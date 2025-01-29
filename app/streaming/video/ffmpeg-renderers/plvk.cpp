@@ -14,8 +14,9 @@
 #include <vector>
 #include <set>
 
-#ifndef VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME
+#ifndef VK_KHR_video_decode_av1
 #define VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME "VK_KHR_video_decode_av1"
+#define VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR ((VkVideoCodecOperationFlagBitsKHR)0x00000004)
 #endif
 
 // Keep these in sync with hwcontext_vulkan.c
@@ -56,23 +57,26 @@ static void pl_log_cb(void*, enum pl_log_level level, const char *msg)
 {
     switch (level) {
     case PL_LOG_FATAL:
-        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_ERR:
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_WARN:
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        if (strncmp(msg, "Masking `", 9) == 0) {
+            return;
+        }
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_INFO:
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_DEBUG:
-        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_NONE:
     case PL_LOG_TRACE:
-        SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     }
 }
@@ -94,8 +98,9 @@ void PlVkRenderer::overlayUploadComplete(void* opaque)
     SDL_FreeSurface((SDL_Surface*)opaque);
 }
 
-PlVkRenderer::PlVkRenderer(IFFmpegRenderer* backendRenderer) :
-    m_Backend(backendRenderer)
+PlVkRenderer::PlVkRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer) :
+    m_Backend(backendRenderer),
+    m_HwAccelBackend(hwaccel)
 {
     bool ok;
 
@@ -148,7 +153,7 @@ PlVkRenderer::~PlVkRenderer()
     pl_log_destroy(&m_Log);
 }
 
-bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
+bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params, bool hdrOutputRequired)
 {
     uint32_t physicalDeviceCount = 0;
     fn_vkEnumeratePhysicalDevices(m_PlVkInstance->instance, &physicalDeviceCount, nullptr);
@@ -158,10 +163,16 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
     std::set<uint32_t> devicesTried;
     VkPhysicalDeviceProperties deviceProps;
 
+    if (physicalDeviceCount == 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "No Vulkan devices found!");
+        return false;
+    }
+
     // First, try the first device in the list to support device selection layers
     // that put the user's preferred GPU in the first slot.
     fn_vkGetPhysicalDeviceProperties(physicalDevices[0], &deviceProps);
-    if (tryInitializeDevice(physicalDevices[0], &deviceProps, params)) {
+    if (tryInitializeDevice(physicalDevices[0], &deviceProps, params, hdrOutputRequired)) {
         return true;
     }
     devicesTried.emplace(0);
@@ -177,7 +188,7 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
         VkPhysicalDeviceProperties deviceProps;
         fn_vkGetPhysicalDeviceProperties(physicalDevices[i], &deviceProps);
         if (deviceProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
-            if (tryInitializeDevice(physicalDevices[i], &deviceProps, params)) {
+            if (tryInitializeDevice(physicalDevices[i], &deviceProps, params, hdrOutputRequired)) {
                 return true;
             }
             devicesTried.emplace(i);
@@ -194,7 +205,7 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
         VkPhysicalDeviceProperties deviceProps;
         fn_vkGetPhysicalDeviceProperties(physicalDevices[i], &deviceProps);
         if (deviceProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            if (tryInitializeDevice(physicalDevices[i], &deviceProps, params)) {
+            if (tryInitializeDevice(physicalDevices[i], &deviceProps, params, hdrOutputRequired)) {
                 return true;
             }
             devicesTried.emplace(i);
@@ -210,18 +221,20 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
 
         VkPhysicalDeviceProperties deviceProps;
         fn_vkGetPhysicalDeviceProperties(physicalDevices[i], &deviceProps);
-        if (tryInitializeDevice(physicalDevices[i], &deviceProps, params)) {
+        if (tryInitializeDevice(physicalDevices[i], &deviceProps, params, hdrOutputRequired)) {
             return true;
         }
         devicesTried.emplace(i);
     }
 
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                 "No suitable Vulkan devices found!");
+                 "No suitable %sVulkan devices found!",
+                 hdrOutputRequired ? "HDR-capable " : "");
     return false;
 }
 
-bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDeviceProperties* deviceProps, PDECODER_PARAMETERS decoderParams)
+bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDeviceProperties* deviceProps,
+                                       PDECODER_PARAMETERS decoderParams, bool hdrOutputRequired)
 {
     // Check the Vulkan API version first to ensure it meets libplacebo's minimum
     if (deviceProps->apiVersion < PL_VK_MIN_VERSION) {
@@ -231,8 +244,20 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
         return false;
     }
 
+#ifdef Q_OS_WIN32
+    // Intel's Windows drivers seem to have interoperability issues as of FFmpeg 7.0.1
+    // when using Vulkan Video decoding. Since they also expose HEVC REXT profiles using
+    // D3D11VA, let's reject them here so we can select a different Vulkan device or
+    // just allow D3D11VA to take over.
+    if (m_HwAccelBackend && deviceProps->vendorID == 0x8086 && !qEnvironmentVariableIntValue("PLVK_ALLOW_INTEL")) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Skipping Intel GPU for Vulkan Video due to broken drivers");
+        return false;
+    }
+#endif
+
     // If we're acting as the decoder backend, we need a physical device with Vulkan video support
-    if (m_Backend == nullptr) {
+    if (m_HwAccelBackend) {
         const char* videoDecodeExtension;
 
         if (decoderParams->videoFormat & VIDEO_FORMAT_MASK_H264) {
@@ -271,7 +296,7 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
         return false;
     }
 
-    if ((decoderParams->videoFormat & VIDEO_FORMAT_MASK_10BIT) && !isColorSpaceSupportedByPhysicalDevice(device, VK_COLOR_SPACE_HDR10_ST2084_EXT)) {
+    if (hdrOutputRequired && !isColorSpaceSupportedByPhysicalDevice(device, VK_COLOR_SPACE_HDR10_ST2084_EXT)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Vulkan device '%s' does not support HDR10 (ST.2084 PQ)",
                     deviceProps->deviceName);
@@ -293,7 +318,7 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
     vkParams.device = device;
     vkParams.opt_extensions = k_OptionalDeviceExtensions;
     vkParams.num_opt_extensions = SDL_arraysize(k_OptionalDeviceExtensions);
-    vkParams.extra_queues = VK_QUEUE_VIDEO_DECODE_BIT_KHR;
+    vkParams.extra_queues = m_HwAccelBackend ? VK_QUEUE_FLAG_BITS_MAX_ENUM : 0;
     m_Vulkan = pl_vulkan_create(m_Log, &vkParams);
     if (m_Vulkan == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -354,14 +379,8 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 
     pl_vk_inst_params vkInstParams = pl_vk_inst_default_params;
     {
-        bool ok;
-        vkInstParams.debug_extra = !!qEnvironmentVariableIntValue("PLVK_DEBUG_EXTRA", &ok);
-        vkInstParams.debug = vkInstParams.debug_extra || !!qEnvironmentVariableIntValue("PLVK_DEBUG", &ok);
-#ifdef QT_DEBUG
-        if (!ok) {
-            vkInstParams.debug = true;
-        }
-#endif
+        vkInstParams.debug_extra = !!qEnvironmentVariableIntValue("PLVK_DEBUG_EXTRA");
+        vkInstParams.debug = vkInstParams.debug_extra || !!qEnvironmentVariableIntValue("PLVK_DEBUG");
     }
     vkInstParams.get_proc_addr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
     vkInstParams.extensions = instanceExtensions.data();
@@ -375,7 +394,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 
     // Lookup all Vulkan functions we require
     POPULATE_FUNCTION(vkDestroySurfaceKHR);
-    POPULATE_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties);
+    POPULATE_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties2);
     POPULATE_FUNCTION(vkGetPhysicalDeviceSurfacePresentModesKHR);
     POPULATE_FUNCTION(vkGetPhysicalDeviceSurfaceFormatsKHR);
     POPULATE_FUNCTION(vkEnumeratePhysicalDevices);
@@ -390,8 +409,12 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // Enumerate physical devices and choose one that is suitable for our needs
-    if (!chooseVulkanDevice(params)) {
+    // Enumerate physical devices and choose one that is suitable for our needs.
+    //
+    // For HDR streaming, we try to find an HDR-capable Vulkan device first then
+    // try another search without the HDR requirement if the first attempt fails.
+    if (!chooseVulkanDevice(params, params->videoFormat & VIDEO_FORMAT_MASK_10BIT) &&
+        (!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT) || !chooseVulkanDevice(params, false))) {
         return false;
     }
 
@@ -458,7 +481,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // We only need an hwaccel device context if we're going to act as the backend renderer too
-    if (m_Backend == nullptr) {
+    if (m_HwAccelBackend) {
         m_HwDeviceCtx = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VULKAN);
         if (m_HwDeviceCtx == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -479,24 +502,13 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         vkDeviceContext->nb_enabled_inst_extensions = m_PlVkInstance->num_extensions;
         vkDeviceContext->enabled_dev_extensions = m_Vulkan->extensions;
         vkDeviceContext->nb_enabled_dev_extensions = m_Vulkan->num_extensions;
-        vkDeviceContext->queue_family_index = m_Vulkan->queue_graphics.index;
-        vkDeviceContext->nb_graphics_queues = m_Vulkan->queue_graphics.count;
-        vkDeviceContext->queue_family_tx_index = m_Vulkan->queue_transfer.index;
-        vkDeviceContext->nb_tx_queues = m_Vulkan->queue_transfer.count;
-        vkDeviceContext->queue_family_comp_index = m_Vulkan->queue_compute.index;
-        vkDeviceContext->nb_comp_queues = m_Vulkan->queue_compute.count;
 #if LIBAVUTIL_VERSION_INT > AV_VERSION_INT(58, 9, 100)
         vkDeviceContext->lock_queue = lockQueue;
         vkDeviceContext->unlock_queue = unlockQueue;
 #endif
 
-        static_assert(sizeof(vkDeviceContext->queue_family_decode_index) == sizeof(uint32_t), "sizeof(int) != sizeof(uint32_t)");
-        static_assert(sizeof(vkDeviceContext->nb_decode_queues) == sizeof(uint32_t), "sizeof(int) != sizeof(uint32_t)");
-        if (!getQueue(VK_QUEUE_VIDEO_DECODE_BIT_KHR, (uint32_t*)&vkDeviceContext->queue_family_decode_index, (uint32_t*)&vkDeviceContext->nb_decode_queues)) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Vulkan video decoding is not supported by the Vulkan device");
-            return false;
-        }
+        // Populate the device queues for decoding this video format
+        populateQueues(params->videoFormat);
 
         int err = av_hwdevice_ctx_init(m_HwDeviceCtx);
         if (err < 0) {
@@ -512,13 +524,17 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 
 bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary **)
 {
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Using Vulkan video decoding");
+    if (m_HwAccelBackend) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using Vulkan video decoding");
 
-    // This should only be called when we're acting as the decoder backend
-    SDL_assert(m_Backend == nullptr);
+        context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
+    }
+    else {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using Vulkan renderer");
+    }
 
-    context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
     return true;
 }
 
@@ -543,26 +559,95 @@ bool PlVkRenderer::mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFra
         mappedFrame->color.hdr.min_luma = PL_COLOR_HDR_BLACK;
     }
 
+    // HACK: AMF AV1 encoding on the host PC does not set full color range properly in the
+    // bitstream data, so libplacebo incorrectly renders the content as limited range.
+    //
+    // As a workaround, set full range manually in the mapped frame ourselves.
+    mappedFrame->repr.levels = PL_COLOR_LEVELS_FULL;
+
     return true;
 }
 
-bool PlVkRenderer::getQueue(VkQueueFlags requiredFlags, uint32_t *queueIndex, uint32_t *queueCount)
+bool PlVkRenderer::populateQueues(int videoFormat)
 {
-    uint32_t queueFamilyCount = 0;
-    fn_vkGetPhysicalDeviceQueueFamilyProperties(m_Vulkan->phys_device, &queueFamilyCount, nullptr);
+    auto vkDeviceContext = (AVVulkanDeviceContext*)((AVHWDeviceContext *)m_HwDeviceCtx->data)->hwctx;
 
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    fn_vkGetPhysicalDeviceQueueFamilyProperties(m_Vulkan->phys_device, &queueFamilyCount, queueFamilies.data());
+    uint32_t queueFamilyCount = 0;
+    fn_vkGetPhysicalDeviceQueueFamilyProperties2(m_Vulkan->phys_device, &queueFamilyCount, nullptr);
+
+    std::vector<VkQueueFamilyProperties2> queueFamilies(queueFamilyCount);
+    std::vector<VkQueueFamilyVideoPropertiesKHR> queueFamilyVideoProps(queueFamilyCount);
+    for (uint32_t i = 0; i < queueFamilyCount; i++) {
+        queueFamilyVideoProps[i].sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_VIDEO_PROPERTIES_KHR;
+        queueFamilies[i].sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
+        queueFamilies[i].pNext = &queueFamilyVideoProps[i];
+    }
+
+    fn_vkGetPhysicalDeviceQueueFamilyProperties2(m_Vulkan->phys_device, &queueFamilyCount, queueFamilies.data());
+
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(59, 34, 100)
+    Q_UNUSED(videoFormat);
 
     for (uint32_t i = 0; i < queueFamilyCount; i++) {
-        if ((queueFamilies[i].queueFlags & requiredFlags) == requiredFlags) {
-            *queueIndex = i;
-            *queueCount = queueFamilies[i].queueCount;
-            return true;
+        vkDeviceContext->qf[i].idx = i;
+        vkDeviceContext->qf[i].num = queueFamilies[i].queueFamilyProperties.queueCount;
+        vkDeviceContext->qf[i].flags = (VkQueueFlagBits)queueFamilies[i].queueFamilyProperties.queueFlags;
+        vkDeviceContext->qf[i].video_caps = (VkVideoCodecOperationFlagBitsKHR)queueFamilyVideoProps[i].videoCodecOperations;
+    }
+    vkDeviceContext->nb_qf = queueFamilyCount;
+#else
+    vkDeviceContext->queue_family_index = m_Vulkan->queue_graphics.index;
+    vkDeviceContext->nb_graphics_queues = m_Vulkan->queue_graphics.count;
+    vkDeviceContext->queue_family_tx_index = m_Vulkan->queue_transfer.index;
+    vkDeviceContext->nb_tx_queues = m_Vulkan->queue_transfer.count;
+    vkDeviceContext->queue_family_comp_index = m_Vulkan->queue_compute.index;
+    vkDeviceContext->nb_comp_queues = m_Vulkan->queue_compute.count;
+
+    // Select a video decode queue that is capable of decoding our chosen format
+    for (uint32_t i = 0; i < queueFamilyCount; i++) {
+        if (queueFamilies[i].queueFamilyProperties.queueFlags & VK_QUEUE_VIDEO_DECODE_BIT_KHR) {
+            if (videoFormat & VIDEO_FORMAT_MASK_H264) {
+                if (queueFamilyVideoProps[i].videoCodecOperations & VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR) {
+                    vkDeviceContext->queue_family_decode_index = i;
+                    vkDeviceContext->nb_decode_queues = queueFamilies[i].queueFamilyProperties.queueCount;
+                    break;
+                }
+            }
+            else if (videoFormat & VIDEO_FORMAT_MASK_H265) {
+                if (queueFamilyVideoProps[i].videoCodecOperations & VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR) {
+                    vkDeviceContext->queue_family_decode_index = i;
+                    vkDeviceContext->nb_decode_queues = queueFamilies[i].queueFamilyProperties.queueCount;
+                    break;
+                }
+            }
+            else if (videoFormat & VIDEO_FORMAT_MASK_AV1) {
+#if LIBAVCODEC_VERSION_MAJOR >= 61
+                // VK_KHR_video_decode_av1 added VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR to check for AV1
+                // decoding support on this queue. Since FFmpeg 6.1 used the older Mesa-specific AV1 extension,
+                // we'll just assume all video decode queues on this device support AV1 (since we checked that
+                // the physical device supports it earlier.
+                if (queueFamilyVideoProps[i].videoCodecOperations & VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR)
+#endif
+                {
+                    vkDeviceContext->queue_family_decode_index = i;
+                    vkDeviceContext->nb_decode_queues = queueFamilies[i].queueFamilyProperties.queueCount;
+                    break;
+                }
+            }
+            else {
+                SDL_assert(false);
+            }
         }
     }
 
-    return false;
+    if (vkDeviceContext->queue_family_decode_index < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to find compatible video decode queue!");
+        return false;
+    }
+#endif
+
+    return true;
 }
 
 bool PlVkRenderer::isPresentModeSupportedByPhysicalDevice(VkPhysicalDevice device, VkPresentModeKHR presentMode)
@@ -602,7 +687,7 @@ bool PlVkRenderer::isColorSpaceSupportedByPhysicalDevice(VkPhysicalDevice device
 bool PlVkRenderer::isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevice device)
 {
     uint32_t queueFamilyCount = 0;
-    fn_vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+    fn_vkGetPhysicalDeviceQueueFamilyProperties2(device, &queueFamilyCount, nullptr);
 
     for (uint32_t i = 0; i < queueFamilyCount; i++) {
         VkBool32 supported = VK_FALSE;
@@ -626,11 +711,16 @@ void PlVkRenderer::waitToRender()
         return;
     }
 
+#ifndef Q_OS_WIN32
     // With libplacebo's Vulkan backend, all swap_buffers does is wait for queued
     // presents to finish. This happens to be exactly what we want to do here, since
     // it lets us wait to select a queued frame for rendering until we know that we
     // can present without blocking in renderFrame().
+    //
+    // NB: This seems to cause performance problems with the Windows display stack
+    // (particularly on Nvidia) so we will only do this for non-Windows platforms.
     pl_swapchain_swap_buffers(m_Swapchain);
+#endif
 
     // Handle the swapchain being resized
     int vkDrawableW, vkDrawableH;
@@ -785,6 +875,12 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         goto UnmapExit;
     }
 
+#ifdef Q_OS_WIN32
+    // On Windows, we swap buffers here instead of waitToRender()
+    // to avoid some performance problems on Nvidia GPUs.
+    pl_swapchain_swap_buffers(m_Swapchain);
+#endif
+
 UnmapExit:
     // Delete any textures that need to be destroyed
     for (pl_tex texture : texturesToDestroy) {
@@ -901,18 +997,20 @@ bool PlVkRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 
 int PlVkRenderer::getRendererAttributes()
 {
-    int attributes = 0;
+    // This renderer supports HDR (including tone mapping to SDR displays)
+    return RENDERER_ATTRIBUTE_HDR_SUPPORT;
+}
 
-    if (isColorSpaceSupportedByPhysicalDevice(m_Vulkan->phys_device, VK_COLOR_SPACE_HDR10_ST2084_EXT)) {
-        attributes |= RENDERER_ATTRIBUTE_HDR_SUPPORT;
-    }
-
-    return attributes;
+int PlVkRenderer::getDecoderColorspace()
+{
+    // We rely on libplacebo for color conversion, pick colorspace with the same primaries as sRGB
+    return COLORSPACE_REC_709;
 }
 
 int PlVkRenderer::getDecoderColorRange()
 {
-    // Explicitly set the color range to full to fix raised black levels on OLED displays
+    // Explicitly set the color range to full to fix raised black levels on OLED displays,
+    // should also reduce banding artifacts in all situations
     return COLOR_RANGE_FULL;
 }
 
@@ -930,11 +1028,59 @@ bool PlVkRenderer::needsTestFrame()
 
 bool PlVkRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
-    if (m_Backend) {
+    if (m_HwAccelBackend) {
+        return pixelFormat == AV_PIX_FMT_VULKAN;
+    }
+    else if (m_Backend) {
         return m_Backend->isPixelFormatSupported(videoFormat, pixelFormat);
     }
     else {
-        return IFFmpegRenderer::isPixelFormatSupported(videoFormat, pixelFormat);
+        if (pixelFormat == AV_PIX_FMT_VULKAN) {
+            // Vulkan frames are always supported
+            return true;
+        }
+        else if (videoFormat & VIDEO_FORMAT_MASK_YUV444) {
+            if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+                switch (pixelFormat) {
+                case AV_PIX_FMT_P410:
+                case AV_PIX_FMT_YUV444P10:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+            else {
+                switch (pixelFormat) {
+                case AV_PIX_FMT_NV24:
+                case AV_PIX_FMT_NV42:
+                case AV_PIX_FMT_YUV444P:
+                case AV_PIX_FMT_YUVJ444P:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+        }
+        else if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+            switch (pixelFormat) {
+            case AV_PIX_FMT_P010:
+            case AV_PIX_FMT_YUV420P10:
+                return true;
+            default:
+                return false;
+            }
+        }
+        else {
+            switch (pixelFormat) {
+            case AV_PIX_FMT_NV12:
+            case AV_PIX_FMT_NV21:
+            case AV_PIX_FMT_YUV420P:
+            case AV_PIX_FMT_YUVJ420P:
+                return true;
+            default:
+                return false;
+            }
+        }
     }
 }
 

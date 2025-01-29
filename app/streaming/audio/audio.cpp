@@ -205,29 +205,41 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
     }
 
     if (s_ActiveSession->m_AudioRenderer != nullptr) {
-        int desiredSize = sizeof(short) * s_ActiveSession->m_ActiveAudioConfig.samplesPerFrame * s_ActiveSession->m_ActiveAudioConfig.channelCount;
-        void* buffer = s_ActiveSession->m_AudioRenderer->getAudioBuffer(&desiredSize);
+        int sampleSize = s_ActiveSession->m_AudioRenderer->getAudioBufferSampleSize();
+        int frameSize = sampleSize * s_ActiveSession->m_ActiveAudioConfig.channelCount;
+        int desiredBufferSize = frameSize * s_ActiveSession->m_ActiveAudioConfig.samplesPerFrame;
+        void* buffer = s_ActiveSession->m_AudioRenderer->getAudioBuffer(&desiredBufferSize);
         if (buffer == nullptr) {
             return;
         }
 
-        samplesDecoded = opus_multistream_decode(s_ActiveSession->m_OpusDecoder,
-                                                 (unsigned char*)sampleData,
-                                                 sampleLength,
-                                                 (short*)buffer,
-                                                 desiredSize / sizeof(short) / s_ActiveSession->m_ActiveAudioConfig.channelCount,
-                                                 0);
+        if (s_ActiveSession->m_AudioRenderer->getAudioBufferFormat() == IAudioRenderer::AudioFormat::Float32NE) {
+            samplesDecoded = opus_multistream_decode_float(s_ActiveSession->m_OpusDecoder,
+                                                           (unsigned char*)sampleData,
+                                                           sampleLength,
+                                                           (float*)buffer,
+                                                           desiredBufferSize / frameSize,
+                                                           0);
+        }
+        else {
+            samplesDecoded = opus_multistream_decode(s_ActiveSession->m_OpusDecoder,
+                                                     (unsigned char*)sampleData,
+                                                     sampleLength,
+                                                     (short*)buffer,
+                                                     desiredBufferSize / frameSize,
+                                                     0);
+        }
 
         // Update desiredSize with the number of bytes actually populated by the decoding operation
         if (samplesDecoded > 0) {
-            SDL_assert(desiredSize >= (int)(sizeof(short) * samplesDecoded * s_ActiveSession->m_ActiveAudioConfig.channelCount));
-            desiredSize = sizeof(short) * samplesDecoded * s_ActiveSession->m_ActiveAudioConfig.channelCount;
+            SDL_assert(desiredBufferSize >= frameSize * samplesDecoded);
+            desiredBufferSize = frameSize * samplesDecoded;
         }
         else {
-            desiredSize = 0;
+            desiredBufferSize = 0;
         }
 
-        if (!s_ActiveSession->m_AudioRenderer->submitAudio(desiredSize)) {
+        if (!s_ActiveSession->m_AudioRenderer->submitAudio(desiredBufferSize)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Reinitializing audio renderer after failure");
 

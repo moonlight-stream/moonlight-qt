@@ -12,7 +12,7 @@
 
 class PlVkRenderer : public IFFmpegRenderer {
 public:
-    PlVkRenderer(IFFmpegRenderer* backendRenderer);
+    PlVkRenderer(bool hwaccel = false, IFFmpegRenderer *backendRenderer = nullptr);
     virtual ~PlVkRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
@@ -23,6 +23,7 @@ public:
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) override;
     virtual int getRendererAttributes() override;
+    virtual int getDecoderColorspace() override;
     virtual int getDecoderColorRange() override;
     virtual int getDecoderCapabilities() override;
     virtual bool needsTestFrame() override;
@@ -36,9 +37,10 @@ private:
     static void overlayUploadComplete(void* opaque);
 
     bool mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFrame);
-    bool getQueue(VkQueueFlags requiredFlags, uint32_t* queueIndex, uint32_t* queueCount);
-    bool chooseVulkanDevice(PDECODER_PARAMETERS params);
-    bool tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDeviceProperties* deviceProps, PDECODER_PARAMETERS decoderParams);
+    bool populateQueues(int videoFormat);
+    bool chooseVulkanDevice(PDECODER_PARAMETERS params, bool hdrOutputRequired);
+    bool tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDeviceProperties* deviceProps,
+                             PDECODER_PARAMETERS decoderParams, bool hdrOutputRequired);
     bool isExtensionSupportedByPhysicalDevice(VkPhysicalDevice device, const char* extensionName);
     bool isPresentModeSupportedByPhysicalDevice(VkPhysicalDevice device, VkPresentModeKHR presentMode);
     bool isColorSpaceSupportedByPhysicalDevice(VkPhysicalDevice device, VkColorSpaceKHR colorSpace);
@@ -46,6 +48,7 @@ private:
 
     // The backend renderer if we're frontend-only
     IFFmpegRenderer* m_Backend;
+    bool m_HwAccelBackend;
 
     // SDL state
     SDL_Window* m_Window = nullptr;
@@ -53,7 +56,7 @@ private:
     // The libplacebo rendering state
     pl_log m_Log = nullptr;
     pl_vk_inst m_PlVkInstance = nullptr;
-    VkSurfaceKHR m_VkSurface = nullptr;
+    VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
     pl_vulkan m_Vulkan = nullptr;
     pl_swapchain m_Swapchain = nullptr;
     pl_renderer m_Renderer = nullptr;
@@ -94,7 +97,7 @@ private:
 
     // Vulkan functions we call directly
     PFN_vkDestroySurfaceKHR fn_vkDestroySurfaceKHR = nullptr;
-    PFN_vkGetPhysicalDeviceQueueFamilyProperties fn_vkGetPhysicalDeviceQueueFamilyProperties = nullptr;
+    PFN_vkGetPhysicalDeviceQueueFamilyProperties2 fn_vkGetPhysicalDeviceQueueFamilyProperties2 = nullptr;
     PFN_vkGetPhysicalDeviceSurfacePresentModesKHR fn_vkGetPhysicalDeviceSurfacePresentModesKHR = nullptr;
     PFN_vkGetPhysicalDeviceSurfaceFormatsKHR fn_vkGetPhysicalDeviceSurfaceFormatsKHR = nullptr;
     PFN_vkEnumeratePhysicalDevices fn_vkEnumeratePhysicalDevices = nullptr;

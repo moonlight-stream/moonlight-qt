@@ -1,7 +1,7 @@
 #include "streaming/session.h"
 
 #include <Limelight.h>
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #define VK_0 0x30
 #define VK_A 0x41

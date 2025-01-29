@@ -15,6 +15,7 @@
 #define SER_HEIGHT "height"
 #define SER_FPS "fps"
 #define SER_BITRATE "bitrate"
+#define SER_UNLOCK_BITRATE "unlockbitrate"
 #define SER_FULLSCREEN "fullscreen"
 #define SER_IGNORE_ASPECT_RATIO "ignoreaspectratio"
 #define SER_VSYNC "vsync"
@@ -24,6 +25,7 @@
 #define SER_AUDIOCFG "audiocfg"
 #define SER_VIDEOCFG "videocfg"
 #define SER_HDR "hdr"
+#define SER_YUV444 "yuv444"
 #define SER_VIDEODEC "videodec"
 #define SER_WINDOWMODE "windowmode"
 #define SER_MDNS "mdns"
@@ -118,7 +120,9 @@ void StreamingPreferences::reload()
     width = settings.value(SER_WIDTH, 1280).toInt();
     height = settings.value(SER_HEIGHT, 720).toInt();
     fps = settings.value(SER_FPS, 60).toInt();
-    bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps)).toInt();
+    enableYUV444 = settings.value(SER_YUV444, false).toBool();
+    bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps, enableYUV444)).toInt();
+    unlockBitrate = settings.value(SER_UNLOCK_BITRATE, false).toBool();
     ignoreAspectRatio = settings.value(SER_IGNORE_ASPECT_RATIO, true).toBool();
     enableVsync = settings.value(SER_VSYNC, true).toBool();
     gameOptimizations = settings.value(SER_GAMEOPTS, true).toBool();
@@ -291,6 +295,10 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
         return "he";
     case LANG_CKB:
         return "ckb";
+    case LANG_LT:
+        return "lt";
+    case LANG_ET:
+        return "et";
     case LANG_AUTO:
     default:
         return QLocale::system().name();
@@ -305,6 +313,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_HEIGHT, height);
     settings.setValue(SER_FPS, fps);
     settings.setValue(SER_BITRATE, bitrateKbps);
+    settings.setValue(SER_UNLOCK_BITRATE, unlockBitrate);
     settings.setValue(SER_IGNORE_ASPECT_RATIO, ignoreAspectRatio);
     settings.setValue(SER_VSYNC, enableVsync);
     settings.setValue(SER_GAMEOPTS, gameOptimizations);
@@ -323,6 +332,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_SHOWPERFOVERLAY, showPerformanceOverlay);
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
     settings.setValue(SER_HDR, enableHdr);
+    settings.setValue(SER_YUV444, enableYUV444);
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
     settings.setValue(SER_WINDOWMODE, static_cast<int>(windowMode));
@@ -338,7 +348,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_KEEPAWAKE, keepAwake);
 }
 
-int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
+int StreamingPreferences::getDefaultBitrate(int width, int height, int fps, bool yuv444)
 {
     // Don't scale bitrate linearly beyond 60 FPS. It's definitely not a linear
     // bitrate increase for frame rate once we get to values that high.
@@ -384,6 +394,11 @@ int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
             resolutionFactor = resTable[i-1].factor;
             break;
         }
+    }
+
+    if (yuv444) {
+        // This is rough estimation based on the fact that 4:4:4 doubles the amount of raw YUV data compared to 4:2:0
+        resolutionFactor *= 2;
     }
 
     return qRound(resolutionFactor * frameRateFactor) * 1000;

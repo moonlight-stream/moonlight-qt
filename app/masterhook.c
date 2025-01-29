@@ -15,10 +15,11 @@
 // redirection that happens when _FILE_OFFSET_BITS=64!
 // See masterhook_internal.c for details.
 
-#include <SDL.h>
+#include "SDL_compat.h"
 #include <dlfcn.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdbool.h>
 #include <sys/stat.h>
 
 #include <xf86drm.h>
@@ -36,8 +37,13 @@
 int g_QtDrmMasterFd = -1;
 struct stat g_DrmMasterStat;
 
-// The DRM master FD created for SDL
-int g_SdlDrmMasterFd = -1;
+// Last CRTC state for us to restore later
+drmModeCrtcPtr g_QtCrtcState;
+uint32_t* g_QtCrtcConnectors;
+int g_QtCrtcConnectorCount;
+
+bool removeSdlFd(int fd);
+int takeMasterFromSdlFd(void);
 
 int drmIsMaster(int fd)
 {
@@ -62,7 +68,41 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
     }
 
     // Call into the real thing
-    return ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtcId, bufferId, x, y, connectors, count, mode);
+    int err = ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtcId, bufferId, x, y, connectors, count, mode);
+    if (err == 0 && fd == g_QtDrmMasterFd) {
+        // Free old CRTC state (if any)
+        if (g_QtCrtcState) {
+            drmModeFreeCrtc(g_QtCrtcState);
+        }
+        if (g_QtCrtcConnectors) {
+            free(g_QtCrtcConnectors);
+        }
+
+        // Store the CRTC configuration so we can restore it later
+        g_QtCrtcState = drmModeGetCrtc(fd, crtcId);
+        g_QtCrtcConnectors = calloc(count, sizeof(*g_QtCrtcConnectors));
+        memcpy(g_QtCrtcConnectors, connectors, count * sizeof(*connectors));
+        g_QtCrtcConnectorCount = count;
+    }
+    return err;
+}
+
+// This hook will temporarily retake DRM master to allow Qt to render while SDL has a DRM FD open
+int drmModePageFlip(int fd, uint32_t crtc_id, uint32_t fb_id, uint32_t flags, void *user_data)
+{
+    // Call into the real thing
+    int err = ((typeof(drmModePageFlip)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtc_id, fb_id, flags, user_data);
+    if (err == -EACCES && fd == g_QtDrmMasterFd) {
+        // If SDL took master from us, try to grab it back temporarily
+        int oldMasterFd = takeMasterFromSdlFd();
+        drmSetMaster(fd);
+        err = ((typeof(drmModePageFlip)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtc_id, fb_id, flags, user_data);
+        drmDropMaster(fd);
+        if (oldMasterFd != -1) {
+            drmSetMaster(oldMasterFd);
+        }
+    }
+    return err;
 }
 
 // This hook will handle atomic DRM rendering
@@ -80,7 +120,18 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
     }
 
     // Call into the real thing
-    return ((typeof(drmModeAtomicCommit)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, req, flags, user_data);
+    int err = ((typeof(drmModeAtomicCommit)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, req, flags, user_data);
+    if (err == -EACCES && fd == g_QtDrmMasterFd) {
+        // If SDL took master from us, try to grab it back temporarily
+        int oldMasterFd = takeMasterFromSdlFd();
+        drmSetMaster(fd);
+        err = ((typeof(drmModeAtomicCommit)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, req, flags, user_data);
+        drmDropMaster(fd);
+        if (oldMasterFd != -1) {
+            drmSetMaster(oldMasterFd);
+        }
+    }
+    return err;
 }
 
 // This hook will handle SDL's open() on the DRM device. We just need to
@@ -111,23 +162,39 @@ int open64(const char *pathname, int flags, ...)
 // after SDL closes its DRM FD.
 int close(int fd)
 {
+    // Remove this entry from the SDL FD table
+    bool lastSdlFd = removeSdlFd(fd);
+
     // Call the real thing
     int ret = ((typeof(close)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd);
-    if (ret == 0) {
-        // If we just closed the SDL DRM master FD, restore master
-        // to the Qt DRM FD. This works because the Qt DRM master FD
-        // was master once before, so we can set it as master again
-        // using drmSetMaster() without CAP_SYS_ADMIN.
-        if (g_SdlDrmMasterFd != -1 && fd == g_SdlDrmMasterFd) {
-            if (drmSetMaster(g_QtDrmMasterFd) < 0) {
+
+    // If we closed the last SDL FD, restore master to the Qt FD
+    if (ret == 0 && lastSdlFd) {
+        if (drmSetMaster(g_QtDrmMasterFd) < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to restore master to Qt DRM FD: %d",
+                         errno);
+        }
+
+        // Reset the CRTC state to how Qt configured it
+        if (g_QtCrtcState) {
+            int err = ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, "drmModeSetCrtc"))(g_QtDrmMasterFd,
+                                                                                    g_QtCrtcState->crtc_id,
+                                                                                    g_QtCrtcState->buffer_id,
+                                                                                    g_QtCrtcState->x,
+                                                                                    g_QtCrtcState->y,
+                                                                                    g_QtCrtcConnectors,
+                                                                                    g_QtCrtcConnectorCount,
+                                                                                    g_QtCrtcState->mode_valid ?
+                                                                                          &g_QtCrtcState->mode : NULL);
+            if (err < 0) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Failed to restore master to Qt DRM FD: %d",
+                             "Failed to restore CRTC state to Qt DRM FD: %d",
                              errno);
             }
-
-            g_SdlDrmMasterFd = -1;
         }
     }
+
     return ret;
 }
 

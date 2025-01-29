@@ -8,6 +8,7 @@
 
 extern "C" {
     #include <libavutil/hwcontext_drm.h>
+    #include <libavutil/pixdesc.h>
 }
 
 #include <libdrm/drm_fourcc.h>
@@ -23,6 +24,11 @@ extern "C" {
 #define DRM_FORMAT_NV15 fourcc_code('N', 'V', '1', '5')
 #endif
 
+// Same as NV15 but non-subsampled
+#ifndef DRM_FORMAT_NV30
+#define DRM_FORMAT_NV30	fourcc_code('N', 'V', '3', '0')
+#endif
+
 // Special Raspberry Pi type (upstreamed)
 #ifndef DRM_FORMAT_P030
 #define DRM_FORMAT_P030	fourcc_code('P', '0', '3', '0')
@@ -31,6 +37,21 @@ extern "C" {
 // Regular P010 (not present in some old libdrm headers)
 #ifndef DRM_FORMAT_P010
 #define DRM_FORMAT_P010	fourcc_code('P', '0', '1', '0')
+#endif
+
+// Upstreamed fully-planar YUV444 10-bit
+#ifndef DRM_FORMAT_Q410
+#define DRM_FORMAT_Q410	fourcc_code('Q', '4', '1', '0')
+#endif
+
+// Upstreamed packed YUV444 10-bit
+#ifndef DRM_FORMAT_Y410
+#define DRM_FORMAT_Y410 fourcc_code('Y', '4', '1', '0')
+#endif
+
+// Upstreamed packed YUV444 8-bit
+#ifndef DRM_FORMAT_XYUV8888
+#define DRM_FORMAT_XYUV8888 fourcc_code('X', 'Y', 'U', 'V')
 #endif
 
 // Values for "Colorspace" connector property
@@ -51,24 +72,78 @@ extern "C" {
 
 #include <Limelight.h>
 
-// HACK: Avoid including X11 headers which conflict with QDir
-#ifdef SDL_VIDEO_DRIVER_X11
-#undef SDL_VIDEO_DRIVER_X11
+#include <map>
+
+// This map is used to lookup characteristics of a given DRM format
+//
+// All DRM formats that we want to try when selecting a plane must
+// be listed here.
+static const std::map<uint32_t, AVPixelFormat> k_DrmToAvFormatMap
+{
+    {DRM_FORMAT_NV12, AV_PIX_FMT_NV12},
+    {DRM_FORMAT_NV21, AV_PIX_FMT_NV21},
+    {DRM_FORMAT_P010, AV_PIX_FMT_P010LE},
+    {DRM_FORMAT_YUV420, AV_PIX_FMT_YUV420P},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 27, 100)
+    {DRM_FORMAT_NV24, AV_PIX_FMT_NV24},
+    {DRM_FORMAT_NV42, AV_PIX_FMT_NV42},
+#endif
+    {DRM_FORMAT_YUV444, AV_PIX_FMT_YUV444P},
+    {DRM_FORMAT_Q410, AV_PIX_FMT_YUV444P10LE},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 34, 100)
+    {DRM_FORMAT_XYUV8888, AV_PIX_FMT_VUYX},
+#endif
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 36, 100)
+    {DRM_FORMAT_Y410, AV_PIX_FMT_XV30LE},
 #endif
 
-#include <SDL_syswm.h>
+    // These mappings are lies, but they're close enough for our purposes.
+    //
+    // We don't support dumb buffers with these formats, so they just need
+    // to have accurate bit depth and chroma subsampling values.
+    {DRM_FORMAT_NA12, AV_PIX_FMT_P010LE},
+    {DRM_FORMAT_NV15, AV_PIX_FMT_P010LE},
+    {DRM_FORMAT_P030, AV_PIX_FMT_P010LE},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 9, 100)
+    {DRM_FORMAT_NV30, AV_PIX_FMT_P410LE},
+#endif
+};
 
-#include <QDir>
+// This map is used to determine the required DRM format for dumb buffer upload.
+//
+// AV pixel formats in this list must have exactly one valid linear DRM format.
+static const std::map<AVPixelFormat, uint32_t> k_AvToDrmFormatMap
+{
+    {AV_PIX_FMT_NV12, DRM_FORMAT_NV12},
+    {AV_PIX_FMT_NV21, DRM_FORMAT_NV21},
+    {AV_PIX_FMT_P010LE, DRM_FORMAT_P010},
+    {AV_PIX_FMT_YUV420P, DRM_FORMAT_YUV420},
+    {AV_PIX_FMT_YUVJ420P, DRM_FORMAT_YUV420},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 27, 100)
+    {AV_PIX_FMT_NV24, DRM_FORMAT_NV24},
+    {AV_PIX_FMT_NV42, DRM_FORMAT_NV42},
+#endif
+    {AV_PIX_FMT_YUV444P, DRM_FORMAT_YUV444},
+    {AV_PIX_FMT_YUVJ444P, DRM_FORMAT_YUV444},
+    {AV_PIX_FMT_YUV444P10LE, DRM_FORMAT_Q410},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 34, 100)
+    {AV_PIX_FMT_VUYX, DRM_FORMAT_XYUV8888},
+#endif
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 36, 100)
+    {AV_PIX_FMT_XV30LE, DRM_FORMAT_Y410},
+#endif
+};
 
-DrmRenderer::DrmRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer)
+DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRenderer)
     : m_BackendRenderer(backendRenderer),
       m_DrmPrimeBackend(backendRenderer && backendRenderer->canExportDrmPrime()),
-      m_HwAccelBackend(hwaccel),
+      m_HwDeviceType(hwDeviceType),
       m_HwContext(nullptr),
       m_DrmFd(-1),
-      m_SdlOwnsDrmFd(false),
+      m_DrmIsMaster(false),
+      m_MustCloseDrmFd(false),
       m_SupportsDirectRendering(false),
-      m_Main10Hdr(false),
+      m_VideoFormat(0),
       m_ConnectorId(0),
       m_EncoderId(0),
       m_CrtcId(0),
@@ -83,6 +158,7 @@ DrmRenderer::DrmRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer)
       m_ColorspaceProp(nullptr),
       m_Version(nullptr),
       m_HdrOutputMetadataBlobId(0),
+      m_OutputRect{},
       m_SwFrameMapper(this),
       m_CurrentSwFrameIdx(0)
 #ifdef HAVE_EGL
@@ -149,7 +225,7 @@ DrmRenderer::~DrmRenderer()
         av_buffer_unref(&m_HwContext);
     }
 
-    if (!m_SdlOwnsDrmFd && m_DrmFd != -1) {
+    if (m_MustCloseDrmFd && m_DrmFd != -1) {
         close(m_DrmFd);
     }
 }
@@ -169,7 +245,7 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     // https://doc-en.rvspace.org/VisionFive2/DG_Multimedia/JH7110_SDK/hevc_omx.html
     av_dict_set(options, "omx_pix_fmt", "nv12", 0);
 
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
         context->hw_device_ctx = av_buffer_ref(m_HwContext);
     }
 
@@ -179,117 +255,163 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     return true;
 }
 
+void DrmRenderer::prepareToRender()
+{
+    // Retake DRM master if we dropped it earlier
+    drmSetMaster(m_DrmFd);
+
+    // Create a dummy renderer to force SDL to complete the modesetting
+    // operation that the KMSDRM backend keeps pending until the next
+    // time we swap buffers. We have to do this before we enumerate
+    // CRTC modes below.
+    SDL_Renderer* renderer = SDL_CreateRenderer(m_Window, -1, SDL_RENDERER_SOFTWARE);
+    if (renderer != nullptr) {
+        // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
+        // to ensure it's compatible with the renderer's OpenGL context. If that happens, we
+        // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
+        // renderer. This can lead to an infinite to renderer recreation, so discard all
+        // SDL_WINDOWEVENT events after SDL_CreateRenderer().
+        Session* session = Session::get();
+        if (session != nullptr) {
+            // If we get here during a session, we need to synchronize with the event loop
+            // to ensure we don't drop any important events.
+            session->flushWindowEvents();
+        }
+        else {
+            // If we get here prior to the start of a session, just pump and flush ourselves.
+            SDL_PumpEvents();
+            SDL_FlushEvent(SDL_WINDOWEVENT);
+        }
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(renderer);
+        SDL_RenderPresent(renderer);
+        SDL_DestroyRenderer(renderer);
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateRenderer() failed: %s",
+                     SDL_GetError());
+    }
+
+    // Set the output rect to match the new CRTC size after modesetting
+    m_OutputRect.x = m_OutputRect.y = 0;
+    drmModeCrtc* crtc = drmModeGetCrtc(m_DrmFd, m_CrtcId);
+    if (crtc != nullptr) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "CRTC size after modesetting: %ux%u",
+                    crtc->width,
+                    crtc->height);
+        m_OutputRect.w = crtc->width;
+        m_OutputRect.h = crtc->height;
+        drmModeFreeCrtc(crtc);
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "drmModeGetCrtc() failed: %d",
+                     errno);
+
+        SDL_GetWindowSize(m_Window, &m_OutputRect.w, &m_OutputRect.h);
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Guessing CRTC is window size: %dx%d",
+                    m_OutputRect.w,
+                    m_OutputRect.h);
+    }
+}
+
+bool DrmRenderer::getPropertyByName(drmModeObjectPropertiesPtr props, const char* name, uint64_t *value) {
+    for (uint32_t j = 0; j < props->count_props; j++) {
+        drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
+        if (prop != nullptr) {
+            if (!strcmp(prop->name, name)) {
+                *value = props->prop_values[j];
+                drmModeFreeProperty(prop);
+                return true;
+            }
+            else {
+                drmModeFreeProperty(prop);
+            }
+        }
+    }
+
+    return false;
+}
+
 bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 {
     int i;
 
-    m_Main10Hdr = (params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
+    m_Window = params->window;
+    m_VideoFormat = params->videoFormat;
     m_SwFrameMapper.setVideoFormat(params->videoFormat);
 
-#if SDL_VERSION_ATLEAST(2, 0, 15)
-    SDL_SysWMinfo info;
+    // Try to get the FD that we're sharing with SDL
+    m_DrmFd = StreamUtils::getDrmFdForWindow(m_Window, &m_MustCloseDrmFd);
+    if (m_DrmFd >= 0) {
+        // If we got a DRM FD for the window, we can render to it
+        m_DrmIsMaster = true;
 
-    SDL_VERSION(&info.version);
-
-    if (!SDL_GetWindowWMInfo(params->window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
-    if (info.subsystem == SDL_SYSWM_KMSDRM) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Sharing DRM FD with SDL");
-
-        SDL_assert(info.info.kmsdrm.drm_fd >= 0);
-        m_DrmFd = info.info.kmsdrm.drm_fd;
-        m_SdlOwnsDrmFd = true;
-    }
-    else
-#endif
-    {
-        const char* userDevice = SDL_getenv("DRM_DEV");
-        if (userDevice != nullptr) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Opening user-specified DRM device: %s",
-                        userDevice);
-
-            m_DrmFd = open(userDevice, O_RDWR | O_CLOEXEC);
-        }
-        else {
-            QDir driDir("/dev/dri");
-
-            // We have to explicitly ask for devices to be returned
-            driDir.setFilter(QDir::Files | QDir::System);
-
-            // Try a render node first since we aren't using DRM for output in this codepath
-            for (QFileInfo& node : driDir.entryInfoList(QStringList("renderD*"))) {
-                QByteArray absolutePath = node.absoluteFilePath().toUtf8();
-                m_DrmFd = open(absolutePath.constData(), O_RDWR | O_CLOEXEC);
-                if (m_DrmFd >= 0) {
-                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Opened DRM render node: %s",
-                                absolutePath.constData());
-                    break;
-                }
-            }
-
-            // If that fails, try to use a primary node and hope for the best
-            if (m_DrmFd < 0) {
-                for (QFileInfo& node : driDir.entryInfoList(QStringList("card*"))) {
-                    QByteArray absolutePath = node.absoluteFilePath().toUtf8();
-                    m_DrmFd = open(absolutePath.constData(), O_RDWR | O_CLOEXEC);
-                    if (m_DrmFd >= 0) {
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Opened DRM primary node: %s",
-                                    absolutePath.constData());
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (m_DrmFd < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to open DRM device: %d",
-                          errno);
-            return false;
+        // If we just opened a new FD, let's drop master on it
+        // so SDL can take master for Vulkan rendering. We'll
+        // regrab master later if we end up direct rendering.
+        if (m_MustCloseDrmFd) {
+            drmDropMaster(m_DrmFd);
         }
     }
+    else {
+        // Try to open any DRM render node
+        m_DrmFd = StreamUtils::getDrmFd(true);
+        if (m_DrmFd >= 0) {
+            // Drop master in case we somehow got a primary node
+            drmDropMaster(m_DrmFd);
 
-    // Fetch version details about the DRM driver to use later
-    m_Version = drmGetVersion(m_DrmFd);
-    if (m_Version == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "drmGetVersion() failed: %d",
-                     errno);
-        return false;
+            // This is a new FD that we must close
+            m_MustCloseDrmFd = true;
+        }
     }
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "GPU driver: %s", m_Version->name);
 
     // Create the device context first because it is needed whether we can
     // actually use direct rendering or not.
-    m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_DRM);
-    if (m_HwContext == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "av_hwdevice_ctx_alloc(DRM) failed");
-        return false;
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_DRM) {
+        // A real DRM FD is required for DRM-backed hwaccels
+        if (m_DrmFd < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to open DRM device: %d",
+                         errno);
+            return false;
+        }
+
+        m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_DRM);
+        if (m_HwContext == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_alloc(DRM) failed");
+            return false;
+        }
+
+        AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
+        AVDRMDeviceContext* drmDeviceContext = (AVDRMDeviceContext*)deviceContext->hwctx;
+
+        drmDeviceContext->fd = m_DrmFd;
+
+        int err = av_hwdevice_ctx_init(m_HwContext);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_init(DRM) failed: %d",
+                         err);
+            return false;
+        }
     }
-
-    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
-    AVDRMDeviceContext* drmDeviceContext = (AVDRMDeviceContext*)deviceContext->hwctx;
-
-    drmDeviceContext->fd = m_DrmFd;
-
-    int err = av_hwdevice_ctx_init(m_HwContext);
-    if (err < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "av_hwdevice_ctx_init(DRM) failed: %d",
-                     err);
-        return false;
+    else if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
+        // We got some other non-DRM hwaccel that outputs DRM_PRIME frames.
+        // Create it with default parameters and hope for the best.
+        int err = av_hwdevice_ctx_create(&m_HwContext, m_HwDeviceType, nullptr, nullptr, 0);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_create(%u) failed: %d",
+                         m_HwDeviceType,
+                         err);
+            return false;
+        }
     }
 
     // Still return true if we fail to initialize DRM direct rendering
@@ -301,32 +423,31 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // that's the whole point it's trying to use us for.
     const bool DIRECT_RENDERING_INIT_FAILED = (m_BackendRenderer == nullptr);
 
-    // If we're not sharing the DRM FD with SDL, that means we don't
-    // have DRM master, so we can't call drmModeSetPlane(). We can
-    // use EGLRenderer or SDLRenderer to render in this situation.
-    if (!m_SdlOwnsDrmFd) {
+    if (m_DrmFd < 0) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Direct rendering via DRM is disabled");
+                    "Direct rendering via DRM is unavailable due to lack of DRM devices");
         return DIRECT_RENDERING_INIT_FAILED;
     }
 
-    if (!params->testOnly) {
-        // Create a dummy renderer to force SDL to complete the modesetting
-        // operation that the KMSDRM backend keeps pending until the next
-        // time we swap buffers. We have to do this before we enumerate
-        // CRTC modes below.
-        SDL_Renderer* renderer = SDL_CreateRenderer(params->window, -1, SDL_RENDERER_SOFTWARE);
-        if (renderer != nullptr) {
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-            SDL_RenderClear(renderer);
-            SDL_RenderPresent(renderer);
-            SDL_DestroyRenderer(renderer);
-        }
-        else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                        "SDL_CreateRenderer() failed: %s",
-                        SDL_GetError());
-        }
+    // Fetch version details about the DRM driver to use later
+    m_Version = drmGetVersion(m_DrmFd);
+    if (m_Version == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "drmGetVersion() failed: %d",
+                     errno);
+        return DIRECT_RENDERING_INIT_FAILED;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "GPU driver: %s", m_Version->name);
+
+    // If we're not sharing the DRM FD with SDL, that means we don't
+    // have DRM master, so we can't call drmModeSetPlane(). We can
+    // use EGLRenderer or SDLRenderer to render in this situation.
+    if (!m_DrmIsMaster) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Direct rendering via DRM is disabled");
+        return DIRECT_RENDERING_INIT_FAILED;
     }
 
     drmModeRes* resources = drmModeGetResources(m_DrmFd);
@@ -382,12 +503,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     int crtcIndex = -1;
     for (int i = 0; i < resources->count_crtcs; i++) {
         if (resources->crtcs[i] == m_CrtcId) {
-            drmModeCrtc* crtc = drmModeGetCrtc(m_DrmFd, resources->crtcs[i]);
             crtcIndex = i;
-            m_OutputRect.x = m_OutputRect.y = 0;
-            m_OutputRect.w = crtc->width;
-            m_OutputRect.h = crtc->height;
-            drmModeFreeCrtc(crtc);
             break;
         }
     }
@@ -410,64 +526,26 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         return DIRECT_RENDERING_INIT_FAILED;
     }
 
-    // Find a plane with the required format to render on
-    //
-    // FIXME: We should check the actual DRM format in a real AVFrame rather
-    // than just assuming it will be a certain hardcoded type like NV12 based
-    // on the chosen video format.
-    m_PlaneId = 0;
-    for (uint32_t i = 0; i < planeRes->count_planes && m_PlaneId == 0; i++) {
+    // Find the active plane (if any) on this CRTC with the highest zpos.
+    // We'll need to use a plane with a equal or greater zpos to be visible.
+    uint64_t maxActiveZpos = qEnvironmentVariableIntValue("DRM_MIN_PLANE_ZPOS");
+    for (uint32_t i = 0; i < planeRes->count_planes; i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
         if (plane != nullptr) {
-            bool matchingFormat = false;
-            for (uint32_t j = 0; j < plane->count_formats && !matchingFormat; j++) {
-                if (m_Main10Hdr) {
-                    switch (plane->formats[j]) {
-                    case DRM_FORMAT_P010:
-                    case DRM_FORMAT_P030:
-                    case DRM_FORMAT_NA12:
-                    case DRM_FORMAT_NV15:
-                        matchingFormat = true;
-                        break;
-                    }
-                }
-                else {
-                    switch (plane->formats[j]) {
-                    case DRM_FORMAT_NV12:
-                        matchingFormat = true;
-                        break;
-                    }
-                }
-            }
+            if (plane->crtc_id == m_CrtcId) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Plane %u is active on CRTC %u",
+                            plane->plane_id,
+                            m_CrtcId);
 
-            if (matchingFormat == false) {
-                drmModeFreePlane(plane);
-                continue;
-            }
-
-            // We don't check plane->crtc_id here because we want to be able to reuse the primary plane
-            // that may owned by Qt and in use on a CRTC prior to us taking over DRM master. When we give
-            // control back to Qt, it will repopulate the plane with the FB it owns and render as normal.
-            if ((plane->possible_crtcs & (1 << crtcIndex))) {
                 drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
                 if (props != nullptr) {
-                    for (uint32_t j = 0; j < props->count_props; j++) {
-                        drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
-                        if (prop != nullptr) {
-                            if (!strcmp(prop->name, "type") &&
-                                    (props->prop_values[j] == DRM_PLANE_TYPE_PRIMARY || props->prop_values[j] == DRM_PLANE_TYPE_OVERLAY)) {
-                                m_PlaneId = plane->plane_id;
-                            }
-
-                            if (!strcmp(prop->name, "COLOR_ENCODING")) {
-                                m_ColorEncodingProp = prop;
-                            }
-                            else if (!strcmp(prop->name, "COLOR_RANGE")) {
-                                m_ColorRangeProp = prop;
-                            }
-                            else {
-                                drmModeFreeProperty(prop);
-                            }
+                    // Don't consider cursor planes when searching for the highest active zpos
+                    uint64_t type;
+                    if (getPropertyByName(props, "type", &type) && (type == DRM_PLANE_TYPE_PRIMARY || type == DRM_PLANE_TYPE_OVERLAY)) {
+                        uint64_t zPos;
+                        if (getPropertyByName(props, "zpos", &zPos) && zPos > maxActiveZpos) {
+                            maxActiveZpos = zPos;
                         }
                     }
 
@@ -475,12 +553,76 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 }
             }
 
-            // Store the plane details for use during render format testing
-            if (m_PlaneId != 0) {
-                m_Plane = plane;
-            }
-            else {
+            drmModeFreePlane(plane);
+        }
+    }
+
+    // The Spacemit K1 driver is broken and advertises support for NV12/P010
+    // formats with the linear modifier on all planes, but doesn't actually
+    // support raw YUV formats on the primary plane. Don't ever use primary
+    // planes on Spacemit hardware to avoid triggering this bug.
+    bool ok, allowPrimaryPlane = !!qEnvironmentVariableIntValue("DRM_ALLOW_PRIMARY_PLANE", &ok);
+    if (!ok) {
+        allowPrimaryPlane = strcmp(m_Version->name, "spacemit") != 0;
+    }
+
+    // Find a plane with the required format to render on
+    //
+    // FIXME: We should check the actual DRM format in a real AVFrame rather
+    // than just assuming it will be a certain hardcoded type like NV12 based
+    // on the chosen video format.
+    for (uint32_t i = 0; i < planeRes->count_planes && !m_PlaneId; i++) {
+        drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
+        if (plane != nullptr) {
+            // If the plane can't be used on our CRTC, don't consider it further
+            if (!(plane->possible_crtcs & (1 << crtcIndex))) {
                 drmModeFreePlane(plane);
+                continue;
+            }
+
+            // We don't check plane->crtc_id here because we want to be able to reuse the primary plane
+            // that may owned by Qt and in use on a CRTC prior to us taking over DRM master. When we give
+            // control back to Qt, it will repopulate the plane with the FB it owns and render as normal.
+
+            // Validate that the candidate plane supports our pixel format
+            m_SupportedPlaneFormats.clear();
+            for (uint32_t j = 0; j < plane->count_formats; j++) {
+                if (drmFormatMatchesVideoFormat(plane->formats[j], m_VideoFormat)) {
+                    m_SupportedPlaneFormats.emplace(plane->formats[j]);
+                }
+            }
+
+            if (m_SupportedPlaneFormats.empty()) {
+                drmModeFreePlane(plane);
+                continue;
+            }
+
+            drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
+            if (props != nullptr) {
+                uint64_t type;
+                uint64_t zPos;
+
+                // Only consider overlay and primary (if allowed) planes as valid render targets
+                if (!getPropertyByName(props, "type", &type) ||
+                        (type != DRM_PLANE_TYPE_OVERLAY && (type != DRM_PLANE_TYPE_PRIMARY || !allowPrimaryPlane))) {
+                    drmModeFreePlane(plane);
+                }
+                // If this plane has a zpos property and it's lower (further from user) than
+                // the highest active plane we found, avoid this plane. It won't be visible.
+                //
+                // Note: zpos is not a required property, but if any plane has it, all planes must.
+                else if (getPropertyByName(props, "zpos", &zPos) && zPos < maxActiveZpos) {
+                    drmModeFreePlane(plane);
+                }
+                else {
+                    SDL_assert(!m_PlaneId);
+                    SDL_assert(!m_Plane);
+
+                    m_PlaneId = plane->plane_id;
+                    m_Plane = plane;
+                }
+
+                drmModeFreeObjectProperties(props);
             }
         }
     }
@@ -489,51 +631,77 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
     if (m_PlaneId == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to find suitable overlay plane!");
+                     "Failed to find suitable primary/overlay plane!");
         return DIRECT_RENDERING_INIT_FAILED;
     }
 
-    drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR);
-    if (props != nullptr) {
-        for (uint32_t j = 0; j < props->count_props; j++) {
-            drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
-            if (prop != nullptr) {
-                if (!strcmp(prop->name, "HDR_OUTPUT_METADATA")) {
-                    m_HdrOutputMetadataProp = prop;
-                }
-                else if (!strcmp(prop->name, "Colorspace")) {
-                    m_ColorspaceProp = prop;
-                }
-                else if (!strcmp(prop->name, "max bpc") && m_Main10Hdr) {
-                    if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 16) == 0) {
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Enabled 48-bit HDMI Deep Color");
+    // Populate plane properties
+    {
+        drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, m_PlaneId, DRM_MODE_OBJECT_PLANE);
+        if (props != nullptr) {
+            for (uint32_t j = 0; j < props->count_props; j++) {
+                drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
+                if (prop != nullptr) {
+                    if (!strcmp(prop->name, "COLOR_ENCODING")) {
+                        m_ColorEncodingProp = prop;
                     }
-                    else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 12) == 0) {
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Enabled 36-bit HDMI Deep Color");
-                    }
-                    else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 10) == 0) {
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Enabled 30-bit HDMI Deep Color");
+                    else if (!strcmp(prop->name, "COLOR_RANGE")) {
+                        m_ColorRangeProp = prop;
                     }
                     else {
-                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                     "drmModeObjectSetProperty(%s) failed: %d",
-                                     prop->name,
-                                     errno);
-                        // Non-fatal
+                        drmModeFreeProperty(prop);
                     }
-
-                    drmModeFreeProperty(prop);
-                }
-                else {
-                    drmModeFreeProperty(prop);
                 }
             }
-        }
 
-        drmModeFreeObjectProperties(props);
+            drmModeFreeObjectProperties(props);
+        }
+    }
+
+    // Populate connector properties
+    {
+        drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR);
+        if (props != nullptr) {
+            for (uint32_t j = 0; j < props->count_props; j++) {
+                drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
+                if (prop != nullptr) {
+                    if (!strcmp(prop->name, "HDR_OUTPUT_METADATA")) {
+                        m_HdrOutputMetadataProp = prop;
+                    }
+                    else if (!strcmp(prop->name, "Colorspace")) {
+                        m_ColorspaceProp = prop;
+                    }
+                    else if (!strcmp(prop->name, "max bpc") && (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT)) {
+                        if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 16) == 0) {
+                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Enabled 48-bit HDMI Deep Color");
+                        }
+                        else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 12) == 0) {
+                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Enabled 36-bit HDMI Deep Color");
+                        }
+                        else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 10) == 0) {
+                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Enabled 30-bit HDMI Deep Color");
+                        }
+                        else {
+                            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                         "drmModeObjectSetProperty(%s) failed: %d",
+                                         prop->name,
+                                         errno);
+                            // Non-fatal
+                        }
+
+                        drmModeFreeProperty(prop);
+                    }
+                    else {
+                        drmModeFreeProperty(prop);
+                    }
+                }
+            }
+
+            drmModeFreeObjectProperties(props);
+        }
     }
 
     // If we got this far, we can do direct rendering via the DRM FD.
@@ -559,7 +727,7 @@ enum AVPixelFormat DrmRenderer::getPreferredPixelFormat(int videoFormat)
 }
 
 bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) {
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
         return pixelFormat == AV_PIX_FMT_DRM_PRIME;
     }
     else if (m_DrmPrimeBackend) {
@@ -568,16 +736,24 @@ bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
     else {
         // If we're going to need to map this as a software frame, check
         // against the set of formats we support in mapSoftwareFrame().
-        switch (pixelFormat) {
-        case AV_PIX_FMT_DRM_PRIME:
-        case AV_PIX_FMT_NV12:
-        case AV_PIX_FMT_NV21:
-        case AV_PIX_FMT_P010:
-        case AV_PIX_FMT_YUV420P:
-        case AV_PIX_FMT_YUVJ420P:
+        if (pixelFormat == AV_PIX_FMT_DRM_PRIME) {
+            // AV_PIX_FMT_DRM_PRIME is always supported
             return true;
-        default:
-            return false;
+        }
+        else {
+            auto avToDrmTuple = k_AvToDrmFormatMap.find(pixelFormat);
+            if (avToDrmTuple == k_AvToDrmFormatMap.end()) {
+                return false;
+            }
+
+            // If we've been called after initialize(), use the actual supported plane formats
+            if (!m_SupportedPlaneFormats.empty()) {
+                return m_SupportedPlaneFormats.find(avToDrmTuple->second) != m_SupportedPlaneFormats.end();
+            }
+            else {
+                // If we've been called before initialize(), use any valid plane format for our video formats
+                return drmFormatMatchesVideoFormat(avToDrmTuple->second, videoFormat);
+            }
         }
     }
 }
@@ -599,7 +775,7 @@ int DrmRenderer::getRendererAttributes()
     // Restrict streaming resolution to 1080p on the Pi 4 while in the desktop environment.
     // EGL performance is extremely poor and just barely hits 1080p60 on Bookworm. This also
     // covers the MMAL H.264 case which maxes out at 1080p60 too.
-    if (!m_SupportsDirectRendering &&
+    if (!m_SupportsDirectRendering && m_Version &&
             (strcmp(m_Version->name, "vc4") == 0 || strcmp(m_Version->name, "v3d") == 0) &&
             qgetenv("RPI_ALLOW_EGL_4K") != "1") {
         drmDevicePtr device;
@@ -730,34 +906,11 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         freeFrame = false;
     }
 
-    uint32_t drmFormat;
-    bool fullyPlanar;
-    int bpc;
+    const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get((AVPixelFormat) frame->format);
+    int planes = av_pix_fmt_count_planes((AVPixelFormat) frame->format);
 
-    // NB: Keep this list updated with isPixelFormatSupported()
-    switch (frame->format) {
-    case AV_PIX_FMT_NV12:
-        drmFormat = DRM_FORMAT_NV12;
-        fullyPlanar = false;
-        bpc = 8;
-        break;
-    case AV_PIX_FMT_NV21:
-        drmFormat = DRM_FORMAT_NV21;
-        fullyPlanar = false;
-        bpc = 8;
-        break;
-    case AV_PIX_FMT_P010:
-        drmFormat = DRM_FORMAT_P010;
-        fullyPlanar = false;
-        bpc = 16;
-        break;
-    case AV_PIX_FMT_YUV420P:
-    case AV_PIX_FMT_YUVJ420P:
-        drmFormat = DRM_FORMAT_YUV420;
-        fullyPlanar = true;
-        bpc = 8;
-        break;
-    default:
+    auto drmFormatTuple = k_AvToDrmFormatMap.find((AVPixelFormat) frame->format);
+    if (drmFormatTuple == k_AvToDrmFormatMap.end()) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to map frame with unsupported format: %d",
                      frame->format);
@@ -769,8 +922,17 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         struct drm_mode_create_dumb createBuf = {};
 
         createBuf.width = frame->width;
-        createBuf.height = frame->height * 2; // Y + CbCr at 2x2 subsampling
-        createBuf.bpp = bpc;
+        createBuf.height = frame->height;
+        createBuf.bpp = formatDesc->comp[0].step * 8;
+
+        // For planar formats, we need to add additional space to the "height"
+        // of the dumb buffer to account for the chroma plane(s). Chroma for
+        // packed formats is already covered by the bpp value since the step
+        // value of the Y component will also include the space for chroma
+        // since it's all packed into a single plane.
+        if (planes > 1) {
+            createBuf.height += (2 * AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h));
+        }
 
         int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_CREATE_DUMB, &createBuf);
         if (err < 0) {
@@ -840,7 +1002,7 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         mappedFrame->nb_layers = 1;
 
         auto &layer = mappedFrame->layers[0];
-        layer.format = drmFormat;
+        layer.format = drmFormatTuple->second;
 
         // Prepare to write to the dumb buffer from the CPU
         struct dma_buf_sync sync;
@@ -861,18 +1023,16 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                     planeHeight = frame->height;
                     plane.pitch = drmFrame->pitch;
                 }
-                else if (fullyPlanar) {
-                    // U/V planes are 2x2 subsampled
-                    planeHeight = frame->height / 2;
-                    plane.pitch = drmFrame->pitch / 2;
-                }
                 else {
-                    // UV/VU planes are 2x2 subsampled.
-                    //
-                    // NB: The pitch is the same between Y and UV/VU, because the 2x subsampling
-                    // is cancelled out by the 2x plane size of UV/VU vs U/V alone.
-                    planeHeight = frame->height / 2;
-                    plane.pitch = drmFrame->pitch;
+                    planeHeight = AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h);
+
+                    // First argument to AV_CEIL_RSHIFT() *must* be signed for correct behavior!
+                    plane.pitch = AV_CEIL_RSHIFT((ptrdiff_t)drmFrame->pitch, formatDesc->log2_chroma_w);
+
+                    // If UV planes are interleaved, double the pitch to count both U+V together
+                    if (planes == 2) {
+                        plane.pitch <<= 1;
+                    }
                 }
 
                 // Copy the plane data into the dumb buffer
@@ -1027,10 +1187,35 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
     }
 }
 
+bool DrmRenderer::drmFormatMatchesVideoFormat(uint32_t drmFormat, int videoFormat)
+{
+    auto drmToAvTuple = k_DrmToAvFormatMap.find(drmFormat);
+    if (drmToAvTuple == k_DrmToAvFormatMap.end()) {
+        return false;
+    }
+
+    const int expectedPixelDepth = (videoFormat & VIDEO_FORMAT_MASK_10BIT) ? 10 : 8;
+    const int expectedLog2ChromaW = (videoFormat & VIDEO_FORMAT_MASK_YUV444) ? 0 : 1;
+    const int expectedLog2ChromaH = (videoFormat & VIDEO_FORMAT_MASK_YUV444) ? 0 : 1;
+
+    const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get(drmToAvTuple->second);
+    if (!formatDesc) {
+        // This shouldn't be possible but handle it anyway
+        SDL_assert(formatDesc);
+        return false;
+    }
+
+    return formatDesc->comp[0].depth == expectedPixelDepth &&
+           formatDesc->log2_chroma_w == expectedLog2ChromaW &&
+           formatDesc->log2_chroma_h == expectedLog2ChromaH;
+}
+
 void DrmRenderer::renderFrame(AVFrame* frame)
 {
     int err;
     SDL_Rect src, dst;
+
+    SDL_assert(m_OutputRect.w > 0 && m_OutputRect.h > 0);
 
     src.x = src.y = 0;
     src.w = frame->width;
@@ -1190,16 +1375,20 @@ bool DrmRenderer::isDirectRenderingSupported()
 
 int DrmRenderer::getDecoderColorspace()
 {
-    // The starfive driver used on the VisionFive 2 doesn't support BT.601,
-    // so we will use BT.709 instead. Rockchip doesn't support BT.709, even
-    // in some cases where it exposes COLOR_ENCODING properties, so we stick
-    // to BT.601 which seems to be the default for YUV planes on Linux.
-    if (strcmp(m_Version->name, "starfive") == 0) {
-        return COLORSPACE_REC_709;
+    if (m_ColorEncodingProp != nullptr) {
+        // Search for a COLOR_ENCODING property that fits a value we support
+        for (int i = 0; i < m_ColorEncodingProp->count_enums; i++) {
+            if (!strcmp(m_ColorEncodingProp->enums[i].name, "ITU-R BT.601 YCbCr")) {
+                return COLORSPACE_REC_601;
+            }
+            else if (!strcmp(m_ColorEncodingProp->enums[i].name, "ITU-R BT.709 YCbCr")) {
+                return COLORSPACE_REC_709;
+            }
+        }
     }
-    else {
-        return COLORSPACE_REC_601;
-    }
+
+    // Default to BT.601 if we couldn't find a valid COLOR_ENCODING property
+    return COLORSPACE_REC_601;
 }
 
 const char* DrmRenderer::getDrmColorEncodingValue(AVFrame* frame)
@@ -1234,7 +1423,7 @@ bool DrmRenderer::canExportEGL() {
                     "Using EGL rendering due to environment variable");
         return true;
     }
-    else if (m_SupportsDirectRendering && m_Main10Hdr) {
+    else if (m_SupportsDirectRendering && (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using direct rendering for HDR support");
         return false;

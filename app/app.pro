@@ -12,10 +12,13 @@ include(../globaldefs.pri)
 
 # Precompile QML files to avoid writing qmlcache on portable versions.
 # Since this binds the app against the Qt runtime version, we will only
-# do this for Windows and Mac, since they ship with the Qt runtime.
-win32|macx {
-    CONFIG(release, debug|release) {
-        CONFIG += qtquickcompiler
+# do this for Windows and Mac (when disable-prebuilts is not defined),
+# since they always ship with the matching build of the Qt runtime.
+!disable-prebuilts {
+    win32|macx {
+        CONFIG(release, debug|release) {
+            CONFIG += qtquickcompiler
+        }
     }
 }
 
@@ -52,7 +55,7 @@ win32 {
     # Work around a conflict with math.h inclusion between SDL and Qt 6
     DEFINES += _USE_MATH_DEFINES
 }
-macx {
+macx:!disable-prebuilts {
     INCLUDEPATH += $$PWD/../libs/mac/include
     INCLUDEPATH += $$PWD/../libs/mac/Frameworks/SDL2.framework/Versions/A/Headers
     INCLUDEPATH += $$PWD/../libs/mac/Frameworks/SDL2_ttf.framework/Versions/A/Headers
@@ -64,13 +67,18 @@ macx {
     QMAKE_OBJECTIVE_CFLAGS += -F$$PWD/../libs/mac/Frameworks
 }
 
-unix:!macx {
+unix:if(!macx|disable-prebuilts) {
     CONFIG += link_pkgconfig
-    PKGCONFIG += openssl sdl2 SDL2_ttf opus
+    PKGCONFIG += openssl sdl2 SDL2_ttf
+
+    # We have our own optimized libopus.a for Steam Link
+    if(!config_SL|disable-prebuilts) {
+        PKGCONFIG += opus
+    }
 
     !disable-ffmpeg {
         packagesExist(libavcodec) {
-            PKGCONFIG += libavcodec libavutil
+            PKGCONFIG += libavcodec libavutil libswscale
             CONFIG += ffmpeg
 
             !disable-libva {
@@ -145,20 +153,24 @@ unix:!macx {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ldxgi -ld3d11
-    CONFIG += ffmpeg
+    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lswscale -lopus -ldxgi -ld3d11 -llibplacebo
+    CONFIG += ffmpeg libplacebo
 }
 win32:!winrt {
     CONFIG += soundio discord-rpc
 }
 macx {
-    LIBS += -lssl -lcrypto -lavcodec.61 -lavutil.59 -lopus -framework SDL2 -framework SDL2_ttf
+    !disable-prebuilts {
+        LIBS += -lssl.3 -lcrypto.3 -lavcodec.61 -lavutil.59 -lswscale.8 -lopus -framework SDL2 -framework SDL2_ttf
+        CONFIG += discord-rpc
+    }
+
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework QuartzCore
 
     # For libsoundio
     LIBS += -framework CoreAudio -framework AudioUnit
 
-    CONFIG += ffmpeg soundio discord-rpc
+    CONFIG += ffmpeg soundio
 }
 
 SOURCES += \
@@ -202,6 +214,7 @@ SOURCES += \
     wm.cpp
 
 HEADERS += \
+    SDL_compat.h \
     backend/nvaddress.h \
     backend/nvapp.h \
     cli/pair.h \
@@ -243,6 +256,7 @@ ffmpeg {
     DEFINES += HAVE_FFMPEG
     SOURCES += \
         streaming/video/ffmpeg.cpp \
+        streaming/video/ffmpeg-renderers/genhwaccel.cpp \
         streaming/video/ffmpeg-renderers/sdlvid.cpp \
         streaming/video/ffmpeg-renderers/swframemapper.cpp \
         streaming/video/ffmpeg-renderers/pacer/pacer.cpp
@@ -250,6 +264,7 @@ ffmpeg {
     HEADERS += \
         streaming/video/ffmpeg.h \
         streaming/video/ffmpeg-renderers/renderer.h \
+        streaming/video/ffmpeg-renderers/genhwaccel.h \
         streaming/video/ffmpeg-renderers/sdlvid.h \
         streaming/video/ffmpeg-renderers/swframemapper.h \
         streaming/video/ffmpeg-renderers/pacer/pacer.h
@@ -355,6 +370,13 @@ config_EGL {
 config_SL {
     message(Steam Link build configuration selected)
 
+    !disable-prebuilts {
+        # Link against our NEON-optimized libopus build
+        LIBS += -L$$PWD/../libs/steamlink/lib
+        INCLUDEPATH += $$PWD/../libs/steamlink/include
+        LIBS += -lopus -larmasm -lNE10
+    }
+
     DEFINES += EMBEDDED_BUILD STEAM_LINK HAVE_SLVIDEO HAVE_SLAUDIO
     LIBS += -lSLVideo -lSLAudio
 
@@ -385,6 +407,7 @@ macx {
     message(VideoToolbox renderer selected)
 
     SOURCES += \
+        streaming/video/ffmpeg-renderers/vt_base.mm \
         streaming/video/ffmpeg-renderers/vt_avsamplelayer.mm \
         streaming/video/ffmpeg-renderers/vt_metal.mm
 
@@ -461,7 +484,9 @@ TRANSLATIONS += \
     languages/qml_pl.ts \
     languages/qml_cs.ts \
     languages/qml_he.ts \
-    languages/qml_ckb.ts
+    languages/qml_ckb.ts \
+    languages/qml_lt.ts \
+    languages/qml_et.ts
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
@@ -550,15 +575,19 @@ macx {
     APP_BUNDLE_RESOURCES.files = moonlight.icns
     APP_BUNDLE_RESOURCES.path = Contents/Resources
 
-    APP_BUNDLE_FRAMEWORKS.files = $$files(../libs/mac/Frameworks/*.framework, true) $$files(../libs/mac/lib/*.dylib, true)
-    APP_BUNDLE_FRAMEWORKS.path = Contents/Frameworks
-
     APP_BUNDLE_PLIST.files = $$OUT_PWD/Info.plist
     APP_BUNDLE_PLIST.path = Contents
 
-    QMAKE_BUNDLE_DATA += APP_BUNDLE_RESOURCES APP_BUNDLE_FRAMEWORKS APP_BUNDLE_PLIST
+    QMAKE_BUNDLE_DATA += APP_BUNDLE_RESOURCES APP_BUNDLE_PLIST
 
-    QMAKE_RPATHDIR += @executable_path/../Frameworks
+    !disable-prebuilts {
+        APP_BUNDLE_FRAMEWORKS.files = $$files(../libs/mac/Frameworks/*.framework, true) $$files(../libs/mac/lib/*.dylib, true)
+        APP_BUNDLE_FRAMEWORKS.path = Contents/Frameworks
+
+        QMAKE_BUNDLE_DATA += APP_BUNDLE_FRAMEWORKS
+
+        QMAKE_RPATHDIR += @executable_path/../Frameworks
+    }
 }
 
 VERSION = "$$cat(version.txt)"

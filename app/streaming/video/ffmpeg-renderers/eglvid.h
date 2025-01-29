@@ -14,6 +14,7 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void cleanupRenderContext() override;
     virtual void waitToRender() override;
+    virtual void prepareToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
@@ -30,7 +31,6 @@ private:
     const float *getColorOffsets(const AVFrame* frame);
     const float *getColorMatrix(const AVFrame* frame);
     static int loadAndBuildShader(int shaderType, const char *filename);
-    bool openDisplay(unsigned int platform, void* nativeDisplay);
 
     AVPixelFormat m_EGLImagePixelFormat;
     void *m_EGLDisplay;

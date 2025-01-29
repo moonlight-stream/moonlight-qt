@@ -7,11 +7,19 @@
 
 #include <SDL_syswm.h>
 
+extern "C" {
+#include <libavutil/pixdesc.h>
+#include <libavutil/opt.h>
+}
+
 SdlRenderer::SdlRenderer()
     : m_VideoFormat(0),
       m_Renderer(nullptr),
       m_Texture(nullptr),
       m_ColorSpace(-1),
+      m_NeedsYuvToRgbConversion(false),
+      m_SwsContext(nullptr),
+      m_RgbFrame(av_frame_alloc()),
       m_SwFrameMapper(this)
 {
     SDL_zero(m_OverlayTextures);
@@ -35,6 +43,9 @@ SdlRenderer::~SdlRenderer()
         }
     }
 
+    av_frame_free(&m_RgbFrame);
+    sws_freeContext(m_SwsContext);
+
     if (m_Texture != nullptr) {
         SDL_DestroyTexture(m_Texture);
     }
@@ -52,6 +63,14 @@ bool SdlRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
                 "Using SDL renderer");
 
     return true;
+}
+
+void SdlRenderer::prepareToRender()
+{
+    // Draw a black frame until the video stream starts rendering
+    SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(m_Renderer);
+    SDL_RenderPresent(m_Renderer);
 }
 
 bool SdlRenderer::isRenderThreadSupported()
@@ -72,19 +91,40 @@ bool SdlRenderer::isRenderThreadSupported()
     return true;
 }
 
-bool SdlRenderer::isPixelFormatSupported(int, AVPixelFormat pixelFormat)
+bool SdlRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
-    // Remember to keep this in sync with SdlRenderer::renderFrame()!
-    switch (pixelFormat)
-    {
-    case AV_PIX_FMT_YUV420P:
-    case AV_PIX_FMT_YUVJ420P:
-    case AV_PIX_FMT_NV12:
-    case AV_PIX_FMT_NV21:
-        return true;
+    if (videoFormat & (VIDEO_FORMAT_MASK_10BIT | VIDEO_FORMAT_MASK_YUV444)) {
+        // SDL2 can't natively handle textures with these formats, but we can perform
+        // conversion on the CPU using swscale then upload them as an RGB texture.
+        const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get(pixelFormat);
+        if (!formatDesc) {
+            SDL_assert(formatDesc);
+            return false;
+        }
 
-    default:
-        return false;
+        const int expectedPixelDepth = (videoFormat & VIDEO_FORMAT_MASK_10BIT) ? 10 : 8;
+        const int expectedLog2ChromaW = (videoFormat & VIDEO_FORMAT_MASK_YUV444) ? 0 : 1;
+        const int expectedLog2ChromaH = (videoFormat & VIDEO_FORMAT_MASK_YUV444) ? 0 : 1;
+
+        return formatDesc->comp[0].depth == expectedPixelDepth &&
+               formatDesc->log2_chroma_w == expectedLog2ChromaW &&
+               formatDesc->log2_chroma_h == expectedLog2ChromaH;
+    }
+    else {
+        // The formats listed below are natively supported by SDL, so it can handle
+        // YUV to RGB conversion on the GPU using pixel shaders.
+        //
+        // Remember to keep this in sync with SdlRenderer::renderFrame()!
+        switch (pixelFormat) {
+        case AV_PIX_FMT_YUV420P:
+        case AV_PIX_FMT_YUVJ420P:
+        case AV_PIX_FMT_NV12:
+        case AV_PIX_FMT_NV21:
+            return true;
+
+        default:
+            return false;
+        }
     }
 }
 
@@ -96,7 +136,7 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     m_SwFrameMapper.setVideoFormat(m_VideoFormat);
 
     if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
-        // SDL doesn't support rendering YUV 10-bit textures yet
+        // SDL doesn't support rendering HDR yet
         return false;
     }
 
@@ -165,13 +205,6 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_FlushEvent(SDL_WINDOWEVENT);
     }
 
-    if (!params->testOnly) {
-        // Draw a black frame until the video stream starts rendering
-        SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(m_Renderer);
-        SDL_RenderPresent(m_Renderer);
-    }
-
 #ifdef Q_OS_WIN32
     // For some reason, using Direct3D9Ex breaks this with multi-monitor setups.
     // When focus is lost, the window is minimized then immediately restored without
@@ -221,6 +254,11 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
             SDL_RenderCopy(m_Renderer, m_OverlayTextures[type], nullptr, &m_OverlayRects[type]);
         }
     }
+}
+
+void SdlRenderer::ffNoopFree(void*, uint8_t*)
+{
+    // Nothing
 }
 
 void SdlRenderer::renderFrame(AVFrame* frame)
@@ -276,6 +314,7 @@ ReadbackRetry:
         Uint32 sdlFormat;
 
         // Remember to keep this in sync with SdlRenderer::isPixelFormatSupported()!
+        m_NeedsYuvToRgbConversion = false;
         switch (frame->format)
         {
         case AV_PIX_FMT_YUV420P:
@@ -290,27 +329,90 @@ ReadbackRetry:
             sdlFormat = SDL_PIXELFORMAT_NV21;
             break;
         default:
-            SDL_assert(false);
-            goto Exit;
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Performing color conversion on CPU due to lack of SDL support for format: %s",
+                        av_get_pix_fmt_name((AVPixelFormat)frame->format));
+            sdlFormat = SDL_PIXELFORMAT_XRGB8888;
+            m_NeedsYuvToRgbConversion = true;
+            break;
         }
 
-        switch (colorspace)
-        {
-        case COLORSPACE_REC_709:
-            SDL_assert(!isFrameFullRange(frame));
-            SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT709);
-            break;
-        case COLORSPACE_REC_601:
-            if (isFrameFullRange(frame)) {
-                // SDL's JPEG mode is Rec 601 Full Range
-                SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_JPEG);
+        if (m_NeedsYuvToRgbConversion) {
+            m_RgbFrame->width = frame->width;
+            m_RgbFrame->height = frame->height;
+            m_RgbFrame->format = AV_PIX_FMT_BGR0;
+
+            sws_freeContext(m_SwsContext);
+
+#if LIBSWSCALE_VERSION_INT >= AV_VERSION_INT(6, 1, 100)
+            m_SwsContext = sws_alloc_context();
+            if (!m_SwsContext) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "sws_alloc_context() failed");
+                goto Exit;
             }
-            else {
-                SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT601);
+
+            AVDictionary *options { nullptr };
+            av_dict_set_int(&options, "srcw", frame->width, 0);
+            av_dict_set_int(&options, "srch", frame->height, 0);
+            av_dict_set_int(&options, "src_format", frame->format, 0);
+            av_dict_set_int(&options, "dstw", m_RgbFrame->width, 0);
+            av_dict_set_int(&options, "dsth", m_RgbFrame->height, 0);
+            av_dict_set_int(&options, "dst_format", m_RgbFrame->format, 0);
+            av_dict_set_int(&options, "threads", std::min(SDL_GetCPUCount(), 4), 0); // Up to 4 threads
+
+            err = av_opt_set_dict(m_SwsContext, &options);
+            av_dict_free(&options);
+            if (err < 0) {
+                char string[AV_ERROR_MAX_STRING_SIZE];
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "av_opt_set_dict() failed: %s",
+                             av_make_error_string(string, sizeof(string), err));
+                goto Exit;
             }
-            break;
-        default:
-            break;
+
+            err = sws_init_context(m_SwsContext, nullptr, nullptr);
+            if (err < 0) {
+                char string[AV_ERROR_MAX_STRING_SIZE];
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "sws_init_context() failed: %s",
+                             av_make_error_string(string, sizeof(string), err));
+                goto Exit;
+            }
+#else
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "CPU color conversion is slow on FFmpeg 4.x. Update FFmpeg for better performance.");
+
+            m_SwsContext = sws_getContext(frame->width, frame->height, (AVPixelFormat)frame->format,
+                                          m_RgbFrame->width, m_RgbFrame->height, (AVPixelFormat)m_RgbFrame->format,
+                                          0, nullptr, nullptr, nullptr);
+            if (!m_SwsContext) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "sws_getContext() failed");
+                goto Exit;
+            }
+#endif
+        }
+        else {
+            // SDL will perform YUV conversion on the GPU
+            switch (colorspace)
+            {
+            case COLORSPACE_REC_709:
+                SDL_assert(!isFrameFullRange(frame));
+                SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT709);
+                break;
+            case COLORSPACE_REC_601:
+                if (isFrameFullRange(frame)) {
+                    // SDL's JPEG mode is Rec 601 Full Range
+                    SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_JPEG);
+                }
+                else {
+                    SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT601);
+                }
+                break;
+            default:
+                break;
+            }
         }
 
         m_Texture = SDL_CreateTexture(m_Renderer,
@@ -361,7 +463,7 @@ ReadbackRetry:
                              frame->data[2],
                              frame->linesize[2]);
     }
-    else {
+    else if (!m_NeedsYuvToRgbConversion) {
 #if SDL_VERSION_ATLEAST(2, 0, 15)
         // SDL_UpdateNVTexture is not supported on all renderer backends,
         // (notably not DX9), so we must have a fallback in case it's not
@@ -418,6 +520,45 @@ ReadbackRetry:
             }
 
             SDL_UnlockTexture(m_Texture);
+        }
+    }
+    else {
+        // We have a pixel format that SDL doesn't natively support, so we must use
+        // swscale to convert the YUV frame into an RGB frame to upload to the GPU.
+        uint8_t* pixels;
+        int texturePitch;
+
+        err = SDL_LockTexture(m_Texture, nullptr, (void**)&pixels, &texturePitch);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_LockTexture() failed: %s",
+                         SDL_GetError());
+            goto Exit;
+        }
+
+        // Create a buffer to wrap our locked texture buffer
+        m_RgbFrame->buf[0] = av_buffer_create(pixels, m_RgbFrame->height * texturePitch, ffNoopFree, nullptr, 0);
+        m_RgbFrame->data[0] = pixels;
+        m_RgbFrame->linesize[0] = texturePitch;
+
+#if LIBSWSCALE_VERSION_INT >= AV_VERSION_INT(6, 1, 100)
+        // Perform multi-threaded color conversion into the locked texture buffer
+        err = sws_scale_frame(m_SwsContext, m_RgbFrame, frame);
+#else
+        // Perform a single-threaded color conversion using the legacy swscale API
+        err = sws_scale(m_SwsContext, frame->data, frame->linesize, 0, frame->height,
+                        m_RgbFrame->data, m_RgbFrame->linesize);
+#endif
+
+        av_buffer_unref(&m_RgbFrame->buf[0]);
+        SDL_UnlockTexture(m_Texture);
+
+        if (err < 0) {
+            char string[AV_ERROR_MAX_STRING_SIZE];
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "sws_scale_frame() failed: %s",
+                         av_make_error_string(string, AV_ERROR_MAX_STRING_SIZE, err));
+            goto Exit;
         }
     }
 
@@ -495,6 +636,11 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
 
 bool SdlRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 {
-    // We can transparently handle size and display changes
+    // We can transparently handle size and display changes, except Windows where
+    // changing size appears to break the renderer (maybe due to the render thread?)
+#ifdef Q_OS_WIN32
+    return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_DISPLAY));
+#else
     return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_SIZE | WINDOW_STATE_CHANGE_DISPLAY));
+#endif
 }

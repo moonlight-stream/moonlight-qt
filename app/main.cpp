@@ -17,7 +17,7 @@
 // doing the same thing. This needs to be before any headers
 // that might include SDL.h themselves.
 #define SDL_MAIN_HANDLED
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #ifdef HAVE_FFMPEG
 #include "streaming/video/ffmpeg.h"
@@ -25,6 +25,9 @@
 
 #if defined(Q_OS_WIN32)
 #include "antihookingprotection.h"
+
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #elif defined(Q_OS_LINUX)
 #include <openssl/ssl.h>
 #endif
@@ -59,47 +62,73 @@
 
 static QElapsedTimer s_LoggerTime;
 static QTextStream s_LoggerStream(stderr);
-static QMutex s_LoggerLock;
+static QThreadPool s_LoggerThread;
 static bool s_SuppressVerboseOutput;
 static QRegularExpression k_RikeyRegex("&rikey=\\w+");
 static QRegularExpression k_RikeyIdRegex("&rikeyid=[\\d-]+");
 #ifdef LOG_TO_FILE
 // Max log file size of 10 MB
-#define MAX_LOG_SIZE_BYTES (10 * 1024 * 1024)
-static int s_LogBytesWritten = 0;
-static bool s_LogLimitReached = false;
+static const uint64_t k_MaxLogSizeBytes = 10 * 1024 * 1024;
+static QAtomicInteger<uint64_t> s_LogBytesWritten = 0;
 static QFile* s_LoggerFile;
 #endif
 
+class LoggerTask : public QRunnable
+{
+public:
+    LoggerTask(const QString& msg) : m_Msg(msg)
+    {
+        setAutoDelete(true);
+    }
+
+    void run() override
+    {
+        s_LoggerStream << m_Msg;
+        s_LoggerStream.flush();
+    }
+
+private:
+    QString m_Msg;
+};
+
 void logToLoggerStream(QString& message)
 {
-    QMutexLocker lock(&s_LoggerLock);
+#if defined(QT_DEBUG) && defined(Q_OS_WIN32)
+    // Output log messages to a debugger if attached
+    if (IsDebuggerPresent()) {
+        static QString lineBuffer;
+        lineBuffer += message;
+        if (message.endsWith('\n')) {
+            OutputDebugStringW(lineBuffer.toStdWString().c_str());
+            lineBuffer.clear();
+        }
+    }
+#endif
 
     // Strip session encryption keys and IVs from the logs
     message.replace(k_RikeyRegex, "&rikey=REDACTED");
     message.replace(k_RikeyIdRegex, "&rikeyid=REDACTED");
 
 #ifdef LOG_TO_FILE
-    if (s_LogLimitReached) {
+    auto oldLogSize = s_LogBytesWritten.fetchAndAddRelaxed(message.size());
+    if (oldLogSize >= k_MaxLogSizeBytes) {
         return;
     }
-    else if (s_LogBytesWritten >= MAX_LOG_SIZE_BYTES) {
+    else if (oldLogSize >= k_MaxLogSizeBytes - message.size()) {
+        s_LoggerThread.waitForDone();
         s_LoggerStream << "Log size limit reached!";
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
         s_LoggerStream << Qt::endl;
 #else
         s_LoggerStream << endl;
 #endif
-        s_LogLimitReached = true;
+        s_LoggerStream.flush();
         return;
-    }
-    else {
-        s_LogBytesWritten += message.size();
     }
 #endif
 
-    s_LoggerStream << message;
-    s_LoggerStream.flush();
+    // Queue the log message to be written asynchronously
+    s_LoggerThread.start(new LoggerTask(message));
 }
 
 void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const char* message)
@@ -329,6 +358,9 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    // Serialize log messages on a single thread
+    s_LoggerThread.setMaxThreadCount(1);
+
     s_LoggerTime.start();
     qInstallMessageHandler(qtLogToDiskHandler);
     SDL_LogSetOutputFunction(sdlLogToDiskHandler, nullptr);
@@ -420,9 +452,18 @@ int main(int argc, char *argv[])
 #endif
     }
 
+#ifndef Q_PROCESSOR_X86
+    // Some ARM and RISC-V embedded devices don't have working GLX which can cause
+    // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
+    // on non-x86 platforms, since GLX is deprecated anyway.
+    SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
+#endif
+
+#ifdef Q_OS_MACOS
     // This avoids using the default keychain for SSL, which may cause
     // password prompts on macOS.
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", "1");
+#endif
 
 #if defined(Q_OS_WIN32) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
@@ -466,19 +507,13 @@ int main(int argc, char *argv[])
     // initializing the SDL video subsystem to have any effect.
     SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
 
-    // For SDL backends that support it, use double buffering instead of triple buffering
-    // to save a frame of latency. This doesn't matter for MMAL or DRM renderers since they
-    // are drawing directly to the screen without involving SDL, but it may matter for other
-    // future KMSDRM platforms that use SDL for rendering.
-    SDL_SetHint(SDL_HINT_VIDEO_DOUBLE_BUFFER, "1");
-
     // We use MMAL to render on Raspberry Pi, so we do not require DRM master.
-    SDL_SetHint("SDL_KMSDRM_REQUIRE_DRM_MASTER", "0");
+    SDL_SetHint(SDL_HINT_KMSDRM_REQUIRE_DRM_MASTER, "0");
 
     // Use Direct3D 9Ex to avoid a deadlock caused by the D3D device being reset when
     // the user triggers a UAC prompt. This option controls the software/SDL renderer.
     // The DXVA2 renderer uses Direct3D 9Ex itself directly.
-    SDL_SetHint("SDL_WINDOWS_USE_D3D9EX", "1");
+    SDL_SetHint(SDL_HINT_WINDOWS_USE_D3D9EX, "1");
 
     if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -513,28 +548,28 @@ int main(int argc, char *argv[])
     // SDL 2.0.12 changes the default behavior to use the button label rather than the button
     // position as most other software does. Set this back to 0 to stay consistent with prior
     // releases of Moonlight.
-    SDL_SetHint("SDL_GAMECONTROLLER_USE_BUTTON_LABELS", "0");
+    SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
 
     // Disable relative mouse scaling to renderer size or logical DPI. We want to send
     // the mouse motion exactly how it was given to us.
-    SDL_SetHint("SDL_MOUSE_RELATIVE_SCALING", "0");
+    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_SCALING, "0");
 
     // Set our app name for SDL to use with PulseAudio and PipeWire. This matches what we
     // provide as our app name to libsoundio too. On SDL 2.0.18+, SDL_APP_NAME is also used
     // for screensaver inhibitor reporting.
-    SDL_SetHint("SDL_AUDIO_DEVICE_APP_NAME", "Moonlight");
-    SDL_SetHint("SDL_APP_NAME", "Moonlight");
+    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_APP_NAME, "Moonlight");
+    SDL_SetHint(SDL_HINT_APP_NAME, "Moonlight");
 
     // We handle capturing the mouse ourselves when it leaves the window, so we don't need
     // SDL doing it for us behind our backs.
-    SDL_SetHint("SDL_MOUSE_AUTO_CAPTURE", "0");
+    SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
 
     // SDL will try to lock the mouse cursor on Wayland if it's not visible in order to
     // support applications that assume they can warp the cursor (which isn't possible
     // on Wayland). We don't want this behavior because it interferes with seamless mouse
     // mode when toggling between windowed and fullscreen modes by unexpectedly locking
     // the mouse cursor.
-    SDL_SetHint("SDL_VIDEO_WAYLAND_EMULATE_MOUSE_WARP", "0");
+    SDL_SetHint(SDL_HINT_VIDEO_WAYLAND_EMULATE_MOUSE_WARP, "0");
 
 #ifdef QT_DEBUG
     // Allow thread naming using exceptions on debug builds. SDL doesn't use SEH
@@ -765,6 +800,9 @@ int main(int argc, char *argv[])
     // Give worker tasks time to properly exit. Fixes PendingQuitTask
     // sometimes freezing and blocking process exit.
     QThreadPool::globalInstance()->waitForDone(30000);
+
+    // Wait for pending log messages to be printed
+    s_LoggerThread.waitForDone();
 
 #ifdef Q_OS_WIN32
     // Without an explicit flush, console redirection for the list command

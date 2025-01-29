@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #include "streaming/video/decoder.h"
 #include "streaming/video/overlaymanager.h"
@@ -228,12 +228,14 @@ public:
 
     virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) {
         if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
-            // 10-bit YUV 4:2:0
-            return AV_PIX_FMT_P010;
+            return (videoFormat & VIDEO_FORMAT_MASK_YUV444) ?
+                AV_PIX_FMT_YUV444P10 : // 10-bit 3-plane YUV 4:4:4
+                AV_PIX_FMT_P010;       // 10-bit 2-plane YUV 4:2:0
         }
         else {
-            // Planar YUV 4:2:0
-            return AV_PIX_FMT_YUV420P;
+            return (videoFormat & VIDEO_FORMAT_MASK_YUV444) ?
+                       AV_PIX_FMT_YUV444P : // 8-bit 3-plane YUV 4:4:4
+                       AV_PIX_FMT_YUV420P;  // 8-bit 3-plane YUV 4:2:0
         }
     }
 
@@ -254,6 +256,12 @@ public:
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) {
         // Assume the renderer cannot handle window state changes
         return false;
+    }
+
+    virtual void prepareToRender() {
+        // Allow renderers to perform any final preparations for
+        // rendering after they have been selected to render. Such
+        // preparations might include clearing the window.
     }
 
     // Allow renderers to expose their type

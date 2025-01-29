@@ -375,6 +375,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("keep-awake", "prevent display sleep while streaming");
     parser.addToggleOption("performance-overlay", "show performance overlay");
     parser.addToggleOption("hdr", "HDR streaming");
+    parser.addToggleOption("yuv444", "YUV 4:4:4 sampling, if supported");
     parser.addChoiceOption("capture-system-keys", "capture system key combos", m_CaptureSysKeysModeMap.keys());
     parser.addChoiceOption("video-codec", "video codec", m_VideoCodecMap.keys());
     parser.addChoiceOption("video-decoder", "video decoder", m_VideoDecoderMap.keys());
@@ -413,20 +414,20 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --fps option
     if (parser.isSet("fps")) {
         preferences->fps = parser.getIntOption("fps");
-        if (!inRange(preferences->fps, 30, 240)) {
-            parser.showError("FPS must be in range: 30 - 240");
+        if (!inRange(preferences->fps, 10, 480)) {
+            fprintf(stderr, "Warning: FPS is out of the supported range (10 - 480 FPS). Performance may suffer!\n");
         }
     }
 
     // Resolve --bitrate option
     if (parser.isSet("bitrate")) {
         preferences->bitrateKbps = parser.getIntOption("bitrate");
-        if (!inRange(preferences->bitrateKbps, 500, 150000)) {
-            parser.showError("Bitrate must be in range: 500 - 150000");
+        if (!inRange(preferences->bitrateKbps, 500, 500000)) {
+            fprintf(stderr, "Warning: Bitrate is out of the supported range (500 - 500000 Kbps). Performance may suffer!\n");
         }
     } else if (displaySet || parser.isSet("fps")) {
         preferences->bitrateKbps = preferences->getDefaultBitrate(
-            preferences->width, preferences->height, preferences->fps);
+            preferences->width, preferences->height, preferences->fps, preferences->enableYUV444);
     }
 
     // Resolve --packet-size option
@@ -497,6 +498,9 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
 
     // Resolve --hdr and --no-hdr options
     preferences->enableHdr = parser.getToggleOptionValue("hdr", preferences->enableHdr);
+
+    // Resolve --yuv444 and --no-yuv444 options
+    preferences->enableYUV444 = parser.getToggleOptionValue("yuv444", preferences->enableYUV444);
     
     // Resolve --capture-system-keys option
     if (parser.isSet("capture-system-keys")) {

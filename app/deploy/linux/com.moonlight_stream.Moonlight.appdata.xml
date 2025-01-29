@@ -34,6 +34,78 @@
 	</screenshots>
 
 	<releases>
+		<release version="6.1.0" date="2024-09-16">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Experimental YUV 4:4:4 support for improved text clarity during remote desktop usage</li>
+					<li>HDR is now supported with software decoding (requires GPU with Vulkan support)</li>
+					<li>Bitrate limit can now be increased to 500 Mbps</li>
+					<li>Audio decoding now uses 32-bit floating point format</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed incorrect color range when streaming with AV1 from a host with an AMD GPU</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
+		<release version="6.0.1" date="2024-06-30">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>HDR to SDR tonemapping is now supported by the Vulkan renderer on Linux</li>
+				</ul>
+				<p>Behavior Changes:</p>
+				<ul>
+					<li>More time is now provided for PCs to wake up before displaying an error when starting a stream from the CLI</li>
+					<li>Moonlight will no longer try to guess VA driver names when running libva 2.20 or later</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed crash when the Vulkan renderer executed on a system with no Vulkan devices</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
+		<release version="6.0.0" date="2024-06-06">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>HDR is now supported on Steam Deck and other HDR-capable Linux systems using a new Vulkan-based renderer</li>
+					<li>Vulkan Video decoding of H.264, HEVC, and AV1 is now supported using the new Vulkan renderer</li>
+					<li>Full E2E stream encryption is now supported when streaming from Sunshine v0.22 or later</li>
+					<li>Initiating a stream via the command-line will now automatically wake the target machine if it is sleeping</li>
+					<li>Error codes are now displayed in the connection termination dialog</li>
+					<li>Detailed PC state information is now available via the new "View Details" context menu option (similar to the Android client)</li>
+					<li>The performance overlay can now be configured to be shown by default when starting a stream</li>
+				</ul>
+				<p>Behavior Changes:</p>
+				<ul>
+					<li>The selected bitrate is no longer silently adjusted by Moonlight based upon the video codec or HDR mode</li>
+					<li>The selected mouse mode when starting a stream no longer influences the acceleration curve when the mouse mode is toggled using the Ctrl+Alt+Shift+M key combo while streaming</li>
+					<li>Hardcoded fallback paths for VAAPI and VDPAU drivers are no longer used</li>
+					<li>Per-session keys (rikey and rikeyid values) are now automatically stripped from logs</li>
+					<li>Log messages will now be logged to stderr rather than stdout</li>
+					<li>EGL is now always used instead of GLX for loading OpenGL in X11 environments on non-x86 platforms</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Improved reliability of streaming during momentary drops of WiFi connections</li>
+					<li>Improved performance with high polling rate mice</li>
+					<li>Improved input latency when a gamepad is connected</li>
+					<li>Added missing command-line options to control HDR and AV1 codec usage</li>
+					<li>Fixed instant connection termination error when streaming over the Internet behind certain Carrier-Grade NAT devices</li>
+					<li>Fixed incorrect MTU detection when streaming over the Internet without a VPN</li>
+					<li>Fixed recovery of audio when no audio output device is present when the stream starts</li>
+					<li>Fixed merging of gamepad state when multi-controller mode is disabled</li>
+					<li>Fixed indefinitely resending mDNS queries when a host could not be resolved</li>
+					<li>Fixed inability to pair when the host is not using a RSA-2048 key</li>
+					<li>Updated included gamepad mappings</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="5.0.1" date="2023-11-02">
 			<description>
 				<p>Bugfixes:</p>

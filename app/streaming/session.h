@@ -11,6 +11,84 @@
 #include "audio/renderers/renderer.h"
 #include "video/overlaymanager.h"
 
+class SupportedVideoFormatList : public QList<int>
+{
+public:
+    operator int() const
+    {
+        int value = 0;
+
+        for (const int & v : *this) {
+            value |= v;
+        }
+
+        return value;
+    }
+
+    void
+    removeByMask(int mask)
+    {
+        int i = 0;
+        while (i < this->length()) {
+            if (this->value(i) & mask) {
+                this->removeAt(i);
+            }
+            else {
+                i++;
+            }
+        }
+    }
+
+    void
+    deprioritizeByMask(int mask)
+    {
+        QList<int> deprioritizedList;
+
+        int i = 0;
+        while (i < this->length()) {
+            if (this->value(i) & mask) {
+                deprioritizedList.append(this->takeAt(i));
+            }
+            else {
+                i++;
+            }
+        }
+
+        this->append(std::move(deprioritizedList));
+    }
+
+    int maskByServerCodecModes(int serverCodecModes)
+    {
+        int mask = 0;
+
+        const QMap<int, int> mapping = {
+            {SCM_H264, VIDEO_FORMAT_H264},
+            {SCM_H264_HIGH8_444, VIDEO_FORMAT_H264_HIGH8_444},
+            {SCM_HEVC, VIDEO_FORMAT_H265},
+            {SCM_HEVC_MAIN10, VIDEO_FORMAT_H265_MAIN10},
+            {SCM_HEVC_REXT8_444, VIDEO_FORMAT_H265_REXT8_444},
+            {SCM_HEVC_REXT10_444, VIDEO_FORMAT_H265_REXT10_444},
+            {SCM_AV1_MAIN8, VIDEO_FORMAT_AV1_MAIN8},
+            {SCM_AV1_MAIN10, VIDEO_FORMAT_AV1_MAIN10},
+            {SCM_AV1_HIGH8_444, VIDEO_FORMAT_AV1_HIGH8_444},
+            {SCM_AV1_HIGH10_444, VIDEO_FORMAT_AV1_HIGH10_444},
+        };
+
+        for (QMap<int, int>::const_iterator it = mapping.cbegin(); it != mapping.cend(); ++it) {
+            if (serverCodecModes & it.key()) {
+                mask |= it.value();
+                serverCodecModes &= ~it.key();
+            }
+        }
+
+        // Make sure nobody forgets to update this for new SCM values
+        SDL_assert(serverCodecModes == 0);
+
+        int val = *this;
+        return val & mask;
+    }
+};
+
 class Session : public QObject
 {
     Q_OBJECT
@@ -94,10 +172,16 @@ private:
 
     void updateOptimalWindowDisplayMode();
 
+    enum class DecoderAvailability {
+        None,
+        Software,
+        Hardware
+    };
+
     static
-    bool isHardwareDecodeAvailable(SDL_Window* window,
-                                   StreamingPreferences::VideoDecoderSelection vds,
-                                   int videoFormat, int width, int height, int frameRate);
+    DecoderAvailability getDecoderAvailability(SDL_Window* window,
+                                               StreamingPreferences::VideoDecoderSelection vds,
+                                               int videoFormat, int width, int height, int frameRate);
 
     static
     bool chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
@@ -158,6 +242,7 @@ private:
 
     StreamingPreferences* m_Preferences;
     bool m_IsFullScreen;
+    SupportedVideoFormatList m_SupportedVideoFormats; // Sorted in order of descending priority
     STREAM_CONFIGURATION m_StreamConfig;
     DECODER_RENDERER_CALLBACKS m_VideoCallbacks;
     AUDIO_RENDERER_CALLBACKS m_AudioCallbacks;
@@ -175,6 +260,7 @@ private:
     SdlInputHandler* m_InputHandler;
     int m_MouseEmulationRefCount;
     int m_FlushingWindowEventsRef;
+    QList<QString> m_LaunchWarnings;
 
     bool m_AsyncConnectionSuccess;
     int m_PortTestResults;

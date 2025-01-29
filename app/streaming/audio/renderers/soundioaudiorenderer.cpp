@@ -1,6 +1,6 @@
 #include "soundioaudiorenderer.h"
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #include <QtGlobal>
 
@@ -164,7 +164,7 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
 
     m_AudioPacketDuration = (opusConfig->samplesPerFrame / (opusConfig->sampleRate / 1000)) / 1000.0;
 
-    m_OutputStream->format = SoundIoFormatS16NE;
+    m_OutputStream->format = SoundIoFormatFloat32NE;
     m_OutputStream->sample_rate = opusConfig->sampleRate;
     m_OutputStream->software_latency = m_AudioPacketDuration;
     m_OutputStream->name = "Moonlight";
@@ -321,6 +321,11 @@ int SoundIoAudioRenderer::getCapabilities()
 {
     // TODO: Tweak buffer sizes then re-enable arbitrary audio duration
     return CAPABILITY_DIRECT_SUBMIT /* | CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION */;
+}
+
+IAudioRenderer::AudioFormat SoundIoAudioRenderer::getAudioBufferFormat()
+{
+    return AudioFormat::Float32NE;
 }
 
 void SoundIoAudioRenderer::sioErrorCallback(SoundIoOutStream* stream, int err)

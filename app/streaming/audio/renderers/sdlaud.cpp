@@ -1,7 +1,6 @@
 #include "sdl.h"
 
 #include <Limelight.h>
-#include <SDL.h>
 
 SdlAudioRenderer::SdlAudioRenderer()
     : m_AudioDevice(0),
@@ -23,7 +22,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
 
     SDL_zero(want);
     want.freq = opusConfig->sampleRate;
-    want.format = AUDIO_S16;
+    want.format = AUDIO_F32SYS;
     want.channels = opusConfig->channelCount;
 
     // On PulseAudio systems, setting a value too small can cause underruns for other
@@ -40,7 +39,9 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
     want.samples = SDL_max(480, opusConfig->samplesPerFrame);
 #endif
 
-    m_FrameSize = opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount;
+    m_FrameSize = opusConfig->samplesPerFrame *
+                  opusConfig->channelCount *
+                  getAudioBufferSampleSize();
 
     m_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
     if (m_AudioDevice == 0) {
@@ -60,7 +61,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Desired audio buffer: %u samples (%u bytes)",
                 want.samples,
-                want.samples * (Uint32)sizeof(short) * want.channels);
+                want.samples * want.channels * getAudioBufferSampleSize());
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Obtained audio buffer: %u samples (%u bytes)",
@@ -142,4 +143,9 @@ int SdlAudioRenderer::getCapabilities()
 {
     // Direct submit can't be used because we use LiGetPendingAudioDuration()
     return CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
+}
+
+IAudioRenderer::AudioFormat SdlAudioRenderer::getAudioBufferFormat()
+{
+    return AudioFormat::Float32NE;
 }

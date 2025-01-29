@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Limelight.h>
-#include <SDL.h>
+#include "SDL_compat.h"
 #include "settings/streamingpreferences.h"
 
 #define SDL_CODE_FRAME_READY 0

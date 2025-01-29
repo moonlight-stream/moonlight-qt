@@ -1,6 +1,6 @@
 #include "slaud.h"
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 SLAudioRenderer::SLAudioRenderer()
     : m_AudioContext(nullptr),
@@ -23,7 +23,9 @@ bool SLAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* o
     // it's hard to avoid since we get crushed by CPU limitations.
     m_MaxQueuedAudioMs = 40 * opusConfig->channelCount / 2;
 
-    m_AudioBufferSize = opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount;
+    m_AudioBufferSize = opusConfig->samplesPerFrame *
+                        opusConfig->channelCount *
+                        getAudioBufferSampleSize();
     m_AudioStream = SLAudio_CreateStream(m_AudioContext,
                                          opusConfig->sampleRate,
                                          opusConfig->channelCount,
@@ -115,6 +117,11 @@ bool SLAudioRenderer::submitAudio(int bytesWritten)
 int SLAudioRenderer::getCapabilities()
 {
     return CAPABILITY_SLOW_OPUS_DECODER | CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
+}
+
+IAudioRenderer::AudioFormat SLAudioRenderer::getAudioBufferFormat()
+{
+    return AudioFormat::Sint16NE;
 }
 
 void SLAudioRenderer::slLogCallback(void*, ESLAudioLog logLevel, const char *message)

@@ -18,10 +18,20 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
+extern "C" {
+    #include <libavutil/pixdesc.h>
+}
+
 struct CscParams
 {
     vector_float3 matrix[3];
     vector_float3 offsets;
+};
+
+struct ParamBuffer
+{
+    CscParams cscParams;
+    float bitnessScaleFactor;
 };
 
 static const CscParams k_CscParams_Bt601Lim = {
@@ -97,11 +107,14 @@ struct Vertex
     vector_float2 texCoord;
 };
 
-class VTMetalRenderer : public IFFmpegRenderer
+#define MAX_VIDEO_PLANES 3
+
+class VTMetalRenderer : public VTBaseRenderer
 {
 public:
-    VTMetalRenderer()
-        : m_Window(nullptr),
+    VTMetalRenderer(bool hwAccel)
+        : m_HwAccel(hwAccel),
+          m_Window(nullptr),
           m_HwContext(nullptr),
           m_MetalLayer(nullptr),
           m_TextureCache(nullptr),
@@ -114,6 +127,7 @@ public:
           m_ShaderLibrary(nullptr),
           m_CommandQueue(nullptr),
           m_NextDrawable(nullptr),
+          m_SwMappingTextures{},
           m_MetalView(nullptr),
           m_LastColorSpace(-1),
           m_LastFullRange(false),
@@ -157,6 +171,12 @@ public:
         for (int i = 0; i < Overlay::OverlayMax; i++) {
             if (m_OverlayTextures[i] != nullptr) {
                 [m_OverlayTextures[i] release];
+            }
+        }
+
+        for (int i = 0; i < MAX_VIDEO_PLANES; i++) {
+            if (m_SwMappingTextures[i] != nullptr) {
+                [m_SwMappingTextures[i] release];
             }
         }
 
@@ -275,13 +295,43 @@ public:
         return true;
     }
 
+    int getFramePlaneCount(AVFrame* frame)
+    {
+        if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
+            return CVPixelBufferGetPlaneCount((CVPixelBufferRef)frame->data[3]);
+        }
+        else {
+            return av_pix_fmt_count_planes((AVPixelFormat)frame->format);
+        }
+    }
+
+    int getBitnessScaleFactor(AVFrame* frame)
+    {
+        if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
+            // VideoToolbox frames never require scaling
+            return 1;
+        }
+        else {
+            const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get((AVPixelFormat)frame->format);
+            if (!formatDesc) {
+                // This shouldn't be possible but handle it anyway
+                SDL_assert(formatDesc);
+                return 1;
+            }
+
+            // This assumes plane 0 is exclusively the Y component
+            SDL_assert(formatDesc->comp[0].step == 1 || formatDesc->comp[0].step == 2);
+            return pow(2, (formatDesc->comp[0].step * 8) - formatDesc->comp[0].depth);
+        }
+    }
+
     bool updateColorSpaceForFrame(AVFrame* frame)
     {
         int colorspace = getFrameColorspace(frame);
         bool fullRange = isFrameFullRange(frame);
         if (colorspace != m_LastColorSpace || fullRange != m_LastFullRange) {
             CGColorSpaceRef newColorSpace;
-            void* paramBuffer;
+            ParamBuffer paramBuffer;
 
             // Free any unpresented drawable since we're changing pixel formats
             discardNextDrawable();
@@ -290,7 +340,7 @@ public:
             case COLORSPACE_REC_709:
                 m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_709);
                 m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-                paramBuffer = (void*)(fullRange ? &k_CscParams_Bt709Full : &k_CscParams_Bt709Lim);
+                paramBuffer.cscParams = (fullRange ? k_CscParams_Bt709Full : k_CscParams_Bt709Lim);
                 break;
             case COLORSPACE_REC_2020:
                 // https://developer.apple.com/documentation/metal/hdr_content/using_color_spaces_to_display_hdr_content
@@ -302,15 +352,17 @@ public:
                     m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2020);
                     m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
                 }
-                paramBuffer = (void*)(fullRange ? &k_CscParams_Bt2020Full : &k_CscParams_Bt2020Lim);
+                paramBuffer.cscParams = (fullRange ? k_CscParams_Bt2020Full : k_CscParams_Bt2020Lim);
                 break;
             default:
             case COLORSPACE_REC_601:
                 m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
                 m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-                paramBuffer = (void*)(fullRange ? &k_CscParams_Bt601Full : &k_CscParams_Bt601Lim);
+                paramBuffer.cscParams = (fullRange ? k_CscParams_Bt601Full : k_CscParams_Bt601Lim);
                 break;
             }
+
+            paramBuffer.bitnessScaleFactor = getBitnessScaleFactor(frame);
 
             // The CAMetalLayer retains the CGColorSpace
             CGColorSpaceRelease(newColorSpace);
@@ -318,16 +370,19 @@ public:
             // Create the new colorspace parameter buffer for our fragment shader
             [m_CscParamsBuffer release];
             auto bufferOptions = MTLCPUCacheModeWriteCombined | MTLResourceStorageModeManaged;
-            m_CscParamsBuffer = [m_MetalLayer.device newBufferWithBytes:paramBuffer length:sizeof(CscParams) options:bufferOptions];
+            m_CscParamsBuffer = [m_MetalLayer.device newBufferWithBytes:(void*)&paramBuffer length:sizeof(paramBuffer) options:bufferOptions];
             if (!m_CscParamsBuffer) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "Failed to create CSC parameters buffer");
                 return false;
             }
 
+            int planes = getFramePlaneCount(frame);
+            SDL_assert(planes == 2 || planes == 3);
+
             MTLRenderPipelineDescriptor *pipelineDesc = [[MTLRenderPipelineDescriptor new] autorelease];
             pipelineDesc.vertexFunction = [[m_ShaderLibrary newFunctionWithName:@"vs_draw"] autorelease];
-            pipelineDesc.fragmentFunction = [[m_ShaderLibrary newFunctionWithName:@"ps_draw_biplanar"] autorelease];
+            pipelineDesc.fragmentFunction = [[m_ShaderLibrary newFunctionWithName:planes == 2 ? @"ps_draw_biplanar" : @"ps_draw_triplanar"] autorelease];
             pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
             [m_VideoPipelineState release];
             m_VideoPipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
@@ -363,11 +418,73 @@ public:
         return true;
     }
 
+    id<MTLTexture> mapPlaneForSoftwareFrame(AVFrame* frame, int planeIndex)
+    {
+        const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get((AVPixelFormat)frame->format);
+        if (!formatDesc) {
+            // This shouldn't be possible but handle it anyway
+            SDL_assert(formatDesc);
+            return nil;
+        }
+
+        SDL_assert(planeIndex < MAX_VIDEO_PLANES);
+
+        NSUInteger planeWidth = planeIndex ? AV_CEIL_RSHIFT(frame->width, formatDesc->log2_chroma_w) : frame->width;
+        NSUInteger planeHeight = planeIndex ? AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h) : frame->height;
+
+        // Recreate the texture if the plane size changes
+        if (m_SwMappingTextures[planeIndex] && (m_SwMappingTextures[planeIndex].width != planeWidth ||
+                                                m_SwMappingTextures[planeIndex].height != planeHeight)) {
+            [m_SwMappingTextures[planeIndex] release];
+            m_SwMappingTextures[planeIndex] = nil;
+        }
+
+        if (!m_SwMappingTextures[planeIndex]) {
+            MTLPixelFormat metalFormat;
+
+            switch (formatDesc->comp[planeIndex].step) {
+            case 1:
+                metalFormat = MTLPixelFormatR8Unorm;
+                break;
+            case 2:
+                metalFormat = MTLPixelFormatR16Unorm;
+                break;
+            default:
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Unhandled plane step: %d (plane: %d)",
+                             formatDesc->comp[planeIndex].step,
+                             planeIndex);
+                SDL_assert(false);
+                return nil;
+            }
+
+            auto texDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:metalFormat
+                                                                              width:planeWidth
+                                                                             height:planeHeight
+                                                                          mipmapped:NO];
+            texDesc.cpuCacheMode = MTLCPUCacheModeWriteCombined;
+            texDesc.storageMode = MTLStorageModeManaged;
+            texDesc.usage = MTLTextureUsageShaderRead;
+
+            m_SwMappingTextures[planeIndex] = [m_MetalLayer.device newTextureWithDescriptor:texDesc];
+            if (!m_SwMappingTextures[planeIndex]) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to allocate software frame texture");
+                return nil;
+            }
+        }
+
+        [m_SwMappingTextures[planeIndex] replaceRegion:MTLRegionMake2D(0, 0, planeWidth, planeHeight)
+                                           mipmapLevel:0
+                                             withBytes:frame->data[planeIndex]
+                                           bytesPerRow:frame->linesize[planeIndex]];
+
+        return m_SwMappingTextures[planeIndex];
+    }
+
     // Caller frees frame after we return
     virtual void renderFrame(AVFrame* frame) override
     { @autoreleasepool {
-        CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
-
         // Handle changes to the frame's colorspace from last time we rendered
         if (!updateColorSpaceForFrame(frame)) {
             // Trigger the main thread to recreate the decoder
@@ -391,39 +508,50 @@ public:
             return;
         }
 
-        // Create Metal textures for the planes of the CVPixelBuffer
-        std::array<CVMetalTextureRef, 2> textures;
-        for (size_t i = 0; i < textures.size(); i++) {
-            MTLPixelFormat fmt;
+        std::array<CVMetalTextureRef, MAX_VIDEO_PLANES> cvMetalTextures;
+        size_t planes = getFramePlaneCount(frame);
+        SDL_assert(planes <= MAX_VIDEO_PLANES);
 
-            switch (CVPixelBufferGetPixelFormatType(pixBuf)) {
-            case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
-            case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
-                fmt = (i == 0) ? MTLPixelFormatR8Unorm : MTLPixelFormatRG8Unorm;
-                break;
+        if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
+            CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
 
-            case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
-            case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
-                fmt = (i == 0) ? MTLPixelFormatR16Unorm : MTLPixelFormatRG16Unorm;
-                break;
+            // Create Metal textures for the planes of the CVPixelBuffer
+            for (size_t i = 0; i < planes; i++) {
+                MTLPixelFormat fmt;
 
-            default:
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Unknown pixel format: %x",
-                             CVPixelBufferGetPixelFormatType(pixBuf));
-                return;
-            }
+                switch (CVPixelBufferGetPixelFormatType(pixBuf)) {
+                case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+                case kCVPixelFormatType_444YpCbCr8BiPlanarVideoRange:
+                case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+                case kCVPixelFormatType_444YpCbCr8BiPlanarFullRange:
+                    fmt = (i == 0) ? MTLPixelFormatR8Unorm : MTLPixelFormatRG8Unorm;
+                    break;
 
-            CVReturn err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, m_TextureCache, pixBuf, nullptr, fmt,
-                                                                     CVPixelBufferGetWidthOfPlane(pixBuf, i),
-                                                                     CVPixelBufferGetHeightOfPlane(pixBuf, i),
-                                                                     i,
-                                                                     &textures[i]);
-            if (err != kCVReturnSuccess) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
-                             err);
-                return;
+                case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
+                case kCVPixelFormatType_444YpCbCr10BiPlanarFullRange:
+                case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
+                case kCVPixelFormatType_444YpCbCr10BiPlanarVideoRange:
+                    fmt = (i == 0) ? MTLPixelFormatR16Unorm : MTLPixelFormatRG16Unorm;
+                    break;
+
+                default:
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                 "Unknown pixel format: %x",
+                                 CVPixelBufferGetPixelFormatType(pixBuf));
+                    return;
+                }
+
+                CVReturn err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, m_TextureCache, pixBuf, nullptr, fmt,
+                                                                         CVPixelBufferGetWidthOfPlane(pixBuf, i),
+                                                                         CVPixelBufferGetHeightOfPlane(pixBuf, i),
+                                                                         i,
+                                                                         &cvMetalTextures[i]);
+                if (err != kCVReturnSuccess) {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                 "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
+                                 err);
+                    return;
+                }
             }
         }
 
@@ -438,15 +566,22 @@ public:
 
         // Bind textures and buffers then draw the video region
         [renderEncoder setRenderPipelineState:m_VideoPipelineState];
-        for (size_t i = 0; i < textures.size(); i++) {
-            [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(textures[i]) atIndex:i];
-        }
-        [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
-            // Free textures after completion of rendering per CVMetalTextureCache requirements
-            for (const CVMetalTextureRef &tex : textures) {
-                CFRelease(tex);
+        if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
+            for (size_t i = 0; i < planes; i++) {
+                [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(cvMetalTextures[i]) atIndex:i];
             }
-        }];
+            [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
+                // Free textures after completion of rendering per CVMetalTextureCache requirements
+                for (size_t i = 0; i < planes; i++) {
+                    CFRelease(cvMetalTextures[i]);
+                }
+            }];
+        }
+        else {
+            for (size_t i = 0; i < planes; i++) {
+                [renderEncoder setFragmentTexture:mapPlaneForSoftwareFrame(frame, i) atIndex:i];
+            }
+        }
         [renderEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
         [renderEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:4];
@@ -522,74 +657,6 @@ public:
         m_NextDrawable = nullptr;
     }}
 
-    bool checkDecoderCapabilities(id<MTLDevice> device, PDECODER_PARAMETERS params) {
-        if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
-            if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_H264)) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "No HW accelerated H.264 decode via VT");
-                return false;
-            }
-        }
-        else if (params->videoFormat & VIDEO_FORMAT_MASK_H265) {
-            if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC)) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "No HW accelerated HEVC decode via VT");
-                return false;
-            }
-
-            // HEVC Main10 requires more extensive checks because there's no
-            // simple API to check for Main10 hardware decoding, and if we don't
-            // have it, we'll silently get software decoding with horrible performance.
-            if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
-                // Exclude all GPUs earlier than macOSGPUFamily2
-                // https://developer.apple.com/documentation/metal/mtlfeatureset/mtlfeatureset_macos_gpufamily2_v1
-                if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily2_v1]) {
-                    if ([device.name containsString:@"Intel"]) {
-                        // 500-series Intel GPUs are Skylake and don't support Main10 hardware decoding
-                        if ([device.name containsString:@" 5"]) {
-                            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                        "No HEVC Main10 support on Skylake iGPU");
-                            return false;
-                        }
-                    }
-                    else if ([device.name containsString:@"AMD"]) {
-                        // FirePro D, M200, and M300 series GPUs don't support Main10 hardware decoding
-                        if ([device.name containsString:@"FirePro D"] ||
-                                [device.name containsString:@" M2"] ||
-                                [device.name containsString:@" M3"]) {
-                            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                        "No HEVC Main10 support on AMD GPUs until Polaris");
-                            return false;
-                        }
-                    }
-                }
-                else {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "No HEVC Main10 support on macOS GPUFamily1 GPUs");
-                    return false;
-                }
-            }
-        }
-        else if (params->videoFormat & VIDEO_FORMAT_MASK_AV1) {
-        #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 130000
-            if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_AV1)) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "No HW accelerated AV1 decode via VT");
-                return false;
-            }
-
-            // 10-bit is part of the Main profile for AV1, so it will always
-            // be present on hardware that supports 8-bit.
-        #else
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "AV1 requires building with Xcode 14 or later");
-            return false;
-        #endif
-        }
-
-        return true;
-    }
-
     id<MTLDevice> getMetalDevice() {
         if (qgetenv("VT_FORCE_METAL") == "0") {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -597,33 +664,31 @@ public:
             return nullptr;
         }
 
-        if (@available(macOS 11.0, *)) {
-            NSArray<id<MTLDevice>> *devices = [MTLCopyAllDevices() autorelease];
-            if (devices.count == 0) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "No Metal device found!");
-                return nullptr;
-            }
+        NSArray<id<MTLDevice>> *devices = [MTLCopyAllDevices() autorelease];
+        if (devices.count == 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "No Metal device found!");
+            return nullptr;
+        }
 
-            for (id<MTLDevice> device in devices) {
-                if (device.isLowPower || device.hasUnifiedMemory) {
-                    return device;
-                }
+        for (id<MTLDevice> device in devices) {
+            if (device.isLowPower || device.hasUnifiedMemory) {
+                return device;
             }
+        }
 
-            if (qgetenv("VT_FORCE_METAL") == "1") {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Using Metal renderer due to VT_FORCE_METAL=1 override.");
-                return [MTLCreateSystemDefaultDevice() autorelease];
-            }
-            else {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Avoiding Metal renderer due to use of dGPU/eGPU. Use VT_FORCE_METAL=1 to override.");
-            }
+        if (!m_HwAccel) {
+            // Metal software decoding is always available
+            return [MTLCreateSystemDefaultDevice() autorelease];
+        }
+        else if (qgetenv("VT_FORCE_METAL") == "1") {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using Metal renderer due to VT_FORCE_METAL=1 override.");
+            return [MTLCreateSystemDefaultDevice() autorelease];
         }
         else {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Metal renderer requires macOS Big Sur or later");
+                        "Avoiding Metal renderer due to use of dGPU/eGPU. Use VT_FORCE_METAL=1 to override.");
         }
 
         return nullptr;
@@ -640,7 +705,11 @@ public:
             return false;
         }
 
-        if (!checkDecoderCapabilities(device, params)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Selected Metal device: %s",
+                    device.name.UTF8String);
+
+        if (m_HwAccel && !checkDecoderCapabilities(device, params)) {
             return false;
         }
 
@@ -767,10 +836,13 @@ public:
 
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override
     {
-        context->hw_device_ctx = av_buffer_ref(m_HwContext);
+        if (m_HwAccel) {
+            context->hw_device_ctx = av_buffer_ref(m_HwContext);
+        }
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using VideoToolbox Metal renderer");
+                    "Using Metal renderer with %s decoding",
+                    m_HwAccel ? "hardware" : "software");
 
         return true;
     }
@@ -802,6 +874,38 @@ public:
         return RENDERER_ATTRIBUTE_HDR_SUPPORT;
     }
 
+    bool isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) override
+    {
+        if (m_HwAccel) {
+            return pixelFormat == AV_PIX_FMT_VIDEOTOOLBOX;
+        }
+        else {
+            if (pixelFormat == AV_PIX_FMT_VIDEOTOOLBOX) {
+                // VideoToolbox frames are always supported
+                return true;
+            }
+            else {
+                // Otherwise it's supported if we can map it
+                const int expectedPixelDepth = (videoFormat & VIDEO_FORMAT_MASK_10BIT) ? 10 : 8;
+                const int expectedLog2ChromaW = (videoFormat & VIDEO_FORMAT_MASK_YUV444) ? 0 : 1;
+                const int expectedLog2ChromaH = (videoFormat & VIDEO_FORMAT_MASK_YUV444) ? 0 : 1;
+
+                const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get(pixelFormat);
+                if (!formatDesc) {
+                    // This shouldn't be possible but handle it anyway
+                    SDL_assert(formatDesc);
+                    return false;
+                }
+
+                int planes = av_pix_fmt_count_planes(pixelFormat);
+                return (planes == 2 || planes == 3) &&
+                       formatDesc->comp[0].depth == expectedPixelDepth &&
+                       formatDesc->log2_chroma_w == expectedLog2ChromaW &&
+                       formatDesc->log2_chroma_h == expectedLog2ChromaH;
+            }
+        }
+    }
+
     bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info) override
     {
         auto unhandledStateFlags = info->stateChangeFlags;
@@ -817,6 +921,7 @@ public:
     }
 
 private:
+    bool m_HwAccel;
     SDL_Window* m_Window;
     AVBufferRef* m_HwContext;
     CAMetalLayer* m_MetalLayer;
@@ -830,6 +935,7 @@ private:
     id<MTLLibrary> m_ShaderLibrary;
     id<MTLCommandQueue> m_CommandQueue;
     id<CAMetalDrawable> m_NextDrawable;
+    id<MTLTexture> m_SwMappingTextures[MAX_VIDEO_PLANES];
     SDL_MetalView m_MetalView;
     int m_LastColorSpace;
     bool m_LastFullRange;
@@ -843,6 +949,6 @@ private:
     bool m_IgnoreAspectRatio;
 };
 
-IFFmpegRenderer* VTMetalRendererFactory::createRenderer() {
-    return new VTMetalRenderer();
+IFFmpegRenderer* VTMetalRendererFactory::createRenderer(bool hwAccel) {
+    return new VTMetalRenderer(hwAccel);
 }

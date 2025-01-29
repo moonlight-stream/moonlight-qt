@@ -42,12 +42,12 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     --openssl_mac)
       rm -r $LIB_PATH/mac/include/openssl
-	    rm $LIB_PATH/mac/lib/libssl.a $LIB_PATH/mac/lib/libcrypto.a
+	    rm $LIB_PATH/mac/lib/libssl*.dylib $LIB_PATH/mac/lib/libcrypto*.dylib
       shift
       ;;
     --ffmpeg_win)
-      rm -r $LIB_PATH/windows/include/*/libavcodec $LIB_PATH/windows/include/*/libavutil $LIB_PATH/windows/include/*/libavformat
-      rm $LIB_PATH/windows/lib/*/avcodec* $LIB_PATH/windows/lib/*/avutil* $LIB_PATH/windows/lib/*/avformat*
+      rm -r $LIB_PATH/windows/include/*/libavcodec $LIB_PATH/windows/include/*/libavutil $LIB_PATH/windows/include/*/libavformat $LIB_PATH/windows/include/*/libswscale
+      rm $LIB_PATH/windows/lib/*/avcodec* $LIB_PATH/windows/lib/*/avutil* $LIB_PATH/windows/lib/*/avformat* $LIB_PATH/windows/lib/*/swscale*
       shift
       ;;
     --dav1d_win)
@@ -55,8 +55,13 @@ while [[ "$#" -gt 0 ]]; do
       shift
       ;;
     --ffmpeg_mac)
-      rm -r $LIB_PATH/mac/include/libavcodec $LIB_PATH/mac/include/libavutil $LIB_PATH/mac/include/libavformat
-      rm $LIB_PATH/mac/lib/libavcodec* $LIB_PATH/mac/lib/libavutil* $LIB_PATH/mac/lib/libavformat*
+      rm -r $LIB_PATH/mac/include/libavcodec $LIB_PATH/mac/include/libavutil $LIB_PATH/mac/include/libavformat $LIB_PATH/mac/include/libswscale
+      rm $LIB_PATH/mac/lib/libavcodec* $LIB_PATH/mac/lib/libavutil* $LIB_PATH/mac/lib/libavformat* $LIB_PATH/mac/lib/libswscale*
+      shift
+      ;;
+    --libplacebo_win)
+      rm -r $LIB_PATH/windows/include/*/libplacebo
+      rm $LIB_PATH/windows/lib/*/libplacebo*
       shift
       ;;
     --)

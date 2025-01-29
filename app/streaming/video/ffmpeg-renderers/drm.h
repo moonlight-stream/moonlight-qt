@@ -10,6 +10,8 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+#include <set>
+
 // Newer libdrm headers have these HDR structs, but some older ones don't.
 namespace DrmDefs
 {
@@ -48,10 +50,11 @@ namespace DrmDefs
 
 class DrmRenderer : public IFFmpegRenderer {
 public:
-    DrmRenderer(bool hwaccel = false, IFFmpegRenderer *backendRenderer = nullptr);
+    DrmRenderer(AVHWDeviceType hwDeviceType = AV_HWDEVICE_TYPE_NONE, IFFmpegRenderer *backendRenderer = nullptr);
     virtual ~DrmRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
+    virtual void prepareToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
     virtual bool isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) override;
@@ -70,19 +73,23 @@ public:
 #endif
 
 private:
+    bool getPropertyByName(drmModeObjectPropertiesPtr props, const char* name, uint64_t *value);
     const char* getDrmColorEncodingValue(AVFrame* frame);
     const char* getDrmColorRangeValue(AVFrame* frame);
     bool mapSoftwareFrame(AVFrame* frame, AVDRMFrameDescriptor* mappedFrame);
     bool addFbForFrame(AVFrame* frame, uint32_t* newFbId, bool testMode);
+    static bool drmFormatMatchesVideoFormat(uint32_t drmFormat, int videoFormat);
 
     IFFmpegRenderer* m_BackendRenderer;
+    SDL_Window* m_Window;
     bool m_DrmPrimeBackend;
-    bool m_HwAccelBackend;
+    AVHWDeviceType m_HwDeviceType;
     AVBufferRef* m_HwContext;
     int m_DrmFd;
-    bool m_SdlOwnsDrmFd;
+    bool m_DrmIsMaster;
+    bool m_MustCloseDrmFd;
     bool m_SupportsDirectRendering;
-    bool m_Main10Hdr;
+    int m_VideoFormat;
     uint32_t m_ConnectorId;
     uint32_t m_EncoderId;
     uint32_t m_CrtcId;
@@ -98,6 +105,7 @@ private:
     drmVersionPtr m_Version;
     uint32_t m_HdrOutputMetadataBlobId;
     SDL_Rect m_OutputRect;
+    std::set<uint32_t> m_SupportedPlaneFormats;
 
     static constexpr int k_SwFrameCount = 2;
     SwFrameMapper m_SwFrameMapper;

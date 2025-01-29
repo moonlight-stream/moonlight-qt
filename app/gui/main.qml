@@ -22,7 +22,8 @@ ApplicationWindow {
     width: 1280
     height: 600
 
-    Component.onCompleted: {
+    // This function runs prior to creation of the initial StackView item
+    function doEarlyInit() {
         // Override the background color to Material 2 colors for Qt 6.5+
         // in order to improve contrast between GFE's placeholder box art
         // and the background of the app grid.
@@ -30,6 +31,10 @@ ApplicationWindow {
             Material.background = "#303030"
         }
 
+        SdlGamepadKeyNavigation.enable()
+    }
+
+    Component.onCompleted: {
         // Show the window according to the user's preferences
         if (SystemProperties.hasDesktopEnvironment) {
             if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_MAXIMIZED) {
@@ -81,9 +86,15 @@ ApplicationWindow {
 
     StackView {
         id: stackView
-        initialItem: initialView
         anchors.fill: parent
         focus: true
+
+        Component.onCompleted: {
+            // Perform our early initialization before constructing
+            // the initial view and pushing it to the StackView
+            doEarlyInit()
+            push(initialView)
+        }
 
         onCurrentItemChanged: {
             // Ensure focus travels to the next view when going back
@@ -158,6 +169,9 @@ ApplicationWindow {
                 pollingActive = true
             }
         }
+
+        // Poll for gamepad input only when the window is in focus
+        SdlGamepadKeyNavigation.notifyWindowFocus(visible && active)
     }
 
     onActiveChanged: {
@@ -176,6 +190,9 @@ ApplicationWindow {
             // if focus does not return within a few minutes.
             inactivityTimer.restart()
         }
+
+        // Poll for gamepad input only when the window is in focus
+        SdlGamepadKeyNavigation.notifyWindowFocus(visible && active)
     }
 
     // Workaround for lack of instanceof in Qt 5.9.

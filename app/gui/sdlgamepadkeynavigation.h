@@ -3,7 +3,7 @@
 #include <QTimer>
 #include <QEvent>
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #include "settings/streamingpreferences.h"
 
@@ -20,12 +20,16 @@ public:
 
     Q_INVOKABLE void disable();
 
+    Q_INVOKABLE void notifyWindowFocus(bool hasFocus);
+
     Q_INVOKABLE void setUiNavMode(bool settingsMode);
 
     Q_INVOKABLE int getConnectedGamepads();
 
 private:
     void sendKey(QEvent::Type type, Qt::Key key, Qt::KeyboardModifiers modifiers = Qt::NoModifier);
+
+    void updateTimerState();
 
 private slots:
     void onPollingTimerFired();
@@ -37,5 +41,6 @@ private:
     bool m_Enabled;
     bool m_UiNavMode;
     bool m_FirstPoll;
+    bool m_HasFocus;
     Uint32 m_LastAxisNavigationEventTime;
 };

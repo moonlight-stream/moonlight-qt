@@ -34,11 +34,6 @@ CenteredGridView {
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
 
-        // This is a bit of a hack to do this here as opposed to main.qml, but
-        // we need it enabled before calling getConnectedGamepads() and PcView
-        // is never destroyed, so it should be okay.
-        SdlGamepadKeyNavigation.enable()
-
         // Highlight the first item if a gamepad is connected
         if (currentIndex == -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
             currentIndex = 0
