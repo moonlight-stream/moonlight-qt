@@ -8,7 +8,7 @@ SdlAudioRenderer::SdlAudioRenderer()
 {
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
 
-    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_AUDIO))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_AUDIO) failed: %s",
                      SDL_GetError());

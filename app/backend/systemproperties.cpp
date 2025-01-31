@@ -181,7 +181,7 @@ void SystemProperties::startAsyncLoad()
     // We initialize the video subsystem and test window on the main thread
     // because some platforms (macOS) do not support window creation on
     // non-main threads.
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_VIDEO))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
                      SDL_GetError());
@@ -217,7 +217,7 @@ void SystemProperties::waitForAsyncLoad()
 
 void SystemProperties::refreshDisplays()
 {
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_VIDEO))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
                      SDL_GetError());

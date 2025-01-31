@@ -669,7 +669,7 @@ int main(int argc, char *argv[])
     // The DXVA2 renderer uses Direct3D 9Ex itself directly.
     SDL_SetHint(SDL_HINT_WINDOWS_USE_D3D9EX, "1");
 
-    if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_TIMER))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_TIMER) failed: %s",
                      SDL_GetError());
@@ -683,7 +683,7 @@ int main(int argc, char *argv[])
     // We keep the video subsystem initialized on Windows because it's
     // much more costly to reinitialize than other platforms. It hurts
     // the settings page transition performance significantly.
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_VIDEO))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
                      SDL_GetError());
