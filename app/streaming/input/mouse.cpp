@@ -13,7 +13,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
         return;
     }
     else if (!isCaptureActive()) {
-        if (event->button == SDL_BUTTON_LEFT && event->state == SDL_RELEASED &&
+        if (event->button == SDL_BUTTON_LEFT && event->state == false &&
                 isMouseInVideoRegion(event->x, event->y)) {
             // Capture the mouse again if clicked when unbound.
             // We start capture on left button released instead of
@@ -26,7 +26,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
         // Not capturing
         return;
     }
-    else if (m_AbsoluteMouseMode && !isMouseInVideoRegion(event->x, event->y) && event->state == SDL_PRESSED) {
+    else if (m_AbsoluteMouseMode && !isMouseInVideoRegion(event->x, event->y) && event->state == true) {
         // Ignore button presses outside the video region, but allow button releases
         return;
     }
@@ -62,7 +62,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
             button = BUTTON_RIGHT;
     }
 
-    LiSendMouseButtonEvent(event->state == SDL_PRESSED ?
+    LiSendMouseButtonEvent(event->state == true ?
                                BUTTON_ACTION_PRESS :
                                BUTTON_ACTION_RELEASE,
                            button);
@@ -82,7 +82,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
     // Batch all pending mouse motion events to save CPU time
     Sint32 x = event->x, y = event->y, xrel = event->xrel, yrel = event->yrel;
     SDL_Event nextEvent;
-    while (SDL_PeepEvents(&nextEvent, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0) {
+    while (SDL_PeepEvents(&nextEvent, 1, SDL_GETEVENT, SDL_EVENT_MOUSE_MOTION, SDL_EVENT_MOUSE_MOTION) > 0) {
         event = &nextEvent.motion;
 
         // Ignore synthetic mouse events
@@ -175,34 +175,34 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
     }
 
 #if SDL_VERSION_ATLEAST(2, 0, 18)
-    if (event->preciseY != 0.0f) {
+    if (event->y != 0.0f) {
         // Invert the scroll direction if needed
         if (m_ReverseScrollDirection) {
-            event->preciseY = -event->preciseY;
+            event->y = -event->y;
         }
 
 #ifdef Q_OS_DARWIN
         // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
         // from generating wild scroll deltas when scrolling quickly.
-        event->preciseY = SDL_clamp(event->preciseY, -1.0f, 1.0f);
+        event->y = SDL_clamp(event->y, -1.0f, 1.0f);
 #endif
 
-        LiSendHighResScrollEvent((short)(event->preciseY * 120)); // WHEEL_DELTA
+        LiSendHighResScrollEvent((short)(event->y * 120)); // WHEEL_DELTA
     }
 
-    if (event->preciseX != 0.0f) {
+    if (event->x != 0.0f) {
         // Invert the scroll direction if needed
         if (m_ReverseScrollDirection) {
-            event->preciseX = -event->preciseY;
+            event->x = -event->y;
         }
 
 #ifdef Q_OS_DARWIN
         // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
         // from generating wild scroll deltas when scrolling quickly.
-        event->preciseX = SDL_clamp(event->preciseX, -1.0f, 1.0f);
+        event->x = SDL_clamp(event->x, -1.0f, 1.0f);
 #endif
 
-        LiSendHighResHScrollEvent((short)(event->preciseX * 120)); // WHEEL_DELTA
+        LiSendHighResHScrollEvent((short)(event->x * 120)); // WHEEL_DELTA
     }
 #else
     if (event->y != 0) {

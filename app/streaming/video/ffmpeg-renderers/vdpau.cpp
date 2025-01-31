@@ -374,7 +374,7 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
     if (!overlayEnabled) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         return;
     }
 
@@ -393,7 +393,7 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "VdpBitmapSurfaceCreate() failed: %s",
                          m_VdpGetErrorString(status));
-            SDL_FreeSurface(newSurface);
+            SDL_DestroySurface(newSurface);
             return;
         }
 
@@ -406,7 +406,7 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
                          "VdpBitmapSurfacePutBitsNative() failed: %s",
                          m_VdpGetErrorString(status));
             m_VdpBitmapSurfaceDestroy(newBitmapSurface);
-            SDL_FreeSurface(newSurface);
+            SDL_DestroySurface(newSurface);
             return;
         }
 
@@ -427,7 +427,7 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         overlayRect.y1 = overlayRect.y0 + newSurface->h;
 
         // Surface data is no longer needed
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
 
         SDL_LockMutex(m_OverlayMutex);
         m_OverlaySurface[type] = newBitmapSurface;
@@ -467,7 +467,7 @@ void VDPAURenderer::renderOverlay(VdpOutputSurface destination, Overlay::Overlay
         return;
     }
 
-    if (SDL_TryLockMutex(m_OverlayMutex) != 0) {
+    if (!SDL_TryLockMutex(m_OverlayMutex)) {
         // If the overlay is currently being updated, skip rendering it this frame.
         return;
     }

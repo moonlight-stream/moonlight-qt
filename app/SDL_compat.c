@@ -255,3 +255,66 @@ void SDLC_FlushWindowEvents(void)
 {
     SDL_FlushEvent(SDL_WINDOWEVENT);
 }
+
+SDL_JoystickID* SDL_GetGamepads(int *count)
+{
+    int numJoysticks = SDL_NumJoysticks();
+    SDL_JoystickID* ids = SDL_calloc(numJoysticks + 1, sizeof(SDL_JoystickID));
+
+    int numGamepads = 0;
+    for (int i = 0; i < numJoysticks; i++) {
+        if (SDL_IsGameController(i)) {
+            ids[numGamepads++] = i;
+        }
+    }
+
+    if (count != NULL) {
+        *count = numGamepads;
+    }
+
+    return ids;
+}
+
+SDL_JoystickID* SDL_GetJoysticks(int *count)
+{
+    int numJoysticks = SDL_NumJoysticks();
+    SDL_JoystickID* ids = SDL_calloc(numJoysticks + 1, sizeof(SDL_JoystickID));
+
+    for (int i = 0; i < numJoysticks; i++) {
+        ids[i] = i;
+    }
+
+    if (count != NULL) {
+        *count = numJoysticks;
+    }
+
+    return ids;
+}
+
+SDL_DisplayID * SDL_GetDisplays(int *count)
+{
+    int numDisplays = SDL_GetNumVideoDisplays();
+    SDL_DisplayID* ids = SDL_calloc(numDisplays + 1, sizeof(SDL_DisplayID));
+
+    for (int i = 0; i < numDisplays; i++) {
+        ids[i] = i;
+    }
+
+    if (count != NULL) {
+        *count = numDisplays;
+    }
+
+    return ids;
+}
+
+const SDL_DisplayMode * SDL_GetWindowFullscreenMode(SDL_Window *window)
+{
+    static SDL_DisplayMode mode;
+
+    if (SDL_GetWindowDisplayMode(window, &mode) == 0) {
+        return &mode;
+    }
+    else {
+        return NULL;
+    }
+}

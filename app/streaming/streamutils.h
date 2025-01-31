@@ -18,7 +18,7 @@ public:
     void screenSpaceToNormalizedDeviceCoords(SDL_Rect* src, SDL_FRect* dst, int viewportWidth, int viewportHeight);
 
     static
-    bool getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, SDL_Rect* safeArea);
+    bool getNativeDesktopMode(SDL_DisplayID display, SDL_DisplayMode* mode, SDL_Rect* safeArea);
 
     static
     int getDisplayRefreshRate(SDL_Window* window);

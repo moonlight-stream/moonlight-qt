@@ -111,31 +111,22 @@ void StreamUtils::screenSpaceToNormalizedDeviceCoords(SDL_Rect* src, SDL_FRect* 
 
 int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
 {
-    int displayIndex = SDL_GetWindowDisplayIndex(window);
-    if (displayIndex < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to get current display: %s",
-                     SDL_GetError());
-
-        // Assume display 0 if it fails
-        displayIndex = 0;
-    }
-
     SDL_DisplayMode mode;
     if (SDLC_IsFullscreenExclusive(window)) {
         // Use the window display mode for full-screen exclusive mode
-        if (SDL_GetWindowDisplayMode(window, &mode) != 0) {
+        const SDL_DisplayMode *fsMode = SDL_GetWindowFullscreenMode(window);
+        if (fsMode) {
+            mode = *fsMode;
+        }
+        else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_GetWindowDisplayMode() failed: %s",
+                         "SDL_GetWindowFullscreenMode() failed: %s",
                          SDL_GetError());
-
-            // Assume 60 Hz
-            return 60;
         }
     }
     else {
         // Use the current display mode for windowed and borderless
-        if (SDL_GetCurrentDisplayMode(displayIndex, &mode) != 0) {
+        if (SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(window), &mode) != 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_GetCurrentDisplayMode() failed: %s",
                          SDL_GetError());
@@ -199,7 +190,7 @@ bool StreamUtils::hasFastAes()
 #endif
 }
 
-bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, SDL_Rect* safeArea)
+bool StreamUtils::getNativeDesktopMode(SDL_DisplayID display, SDL_DisplayMode* mode, SDL_Rect* safeArea)
 {
 #ifdef Q_OS_DARWIN
 #define MAX_DISPLAYS 16
@@ -277,17 +268,13 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
 #else
     SDL_assert(SDL_WasInit(SDL_INIT_VIDEO));
 
-    if (displayIndex >= SDL_GetNumVideoDisplays()) {
-        return false;
-    }
-
     // We need to get the true display resolution without DPI scaling (since we use High DPI).
     // Windows returns the real display resolution here, even if DPI scaling is enabled.
     // macOS and Wayland report a resolution that includes the DPI scaling factor. Picking
     // the first mode on Wayland will get the native resolution without the scaling factor
     // (and macOS is handled in the #ifdef above).
     if (!strcmp(SDL_GetCurrentVideoDriver(), "wayland")) {
-        if (SDL_GetDisplayMode(displayIndex, 0, mode) != 0) {
+        if (SDL_GetDisplayMode(display, 0, mode) != 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_GetDisplayMode() failed: %s",
                          SDL_GetError());
@@ -295,7 +282,7 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
         }
     }
     else {
-        if (SDL_GetDesktopDisplayMode(displayIndex, mode) != 0) {
+        if (SDL_GetDesktopDisplayMode(display, mode) != 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_GetDesktopDisplayMode() failed: %s",
                          SDL_GetError());

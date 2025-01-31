@@ -666,7 +666,7 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
 
         // The card may have been removed or crashed. Reset the decoder.
         SDL_Event event;
-        event.type = SDL_RENDER_TARGETS_RESET;
+        event.type = SDL_EVENT_RENDER_TARGETS_RESET;
         SDL_PushEvent(&event);
         return;
     }

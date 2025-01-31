@@ -162,7 +162,7 @@ void EGLRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
     if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
         // If the overlay has been disabled, mark the data as invalid/stale.
-        SDL_AtomicSet(&m_OverlayHasValidData[type], 0);
+        SDL_SetAtomicInt(&m_OverlayHasValidData[type], 0);
         return;
     }
 }
@@ -211,7 +211,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
             // we must allocate a tightly packed buffer and copy our pixels there.
             packedPixelData = malloc(newSurface->w * newSurface->h * newSurface->format->BytesPerPixel);
             if (!packedPixelData) {
-                SDL_FreeSurface(newSurface);
+                SDL_DestroySurface(newSurface);
                 return;
             }
 
@@ -247,7 +247,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
         overlayRect.w = newSurface->w;
         overlayRect.h = newSurface->h;
 
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
 
         // Convert screen space to normalized device coordinates
         StreamUtils::screenSpaceToNormalizedDeviceCoords(&overlayRect, viewportWidth, viewportHeight);
@@ -265,10 +265,10 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
         glBindBuffer(GL_ARRAY_BUFFER, m_OverlayVbos[type]);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
 
-        SDL_AtomicSet(&m_OverlayHasValidData[type], 1);
+        SDL_SetAtomicInt(&m_OverlayHasValidData[type], 1);
     }
 
-    if (!SDL_AtomicGet(&m_OverlayHasValidData[type])) {
+    if (!SDL_GetAtomicInt(&m_OverlayHasValidData[type])) {
         // If the overlay is not populated yet or is stale, don't render it.
         return;
     }
@@ -435,6 +435,9 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    m_DummyRenderer = SDL_CreateRenderer(m_Window, "opengles2", SDL_RENDERER_ACCELERATED);
+#else
     int renderIndex;
     int maxRenderers = SDL_GetNumRenderDrivers();
     SDL_assert(maxRenderers >= 0);
@@ -454,6 +457,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     m_DummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED);
+#endif
     if (!m_DummyRenderer) {
         // Print the error here (before it gets clobbered), but ensure that we flush window
         // events just in case SDL re-created the window before eventually failing.
@@ -638,7 +642,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         // If we got a working GL implementation via EGL, avoid using GLX from now on.
         // GLX will cause problems if we later want to use EGL again on this window.
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "EGL passed preflight checks. Using EGL for GL context creation.");
-        SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
+        SDL_SetHint(SDL_HINT_VIDEO_FORCE_EGL, "1");
     }
 
     return err == GL_NO_ERROR;
@@ -822,7 +826,7 @@ void EGLRenderer::renderFrame(AVFrame* frame)
             // XWayland. Other strategies like calling glGetError() don't seem
             // to be able to detect this situation for some reason.
             SDL_Event event;
-            event.type = SDL_RENDER_TARGETS_RESET;
+            event.type = SDL_EVENT_RENDER_TARGETS_RESET;
             SDL_PushEvent(&event);
 
             return;
@@ -841,7 +845,11 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     glClear(GL_COLOR_BUFFER_BIT);
 
     int drawableWidth, drawableHeight;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_GetWindowSizeInPixels(m_Window, &drawableWidth, &drawableHeight);
+#else
     SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+#endif
 
     // Set the viewport to the size of the aspect-ratio-scaled video
     SDL_Rect src, dst;

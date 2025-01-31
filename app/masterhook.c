@@ -16,6 +16,7 @@
 // See masterhook_internal.c for details.
 
 #include "SDL_compat.h"
+#include <stdlib.h>
 #include <dlfcn.h>
 #include <unistd.h>
 #include <errno.h>

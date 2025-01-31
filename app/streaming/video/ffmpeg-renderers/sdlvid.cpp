@@ -169,7 +169,7 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     SDL_SetHintWithPriority(SDL_HINT_RENDER_DIRECT3D_THREADSAFE, "1", SDL_HINT_OVERRIDE);
 #endif
 
-    m_Renderer = SDL_CreateRenderer(params->window, -1, rendererFlags);
+    m_Renderer = SDL_CreateRenderer(params->window, SDLC_DEFAULT_RENDER_DRIVER, rendererFlags);
     if (!m_Renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
@@ -221,7 +221,7 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
             if (type == Overlay::OverlayStatusUpdate) {
                 // Bottom Left
                 SDL_Rect viewportRect;
-                SDL_RenderGetViewport(m_Renderer, &viewportRect);
+                SDL_GetRenderViewport(m_Renderer, &viewportRect);
                 m_OverlayRects[type].x = 0;
                 m_OverlayRects[type].y = viewportRect.h - newSurface->h;
             }
@@ -235,12 +235,12 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
             m_OverlayRects[type].h = newSurface->h;
 
             m_OverlayTextures[type] = SDL_CreateTextureFromSurface(m_Renderer, newSurface);
-            SDL_FreeSurface(newSurface);
+            SDL_DestroySurface(newSurface);
         }
 
         // If we have an overlay texture, render it too
         if (m_OverlayTextures[type] != nullptr) {
-            SDL_RenderCopy(m_Renderer, m_OverlayTextures[type], nullptr, &m_OverlayRects[type]);
+            SDL_RenderTexture(m_Renderer, m_OverlayTextures[type], nullptr, &m_OverlayRects[type]);
         }
     }
 }

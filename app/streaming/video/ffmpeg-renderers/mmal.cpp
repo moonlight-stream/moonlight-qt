@@ -56,7 +56,7 @@ void MmalRenderer::prepareToRender()
 {
     // Create a renderer and draw a black background for the area not covered by the MMAL overlay.
     // On the KMSDRM backend, this triggers the modeset that puts the CRTC into the mode we selected.
-    m_BackgroundRenderer = SDL_CreateRenderer(m_Window, -1, SDL_RENDERER_SOFTWARE);
+    m_BackgroundRenderer = SDL_CreateRenderer(m_Window, SDLC_DEFAULT_RENDER_DRIVER, SDL_RENDERER_SOFTWARE);
     if (m_BackgroundRenderer == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",

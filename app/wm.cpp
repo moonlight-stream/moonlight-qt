@@ -24,10 +24,10 @@
 bool WMUtils::isRunningX11()
 {
 #ifdef HAS_X11
-    static SDL_atomic_t isRunningOnX11;
+    static SDL_AtomicInt isRunningOnX11;
 
     // If the value is not set yet, populate it now.
-    int val = SDL_AtomicGet(&isRunningOnX11);
+    int val = SDL_GetAtomicInt(&isRunningOnX11);
     if (!(val & VALUE_SET)) {
         Display* display = XOpenDisplay(nullptr);
         if (display != nullptr) {
@@ -38,7 +38,7 @@ bool WMUtils::isRunningX11()
         // This can race with another thread populating the same data,
         // but that's no big deal.
         val = VALUE_SET | ((display != nullptr) ? VALUE_TRUE : 0);
-        SDL_AtomicSet(&isRunningOnX11, val);
+        SDL_SetAtomicInt(&isRunningOnX11, val);
     }
 
     return !!(val & VALUE_TRUE);
@@ -50,10 +50,10 @@ bool WMUtils::isRunningX11()
 bool WMUtils::isRunningWayland()
 {
 #ifdef HAS_WAYLAND
-    static SDL_atomic_t isRunningOnWayland;
+    static SDL_AtomicInt isRunningOnWayland;
 
     // If the value is not set yet, populate it now.
-    int val = SDL_AtomicGet(&isRunningOnWayland);
+    int val = SDL_GetAtomicInt(&isRunningOnWayland);
     if (!(val & VALUE_SET)) {
         struct wl_display* display = wl_display_connect(nullptr);
         if (display != nullptr) {
@@ -64,7 +64,7 @@ bool WMUtils::isRunningWayland()
         // This can race with another thread populating the same data,
         // but that's no big deal.
         val = VALUE_SET | ((display != nullptr) ? VALUE_TRUE : 0);
-        SDL_AtomicSet(&isRunningOnWayland, val);
+        SDL_SetAtomicInt(&isRunningOnWayland, val);
     }
 
     return !!(val & VALUE_TRUE);

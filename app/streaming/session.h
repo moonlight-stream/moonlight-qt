@@ -266,7 +266,7 @@ private:
     int m_FlushingWindowEventsRef;
     QList<QString> m_LaunchWarnings;
 
-    int m_CurrentDisplayIndex;
+    SDL_DisplayID m_CurrentDisplay;
     bool m_NeedsFirstEnterCapture;
     bool m_NeedsPostDecoderCreationCapture;
 

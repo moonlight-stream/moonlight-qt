@@ -264,7 +264,7 @@ void DrmRenderer::prepareToRender()
     // operation that the KMSDRM backend keeps pending until the next
     // time we swap buffers. We have to do this before we enumerate
     // CRTC modes below.
-    SDL_Renderer* renderer = SDL_CreateRenderer(m_Window, -1, SDL_RENDERER_SOFTWARE);
+    SDL_Renderer* renderer = SDL_CreateRenderer(m_Window, SDLC_DEFAULT_RENDER_DRIVER, SDL_RENDERER_SOFTWARE);
     if (renderer != nullptr) {
         // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
         // to ensure it's compatible with the renderer's OpenGL context. If that happens, we

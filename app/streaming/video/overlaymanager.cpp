@@ -133,7 +133,7 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
         }
 
         // m_FontData must stay around until the font is closed
-        m_Overlays[type].font = TTF_OpenFontRW(SDL_RWFromConstMem(m_FontData.constData(), m_FontData.size()),
+        m_Overlays[type].font = TTF_OpenFontRW(SDL_IOFromConstMem(m_FontData.constData(), m_FontData.size()),
                                                1,
                                                m_Overlays[type].fontSize);
         if (m_Overlays[type].font == nullptr) {
@@ -146,11 +146,11 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
         }
     }
 
-    SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, nullptr);
+    SDL_Surface* oldSurface = (SDL_Surface*) SDL_SetAtomicPointer((void**)&m_Overlays[type].surface, nullptr);
 
     // Free the old surface
     if (oldSurface != nullptr) {
-        SDL_FreeSurface(oldSurface);
+        SDL_DestroySurface(oldSurface);
     }
 
     if (m_Overlays[type].enabled) {
@@ -159,7 +159,7 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
                                                               m_Overlays[type].text,
                                                               m_Overlays[type].color,
                                                               1024);
-        SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, surface);
+        SDL_SetAtomicPointer((void**)&m_Overlays[type].surface, surface);
     }
 
     // Notify the renderer

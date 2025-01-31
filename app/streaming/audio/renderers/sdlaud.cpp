@@ -22,7 +22,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
 
     SDL_zero(want);
     want.freq = opusConfig->sampleRate;
-    want.format = AUDIO_F32SYS;
+    want.format = SDL_AUDIO_F32;
     want.channels = opusConfig->channelCount;
 
     // On PulseAudio systems, setting a value too small can cause underruns for other
@@ -73,7 +73,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
                 SDL_GetCurrentAudioDriver());
 
     // Start playback
-    SDL_PauseAudioDevice(m_AudioDevice, 0);
+    SDL_ResumeAudioDevice(m_AudioDevice);
 
     return true;
 }
