@@ -280,7 +280,7 @@ void DrmRenderer::prepareToRender()
         else {
             // If we get here prior to the start of a session, just pump and flush ourselves.
             SDL_PumpEvents();
-            SDL_FlushEvent(SDL_WINDOWEVENT);
+            SDLC_FlushWindowEvents();
         }
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);

@@ -550,6 +550,9 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_InputHandler(nullptr),
       m_MouseEmulationRefCount(0),
       m_FlushingWindowEventsRef(0),
+      m_CurrentDisplayIndex(-1),
+      m_NeedsFirstEnterCapture(false),
+      m_NeedsPostDecoderCreationCapture(false),
       m_AsyncConnectionSuccess(false),
       m_PortTestResults(0),
       m_OpusDecoder(nullptr),
@@ -1675,6 +1678,208 @@ void Session::flushWindowEvents()
     SDL_PushEvent(&flushEvent);
 }
 
+bool Session::handleWindowEvent(SDL_WindowEvent* event)
+{
+    // Early handling of some events
+    switch (event->event) {
+    case SDL_WINDOWEVENT_FOCUS_LOST:
+        if (m_Preferences->muteOnFocusLoss) {
+            m_AudioMuted = true;
+        }
+        m_InputHandler->notifyFocusLost();
+        break;
+    case SDL_WINDOWEVENT_FOCUS_GAINED:
+        if (m_Preferences->muteOnFocusLoss) {
+            m_AudioMuted = false;
+        }
+        break;
+    case SDL_WINDOWEVENT_LEAVE:
+        m_InputHandler->notifyMouseLeave();
+        break;
+    }
+
+    // Capture the mouse on SDL_WINDOWEVENT_ENTER if needed
+    if (m_NeedsFirstEnterCapture && event->event == SDL_WINDOWEVENT_ENTER) {
+        m_InputHandler->setCaptureActive(true);
+        m_NeedsFirstEnterCapture = false;
+    }
+
+    // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event.
+    // We use SDL_WINDOWEVENT_SIZE_CHANGED rather than SDL_WINDOWEVENT_RESIZED because the latter doesn't
+    // seem to fire when switching from windowed to full-screen on X11.
+    if (event->event != SDL_WINDOWEVENT_SIZE_CHANGED &&
+        (event->event != SDL_WINDOWEVENT_SHOWN || m_VideoDecoder != nullptr)) {
+        // Check that the window display hasn't changed. If it has, we want
+        // to recreate the decoder to allow it to adapt to the new display.
+        // This will allow Pacer to pull the new display refresh rate.
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+        // On SDL 2.0.18+, there's an event for this specific situation
+        if (event->event != SDL_WINDOWEVENT_DISPLAY_CHANGED) {
+            return true;
+        }
+#else
+        // Prior to SDL 2.0.18, we must check the display index for each window event
+        if (SDL_GetWindowDisplayIndex(m_Window) == currentDisplayIndex) {
+            return true;
+        }
+#endif
+    }
+#ifdef Q_OS_WIN32
+    // We can get a resize event after being minimized. Recreating the renderer at that time can cause
+    // us to start drawing on the screen even while our window is minimized. Minimizing on Windows also
+    // moves the window to -32000, -32000 which can cause a false window display index change. Avoid
+    // that whole mess by never recreating the decoder if we're minimized.
+    else if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MINIMIZED) {
+        return true;
+    }
+#endif
+
+    if (m_FlushingWindowEventsRef > 0) {
+        // Ignore window events for renderer reset if flushing
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Dropping window event during flush: %d (%d %d)",
+                    event->event,
+                    event->data1,
+                    event->data2);
+        return true;
+    }
+
+    // Allow the renderer to handle the state change without being recreated
+    if (m_VideoDecoder) {
+        bool forceRecreation = false;
+
+        WINDOW_STATE_CHANGE_INFO windowChangeInfo = {};
+        windowChangeInfo.window = m_Window;
+
+        if (event->event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+            windowChangeInfo.stateChangeFlags |= WINDOW_STATE_CHANGE_SIZE;
+
+            windowChangeInfo.width = event->data1;
+            windowChangeInfo.height = event->data2;
+        }
+
+        int newDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+        if (newDisplayIndex != m_CurrentDisplayIndex) {
+            windowChangeInfo.stateChangeFlags |= WINDOW_STATE_CHANGE_DISPLAY;
+
+            windowChangeInfo.displayIndex = newDisplayIndex;
+
+            // If the refresh rates have changed, we will need to go through the full
+            // decoder recreation path to ensure Pacer is switched to the new display
+            // and that we apply any V-Sync disablement rules that may be needed for
+            // this display.
+            SDL_DisplayMode oldMode, newMode;
+            if (SDL_GetCurrentDisplayMode(m_CurrentDisplayIndex, &oldMode) < 0 ||
+                SDL_GetCurrentDisplayMode(newDisplayIndex, &newMode) < 0 ||
+                oldMode.refresh_rate != newMode.refresh_rate) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Forcing renderer recreation due to refresh rate change between displays");
+                forceRecreation = true;
+            }
+        }
+
+        if (!forceRecreation && m_VideoDecoder->notifyWindowChanged(&windowChangeInfo)) {
+            // Update the window display mode based on our current monitor
+            // NB: Avoid a useless modeset by only doing this if it changed.
+            if (newDisplayIndex != m_CurrentDisplayIndex) {
+                m_CurrentDisplayIndex = newDisplayIndex;
+                updateOptimalWindowDisplayMode();
+            }
+
+            return true;
+        }
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Recreating renderer for window event: %d (%d %d)",
+                event->event,
+                event->data1,
+                event->data2);
+    if (!recreateRenderer()) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to recreate decoder after reset");
+        emit displayLaunchError(tr("Unable to initialize video decoder. Please check your streaming settings and try again."));
+        return false;
+    }
+
+    return true;
+}
+
+bool Session::recreateRenderer()
+{
+    SDL_AtomicLock(&m_DecoderLock);
+
+    // Destroy the old decoder
+    delete m_VideoDecoder;
+
+    // Insert a barrier to discard any additional window events
+    // that could cause the renderer to be and recreated again.
+    // We don't use SDL_FlushEvent() here because it could cause
+    // important events to be lost.
+    flushWindowEvents();
+
+    // Update the window display mode based on our current monitor
+    // NB: Avoid a useless modeset by only doing this if it changed.
+    if (m_CurrentDisplayIndex != SDL_GetWindowDisplayIndex(m_Window)) {
+        m_CurrentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+        updateOptimalWindowDisplayMode();
+    }
+
+    // Now that the old decoder is dead, flush any events it may
+    // have queued to reset itself (if this reset was the result
+    // of state loss).
+    SDL_PumpEvents();
+    SDL_FlushEvent(SDL_RENDER_DEVICE_RESET);
+    SDL_FlushEvent(SDL_RENDER_TARGETS_RESET);
+
+    {
+        // If the stream exceeds the display refresh rate (plus some slack),
+        // forcefully disable V-sync to allow the stream to render faster
+        // than the display.
+        int displayHz = StreamUtils::getDisplayRefreshRate(m_Window);
+        bool enableVsync = m_Preferences->enableVsync;
+        if (displayHz + 5 < m_StreamConfig.fps) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Disabling V-sync because refresh rate limit exceeded");
+            enableVsync = false;
+        }
+
+        // Choose a new decoder (hopefully the same one, but possibly
+        // not if a GPU was removed or something).
+        if (!chooseDecoder(m_Preferences->videoDecoderSelection,
+                           m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
+                           m_ActiveVideoHeight, m_ActiveVideoFrameRate,
+                           enableVsync,
+                           enableVsync && m_Preferences->framePacing,
+                           false,
+                           s_ActiveSession->m_VideoDecoder)) {
+            SDL_AtomicUnlock(&m_DecoderLock);
+            return false;
+        }
+
+        // As of SDL 2.0.12, SDL_RecreateWindow() doesn't carry over mouse capture
+        // or mouse hiding state to the new window. By capturing after the decoder
+        // is set up, this ensures the window re-creation is already done.
+        if (m_NeedsPostDecoderCreationCapture) {
+            m_InputHandler->setCaptureActive(true);
+            m_NeedsPostDecoderCreationCapture = false;
+        }
+    }
+
+    // Request an IDR frame to complete the reset
+    LiRequestIdrFrame();
+
+    // Set HDR mode. We may miss the callback if we're in the middle
+    // of recreating our decoder at the time the HDR transition happens.
+    m_VideoDecoder->setHdrMode(LiGetCurrentHostDisplayHdrMode());
+
+    // After a window resize, we need to reset the pointer lock region
+    m_InputHandler->updatePointerRegionLock();
+
+    SDL_AtomicUnlock(&m_DecoderLock);
+    return true;
+}
+
 class ExecThread : public QThread
 {
 public:
@@ -1909,20 +2114,17 @@ void Session::execInternal()
         SDLC_EnterFullscreen(m_Window, m_FullScreenExclusiveMode);
     }
 
-    bool needsFirstEnterCapture = false;
-    bool needsPostDecoderCreationCapture = false;
-
     // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
     // event where it seems to work consistently on GNOME. For other platforms,
     // especially where SDL may call SDL_RecreateWindow(), we must only capture
     // after the decoder is created.
     if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
         // Native Wayland: Capture on SDL_WINDOWEVENT_ENTER
-        needsFirstEnterCapture = true;
+        m_NeedsFirstEnterCapture = true;
     }
     else {
         // X11/XWayland: Capture after decoder creation
-        needsPostDecoderCreationCapture = true;
+        m_NeedsPostDecoderCreationCapture = true;
     }
 
     // Stop text input. SDL enables it by default
@@ -1945,7 +2147,7 @@ void Session::execInternal()
     // sleep precision and more accurate callback timing.
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "1");
 
-    int currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+    m_CurrentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
 
     // Now that we're about to stream, any SDL_QUIT event is expected
     // unless it comes from the connection termination callback where
@@ -1993,6 +2195,15 @@ void Session::execInternal()
             continue;
         }
 #endif
+
+        if (event.type == SDL_WINDOWEVENT) {
+            if (!handleWindowEvent(&event.window)) {
+                goto DispatchDeferredCleanup;
+            }
+
+            presence.runCallbacks();
+        }
+
         switch (event.type) {
         case SDL_QUIT:
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -2034,209 +2245,18 @@ void Session::execInternal()
                 SDL_assert(false);
             }
             break;
-
-        case SDL_WINDOWEVENT:
-            // Early handling of some events
-            switch (event.window.event) {
-            case SDL_WINDOWEVENT_FOCUS_LOST:
-                if (m_Preferences->muteOnFocusLoss) {
-                    m_AudioMuted = true;
-                }
-                m_InputHandler->notifyFocusLost();
-                break;
-            case SDL_WINDOWEVENT_FOCUS_GAINED:
-                if (m_Preferences->muteOnFocusLoss) {
-                    m_AudioMuted = false;
-                }
-                break;
-            case SDL_WINDOWEVENT_LEAVE:
-                m_InputHandler->notifyMouseLeave();
-                break;
-            }
-
-            presence.runCallbacks();
-
-            // Capture the mouse on SDL_WINDOWEVENT_ENTER if needed
-            if (needsFirstEnterCapture && event.window.event == SDL_WINDOWEVENT_ENTER) {
-                m_InputHandler->setCaptureActive(true);
-                needsFirstEnterCapture = false;
-            }
-
-            // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event.
-            // We use SDL_WINDOWEVENT_SIZE_CHANGED rather than SDL_WINDOWEVENT_RESIZED because the latter doesn't
-            // seem to fire when switching from windowed to full-screen on X11.
-            if (event.window.event != SDL_WINDOWEVENT_SIZE_CHANGED &&
-                (event.window.event != SDL_WINDOWEVENT_SHOWN || m_VideoDecoder != nullptr)) {
-                // Check that the window display hasn't changed. If it has, we want
-                // to recreate the decoder to allow it to adapt to the new display.
-                // This will allow Pacer to pull the new display refresh rate.
-#if SDL_VERSION_ATLEAST(2, 0, 18)
-                // On SDL 2.0.18+, there's an event for this specific situation
-                if (event.window.event != SDL_WINDOWEVENT_DISPLAY_CHANGED) {
-                    break;
-                }
-#else
-                // Prior to SDL 2.0.18, we must check the display index for each window event
-                if (SDL_GetWindowDisplayIndex(m_Window) == currentDisplayIndex) {
-                    break;
-                }
-#endif
-            }
-#ifdef Q_OS_WIN32
-            // We can get a resize event after being minimized. Recreating the renderer at that time can cause
-            // us to start drawing on the screen even while our window is minimized. Minimizing on Windows also
-            // moves the window to -32000, -32000 which can cause a false window display index change. Avoid
-            // that whole mess by never recreating the decoder if we're minimized.
-            else if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MINIMIZED) {
-                break;
-            }
-#endif
-
-            if (m_FlushingWindowEventsRef > 0) {
-                // Ignore window events for renderer reset if flushing
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Dropping window event during flush: %d (%d %d)",
-                            event.window.event,
-                            event.window.data1,
-                            event.window.data2);
-                break;
-            }
-
-            // Allow the renderer to handle the state change without being recreated
-            if (m_VideoDecoder) {
-                bool forceRecreation = false;
-
-                WINDOW_STATE_CHANGE_INFO windowChangeInfo = {};
-                windowChangeInfo.window = m_Window;
-
-                if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                    windowChangeInfo.stateChangeFlags |= WINDOW_STATE_CHANGE_SIZE;
-
-                    windowChangeInfo.width = event.window.data1;
-                    windowChangeInfo.height = event.window.data2;
-                }
-
-                int newDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
-                if (newDisplayIndex != currentDisplayIndex) {
-                    windowChangeInfo.stateChangeFlags |= WINDOW_STATE_CHANGE_DISPLAY;
-
-                    windowChangeInfo.displayIndex = newDisplayIndex;
-
-                    // If the refresh rates have changed, we will need to go through the full
-                    // decoder recreation path to ensure Pacer is switched to the new display
-                    // and that we apply any V-Sync disablement rules that may be needed for
-                    // this display.
-                    SDL_DisplayMode oldMode, newMode;
-                    if (SDL_GetCurrentDisplayMode(currentDisplayIndex, &oldMode) < 0 ||
-                            SDL_GetCurrentDisplayMode(newDisplayIndex, &newMode) < 0 ||
-                            oldMode.refresh_rate != newMode.refresh_rate) {
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Forcing renderer recreation due to refresh rate change between displays");
-                        forceRecreation = true;
-                    }
-                }
-
-                if (!forceRecreation && m_VideoDecoder->notifyWindowChanged(&windowChangeInfo)) {
-                    // Update the window display mode based on our current monitor
-                    // NB: Avoid a useless modeset by only doing this if it changed.
-                    if (newDisplayIndex != currentDisplayIndex) {
-                        currentDisplayIndex = newDisplayIndex;
-                        updateOptimalWindowDisplayMode();
-                    }
-
-                    break;
-                }
-            }
-
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Recreating renderer for window event: %d (%d %d)",
-                        event.window.event,
-                        event.window.data1,
-                        event.window.data2);
-
-            // Fall through
         case SDL_RENDER_DEVICE_RESET:
         case SDL_RENDER_TARGETS_RESET:
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Recreating renderer by internal request: %d",
+                        event.type);
 
-            if (event.type != SDL_WINDOWEVENT) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Recreating renderer by internal request: %d",
-                            event.type);
+            if (!recreateRenderer()) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to recreate decoder after reset");
+                emit displayLaunchError(tr("Unable to initialize video decoder. Please check your streaming settings and try again."));
+                goto DispatchDeferredCleanup;
             }
-
-            SDL_AtomicLock(&m_DecoderLock);
-
-            // Destroy the old decoder
-            delete m_VideoDecoder;
-
-            // Insert a barrier to discard any additional window events
-            // that could cause the renderer to be and recreated again.
-            // We don't use SDL_FlushEvent() here because it could cause
-            // important events to be lost.
-            flushWindowEvents();
-
-            // Update the window display mode based on our current monitor
-            // NB: Avoid a useless modeset by only doing this if it changed.
-            if (currentDisplayIndex != SDL_GetWindowDisplayIndex(m_Window)) {
-                currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
-                updateOptimalWindowDisplayMode();
-            }
-
-            // Now that the old decoder is dead, flush any events it may
-            // have queued to reset itself (if this reset was the result
-            // of state loss).
-            SDL_PumpEvents();
-            SDL_FlushEvent(SDL_RENDER_DEVICE_RESET);
-            SDL_FlushEvent(SDL_RENDER_TARGETS_RESET);
-
-            {
-                // If the stream exceeds the display refresh rate (plus some slack),
-                // forcefully disable V-sync to allow the stream to render faster
-                // than the display.
-                int displayHz = StreamUtils::getDisplayRefreshRate(m_Window);
-                bool enableVsync = m_Preferences->enableVsync;
-                if (displayHz + 5 < m_StreamConfig.fps) {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "Disabling V-sync because refresh rate limit exceeded");
-                    enableVsync = false;
-                }
-
-                // Choose a new decoder (hopefully the same one, but possibly
-                // not if a GPU was removed or something).
-                if (!chooseDecoder(m_Preferences->videoDecoderSelection,
-                                   m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
-                                   m_ActiveVideoHeight, m_ActiveVideoFrameRate,
-                                   enableVsync,
-                                   enableVsync && m_Preferences->framePacing,
-                                   false,
-                                   s_ActiveSession->m_VideoDecoder)) {
-                    SDL_AtomicUnlock(&m_DecoderLock);
-                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                 "Failed to recreate decoder after reset");
-                    emit displayLaunchError(tr("Unable to initialize video decoder. Please check your streaming settings and try again."));
-                    goto DispatchDeferredCleanup;
-                }
-
-                // As of SDL 2.0.12, SDL_RecreateWindow() doesn't carry over mouse capture
-                // or mouse hiding state to the new window. By capturing after the decoder
-                // is set up, this ensures the window re-creation is already done.
-                if (needsPostDecoderCreationCapture) {
-                    m_InputHandler->setCaptureActive(true);
-                    needsPostDecoderCreationCapture = false;
-                }
-            }
-
-            // Request an IDR frame to complete the reset
-            LiRequestIdrFrame();
-
-            // Set HDR mode. We may miss the callback if we're in the middle
-            // of recreating our decoder at the time the HDR transition happens.
-            m_VideoDecoder->setHdrMode(LiGetCurrentHostDisplayHdrMode());
-
-            // After a window resize, we need to reset the pointer lock region
-            m_InputHandler->updatePointerRegionLock();
-
-            SDL_AtomicUnlock(&m_DecoderLock);
             break;
 
         case SDL_KEYUP:

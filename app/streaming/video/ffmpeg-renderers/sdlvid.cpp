@@ -191,7 +191,7 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     else {
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
-        SDL_FlushEvent(SDL_WINDOWEVENT);
+        SDLC_FlushWindowEvents();
     }
 
 #ifdef Q_OS_WIN32

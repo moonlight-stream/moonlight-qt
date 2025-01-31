@@ -102,6 +102,8 @@ SDL_Window* SDLC_CreateWindowWithFallback(const char *title,
                                           Uint32 requiredFlags,
                                           Uint32 optionalFlags);
 
+void SDLC_FlushWindowEvents();
+
 #ifdef __cplusplus
 }
 #endif
