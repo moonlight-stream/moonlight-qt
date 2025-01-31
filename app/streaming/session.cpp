@@ -645,7 +645,7 @@ bool Session::initialize(QQuickWindow* qtWindow)
     }
 #endif
 
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_VIDEO))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
                      SDL_GetError());
@@ -1341,7 +1341,7 @@ void Session::getWindowDimensions(int& x, int& y,
                 for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
                     SDL_Rect displayBounds;
 
-                    if (SDL_GetDisplayBounds(i, &displayBounds) == 0) {
+                    if (SDLC_SUCCESS(SDL_GetDisplayBounds(i, &displayBounds))) {
                         if (displayBounds.x == displayRect.x() &&
                             displayBounds.y == displayRect.y()) {
                             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1367,7 +1367,7 @@ void Session::getWindowDimensions(int& x, int& y,
 
     // Get the usable display bounds
     SDL_Rect usableBounds;
-    if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) != 0) {
+    if (SDLC_FAILURE(SDL_GetDisplayUsableBounds(displayIndex, &usableBounds))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_GetDisplayUsableBounds() failed: %s",
                      SDL_GetError());
@@ -1383,7 +1383,7 @@ void Session::getWindowDimensions(int& x, int& y,
         width = m_StreamConfig.width;
         height = m_StreamConfig.height;
     }
-    else if (usableBounds.w != 0 || SDL_GetDisplayBounds(displayIndex, &usableBounds) == 0) {
+    else if (usableBounds.w != 0 || SDLC_SUCCESS(SDL_GetDisplayBounds(displayIndex, &usableBounds))) {
         // Otherwise, use 80% of usable bounds and preserve aspect ratio
         SDL_Rect src, dst;
         src.x = src.y = dst.x = dst.y = 0;

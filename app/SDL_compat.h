@@ -103,6 +103,8 @@ SDL_Window* SDLC_CreateWindowWithFallback(const char *title,
                                           Uint32 optionalFlags);
 
 void SDLC_FlushWindowEvents();
+#define SDLC_SUCCESS(x) ((x) == 0)
+#define SDLC_FAILURE(x) ((x) != 0)
 
 #ifdef __cplusplus
 }

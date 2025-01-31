@@ -37,7 +37,7 @@ void SdlGamepadKeyNavigation::enable()
     // arrival events. Additionally, there's a race condition between
     // our QML objects being destroyed and SDL being deinitialized that
     // this solves too.
-    if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
                      SDL_GetError());
