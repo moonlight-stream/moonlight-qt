@@ -904,7 +904,7 @@ QString SdlInputHandler::getUnmappedGamepads()
 {
     QString ret;
 
-    if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
                      SDL_GetError());

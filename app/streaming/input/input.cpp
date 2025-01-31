@@ -148,7 +148,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     // can allow mapping manager to update the mappings before GC attach
     // events are generated.
     SDL_assert(!SDL_WasInit(SDL_INIT_JOYSTICK));
-    if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_JOYSTICK))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_JOYSTICK) failed: %s",
                      SDL_GetError());
@@ -166,7 +166,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     // We need to reinit this each time, since you only get
     // an initial set of gamepad arrival events once per init.
     SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
-    if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
                      SDL_GetError());
@@ -174,7 +174,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
 
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_assert(!SDL_WasInit(SDL_INIT_HAPTIC));
-    if (SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_HAPTIC))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_HAPTIC) failed: %s",
                      SDL_GetError());

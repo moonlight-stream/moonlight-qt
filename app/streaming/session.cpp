@@ -606,7 +606,7 @@ bool Session::initialize()
     }
 #endif
 
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_VIDEO))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
                      SDL_GetError());
@@ -1282,7 +1282,7 @@ void Session::getWindowDimensions(int& x, int& y,
                 for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
                     SDL_Rect displayBounds;
 
-                    if (SDL_GetDisplayBounds(i, &displayBounds) == 0) {
+                    if (SDLC_SUCCESS(SDL_GetDisplayBounds(i, &displayBounds))) {
                         if (displayBounds.x == displayRect.x() &&
                             displayBounds.y == displayRect.y()) {
                             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1307,7 +1307,7 @@ void Session::getWindowDimensions(int& x, int& y,
     }
 
     SDL_Rect usableBounds;
-    if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
+    if (SDLC_SUCCESS(SDL_GetDisplayUsableBounds(displayIndex, &usableBounds))) {
         // Don't use more than 80% of the display to leave room for system UI
         // and ensure the target size is not odd (otherwise one of the sides
         // of the image will have a one-pixel black bar next to it).
