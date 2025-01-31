@@ -256,7 +256,7 @@ private:
     SDL_mutex* m_DecoderLock;
     bool m_AudioDisabled;
     bool m_AudioMuted;
-    Uint32 m_FullScreenFlag;
+    bool m_FullScreenExclusiveMode;
     QQuickWindow* m_QtWindow;
     bool m_UnexpectedTermination;
     SdlInputHandler* m_InputHandler;
