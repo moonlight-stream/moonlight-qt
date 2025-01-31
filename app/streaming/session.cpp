@@ -1856,34 +1856,23 @@ void Session::exec()
     std::string windowName = QString(m_Computer->name + " - Moonlight").toStdString();
 #endif
 
-    m_Window = SDL_CreateWindow(windowName.c_str(),
-                                x,
-                                y,
-                                width,
-                                height,
-                                defaultWindowFlags | StreamUtils::getPlatformWindowFlags());
+    m_Window = SDLC_CreateWindowWithFallback(windowName.c_str(),
+                                             x,
+                                             y,
+                                             width,
+                                             height,
+                                             defaultWindowFlags,
+                                             StreamUtils::getPlatformWindowFlags());
     if (!m_Window) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "SDL_CreateWindow() failed with platform flags: %s",
-                    SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateWindow() failed: %s",
+                     SDL_GetError());
 
-        m_Window = SDL_CreateWindow(windowName.c_str(),
-                                    x,
-                                    y,
-                                    width,
-                                    height,
-                                    defaultWindowFlags);
-        if (!m_Window) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_CreateWindow() failed: %s",
-                         SDL_GetError());
-
-            delete m_InputHandler;
-            m_InputHandler = nullptr;
-            SDL_QuitSubSystem(SDL_INIT_VIDEO);
-            QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
-            return;
-        }
+        delete m_InputHandler;
+        m_InputHandler = nullptr;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
+        return;
     }
 
     m_InputHandler->setWindow(m_Window);
