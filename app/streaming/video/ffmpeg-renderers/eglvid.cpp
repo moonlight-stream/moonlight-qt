@@ -11,7 +11,7 @@
 #include <Limelight.h>
 #include <unistd.h>
 
-#include <SDL_syswm.h>
+#include <SDL_render.h>
 
 // These are extensions, so some platform headers may not provide them
 #ifndef GL_UNPACK_ROW_LENGTH_EXT
@@ -470,13 +470,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_FlushEvent(SDL_WINDOWEVENT);
     }
 
-    SDL_SysWMinfo info;
-    SDL_VERSION(&info.version);
-    if (!SDL_GetWindowWMInfo(params->window, &info)) {
-        EGL_LOG(Error, "SDL_GetWindowWMInfo() failed: %s", SDL_GetError());
-        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
-        return false;
-    }
+    SDLC_VideoDriver videoDriver = SDLC_GetVideoDriver();
 
     if (!(m_Context = SDL_GL_CreateContext(params->window))) {
         EGL_LOG(Error, "Cannot create OpenGL context: %s", SDL_GetError());
@@ -585,23 +579,16 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // the Wayland viewport can be stale when using Super+Left/Right/Up
     // to resize the window. This seems to happen significantly more often
     // with vsync enabled, so this also mitigates that problem too.
-    if (params->enableVsync
-#ifdef SDL_VIDEO_DRIVER_WAYLAND
-            && info.subsystem != SDL_SYSWM_WAYLAND
-#endif
-            ) {
+    if (params->enableVsync && videoDriver != SDLC_VIDEO_WAYLAND) {
         SDL_GL_SetSwapInterval(1);
 
-#if SDL_VERSION_ATLEAST(2, 0, 15) && defined(SDL_VIDEO_DRIVER_KMSDRM)
         // We don't use the fence to reduce latency on KMSDRM
         // because it can have severe performance impacts when
         // running on slow GPUs where the frame time exceeds
         // the video stream's frame interval. The latency
         // reduction is also less critical without a compositor
         // adding latency too.
-        if (info.subsystem != SDL_SYSWM_KMSDRM)
-#endif
-        {
+        if (videoDriver != SDLC_VIDEO_KMSDRM) {
             m_BlockingSwapBuffers = true;
         }
     } else {

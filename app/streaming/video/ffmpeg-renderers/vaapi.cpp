@@ -13,8 +13,6 @@
 #include <xf86drm.h>
 #endif
 
-#include <SDL_syswm.h>
-
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -88,27 +86,18 @@ VAAPIRenderer::~VAAPIRenderer()
 VADisplay
 VAAPIRenderer::openDisplay(SDL_Window* window)
 {
-    SDL_SysWMinfo info;
     VADisplay display;
 
-    SDL_VERSION(&info.version);
+    m_WindowSystem = SDLC_GetVideoDriver();
 
-    if (!SDL_GetWindowWMInfo(window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        return nullptr;
-    }
-
-    m_WindowSystem = info.subsystem;
-    if (info.subsystem == SDL_SYSWM_X11) {
+    if (m_WindowSystem == SDLC_VIDEO_X11) {
 #ifdef HAVE_LIBVA_X11
-        m_XWindow = info.info.x11.window;
+        m_XWindow = (Window)SDLC_X11_GetWindow(window);
 
         // It's possible to enter this function several times as we're probing VA drivers.
         // Only open the new Display object the first time through.
         if (m_XDisplay == nullptr) {
-            m_XDisplay = XOpenDisplay(XDisplayString(info.info.x11.display));
+            m_XDisplay = XOpenDisplay(XDisplayString((Display*)SDLC_X11_GetDisplay(window)));
             if (m_XDisplay == nullptr) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "Unable to clone SDL X11 display for VAAPI");
@@ -128,9 +117,9 @@ VAAPIRenderer::openDisplay(SDL_Window* window)
         return nullptr;
 #endif
     }
-    else if (info.subsystem == SDL_SYSWM_WAYLAND) {
+    else if (m_WindowSystem == SDLC_VIDEO_WAYLAND) {
 #ifdef HAVE_LIBVA_WAYLAND
-        display = vaGetDisplayWl(info.info.wl.display);
+        display = vaGetDisplayWl((wl_display*)SDLC_Wayland_GetDisplay(window));
         if (display == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Unable to open Wayland display for VAAPI");
@@ -142,8 +131,8 @@ VAAPIRenderer::openDisplay(SDL_Window* window)
         return nullptr;
 #endif
     }
-#if defined(SDL_VIDEO_DRIVER_KMSDRM) && defined(HAVE_LIBVA_DRM) && SDL_VERSION_ATLEAST(2, 0, 15)
-    else if (info.subsystem == SDL_SYSWM_KMSDRM) {
+    else if (m_WindowSystem == SDLC_VIDEO_KMSDRM) {
+#ifdef HAVE_LIBVA_DRM
         // It's possible to enter this function several times as we're probing VA drivers.
         // Make sure to only duplicate the DRM FD the first time through.
         if (m_DrmFd < 0) {
@@ -202,12 +191,16 @@ VAAPIRenderer::openDisplay(SDL_Window* window)
                          "Unable to open DRM display for VAAPI");
             return nullptr;
         }
-    }
+#else
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Moonlight not compiled with VAAPI DRM support!");
+        return nullptr;
 #endif
+    }
     else {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unsupported VAAPI rendering subsystem: %d",
-                     info.subsystem);
+                     m_WindowSystem);
         return nullptr;
     }
 
@@ -319,7 +312,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                     status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
                 }
 
-                if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0)) {
+                if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDLC_VIDEO_X11 || m_DecoderSelectionPass > 0)) {
                     // The unofficial nvidia VAAPI driver over NVDEC/CUDA works well on Wayland,
                     // but we'd rather use CUDA for XWayland and VDPAU for regular X11.
                     // NB: Remember to update the VA-API NVDEC condition below when modifying this!
@@ -443,7 +436,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
         // - EGL is broken in their driver, so we're stuck using the slow copy path in SDL renderer
         if (
 #if !defined(HAVE_LIBPLACEBO_VULKAN) && !defined(HAVE_CUDA)
-            m_WindowSystem == SDL_SYSWM_X11 &&
+            m_WindowSystem == SDLC_VIDEO_X11 &&
 #endif
             vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -592,7 +585,7 @@ VAAPIRenderer::isDirectRenderingSupported()
     }
 
     // We only support direct rendering on X11 with VAEntrypointVideoProc support
-    if (m_WindowSystem != SDL_SYSWM_X11 || m_BlacklistedForDirectRendering) {
+    if (m_WindowSystem != SDLC_VIDEO_X11 || m_BlacklistedForDirectRendering) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using indirect rendering due to WM or blacklist");
         return false;
@@ -817,7 +810,7 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
 
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
-    if (m_WindowSystem == SDL_SYSWM_X11) {
+    if (m_WindowSystem == SDLC_VIDEO_X11) {
 #ifdef HAVE_LIBVA_X11
         unsigned int flags = 0;
 
@@ -953,7 +946,7 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
         SDL_UnlockMutex(m_OverlayMutex);
 #endif
     }
-    else if (m_WindowSystem == SDL_SYSWM_WAYLAND) {
+    else if (m_WindowSystem == SDLC_VIDEO_WAYLAND) {
         // We don't support direct rendering on Wayland, so we should
         // never get called there. Many common Wayland compositors don't
         // support YUV surfaces, so direct rendering would fail.
