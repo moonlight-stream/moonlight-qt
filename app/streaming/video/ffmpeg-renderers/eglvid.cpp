@@ -467,7 +467,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     else if (!params->testOnly) {
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
-        SDL_FlushEvent(SDL_WINDOWEVENT);
+        SDLC_FlushWindowEvents();
     }
 
     SDLC_VideoDriver videoDriver = SDLC_GetVideoDriver();

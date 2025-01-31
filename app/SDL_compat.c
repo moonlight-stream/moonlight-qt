@@ -250,3 +250,8 @@ SDL_Window* SDLC_CreateWindowWithFallback(const char *title,
 
     return window;
 }
+
+void SDLC_FlushWindowEvents(void)
+{
+    SDL_FlushEvent(SDL_WINDOWEVENT);
+}
