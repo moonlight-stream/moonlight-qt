@@ -618,21 +618,15 @@ bool Session::initialize()
     getWindowDimensions(x, y, width, height);
 
     // Create a hidden window to use for decoder initialization tests
-    SDL_Window* testWindow = SDL_CreateWindow("", x, y, width, height,
-                                              SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
+    SDL_Window* testWindow = SDLC_CreateWindowWithFallback("", x, y, width, height,
+                                                           SDL_WINDOW_HIDDEN,
+                                                           StreamUtils::getPlatformWindowFlags());
     if (!testWindow) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to create test window with platform flags: %s",
-                    SDL_GetError());
-
-        testWindow = SDL_CreateWindow("", x, y, width, height, SDL_WINDOW_HIDDEN);
-        if (!testWindow) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to create window for hardware decode test: %s",
-                         SDL_GetError());
-            SDL_QuitSubSystem(SDL_INIT_VIDEO);
-            return false;
-        }
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create window for hardware decode test: %s",
+                     SDL_GetError());
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return false;
     }
 
     qInfo() << "Server GPU:" << m_Computer->gpuModel;
@@ -1835,34 +1829,23 @@ void Session::execInternal()
     std::string windowName = QString(m_Computer->name + " - Moonlight").toStdString();
 #endif
 
-    m_Window = SDL_CreateWindow(windowName.c_str(),
-                                x,
-                                y,
-                                width,
-                                height,
-                                defaultWindowFlags | StreamUtils::getPlatformWindowFlags());
+    m_Window = SDLC_CreateWindowWithFallback(windowName.c_str(),
+                                             x,
+                                             y,
+                                             width,
+                                             height,
+                                             defaultWindowFlags,
+                                             StreamUtils::getPlatformWindowFlags());
     if (!m_Window) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "SDL_CreateWindow() failed with platform flags: %s",
-                    SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateWindow() failed: %s",
+                     SDL_GetError());
 
-        m_Window = SDL_CreateWindow(windowName.c_str(),
-                                    x,
-                                    y,
-                                    width,
-                                    height,
-                                    defaultWindowFlags);
-        if (!m_Window) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_CreateWindow() failed: %s",
-                         SDL_GetError());
-
-            delete m_InputHandler;
-            m_InputHandler = nullptr;
-            SDL_QuitSubSystem(SDL_INIT_VIDEO);
-            QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
-            return;
-        }
+        delete m_InputHandler;
+        m_InputHandler = nullptr;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
+        return;
     }
 
     // HACK: Remove once proper Dark Mode support lands in SDL

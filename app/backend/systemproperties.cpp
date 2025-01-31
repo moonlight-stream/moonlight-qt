@@ -139,21 +139,15 @@ void SystemProperties::querySdlVideoInfoInternal()
     // We call the internal variant because we're already in a safe thread context.
     refreshDisplaysInternal();
 
-    SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
-                                              SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
+    SDL_Window* testWindow = SDLC_CreateWindowWithFallback("", 0, 0, 1280, 720,
+                                                           SDL_WINDOW_HIDDEN,
+                                                           StreamUtils::getPlatformWindowFlags());
     if (!testWindow) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to create test window with platform flags: %s",
-                    SDL_GetError());
-
-        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
-        if (!testWindow) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to create window for hardware decode test: %s",
-                         SDL_GetError());
-            SDL_QuitSubSystem(SDL_INIT_VIDEO);
-            return;
-        }
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create window for hardware decode test: %s",
+                     SDL_GetError());
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return;
     }
 
     Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, supportsHdr, maximumResolution);
