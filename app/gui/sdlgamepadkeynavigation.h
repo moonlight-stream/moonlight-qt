@@ -37,7 +37,7 @@ private slots:
 private:
     StreamingPreferences* m_Prefs;
     QTimer* m_PollingTimer;
-    QList<SDL_GameController*> m_Gamepads;
+    QList<SDL_Gamepad*> m_Gamepads;
     bool m_Enabled;
     bool m_UiNavMode;
     bool m_FirstPoll;
