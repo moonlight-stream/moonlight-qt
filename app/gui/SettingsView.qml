@@ -1378,6 +1378,18 @@ Flickable {
                 }
 
                 CheckBox {
+                    id: swapCmdCtrlCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Swap cmd and ctrl keys")
+                    font.pointSize:  12
+                    checked: StreamingPreferences.swapCmdCtrl
+                    onCheckedChanged: {
+                        StreamingPreferences.swapCmdCtrl = checked
+                    }
+                }
+
+                CheckBox {
                     id: reverseScrollButtonsCheck
                     hoverEnabled: true
                     width: parent.width
