@@ -7,6 +7,11 @@
 
 #include <SDL.h>
 
+// This is a pure C header for compatibility with SDL.h
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // SDL_FRect wasn't added until 2.0.10
 #if !SDL_VERSION_ATLEAST(2, 0, 10)
 typedef struct SDL_FRect
@@ -64,4 +69,27 @@ typedef struct SDL_FRect
 
 #ifndef SDL_HINT_VIDEO_WAYLAND_EMULATE_MOUSE_WARP
 #define SDL_HINT_VIDEO_WAYLAND_EMULATE_MOUSE_WARP "SDL_VIDEO_WAYLAND_EMULATE_MOUSE_WARP"
+#endif
+
+void* SDLC_Win32_GetHwnd(SDL_Window* window);
+void* SDLC_MacOS_GetWindow(SDL_Window* window);
+void* SDLC_X11_GetDisplay(SDL_Window* window);
+unsigned long SDLC_X11_GetWindow(SDL_Window* window);
+void* SDLC_Wayland_GetDisplay(SDL_Window* window);
+void* SDLC_Wayland_GetSurface(SDL_Window* window);
+int SDLC_KMSDRM_GetFd(SDL_Window* window);
+int SDLC_KMSDRM_GetDevIndex(SDL_Window* window);
+
+typedef enum {
+    SDLC_VIDEO_UNKNOWN,
+    SDLC_VIDEO_WIN32,
+    SDLC_VIDEO_MACOS,
+    SDLC_VIDEO_X11,
+    SDLC_VIDEO_WAYLAND,
+    SDLC_VIDEO_KMSDRM,
+} SDLC_VideoDriver;
+SDLC_VideoDriver SDLC_GetVideoDriver();
+
+#ifdef __cplusplus
+}
 #endif

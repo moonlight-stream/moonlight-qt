@@ -5,7 +5,6 @@
 #include "pacer/pacer.h"
 #undef AVMediaType
 
-#include <SDL_syswm.h>
 #include <Limelight.h>
 #include "streaming/session.h"
 #include "streaming/streamutils.h"

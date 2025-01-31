@@ -2,7 +2,8 @@
 
 #include "pacer.h"
 
-#include <SDL_syswm.h>
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 
 // from <D3dkmthk.h>
 typedef LONG NTSTATUS;
