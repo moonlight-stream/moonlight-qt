@@ -171,6 +171,10 @@ private:
 
     void updateOptimalWindowDisplayMode();
 
+    bool recreateRenderer();
+
+    bool handleWindowEvent(SDL_WindowEvent* event);
+
     enum class DecoderAvailability {
         None,
         Software,
@@ -264,6 +268,10 @@ private:
     int m_FlushingWindowEventsRef;
     QStringList m_LaunchWarnings;
     bool m_ShouldExit;
+
+    int m_CurrentDisplayIndex;
+    bool m_NeedsFirstEnterCapture;
+    bool m_NeedsPostDecoderCreationCapture;
 
     bool m_AsyncConnectionSuccess;
     int m_PortTestResults;
