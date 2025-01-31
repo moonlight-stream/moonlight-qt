@@ -122,7 +122,7 @@ int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
     }
 
     SDL_DisplayMode mode;
-    if ((SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+    if (SDLC_IsFullscreenExclusive(window)) {
         // Use the window display mode for full-screen exclusive mode
         if (SDL_GetWindowDisplayMode(window, &mode) != 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

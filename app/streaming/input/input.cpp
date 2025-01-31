@@ -289,7 +289,7 @@ void SdlInputHandler::notifyFocusLost()
     // This lets user to interact with our window's title bar and with the buttons in it.
     // Doing this while the window is full-screen breaks the transition out of FS
     // (desktop and exclusive), so we must check for that before releasing mouse capture.
-    if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) && !m_AbsoluteMouseMode) {
+    if (!SDLC_IsFullscreen(m_Window) && !m_AbsoluteMouseMode) {
         setCaptureActive(false);
     }
 
@@ -315,9 +315,8 @@ void SdlInputHandler::updateKeyboardGrabState()
     }
 
     bool shouldGrab = isCaptureActive();
-    Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
     if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN &&
-            !(windowFlags & SDL_WINDOW_FULLSCREEN)) {
+            !SDLC_IsFullscreen(m_Window)) {
         // Ungrab if it's fullscreen only and we left fullscreen
         shouldGrab = false;
     }
@@ -355,7 +354,7 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
     }
 
     if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN &&
-            !(windowFlags & SDL_WINDOW_FULLSCREEN)) {
+            !SDLC_IsFullscreen(m_Window)) {
         return false;
     }
 

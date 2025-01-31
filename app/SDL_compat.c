@@ -207,3 +207,28 @@ SDLC_VideoDriver SDLC_GetVideoDriver(void)
     }
 #endif
 }
+
+bool SDLC_IsFullscreen(SDL_Window* window)
+{
+    return !!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN);
+}
+
+bool SDLC_IsFullscreenExclusive(SDL_Window* window)
+{
+    return (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN;
+}
+
+bool SDLC_IsFullscreenDesktop(SDL_Window* window)
+{
+    return (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN_DESKTOP;
+}
+
+void SDLC_EnterFullscreen(SDL_Window* window, bool exclusive)
+{
+    SDL_SetWindowFullscreen(window, exclusive ? SDL_WINDOW_FULLSCREEN : SDL_WINDOW_FULLSCREEN_DESKTOP);
+}
+
+void SDLC_LeaveFullscreen(SDL_Window* window)
+{
+    SDL_SetWindowFullscreen(window, 0);
+}

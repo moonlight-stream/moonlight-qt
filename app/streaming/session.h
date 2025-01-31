@@ -253,7 +253,7 @@ private:
     SDL_SpinLock m_DecoderLock;
     bool m_AudioDisabled;
     bool m_AudioMuted;
-    Uint32 m_FullScreenFlag;
+    bool m_FullScreenExclusiveMode;
     QWindow* m_QtWindow;
     bool m_ThreadedExec;
     bool m_UnexpectedTermination;

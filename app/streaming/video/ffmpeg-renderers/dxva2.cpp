@@ -549,7 +549,6 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     }
 
     int adapterIndex = SDL_Direct3D9GetAdapterIndex(SDL_GetWindowDisplayIndex(window));
-    Uint32 windowFlags = SDL_GetWindowFlags(window);
 
     // Initialize quirks *before* calling CreateDeviceEx() to allow our below
     // logic to avoid a hang with NahimicOSD.dll's broken full-screen handling.
@@ -583,7 +582,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         }
     }
 
-    if ((windowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+    if (SDLC_IsFullscreenExclusive(window)) {
         d3dpp.Windowed = false;
         d3dpp.BackBufferWidth = currentMode.Width;
         d3dpp.BackBufferHeight = currentMode.Height;

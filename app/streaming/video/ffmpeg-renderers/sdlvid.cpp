@@ -144,7 +144,7 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     switch (SDLC_GetVideoDriver()) {
     case SDLC_VIDEO_WIN32:
         // DWM is always tear-free except in full-screen exclusive mode
-        if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+        if (SDLC_IsFullscreenExclusive(params->window)) {
             if (params->enableVsync) {
                 rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
             }
