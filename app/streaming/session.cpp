@@ -645,7 +645,7 @@ bool Session::initialize(QQuickWindow* qtWindow)
     }
 #endif
 
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_VIDEO))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
                      SDL_GetError());
@@ -1342,7 +1342,7 @@ void Session::getWindowDimensions(int& x, int& y,
                 for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
                     SDL_Rect displayBounds;
 
-                    if (SDL_GetDisplayBounds(i, &displayBounds) == 0) {
+                    if (SDLC_SUCCESS(SDL_GetDisplayBounds(i, &displayBounds))) {
                         if (displayBounds.x == displayRect.x() &&
                             displayBounds.y == displayRect.y()) {
                             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1367,7 +1367,7 @@ void Session::getWindowDimensions(int& x, int& y,
     }
 
     SDL_Rect usableBounds;
-    if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
+    if (SDLC_SUCCESS(SDL_GetDisplayUsableBounds(displayIndex, &usableBounds))) {
         // If the stream resolution fits within the usable display area, use it directly
         if (m_StreamConfig.width <= usableBounds.w &&
             m_StreamConfig.height <= usableBounds.h) {
