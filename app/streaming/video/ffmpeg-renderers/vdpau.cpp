@@ -3,8 +3,6 @@
 #include <streaming/streamutils.h>
 #include <utils.h>
 
-#include <SDL_syswm.h>
-
 #define BAIL_ON_FAIL(status, something) if ((status) != VDP_STATUS_OK) { \
                                             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, \
                                                         #something " failed: %d", (status)); \
@@ -78,7 +76,6 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
 {
     int err;
     VdpStatus status;
-    SDL_SysWMinfo info;
 
     // Avoid initializing VDPAU on this window on the first selection pass if:
     // a) We know we want HDR compatibility
@@ -97,24 +94,16 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
-    SDL_VERSION(&info.version);
-
-    if (!SDL_GetWindowWMInfo(params->window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
-    if (info.subsystem == SDL_SYSWM_WAYLAND) {
+    SDLC_VideoDriver videoDriver = SDLC_GetVideoDriver();
+    if (videoDriver == SDLC_VIDEO_WAYLAND) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "VDPAU is not supported on Wayland");
         return false;
     }
-    else if (info.subsystem != SDL_SYSWM_X11) {
+    else if (videoDriver != SDLC_VIDEO_X11) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VDPAU is not supported on the current subsystem: %d",
-                     info.subsystem);
+                     videoDriver);
         return false;
     }
     else if (qgetenv("VDPAU_XWAYLAND") != "1" && WMUtils::isRunningWayland()) {
@@ -216,12 +205,10 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
 
     SDL_GetWindowSize(params->window, (int*)&m_DisplayWidth, (int*)&m_DisplayHeight);
 
-    SDL_assert(info.subsystem == SDL_SYSWM_X11);
-
     GET_PROC_ADDRESS(VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11,
                      &m_VdpPresentationQueueTargetCreateX11);
     status = m_VdpPresentationQueueTargetCreateX11(m_Device,
-                                                   info.info.x11.window,
+                                                   SDLC_X11_GetWindow(params->window),
                                                    &m_PresentationQueueTarget);
     if (status != VDP_STATUS_OK) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

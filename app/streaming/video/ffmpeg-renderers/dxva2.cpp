@@ -9,8 +9,6 @@
 #include <streaming/streamutils.h>
 #include <streaming/session.h>
 
-#include <SDL_syswm.h>
-
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <VersionHelpers.h>
@@ -541,11 +539,6 @@ bool DXVA2Renderer::isDecoderBlacklisted()
 
 bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
 {
-    SDL_SysWMinfo info;
-
-    SDL_VERSION(&info.version);
-    SDL_GetWindowWMInfo(window, &info);
-
     ComPtr<IDirect3D9Ex> d3d9ex;
     HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d9ex);
     if (FAILED(hr)) {
@@ -572,7 +565,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     d3d9ex->GetAdapterDisplayModeEx(adapterIndex, &currentMode, nullptr);
 
     D3DPRESENT_PARAMETERS d3dpp = {};
-    d3dpp.hDeviceWindow = info.info.win.window;
+    d3dpp.hDeviceWindow = (HWND)SDLC_Win32_GetHwnd(window);
     d3dpp.Flags = D3DPRESENTFLAG_VIDEO;
 
     if (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) {

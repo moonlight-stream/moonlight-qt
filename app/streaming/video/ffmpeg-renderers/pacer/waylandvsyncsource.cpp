@@ -1,7 +1,5 @@
 #include "waylandvsyncsource.h"
 
-#include <SDL_syswm.h>
-
 #ifndef SDL_VIDEO_DRIVER_WAYLAND
 #warning Unable to use WaylandVsyncSource without SDL support
 #else
@@ -29,22 +27,8 @@ WaylandVsyncSource::~WaylandVsyncSource()
 
 bool WaylandVsyncSource::initialize(SDL_Window* window, int)
 {
-    SDL_SysWMinfo info;
-
-    SDL_VERSION(&info.version);
-
-    if (!SDL_GetWindowWMInfo(window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
-    // Pacer should not create us for non-Wayland windows
-    SDL_assert(info.subsystem == SDL_SYSWM_WAYLAND);
-
-    m_Display = info.info.wl.display;
-    m_Surface = info.info.wl.surface;
+    m_Display = (wl_display*)SDLC_Wayland_GetDisplay(window);
+    m_Surface = (wl_surface*)SDLC_Wayland_GetSurface(window);
 
     // Enqueue our first frame callback
     m_Callback = wl_surface_frame(m_Surface);

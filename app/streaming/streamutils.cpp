@@ -14,8 +14,6 @@
 #ifdef Q_OS_UNIX
 #include <unistd.h>
 #include <fcntl.h>
-
-#include <SDL_syswm.h>
 #endif
 
 #ifdef Q_OS_LINUX
@@ -318,38 +316,28 @@ int StreamUtils::getDrmFdForWindow(SDL_Window* window, bool* mustClose)
 {
     *mustClose = false;
 
-#if defined(SDL_VIDEO_DRIVER_KMSDRM) && SDL_VERSION_ATLEAST(2, 0, 15)
-    SDL_SysWMinfo info;
-    SDL_VERSION(&info.version);
-    if (!SDL_GetWindowWMInfo(window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        return -1;
+    // If SDL has an FD, share that
+    int fd = SDLC_KMSDRM_GetFd(window);
+    if (fd >= 0) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Sharing DRM FD with SDL");
+        return fd;
     }
 
-    if (info.subsystem == SDL_SYSWM_KMSDRM) {
-        // If SDL has an FD, share that
-        if (info.info.kmsdrm.drm_fd >= 0) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Sharing DRM FD with SDL");
-            return info.info.kmsdrm.drm_fd;
+#ifdef Q_OS_UNIX
+    int devIndex = SDLC_KMSDRM_GetDevIndex(window);
+    if (devIndex >= 0) {
+        char path[128];
+        snprintf(path, sizeof(path), "/dev/dri/card%u", devIndex);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Opening DRM FD from SDL by path: %s",
+                    path);
+        int fd = open(path, O_RDWR | O_CLOEXEC);
+        if (fd >= 0) {
+            *mustClose = true;
         }
-        else {
-            char path[128];
-            snprintf(path, sizeof(path), "/dev/dri/card%u", info.info.kmsdrm.dev_index);
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Opening DRM FD from SDL by path: %s",
-                        path);
-            int fd = open(path, O_RDWR | O_CLOEXEC);
-            if (fd >= 0) {
-                *mustClose = true;
-            }
-            return fd;
-        }
+        return fd;
     }
-#else
-    Q_UNUSED(window);
 #endif
 
     return -1;

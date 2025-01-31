@@ -24,7 +24,6 @@
 
 // HACK: Remove once proper Dark Mode support lands in SDL
 #ifdef Q_OS_WIN32
-#include <SDL_syswm.h>
 #include <dwmapi.h>
 #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE_OLD
 #define DWMWA_USE_IMMERSIVE_DARK_MODE_OLD 19
@@ -1867,23 +1866,20 @@ void Session::execInternal()
             darkModeEnabled = FALSE;
         }
 
-        SDL_SysWMinfo info;
-        SDL_VERSION(&info.version);
+        // If dark mode is enabled, propagate that to our SDL window
+        if (darkModeEnabled) {
+            HWND hwnd = (HWND)SDLC_Win32_GetHwnd(m_Window);
 
-        if (SDL_GetWindowWMInfo(m_Window, &info) && info.subsystem == SDL_SYSWM_WINDOWS) {
-            // If dark mode is enabled, propagate that to our SDL window
-            if (darkModeEnabled) {
-                if (FAILED(DwmSetWindowAttribute(info.info.win.window, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkModeEnabled, sizeof(darkModeEnabled)))) {
-                    DwmSetWindowAttribute(info.info.win.window, DWMWA_USE_IMMERSIVE_DARK_MODE_OLD, &darkModeEnabled, sizeof(darkModeEnabled));
-                }
-
-                // Toggle non-client rendering off and back on to ensure dark mode takes effect on Windows 10.
-                // DWM doesn't seem to correctly invalidate the non-client area after enabling dark mode.
-                DWMNCRENDERINGPOLICY ncPolicy = DWMNCRP_DISABLED;
-                DwmSetWindowAttribute(info.info.win.window, DWMWA_NCRENDERING_POLICY, &ncPolicy, sizeof(ncPolicy));
-                ncPolicy = DWMNCRP_ENABLED;
-                DwmSetWindowAttribute(info.info.win.window, DWMWA_NCRENDERING_POLICY, &ncPolicy, sizeof(ncPolicy));
+            if (FAILED(DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkModeEnabled, sizeof(darkModeEnabled)))) {
+                DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_OLD, &darkModeEnabled, sizeof(darkModeEnabled));
             }
+
+            // Toggle non-client rendering off and back on to ensure dark mode takes effect on Windows 10.
+            // DWM doesn't seem to correctly invalidate the non-client area after enabling dark mode.
+            DWMNCRENDERINGPOLICY ncPolicy = DWMNCRP_DISABLED;
+            DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &ncPolicy, sizeof(ncPolicy));
+            ncPolicy = DWMNCRP_ENABLED;
+            DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &ncPolicy, sizeof(ncPolicy));
         }
     }
 #endif

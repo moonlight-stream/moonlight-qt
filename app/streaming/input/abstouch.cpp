@@ -2,8 +2,12 @@
 
 #include <Limelight.h>
 #include "SDL_compat.h"
-#include <SDL_syswm.h>
 #include "streaming/streamutils.h"
+
+#ifdef Q_OS_WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
 
 #include <QtMath>
 
@@ -30,33 +34,27 @@ Uint32 SdlInputHandler::longPressTimerCallback(Uint32, void*)
 
 void SdlInputHandler::disableTouchFeedback()
 {
-    SDL_SysWMinfo info;
-
-    SDL_VERSION(&info.version);
-    SDL_GetWindowWMInfo(m_Window, &info);
-
 #ifdef Q_OS_WIN32
-    if (info.subsystem == SDL_SYSWM_WINDOWS) {
-        auto fnSetWindowFeedbackSetting = (decltype(SetWindowFeedbackSetting)*)GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowFeedbackSetting");
-        if (fnSetWindowFeedbackSetting) {
-            constexpr FEEDBACK_TYPE feedbackTypes[] = {
-                FEEDBACK_TOUCH_CONTACTVISUALIZATION,
-                FEEDBACK_PEN_BARRELVISUALIZATION,
-                FEEDBACK_PEN_TAP,
-                FEEDBACK_PEN_DOUBLETAP,
-                FEEDBACK_PEN_PRESSANDHOLD,
-                FEEDBACK_PEN_RIGHTTAP,
-                FEEDBACK_TOUCH_TAP,
-                FEEDBACK_TOUCH_DOUBLETAP,
-                FEEDBACK_TOUCH_PRESSANDHOLD,
-                FEEDBACK_TOUCH_RIGHTTAP,
-                FEEDBACK_GESTURE_PRESSANDTAP,
-            };
+    auto fnSetWindowFeedbackSetting = (decltype(SetWindowFeedbackSetting)*)GetProcAddress(GetModuleHandleW(L"user32.dll"), "SetWindowFeedbackSetting");
+    if (fnSetWindowFeedbackSetting) {
+        constexpr FEEDBACK_TYPE feedbackTypes[] = {
+            FEEDBACK_TOUCH_CONTACTVISUALIZATION,
+            FEEDBACK_PEN_BARRELVISUALIZATION,
+            FEEDBACK_PEN_TAP,
+            FEEDBACK_PEN_DOUBLETAP,
+            FEEDBACK_PEN_PRESSANDHOLD,
+            FEEDBACK_PEN_RIGHTTAP,
+            FEEDBACK_TOUCH_TAP,
+            FEEDBACK_TOUCH_DOUBLETAP,
+            FEEDBACK_TOUCH_PRESSANDHOLD,
+            FEEDBACK_TOUCH_RIGHTTAP,
+            FEEDBACK_GESTURE_PRESSANDTAP,
+        };
 
-            for (FEEDBACK_TYPE ft : feedbackTypes) {
-                BOOL val = FALSE;
-                fnSetWindowFeedbackSetting(info.info.win.window, ft, 0, sizeof(val), &val);
-            }
+        HWND window = (HWND)SDLC_Win32_GetHwnd(m_Window);
+        for (FEEDBACK_TYPE ft : feedbackTypes) {
+            BOOL val = FALSE;
+            fnSetWindowFeedbackSetting(window, ft, 0, sizeof(val), &val);
         }
     }
 #endif

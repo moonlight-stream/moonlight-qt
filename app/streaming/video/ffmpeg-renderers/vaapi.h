@@ -92,7 +92,7 @@ private:
 #endif
 
     int m_DecoderSelectionPass;
-    int m_WindowSystem;
+    SDLC_VideoDriver m_WindowSystem;
     AVBufferRef* m_HwContext;
     bool m_BlacklistedForDirectRendering;
     bool m_HasRfiLatencyBug;

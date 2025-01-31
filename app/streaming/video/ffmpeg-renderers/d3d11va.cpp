@@ -8,7 +8,6 @@
 #include "streaming/streamutils.h"
 #include "streaming/session.h"
 
-#include <SDL_syswm.h>
 #include <VersionHelpers.h>
 
 #include <dwmapi.h>
@@ -435,16 +434,13 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
-    SDL_SysWMinfo info;
-    SDL_VERSION(&info.version);
-    SDL_GetWindowWMInfo(params->window, &info);
-    SDL_assert(info.subsystem == SDL_SYSWM_WINDOWS);
+    HWND window = (HWND)SDLC_Win32_GetHwnd(params->window);
 
     // Always use windowed or borderless windowed mode.. SDL does mode-setting for us in
     // full-screen exclusive mode (SDL_WINDOW_FULLSCREEN), so this actually works out okay.
     ComPtr<IDXGISwapChain1> swapChain;
     hr = m_Factory->CreateSwapChainForHwnd(m_Device.Get(),
-                                           info.info.win.window,
+                                           window,
                                            &swapChainDesc,
                                            nullptr,
                                            nullptr,
@@ -468,7 +464,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     // Disable Alt+Enter, PrintScreen, and window message snooping. This makes
     // it safe to run the renderer on a separate rendering thread rather than
     // requiring the main (message loop) thread.
-    hr = m_Factory->MakeWindowAssociation(info.info.win.window, DXGI_MWA_NO_WINDOW_CHANGES);
+    hr = m_Factory->MakeWindowAssociation(window, DXGI_MWA_NO_WINDOW_CHANGES);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "IDXGIFactory::MakeWindowAssociation() failed: %x",

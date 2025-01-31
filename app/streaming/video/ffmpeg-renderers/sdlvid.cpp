@@ -5,8 +5,6 @@
 
 #include <Limelight.h>
 
-#include <SDL_syswm.h>
-
 extern "C" {
 #include <libavutil/pixdesc.h>
 #include <libavutil/opt.h>
@@ -140,20 +138,11 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    SDL_SysWMinfo info;
-    SDL_VERSION(&info.version);
-    if (!SDL_GetWindowWMInfo(params->window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
     // Only set SDL_RENDERER_PRESENTVSYNC if we know we'll get tearing otherwise.
     // Since we don't use V-Sync to pace our frame rate, we want non-blocking
     // presents to reduce video latency.
-    switch (info.subsystem) {
-    case SDL_SYSWM_WINDOWS:
+    switch (SDLC_GetVideoDriver()) {
+    case SDLC_VIDEO_WIN32:
         // DWM is always tear-free except in full-screen exclusive mode
         if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
             if (params->enableVsync) {
@@ -161,7 +150,7 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
             }
         }
         break;
-    case SDL_SYSWM_WAYLAND:
+    case SDLC_VIDEO_WAYLAND:
         // Wayland is always tear-free in all modes
         break;
     default:

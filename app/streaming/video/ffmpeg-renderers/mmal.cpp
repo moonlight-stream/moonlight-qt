@@ -5,13 +5,6 @@
 
 #include <Limelight.h>
 
-// HACK: Avoid including X11 headers which conflict with QDir
-#ifdef SDL_VIDEO_DRIVER_X11
-#undef SDL_VIDEO_DRIVER_X11
-#endif
-
-#include <SDL_syswm.h>
-
 #include <QDir>
 #include <QTextStream>
 

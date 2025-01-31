@@ -11,7 +11,6 @@
 #include <unistd.h>
 
 #include <SDL_render.h>
-#include <SDL_syswm.h>
 
 // These are extensions, so some platform headers may not provide them
 #ifndef EGL_PLATFORM_WAYLAND_KHR
@@ -485,12 +484,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    SDL_SysWMinfo info;
-    SDL_VERSION(&info.version);
-    if (!SDL_GetWindowWMInfo(params->window, &info)) {
-        EGL_LOG(Error, "SDL_GetWindowWMInfo() failed: %s", SDL_GetError());
-        return false;
-    }
+    SDLC_VideoDriver videoDriver = SDLC_GetVideoDriver();
 
     if (!(m_Context = SDL_GL_CreateContext(params->window))) {
         EGL_LOG(Error, "Cannot create OpenGL context: %s", SDL_GetError());
@@ -597,21 +591,14 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // the Wayland viewport can be stale when using Super+Left/Right/Up
     // to resize the window. This seems to happen significantly more often
     // with vsync enabled, so this also mitigates that problem too.
-    if (params->enableVsync
-#ifdef SDL_VIDEO_DRIVER_WAYLAND
-            && info.subsystem != SDL_SYSWM_WAYLAND
-#endif
-            ) {
+    if (params->enableVsync && videoDriver != SDLC_VIDEO_WAYLAND) {
         SDL_GL_SetSwapInterval(1);
 
-#if SDL_VERSION_ATLEAST(2, 0, 15) && defined(SDL_VIDEO_DRIVER_KMSDRM)
         // The SDL KMSDRM backend already enforces double buffering (due to
         // SDL_HINT_VIDEO_DOUBLE_BUFFER=1), so calling glFinish() after
         // SDL_GL_SwapWindow() will block an extra frame and lock rendering
         // at 1/2 the display refresh rate.
-        if (info.subsystem != SDL_SYSWM_KMSDRM)
-#endif
-        {
+        if (videoDriver != SDLC_VIDEO_KMSDRM) {
             m_BlockingSwapBuffers = true;
         }
     } else {

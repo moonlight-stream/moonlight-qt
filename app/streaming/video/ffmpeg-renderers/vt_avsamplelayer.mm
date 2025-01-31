@@ -5,7 +5,6 @@
 #include "pacer/pacer.h"
 #undef AVMediaType
 
-#include <SDL_syswm.h>
 #include <Limelight.h>
 #include <streaming/session.h>
 
@@ -139,9 +138,8 @@ public:
         return kCVReturnSuccess;
     }
 
-    bool initializeVsyncCallback(SDL_SysWMinfo* info)
+    bool initializeVsyncCallback(NSScreen* screen)
     {
-        NSScreen* screen = [info->info.cocoa.window screen];
         CVReturn status;
         if (screen == nullptr) {
             // Window not visible on any display, so use a
@@ -418,23 +416,11 @@ public:
 
         // If we're using direct rendering, set up the AVSampleBufferDisplayLayer
         if (m_DirectRendering) {
-            SDL_SysWMinfo info;
-
-            SDL_VERSION(&info.version);
-
-            if (!SDL_GetWindowWMInfo(params->window, &info)) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "SDL_GetWindowWMInfo() failed: %s",
-                            SDL_GetError());
-                return false;
-            }
-
-            SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
+            NSWindow* window = (NSWindow*)SDLC_MacOS_GetWindow(params->window);
 
             // SDL adds its own content view to listen for events.
             // We need to add a subview for our display layer.
-            NSView* contentView = info.info.cocoa.window.contentView;
-            m_StreamView = [[VTView alloc] initWithFrame:contentView.bounds];
+            m_StreamView = [[VTView alloc] initWithFrame:window.contentView.bounds];
 
             m_DisplayLayer = [[AVSampleBufferDisplayLayer alloc] init];
             m_DisplayLayer.bounds = m_StreamView.bounds;
@@ -453,9 +439,9 @@ public:
             if (isAppleSilicon && !(params->videoFormat & VIDEO_FORMAT_MASK_10BIT)) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using layer rasterization workaround");
-                if (info.info.cocoa.window.screen != nullptr) {
+                if (window.screen != nullptr) {
                     m_DisplayLayer.shouldRasterize = YES;
-                    m_DisplayLayer.rasterizationScale = info.info.cocoa.window.screen.backingScaleFactor;
+                    m_DisplayLayer.rasterizationScale = window.screen.backingScaleFactor;
                 }
                 else {
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -471,10 +457,10 @@ public:
             m_StreamView.layer = m_DisplayLayer;
             m_StreamView.wantsLayer = YES;
 
-            [contentView addSubview: m_StreamView];
+            [window.contentView addSubview: m_StreamView];
 
             if (params->enableFramePacing) {
-                if (!initializeVsyncCallback(&info)) {
+                if (!initializeVsyncCallback(window.screen)) {
                     return false;
                 }
             }
