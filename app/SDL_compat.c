@@ -232,3 +232,21 @@ void SDLC_LeaveFullscreen(SDL_Window* window)
 {
     SDL_SetWindowFullscreen(window, 0);
 }
+
+SDL_Window* SDLC_CreateWindowWithFallback(const char *title,
+                                          int x, int y, int w, int h,
+                                          Uint32 requiredFlags,
+                                          Uint32 optionalFlags)
+{
+    SDL_Window* window = SDL_CreateWindow(title, x, y, w, h, requiredFlags | optionalFlags);
+    if (!window) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to create window with optional flags: %s",
+                    SDL_GetError());
+
+        // Try the fallback flags now
+        window = SDL_CreateWindow(title, x, y, w, h, requiredFlags);
+    }
+
+    return window;
+}

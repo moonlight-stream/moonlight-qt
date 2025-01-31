@@ -97,6 +97,11 @@ bool SDLC_IsFullscreenDesktop(SDL_Window* window);
 void SDLC_EnterFullscreen(SDL_Window* window, bool exclusive);
 void SDLC_LeaveFullscreen(SDL_Window* window);
 
+SDL_Window* SDLC_CreateWindowWithFallback(const char *title,
+                                          int x, int y, int w, int h,
+                                          Uint32 requiredFlags,
+                                          Uint32 optionalFlags);
+
 #ifdef __cplusplus
 }
 #endif
