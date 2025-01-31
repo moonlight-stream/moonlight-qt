@@ -166,6 +166,7 @@ macx {
 }
 
 SOURCES += \
+    SDL_compat.c \
     backend/nvaddress.cpp \
     backend/nvapp.cpp \
     cli/pair.cpp \
