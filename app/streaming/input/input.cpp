@@ -189,10 +189,10 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
 
     // We need to reinit this each time, since you only get
     // an initial set of gamepad arrival events once per init.
-    SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
-    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER))) {
+    SDL_assert(!SDL_WasInit(SDL_INIT_GAMEPAD));
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_GAMEPAD))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
+                     "SDL_InitSubSystem(SDL_INIT_GAMEPAD) failed: %s",
                      SDL_GetError());
     }
 
@@ -243,8 +243,8 @@ SdlInputHandler::~SdlInputHandler()
     SDL_assert(!SDL_WasInit(SDL_INIT_HAPTIC));
 #endif
 
-    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
-    SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
+    SDL_QuitSubSystem(SDL_INIT_GAMEPAD);
+    SDL_assert(!SDL_WasInit(SDL_INIT_GAMEPAD));
 
     SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
     SDL_assert(!SDL_WasInit(SDL_INIT_JOYSTICK));
@@ -376,7 +376,7 @@ void SdlInputHandler::setCaptureActive(bool active)
             if (isMouseInVideoRegion(mouseX, mouseY)) {
                 // Synthesize a mouse event to synchronize the cursor
                 SDL_MouseMotionEvent motionEvent = {};
-                motionEvent.type = SDL_MOUSEMOTION;
+                motionEvent.type = SDL_EVENT_MOUSE_MOTION;
                 motionEvent.timestamp = SDL_GetTicks();
                 motionEvent.windowID = SDL_GetWindowID(m_Window);
                 motionEvent.x = mouseX;
@@ -406,7 +406,7 @@ void SdlInputHandler::setCaptureActive(bool active)
 void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
 {
 #if SDL_VERSION_ATLEAST(2, 0, 10)
-    if (SDL_GetTouchDeviceType(event->touchId) != SDL_TOUCH_DEVICE_DIRECT) {
+    if (SDL_GetTouchDeviceType(event->touchID) != SDL_TOUCH_DEVICE_DIRECT) {
         // Ignore anything that isn't a touchscreen. We may get callbacks
         // for trackpads, but we want to handle those in the mouse path.
         return;
