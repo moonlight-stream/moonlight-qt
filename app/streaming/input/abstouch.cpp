@@ -82,13 +82,13 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
 
     uint8_t eventType;
     switch (event->type) {
-    case SDL_FINGERDOWN:
+    case SDL_EVENT_FINGER_DOWN :
         eventType = LI_TOUCH_EVENT_DOWN;
         break;
-    case SDL_FINGERMOTION:
+    case SDL_EVENT_FINGER_MOTION :
         eventType = LI_TOUCH_EVENT_MOVE;
         break;
-    case SDL_FINGERUP:
+    case SDL_EVENT_FINGER_UP :
         eventType = LI_TOUCH_EVENT_UP;
         break;
     default:
@@ -98,16 +98,16 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
     uint32_t pointerId;
 
     // If the pointer ID is larger than we can fit, just CRC it and use that as the ID.
-    if ((uint64_t)event->fingerId > UINT32_MAX) {
+    if ((uint64_t) event->fingerID > UINT32_MAX) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        QByteArrayView bav((char*)&event->fingerId, sizeof(event->fingerId));
+        QByteArrayView bav((char*)&event->fingerID, sizeof(event->fingerID));
         pointerId = qChecksum(bav);
 #else
-        pointerId = qChecksum((char*)&event->fingerId, sizeof(event->fingerId));
+        pointerId = qChecksum((char*)&event->fingerID, sizeof(event->fingerID));
 #endif
     }
     else {
-        pointerId = (uint32_t)event->fingerId;
+        pointerId = (uint32_t) event->fingerID;
     }
 
     // Try to send it as a native pen/touch event, otherwise fall back to our touch emulation
@@ -117,7 +117,7 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
 
         int numTouchDevices = SDL_GetNumTouchDevices();
         for (int i = 0; i < numTouchDevices; i++) {
-            if (event->touchId == SDL_GetTouchDevice(i)) {
+            if (event->touchID == SDL_GetTouchDevice(i)) {
                 const char* touchName = SDL_GetTouchName(i);
 
                 // SDL will report "pen" as the name of pen input devices on Windows.
@@ -158,12 +158,12 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
     // dx and dy are deltas from the last touch event, not the first touch down.
 
     // Ignore touch down events with more than one finger
-    if (event->type == SDL_FINGERDOWN && SDL_GetNumTouchFingers(event->touchId) > 1) {
+    if (event->type == SDL_EVENT_FINGER_DOWN && SDL_GetNumTouchFingers(event->touchID) > 1) {
         return;
     }
 
     // Ignore touch move and touch up events from the non-primary finger
-    if (event->type != SDL_FINGERDOWN && event->fingerId != m_LastTouchDownEvent.fingerId) {
+    if (event->type != SDL_EVENT_FINGER_DOWN && event->fingerID != m_LastTouchDownEvent.fingerID) {
         return;
     }
 
@@ -190,7 +190,7 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
     }
 
     // Don't reposition for finger down events within the deadzone. This makes double-clicking easier.
-    if (event->type != SDL_FINGERDOWN ||
+    if (event->type != SDL_EVENT_FINGER_DOWN ||
             event->timestamp - m_LastTouchUpEvent.timestamp > DOUBLE_TAP_DEAD_ZONE_DELAY ||
             qSqrt(qPow(event->x - m_LastTouchUpEvent.x, 2) + qPow(event->y - m_LastTouchUpEvent.y, 2)) > DOUBLE_TAP_DEAD_ZONE_DELTA) {
         // Scale window-relative events to be video-relative and clamp to video region
@@ -201,7 +201,7 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
         LiSendMousePositionEvent(x - dst.x, y - dst.y, dst.w, dst.h);
     }
 
-    if (event->type == SDL_FINGERDOWN) {
+    if (event->type == SDL_EVENT_FINGER_DOWN) {
         m_LastTouchDownEvent = *event;
 
         // Start/restart the long press timer
@@ -213,7 +213,7 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
         // Left button down on finger down
         LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
     }
-    else if (event->type == SDL_FINGERUP) {
+    else if (event->type == SDL_EVENT_FINGER_UP) {
         m_LastTouchUpEvent = *event;
 
         // Cancel the long press timer

@@ -228,12 +228,15 @@ void SystemProperties::refreshDisplays()
     monitorSafeAreaResolutions.clear();
     monitorRefreshRates.clear();
 
+    int numDisplays = 0;
+    SDL_DisplayID *displays = SDL_GetDisplays(&numDisplays);
+
     SDL_DisplayMode bestMode;
-    for (int displayIndex = 0; displayIndex < SDL_GetNumVideoDisplays(); displayIndex++) {
+    for (int i = 0; i < numDisplays; i++) {
         SDL_DisplayMode desktopMode;
         SDL_Rect safeArea;
 
-        if (StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea)) {
+        if (StreamUtils::getNativeDesktopMode(displays[i], &desktopMode, &safeArea)) {
             if (desktopMode.w <= 8192 && desktopMode.h <= 8192) {
                 // Keep these lists compact because their QML consumers iterate until
                 // the first empty entry. Inserting by SDL display index is invalid if
@@ -249,10 +252,10 @@ void SystemProperties::refreshDisplays()
 
             // Start at desktop mode and work our way up
             bestMode = desktopMode;
-            int numDisplayModes = SDL_GetNumDisplayModes(displayIndex);
-            for (int i = 0; i < numDisplayModes; i++) {
+            int numDisplayModes = SDL_GetNumDisplayModes(displays[i]);
+            for (int modeIndex = 0; modeIndex < numDisplayModes; modeIndex++) {
                 SDL_DisplayMode mode;
-                if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
+                if (SDL_GetDisplayMode(displays[i], modeIndex, &mode) == 0) {
                     if (mode.w == desktopMode.w && mode.h == desktopMode.h) {
                         if (mode.refresh_rate > bestMode.refresh_rate) {
                             bestMode = mode;
@@ -275,5 +278,6 @@ void SystemProperties::refreshDisplays()
         }
     }
 
+    SDL_free(displays);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }

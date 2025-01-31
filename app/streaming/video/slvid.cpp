@@ -195,7 +195,7 @@ void SLVideoDecoder::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
     if (!overlayEnabled) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         return;
     }
 
@@ -203,7 +203,7 @@ void SLVideoDecoder::notifyOverlayUpdated(Overlay::OverlayType type)
     if (m_Overlay == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SLVideo_CreateOverlay() failed");
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         return;
     }
 
@@ -221,7 +221,7 @@ void SLVideoDecoder::notifyOverlayUpdated(Overlay::OverlayType type)
     SLVideo_SetOverlayDisplayArea(m_Overlay, 0.0f, 1.0f - flHeight, flWidth, flHeight);
 
     // We're done with the surface now
-    SDL_FreeSurface(newSurface);
+    SDL_DestroySurface(newSurface);
 
     // Show the overlay
     SLVideo_ShowOverlay(m_Overlay);

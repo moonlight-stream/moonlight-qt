@@ -269,7 +269,7 @@ private:
     QStringList m_LaunchWarnings;
     bool m_ShouldExit;
 
-    int m_CurrentDisplayIndex;
+    SDL_DisplayID m_CurrentDisplay;
     bool m_NeedsFirstEnterCapture;
     bool m_NeedsPostDecoderCreationCapture;
 
