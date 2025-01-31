@@ -900,14 +900,14 @@ bool Session::initialize(QQuickWindow* qtWindow)
         // mode, but in the case of a slow GPU, we want to use real fullscreen
         // to allow the display to assist with the video scaling work.
         if (WMUtils::isGpuSlow()) {
-            m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
+            m_FullScreenExclusiveMode = true;
             break;
         }
         // Fall-through
     case StreamingPreferences::WM_FULLSCREEN_DESKTOP:
         // Only use full-screen desktop mode if we're running a desktop environment
         if (WMUtils::isRunningDesktopEnvironment()) {
-            m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+            m_FullScreenExclusiveMode = false;
             break;
         }
         // Fall-through
@@ -915,13 +915,13 @@ bool Session::initialize(QQuickWindow* qtWindow)
 #ifdef Q_OS_DARWIN
         if (qEnvironmentVariableIntValue("I_WANT_BUGGY_FULLSCREEN") == 0) {
             // Don't use "real" fullscreen on macOS by default. See comments above.
-            m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+            m_FullScreenExclusiveMode = false;
         }
         else {
-            m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
+            m_FullScreenExclusiveMode = true;
         }
 #else
-        m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
+        m_FullScreenExclusiveMode = true;
 #endif
         break;
     }
@@ -933,7 +933,7 @@ bool Session::initialize(QQuickWindow* qtWindow)
     if (qgetenv("DESKTOP_SESSION") == "LXDE-pi") {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Forcing windowed mode on LXDE-Pi");
-        m_FullScreenFlag = 0;
+        m_FullScreenExclusiveMode = false;
     }
 #endif
 
@@ -1401,10 +1401,15 @@ void Session::getWindowDimensions(int& x, int& y,
 void Session::updateOptimalWindowDisplayMode()
 {
     SDL_DisplayMode desktopMode, bestMode, mode;
-    int displayIndex = SDL_GetWindowDisplayIndex(m_Window);
+
+    // Nothing to do if we're not using full-screen exclusive mode
+    if (!m_FullScreenExclusiveMode) {
+        return;
+    }
 
     // Try the current display mode first. On macOS, this will be the normal
     // scaled desktop resolution setting.
+    int displayIndex = SDL_GetWindowDisplayIndex(m_Window);
     if (SDL_GetDesktopDisplayMode(displayIndex, &desktopMode) == 0) {
         // If this doesn't fit the selected resolution, use the native
         // resolution of the panel (unscaled).
@@ -1491,7 +1496,7 @@ void Session::updateOptimalWindowDisplayMode()
         bestMode = desktopMode;
     }
 
-    if ((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+    if (SDLC_IsFullscreenExclusive(m_Window)) {
         // Only print when the window is actually in full-screen exclusive mode,
         // otherwise we're not actually using the mode we've set here
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1504,7 +1509,7 @@ void Session::updateOptimalWindowDisplayMode()
 
 void Session::toggleFullscreen()
 {
-    bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
+    bool enterFullScreen = !SDLC_IsFullscreen(m_Window);
 
 #if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
     // Destroy the video decoder before toggling full-screen because D3D9 can try
@@ -1522,13 +1527,18 @@ void Session::toggleFullscreen()
 #endif
 
     // Actually enter/leave fullscreen
-    SDL_SetWindowFullscreen(m_Window, fullScreen ? m_FullScreenFlag : 0);
+    if (enterFullScreen) {
+        SDLC_EnterFullscreen(m_Window, m_FullScreenExclusiveMode);
+    }
+    else {
+        SDLC_LeaveFullscreen(m_Window);
+    }
 
 #ifdef Q_OS_DARWIN
     // SDL on macOS has a bug that causes the window size to be reset to crazy
     // large dimensions when exiting out of true fullscreen mode. We can work
     // around the issue by manually resetting the position and size here.
-    if (!fullScreen && m_FullScreenFlag == SDL_WINDOW_FULLSCREEN) {
+    if (!enterFullScreen && m_FullScreenExclusiveMode) {
         int x, y, width, height;
         getWindowDimensions(x, y, width, height);
         SDL_SetWindowSize(m_Window, width, height);
@@ -1905,7 +1915,7 @@ void Session::exec()
 
     // Enter full screen if requested
     if (m_IsFullScreen) {
-        SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
+        SDLC_EnterFullscreen(m_Window, m_FullScreenExclusiveMode);
     }
 
     bool needsFirstEnterCapture = false;

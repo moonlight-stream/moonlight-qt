@@ -6,6 +6,7 @@
 #pragma once
 
 #include <SDL.h>
+#include <stdbool.h>
 
 // This is a pure C header for compatibility with SDL.h
 #ifdef __cplusplus
@@ -89,6 +90,12 @@ typedef enum {
     SDLC_VIDEO_KMSDRM,
 } SDLC_VideoDriver;
 SDLC_VideoDriver SDLC_GetVideoDriver();
+
+bool SDLC_IsFullscreen(SDL_Window* window);
+bool SDLC_IsFullscreenExclusive(SDL_Window* window);
+bool SDLC_IsFullscreenDesktop(SDL_Window* window);
+void SDLC_EnterFullscreen(SDL_Window* window, bool exclusive);
+void SDLC_LeaveFullscreen(SDL_Window* window);
 
 #ifdef __cplusplus
 }
