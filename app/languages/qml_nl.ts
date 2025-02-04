@@ -7,18 +7,18 @@
         <location filename="../gui/AppView.qml" line="145"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Resume Game</source>
-        <translation>Vervolg spel</translation>
+        <translation>Spel hervatten</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="173"/>
         <location filename="../gui/AppView.qml" line="308"/>
         <source>Quit Game</source>
-        <translation>Verlaat spel</translation>
+        <translation>Spel afsluiten</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Launch Game</source>
-        <translation>Start spel</translation>
+        <translation>Spel starten</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="316"/>
@@ -33,7 +33,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="329"/>
         <source>Hide Game</source>
-        <translation>Verberg spel</translation>
+        <translation>Spel verbergen</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
@@ -43,7 +43,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>View All Apps</source>
-        <translation>Bekijk alle apps</translation>
+        <translation>Alle apps bekijken</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
@@ -56,7 +56,7 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Verbinding maken met PC...</translation>
+        <translation>Verbinding maken met PC…</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
@@ -66,7 +66,7 @@
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Koppelen succesvol</translation>
     </message>
 </context>
 <context>
@@ -79,7 +79,7 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation>App afsluiten...</translation>
+        <translation>App afsluiten…</translation>
     </message>
 </context>
 <context>
@@ -92,7 +92,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation>App lijst laden...</translation>
+        <translation>App-lijst laden…</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
@@ -105,12 +105,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished">Online</translation>
+        <translation>Online</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished">Offline</translation>
+        <translation>Offline</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -119,67 +119,67 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Onbekend</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>Gekoppeld</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>Niet gekoppeld</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Naam: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Status: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Actief adres: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Lokaal adres: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Extern adres: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>IPv6-adres: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Handmatig adres: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>MAC-adres: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Koppelings­status: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
@@ -189,7 +189,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTPS-poort: %1</translation>
     </message>
 </context>
 <context>
@@ -197,7 +197,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation>Gamepad mapping</translation>
+        <translation>Gamepad-mapping</translation>
     </message>
 </context>
 <context>
@@ -243,27 +243,27 @@
     <message>
         <location filename="../gui/PcView.qml" line="188"/>
         <source>Wake PC</source>
-        <translation>Wek PC</translation>
+        <translation>PC ontwaken</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="194"/>
         <source>Test Network</source>
-        <translation>Test netwerk</translation>
+        <translation>Netwerk testen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="203"/>
         <source>Rename PC</source>
-        <translation>Wijzig PC naam</translation>
+        <translation>PC hernoemen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="212"/>
         <source>Delete PC</source>
-        <translation>Verwijder PC</translation>
+        <translation>PC verwijderen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Details bekijken</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="233"/>
@@ -303,7 +303,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="172"/>
         <source>PC Status: %1</source>
-        <translation>PC Status: %1</translation>
+        <translation>PC-status: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="172"/>
@@ -318,7 +318,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="178"/>
         <source>View All Apps</source>
-        <translation>Geef alle apps weer</translation>
+        <translation>Alle apps bekijken</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="309"/>
@@ -387,7 +387,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 is al gekoppeld</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="109"/>
@@ -434,12 +434,12 @@
     <message>
         <location filename="../main.cpp" line="622"/>
         <source>OK</source>
-        <translation>OK</translation>
+        <translation>Oké</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="623"/>
         <source>Help</source>
-        <translation>Help</translation>
+        <translation>Hulp</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="624"/>
@@ -452,7 +452,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="13"/>
         <source>Quitting %1...</source>
-        <translation>%1 afsluiten...</translation>
+        <translation>%1 afsluiten…</translation>
     </message>
 </context>
 <context>
@@ -500,7 +500,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Fout­code: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="931"/>
@@ -683,7 +683,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="106"/>
         <source>Basic Settings</source>
-        <translation>Basis instellingen</translation>
+        <translation>Basis­instellingen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="250"/>
@@ -728,7 +728,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="668"/>
         <source>Video bitrate:</source>
-        <translation>Video bitrate:</translation>
+        <translation>Video-bitsnelheid:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="676"/>
@@ -743,12 +743,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="707"/>
         <source>Display mode</source>
-        <translation>Display modus</translation>
+        <translation>Weergave­modus</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="737"/>
         <source>(Recommended)</source>
-        <translation>(Aanbevolen)</translation>
+        <translation>(aanbevolen)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
@@ -764,23 +764,23 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="723"/>
         <source>Borderless windowed</source>
-        <translation>Randloos windowed</translation>
+        <translation>Randloos venster</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="182"/>
         <source>Native</source>
-        <translation type="unfinished"></translation>
+        <translation>Inheems</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
+        <translation>Inheems (exclusief inkeping)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="728"/>
         <location filename="../gui/SettingsView.qml" line="1173"/>
         <source>Windowed</source>
-        <translation>Windowed</translation>
+        <translation>Venster</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="794"/>
@@ -795,7 +795,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="811"/>
         <source>Frame pacing</source>
-        <translation>Frame pacing</translation>
+        <translation>Beeld­tempo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="821"/>
@@ -805,7 +805,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="831"/>
         <source>Audio Settings</source>
-        <translation>Audio instellingen</translation>
+        <translation>Audio­instellingen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="866"/>
@@ -845,7 +845,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="964"/>
         <source>UI Settings</source>
-        <translation>UI instellingen</translation>
+        <translation>Interface­instellingen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="974"/>
@@ -865,7 +865,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1140"/>
         <source>GUI display mode</source>
-        <translation>GUI weergave modus</translation>
+        <translation>GUI-weergave­modus</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1177"/>
@@ -875,7 +875,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1250"/>
         <source>Input Settings</source>
-        <translation>Invoer instellingen</translation>
+        <translation>Invoer­instellingen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1271"/>
@@ -894,12 +894,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1573"/>
         <source>AV1 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>AV1 (experimenteel)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1588"/>
         <source>Enable HDR (Experimental)</source>
-        <translation>HDR inschakelen (Experimenteel)</translation>
+        <translation>HDR inschakelen (experimenteel)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1603"/>
@@ -954,7 +954,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1398"/>
         <source>Gamepad Settings</source>
-        <translation>Gamepad instellingen</translation>
+        <translation>Gamepad­instellingen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1408"/>
@@ -999,7 +999,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="924"/>
         <source>Host Settings</source>
-        <translation>Host instellingen</translation>
+        <translation>Host­instellingen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1473"/>
@@ -1009,7 +1009,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="841"/>
         <source>Audio configuration</source>
-        <translation>Audio configuratie</translation>
+        <translation>Audio­configuratie</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1194"/>
@@ -1040,7 +1040,7 @@
         <location filename="../gui/SettingsView.qml" line="508"/>
         <location filename="../gui/SettingsView.qml" line="618"/>
         <source>Custom (%1 FPS)</source>
-        <translation type="unfinished"></translation>
+        <translation>aangepast (%1 FPS)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="523"/>
@@ -1052,17 +1052,17 @@
         <location filename="../gui/SettingsView.qml" line="228"/>
         <location filename="../gui/SettingsView.qml" line="621"/>
         <source>Custom</source>
-        <translation type="unfinished"></translation>
+        <translation>Aangepast</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="639"/>
         <source>30 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>30 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="644"/>
         <source>60 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>60 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1222"/>
@@ -1117,28 +1117,28 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1483"/>
         <source>Video decoder</source>
-        <translation>Video decoder</translation>
+        <translation>Video­decoder</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1508"/>
         <location filename="../gui/SettingsView.qml" line="1561"/>
         <source>Automatic (Recommended)</source>
-        <translation>Automatisch (Aanbevolen)</translation>
+        <translation>Automatisch (aanbevolen)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1512"/>
         <source>Force software decoding</source>
-        <translation>Forceer software decoding</translation>
+        <translation>Software­ontcijfering forceren</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1516"/>
         <source>Force hardware decoding</source>
-        <translation>Forceer hardware decoding</translation>
+        <translation>Hardware­ontcijfering forceren</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1531"/>
         <source>Video codec</source>
-        <translation>Video codec</translation>
+        <translation>Video­codec</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1565"/>
@@ -1191,13 +1191,13 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <source>Resuming %1...</source>
-        <translation>%1 Vervolgen...</translation>
+        <translation>%1 hervatten…</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>
         <location filename="../gui/StreamSegue.qml" line="19"/>
         <source>Starting %1...</source>
-        <translation>%1 Starten...</translation>
+        <translation>%1 Starten…</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="25"/>
@@ -1255,7 +1255,7 @@
     <message>
         <location filename="../gui/main.qml" line="297"/>
         <source>Add PC manually</source>
-        <translation>Voeg PC handmatig toe</translation>
+        <translation>PC handmatig toe­voegen</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="337"/>
@@ -1265,7 +1265,7 @@
     <message>
         <location filename="../gui/main.qml" line="384"/>
         <source>Gamepad Mapper</source>
-        <translation>Gamepad mapper</translation>
+        <translation>Gamepad-mapper</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="430"/>
@@ -1285,7 +1285,7 @@
     <message>
         <location filename="../gui/main.qml" line="361"/>
         <source>Help</source>
-        <translation>Help</translation>
+        <translation>Hulp</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="422"/>
