@@ -12,7 +12,8 @@ SoundIoAudioRenderer::SoundIoAudioRenderer()
       m_RingBuffer(nullptr),
       m_AudioPacketDuration(0),
       m_Latency(0),
-      m_Errored(false)
+      m_Errored(false),
+      m_Name("libsoundio")
 {
 
 }
@@ -109,6 +110,8 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
         return false;
     }
 
+    setOpusConfig(opusConfig);
+
     m_SoundIo->app_name = "Moonlight";
     m_SoundIo->userdata = this;
     m_SoundIo->on_backend_disconnect = sioBackendDisconnect;
@@ -123,7 +126,7 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Audio backend: %s",
+                "Audio backend: soundio using %s",
                 soundio_backend_name(m_SoundIo->current_backend));
 
     // Don't continue if we could only open the dummy backend
