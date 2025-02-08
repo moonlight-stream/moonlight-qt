@@ -394,7 +394,7 @@
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation>Conessione fallita verso %1</translation>
+        <translation>Connessione fallita verso %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
@@ -495,7 +495,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="139"/>
         <source>Connection terminated</source>
-        <translation>Conessione terminata</translation>
+        <translation>Connessione terminata</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
@@ -830,7 +830,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="898"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
-        <translation>Devi riavviare i giochi attualmente in eseguzione perché questa impostazione abbia effetto</translation>
+        <translation>Devi riavviare i giochi attualmente in esecuzione perché questa impostazione abbia effetto</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="904"/>
@@ -1072,7 +1072,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1232"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation>Evita che il salvaschermo si avii o che lo schermo si spenga durante la trasmissione.</translation>
+        <translation>Evita che il salvaschermo si avvii o che lo schermo si spenga durante la trasmissione.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1283"/>
@@ -1250,7 +1250,7 @@
     <message>
         <location filename="../gui/main.qml" line="278"/>
         <source>Join our community on Discord</source>
-        <translation>Unisciti alla nostra communità su Discord</translation>
+        <translation>Unisciti alla nostra comunità su Discord</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="297"/>
