@@ -820,6 +820,44 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Frame pacing reduces micro-stutter by delaying frames that come in too early")
                 }
+
+                CheckBox {
+                    id: videoEnhancementCheck
+                    width: parent.width
+                    hoverEnabled: true
+                    text: qsTr("Video AI-Enhancement")
+                    font.pointSize:  12
+                    enabled: SystemProperties.isVideoEnhancementCapable()
+                    checked: {
+                        return SystemProperties.isVideoEnhancementCapable() && StreamingPreferences.videoEnhancement
+                    }
+                    property bool keepValue: checked;
+                    onCheckedChanged: {
+                        StreamingPreferences.videoEnhancement = checked
+                    }
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text:
+                        qsTr("Enhance video quality by utilizing the GPU's AI-Enhancement capabilities.")
+                        + qsTr("\nThis feature effectively upscales, reduces compression artifacts and enhances the clarity of streamed content.")
+                        + qsTr("\nNote:")
+                        + qsTr("\n  - If available, ensure that appropriate settings (i.e. RTX Video enhancement) are enabled in your GPU driver configuration.")
+                        + qsTr("\n  - HDR rendering has divers issues depending on the GPU used, we are working on it but we advise to currently use Non-HDR.")
+                        + qsTr("\n  - Be advised that using this feature on laptops running on battery power may lead to significant battery drain.")
+
+                    Component.onCompleted: {
+                        if (!SystemProperties.isVideoEnhancementCapable()){
+                            // VSR or SDR->HDR feature could not be initialized by any GPU available
+                            text = qsTr("Video AI-Enhancement (Not supported by the GPU)")
+                            enabled = false;
+                            checked = false;
+                        } else if(SystemProperties.isVideoEnhancementExperimental()){
+                            // Indicate if the feature is available but not officially deployed by the Vendor
+                            text = qsTr("Video AI-Enhancement (Experimental)")
+                        }
+                    }
+                }
             }
         }
 
@@ -1521,6 +1559,16 @@ Flickable {
                     onActivated: {
                         if (enabled) {
                             StreamingPreferences.videoDecoderSelection = decoderListModel.get(currentIndex).val
+                        }
+                    }
+                    onCurrentIndexChanged: {
+                        if(decoderListModel.get(currentIndex).val === StreamingPreferences.VDS_FORCE_SOFTWARE){
+                            videoEnhancementCheck.enabled = false;
+                            videoEnhancementCheck.keepValue = videoEnhancementCheck.checked;
+                            videoEnhancementCheck.checked = false;
+                        } else {
+                            videoEnhancementCheck.enabled = true;
+                            videoEnhancementCheck.checked = videoEnhancementCheck.keepValue;
                         }
                     }
                 }

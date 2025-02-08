@@ -165,7 +165,7 @@ macx {
         CONFIG += discord-rpc
     }
 
-    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework QuartzCore
+    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework MetalFx -framework QuartzCore
 
     # For libsoundio
     LIBS += -framework CoreAudio -framework AudioUnit
@@ -211,6 +211,7 @@ SOURCES += \
     gui/sdlgamepadkeynavigation.cpp \
     streaming/video/overlaymanager.cpp \
     backend/systemproperties.cpp \
+    streaming/video/videoenhancement.cpp \
     wm.cpp
 
 HEADERS += \
@@ -220,6 +221,7 @@ HEADERS += \
     cli/pair.h \
     settings/compatfetcher.h \
     settings/mappingfetcher.h \
+    streaming/video/videoenhancement.h \
     utils.h \
     backend/computerseeker.h \
     backend/identitymanager.h \
@@ -402,6 +404,18 @@ win32:!winrt {
         streaming/video/ffmpeg-renderers/dxva2.h \
         streaming/video/ffmpeg-renderers/d3d11va.h \
         streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.h
+}
+win32:!winrt {
+    message(AMF enabled for AMD Drivers)
+
+    SOURCES += \
+        ../third-party/AMF/amf/public/common/AMFFactory.cpp \
+        ../third-party/AMF/amf/public/common/AMFSTL.cpp \
+        ../third-party/AMF/amf/public/common/Thread.cpp \
+        ../third-party/AMF/amf/public/common/TraceAdapter.cpp \
+        ../third-party/AMF/amf/public/common/Windows/ThreadWindows.cpp
+
+    INCLUDEPATH += $$PWD/../third-party/AMF/amf
 }
 macx {
     message(VideoToolbox renderer selected)
