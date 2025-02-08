@@ -189,7 +189,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
     // Set modifier flags
     modifiers = 0;
     if (event->keysym.mod & KMOD_CTRL) {
-        modifiers |= MODIFIER_CTRL;
+        modifiers |= m_SwapCmdCtrl ? MODIFIER_META : MODIFIER_CTRL;
     }
     if (event->keysym.mod & KMOD_ALT) {
         modifiers |= MODIFIER_ALT;
@@ -199,7 +199,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
     }
     if (event->keysym.mod & KMOD_GUI) {
         if (isSystemKeyCaptureActive()) {
-            modifiers |= MODIFIER_META;
+            modifiers |= m_SwapCmdCtrl ? MODIFIER_CTRL : MODIFIER_META;
         }
     }
 
@@ -331,10 +331,10 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 keyCode = 0xA1;
                 break;
             case SDL_SCANCODE_LCTRL:
-                keyCode = 0xA2;
+                keyCode = m_SwapCmdCtrl ? 0x5B : 0xA2;
                 break;
             case SDL_SCANCODE_RCTRL:
-                keyCode = 0xA3;
+                keyCode = m_SwapCmdCtrl ? 0x5C : 0xA3;
                 break;
             case SDL_SCANCODE_LALT:
                 keyCode = 0xA4;
@@ -346,13 +346,13 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 if (!isSystemKeyCaptureActive()) {
                     return;
                 }
-                keyCode = 0x5B;
+                keyCode = m_SwapCmdCtrl ? 0xA2 : 0x5B;
                 break;
             case SDL_SCANCODE_RGUI:
                 if (!isSystemKeyCaptureActive()) {
                     return;
                 }
-                keyCode = 0x5C;
+                keyCode = m_SwapCmdCtrl ? 0xA3 : 0x5C;
                 break;
             case SDL_SCANCODE_APPLICATION:
                 keyCode = 0x5D;
