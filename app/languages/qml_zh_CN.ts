@@ -144,7 +144,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation>活动地址:% 1</translation>
+        <translation>活动地址: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
@@ -579,7 +579,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1001"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation>使用软件解码，因为你选择强制使用没有 GPU 支持的H.264。这可能会导致较差的流性能。</translation>
+        <translation>使用软件解码，因为你选择强制使用没有 GPU 支持的 H.264。这可能会导致较差的流性能。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1011"/>
@@ -595,7 +595,7 @@
         <location filename="../streaming/session.cpp" line="1050"/>
         <location filename="../streaming/session.cpp" line="1068"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation>由于您选择强制使用未经GPU支持的HDR，因此将采用软件解码。这可能会导致串流性能不佳。</translation>
+        <translation>由于您选择强制使用未经 GPU 支持的 HDR，因此将采用软件解码。这可能会导致串流性能不佳。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1062"/>
@@ -605,22 +605,22 @@
     <message>
         <location filename="../streaming/session.cpp" line="1084"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation>您的主机PC不支持 YUV 4:4:4 串流。</translation>
+        <translation>您的主机 PC 不支持 YUV 4:4:4 串流。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1092"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation>您的主机PC不支持所选视频编解码器的 YUV 4:4:4 串流。</translation>
+        <translation>您的主机 PC 不支持所选视频编解码器的 YUV 4:4:4 串流。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1107"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation>由于您选择强制使用未经GPU支持的YUV 4:4:4，因此将采用软件解码。这可能会导致串流性能不佳。</translation>
+        <translation>由于您选择强制使用未经 GPU 支持的 YUV 4:4:4，因此将采用软件解码。这可能会导致串流性能不佳。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1113"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation>这台PC的GPU不支持所选视频编解码器的 YUV 4:4:4 解码。</translation>
+        <translation>这台 PC 的 GPU 不支持所选视频编解码器的 YUV 4:4:4 解码。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1122"/>
