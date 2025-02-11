@@ -403,6 +403,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 keyCode = 0xDB;
                 break;
             case SDL_SCANCODE_BACKSLASH:
+            case SDL_SCANCODE_INTERNATIONAL3:
                 keyCode = 0xDC;
                 break;
             case SDL_SCANCODE_RIGHTBRACKET:
@@ -412,7 +413,14 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 keyCode = 0xDE;
                 break;
             case SDL_SCANCODE_NONUSBACKSLASH:
+            case SDL_SCANCODE_INTERNATIONAL1:
                 keyCode = 0xE2;
+                break;
+            case SDL_SCANCODE_LANG1:
+                keyCode = 0x1C;
+                break;
+            case SDL_SCANCODE_LANG2:
+                keyCode = 0x1D;
                 break;
             default:
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
