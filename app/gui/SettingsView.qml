@@ -788,6 +788,23 @@ Flickable {
                 }
 
                 CheckBox {
+                    id: ignoreAspectRatioCheck
+                    width: parent.width
+                    hoverEnabled: true
+                    text: qsTr("Stretch presentation")
+                    font.pointSize:  12
+                    checked: StreamingPreferences.ignoreAspectRatio
+                    onCheckedChanged: {
+                        StreamingPreferences.ignoreAspectRatio = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 12000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Ignores both client and host PC aspect ratios, which is required for displaying Half-SBS (Side-By-Side) 3D signals to AR/XR devices that only support Full-SBS (usually 1920x1080 per eye, meaning a total resolution of 3840x1080)")
+                }
+
+                CheckBox {
                     id: vsyncCheck
                     width: parent.width
                     hoverEnabled: true

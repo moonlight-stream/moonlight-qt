@@ -137,7 +137,8 @@ public:
           m_LastDrawableHeight(-1),
           m_PresentationMutex(SDL_CreateMutex()),
           m_PresentationCond(SDL_CreateCond()),
-          m_PendingPresentationCount(0)
+          m_PendingPresentationCount(0),
+          m_IgnoreAspectRatio(false)
     {
     }
 
@@ -260,7 +261,10 @@ public:
         dst.x = dst.y = 0;
         dst.w = drawableWidth;
         dst.h = drawableHeight;
-        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        if (!m_IgnoreAspectRatio) {
+            StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+        }
 
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
@@ -750,6 +754,9 @@ public:
         // Allow tearing if V-Sync is off (also requires direct display path)
         m_MetalLayer.displaySyncEnabled = params->enableVsync;
 
+        // Ignores aspect ratio to fill the entire screen
+        m_IgnoreAspectRatio = params->ignoreAspectRatio;
+
         // Create the Metal texture cache for our CVPixelBuffers
         CFStringRef keys[1] = { kCVMetalTextureUsage };
         NSUInteger values[1] = { MTLTextureUsageShaderRead };
@@ -939,6 +946,7 @@ private:
     SDL_mutex* m_PresentationMutex;
     SDL_cond* m_PresentationCond;
     int m_PendingPresentationCount;
+    bool m_IgnoreAspectRatio;
 };
 
 IFFmpegRenderer* VTMetalRendererFactory::createRenderer(bool hwAccel) {
