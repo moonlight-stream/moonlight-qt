@@ -184,7 +184,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Id van draaiend spel: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
@@ -574,7 +574,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1554"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Host gaf fout terug: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1001"/>
@@ -1153,7 +1153,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>YUV 4:4:4 inschakelen (experimenteel)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1631"/>
