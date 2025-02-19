@@ -6,6 +6,7 @@
 #import <Metal/Metal.h>
 class VTBaseRenderer : public IFFmpegRenderer {
 public:
+    VTBaseRenderer(IFFmpegRenderer::RendererType type) : IFFmpegRenderer(type) {}
     bool checkDecoderCapabilities(id<MTLDevice> device, PDECODER_PARAMETERS params);
 };
 #endif

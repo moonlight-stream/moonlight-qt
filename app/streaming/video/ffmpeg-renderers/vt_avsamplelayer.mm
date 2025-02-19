@@ -35,7 +35,7 @@ class VTRenderer : public VTBaseRenderer
 {
 public:
     VTRenderer()
-        : IFFmpegRenderer(RendererType::VTSampleLayer),
+        : VTBaseRenderer(RendererType::VTSampleLayer),
           m_HwContext(nullptr),
           m_DisplayLayer(nullptr),
           m_FormatDesc(nullptr),
