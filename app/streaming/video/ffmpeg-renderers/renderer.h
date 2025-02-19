@@ -162,7 +162,8 @@ public:
         // Only return this reason code if the software or driver does not support
         // the specified decoding/rendering API. If the FFmpeg decoder code sees
         // this value, it will assume trying the same renderer again for any other
-        // codec will be useless and skip it.
+        // codec will be useless and skip it. This should never be set if the error
+        // could potentially be transient.
         NoSoftwareSupport,
     };
 
@@ -290,6 +291,38 @@ public:
 
     RendererType getRendererType() {
         return m_Type;
+    }
+
+    const char *getRendererName() {
+        switch (m_Type) {
+        default:
+        case RendererType::Unknown:
+            return "Unknown";
+        case RendererType::Vulkan:
+            return "Vulkan (libplacebo)";
+        case RendererType::CUDA:
+            return "CUDA";
+        case RendererType::D3D11VA:
+            return "D3D11VA";
+        case RendererType::DRM:
+            return "DRM";
+        case RendererType::DXVA2:
+            return "DXVA2 (D3D9)";
+        case RendererType::EGL:
+            return "EGL/GLES";
+        case RendererType::MMAL:
+            return "MMAL";
+        case RendererType::SDL:
+            return "SDL";
+        case RendererType::VAAPI:
+            return "VAAPI";
+        case RendererType::VDPAU:
+            return "VDPAU";
+        case RendererType::VTSampleLayer:
+            return "VideoToolbox (AVSampleBufferDisplayLayer)";
+        case RendererType::VTMetal:
+            return "VideoToolbox (Metal)";
+        }
     }
 
     // IOverlayRenderer

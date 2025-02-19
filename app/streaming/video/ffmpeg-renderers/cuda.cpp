@@ -22,6 +22,7 @@ bool CUDARenderer::initialize(PDECODER_PARAMETERS)
 
     err = av_hwdevice_ctx_create(&m_HwContext, AV_HWDEVICE_TYPE_CUDA, nullptr, nullptr, 0);
     if (err != 0) {
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "av_hwdevice_ctx_create(CUDA) failed: %d",
                      err);

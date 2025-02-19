@@ -152,6 +152,7 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
     MMAL_STATUS_T status;
 
     if (!isMmalOverlaySupported()) {
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -164,6 +165,7 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "mmal_component_create() failed: %x (%s)",
                      status, mmal_status_to_string(status));
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 

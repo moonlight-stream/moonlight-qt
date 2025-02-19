@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <QQueue>
+#include <set>
 
 #include "decoder.h"
 #include "ffmpeg-renderers/renderer.h"
@@ -75,6 +76,8 @@ private:
 
     static IFFmpegRenderer* createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass);
 
+    bool initializeRendererInternal(IFFmpegRenderer* renderer, PDECODER_PARAMETERS params);
+
     void reset();
 
     void writeBuffer(PLENTRY entry, int& offset);
@@ -99,6 +102,7 @@ private:
     VIDEO_STATS m_ActiveWndVideoStats;
     VIDEO_STATS m_LastWndVideoStats;
     VIDEO_STATS m_GlobalVideoStats;
+    std::set<IFFmpegRenderer::RendererType> m_FailedRenderers;
 
     int m_FramesIn;
     int m_FramesOut;

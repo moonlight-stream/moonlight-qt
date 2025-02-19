@@ -104,18 +104,21 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_GetWindowWMInfo() failed: %s",
                      SDL_GetError());
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
     if (info.subsystem == SDL_SYSWM_WAYLAND) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "VDPAU is not supported on Wayland");
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
     else if (info.subsystem != SDL_SYSWM_X11) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VDPAU is not supported on the current subsystem: %d",
                      info.subsystem);
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
     else if (qgetenv("VDPAU_XWAYLAND") != "1" && WMUtils::isRunningWayland()) {
@@ -125,6 +128,7 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
         // https://gitlab.freedesktop.org/vdpau/libvdpau/-/issues/2
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "VDPAU is disabled on XWayland. Set VDPAU_XWAYLAND=1 to try your luck.");
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -188,6 +192,7 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to create VDPAU context: %d",
                      err);
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 

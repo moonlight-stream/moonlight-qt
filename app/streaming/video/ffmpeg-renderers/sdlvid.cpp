@@ -186,7 +186,6 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
                      SDL_GetError());
-        return false;
     }
 
     // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
@@ -204,6 +203,11 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
         SDL_FlushEvent(SDL_WINDOWEVENT);
+    }
+
+    if (!m_Renderer) {
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
+        return false;
     }
 
 #ifdef Q_OS_WIN32
