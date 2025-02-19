@@ -1063,56 +1063,68 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
 
     // i == 0 - Indirect via EGL or DRM frontend with zero-copy DMA-BUF passing
     // i == 1 - Direct rendering or indirect via SDL read-back
+    bool backendInitFailure = false;
 #ifdef HAVE_EGL
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 2 && !backendInitFailure; i++) {
 #else
-    for (int i = 1; i < 2; i++) {
+    for (int i = 1; i < 2 && !backendInitFailure; i++) {
 #endif
         SDL_assert(m_BackendRenderer == nullptr);
-        if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
-                initializeRendererInternal(m_BackendRenderer, (m_TestOnly || m_BackendRenderer->needsTestFrame()) ? &testFrameDecoderParams : params) &&
-                completeInitialization(decoder, requiredFormat,
+
+        if ((m_BackendRenderer = createRendererFunc()) == nullptr) {
+            // Out of memory
+            break;
+        }
+
+        // Initialize the backend renderer itself
+        if (initializeRendererInternal(m_BackendRenderer, (m_TestOnly || m_BackendRenderer->needsTestFrame()) ? &testFrameDecoderParams : params)) {
+            if (completeInitialization(decoder, requiredFormat,
                                        (m_TestOnly || m_BackendRenderer->needsTestFrame()) ? &testFrameDecoderParams : params,
                                        m_TestOnly || m_BackendRenderer->needsTestFrame(),
                                        i == 0 /* EGL/DRM */)) {
-            if (m_TestOnly) {
-                // This decoder is only for testing capabilities, so don't bother
-                // creating a usable renderer
-                return true;
-            }
-
-            if (m_BackendRenderer->needsTestFrame()) {
-                // The test worked, so now let's initialize it for real
-                reset();
-                if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
-                        initializeRendererInternal(m_BackendRenderer, params) &&
-                        completeInitialization(decoder, requiredFormat, params, false, i == 0 /* EGL/DRM */)) {
+                if (m_TestOnly) {
+                    // This decoder is only for testing capabilities, so don't bother
+                    // creating a usable renderer
                     return true;
                 }
-                else {
-                    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Decoder failed to initialize after successful test");
 
-                    if (m_BackendRenderer != nullptr && failureReason != nullptr) {
-                        *failureReason = m_BackendRenderer->getInitFailureReason();
+                if (m_BackendRenderer->needsTestFrame()) {
+                    // The test worked, so now let's initialize it for real
+                    reset();
+
+                    if ((m_BackendRenderer = createRendererFunc()) == nullptr) {
+                        // Out of memory
+                        break;
                     }
 
-                    reset();
+                    if (initializeRendererInternal(m_BackendRenderer, params) &&
+                        completeInitialization(decoder, requiredFormat, params, false, i == 0 /* EGL/DRM */)) {
+                        return true;
+                    }
+                    else {
+                        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Decoder failed to initialize after successful test");
+                    }
                 }
-            }
-            else {
-                // No test required. Good to go now.
-                return true;
+                else {
+                    // No test required. Good to go now.
+                    return true;
+                }
             }
         }
         else {
-            if (m_BackendRenderer != nullptr && failureReason != nullptr) {
-                *failureReason = m_BackendRenderer->getInitFailureReason();
-            }
-
-            // Failed to initialize, so keep looking
-            reset();
+            // If we failed to initialize the backend entirely, there's no sense in trying
+            // a different frontend renderer as it won't make a difference.
+            backendInitFailure = true;
         }
+
+        auto backendFailureReason = m_BackendRenderer->getInitFailureReason();
+
+        if (failureReason != nullptr) {
+            *failureReason = backendFailureReason;
+        }
+
+        reset();
     }
 
     // reset() must be called before we reach this point!
