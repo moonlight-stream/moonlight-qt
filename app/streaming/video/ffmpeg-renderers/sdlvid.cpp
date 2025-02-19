@@ -13,7 +13,8 @@ extern "C" {
 }
 
 SdlRenderer::SdlRenderer()
-    : m_VideoFormat(0),
+    : IFFmpegRenderer(RendererType::SDL),
+      m_VideoFormat(0),
       m_Renderer(nullptr),
       m_Texture(nullptr),
       m_ColorSpace(-1),

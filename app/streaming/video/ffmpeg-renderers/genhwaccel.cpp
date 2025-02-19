@@ -1,7 +1,8 @@
 #include "genhwaccel.h"
 
 GenericHwAccelRenderer::GenericHwAccelRenderer(AVHWDeviceType hwDeviceType)
-    : m_HwDeviceType(hwDeviceType),
+    : IFFmpegRenderer(RendererType::Unknown),
+      m_HwDeviceType(hwDeviceType),
       m_HwContext(nullptr)
 {
 

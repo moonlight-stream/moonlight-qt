@@ -16,7 +16,8 @@
 #include <QTextStream>
 
 MmalRenderer::MmalRenderer()
-    : m_Renderer(nullptr),
+    : IFFmpegRenderer(RendererType::MMAL),
+      m_Renderer(nullptr),
       m_InputPort(nullptr),
       m_BackgroundRenderer(nullptr),
       m_Window(nullptr),

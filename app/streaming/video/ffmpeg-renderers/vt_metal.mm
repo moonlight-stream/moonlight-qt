@@ -113,7 +113,8 @@ class VTMetalRenderer : public VTBaseRenderer
 {
 public:
     VTMetalRenderer(bool hwAccel)
-        : m_HwAccel(hwAccel),
+        : IFFmpegRenderer(RendererType::VTMetal),
+          m_HwAccel(hwAccel),
           m_Window(nullptr),
           m_HwContext(nullptr),
           m_MetalLayer(nullptr),

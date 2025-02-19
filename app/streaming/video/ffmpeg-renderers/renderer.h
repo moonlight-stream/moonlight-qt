@@ -124,6 +124,24 @@ private:
 
 class IFFmpegRenderer : public Overlay::IOverlayRenderer {
 public:
+    enum class RendererType {
+        Unknown,
+        Vulkan,
+        CUDA,
+        D3D11VA,
+        DRM,
+        DXVA2,
+        EGL,
+        MMAL,
+        SDL,
+        VAAPI,
+        VDPAU,
+        VTSampleLayer,
+        VTMetal,
+    };
+
+    IFFmpegRenderer(RendererType type) : m_Type(type) {}
+
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
@@ -140,10 +158,16 @@ public:
         // where trying additional hwaccels may be undesirable since it could lead
         // to incorrectly skipping working hwaccels.
         NoHardwareSupport,
+
+        // Only return this reason code if the software or driver does not support
+        // the specified decoding/rendering API. If the FFmpeg decoder code sees
+        // this value, it will assume trying the same renderer again for any other
+        // codec will be useless and skip it.
+        NoSoftwareSupport,
     };
 
     virtual InitFailureReason getInitFailureReason() {
-        return InitFailureReason::Unknown;
+        return m_InitFailureReason;
     }
 
     // Called for threaded renderers to allow them to wait prior to us latching
@@ -264,13 +288,8 @@ public:
         // preparations might include clearing the window.
     }
 
-    // Allow renderers to expose their type
-    enum class RendererType {
-        Unknown,
-        Vulkan
-    };
-    virtual RendererType getRendererType() {
-        return RendererType::Unknown;
+    RendererType getRendererType() {
+        return m_Type;
     }
 
     // IOverlayRenderer
@@ -315,4 +334,10 @@ public:
 
     virtual void unmapDrmPrimeFrame(AVDRMFrameDescriptor*) {}
 #endif
+
+protected:
+    InitFailureReason m_InitFailureReason;
+
+private:
+    RendererType m_Type;
 };

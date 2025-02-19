@@ -10,7 +10,6 @@
 #include <Limelight.h>
 #include <unistd.h>
 
-#include <SDL_render.h>
 #include <SDL_syswm.h>
 
 // These are extensions, so some platform headers may not provide them
@@ -61,6 +60,7 @@ int EGLRenderer::s_LastFailedVideoFormat = 0;
 
 EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
     :
+        IFFmpegRenderer(RendererType::EGL),
         m_EGLImagePixelFormat(AV_PIX_FMT_NONE),
         m_EGLDisplay(EGL_NO_DISPLAY),
         m_Textures{0},

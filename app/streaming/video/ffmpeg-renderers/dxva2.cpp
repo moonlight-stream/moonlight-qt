@@ -36,6 +36,7 @@ typedef struct _VERTEX
 } VERTEX, *PVERTEX;
 
 DXVA2Renderer::DXVA2Renderer(int decoderSelectionPass) :
+    IFFmpegRenderer(RendererType::DXVA2),
     m_DecoderSelectionPass(decoderSelectionPass),
     m_SurfacesUsed(0),
     m_Pool(nullptr),

@@ -19,7 +19,8 @@
 #include <fcntl.h>
 
 VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
-    : m_DecoderSelectionPass(decoderSelectionPass),
+    : IFFmpegRenderer(RendererType::VAAPI),
+      m_DecoderSelectionPass(decoderSelectionPass),
       m_HwContext(nullptr),
       m_BlacklistedForDirectRendering(false),
       m_RequiresExplicitPixelFormat(false),

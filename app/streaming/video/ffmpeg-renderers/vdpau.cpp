@@ -25,7 +25,8 @@ const VdpRGBAFormat VDPAURenderer::k_OutputFormats10Bit[] = {
 };
 
 VDPAURenderer::VDPAURenderer(int decoderSelectionPass)
-    : m_DecoderSelectionPass(decoderSelectionPass),
+    : IFFmpegRenderer(RendererType::VDPAU),
+      m_DecoderSelectionPass(decoderSelectionPass),
       m_HwContext(nullptr),
       m_PresentationQueueTarget(0),
       m_PresentationQueue(0),

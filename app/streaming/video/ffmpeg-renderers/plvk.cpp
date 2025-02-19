@@ -99,6 +99,7 @@ void PlVkRenderer::overlayUploadComplete(void* opaque)
 }
 
 PlVkRenderer::PlVkRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer) :
+    IFFmpegRenderer(RendererType::Vulkan),
     m_Backend(backendRenderer),
     m_HwAccelBackend(hwaccel)
 {
@@ -1087,9 +1088,4 @@ AVPixelFormat PlVkRenderer::getPreferredPixelFormat(int videoFormat)
     else {
         return AV_PIX_FMT_VULKAN;
     }
-}
-
-IFFmpegRenderer::RendererType PlVkRenderer::getRendererType()
-{
-    return IFFmpegRenderer::RendererType::Vulkan;
 }

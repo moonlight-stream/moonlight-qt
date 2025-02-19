@@ -2,9 +2,6 @@
 
 #include "renderer.h"
 
-#define SDL_USE_BUILTIN_OPENGL_DEFINITIONS 1
-#include <SDL_egl.h>
-
 #ifdef HAVE_LIBVA
 #include <va/va_drmcommon.h>
 #endif

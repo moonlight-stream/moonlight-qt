@@ -135,7 +135,8 @@ static const std::map<AVPixelFormat, uint32_t> k_AvToDrmFormatMap
 };
 
 DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRenderer)
-    : m_BackendRenderer(backendRenderer),
+    : IFFmpegRenderer(RendererType::DRM),
+      m_BackendRenderer(backendRenderer),
       m_DrmPrimeBackend(backendRenderer && backendRenderer->canExportDrmPrime()),
       m_HwDeviceType(hwDeviceType),
       m_HwContext(nullptr),

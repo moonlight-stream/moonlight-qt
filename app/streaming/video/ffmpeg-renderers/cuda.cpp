@@ -3,7 +3,8 @@
 #include <SDL_opengl.h>
 
 CUDARenderer::CUDARenderer()
-    : m_HwContext(nullptr)
+    : IFFmpegRenderer(RendererType::CUDA),
+      m_HwContext(nullptr)
 {
 
 }
