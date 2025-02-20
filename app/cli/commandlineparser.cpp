@@ -462,6 +462,9 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --mouse-buttons-swap and --no-mouse-buttons-swap options
     preferences->swapMouseButtons = parser.getToggleOptionValue("mouse-buttons-swap", preferences->swapMouseButtons);
 
+    // Resolve --cmdctrl-swap and --no-cmdctrl-swap options
+    preferences->swapCmdCtrl = parser.getToggleOptionValue("cmdctrl-swap", preferences->swapCmdCtrl);
+
     // Resolve --touchscreen-trackpad and --no-touchscreen-trackpad options
     preferences->absoluteTouchMode = !parser.getToggleOptionValue("touchscreen-trackpad", !preferences->absoluteTouchMode);
 

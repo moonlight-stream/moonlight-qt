@@ -133,6 +133,7 @@ public:
     Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
     Q_PROPERTY(UIDisplayMode uiDisplayMode MEMBER uiDisplayMode NOTIFY uiDisplayModeChanged)
     Q_PROPERTY(bool swapMouseButtons MEMBER swapMouseButtons NOTIFY mouseButtonsChanged)
+    Q_PROPERTY(bool swapCmdCtrl MEMBER swapCmdCtrl NOTIFY mouseButtonsChanged)
     Q_PROPERTY(bool muteOnFocusLoss MEMBER muteOnFocusLoss NOTIFY muteOnFocusLossChanged)
     Q_PROPERTY(bool backgroundGamepad MEMBER backgroundGamepad NOTIFY backgroundGamepadChanged)
     Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
@@ -164,6 +165,7 @@ public:
     bool detectNetworkBlocking;
     bool showPerformanceOverlay;
     bool swapMouseButtons;
+    bool swapCmdCtrl;
     bool muteOnFocusLoss;
     bool backgroundGamepad;
     bool reverseScrollDirection;
