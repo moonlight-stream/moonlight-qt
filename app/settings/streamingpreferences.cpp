@@ -17,6 +17,7 @@
 #define SER_BITRATE "bitrate"
 #define SER_UNLOCK_BITRATE "unlockbitrate"
 #define SER_FULLSCREEN "fullscreen"
+#define SER_IGNORE_ASPECT_RATIO "ignoreaspectratio"
 #define SER_VSYNC "vsync"
 #define SER_GAMEOPTS "gameopts"
 #define SER_HOSTAUDIO "hostaudio"
@@ -122,6 +123,7 @@ void StreamingPreferences::reload()
     enableYUV444 = settings.value(SER_YUV444, false).toBool();
     bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps, enableYUV444)).toInt();
     unlockBitrate = settings.value(SER_UNLOCK_BITRATE, false).toBool();
+    ignoreAspectRatio = settings.value(SER_IGNORE_ASPECT_RATIO, true).toBool();
     enableVsync = settings.value(SER_VSYNC, true).toBool();
     gameOptimizations = settings.value(SER_GAMEOPTS, true).toBool();
     playAudioOnHost = settings.value(SER_HOSTAUDIO, false).toBool();
@@ -312,6 +314,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_FPS, fps);
     settings.setValue(SER_BITRATE, bitrateKbps);
     settings.setValue(SER_UNLOCK_BITRATE, unlockBitrate);
+    settings.setValue(SER_IGNORE_ASPECT_RATIO, ignoreAspectRatio);
     settings.setValue(SER_VSYNC, enableVsync);
     settings.setValue(SER_GAMEOPTS, gameOptimizations);
     settings.setValue(SER_HOSTAUDIO, playAudioOnHost);

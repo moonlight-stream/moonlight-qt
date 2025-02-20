@@ -424,6 +424,9 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    // Ignores aspect ratio to fill the entire screen
+    m_IgnoreAspectRatio = params->ignoreAspectRatio;
+
     VkPresentModeKHR presentMode;
     if (params->enableVsync) {
         // FIFO mode improves frame pacing compared with Mailbox, especially for
@@ -847,7 +850,9 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     dst.h = targetFrame.crop.y1 - targetFrame.crop.y0;
 
     // Scale the video to the surface size while preserving the aspect ratio
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+    if (!m_IgnoreAspectRatio) {
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+    }
 
     targetFrame.crop.x0 = dst.x;
     targetFrame.crop.y0 = dst.y;
