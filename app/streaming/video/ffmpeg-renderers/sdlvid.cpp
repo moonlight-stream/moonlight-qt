@@ -234,16 +234,22 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
                 SDL_DestroyTexture(m_OverlayTextures[type]);
             }
 
+            SDL_Rect viewportRect;
+            SDL_RenderGetViewport(m_Renderer, &viewportRect);
+
             if (type == Overlay::OverlayStatusUpdate) {
                 // Bottom Left
-                SDL_Rect viewportRect;
-                SDL_RenderGetViewport(m_Renderer, &viewportRect);
                 m_OverlayRects[type].x = 0;
                 m_OverlayRects[type].y = viewportRect.h - newSurface->h;
             }
             else if (type == Overlay::OverlayDebug) {
                 // Top left
                 m_OverlayRects[type].x = 0;
+                m_OverlayRects[type].y = 0;
+            }
+            else if (type == Overlay::OverlayDebugAudio) {
+                // Top right
+                m_OverlayRects[type].x = viewportRect.w - newSurface->w;
                 m_OverlayRects[type].y = 0;
             }
 

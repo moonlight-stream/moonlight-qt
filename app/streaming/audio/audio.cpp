@@ -157,6 +157,8 @@ int Session::arInit(int /* audioConfiguration */,
 
 void Session::arCleanup()
 {
+    s_ActiveSession->m_AudioRenderer->logGlobalAudioStats();
+
     delete s_ActiveSession->m_AudioRenderer;
     s_ActiveSession->m_AudioRenderer = nullptr;
 
@@ -205,6 +207,8 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
     }
 
     if (s_ActiveSession->m_AudioRenderer != nullptr) {
+        uint64_t startTimeUs = LiGetMicroseconds();
+
         int sampleSize = s_ActiveSession->m_AudioRenderer->getAudioBufferSampleSize();
         int frameSize = sampleSize * s_ActiveSession->m_ActiveAudioConfig.channelCount;
         int desiredBufferSize = frameSize * s_ActiveSession->m_ActiveAudioConfig.samplesPerFrame;
@@ -239,6 +243,24 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
             desiredBufferSize = 0;
         }
 
+        // used to display the raw audio bitrate
+        s_ActiveSession->m_AudioRenderer->statsAddOpusBytesReceived(sampleLength);
+
+        // Once a second, maybe grab stats from the last two windows for display, then shift to the next stats window
+        if (LiGetMicroseconds() > s_ActiveSession->m_AudioRenderer->getActiveWndAudioStats().measurementStartUs + 1000000) {
+            if (s_ActiveSession->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebugAudio)) {
+                AUDIO_STATS lastTwoWndAudioStats = {};
+                s_ActiveSession->m_AudioRenderer->snapshotAudioStats(lastTwoWndAudioStats);
+
+                s_ActiveSession->m_AudioRenderer->stringifyAudioStats(lastTwoWndAudioStats,
+                                                                      s_ActiveSession->getOverlayManager().getOverlayText(Overlay::OverlayDebugAudio),
+                                                                      s_ActiveSession->getOverlayManager().getOverlayMaxTextLength());
+                s_ActiveSession->getOverlayManager().setOverlayTextUpdated(Overlay::OverlayDebugAudio);
+            }
+
+            s_ActiveSession->m_AudioRenderer->flipAudioStatsWindows();
+        }
+
         if (!s_ActiveSession->m_AudioRenderer->submitAudio(desiredBufferSize)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Reinitializing audio renderer after failure");
@@ -249,6 +271,9 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
             delete s_ActiveSession->m_AudioRenderer;
             s_ActiveSession->m_AudioRenderer = nullptr;
         }
+
+        // keep stats on how long the audio pipline took to execute
+        s_ActiveSession->m_AudioRenderer->statsTrackDecodeTime(startTimeUs);
     }
 
     // Only try to recreate the audio renderer every 200 samples (1 second)
