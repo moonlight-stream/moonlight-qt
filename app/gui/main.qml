@@ -54,7 +54,7 @@ ApplicationWindow {
         if (SystemProperties.isWow64) {
             wow64Dialog.open()
         }
-        else if (!SystemProperties.hasHardwareAcceleration) {
+        else if (!SystemProperties.hasHardwareAcceleration && StreamingPreferences.videoDecoderSelection !== StreamingPreferences.VDS_FORCE_SOFTWARE) {
             if (SystemProperties.isRunningXWayland) {
                 xWaylandDialog.open()
             }
