@@ -1700,6 +1700,17 @@ Flickable {
                     ToolTip.text: qsTr("Display real-time stream performance information while streaming.") + "\n\n" +
                                   qsTr("You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.") + "\n\n" +
                                   qsTr("The performance overlay is not supported on Steam Link or Raspberry Pi.")
+
+                CheckBox {
+                    id: hwAccelerationWarning
+                    width: parent.width
+                    text: qsTr("Show hardware acceleration warning")
+                    font.pointSize: 12
+
+                    checked: StreamingPreferences.hwAccelerationWarning
+                    onCheckedChanged: {
+                        StreamingPreferences.hwAccelerationWarning = checked
+                    }
                 }
             }
         }
