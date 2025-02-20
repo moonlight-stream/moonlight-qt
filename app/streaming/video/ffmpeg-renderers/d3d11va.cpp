@@ -968,6 +968,11 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         renderRect.x = 0;
         renderRect.y = m_DisplayHeight - newSurface->h;
     }
+    else if (type == Overlay::OverlayDebugAudio) {
+        // Top right
+        renderRect.x = m_DisplayWidth - newSurface->w;
+        renderRect.y = m_DisplayHeight - newSurface->h;
+    }
 
     renderRect.w = newSurface->w;
     renderRect.h = newSurface->h;

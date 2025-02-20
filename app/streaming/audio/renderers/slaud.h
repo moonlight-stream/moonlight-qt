@@ -20,6 +20,8 @@ public:
 
     virtual AudioFormat getAudioBufferFormat();
 
+    const char * getRendererName() { return "Steam Link"; }
+
     virtual void remapChannels(POPUS_MULTISTREAM_CONFIGURATION opusConfig);
 
 private:

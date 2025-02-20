@@ -388,6 +388,8 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         // Toggle the stats overlay
         Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebug,
                                                             !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug));
+        Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebugAudio,
+                                                            !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebugAudio));
 
         // Clear buttons down on this gamepad
         LiSendMultiControllerEvent(state->index, m_GamepadMask,
