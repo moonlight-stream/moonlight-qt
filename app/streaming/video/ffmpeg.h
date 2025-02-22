@@ -7,6 +7,7 @@
 #include "decoder.h"
 #include "ffmpeg-renderers/renderer.h"
 #include "ffmpeg-renderers/pacer/pacer.h"
+#include "utils/bandwidth.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -99,6 +100,7 @@ private:
     IFFmpegRenderer* m_FrontendRenderer;
     int m_ConsecutiveFailedDecodes;
     Pacer* m_Pacer;
+    BandwidthTracker m_bwTracker;
     VIDEO_STATS m_ActiveWndVideoStats;
     VIDEO_STATS m_LastWndVideoStats;
     VIDEO_STATS m_GlobalVideoStats;
