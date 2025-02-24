@@ -5,5 +5,5 @@ Exec=moonlight
 Icon=moonlight
 Terminal=false
 Type=Application
-Categories=Qt;Game;
+Categories=Qt;Game;Network;RemoteAccess;
 Keywords=nvidia;gamestream;stream;sunshine;remote play;

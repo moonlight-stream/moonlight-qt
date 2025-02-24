@@ -311,6 +311,31 @@ void FFmpegVideoDecoder::reset()
     }
 }
 
+bool FFmpegVideoDecoder::initializeRendererInternal(IFFmpegRenderer* renderer, PDECODER_PARAMETERS params)
+{
+    if (renderer->getRendererType() != IFFmpegRenderer::RendererType::Unknown &&
+            m_FailedRenderers.find(renderer->getRendererType()) != m_FailedRenderers.end()) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Skipping '%s' due to prior failure",
+                    renderer->getRendererName());
+        return false;
+    }
+
+    if (!renderer->initialize(params)) {
+        if (renderer->getInitFailureReason() == IFFmpegRenderer::InitFailureReason::NoSoftwareSupport) {
+            m_FailedRenderers.insert(renderer->getRendererType());
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "'%s' failed to initialize. It will not be tried again.",
+                        renderer->getRendererName());
+        }
+
+        return false;
+    }
+
+    return true;
+}
+
 bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool useAlternateFrontend)
 {
     if (useAlternateFrontend) {
@@ -320,7 +345,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
             // rendering HDR with Vulkan if possible since it's more fully featured than DRM.
             if (m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
                 m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
-                if (m_FrontendRenderer->initialize(params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
+                if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
                     return true;
                 }
                 delete m_FrontendRenderer;
@@ -335,7 +360,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
             // currently have protocols to actually get that metadata to the display).
             if (m_BackendRenderer->canExportDrmPrime()) {
                 m_FrontendRenderer = new DrmRenderer(AV_HWDEVICE_TYPE_NONE, m_BackendRenderer);
-                if (m_FrontendRenderer->initialize(params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
+                if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
                     return true;
                 }
                 delete m_FrontendRenderer;
@@ -346,7 +371,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
 #if defined(HAVE_LIBPLACEBO_VULKAN) && defined(VULKAN_IS_SLOW)
             if (m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
                 m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
-                if (m_FrontendRenderer->initialize(params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
+                if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
                     return true;
                 }
                 delete m_FrontendRenderer;
@@ -360,7 +385,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
             if (qgetenv("PREFER_VULKAN") == "1") {
                 if (m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
                     m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
-                    if (m_FrontendRenderer->initialize(params)) {
+                    if (initializeRendererInternal(m_FrontendRenderer, params)) {
                         return true;
                     }
                     delete m_FrontendRenderer;
@@ -373,7 +398,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
 #if defined(HAVE_EGL) && !defined(GL_IS_SLOW)
         if (m_BackendRenderer->canExportEGL()) {
             m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
-            if (m_FrontendRenderer->initialize(params)) {
+            if (initializeRendererInternal(m_FrontendRenderer, params)) {
                 return true;
             }
             delete m_FrontendRenderer;
@@ -396,7 +421,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
 #if (defined(VULKAN_IS_SLOW) || defined(GL_IS_SLOW)) && defined(HAVE_DRM)
         // Try DrmRenderer first if we have a slow GPU
         m_FrontendRenderer = new DrmRenderer(AV_HWDEVICE_TYPE_NONE, m_BackendRenderer);
-        if (m_FrontendRenderer->initialize(params)) {
+        if (initializeRendererInternal(m_FrontendRenderer, params)) {
             return true;
         }
         delete m_FrontendRenderer;
@@ -409,7 +434,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
         // If DRM didn't work either, try EGL now.
         if (m_BackendRenderer->canExportEGL()) {
             m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
-            if (m_FrontendRenderer->initialize(params)) {
+            if (initializeRendererInternal(m_FrontendRenderer, params)) {
                 return true;
             }
             delete m_FrontendRenderer;
@@ -419,7 +444,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
 
 #if defined(HAVE_LIBPLACEBO_VULKAN) && defined(VULKAN_IS_SLOW)
         m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
-        if (m_FrontendRenderer->initialize(params)) {
+        if (initializeRendererInternal(m_FrontendRenderer, params)) {
             return true;
         }
         delete m_FrontendRenderer;
@@ -427,7 +452,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
 #endif
 
         m_FrontendRenderer = new SdlRenderer();
-        if (!m_FrontendRenderer->initialize(params)) {
+        if (!initializeRendererInternal(m_FrontendRenderer, params)) {
             return false;
         }
     }
@@ -652,6 +677,18 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to create decoder thread: %s", SDL_GetError());
             return false;
+        }
+
+        if (m_FrontendRenderer->getRendererType() != m_BackendRenderer->getRendererType()) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Renderer '%s' with '%s' backend chosen",
+                        m_FrontendRenderer->getRendererName(),
+                        m_BackendRenderer->getRendererName());
+        }
+        else {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Renderer '%s' chosen",
+                        m_FrontendRenderer->getRendererName());
         }
     }
 
@@ -1025,56 +1062,68 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
 
     // i == 0 - Indirect via EGL or DRM frontend with zero-copy DMA-BUF passing
     // i == 1 - Direct rendering or indirect via SDL read-back
+    bool backendInitFailure = false;
 #ifdef HAVE_EGL
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 2 && !backendInitFailure; i++) {
 #else
-    for (int i = 1; i < 2; i++) {
+    for (int i = 1; i < 2 && !backendInitFailure; i++) {
 #endif
         SDL_assert(m_BackendRenderer == nullptr);
-        if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
-                m_BackendRenderer->initialize((m_TestOnly || m_BackendRenderer->needsTestFrame()) ? &testFrameDecoderParams : params) &&
-                completeInitialization(decoder, requiredFormat,
+
+        if ((m_BackendRenderer = createRendererFunc()) == nullptr) {
+            // Out of memory
+            break;
+        }
+
+        // Initialize the backend renderer itself
+        if (initializeRendererInternal(m_BackendRenderer, (m_TestOnly || m_BackendRenderer->needsTestFrame()) ? &testFrameDecoderParams : params)) {
+            if (completeInitialization(decoder, requiredFormat,
                                        (m_TestOnly || m_BackendRenderer->needsTestFrame()) ? &testFrameDecoderParams : params,
                                        m_TestOnly || m_BackendRenderer->needsTestFrame(),
                                        i == 0 /* EGL/DRM */)) {
-            if (m_TestOnly) {
-                // This decoder is only for testing capabilities, so don't bother
-                // creating a usable renderer
-                return true;
-            }
-
-            if (m_BackendRenderer->needsTestFrame()) {
-                // The test worked, so now let's initialize it for real
-                reset();
-                if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
-                        m_BackendRenderer->initialize(params) &&
-                        completeInitialization(decoder, requiredFormat, params, false, i == 0 /* EGL/DRM */)) {
+                if (m_TestOnly) {
+                    // This decoder is only for testing capabilities, so don't bother
+                    // creating a usable renderer
                     return true;
                 }
-                else {
-                    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Decoder failed to initialize after successful test");
 
-                    if (m_BackendRenderer != nullptr && failureReason != nullptr) {
-                        *failureReason = m_BackendRenderer->getInitFailureReason();
+                if (m_BackendRenderer->needsTestFrame()) {
+                    // The test worked, so now let's initialize it for real
+                    reset();
+
+                    if ((m_BackendRenderer = createRendererFunc()) == nullptr) {
+                        // Out of memory
+                        break;
                     }
 
-                    reset();
+                    if (initializeRendererInternal(m_BackendRenderer, params) &&
+                        completeInitialization(decoder, requiredFormat, params, false, i == 0 /* EGL/DRM */)) {
+                        return true;
+                    }
+                    else {
+                        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Decoder failed to initialize after successful test");
+                    }
                 }
-            }
-            else {
-                // No test required. Good to go now.
-                return true;
+                else {
+                    // No test required. Good to go now.
+                    return true;
+                }
             }
         }
         else {
-            if (m_BackendRenderer != nullptr && failureReason != nullptr) {
-                *failureReason = m_BackendRenderer->getInitFailureReason();
-            }
-
-            // Failed to initialize, so keep looking
-            reset();
+            // If we failed to initialize the backend entirely, there's no sense in trying
+            // a different frontend renderer as it won't make a difference.
+            backendInitFailure = true;
         }
+
+        auto backendFailureReason = m_BackendRenderer->getInitFailureReason();
+
+        if (failureReason != nullptr) {
+            *failureReason = backendFailureReason;
+        }
+
+        reset();
     }
 
     // reset() must be called before we reach this point!

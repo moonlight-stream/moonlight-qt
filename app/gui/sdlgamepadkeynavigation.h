@@ -3,7 +3,7 @@
 #include <QTimer>
 #include <QEvent>
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #include "settings/streamingpreferences.h"
 

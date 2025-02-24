@@ -4,7 +4,7 @@
 
 #define _GNU_SOURCE
 
-#include <SDL.h>
+#include "SDL_compat.h"
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <unistd.h>

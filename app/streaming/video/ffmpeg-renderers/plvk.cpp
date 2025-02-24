@@ -99,6 +99,7 @@ void PlVkRenderer::overlayUploadComplete(void* opaque)
 }
 
 PlVkRenderer::PlVkRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer) :
+    IFFmpegRenderer(RendererType::Vulkan),
     m_Backend(backendRenderer),
     m_HwAccelBackend(hwaccel)
 {
@@ -166,6 +167,7 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params, bool hdrOutput
     if (physicalDeviceCount == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "No Vulkan devices found!");
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -366,6 +368,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_Vulkan_GetInstanceExtensions() #1 failed: %s",
                      SDL_GetError());
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -374,6 +377,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_Vulkan_GetInstanceExtensions() #2 failed: %s",
                      SDL_GetError());
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -389,6 +393,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     if (m_PlVkInstance == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_vk_inst_create() failed");
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -406,6 +411,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_Vulkan_CreateSurface() failed: %s",
                      SDL_GetError());
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -1087,9 +1093,4 @@ AVPixelFormat PlVkRenderer::getPreferredPixelFormat(int videoFormat)
     else {
         return AV_PIX_FMT_VULKAN;
     }
-}
-
-IFFmpegRenderer::RendererType PlVkRenderer::getRendererType()
-{
-    return IFFmpegRenderer::RendererType::Vulkan;
 }

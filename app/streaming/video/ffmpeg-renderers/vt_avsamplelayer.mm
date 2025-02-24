@@ -35,7 +35,8 @@ class VTRenderer : public VTBaseRenderer
 {
 public:
     VTRenderer()
-        : m_HwContext(nullptr),
+        : VTBaseRenderer(RendererType::VTSampleLayer),
+          m_HwContext(nullptr),
           m_DisplayLayer(nullptr),
           m_FormatDesc(nullptr),
           m_ContentLightLevelInfo(nullptr),
@@ -387,6 +388,7 @@ public:
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "av_hwdevice_ctx_create() failed for VT decoder: %d",
                         err);
+            m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
             return false;
         }
 

@@ -113,7 +113,8 @@ class VTMetalRenderer : public VTBaseRenderer
 {
 public:
     VTMetalRenderer(bool hwAccel)
-        : m_HwAccel(hwAccel),
+        : VTBaseRenderer(RendererType::VTMetal),
+          m_HwAccel(hwAccel),
           m_Window(nullptr),
           m_HwContext(nullptr),
           m_MetalLayer(nullptr),
@@ -698,6 +699,7 @@ public:
 
         id<MTLDevice> device = getMetalDevice();
         if (!device) {
+            m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
             return false;
         }
 
@@ -718,6 +720,7 @@ public:
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "av_hwdevice_ctx_create() failed for VT decoder: %d",
                         err);
+            m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
             return false;
         }
 
