@@ -339,6 +339,19 @@ CenteredGridView {
         }
     }
 
+    Row {
+        anchors.centerIn: parent
+        spacing: 5
+        visible: appGrid.count === 0
+
+        Label {
+            text: qsTr("This computer doesn't seem to have any applications or some applications are hidden")
+            font.pointSize: 20
+            verticalAlignment: Text.AlignVCenter
+            wrapMode: Text.Wrap
+        }
+    }
+
     NavigableMessageDialog {
         id: quitAppDialog
         property string appName : ""
