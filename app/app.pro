@@ -211,7 +211,8 @@ SOURCES += \
     gui/sdlgamepadkeynavigation.cpp \
     streaming/video/overlaymanager.cpp \
     backend/systemproperties.cpp \
-    wm.cpp
+    wm.cpp \
+    utils/bandwidth.cpp
 
 HEADERS += \
     SDL_compat.h \
@@ -247,7 +248,8 @@ HEADERS += \
     settings/mappingmanager.h \
     gui/sdlgamepadkeynavigation.h \
     streaming/video/overlaymanager.h \
-    backend/systemproperties.h
+    backend/systemproperties.h \
+    utils/bandwidth.h
 
 # Platform-specific renderers and decoders
 ffmpeg {
