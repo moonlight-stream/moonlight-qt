@@ -17,7 +17,7 @@
 // doing the same thing. This needs to be before any headers
 // that might include SDL.h themselves.
 #define SDL_MAIN_HANDLED
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #ifdef HAVE_FFMPEG
 #include "streaming/video/ffmpeg.h"
@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
 #endif
     }
 
-#if !defined(Q_PROCESSOR_X86) && defined(SDL_HINT_VIDEO_X11_FORCE_EGL)
+#ifndef Q_PROCESSOR_X86
     // Some ARM and RISC-V embedded devices don't have working GLX which can cause
     // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
     // on non-x86 platforms, since GLX is deprecated anyway.
@@ -508,12 +508,12 @@ int main(int argc, char *argv[])
     SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
 
     // We use MMAL to render on Raspberry Pi, so we do not require DRM master.
-    SDL_SetHint("SDL_KMSDRM_REQUIRE_DRM_MASTER", "0");
+    SDL_SetHint(SDL_HINT_KMSDRM_REQUIRE_DRM_MASTER, "0");
 
     // Use Direct3D 9Ex to avoid a deadlock caused by the D3D device being reset when
     // the user triggers a UAC prompt. This option controls the software/SDL renderer.
     // The DXVA2 renderer uses Direct3D 9Ex itself directly.
-    SDL_SetHint("SDL_WINDOWS_USE_D3D9EX", "1");
+    SDL_SetHint(SDL_HINT_WINDOWS_USE_D3D9EX, "1");
 
     if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -548,28 +548,28 @@ int main(int argc, char *argv[])
     // SDL 2.0.12 changes the default behavior to use the button label rather than the button
     // position as most other software does. Set this back to 0 to stay consistent with prior
     // releases of Moonlight.
-    SDL_SetHint("SDL_GAMECONTROLLER_USE_BUTTON_LABELS", "0");
+    SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
 
     // Disable relative mouse scaling to renderer size or logical DPI. We want to send
     // the mouse motion exactly how it was given to us.
-    SDL_SetHint("SDL_MOUSE_RELATIVE_SCALING", "0");
+    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_SCALING, "0");
 
     // Set our app name for SDL to use with PulseAudio and PipeWire. This matches what we
     // provide as our app name to libsoundio too. On SDL 2.0.18+, SDL_APP_NAME is also used
     // for screensaver inhibitor reporting.
-    SDL_SetHint("SDL_AUDIO_DEVICE_APP_NAME", "Moonlight");
-    SDL_SetHint("SDL_APP_NAME", "Moonlight");
+    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_APP_NAME, "Moonlight");
+    SDL_SetHint(SDL_HINT_APP_NAME, "Moonlight");
 
     // We handle capturing the mouse ourselves when it leaves the window, so we don't need
     // SDL doing it for us behind our backs.
-    SDL_SetHint("SDL_MOUSE_AUTO_CAPTURE", "0");
+    SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
 
     // SDL will try to lock the mouse cursor on Wayland if it's not visible in order to
     // support applications that assume they can warp the cursor (which isn't possible
     // on Wayland). We don't want this behavior because it interferes with seamless mouse
     // mode when toggling between windowed and fullscreen modes by unexpectedly locking
     // the mouse cursor.
-    SDL_SetHint("SDL_VIDEO_WAYLAND_EMULATE_MOUSE_WARP", "0");
+    SDL_SetHint(SDL_HINT_VIDEO_WAYLAND_EMULATE_MOUSE_WARP, "0");
 
 #ifdef QT_DEBUG
     // Allow thread naming using exceptions on debug builds. SDL doesn't use SEH

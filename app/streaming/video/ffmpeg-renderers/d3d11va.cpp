@@ -106,7 +106,8 @@ static const std::array<const char*, D3D11VARenderer::PixelShaders::_COUNT> k_Vi
 };
 
 D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
-    : m_DecoderSelectionPass(decoderSelectionPass),
+    : IFFmpegRenderer(RendererType::D3D11VA),
+      m_DecoderSelectionPass(decoderSelectionPass),
       m_DevicesWithCodecSupport(0),
       m_DevicesWithFL11Support(0),
       m_LastColorSpace(-1),

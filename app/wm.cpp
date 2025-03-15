@@ -3,7 +3,7 @@
 
 #include "utils.h"
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #ifdef HAS_X11
 #include <X11/Xlib.h>

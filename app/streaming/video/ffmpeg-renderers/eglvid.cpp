@@ -10,7 +10,6 @@
 #include <Limelight.h>
 #include <unistd.h>
 
-#include <SDL_render.h>
 #include <SDL_syswm.h>
 
 // These are extensions, so some platform headers may not provide them
@@ -56,11 +55,9 @@ typedef struct _OVERLAY_VERTEX
         SDL_LOG_CATEGORY_APPLICATION, \
         "EGLRenderer: " __VA_ARGS__)
 
-SDL_Window* EGLRenderer::s_LastFailedWindow = nullptr;
-int EGLRenderer::s_LastFailedVideoFormat = 0;
-
 EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
     :
+        IFFmpegRenderer(RendererType::EGL),
         m_EGLImagePixelFormat(AV_PIX_FMT_NONE),
         m_EGLDisplay(EGL_NO_DISPLAY),
         m_Textures{0},
@@ -407,6 +404,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // https://hg.libsdl.org/SDL/rev/84618d571795
     if (!SDL_VERSION_ATLEAST(2, 0, 10)) {
         EGL_LOG(Error, "Not supported until SDL 2.0.10");
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -415,15 +413,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // Vulkan was used before and SDL is trying to load EGL.
     if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
         EGL_LOG(Info, "EGL doesn't support HDR rendering");
-        return false;
-    }
-
-    // HACK: Work around bug where renderer will repeatedly fail with:
-    // SDL_CreateRenderer() failed: Could not create GLES window surface
-    // Don't retry if we've already failed to create a renderer for this
-    // window *unless* the format has changed from 10-bit to 8-bit.
-    if (m_Window == s_LastFailedWindow) {
-        EGL_LOG(Error, "SDL_CreateRenderer() already failed on this window!");
         return false;
     }
 
@@ -451,6 +440,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     }
     if (renderIndex == maxRenderers) {
         EGL_LOG(Error, "Could not find a suitable SDL_Renderer");
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -480,8 +470,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 
     // Now we finally bail if we failed during SDL_CreateRenderer() above.
     if (!m_DummyRenderer) {
-        s_LastFailedWindow = m_Window;
-        s_LastFailedVideoFormat = params->videoFormat;
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -489,15 +478,18 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     SDL_VERSION(&info.version);
     if (!SDL_GetWindowWMInfo(params->window, &info)) {
         EGL_LOG(Error, "SDL_GetWindowWMInfo() failed: %s", SDL_GetError());
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
     if (!(m_Context = SDL_GL_CreateContext(params->window))) {
         EGL_LOG(Error, "Cannot create OpenGL context: %s", SDL_GetError());
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
     if (SDL_GL_MakeCurrent(params->window, m_Context)) {
         EGL_LOG(Error, "Cannot use created EGL context: %s", SDL_GetError());
+        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
@@ -647,14 +639,12 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // Detach the context from this thread, so the render thread can attach it
     SDL_GL_MakeCurrent(m_Window, nullptr);
 
-#ifdef SDL_HINT_VIDEO_X11_FORCE_EGL
     if (err == GL_NO_ERROR) {
         // If we got a working GL implementation via EGL, avoid using GLX from now on.
         // GLX will cause problems if we later want to use EGL again on this window.
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "EGL passed preflight checks. Using EGL for GL context creation.");
         SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
     }
-#endif
 
     return err == GL_NO_ERROR;
 }

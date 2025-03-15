@@ -3,7 +3,7 @@
 #include "settings/streamingpreferences.h"
 #include "backend/computermanager.h"
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 struct GamepadState {
     SDL_GameController* controller;

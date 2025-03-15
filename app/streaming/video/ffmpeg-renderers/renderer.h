@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #include "streaming/video/decoder.h"
 #include "streaming/video/overlaymanager.h"
@@ -124,6 +124,24 @@ private:
 
 class IFFmpegRenderer : public Overlay::IOverlayRenderer {
 public:
+    enum class RendererType {
+        Unknown,
+        Vulkan,
+        CUDA,
+        D3D11VA,
+        DRM,
+        DXVA2,
+        EGL,
+        MMAL,
+        SDL,
+        VAAPI,
+        VDPAU,
+        VTSampleLayer,
+        VTMetal,
+    };
+
+    IFFmpegRenderer(RendererType type) : m_Type(type) {}
+
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
@@ -140,10 +158,17 @@ public:
         // where trying additional hwaccels may be undesirable since it could lead
         // to incorrectly skipping working hwaccels.
         NoHardwareSupport,
+
+        // Only return this reason code if the software or driver does not support
+        // the specified decoding/rendering API. If the FFmpeg decoder code sees
+        // this value, it will assume trying the same renderer again for any other
+        // codec will be useless and skip it. This should never be set if the error
+        // could potentially be transient.
+        NoSoftwareSupport,
     };
 
     virtual InitFailureReason getInitFailureReason() {
-        return InitFailureReason::Unknown;
+        return m_InitFailureReason;
     }
 
     // Called for threaded renderers to allow them to wait prior to us latching
@@ -264,13 +289,40 @@ public:
         // preparations might include clearing the window.
     }
 
-    // Allow renderers to expose their type
-    enum class RendererType {
-        Unknown,
-        Vulkan
-    };
-    virtual RendererType getRendererType() {
-        return RendererType::Unknown;
+    RendererType getRendererType() {
+        return m_Type;
+    }
+
+    const char *getRendererName() {
+        switch (m_Type) {
+        default:
+        case RendererType::Unknown:
+            return "Unknown";
+        case RendererType::Vulkan:
+            return "Vulkan (libplacebo)";
+        case RendererType::CUDA:
+            return "CUDA";
+        case RendererType::D3D11VA:
+            return "D3D11VA";
+        case RendererType::DRM:
+            return "DRM";
+        case RendererType::DXVA2:
+            return "DXVA2 (D3D9)";
+        case RendererType::EGL:
+            return "EGL/GLES";
+        case RendererType::MMAL:
+            return "MMAL";
+        case RendererType::SDL:
+            return "SDL";
+        case RendererType::VAAPI:
+            return "VAAPI";
+        case RendererType::VDPAU:
+            return "VDPAU";
+        case RendererType::VTSampleLayer:
+            return "VideoToolbox (AVSampleBufferDisplayLayer)";
+        case RendererType::VTMetal:
+            return "VideoToolbox (Metal)";
+        }
     }
 
     // IOverlayRenderer
@@ -315,4 +367,10 @@ public:
 
     virtual void unmapDrmPrimeFrame(AVDRMFrameDescriptor*) {}
 #endif
+
+protected:
+    InitFailureReason m_InitFailureReason;
+
+private:
+    RendererType m_Type;
 };
