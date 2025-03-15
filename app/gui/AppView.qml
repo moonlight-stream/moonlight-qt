@@ -7,6 +7,14 @@ import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 
 CenteredGridView {
+    readonly property int nameRole: AppModel.NameRole
+    readonly property int runningRole: AppModel.RunningRole
+    readonly property int boxArtRole: AppModel.BoxArtRole
+    readonly property int hiddenRole: AppModel.HiddenRole
+    readonly property int appIdRole: AppModel.AppIdRole
+    readonly property int directLaunchRole: AppModel.DirectLaunchRole
+    readonly property int appCollectorGameRole: AppModel.AppCollectorGameRole
+
     property int computerIndex
     property AppModel appModel : createModel()
     property bool activated
@@ -16,7 +24,7 @@ CenteredGridView {
     id: appGrid
     focus: true
     activeFocusOnTab: true
-    topMargin: 20
+    topMargin: 80
     bottomMargin: 5
     cellWidth: 230; cellHeight: 297;
 
@@ -370,4 +378,65 @@ CenteredGridView {
     }
 
     ScrollBar.vertical: ScrollBar {}
+
+    // 修改背景图定义部分
+    Image {
+        id: backgroundImage
+        anchors.fill: parent
+        source: getBackgroundSource()
+        opacity: 0.3
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        cache: true
+        z: -1
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.25)
+        z: 0  // 在背景图之上，内容之下
+    }
+
+    // 确保内容列表在顶层
+    ListView {
+        z: 1
+    }
+
+    function getBackgroundSource() {
+        // 优先使用正在运行的应用的封面
+        let runningAppId = appModel.getRunningAppId()
+        if (runningAppId !== 0) {
+            for (let i = 0; i < appModel.rowCount(); i++) {
+                let appIndex = appModel.index(i, 0)
+                let appId = appModel.data(appIndex, appIdRole)
+                if (appId === runningAppId) {
+                    let boxArt = appModel.data(appIndex, boxArtRole)
+                    return boxArt || "qrc:/res/gura.png"
+                }
+            }
+        }
+        
+        // 没有运行应用时使用第一个应用的封面
+        if (appModel.rowCount() > 0) {
+            let firstAppIndex = appModel.index(0, 0)
+            let boxArt = appModel.data(firstAppIndex, boxArtRole)
+            return boxArt || "qrc:/res/gura.png"
+        }
+        
+        return "qrc:/res/gura.png"
+    }
+
+    // 修改数据变化监听
+    Connections {
+        target: appModel
+        function onDataChanged() {
+            // 使用Qt.callLater防止重复更新
+            Qt.callLater(function() {
+                let newSource = getBackgroundSource()
+                if (backgroundImage.source !== newSource) {
+                    backgroundImage.source = newSource
+                }
+            })
+        }
+    }
 }

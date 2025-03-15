@@ -1,5 +1,6 @@
 import QtQuick 2.0
-import QtQuick.Controls 2.2
+import QtQuick.Controls 6.3
+import QtQuick.Dialogs 6.3
 import QtQuick.Layouts 1.2
 
 NavigableDialog {
@@ -16,6 +17,13 @@ NavigableDialog {
     onOpened: {
         // Force keyboard focus on the label so keyboard navigation works
         dialogLabel.forceActiveFocus()
+    }
+
+    background: Rectangle {
+        color: Qt.rgba(0.1, 0.1, 0.1, 0.85)  // 深色半透明背景
+        border.color: Qt.rgba(0.3, 0.3, 0.3, 0.6)
+        border.width: 1
+        radius: 5
     }
 
     RowLayout {

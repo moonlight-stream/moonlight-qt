@@ -1,6 +1,8 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
+import Qt.labs.platform 1.1
+import QtCore
 
 import ComputerModel 1.0
 
@@ -8,16 +10,18 @@ import ComputerManager 1.0
 import StreamingPreferences 1.0
 import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
+import ImageUtils 1.0
 
 CenteredGridView {
     property ComputerModel computerModel : createModel()
+    property string currentBgUrl: backgroundImage.currentImageUrl  // 添加根组件属性用于外部访问
 
     id: pcGrid
     focus: true
     activeFocusOnTab: true
-    topMargin: 20
+    topMargin: 80
     bottomMargin: 5
-    cellWidth: 310; cellHeight: 330;
+    cellWidth: 240; cellHeight: 280;
     objectName: qsTr("Computers")
 
     Component.onCompleted: {
@@ -106,43 +110,106 @@ CenteredGridView {
     model: computerModel
 
     delegate: NavigableItemDelegate {
-        width: 300; height: 320;
+        width: 240; height: 240;
         grid: pcGrid
 
         property alias pcContextMenu : pcContextMenuLoader.item
 
-        Image {
+        Rectangle {
             id: pcIcon
             anchors.horizontalCenter: parent.horizontalCenter
-            source: "qrc:/res/desktop_windows-48px.svg"
-            sourceSize {
-                width: 200
-                height: 200
+            anchors.top: parent.top
+            anchors.topMargin: 10
+            width: 160
+            height: 160
+            radius: width / 2
+            color: {
+                // 根据名称生成固定颜色，确保同一台PC总是相同颜色
+                var hash = 0;
+                for (var i = 0; i < model.name.length; i++) {
+                    hash = model.name.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                var color = '#';
+                for (var j = 0; j < 3; j++) {
+                    var value = (hash >> (j * 8)) & 0xFF;
+                    color += ('00' + value.toString(16)).substr(-2);
+                }
+                return color;
+            }
+            
+            Image {
+                id: moonMask
+                anchors.fill: parent
+                source: "qrc:/res/moon-mask.png"
+                opacity: 0.7
+                fillMode: Image.PreserveAspectFit
+                
+                // 根据PC名称生成旋转角度
+                property real rotationAngle: {
+                    var hash = 0;
+                    for (var i = 0; i < model.name.length; i++) {
+                        hash = model.name.charCodeAt(i) + ((hash << 5) - hash);
+                    }
+                    return (hash % 180);
+                }
+                
+                rotation: rotationAngle
+            }
+            
+            Text {
+                anchors.centerIn: parent
+                text: model.name ? model.name.charAt(0).toUpperCase() : "?"
+                font.pixelSize: parent.width * 0.6
+                font.bold: true
+                color: parent.color
             }
         }
 
         Image {
             // TODO: Tooltip
             id: stateIcon
-            anchors.horizontalCenter: pcIcon.horizontalCenter
-            anchors.verticalCenter: pcIcon.verticalCenter
-            anchors.verticalCenterOffset: !model.online ? -18 : -16
+            anchors {
+                right: pcIcon.right
+                bottom: pcIcon.bottom
+                rightMargin: 5
+                bottomMargin: 5
+            }
             visible: !model.statusUnknown && (!model.online || !model.paired)
             source: !model.online ? "qrc:/res/warning_FILL1_wght300_GRAD200_opsz24.svg" : "qrc:/res/baseline-lock-24px.svg"
             sourceSize {
-                width: !model.online ? 75 : 70
-                height: !model.online ? 75 : 70
+                width: !model.online ? 32 : 28
+                height: !model.online ? 32 : 28
             }
+            opacity: 0.8
         }
 
-        BusyIndicator {
+        Rectangle {
             id: statusUnknownSpinner
             anchors.horizontalCenter: pcIcon.horizontalCenter
             anchors.verticalCenter: pcIcon.verticalCenter
-            anchors.verticalCenterOffset: -15
-            width: 75
-            height: 75
+            anchors.verticalCenterOffset: 0
+            width: 160
+            height: 160
+            color: "transparent"
             visible: model.statusUnknown
+            
+            Image {
+                id: spinnerImage
+                anchors.centerIn: parent
+                width: 160
+                height: 160
+                source: "qrc:/res/loading.svg"
+                
+                RotationAnimation {
+                    target: spinnerImage
+                    property: "rotation"
+                    from: 0
+                    to: 360
+                    duration: 1500
+                    loops: Animation.Infinite
+                    running: statusUnknownSpinner.visible
+                }
+            }
         }
 
         Label {
@@ -151,8 +218,9 @@ CenteredGridView {
 
             width: parent.width
             anchors.top: pcIcon.bottom
+            anchors.topMargin: 20
             anchors.bottom: parent.bottom
-            font.pointSize: 36
+            font.pointSize: 16
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             elide: Text.ElideRight
@@ -303,7 +371,7 @@ CenteredGridView {
         property string pin : "0000"
         text:qsTr("Please enter %1 on your host PC. This dialog will close when pairing is completed.").arg(pin)+"\n\n"+
              qsTr("If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.")
-        standardButtons: Dialog.Cancel
+        standardButtons: DialogButtonBox.Cancel
         onRejected: {
             // FIXME: We should interrupt pairing here
         }
@@ -315,7 +383,7 @@ CenteredGridView {
         property int pcIndex : -1
         property string pcName : ""
         text: qsTr("Are you sure you want to remove '%1'?").arg(pcName)
-        standardButtons: Dialog.Yes | Dialog.No
+        standardButtons: DialogButtonBox.Ok | DialogButtonBox.Cancel
 
         onAccepted: {
             computerModel.deleteComputer(pcIndex)
@@ -324,8 +392,8 @@ CenteredGridView {
 
     NavigableMessageDialog {
         id: testConnectionDialog
-        closePolicy: Popup.CloseOnEscape
-        standardButtons: Dialog.Ok
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        standardButtons: DialogButtonBox.Ok
 
         onAboutToShow: {
             testConnectionDialog.text = qsTr("Moonlight is testing your network connection to determine if any required ports are blocked.") + "\n\n" + qsTr("This may take a few seconds…")
@@ -359,7 +427,7 @@ CenteredGridView {
         property string originalName
         property int pcIndex : -1;
 
-        standardButtons: Dialog.Ok | Dialog.Cancel
+        standardButtons: DialogButtonBox.Ok | DialogButtonBox.Cancel
 
         onOpened: {
             // Force keyboard focus on the textbox so keyboard navigation works
@@ -404,8 +472,319 @@ CenteredGridView {
         property string pcDetails : "";
         text: showPcDetailsDialog.pcDetails
         imageSrc: "qrc:/res/baseline-help_outline-24px.svg"
-        standardButtons: Dialog.Ok
+        standardButtons: DialogButtonBox.Ok
     }
 
     ScrollBar.vertical: ScrollBar {}
+
+    Image {
+        id: backgroundImage
+        anchors.fill: parent
+        source: ""
+        fillMode: Image.PreserveAspectCrop
+        z: -2
+        property string currentImageUrl: ""
+        
+        Settings {
+            id: settings
+            property string cachedImagePath: ""
+            property real lastRefreshTime: Date.now()
+        }
+        
+        onStatusChanged: {
+            if (status === Image.Loading) {
+                loadingIndicator.visible = true
+            } else if (status === Image.Ready) {
+                loadingIndicator.visible = false
+            } else if (status === Image.Error) {
+                loadingIndicator.visible = false
+                getBackgroundImage() // 如果缓存图加载失败，尝试加载新图片
+            }
+        }
+
+        function getBackgroundImage() {
+            loadingIndicator.visible = true
+            
+            var request = new XMLHttpRequest();
+            request.open("GET", "https://imgapi.lie.moe/random?sort=pc", true);
+            request.timeout = 10000;
+
+            request.onreadystatechange = function() {
+                if (request.readyState === XMLHttpRequest.DONE) {
+                    loadingIndicator.visible = false
+                    if (request.status === 200) {
+                        handleImageResponse(request.responseURL)
+                    } else {
+                        handleImageError(request.status)
+                    }
+                }
+            }
+
+            request.send()
+        }
+
+        function handleImageResponse(url) {
+            currentImageUrl = url
+            pcGrid.currentBgUrl = url  // 同步更新根组件属性
+            var cachePath = imageUtils.saveImageFromUrl(url)
+            if (cachePath) {
+                settings.cachedImagePath = cachePath
+                console.log("handleImageResponse: " + cachePath)
+                source = "";
+                source = "file:///" + encodeURIComponent(cachePath);
+                settings.lastRefreshTime = Date.now()
+            }
+        }
+
+        function handleImageError(status) {
+            console.error("Background image load failed:", status)
+            if (!source.toString().startsWith("file://")) {
+                source = "qrc:/res/gura.jpg"
+            }
+        }
+        
+        Component.onCompleted: {
+            // 先检查缓存图是否存在
+            if (settings.cachedImagePath && imageUtils.fileExists(settings.cachedImagePath)) {
+                try {
+                    var fileUrl = "file:///" + settings.cachedImagePath.replace(/\\/g, "/").replace(/^\/+/, "");
+                    source = fileUrl;
+                    console.log("loadBackgroundImageFromCache: " + fileUrl);
+                    currentImageUrl = fileUrl;
+                    pcGrid.currentBgUrl = fileUrl;  // 初始化时同步属性
+                    
+                    // 检查是否需要刷新（如果上次刷新时间超过1小时）
+                    var oneHour = 60 * 60 * 1000 * 24 * 7;
+                    if (Date.now() - settings.lastRefreshTime > oneHour) {
+                        loadNewImageTimer.start();
+                    }
+                } catch (e) {
+                    console.log("fail loadBackgroundImageFromCache: " + e);
+                    getBackgroundImage();
+                }
+            } else {
+                // 如果没有缓存，立即获取新图片
+                getBackgroundImage();
+            }
+        }
+        
+        Timer {
+            id: loadNewImageTimer
+            interval: 1000 // 延迟1秒加载新图片
+            repeat: false
+            onTriggered: {
+                backgroundImage.getBackgroundImage();
+            }
+        }
+    }
+
+    DropArea {
+        anchors.fill: parent
+        onEntered: {
+            drag.accept(Qt.LinkAction)
+            dragBorder.visible = true
+        }
+        onExited: dragBorder.visible = false
+        onDropped: {
+            dragBorder.visible = false
+            if (drop.hasUrls) {
+                // 获取拖入的第一个文件路径
+                var filePath = drop.urls[0]
+                // 检查文件格式
+                var ext = filePath.toString().split('.').pop().toLowerCase()
+                if (["jpg", "jpeg", "png", "webp"].indexOf(ext) !== -1) {
+                    // 更新缓存路径和刷新时间
+                    settings.cachedImagePath = filePath.toString().substring(8)
+                    settings.lastRefreshTime = Date.now()
+                    
+                    // 更新背景图 - 处理包含空格的路径
+                    if (filePath.toString().startsWith("file:///")) {
+                        var pathPart = filePath.toString().substring(8);
+                        backgroundImage.source = "file:///" + encodeURIComponent(pathPart).replace(/%2F/g, "/");
+                    } else {
+                        backgroundImage.source = filePath;
+                    }
+                    currentImageUrl = filePath;
+                    pcGrid.currentBgUrl = filePath;  // 拖放时同步属性
+                } else {
+                    errorDialog.text = qsTr("不支持的图片格式")
+                    errorDialog.open()
+                }
+            }
+        }
+    }
+
+    // 拖放时的边框效果
+    Rectangle {
+        id: dragBorder
+        anchors.fill: parent
+        color: "transparent"
+        border.color: "#4CAF50"
+        border.width: 4
+        visible: false
+        z: 1
+    }
+
+    // 拖放提示文字
+    Label {
+        anchors.centerIn: parent
+        text: qsTr("拖放图片设置背景")
+        font.pointSize: 24
+        color: "white"
+        visible: dragBorder.visible
+        z: 1
+    }
+
+    // 添加右键菜单功能
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.RightButton
+        propagateComposedEvents: true
+        z: -1  // 确保这个MouseArea位于PC条目之下
+        
+        onClicked: {
+            if (mouse.button === Qt.RightButton) {
+                if (backgroundImage.currentImageUrl) {
+                    console.log("右键菜单被触发")
+                    backgroundContextMenu.popup()
+                }
+            }
+        }
+    }
+    
+    // 添加上下文菜单
+    NavigableMenu {
+        id: backgroundContextMenu
+        property int lastRefreshTime: 0  // 明确声明属性
+        
+        NavigableMenuItem {
+            parentMenu: backgroundContextMenu
+            text: qsTr("下载背景图片")
+            onTriggered: {
+                console.log("触发下载背景图片")
+                saveFileDialog.open()
+            }
+        }
+        
+        NavigableMenuItem {
+            parentMenu: backgroundContextMenu
+            text: qsTr("刷新背景图片")
+            onTriggered: {
+                var currentTime = Date.now();
+                if (currentTime - backgroundContextMenu.lastRefreshTime < 10000) {
+                    saveNotification.text = "请稍等片刻再刷新（至少间隔10秒）"
+                    saveNotification.open()
+                    return;
+                }
+                backgroundContextMenu.lastRefreshTime = currentTime;
+                
+                loadingIndicator.visible = true
+                refreshTimer.start()
+            }
+        }
+    }
+
+    // 添加刷新定时器，避免可能的调用冲突
+    Timer {
+        id: refreshTimer
+        interval: 200  // 延迟200毫秒
+        repeat: false
+        onTriggered: {
+            backgroundImage.getBackgroundImage()
+        }
+    }
+
+    // 文件保存对话框
+    FileDialog {
+        id: saveFileDialog
+        title: qsTr("选择保存位置")
+        nameFilters: ["图片文件 (*.jpg *.jpeg *.png *.webp)"]
+        fileMode: FileDialog.SaveFile
+        
+        currentFile: {
+            var timestamp = new Date().getTime()
+            // 从URL中提取文件扩展名
+            var extension = ".jpg"
+            if (backgroundImage.currentImageUrl) {
+                var urlPath = backgroundImage.currentImageUrl.toString()
+                var extMatch = urlPath.match(/\.(jpg|jpeg|png|webp)($|\?)/i)
+                if (extMatch) {
+                    extension = "." + extMatch[1].toLowerCase()
+                }
+            }
+            return "file:///setu_" + timestamp + extension
+        }
+        
+        onAccepted: {
+            var finalPath = saveFileDialog.fileUrl || saveFileDialog.currentFile || saveFileDialog.file
+    
+            console.log("原始路径: " + finalPath)
+            
+            if (finalPath) {
+                var ext = finalPath.toString().split('.').pop().toLowerCase()
+                if (["jpg", "jpeg", "png", "webp"].indexOf(ext) === -1) {
+                    finalPath = finalPath + ".jpg"  // 添加默认扩展名
+                }
+                imageUtils.saveImageToFile(backgroundImage.currentImageUrl, finalPath)
+            } else {
+                var timestamp = new Date().getTime()
+                finalPath = "file:///setu_" + timestamp + ".jpg"
+                console.log("使用默认路径: " + finalPath)
+                imageUtils.saveImageToFile(backgroundImage.currentImageUrl, finalPath)
+            }
+        }
+    }
+
+    // moonlight-dance
+    AnimatedImage {
+        id: loadingIndicator
+        anchors {
+            right: parent.right
+            bottom: parent.bottom
+            margins: 10
+        }
+        opacity: 0.4
+        source: "qrc:/res/moonlight-dance.gif"
+        width: 40
+        height: 40
+        playing: visible
+        fillMode: Image.PreserveAspectFit
+        visible: false
+    }
+    
+    Rectangle {
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.6)
+        z: -1
+    }
+
+    ImageUtils {
+        id: imageUtils
+        onSaveCompleted: {
+            if (success) {
+                saveNotification.text = "图片已保存到: " + message
+                // 自动关闭通知
+                autoCloseTimer.start()
+            } else {
+                saveNotification.text = "保存失败: " + message
+            }
+            saveNotification.open()
+        }
+    }
+
+    NavigableMessageDialog {
+        id: saveNotification
+        title: qsTr("保存结果")
+        standardButtons: DialogButtonBox.Ok
+        
+        // 添加自动关闭计时器
+        Timer {
+            id: autoCloseTimer
+            interval: 3000 // 3秒后自动关闭
+            repeat: false
+            onTriggered: {
+                saveNotification.close()
+            }
+        }
+    }
 }

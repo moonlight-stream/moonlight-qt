@@ -5,6 +5,7 @@
 
 #include <Limelight.h>
 #include "SDL_compat.h"
+#include "network/bandwidth.h"
 #include "utils.h"
 
 #ifdef HAVE_FFMPEG
@@ -923,6 +924,9 @@ bool Session::initialize()
             }
         }
     }
+
+    // 启动带宽计算
+    BandwidthCalculator::instance()->start();
 
     return true;
 }
@@ -2370,5 +2374,8 @@ DispatchDeferredCleanup:
     // When it is complete, it will release our s_ActiveSessionSemaphore
     // reference.
     QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
+
+    // 停止带宽计算
+    BandwidthCalculator::instance()->stop();
 }
 

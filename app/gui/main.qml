@@ -20,7 +20,7 @@ ApplicationWindow {
 
     id: window
     width: 1280
-    height: 600
+    height: 640
 
     // This function runs prior to creation of the initial StackView item
     function doEarlyInit() {
@@ -68,10 +68,6 @@ ApplicationWindow {
             unmappedGamepadDialog.open()
         }
     }
-  
-    // This configures the maximum width of the singleton attached QML ToolTip. If left unconstrained,
-    // it will never insert a line break and just extend on forever.
-    ToolTip.toolTip.contentWidth: ToolTip.toolTip.implicitContentWidth < 400 ? ToolTip.toolTip.implicitContentWidth : 400
 
     function goBack() {
         if (clearOnBack) {
@@ -88,6 +84,9 @@ ApplicationWindow {
         id: stackView
         anchors.fill: parent
         focus: true
+
+        // 将ToolTip配置移动到StackView内部
+        ToolTip.toolTip.contentWidth: ToolTip.toolTip.implicitContentWidth < 400 ? ToolTip.toolTip.implicitContentWidth : 400
 
         Component.onCompleted: {
             // Perform our early initialization before constructing
@@ -221,11 +220,19 @@ ApplicationWindow {
         }
     }
 
-    header: ToolBar {
+    // 添加工具栏作为浮动元素
+    ToolBar {
         id: toolBar
         height: 60
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
         anchors.topMargin: 5
-        anchors.bottomMargin: 5
+        z: 1  // 确保工具栏在其他内容上方
+        
+        background: Rectangle {
+            color: "transparent"  // 完全透明
+        }
 
         Label {
             id: titleLabel

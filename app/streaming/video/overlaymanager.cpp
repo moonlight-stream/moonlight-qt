@@ -9,12 +9,24 @@ OverlayManager::OverlayManager() :
 {
     memset(m_Overlays, 0, sizeof(m_Overlays));
 
+    // 获取默认显示器的DPI
+    float ddpi, hdpi, vdpi;
+    if (SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi) != 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "无法获取显示器DPI: %s", SDL_GetError());
+        ddpi = 96.0f; // 使用默认DPI
+    }
+    
+    // DPI缩放因子（基于标准96 DPI）
+    float dpiScale = ddpi / 96.0f;
+    
+    // 使用DPI缩放调整字体大小
     m_Overlays[OverlayType::OverlayDebug].color = {0xBD, 0xF9, 0xE7, 0xFF};
-    m_Overlays[OverlayType::OverlayDebug].fontSize = 18;
+    m_Overlays[OverlayType::OverlayDebug].fontSize = (int)(20 * dpiScale);
     m_Overlays[OverlayType::OverlayDebug].bgcolor = {0x00, 0x00, 0x00, 0x96};
 
     m_Overlays[OverlayType::OverlayStatusUpdate].color = {0xCC, 0x00, 0x00, 0xFF};
-    m_Overlays[OverlayType::OverlayStatusUpdate].fontSize = 36;
+    m_Overlays[OverlayType::OverlayStatusUpdate].fontSize = (int)(36 * dpiScale);
 
     // While TTF will usually not be initialized here, it is valid for that not to
     // be the case, since Session destruction is deferred and could overlap with
@@ -157,15 +169,60 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
     if (m_Overlays[type].enabled)
     {
         TTF_SetFontWrappedAlign(m_Overlays[type].font, TTF_WRAPPED_ALIGN_CENTER);
-        TTF_SetFontStyle(m_Overlays[type].font, TTF_STYLE_BOLD);
-
-        // The _Wrapped variant is required for line breaks to work
-        SDL_Surface *surface = TTF_RenderUTF8_LCD_Wrapped(m_Overlays[type].font,
-                                                          m_Overlays[type].text,
-                                                          m_Overlays[type].color,
-                                                          m_Overlays[type].bgcolor,
-                                                          996);
-        SDL_AtomicSetPtr((void **)&m_Overlays[type].surface, surface);
+        
+        // 添加字体检查和错误处理
+        if (m_Overlays[type].font == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                       "字体无效，无法渲染文本");
+            return;
+        }
+        
+        // 首先渲染文本
+        SDL_Surface *textSurface = TTF_RenderUTF8_Blended(m_Overlays[type].font,
+                                                    m_Overlays[type].text,
+                                                    m_Overlays[type].color);
+                                                    
+        // 检查文本渲染是否成功
+        if (textSurface == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                       "文本渲染失败: %s", TTF_GetError());
+            return;
+        }
+        
+        // 创建一个带有内边距的新表面
+        float ddpi, hdpi, vdpi;
+        int padding = 2; // 默认内边距
+        if (SDL_GetDisplayDPI(0, &ddpi, &hdpi, &vdpi) == 0) {
+            float dpiScale = ddpi / 96.0f;
+            padding = (int)(padding * dpiScale);
+        }
+        
+        // 创建一个带有内边距的新表面
+        SDL_Surface *paddedSurface = SDL_CreateRGBSurfaceWithFormat(
+            0,
+            textSurface->w + padding * 2,
+            textSurface->h + padding * 2,
+            32,
+            textSurface->format->format
+        );
+        
+        // 用背景色填充paddedSurface
+        SDL_FillRect(paddedSurface, NULL, 
+                    SDL_MapRGBA(paddedSurface->format, 
+                               m_Overlays[type].bgcolor.r,
+                               m_Overlays[type].bgcolor.g,
+                               m_Overlays[type].bgcolor.b,
+                               m_Overlays[type].bgcolor.a));
+        
+        // 将文本表面复制到带内边距的表面中央
+        SDL_Rect destRect = {padding, padding, textSurface->w, textSurface->h};
+        SDL_BlitSurface(textSurface, NULL, paddedSurface, &destRect);
+        
+        // 释放原始文本表面
+        SDL_FreeSurface(textSurface);
+        
+        // 使用带内边距的表面
+        SDL_AtomicSetPtr((void **)&m_Overlays[type].surface, paddedSurface);
     }
 
     // Notify the renderer

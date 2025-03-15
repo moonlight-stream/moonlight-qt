@@ -10,6 +10,7 @@ class AppModel : public QAbstractListModel
 {
     Q_OBJECT
 
+public:
     enum Roles
     {
         NameRole = Qt::UserRole,
@@ -20,8 +21,8 @@ class AppModel : public QAbstractListModel
         DirectLaunchRole,
         AppCollectorGameRole,
     };
+    Q_ENUM(Roles)
 
-public:
     explicit AppModel(QObject *parent = nullptr);
 
     // Must be called before any QAbstractListModel functions

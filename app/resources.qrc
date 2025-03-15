@@ -18,6 +18,11 @@
         <file>res/baseline-error_outline-24px.svg</file>
         <file>res/baseline-check_circle_outline-24px.svg</file>
         <file>res/discord.svg</file>
+        <file>res/loading.svg</file>
+        <file>res/moon-mask.png</file>
+        <file>res/moonlight-dance.gif</file>
+        <file>res/gura.png</file>
+        <file>res/qq-2.svg</file>
         <file>languages/qml_de.ts</file>
         <file>languages/qml_de.qm</file>
         <file>languages/qml_fr.ts</file>

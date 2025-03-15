@@ -207,7 +207,6 @@ NvHTTP::startApp(QString verb,
             openConnectionToString(m_BaseUrlHttps,
                                    verb,
                                    "appid="+QString::number(appId)+
-                                   "&clientname="+QHostInfo::localHostName().toUtf8()+
                                    "&mode="+QString::number(streamConfig->width)+"x"+
                                    QString::number(streamConfig->height)+"x"+
                                    // Using an FPS value over 60 causes SOPS to default to 720p60,
@@ -483,6 +482,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     // manual intervention to solve).
     url.setQuery("uniqueid=0123456789ABCDEF&uuid=" +
                  QUuid::createUuid().toRfc4122().toHex() +
+                 "&clientname="+QHostInfo::localHostName().toUtf8() +
                  ((arguments != nullptr) ? ("&" + arguments) : ""));
 
     QNetworkRequest request(url);

@@ -1,4 +1,4 @@
-QT += core quick network quickcontrols2 svg
+QT += core quick network quickcontrols2 svg gui-private
 CONFIG += c++11
 
 unix:!macx {
@@ -202,6 +202,7 @@ SOURCES += \
     streaming/session.cpp \
     streaming/audio/audio.cpp \
     streaming/audio/renderers/sdlaud.cpp \
+    streaming/network/bandwidth.cpp \
     gui/computermodel.cpp \
     gui/appmodel.cpp \
     streaming/streamutils.cpp \
@@ -211,7 +212,8 @@ SOURCES += \
     gui/sdlgamepadkeynavigation.cpp \
     streaming/video/overlaymanager.cpp \
     backend/systemproperties.cpp \
-    wm.cpp
+    wm.cpp \
+    imageutils.cpp
 
 HEADERS += \
     SDL_compat.h \
@@ -241,13 +243,15 @@ HEADERS += \
     gui/computermodel.h \
     gui/appmodel.h \
     streaming/video/decoder.h \
+    streaming/network/bandwidth.h \
     streaming/streamutils.h \
     backend/autoupdatechecker.h \
     path.h \
     settings/mappingmanager.h \
     gui/sdlgamepadkeynavigation.h \
     streaming/video/overlaymanager.h \
-    backend/systemproperties.h
+    backend/systemproperties.h \
+    imageutils.h
 
 # Platform-specific renderers and decoders
 ffmpeg {
@@ -389,6 +393,7 @@ config_SL {
 }
 win32 {
     HEADERS += streaming/video/ffmpeg-renderers/dxutil.h
+    LIBS += -liphlpapi
 }
 win32:!winrt {
     message(DXVA2 and D3D11VA renderers selected)

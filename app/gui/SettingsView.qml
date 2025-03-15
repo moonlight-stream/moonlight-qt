@@ -11,7 +11,7 @@ import SystemProperties 1.0
 Flickable {
     id: settingsPage
     objectName: qsTr("Settings")
-
+    topMargin: 60
     signal languageChanged()
 
     boundsBehavior: Flickable.OvershootBounds
@@ -93,18 +93,47 @@ Flickable {
         StreamingPreferences.save()
     }
 
+    PcView {
+        id: pcViewPage
+    }
+
+    Rectangle {
+        parent: settingsPage
+        anchors.fill: parent
+        z: -2
+
+        Image {
+            anchors.fill: parent
+            source: pcViewPage.currentBgUrl || "qrc:/res/gura.png"
+            opacity: 0.35
+            fillMode: Image.PreserveAspectCrop
+        }
+    }
+
+    Rectangle {
+        parent: settingsPage
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.55)
+        z: -1
+    }
+
     Column {
         padding: 10
         id: settingsColumn1
         width: settingsPage.width / 2
         spacing: 15
+        z: 1
 
         GroupBox {
             id: basicSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">" + qsTr("Basic Settings") + "</font>"
-            font.pointSize: 12
+            title: "<b><font color=\"#FFA5D2\">⚙ " + qsTr("Basic Settings") + "</font></b>"
+            font {
+                family: "YouYuan"
+                bold: true
+                pointSize: 13
+            }
 
             Column {
                 anchors.fill: parent
@@ -285,7 +314,7 @@ Flickable {
                                                                                                           StreamingPreferences.height,
                                                                                                           StreamingPreferences.fps,
                                                                                                           StreamingPreferences.enableYUV444);
-                                slider.value = StreamingPreferences.bitrateKbps
+                                slider.value = Math.log(StreamingPreferences.bitrateKbps)
                             }
 
                             lastIndexValue = currentIndex
@@ -451,7 +480,7 @@ Flickable {
                                                                                                           StreamingPreferences.height,
                                                                                                           StreamingPreferences.fps,
                                                                                                           StreamingPreferences.enableYUV444);
-                                slider.value = StreamingPreferences.bitrateKbps
+                                slider.value = Math.log(StreamingPreferences.bitrateKbps)
                             }
 
                             lastIndexValue = currentIndex
@@ -681,18 +710,65 @@ Flickable {
                 Slider {
                     id: slider
 
-                    value: StreamingPreferences.bitrateKbps
+                    // 使用对数刻度来实现非线性调整
+                    property real logMin: Math.log(500)
+                    property real logMax: Math.log(800000)
+                    property real linearThreshold: 100000 // 100 Mbps 的线性调整阈值
 
-                    stepSize: 500
-                    from : 500
-                    to: 800000
+                    value: Math.log(StreamingPreferences.bitrateKbps)
+                    stepSize: (logMax - logMin) / 200
+                    from: logMin
+                    to: logMax
 
                     snapMode: "SnapOnRelease"
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
 
+                    handle: Rectangle {
+                        x: slider.visualPosition * (slider.width - width)
+                        y: (slider.height - height) / 2
+                        width: 24
+                        height: 24
+                        radius: 12
+                        color: "#FFA5D2"
+                        border.color: "#ffffff"
+                        border.width: 2
+                    }
+                    
+                    background: Rectangle {
+                        x: 0
+                        y: (slider.height - height) / 2
+                        width: slider.width
+                        height: 6
+                        radius: 3
+                        color: "#e0e0e0"
+                        
+                        Rectangle {
+                            width: slider.visualPosition * parent.width
+                            height: parent.height
+                            color: "#FFA5D2"
+                            radius: 3
+                        }
+                    }
+
                     onValueChanged: {
-                        bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(value / 1000.0)
-                        StreamingPreferences.bitrateKbps = value
+                        var linearValue;
+                        if (Math.exp(value) <= linearThreshold) {
+                            // 在 100 Mbps 以下使用线性调整
+                            linearValue = Math.exp(value);
+                        } else {
+                            // 在 100 Mbps 以上使用对数调整
+                            linearValue = Math.exp(value);
+                        }
+                        
+                        // 根据条件格式化显示文本
+                        var displayValue = linearValue / 1000.0;
+                        if (displayValue < 100) {
+                            bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(displayValue.toFixed(1))
+                        } else {
+                            bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(Math.round(displayValue))
+                        }
+                        
+                        StreamingPreferences.bitrateKbps = linearValue
                     }
 
                     Component.onCompleted: {
@@ -824,12 +900,15 @@ Flickable {
         }
 
         GroupBox {
-
             id: audioSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">" + qsTr("Audio Settings") + "</font>"
-            font.pointSize: 12
+            title: "<b><font color=\"#FFA5D2\">🎵 " + qsTr("Audio Settings") + "</font></b>"
+            font {
+                family: "YouYuan"
+                bold: true
+                pointSize: 13
+            }
 
             Column {
                 anchors.fill: parent
@@ -921,8 +1000,12 @@ Flickable {
             id: hostSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">" + qsTr("Host Settings") + "</font>"
-            font.pointSize: 12
+            title: "<b><font color=\"#FFA5D2\">🖥️ " + qsTr("Host Settings") + "</font></b>"
+            font {
+                family: "YouYuan"
+                bold: true
+                pointSize: 13
+            }
 
             Column {
                 anchors.fill: parent
@@ -961,8 +1044,12 @@ Flickable {
             id: uiSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">" + qsTr("UI Settings") + "</font>"
-            font.pointSize: 12
+            title: "<b><font color=\"#FFA5D2\">🎨 " + qsTr("UI Settings") + "</font></b>"
+            font {
+                family: "YouYuan"
+                bold: true
+                pointSize: 13
+            }
 
             Column {
                 anchors.fill: parent
@@ -1247,8 +1334,12 @@ Flickable {
             id: inputSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">" + qsTr("Input Settings") + "</font>"
-            font.pointSize: 12
+            title: "<b><font color=\"#FFA5D2\">⌨️ " + qsTr("Input Settings") + "</font></b>"
+            font {
+                family: "YouYuan"
+                bold: true
+                pointSize: 13
+            }
 
             Column {
                 anchors.fill: parent
@@ -1376,6 +1467,18 @@ Flickable {
                         StreamingPreferences.swapMouseButtons = checked
                     }
                 }
+                
+                CheckBox {
+                    id: swapWinAltKeysCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Swap Alt and Win keys")
+                    font.pointSize:  12
+                    checked: StreamingPreferences.swapWinAltKeys
+                    onCheckedChanged: {
+                        StreamingPreferences.swapWinAltKeys = checked
+                    }
+                }
 
                 CheckBox {
                     id: reverseScrollButtonsCheck
@@ -1395,8 +1498,12 @@ Flickable {
             id: gamepadSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">" + qsTr("Gamepad Settings") + "</font>"
-            font.pointSize: 12
+            title: "<b><font color=\"#FFA5D2\">🎮 " + qsTr("Gamepad Settings") + "</font></b>"
+            font {
+                family: "YouYuan"
+                bold: true
+                pointSize: 13
+            }
 
             Column {
                 anchors.fill: parent
@@ -1470,8 +1577,12 @@ Flickable {
             id: advancedSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">" + qsTr("Advanced Settings") + "</font>"
-            font.pointSize: 12
+            title: "<b><font color=\"#FFA5D2\">⚗️ " + qsTr("Advanced Settings") + "</font></b>"
+            font {
+                family: "YouYuan"
+                bold: true
+                pointSize: 13
+            }
 
             Column {
                 anchors.fill: parent
@@ -1620,7 +1731,7 @@ Flickable {
                                                                                                       StreamingPreferences.height,
                                                                                                       StreamingPreferences.fps,
                                                                                                       StreamingPreferences.enableYUV444);
-                            slider.value = StreamingPreferences.bitrateKbps
+                            slider.value = Math.log(StreamingPreferences.bitrateKbps)
                         }
                     }
 
@@ -1643,7 +1754,7 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.unlockBitrate = checked
                         StreamingPreferences.bitrateKbps = Math.min(StreamingPreferences.bitrateKbps, slider.to)
-                        slider.value = StreamingPreferences.bitrateKbps
+                        slider.value = Math.log(StreamingPreferences.bitrateKbps)
                     }
 
                     ToolTip.delay: 1000
