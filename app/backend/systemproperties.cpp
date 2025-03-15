@@ -6,6 +6,7 @@
 
 #include "streaming/session.h"
 #include "streaming/streamutils.h"
+#include "streaming/video/videoenhancement.h"
 
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -247,4 +248,28 @@ void SystemProperties::refreshDisplaysInternal()
     }
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
+}
+
+/**
+ * \brief Inform if the GPU is capable of Video enhancement
+ *
+ * Check if either Video Super-Resolution or SDR-to-HDR features can be used by the GPU.
+ *
+ * \return bool Returns true if the GPU is capable
+ */
+bool SystemProperties::isVideoEnhancementCapable()
+{
+    VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+    return videoEnhancement->isUIvisible() && (videoEnhancement->isVSRcapable() || videoEnhancement->isHDRcapable());
+}
+
+/**
+ * \brief Inform if the GPU's driver is at an experiemental state of Video enhancement implementation
+ *
+ * \return bool Returns true if it is experimental yet
+ */
+bool SystemProperties::isVideoEnhancementExperimental()
+{
+    VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+    return videoEnhancement->isExperimental();
 }
