@@ -168,8 +168,7 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
 
     if (m_Overlays[type].enabled)
     {
-        TTF_SetFontWrappedAlign(m_Overlays[type].font, TTF_WRAPPED_ALIGN_CENTER);
-        
+        // TTF_SetFontWrappedAlign(m_Overlays[type].font, TTF_WRAPPED_ALIGN_CENTER);
         // 添加字体检查和错误处理
         if (m_Overlays[type].font == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

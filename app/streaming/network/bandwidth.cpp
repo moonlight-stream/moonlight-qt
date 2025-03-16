@@ -16,7 +16,7 @@
 #include <QTimer>
 #include <QFile>
 #include <QTextStream>
-#include <QRegExp>
+#include <QRegularExpression>
 #endif
 
 BandwidthCalculator *BandwidthCalculator::s_instance = nullptr;
@@ -200,7 +200,7 @@ bool SystemNetworkStats::getLinuxNetworkUsage(qint64 &bytesReceived, qint64 &byt
     while (!in.atEnd())
     {
         line = in.readLine();
-        QStringList parts = line.trimmed().split(QRegExp("\\s+"));
+        QStringList parts = line.trimmed().split(QRegularExpression("\\s+"));
         if (parts.size() >= 10)
         {
             // 每个网络接口行格式：Interface: rx_bytes ... tx_bytes ...
