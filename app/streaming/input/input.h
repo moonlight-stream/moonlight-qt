@@ -38,6 +38,39 @@ struct GamepadState {
     unsigned char lt, rt;
 };
 
+#define RIGHT_TRIGGER_EFFECT 0x04
+#define LEFT_TRIGGER_EFFECT 0x08
+
+struct DualSenseOutputReport{
+    uint8_t valid_flag0;
+    uint8_t valid_flag1;
+
+    /* For DualShock 4 compatibility mode. */
+    uint8_t motor_right;
+    uint8_t motor_left;
+
+    /* Audio controls */
+    uint8_t reserved[4];
+    uint8_t mute_button_led;
+
+    uint8_t power_save_control;
+    uint8_t right_trigger_effect_type;
+    uint8_t right_trigger_effect[DS_EFFECT_PAYLOAD_SIZE];
+    uint8_t left_trigger_effect_type;
+    uint8_t left_trigger_effect[DS_EFFECT_PAYLOAD_SIZE];
+    uint8_t reserved2[6];
+
+    /* LEDs and lightbar */
+    uint8_t valid_flag2;
+    uint8_t reserved3[2];
+    uint8_t lightbar_setup;
+    uint8_t led_brightness;
+    uint8_t player_leds;
+    uint8_t lightbar_red;
+    uint8_t lightbar_green;
+    uint8_t lightbar_blue;
+};
+
 // activeGamepadMask is a short, so we're bounded by the number of mask bits
 #define MAX_GAMEPADS 16
 
@@ -94,6 +127,8 @@ public:
     void setMotionEventState(uint16_t controllerNumber, uint8_t motionType, uint16_t reportRateHz);
 
     void setControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, uint8_t b);
+
+    void setAdaptiveTriggers(uint16_t controllerNumber, DualSenseOutputReport *report);
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 

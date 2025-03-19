@@ -900,6 +900,17 @@ void SdlInputHandler::setControllerLED(uint16_t controllerNumber, uint8_t r, uin
 #endif
 }
 
+void SdlInputHandler::setAdaptiveTriggers(uint16_t controllerNumber, DualSenseOutputReport *report){
+
+#if SDL_VERSION_ATLEAST(2, 0, 16)
+    if (controllerNumber <= MAX_GAMEPADS && m_GamepadState[controllerNumber].controller != nullptr) {
+        SDL_GameControllerSendEffect(m_GamepadState[controllerNumber].controller, report, sizeof(*report));
+    }
+#endif
+
+    SDL_free(report);
+}
+
 QString SdlInputHandler::getUnmappedGamepads()
 {
     QString ret;

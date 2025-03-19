@@ -40,6 +40,7 @@
 #define SDL_CODE_GAMECONTROLLER_RUMBLE_TRIGGERS 102
 #define SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE 103
 #define SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED 104
+#define SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS 105
 
 #include <openssl/rand.h>
 
@@ -69,6 +70,7 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clRumbleTriggers,
     Session::clSetMotionEventState,
     Session::clSetControllerLED,
+    Session::clSetAdaptiveTriggers
 };
 
 Session* Session::s_ActiveSession;
@@ -258,6 +260,30 @@ void Session::clSetControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g
     setControllerLEDEvent.user.data2 = (void*)(uintptr_t)(r << 16 | g << 8 | b);
     SDL_PushEvent(&setControllerLEDEvent);
 }
+
+void Session::clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t type_left, uint8_t type_right, uint8_t *left, uint8_t *right){
+    // We push an event for the main thread to handle in order to properly synchronize
+    // with the removal of game controllers that could result in our game controller
+    // going away during this callback.
+    SDL_Event setControllerLEDEvent = {};
+    setControllerLEDEvent.type = SDL_USEREVENT;
+    setControllerLEDEvent.user.code = SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS;
+    setControllerLEDEvent.user.data1 = (void*)(uintptr_t)controllerNumber;
+
+    // Based on the following SDL code:
+    // https://github.com/libsdl-org/SDL/blob/120c76c84bbce4c1bfed4e9eb74e10678bd83120/test/testgamecontroller.c#L286-L307
+    DualSenseOutputReport *state = (DualSenseOutputReport *) SDL_malloc(sizeof(DualSenseOutputReport));
+    SDL_zero(*state);
+    state->valid_flag0 |= (RIGHT_TRIGGER_EFFECT | LEFT_TRIGGER_EFFECT);
+    state->right_trigger_effect_type = type_right;
+    SDL_memcpy(state->right_trigger_effect, right, sizeof(state->right_trigger_effect));
+    state->left_trigger_effect_type = type_left;
+    SDL_memcpy(state->left_trigger_effect, left, sizeof(state->left_trigger_effect));
+
+    setControllerLEDEvent.user.data2 = (void *) state;
+    SDL_PushEvent(&setControllerLEDEvent);
+}
+
 
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window, int videoFormat, int width, int height,
@@ -2040,6 +2066,10 @@ void Session::execInternal()
                                                  (uint8_t)((uintptr_t)event.user.data2 >> 16),
                                                  (uint8_t)((uintptr_t)event.user.data2 >> 8),
                                                  (uint8_t)((uintptr_t)event.user.data2));
+                break;
+            case SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS:
+                m_InputHandler->setAdaptiveTriggers((uint16_t)(uintptr_t)event.user.data1,
+                                                    (DualSenseOutputReport *)event.user.data2);
                 break;
             default:
                 SDL_assert(false);
