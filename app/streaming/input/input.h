@@ -38,8 +38,6 @@ struct GamepadState {
     unsigned char lt, rt;
 };
 
-#define RIGHT_TRIGGER_EFFECT 0x04
-#define LEFT_TRIGGER_EFFECT 0x08
 
 struct DualSenseOutputReport{
     uint8_t valid_flag0;

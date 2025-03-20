@@ -221,7 +221,7 @@ private:
     void clSetControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, uint8_t b);
 
     static
-    void clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t type_left, uint8_t type_right, uint8_t *left, uint8_t *right);
+    void clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t event_flags, uint8_t type_left, uint8_t type_right, uint8_t *left, uint8_t *right);
 
     static
     int arInit(int audioConfiguration,
