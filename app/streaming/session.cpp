@@ -577,6 +577,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_InputHandler(nullptr),
       m_MouseEmulationRefCount(0),
       m_FlushingWindowEventsRef(0),
+      m_ShouldExitAfterQuit(false),
       m_AsyncConnectionSuccess(false),
       m_PortTestResults(0),
       m_OpusDecoder(nullptr),
@@ -1251,7 +1252,8 @@ private:
         // Only quit the running app if our session terminated gracefully
         bool shouldQuit =
                 !m_Session->m_UnexpectedTermination &&
-                m_Session->m_Preferences->quitAppAfter;
+                (m_Session->m_Preferences->quitAppAfter ||
+                 m_Session->m_ShouldExitAfterQuit);
 
         // Notify the UI
         if (shouldQuit) {
@@ -1278,6 +1280,11 @@ private:
                 http.quitApp();
             } catch (const GfeHttpResponseException&) {
             } catch (const QtNetworkReplyException&) {
+            }
+
+            // Exit the entire program if requested
+            if (m_Session->m_ShouldExitAfterQuit) {
+                QCoreApplication::instance()->quit();
             }
 
             // Session is finished now
@@ -1696,6 +1703,11 @@ void Session::flushWindowEvents()
     flushEvent.type = SDL_USEREVENT;
     flushEvent.user.code = SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER;
     SDL_PushEvent(&flushEvent);
+}
+
+void Session::setShouldExitAfterQuit()
+{
+    m_ShouldExitAfterQuit = true;
 }
 
 class ExecThread : public QThread

@@ -124,6 +124,8 @@ public:
 
     void flushWindowEvents();
 
+    void setShouldExitAfterQuit();
+
 signals:
     void stageStarting(QString stage);
 
@@ -264,6 +266,7 @@ private:
     int m_MouseEmulationRefCount;
     int m_FlushingWindowEventsRef;
     QList<QString> m_LaunchWarnings;
+    bool m_ShouldExitAfterQuit;
 
     bool m_AsyncConnectionSuccess;
     int m_PortTestResults;
