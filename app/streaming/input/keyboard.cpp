@@ -139,6 +139,20 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         updatePointerRegionLock();
         break;
 
+    case KeyComboQuitAndExit:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected quitAndExit key combo");
+
+        // Indicate that we want to exit afterwards
+        Session::get()->setShouldExitAfterQuit();
+
+        // Push a quit event to the main loop
+        SDL_Event quitExitEvent;
+        quitExitEvent.type = SDL_QUIT;
+        quitExitEvent.quit.timestamp = SDL_GetTicks();
+        SDL_PushEvent(&quitExitEvent);
+        break;
+
     default:
         Q_UNREACHABLE();
     }
