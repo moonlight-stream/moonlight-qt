@@ -274,11 +274,11 @@ void Session::clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t type_left
     // https://github.com/libsdl-org/SDL/blob/120c76c84bbce4c1bfed4e9eb74e10678bd83120/test/testgamecontroller.c#L286-L307
     DualSenseOutputReport *state = (DualSenseOutputReport *) SDL_malloc(sizeof(DualSenseOutputReport));
     SDL_zero(*state);
-    // This will determine if the effect is enabled or not, we'll receive -1 when only one of the two triggers have an effect enabled
-    if (state->right_trigger_effect_type >= 0){
+    // This will determine if the effect is enabled or not, we'll receive 0xFF when only one of the two triggers have an effect enabled
+    if (state->right_trigger_effect_type <= 0xFF){
         state->valid_flag0 |= RIGHT_TRIGGER_EFFECT;
     }
-    if (state->left_trigger_effect_type >= 0){
+    if (state->left_trigger_effect_type <= 0xFF){
         state->valid_flag0 |= LEFT_TRIGGER_EFFECT;
     }
     state->right_trigger_effect_type = type_right;
