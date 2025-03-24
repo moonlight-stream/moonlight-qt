@@ -281,11 +281,13 @@ Flickable {
                                 StreamingPreferences.width = selectedWidth
                                 StreamingPreferences.height = selectedHeight
 
-                                StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
-                                                                                                          StreamingPreferences.height,
-                                                                                                          StreamingPreferences.fps,
-                                                                                                          StreamingPreferences.enableYUV444);
-                                slider.value = StreamingPreferences.bitrateKbps
+                                if (StreamingPreferences.autoAdjustBitrate) {
+                                    StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
+                                                                                                              StreamingPreferences.height,
+                                                                                                              StreamingPreferences.fps,
+                                                                                                              StreamingPreferences.enableYUV444);
+                                    slider.value = StreamingPreferences.bitrateKbps
+                                }
                             }
 
                             lastIndexValue = currentIndex
@@ -447,11 +449,13 @@ Flickable {
                             if (StreamingPreferences.fps !== selectedFps) {
                                 StreamingPreferences.fps = selectedFps
 
-                                StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
-                                                                                                          StreamingPreferences.height,
-                                                                                                          StreamingPreferences.fps,
-                                                                                                          StreamingPreferences.enableYUV444);
-                                slider.value = StreamingPreferences.bitrateKbps
+                                if (StreamingPreferences.autoAdjustBitrate) {
+                                    StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
+                                                                                                              StreamingPreferences.height,
+                                                                                                              StreamingPreferences.fps,
+                                                                                                              StreamingPreferences.enableYUV444);
+                                    slider.value = StreamingPreferences.bitrateKbps
+                                }
                             }
 
                             lastIndexValue = currentIndex
@@ -678,26 +682,47 @@ Flickable {
                     wrapMode: Text.Wrap
                 }
 
-                Slider {
-                    id: slider
+                Row {
+                    width: parent.width
+                    spacing: 5
 
-                    value: StreamingPreferences.bitrateKbps
+                    Slider {
+                        id: slider
 
-                    stepSize: 500
-                    from : 500
-                    to: StreamingPreferences.unlockBitrate ? 500000 : 150000
+                        value: StreamingPreferences.bitrateKbps
 
-                    snapMode: "SnapOnRelease"
-                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
+                        stepSize: 500
+                        from : 500
+                        to: StreamingPreferences.unlockBitrate ? 500000 : 150000
 
-                    onValueChanged: {
-                        bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(value / 1000.0)
-                        StreamingPreferences.bitrateKbps = value
+                        snapMode: "SnapOnRelease"
+                        width: Math.min(bitrateDesc.implicitWidth, parent.width - (resetBitrateButton.visible ? resetBitrateButton.width + parent.spacing : 0))
+
+                        onValueChanged: {
+                            bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(value / 1000.0)
+                            StreamingPreferences.bitrateKbps = value
+                        }
+
+                        onMoved: {
+                            StreamingPreferences.autoAdjustBitrate = false
+                        }
+
+                        Component.onCompleted: {
+                            // Refresh the text after translations change
+                            languageChanged.connect(valueChanged)
+                        }
                     }
 
-                    Component.onCompleted: {
-                        // Refresh the text after translations change
-                        languageChanged.connect(valueChanged)
+                    Button {
+                        id: resetBitrateButton
+                        text: qsTr("Use Default (%1 Mbps)").arg(StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444) / 1000.0)
+                        visible: StreamingPreferences.bitrateKbps !== StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
+                        onClicked: {
+                            var defaultBitrate = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
+                            StreamingPreferences.bitrateKbps = defaultBitrate
+                            StreamingPreferences.autoAdjustBitrate = true
+                            slider.value = defaultBitrate
+                        }
                     }
                 }
 
@@ -1616,11 +1641,13 @@ Flickable {
                         // This is called on init, so only reset to default bitrate when checked state changes.
                         if (StreamingPreferences.enableYUV444 != checked) {
                             StreamingPreferences.enableYUV444 = checked
-                            StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
-                                                                                                      StreamingPreferences.height,
-                                                                                                      StreamingPreferences.fps,
-                                                                                                      StreamingPreferences.enableYUV444);
-                            slider.value = StreamingPreferences.bitrateKbps
+                            if (StreamingPreferences.autoAdjustBitrate) {
+                                StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
+                                                                                                          StreamingPreferences.height,
+                                                                                                          StreamingPreferences.fps,
+                                                                                                          StreamingPreferences.enableYUV444);
+                                slider.value = StreamingPreferences.bitrateKbps
+                            }
                         }
                     }
 
