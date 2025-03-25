@@ -40,33 +40,33 @@ struct GamepadState {
 
 
 struct DualSenseOutputReport{
-    uint8_t valid_flag0;
-    uint8_t valid_flag1;
+    uint8_t validFlag0;
+    uint8_t validFlag1;
 
     /* For DualShock 4 compatibility mode. */
-    uint8_t motor_right;
-    uint8_t motor_left;
+    uint8_t motorRight;
+    uint8_t motorLeft;
 
     /* Audio controls */
     uint8_t reserved[4];
-    uint8_t mute_button_led;
+    uint8_t muteButtonLed;
 
-    uint8_t power_save_control;
-    uint8_t right_trigger_effect_type;
-    uint8_t right_trigger_effect[DS_EFFECT_PAYLOAD_SIZE];
-    uint8_t left_trigger_effect_type;
-    uint8_t left_trigger_effect[DS_EFFECT_PAYLOAD_SIZE];
+    uint8_t powerSaveControl;
+    uint8_t rightTriggerEffectType;
+    uint8_t rightTriggerEffect[DS_EFFECT_PAYLOAD_SIZE];
+    uint8_t leftTriggerEffectType;
+    uint8_t leftTriggerEffect[DS_EFFECT_PAYLOAD_SIZE];
     uint8_t reserved2[6];
 
     /* LEDs and lightbar */
-    uint8_t valid_flag2;
+    uint8_t validFlag2;
     uint8_t reserved3[2];
-    uint8_t lightbar_setup;
-    uint8_t led_brightness;
-    uint8_t player_leds;
-    uint8_t lightbar_red;
-    uint8_t lightbar_green;
-    uint8_t lightbar_blue;
+    uint8_t lightbarSetup;
+    uint8_t ledBrightness;
+    uint8_t playerLeds;
+    uint8_t lightbarRed;
+    uint8_t lightbarGreen;
+    uint8_t lightbarBlue;
 };
 
 // activeGamepadMask is a short, so we're bounded by the number of mask bits
