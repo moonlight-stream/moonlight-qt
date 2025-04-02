@@ -65,6 +65,8 @@ private:
     // Pending swapchain state shared between waitToRender(), renderFrame(), and cleanupRenderContext()
     pl_swapchain_frame m_SwapchainFrame = {};
     bool m_HasPendingSwapchainFrame = false;
+    
+    bool m_IgnoreAspectRatio = false;
 
     // Overlay state
     SDL_SpinLock m_OverlayLock = 0;
