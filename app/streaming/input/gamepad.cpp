@@ -900,6 +900,22 @@ void SdlInputHandler::setControllerLED(uint16_t controllerNumber, uint8_t r, uin
 #endif
 }
 
+void SdlInputHandler::setAdaptiveTriggers(uint16_t controllerNumber, DualSenseOutputReport *report){
+
+#if SDL_VERSION_ATLEAST(2, 0, 16)
+        // Make sure the controller number is within our supported count
+    if (controllerNumber <= MAX_GAMEPADS &&
+        // and we have a valid controller
+        m_GamepadState[controllerNumber].controller != nullptr &&
+        // and it's a PS5 controller
+        SDL_GameControllerGetType(m_GamepadState[controllerNumber].controller) == SDL_CONTROLLER_TYPE_PS5) {
+        SDL_GameControllerSendEffect(m_GamepadState[controllerNumber].controller, report, sizeof(*report));
+    }
+#endif
+
+    SDL_free(report);
+}
+
 QString SdlInputHandler::getUnmappedGamepads()
 {
     QString ret;
