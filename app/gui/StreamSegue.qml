@@ -176,7 +176,7 @@ Item {
             gc()
 
             // Run the streaming session to completion
-            session.exec(Window.window)
+            session.exec(window)
         }
 
         sourceComponent: Item {}
