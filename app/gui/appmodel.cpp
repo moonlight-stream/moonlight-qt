@@ -93,6 +93,8 @@ QVariant AppModel::data(const QModelIndex &index, int role) const
         return app.directLaunch;
     case AppCollectorGameRole:
         return app.isAppCollectorGame;
+    case HDRSupportedRole:
+        return app.hdrSupported;
     default:
         return QVariant();
     }
@@ -109,6 +111,7 @@ QHash<int, QByteArray> AppModel::roleNames() const
     names[AppIdRole] = "appid";
     names[DirectLaunchRole] = "directLaunch";
     names[AppCollectorGameRole] = "appCollectorGame";
+    names[HDRSupportedRole] = "hdrSupported";
 
     return names;
 }
