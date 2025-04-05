@@ -588,31 +588,32 @@ int main(int argc, char *argv[])
     }
 #endif
 
+#ifdef Q_OS_WIN32
+    // If we don't have stdout or stderr handles (which will normally be the case
+    // since we're a /SUBSYSTEM:WINDOWS app), attach to our parent console and use
+    // that for stdout and stderr.
+    //
+    // If we do have stdout or stderr handles, that means the user has used standard
+    // handle redirection. In that case, we don't want to override those handles.
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        // If we didn't have an old stdout/stderr handle, use the new CONOUT$ handle
+        if (IS_UNSPECIFIED_HANDLE(oldConOut)) {
+            freopen("CONOUT$", "w", stdout);
+            setvbuf(stdout, NULL, _IONBF, 0);
+        }
+        if (IS_UNSPECIFIED_HANDLE(oldConErr)) {
+            freopen("CONOUT$", "w", stderr);
+            setvbuf(stderr, NULL, _IONBF, 0);
+        }
+    }
+#endif
+
     GlobalCommandLineParser parser;
     GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse(app.arguments());
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::ListRequested:
         // Don't log to the console since it will jumble the command output
         s_SuppressVerboseOutput = true;
-#ifdef Q_OS_WIN32
-        // If we don't have stdout or stderr handles (which will normally be the case
-        // since we're a /SUBSYSTEM:WINDOWS app), attach to our parent console and use
-        // that for stdout and stderr.
-        //
-        // If we do have stdout or stderr handles, that means the user has used standard
-        // handle redirection. In that case, we don't want to override those handles.
-        if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-            // If we didn't have an old stdout/stderr handle, use the new CONOUT$ handle
-            if (IS_UNSPECIFIED_HANDLE(oldConOut)) {
-                freopen("CONOUT$", "w", stdout);
-                setvbuf(stdout, NULL, _IONBF, 0);
-            }
-            if (IS_UNSPECIFIED_HANDLE(oldConErr)) {
-                freopen("CONOUT$", "w", stderr);
-                setvbuf(stderr, NULL, _IONBF, 0);
-            }
-        }
-#endif
         break;
     default:
         break;

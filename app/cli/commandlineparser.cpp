@@ -59,13 +59,6 @@ public:
 
     void showMessage(QString message, MessageType type) const
     {
-    #if defined(Q_OS_WIN32)
-        UINT flags = MB_OK | MB_TOPMOST | MB_SETFOREGROUND;
-        flags |= (type == Info ? MB_ICONINFORMATION : MB_ICONERROR);
-        QString title = "Moonlight";
-        MessageBoxW(nullptr, reinterpret_cast<const wchar_t *>(message.utf16()),
-                    reinterpret_cast<const wchar_t *>(title.utf16()), flags);
-    #endif
         message = message.endsWith('\n') ? message : message + '\n';
         fputs(qPrintable(message), type == Info ? stdout : stderr);
     }
