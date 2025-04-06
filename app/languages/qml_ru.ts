@@ -28,7 +28,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="320"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>Запустить это приложение сразу после выбора хоста, пропуская страницу выбора приложений.</translation>
+        <translation>Запускать это приложение сразу после выбора хоста, пропуская страницу выбора приложений.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="329"/>
@@ -1153,7 +1153,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation>Включить YUV 4:4:4 (Эксперементальна опция)</translation>
+        <translation>Включить YUV 4:4:4 (Эксперементальная опция)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1631"/>

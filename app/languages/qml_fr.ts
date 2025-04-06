@@ -987,12 +987,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1573"/>
         <source>AV1 (Experimental)</source>
-        <translation>AV1 (Expérimental)</translation>
+        <translation>AV1 (expérimental)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1588"/>
         <source>Enable HDR (Experimental)</source>
-        <translation>Activer le HDR (Expérimental)</translation>
+        <translation>Activer le HDR (expérimental)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1603"/>
@@ -1007,7 +1007,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1690"/>
         <source>Show performance stats while streaming</source>
-        <translation>Afficher les statistiques de peformance lors du stream</translation>
+        <translation>Afficher les statistiques de performance lors du stream</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1700"/>
@@ -1153,7 +1153,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation>Activer YUV 4:4:4 (Expérimental)</translation>
+        <translation>Activer YUV 4:4:4 (expérimental)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1631"/>

@@ -1245,17 +1245,17 @@
     <message>
         <location filename="../gui/main.qml" line="262"/>
         <source>Version %1</source>
-        <translation>Versiyon %1</translation>
+        <translation>Sürüm %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="278"/>
         <source>Join our community on Discord</source>
-        <translation>Discord&apos;daki topluluğumuza katılın</translation>
+        <translation>Discord topluluğumuza katılın</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="297"/>
         <source>Add PC manually</source>
-        <translation>Manuel olarak bilgisayar ekleme</translation>
+        <translation>Pc ekle</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="337"/>
