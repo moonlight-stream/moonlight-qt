@@ -1137,6 +1137,18 @@ Flickable {
                             text: "Eesti" // Estonian
                             val: StreamingPreferences.LANG_ET
                         } */
+                        ListElement {
+                            text: "Български" // Bulgarian
+                            val: StreamingPreferences.LANG_BG
+                        }
+                        /* ListElement {
+                            text: "Esperanto"
+                            val: StreamingPreferences.LANG_EO
+                        } */
+                        ListElement {
+                            text: "தமிழ்" // Tamil
+                            val: StreamingPreferences.LANG_TA
+                        }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {

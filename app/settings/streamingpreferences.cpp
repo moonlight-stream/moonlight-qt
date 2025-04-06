@@ -299,6 +299,12 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
         return "lt";
     case LANG_ET:
         return "et";
+    case LANG_BG:
+        return "bg";
+    case LANG_EO:
+        return "eo";
+    case LANG_TA:
+        return "ta";
     case LANG_AUTO:
     default:
         return QLocale::system().name();
