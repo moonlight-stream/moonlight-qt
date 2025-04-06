@@ -94,6 +94,9 @@ public:
         LANG_CKB,
         LANG_LT,
         LANG_ET,
+        LANG_BG,
+        LANG_EO,
+        LANG_TA,
     };
     Q_ENUM(Language);
 

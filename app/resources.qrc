@@ -70,6 +70,12 @@
         <file>languages/qml_lt.qm</file>
         <file>languages/qml_et.ts</file>
         <file>languages/qml_et.qm</file>
+        <file>languages/qml_bg.ts</file>
+        <file>languages/qml_bg.qm</file>
+        <file>languages/qml_eo.ts</file>
+        <file>languages/qml_eo.qm</file>
+        <file>languages/qml_ta.ts</file>
+        <file>languages/qml_ta.qm</file>
         <!-- Don't include pt_BR until it is more complete -->
         <!--file>languages/qml_pt_BR.qm</file-->
         <!--file>languages/qml_pt_BR.ts</file-->
