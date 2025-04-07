@@ -831,4 +831,9 @@
 	</provides>
 
 	<content_rating type="oars-1.0" />
+
+	<custom>
+		<value key="GIT_BRANCH">__GITHUB_REF_NAME__</value>
+		<value key="GIT_SHA">__GITHUB_SHA__</value>
+	</custom>
 </component>
