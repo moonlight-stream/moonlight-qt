@@ -1,68 +1,27 @@
 version: 0.0.0.{build}
 
+# Steam Link only builds on Ubuntu 16.04, and Github Actions runners don't go that far back.
+# All other builds are now in .github/workflows/ci.yml
+
 clone_depth: 1
 
 environment:
-  matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-      QTDIR: C:\Qt\6.8
-    - APPVEYOR_BUILD_WORKER_IMAGE: macOS-Sonoma
-      BUILD_TARGET: macos
-      QTDIR: Qt/6.6
+  matrix: []
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
       BUILD_TARGET: steamlink
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
-      BUILD_TARGET: linux
-      FFMPEG_CONFIGURE_ARGS: --enable-pic --disable-static --enable-shared --disable-all --enable-avcodec --enable-avformat --enable-swscale --enable-decoder=h264 --enable-decoder=hevc --enable-decoder=av1 --enable-hwaccel=h264_vaapi --enable-hwaccel=hevc_vaapi --enable-hwaccel=av1_vaapi --enable-hwaccel=h264_vdpau --enable-hwaccel=hevc_vdpau --enable-hwaccel=av1_vdpau --enable-libdrm --enable-hwaccel=h264_vulkan --enable-hwaccel=hevc_vulkan --enable-hwaccel=av1_vulkan --enable-libdav1d --enable-decoder=libdav1d
 
 install:
-  - cmd: 'copy /y scripts\appveyor\qmake.bat %QTDIR%\msvc2022_arm64\bin\'
-  - cmd: 'copy /y scripts\appveyor\qtpaths.bat %QTDIR%\msvc2022_arm64\bin\'
-  - cmd: 'copy /y scripts\appveyor\target_qt.conf %QTDIR%\msvc2022_arm64\bin\'
-  - sh: '[ "$BUILD_TARGET" != macos ] || nvm use node'
-  - sh: '[ "$BUILD_TARGET" != macos ] || npm install --global create-dmg'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || sudo apt install -y libc6:i386 libstdc++6:i386'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || git clone --depth=1 https://github.com/ValveSoftware/steamlink-sdk.git $HOME/steamlink-sdk'
-  - sh: '[ "$BUILD_TARGET" != linux ] || sudo add-apt-repository ppa:beineri/opt-qt-5.15.4-focal || true'
-  - sh: '[ "$BUILD_TARGET" != linux ] || wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -'
-  - sh: '[ "$BUILD_TARGET" != linux ] || sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.3.280-focal.list https://packages.lunarg.com/vulkan/1.3.280/lunarg-vulkan-1.3.280-focal.list'
-  - sh: '[ "$BUILD_TARGET" != linux ] || sudo apt update || true'
-  - sh: '[ "$BUILD_TARGET" != linux ] || sudo apt install -y qt515base qt515quickcontrols2 qt515svg qt515wayland python3-pip nasm libgbm-dev libdrm-dev libfreetype6-dev libasound2-dev libdbus-1-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libglu1-mesa-dev libibus-1.0-dev libpulse-dev libudev-dev libx11-dev libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxss-dev libxt-dev libxv-dev libxxf86vm-dev libxcb-dri3-dev libx11-xcb-dev wayland-protocols libopus-dev libvdpau-dev vulkan-sdk'
-  - sh: '[ "$BUILD_TARGET" != linux ] || sudo pip3 install meson'
-  - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then export SDL2_REV=86fd4ed83cdcf71fef6a57766b126e88f923acd3 && git clone https://github.com/libsdl-org/SDL.git SDL2 && cd SDL2 && git checkout $SDL2_REV && ./configure && make -j$(nproc) && sudo make install && cd ..; fi'
-  - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then export SDL2_TTF_VER=2.22.0 && wget https://github.com/libsdl-org/SDL_ttf/releases/download/release-$SDL2_TTF_VER/SDL2_ttf-$SDL2_TTF_VER.tar.gz && tar -xf SDL2_ttf-$SDL2_TTF_VER.tar.gz && cd SDL2_ttf-$SDL2_TTF_VER && ./configure && make -j$(nproc) && sudo make install && cd ..; fi'
-  - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then export LIBVA_VER=2.22.0 && git clone --branch $LIBVA_VER --depth 1 https://github.com/intel/libva.git && cd libva && ./autogen.sh && ./configure --enable-x11 --enable-wayland && make -j$(nproc) && sudo make install && cd ..; fi'
-  - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then export DAV1D_VER=1.5.0 && git clone --branch $DAV1D_VER --depth 1 https://code.videolan.org/videolan/dav1d.git && cd dav1d && meson setup build -Ddefault_library=static -Dbuildtype=release -Denable_tools=false -Denable_tests=false && ninja -C build && sudo ninja install -C build && sudo ldconfig && cd ..; fi'
-  - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then export LIBPLACEBO_REV=v7.349.0 && git clone https://code.videolan.org/videolan/libplacebo.git && cd libplacebo && git checkout $LIBPLACEBO_REV && git apply ../app/deploy/linux/appimage/*.patch && git submodule update --init --recursive && meson setup build -Dvulkan=enabled -Dopengl=disabled -Ddemos=false && ninja -C build && sudo ninja install -C build && sudo ldconfig && cd ..; fi'
-  - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then export FFMPEG_REV=87ccf995cb855f0baced9916928b7b48d8b6ed9d && git clone https://github.com/FFmpeg/FFmpeg.git FFmpeg && cd FFmpeg && git checkout $FFMPEG_REV && ./configure $FFMPEG_CONFIGURE_ARGS && make -j$(nproc) && sudo make install && sudo ldconfig && cd ..; fi'
-  - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then mkdir $HOME/bin && wget -O $HOME/bin/linuxdeployqt https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage && chmod a+x $HOME/bin/linuxdeployqt; fi'
 
 before_build:
-  - 'git -c submodule.libs.update=none submodule update --init --recursive'
-  - cmd: 'git submodule update --init --recursive'
-  - sh: '[ "$BUILD_TARGET" = linux ] || git submodule update --init --recursive'
-  - cmd: 'set OLDPATH=%PATH%'
-  - cmd: 'set /p VERSION=<app\version.txt'
+  - sh: 'git -c submodule.libs.update=none submodule update --init --recursive'
   - sh: 'export VERSION=`cat app/version.txt`'
 
 build_script:
-  - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2022_64\bin'
-  - cmd: 'scripts\build-arch.bat Release'
-  - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2022_arm64\bin'
-  - cmd: 'scripts\build-arch.bat Release'
-  - cmd: 'scripts\generate-bundle.bat Release'
-  - sh: '[ "$BUILD_TARGET" != linux ] || source /opt/qt515/bin/qt515-env.sh'
-  - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
-  - sh: '[ "$BUILD_TARGET" != macos ] || PATH=$PATH:$HOME/$QTDIR/macos/bin scripts/generate-dmg.sh Release'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || STEAMLINK_SDK_PATH=$HOME/steamlink-sdk scripts/build-steamlink-app.sh'
 
 after_build:
-  - cmd: 'appveyor PushArtifact build\installer-x64-Release\MoonlightPortable-x64-%VERSION%.zip -FileName MoonlightPortable-x64-r%APPVEYOR_BUILD_NUMBER%.zip'
-  - cmd: 'appveyor PushArtifact build\symbols-x64-Release\MoonlightDebuggingSymbols-x64-%VERSION%.zip -FileName MoonlightDebuggingSymbols-x64-r%APPVEYOR_BUILD_NUMBER%.zip'
-  - cmd: 'appveyor PushArtifact build\installer-arm64-Release\MoonlightPortable-arm64-%VERSION%.zip -FileName MoonlightPortable-arm64-r%APPVEYOR_BUILD_NUMBER%.zip'
-  - cmd: 'appveyor PushArtifact build\symbols-arm64-Release\MoonlightDebuggingSymbols-arm64-%VERSION%.zip -FileName MoonlightDebuggingSymbols-arm64-r%APPVEYOR_BUILD_NUMBER%.zip'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || appveyor PushArtifact build/installer-release/Moonlight-SteamLink-$VERSION.zip -FileName Moonlight-SteamLink-r$APPVEYOR_BUILD_NUMBER.zip'
-  - sh: '[ "$BUILD_TARGET" != macos ] || appveyor PushArtifact build/installer-Release/Moonlight-$VERSION.dmg -FileName Moonlight-r$APPVEYOR_BUILD_NUMBER.dmg'
-  - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/Moonlight-$VERSION-x86_64.AppImage -FileName Moonlight-r$APPVEYOR_BUILD_NUMBER-x86_64.AppImage'
 
 deploy: off

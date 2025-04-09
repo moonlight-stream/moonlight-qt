@@ -1,0 +1,339 @@
+---
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [master]
+  schedule:
+    - cron: "45 23 * * 0" # weekly build of master (Sunday 11:45pm)
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  build_win:
+    name: Windows
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Qt x64
+        uses: jdpurcell/install-qt-action@v5
+        with:
+          arch: win64_msvc2022_64
+          dir: ${{ github.workspace }}\x64\
+          host: windows
+          target: desktop
+          version: '6.8.3'
+          use-naqt: true
+
+      - name: Gather metadata
+        run: |
+          Add-Content $env:GITHUB_PATH "$($env:QT_ROOT_DIR)\bin"
+          echo ("VERSION=" + (Get-Content app/version.txt)) >> $env:GITHUB_ENV
+          Get-Content -Path "app\deploy\windows\Moonlight.rc" | ForEach-Object { $_ -replace "__GITHUB_REF_NAME__", $($env:GITHUB_REF_NAME) } | Set-Content -Path "app\deploy\windows\Moonlight.rc.tmp"
+          Get-Content -Path "app\deploy\windows\Moonlight.rc.tmp" | ForEach-Object { $_ -replace "__GITHUB_SHA__", $($env:GITHUB_SHA) } | Set-Content -Path "app\deploy\windows\Moonlight.rc"
+          Remove-Item -Path "app\deploy\windows\Moonlight.rc.tmp"
+
+      - name: Build Windows x64
+        shell: pwsh
+        run: |
+          scripts\build-arch.bat Release x64
+          mkdir artifacts
+          Copy-Item "build\installer-x64-release\MoonlightPortable-x64-$($env:VERSION).zip" -Destination "artifacts\MoonlightPortable-x64.zip"
+          Copy-Item "build\symbols-x64-Release\MoonlightDebuggingSymbols-x64-$($env:VERSION).zip" -Destination "artifacts\MoonlightDebuggingSymbols-x64.zip"
+          Get-ChildItem -Path "artifacts" -Recurse
+
+      - name: Install Qt arm64
+        uses: jdpurcell/install-qt-action@v5
+        with:
+          arch: win64_msvc2022_arm64_cross_compiled
+          dir: ${{ github.workspace }}\arm64\
+          host: windows
+          target: desktop
+          version: '6.8.3'
+          use-naqt: true
+
+      - name: Build Windows arm64
+        shell: pwsh
+        run: |
+          Copy-Item "scripts\build_arm64\qmake.bat" -Destination "$($env:QT_ROOT_DIR)\bin"
+          Copy-Item "scripts\build_arm64\qtpaths.bat" -Destination "$($env:QT_ROOT_DIR)\bin"
+          Copy-Item "scripts\build_arm64\target_qt.conf" -Destination "$($env:QT_ROOT_DIR)\bin"
+          Add-Content $env:GITHUB_PATH "$($env:QT_ROOT_DIR)\bin"
+          scripts\build-arch.bat Release arm64
+          Copy-Item "build\installer-arm64-release\MoonlightPortable-arm64-$($env:VERSION).zip" -Destination "artifacts\MoonlightPortable-arm64.zip"
+          Copy-Item "build\symbols-arm64-Release\MoonlightDebuggingSymbols-arm64-$($env:VERSION).zip" -Destination "artifacts\MoonlightDebuggingSymbols-arm64.zip"
+          Get-ChildItem -Path "artifacts" -Recurse
+
+      - name: Build universal binary
+        shell: pwsh
+        run: |
+          scripts\generate-bundle.bat Release
+          Copy-Item "build\installer-release\MoonlightSetup-$($env:VERSION).exe" -Destination "artifacts\MoonlightSetup.exe"
+          Get-ChildItem -Path "artifacts" -Recurse
+
+        # This is the only way to generate separate artifacts without using a job matrix
+      - name: Upload Artifacts (Installer)
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoonlightSetup.exe
+          path: artifacts/MoonlightSetup.exe
+          compression-level: 0
+
+      - name: Upload Artifacts (Portable x64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoonlightPortable-x64.zip
+          path: artifacts/MoonlightPortable-x64.zip
+          compression-level: 0
+
+      - name: Upload Artifacts (Portable arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoonlightPortable-arm64.zip
+          path: artifacts/MoonlightPortable-arm64.zip
+          compression-level: 0
+
+      - name: Upload Artifacts (Debug symbols)
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoonlightDebuggingSymbols
+          path: |
+            artifacts/MoonlightDebuggingSymbols-x64.zip
+            artifacts/MoonlightPortable-arm64.zip
+          compression-level: 0
+
+###
+
+  build_macos:
+    name: macOS
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Qt
+        uses: jdpurcell/install-qt-action@v5
+        with:
+          arch: clang_64
+          host: mac
+          target: desktop
+          version: '6.8.3'
+
+      - name: Install Node
+        run: |
+          brew install node
+          npm install --global create-dmg
+
+      - name: Gather Metadata
+        run: |
+          echo "VERSION=$(cat app/version.txt)" >> $GITHUB_ENV
+
+      - name: Build macOS universal binary
+        shell: bash
+        run: |
+          echo "${QT_ROOT_DIR}/bin" >> $GITHUB_PATH
+          scripts/generate-dmg.sh Release
+          mkdir artifacts
+          mv build/installer-Release/Moonlight\ ${VERSION}.dmg artifacts/Moonlight.dmg
+          ls -lR artifacts
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Moonlight.dmg
+          path: artifacts/Moonlight.dmg
+          compression-level: 0
+
+###
+
+  build_linux:
+    name: Linux x86_64
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        qtversion:
+          - '5.15.2'
+          - '6.8.3'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup local env and metadata
+        run: |
+          mkdir -p $HOME/local/{bin,include,lib}
+          echo "$HOME/local/bin" >> $GITHUB_PATH
+          echo "PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig:$HOME/local/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
+          echo "VERSION=$(cat app/version.txt)" >> $GITHUB_ENV
+          echo "UBUNTU_RELEASE=$(lsb_release -rs)" >> $GITHUB_ENV
+
+        # This may still install various Qt packages, but the later install step will override them
+      - name: Install packaged deps
+        run: |
+          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          if [[ $UBUNTU_RELEASE == "20.04" ]]; then
+            sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.3.280-focal.list https://packages.lunarg.com/vulkan/1.3.280/lunarg-vulkan-1.3.280-focal.list
+          else
+            sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.3.280-jammy.list https://packages.lunarg.com/vulkan/1.3.280/lunarg-vulkan-1.3.280-jammy.list
+          fi
+          sudo apt update || true
+          sudo apt install -y \
+            python3-pip nasm libgbm-dev libdrm-dev libfreetype6-dev libasound2-dev \
+            libdbus-1-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libglu1-mesa-dev \
+            libibus-1.0-dev libpulse-dev libudev-dev libx11-dev libxcursor-dev libxext-dev \
+            libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxss-dev libxt-dev \
+            libxv-dev libxxf86vm-dev libxcb-dri3-dev libx11-xcb-dev libwayland-dev wayland-protocols \
+            libopus-dev libvdpau-dev vulkan-sdk
+          sudo pip3 install meson
+
+          if [[ $UBUNTU_RELEASE == "22.04" ]]; then
+            Needed for AppImage
+            sudo apt install libfuse2
+          fi
+
+        # Try to load cached builds of custom built deps
+      - name: Check for cached dependencies
+        id: cache-deps
+        uses: actions/cache/restore@v4
+        with:
+          key: build_linux-deps-${{ matrix.qtversion }}-${{ hashFiles('.github/workflows/ci.yml', 'app/deploy/linux/**') }}
+          path: '/home/runner/local/**'
+
+        # XXX switch this to `--revision $SHA --depth 1` when git 2.49 is available
+      - name: Build SDL2
+        env:
+          SDL2_REV: 86fd4ed83cdcf71fef6a57766b126e88f923acd3
+        if: ${{ steps.cache-deps.outputs.cache-hit != 'true' }}
+        run: |
+          git clone https://github.com/libsdl-org/SDL.git SDL2
+          cd SDL2
+          git checkout $SDL2_REV
+          ./autogen.sh
+          ./configure --prefix=$HOME/local
+          make -j$(nproc)
+          make install
+          cd ..
+
+      - name: Build SDL2_TTF
+        env:
+          SDL2_TTF_VER: 2.22.0
+        if: ${{ steps.cache-deps.outputs.cache-hit != 'true' }}
+        run: |
+          wget -q https://github.com/libsdl-org/SDL_ttf/releases/download/release-$SDL2_TTF_VER/SDL2_ttf-$SDL2_TTF_VER.tar.gz
+          tar -xf SDL2_ttf-$SDL2_TTF_VER.tar.gz
+          cd SDL2_ttf-$SDL2_TTF_VER
+          ./configure --prefix=$HOME/local
+          make -j$(nproc)
+          make install
+          cd ..
+
+      - name: Build libva
+        env:
+          LIBVA_VER: 2.22.0
+        if: ${{ steps.cache-deps.outputs.cache-hit != 'true' }}
+        run: |
+          git clone --branch $LIBVA_VER --depth 1 https://github.com/intel/libva.git
+          cd libva
+          ./autogen.sh
+          ./configure --prefix=$HOME/local --enable-x11 --enable-wayland
+          make -j$(nproc)
+          make install
+          cd ..
+
+      - name: Build dav1d
+        env:
+          DAV1D_VER: 1.5.0
+        if: ${{ steps.cache-deps.outputs.cache-hit != 'true' }}
+        run: |
+          git clone --branch $DAV1D_VER --depth 1 https://code.videolan.org/videolan/dav1d.git
+          cd dav1d
+          meson setup build --prefix=$HOME/local -Ddefault_library=static -Dbuildtype=release -Denable_tools=false -Denable_tests=false
+          ninja -C build
+          ninja install -C build
+          cd ..
+
+      - name: Build libplacebo
+        env:
+          LIBPLACEBO_VER: v7.349.0
+        if: ${{ steps.cache-deps.outputs.cache-hit != 'true' }}
+        run: |
+          git clone --branch $LIBPLACEBO_VER --depth 1 https://code.videolan.org/videolan/libplacebo.git
+          cd libplacebo
+          git apply ../app/deploy/linux/appimage/*.patch
+          git submodule update --init --recursive
+          meson setup build --prefix=$HOME/local -Dvulkan=enabled -Dopengl=disabled -Ddemos=false
+          ninja -C build
+          ninja install -C build
+          cd ..
+
+        # XXX switch this to `--revision $SHA --depth 1` when git 2.49 is available
+      - name: Build ffmpeg
+        env:
+          FFMPEG_REV: 87ccf995cb855f0baced9916928b7b48d8b6ed9d
+        if: ${{ steps.cache-deps.outputs.cache-hit != 'true' }}
+        run: |
+          git clone https://github.com/FFmpeg/FFmpeg.git FFmpeg
+          cd FFmpeg
+          git checkout $FFMPEG_REV
+          ./configure --prefix=$HOME/local --enable-pic --disable-static --enable-shared --disable-all --enable-avcodec \
+            --enable-avformat --enable-swscale --enable-decoder=h264 --enable-decoder=hevc --enable-decoder=av1 \
+            --enable-hwaccel=h264_vaapi --enable-hwaccel=hevc_vaapi --enable-hwaccel=av1_vaapi --enable-hwaccel=h264_vdpau \
+            --enable-hwaccel=hevc_vdpau --enable-hwaccel=av1_vdpau --enable-libdrm --enable-hwaccel=h264_vulkan \
+            --enable-hwaccel=hevc_vulkan --enable-hwaccel=av1_vulkan --enable-libdav1d --enable-decoder=libdav1d
+          make -j$(nproc)
+          make install
+          cd ..
+
+      - name: Save cached dependencies
+        uses: actions/cache/save@v4
+        if: ${{ steps.cache-deps.outputs.cache-hit != 'true' }}
+        with:
+          key: build_linux-deps-${{ matrix.qtversion }}-${{ hashFiles('.github/workflows/ci.yml', 'app/deploy/linux/**') }}
+          path: '/home/runner/local/**'
+
+      - name: Install Qt ${{ matrix.qtversion }}
+        uses: jdpurcell/install-qt-action@v5
+        with:
+          aqtversion: '==3.1.*'
+          arch: ${{ matrix.qtversion == '5.15.2' && 'gcc_64' || 'linux_gcc_64' }}
+          host: linux
+          target: desktop
+          version: '${{ matrix.qtversion }}'
+          modules: qtwaylandcompositor
+
+      - name: Install linuxdeployqt
+        run: |
+          wget -qO $HOME/local/bin/linuxdeployqt https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+          chmod a+x $HOME/local/bin/linuxdeployqt
+
+        # The Install Qt action clobbers our lib paths so we need to set them again
+      - name: Fixup environment
+        run: |
+          echo "PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig:$HOME/local/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$HOME/local/lib:$HOME/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+      - name: Build Moonlight Linux
+        run: |
+          scripts/build-appimage.sh
+          mkdir artifacts
+          mv build/installer-release/Moonlight-${VERSION}-x86_64.AppImage artifacts/Moonlight-qt${{ matrix.qtversion }}-x86_64.AppImage
+          ls -lR artifacts
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Moonlight-qt${{ matrix.qtversion }}-x86_64.AppImage
+          path: artifacts/Moonlight-qt${{ matrix.qtversion }}-x86_64.AppImage
+          compression-level: 0
