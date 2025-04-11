@@ -19,6 +19,7 @@ class AppModel : public QAbstractListModel
         AppIdRole,
         DirectLaunchRole,
         AppCollectorGameRole,
+        HDRSupportedRole,
     };
 
 public:
