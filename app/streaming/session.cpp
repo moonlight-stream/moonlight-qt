@@ -929,24 +929,26 @@ bool Session::initialize()
         return false;
     }
 
-    // Display launch warnings in Qt only after destroying SDL's window.
-    // This avoids conflicts between the windows on display subsystems
-    // such as KMSDRM that only support a single window.
-    for (const auto &text : m_LaunchWarnings) {
-        // Emit the warning to the UI
-        emit displayLaunchWarning(text);
+    if (m_Preferences->configurationWarnings) {
+        // Display launch warnings in Qt only after destroying SDL's window.
+        // This avoids conflicts between the windows on display subsystems
+        // such as KMSDRM that only support a single window.
+        for (const auto &text : m_LaunchWarnings) {
+            // Emit the warning to the UI
+            emit displayLaunchWarning(text);
 
-        // Wait a little bit so the user can actually read what we just said.
-        // This wait is a little longer than the actual toast timeout (3 seconds)
-        // to allow it to transition off the screen before continuing.
-        uint32_t start = SDL_GetTicks();
-        while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 3500)) {
-            SDL_Delay(5);
+            // Wait a little bit so the user can actually read what we just said.
+            // This wait is a little longer than the actual toast timeout (3 seconds)
+            // to allow it to transition off the screen before continuing.
+            uint32_t start = SDL_GetTicks();
+            while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 3500)) {
+                SDL_Delay(5);
 
-            if (!m_ThreadedExec) {
-                // Pump the UI loop while we wait if we're on the main thread
-                QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-                QCoreApplication::sendPostedEvents();
+                if (!m_ThreadedExec) {
+                    // Pump the UI loop while we wait if we're on the main thread
+                    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+                    QCoreApplication::sendPostedEvents();
+                }
             }
         }
     }
