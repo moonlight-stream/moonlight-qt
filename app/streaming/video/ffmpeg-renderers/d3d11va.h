@@ -7,6 +7,7 @@
 #include <CGuid.h>
 #include <atlbase.h>
 #include "streaming/video/videoenhancement.h"
+#include "settings/streamingpreferences.h"
 #include "public/common/AMFFactory.h"
 
 extern "C" {
@@ -65,6 +66,7 @@ private:
     bool checkDecoderSupport(IDXGIAdapter* adapter);
     int getAdapterIndexByEnhancementCapabilities();
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
+    StreamingPreferences* m_Preferences;
 
     int m_DecoderSelectionPass;
     int m_DevicesWithFL11Support;

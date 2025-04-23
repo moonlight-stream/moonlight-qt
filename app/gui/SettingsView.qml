@@ -857,6 +857,26 @@ Flickable {
                         return SystemProperties.isVideoEnhancementCapable() && StreamingPreferences.videoEnhancement
                     }
                     property bool keepValue: checked;
+                    
+                    function changeCheck() {
+                        // For Intel, HDR support is not working properly with VideoProcessor, it crashes while Moonlight is set to HDR and Host to SDR.
+                        // For NVIDIA, VSR should support HDR since Januray 2025 but for some reasons it does not work in Moonlight (in comparison it works for Youtube HDR videos)
+                        // https://nvidia.custhelp.com/app/answers/detail/a_id/5448/~/rtx-video-faq
+                        // So we disbale VSR for NVIDIA too
+                        if(
+                            decoderListModel.get(decoderComboBox.currentIndex).val === StreamingPreferences.VDS_FORCE_SOFTWARE
+                            || enableYUV444.checked
+                            || ((SystemProperties.isVendorIntel() || SystemProperties.isVendorNVIDIA()) && enableHdr.checked)
+                            ){
+                            enabled = false;
+                            keepValue = checked;
+                            checked = false;
+                        } else {
+                            enabled = true;
+                            checked = keepValue;
+                        }
+                    }
+                    
                     onCheckedChanged: {
                         StreamingPreferences.videoEnhancement = checked
                     }
@@ -865,10 +885,10 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text:
                         qsTr("Enhance video quality by utilizing the GPU's AI-Enhancement capabilities.")
-                        + qsTr("\nThis feature effectively upscales, reduces compression artifacts and enhances the clarity of streamed content.")
+                        + qsTr("\nThis feature effectively upscales from the stream resolution up to your display resolution, while also reducing compression artifacts and enhancing the clarity of streamed content.")
                         + qsTr("\nNote:")
                         + qsTr("\n  - If available, ensure that appropriate settings (i.e. RTX Video enhancement) are enabled in your GPU driver configuration.")
-                        + qsTr("\n  - HDR rendering has divers issues depending on the GPU used, we are working on it but we advise to currently use Non-HDR.")
+                        + qsTr("\n  - We advise against enabling HDR and AI-Enhancement at the same time, as there are currently driver issues on some GPU vendors which can negatively impact the resulting image when using that combination.")
                         + qsTr("\n  - Be advised that using this feature on laptops running on battery power may lead to significant battery drain.")
 
                     Component.onCompleted: {
@@ -1599,14 +1619,7 @@ Flickable {
                         }
                     }
                     onCurrentIndexChanged: {
-                        if(decoderListModel.get(currentIndex).val === StreamingPreferences.VDS_FORCE_SOFTWARE){
-                            videoEnhancementCheck.enabled = false;
-                            videoEnhancementCheck.keepValue = videoEnhancementCheck.checked;
-                            videoEnhancementCheck.checked = false;
-                        } else {
-                            videoEnhancementCheck.enabled = true;
-                            videoEnhancementCheck.checked = videoEnhancementCheck.keepValue;
-                        }
+                        videoEnhancementCheck.changeCheck()
                     }
                 }
 
@@ -1677,6 +1690,7 @@ Flickable {
                     checked: enabled && StreamingPreferences.enableHdr
                     onCheckedChanged: {
                         StreamingPreferences.enableHdr = checked
+                        videoEnhancementCheck.changeCheck()
                     }
 
                     // Updating StreamingPreferences.videoCodecConfig is handled above
@@ -1709,6 +1723,8 @@ Flickable {
                                 slider.value = StreamingPreferences.bitrateKbps
                             }
                         }
+                        // Disable Video enhancement when YUV444 is enabled as it doesn't work with
+                        videoEnhancementCheck.changeCheck()
                     }
 
                     ToolTip.delay: 1000
