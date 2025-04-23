@@ -34,6 +34,9 @@ public:
     Q_INVOKABLE int getRefreshRate(int displayIndex);
     Q_INVOKABLE bool isVideoEnhancementCapable();
     Q_INVOKABLE bool isVideoEnhancementExperimental();
+    Q_INVOKABLE bool isVendorAMD();
+    Q_INVOKABLE bool isVendorIntel();
+    Q_INVOKABLE bool isVendorNVIDIA();
 
 signals:
     void unmappedGamepadsChanged();

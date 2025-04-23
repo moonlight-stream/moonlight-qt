@@ -8,6 +8,7 @@
 #include "streaming/streamutils.h"
 #include "streaming/session.h"
 #include "streaming/video/videoenhancement.h"
+#include "settings/streamingpreferences.h"
 
 #include "public/common/AMFFactory.h"
 #include "public/include/core/Platform.h"
@@ -130,6 +131,7 @@ D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
     DwmEnableMMCSS(TRUE);
 
     m_VideoEnhancement = &VideoEnhancement::getInstance();
+    m_Preferences = StreamingPreferences::get();
 }
 
 D3D11VARenderer::~D3D11VARenderer()
@@ -767,7 +769,7 @@ Error:
  */
 bool D3D11VARenderer::enableIntelVideoSuperResolution(bool activate, bool logInfo){
     HRESULT hr;
-
+    
     constexpr GUID GUID_INTEL_VPE_INTERFACE = {0xedd1d4b9, 0x8659, 0x4cbc, {0xa4, 0xd6, 0x98, 0x31, 0xa2, 0x16, 0x3a, 0xc3}};
     constexpr UINT kIntelVpeFnVersion = 0x01;
     constexpr UINT kIntelVpeFnMode = 0x20;
@@ -1641,19 +1643,12 @@ void D3D11VARenderer::prepareEnhancedOutput(AVFrame* frame)
 
     switch (frameColorSpace) {
 
+    // HDR
     case COLORSPACE_REC_2020:
         m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, frameFullRange ? DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 : DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020);
         m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), frameFullRange ? DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 : DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020);
-
-        if(m_VideoEnhancement->isVendorNVIDIA()){
-            // VSR from Nvidia does not work yet on HDR content (Observation by March 28th, 2024)
-            // https://en.wikipedia.org/wiki/Video_Super_Resolution#:~:text=The%20feature%20supports%20input%20resolutions,likely%20added%20in%20the%20future
-            enableNvidiaVideoSuperResolution(false);
-        } else if(m_VideoEnhancement->isVendorIntel()){
-            // Enable VSR for Intel when the Host has HDR activated.
-            enableIntelVideoSuperResolution();
-        }
-        if(m_AmfInitialized){
+        
+        if(m_VideoEnhancement->isVendorAMD() && m_AmfInitialized){
             // Disable sharpness when HDR is enable on client side because it generates white borders
             m_AmfUpScaler->Flush();
             m_AmfUpScaler->Terminate();
@@ -1662,18 +1657,12 @@ void D3D11VARenderer::prepareEnhancedOutput(AVFrame* frame)
         }
         break;
 
+    // SDR
     default:
         m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, frameFullRange ? DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 : DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709);
         m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), frameFullRange ? DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 : DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709);
-
-        if(m_VideoEnhancement->isVendorNVIDIA()){
-            // Always enable NVIDIA VSR for SDR content
-            enableNvidiaVideoSuperResolution();
-        } else if(m_VideoEnhancement->isVendorIntel()){
-            // Disable VSR for Intel when the Host has HDR disactivated to avoid having a grey screen.
-            enableIntelVideoSuperResolution(false);
-        }
-        if(m_AmfInitialized){
+        
+        if(m_VideoEnhancement->isVendorAMD() && m_AmfInitialized){
             // Enable Sharpness for Non-HDR source (host)
             m_AmfUpScaler->Flush();
             m_AmfUpScaler->Terminate();

@@ -273,3 +273,36 @@ bool SystemProperties::isVideoEnhancementExperimental()
     VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
     return videoEnhancement->isExperimental();
 }
+
+/**
+ * \brief Check if the vendor is AMD
+ *
+ * \return bool Returns true if the vendor is AMD
+ */
+bool SystemProperties::isVendorAMD()
+{
+    VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+    return videoEnhancement->isVendorAMD();
+}
+
+/**
+ * \brief Check if the vendor is Intel
+ *
+ * \return bool Returns true if the vendor is Intel
+ */
+bool SystemProperties::isVendorIntel()
+{
+    VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+    return videoEnhancement->isVendorIntel();
+}
+
+/**
+ * \brief Check if the vendor is NVIDIA
+ *
+ * \return bool Returns true if the vendor is NVIDIA
+ */
+bool SystemProperties::isVendorNVIDIA()
+{
+    VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+    return videoEnhancement->isVendorNVIDIA();
+}
