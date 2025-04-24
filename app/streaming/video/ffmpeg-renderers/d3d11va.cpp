@@ -851,9 +851,10 @@ bool D3D11VARenderer::enableIntelVideoSuperResolution(bool activate, bool logInf
  *
  * This feature is available starting from series NVIDIA RTX 2000 and GeForce driver 545.84 (Oct 17, 2023)
  *
- * IMPORTANT (Feb 5th, 2024): RTX VSR seems to be limited to SDR content only,
+ * RTX VSR seems to be limited to SDR content only,
  * it does add a grey filter if it is activated while HDR is on on stream (Host setting does not impact it).
- * It might be fixed later by NVIDIA, but the temporary solution is to disable the feature when Stream content is HDR-on
+ * It seems to be fixed by NVIDIA on Januray 2025 (https://nvidia.custhelp.com/app/answers/detail/a_id/5448/~/rtx-video-faq),
+ * the temporary solution is to disable the feature when Stream content is HDR-on
  * Values from Chromium source code:
  * https://chromium.googlesource.com/chromium/src/+/master/ui/gl/swap_chain_presenter.cc
  *
@@ -1901,12 +1902,8 @@ bool D3D11VARenderer::initializeVideoProcessor()
     if(m_VideoEnhancement->isVendorAMD()){
         // AMD does not have such filters
     } else if(m_VideoEnhancement->isVendorIntel()){
-        // Reduce blocking artifacts
-        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION)
-            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, 30); // (0 / 0 / 100)
-        // Sharpen sligthly the picture to enhance details
-        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT)
-            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, 20); // (0 / 0 / 100)
+        // Do not apply any VideoProcessorSetStreamFilter while Intel Video Super Resolution is active,
+        // it will disable the AI-Enhancement and overwrite it with generic filters.
     } else if(m_VideoEnhancement->isVendorNVIDIA()){
         // Reduce blocking artifacts
         if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION)
