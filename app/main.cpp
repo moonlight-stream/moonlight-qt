@@ -60,10 +60,88 @@
 // Log to console for debug Mac builds
 #endif
 
+// A helper class to ensure that all the logging callbacks have finished adding their logs to the
+// logger thread and ensures (via the help of the guard) that the callbacks can no longer log
+// after waitForAllLoggingToStop is called.
+class LoggerSuppressor final
+{
+public:
+    class SuppressorScopeGuard final
+    {
+    public:
+        SuppressorScopeGuard(LoggerSuppressor &parent) : m_Parent{parent.tryIncrementCounter() ? &parent : nullptr}
+        {
+        }
+
+        ~SuppressorScopeGuard()
+        {
+            // LoggerSuppressor DTOR ensures that guards holding pointer to it are destroyed first
+            if (m_Parent)
+            {
+                m_Parent->decrementCounter();
+            }
+        }
+
+        [[nodiscard]] bool isLoggingSuppressed() const
+        {
+            return m_Parent == nullptr;
+        }
+
+    private:
+        LoggerSuppressor *m_Parent;
+    };
+
+    ~LoggerSuppressor()
+    {
+        waitForAllLoggingToStop();
+    }
+
+    SuppressorScopeGuard getSuppressorGuard()
+    {
+        return SuppressorScopeGuard{*this};
+    }
+
+    void waitForAllLoggingToStop()
+    {
+        {
+            QMutexLocker locker(&m_Mutex);
+            m_SuppressLogging = true;
+        }
+
+        while (m_CallbacksInProgress > 0)
+        {
+            QThread::msleep(10);
+        }
+    }
+
+private:
+    bool tryIncrementCounter()
+    {
+        QMutexLocker locker(&m_Mutex);
+        if (!m_SuppressLogging)
+        {
+            ++m_CallbacksInProgress;
+            return true;
+        }
+        return false;
+    }
+
+    void decrementCounter()
+    {
+        QMutexLocker locker(&m_Mutex);
+        --m_CallbacksInProgress;
+    }
+
+    QMutex m_Mutex;
+    int    m_CallbacksInProgress{0};
+    bool   m_SuppressLogging{false};
+};
+
+static LoggerSuppressor s_LoggerSuppressor;
 static QElapsedTimer s_LoggerTime;
 static QTextStream s_LoggerStream(stderr);
 static QThreadPool s_LoggerThread;
-static bool s_SuppressVerboseOutput;
+static bool s_SuppressVerboseOutput{false};
 static QRegularExpression k_RikeyRegex("&rikey=\\w+");
 static QRegularExpression k_RikeyIdRegex("&rikeyid=[\\d-]+");
 #ifdef LOG_TO_FILE
@@ -133,6 +211,12 @@ void logToLoggerStream(QString& message)
 
 void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const char* message)
 {
+    const auto suppressorGuard{s_LoggerSuppressor.getSuppressorGuard()};
+    if (suppressorGuard.isLoggingSuppressed())
+    {
+        return;
+    }
+
     QString priorityTxt;
 
     switch (priority) {
@@ -179,6 +263,12 @@ void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const ch
 
 void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString& msg)
 {
+    const auto suppressorGuard{s_LoggerSuppressor.getSuppressorGuard()};
+    if (suppressorGuard.isLoggingSuppressed())
+    {
+        return;
+    }
+
     QString typeTxt;
 
     switch (type) {
@@ -218,6 +308,12 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
 
 void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 {
+    const auto suppressorGuard{s_LoggerSuppressor.getSuppressorGuard()};
+    if (suppressorGuard.isLoggingSuppressed())
+    {
+        return;
+    }
+
     char lineBuffer[1024];
     static int printPrefix = 1;
 
@@ -368,6 +464,21 @@ int main(int argc, char *argv[])
 #ifdef HAVE_FFMPEG
     av_log_set_callback(ffmpegLogToDiskHandler);
 #endif
+
+    // Setup `atexit()` to force logging end from all callbacks.
+    // Otherwise, the process may coredump if some callback generates more logs during exit.
+    atexit([]()
+    {
+        s_LoggerSuppressor.waitForAllLoggingToStop();
+        s_LoggerThread.waitForDone();
+
+#ifdef Q_OS_WIN32
+        // Without an explicit flush, console redirection for the list command
+        // doesn't work reliably (sometimes the target file contains no text).
+        fflush(stderr);
+        fflush(stdout);
+#endif
+    });
 
 #ifdef Q_OS_WIN32
     // Create a crash dump when we crash on Windows
@@ -801,16 +912,6 @@ int main(int argc, char *argv[])
     // Give worker tasks time to properly exit. Fixes PendingQuitTask
     // sometimes freezing and blocking process exit.
     QThreadPool::globalInstance()->waitForDone(30000);
-
-    // Wait for pending log messages to be printed
-    s_LoggerThread.waitForDone();
-
-#ifdef Q_OS_WIN32
-    // Without an explicit flush, console redirection for the list command
-    // doesn't work reliably (sometimes the target file contains no text).
-    fflush(stderr);
-    fflush(stdout);
-#endif
 
     return err;
 }
