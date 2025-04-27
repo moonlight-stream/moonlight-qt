@@ -7,9 +7,6 @@
 #include <QCoreApplication>
 #include <QTimer>
 
-#define COMPUTER_SEEK_TIMEOUT 30000
-#define APP_SEEK_TIMEOUT 10000
-
 namespace CliListApps
 {
 
@@ -64,7 +61,7 @@ public:
                            q, &Launcher::onComputerFound);
                 q->connect(m_ComputerSeeker, &ComputerSeeker::errorTimeout,
                            q, &Launcher::onComputerSeekTimeout);
-                m_ComputerSeeker->start(COMPUTER_SEEK_TIMEOUT);
+                m_ComputerSeeker->start(m_Arguments.getComputerSeekTimeout());
 
                 q->connect(m_ComputerManager, &ComputerManager::computerStateChanged,
                            q, &Launcher::onComputerUpdated);
@@ -90,7 +87,7 @@ public:
                 if (event.computer->pairState == NvComputer::PS_PAIRED) {
                     m_State = StateSeekApp;
                     m_Computer = event.computer;
-                    m_TimeoutTimer->start(APP_SEEK_TIMEOUT);
+                    m_TimeoutTimer->start(m_Arguments.getAppSeekTimeout());
                     if (m_Arguments.isVerbose()) {
                         fprintf(stdout, "Loading app list...\n");
                     }

@@ -555,15 +555,29 @@ void ListCommandLineParser::parse(const QStringList &args)
     parser.addFlagOption("csv",     "Print as CSV with additional information");
     parser.addFlagOption("verbose", "Displays additional information");
 
+    parser.addValueOption("computer-seek-timeout", "custom timeout for computer seeking in ms (must be positive)");
+    parser.addValueOption("app-seek-timeout", "custom timeout for app seeking in ms (must be positive)");
+
     if (!parser.parse(args)) {
         parser.showError(parser.errorText());
     }
 
     parser.handleUnknownOptions();
 
+    const auto parsePositiveTimeout = [&parser](const QString& name, const int fallbackValue)
+    {
+        int timeout{0};
+        if (parser.isSet(name))
+        {
+            timeout = parser.getIntOption(name);
+        }
+        return timeout > 0 ? timeout : fallbackValue;
+    };
 
     m_PrintCSV = parser.isSet("csv");
     m_Verbose = parser.isSet("verbose");
+    m_ComputerSeekTimeout = parsePositiveTimeout("computer-seek-timeout", 30000);
+    m_AppSeekTimeout = parsePositiveTimeout("app-seek-timeout", 10000);
 
     // This method will not return and terminates the process if --version or
     // --help is specified
@@ -590,4 +604,14 @@ bool ListCommandLineParser::isPrintCSV() const
 bool ListCommandLineParser::isVerbose() const
 {
     return m_Verbose;
+}
+
+int ListCommandLineParser::getComputerSeekTimeout() const
+{
+    return m_ComputerSeekTimeout;
+}
+
+int ListCommandLineParser::getAppSeekTimeout() const
+{
+    return m_AppSeekTimeout;
 }
