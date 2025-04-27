@@ -18,6 +18,7 @@ enum State {
     StateSeekComputer,
     StateListApp,
     StateSeekApp,
+    StateSeekEnded,
     StateFailure,
 };
 
@@ -107,6 +108,7 @@ public:
         // Occurs when a computer is updated
         case Event::ComputerUpdated:
             if (m_State == StateSeekApp) {
+                m_State = StateSeekEnded;
                 m_Arguments.isPrintCSV() ? printAppsCSV(m_Computer->appList) : printApps(m_Computer->appList);
 
                 QCoreApplication::exit(0);
