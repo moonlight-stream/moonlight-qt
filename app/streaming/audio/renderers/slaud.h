@@ -18,6 +18,8 @@ public:
 
     virtual int getCapabilities();
 
+    virtual QStringList getAudioDevices();
+
     virtual AudioFormat getAudioBufferFormat();
 
     virtual void remapChannels(POPUS_MULTISTREAM_CONFIGURATION opusConfig);

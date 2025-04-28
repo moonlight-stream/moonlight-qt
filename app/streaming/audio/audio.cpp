@@ -127,6 +127,22 @@ int Session::getAudioRendererCapabilities(int audioConfiguration)
     return caps;
 }
 
+QStringList Session::getAudioDevices()
+{
+    OPUS_MULTISTREAM_CONFIGURATION opusConfig = {};
+    opusConfig.sampleRate = 48000;
+    opusConfig.samplesPerFrame = 240;
+    opusConfig.channelCount = 2;
+    IAudioRenderer* audioRenderer = createAudioRenderer(&opusConfig);
+    if (audioRenderer == nullptr) {
+        delete audioRenderer;
+        return QStringList();
+    }
+    QStringList devices = audioRenderer->getAudioDevices();
+    delete audioRenderer;
+    return devices;
+}
+
 bool Session::testAudio(int audioConfiguration)
 {
     // Build a fake OPUS_MULTISTREAM_CONFIGURATION to give

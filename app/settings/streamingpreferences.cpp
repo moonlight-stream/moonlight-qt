@@ -10,6 +10,9 @@
 
 #include <QtDebug>
 
+#include <streaming/audio/renderers/sdl.h>
+#include <streaming/session.h>
+
 #define SER_STREAMSETTINGS "streamsettings"
 #define SER_WIDTH "width"
 #define SER_HEIGHT "height"
@@ -23,6 +26,7 @@
 #define SER_HOSTAUDIO "hostaudio"
 #define SER_MULTICONT "multicontroller"
 #define SER_AUDIOCFG "audiocfg"
+#define SER_AUDIODEVICE "audiodevice"
 #define SER_VIDEOCFG "videocfg"
 #define SER_HDR "hdr"
 #define SER_YUV444 "yuv444"
@@ -185,6 +189,13 @@ void StreamingPreferences::reload()
         videoCodecConfig = VCC_AUTO;
         enableHdr = true;
     }
+
+    // Get audio device names
+    m_audioDeviceNames = Session::getAudioDevices();
+}
+
+QStringList StreamingPreferences::audioDeviceNames() {
+    return m_audioDeviceNames;
 }
 
 bool StreamingPreferences::retranslate()
@@ -337,6 +348,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_DETECTNETBLOCKING, detectNetworkBlocking);
     settings.setValue(SER_SHOWPERFOVERLAY, showPerformanceOverlay);
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
+    settings.setValue(SER_AUDIODEVICE, audioDevice);
     settings.setValue(SER_HDR, enableHdr);
     settings.setValue(SER_YUV444, enableYUV444);
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));

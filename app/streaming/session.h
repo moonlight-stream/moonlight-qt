@@ -112,6 +112,9 @@ public:
                         bool& isHardwareAccelerated, bool& isFullScreenOnly,
                         bool& isHdrSupported, QSize& maxResolution);
 
+    static
+    QStringList getAudioDevices();
+
     static Session* get()
     {
         return s_ActiveSession;
@@ -156,8 +159,6 @@ private:
     void emitLaunchWarning(QString text);
 
     bool populateDecoderProperties(SDL_Window* window);
-
-    IAudioRenderer* createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATION opusConfig);
 
     bool initializeAudioRenderer();
 
@@ -224,6 +225,9 @@ private:
 
     static
     void clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlags, uint8_t typeLeft, uint8_t typeRight, uint8_t *left, uint8_t *right);
+
+    static
+    IAudioRenderer* createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATION opusConfig);
 
     static
     int arInit(int audioConfiguration,
