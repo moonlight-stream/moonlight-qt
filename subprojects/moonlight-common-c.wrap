@@ -1,0 +1,5 @@
+[wrap-git]
+url = https://github.com/moonlight-stream/moonlight-common-c.git
+revision = HEAD
+depth = 1
+patch_directory = moonlight-common-c
