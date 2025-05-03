@@ -428,9 +428,9 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             case SDL_SCANCODE_APOSTROPHE:
                 keyCode = 0xDE;
                 break;
-            case SDL_SCANCODE_INTERNATIONAL1:
-                shouldNotConvertToScanCodeOnServer = true;
             case SDL_SCANCODE_NONUSBACKSLASH:
+                shouldNotConvertToScanCodeOnServer = true;
+            case SDL_SCANCODE_INTERNATIONAL1:
                 keyCode = 0xE2;
                 break;
             case SDL_SCANCODE_LANG1:
