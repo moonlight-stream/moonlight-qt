@@ -413,7 +413,24 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 break;
             case SDL_SCANCODE_GRAVE:
                 keyCode = 0xC0;
-                break;
+                if (event->state == SDL_PRESSED) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Grave key released (swapped)");
+                    LiSendKeyboardEvent2(0x8000 | keyCode,
+                                        KEY_ACTION_UP,
+                                        modifiers,
+                                        shouldNotConvertToScanCodeOnServer ? SS_KBE_FLAG_NON_NORMALIZED : 0);
+                    m_KeysDown.remove(keyCode);
+                } else {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Grave key pressed (swapped)");
+                    LiSendKeyboardEvent2(0x8000 | keyCode,
+                                        KEY_ACTION_DOWN,
+                                        modifiers,
+                                        shouldNotConvertToScanCodeOnServer ? SS_KBE_FLAG_NON_NORMALIZED : 0);
+                    m_KeysDown.insert(keyCode);
+                }
+                return;
             case SDL_SCANCODE_LEFTBRACKET:
                 keyCode = 0xDB;
                 break;
