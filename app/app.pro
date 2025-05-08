@@ -561,6 +561,7 @@ unix:!macx: {
 }
 win32 {
     RC_ICONS = moonlight.ico
+    RC_FILE = deploy/windows/Moonlight.rc
     QMAKE_TARGET_COMPANY = Moonlight Game Streaming Project
     QMAKE_TARGET_DESCRIPTION = Moonlight Game Streaming Client
     QMAKE_TARGET_PRODUCT = Moonlight
