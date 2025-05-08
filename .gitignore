@@ -5,3 +5,9 @@
 build/
 config.tests/*/.qmake.stash
 config.tests/*/Makefile
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
