@@ -19,6 +19,8 @@ public:
 
     virtual int getCapabilities();
 
+    virtual QStringList getAudioDevices();
+
     virtual AudioFormat getAudioBufferFormat();
 
 private:

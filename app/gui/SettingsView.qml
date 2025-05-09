@@ -862,6 +862,47 @@ Flickable {
 
                 Label {
                     width: parent.width
+                    id: resAudioOutputDevice
+                    text: qsTr("Audio output device")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                AutoResizingComboBox {
+                    id: audioOutputDevice
+                    // seems to not autorezie correctly with dynamic content
+                    width: parent.width
+                    textRole: "text"
+                    model: ListModel {
+                        id: audioDeviceModel
+
+                        Component.onCompleted: {
+                            clear()
+                            var saved_audio_device = StreamingPreferences.audioDevice
+                            audioOutputDevice.currentIndex = 0
+                            append({ text: "Deafult" });
+                            for (var i = 1; i < StreamingPreferences.audioDeviceNames.length; i++) {
+                                append({ text: StreamingPreferences.audioDeviceNames[i] });
+                                var el_audio_device = StreamingPreferences.audioDeviceNames[i];
+
+                                if (saved_audio_device === el_audio_device) {
+                                    audioOutputDevice.currentIndex = i
+                                    break
+                                }
+                            }
+                            audioOutputDevice.activated(audioOutputDevice.currentIndex)
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        if (audioDeviceModel.count === 0) return;
+                        StreamingPreferences.audioDevice = audioDeviceModel.get(currentIndex).text
+                        StreamingPreferences.save()
+                    }
+                }
+
+                Label {
+                    width: parent.width
                     id: resAudioTitle
                     text: qsTr("Audio configuration")
                     font.pointSize: 12

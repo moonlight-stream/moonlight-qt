@@ -1,10 +1,13 @@
 #include "sdl.h"
 
 #include <Limelight.h>
+#include <settings/streamingpreferences.h>
+#include <streaming/session.h>
 
 SdlAudioRenderer::SdlAudioRenderer()
     : m_AudioDevice(0),
-      m_AudioBuffer(nullptr)
+      m_AudioBuffer(nullptr),
+      m_OutputDevice(nullptr)
 {
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
 
@@ -43,7 +46,17 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
                   opusConfig->channelCount *
                   getAudioBufferSampleSize();
 
-    m_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
+    QString configuredDevice;
+    if (Session::get() != nullptr) {
+        // if there's not a valid session use the default audio device
+        // this avoids a deadlock reading the settings before they are valid
+        configuredDevice = StreamingPreferences::get()->audioDevice;
+    }
+    if (!configuredDevice.isEmpty() && configuredDevice != "Default") {
+        m_OutputDevice = configuredDevice.toUtf8();
+    }
+    m_AudioDevice = SDL_OpenAudioDevice(
+        m_OutputDevice.isEmpty() ? nullptr : m_OutputDevice.constData(), 0, &want, &have, 0);
     if (m_AudioDevice == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to open audio device: %s",
@@ -143,6 +156,20 @@ int SdlAudioRenderer::getCapabilities()
 {
     // Direct submit can't be used because we use LiGetPendingAudioDuration()
     return CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
+}
+
+QStringList SdlAudioRenderer::getAudioDevices()
+{
+    QStringList deviceNames;
+    int numDevices = SDL_GetNumAudioDevices(0);
+    for (int i = 0; i < numDevices; ++i) {
+        const char* name = SDL_GetAudioDeviceName(i, 0);
+        if (name) {
+            deviceNames.append(QString::fromUtf8(name));
+        }
+    }
+
+    return deviceNames;
 }
 
 IAudioRenderer::AudioFormat SdlAudioRenderer::getAudioBufferFormat()

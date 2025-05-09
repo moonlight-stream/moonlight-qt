@@ -119,6 +119,11 @@ int SLAudioRenderer::getCapabilities()
     return CAPABILITY_SLOW_OPUS_DECODER | CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
 }
 
+QStringList SLAudioRenderer::getAudioDevices()
+{
+    return QStringList();
+}
+
 IAudioRenderer::AudioFormat SLAudioRenderer::getAudioBufferFormat()
 {
     return AudioFormat::Sint16NE;

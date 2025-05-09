@@ -323,6 +323,11 @@ int SoundIoAudioRenderer::getCapabilities()
     return CAPABILITY_DIRECT_SUBMIT /* | CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION */;
 }
 
+QStringList SoundIoAudioRenderer::getAudioDevices()
+{
+    return QStringList();
+}
+
 IAudioRenderer::AudioFormat SoundIoAudioRenderer::getAudioBufferFormat()
 {
     return AudioFormat::Float32NE;

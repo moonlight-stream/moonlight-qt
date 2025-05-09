@@ -18,10 +18,12 @@ public:
 
     virtual int getCapabilities();
 
-    virtual AudioFormat getAudioBufferFormat();
+    virtual QStringList getAudioDevices();
 
+    virtual AudioFormat getAudioBufferFormat();
 private:
     SDL_AudioDeviceID m_AudioDevice;
     void* m_AudioBuffer;
     int m_FrameSize;
+    QByteArray m_OutputDevice;
 };

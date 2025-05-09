@@ -2,6 +2,7 @@
 
 #include <Limelight.h>
 #include <QtGlobal>
+#include <QStringList>
 
 class IAudioRenderer
 {
@@ -16,6 +17,8 @@ public:
     virtual bool submitAudio(int bytesWritten) = 0;
 
     virtual int getCapabilities() = 0;
+
+    virtual QStringList getAudioDevices() = 0;
 
     virtual void remapChannels(POPUS_MULTISTREAM_CONFIGURATION) {
         // Use default channel mapping:
