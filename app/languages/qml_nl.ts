@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>Deze computer lijkt geen applicaties te hebben of sommige applicaties zijn verborgen.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="361"/>
