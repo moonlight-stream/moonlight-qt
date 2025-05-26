@@ -4,6 +4,10 @@
 #
 #-------------------------------------------------
 
+QMAKE_CFLAGS   *= $$(QMAKE_CFLAGS)
+QMAKE_CXXFLAGS *= $$(QMAKE_CXXFLAGS)
+QMAKE_LFLAGS   *= $$(QMAKE_LFLAGS)
+
 QT -= core gui
 
 TARGET = moonlight-common-c
