@@ -33,7 +33,7 @@ public:
     int getOverlayMaxTextLength();
     void setOverlayTextUpdated(OverlayType type);
     void setOverlayState(OverlayType type, bool enabled);
-    SDL_Color getOverlayColor(OverlayType type);
+    SDL_Color getOverlayTextColor();
     int getOverlayFontSize(OverlayType type);
     SDL_Surface* getUpdatedOverlaySurface(OverlayType type);
 

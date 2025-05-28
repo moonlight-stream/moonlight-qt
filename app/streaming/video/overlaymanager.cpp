@@ -88,6 +88,11 @@ void OverlayManager::setOverlayTextUpdated(OverlayType type)
     }
 }
 
+SDL_Color OverlayManager::getOverlayTextColor()
+{
+    return m_overlayTextColor;
+}
+
 void OverlayManager::setOverlayBackgroundRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
     m_overlayBackgroundColor.r = r;
