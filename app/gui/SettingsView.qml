@@ -1272,7 +1272,14 @@ Flickable {
                 Label {
                     anchors.left: parent.left
                     anchors.leftMargin: 10
-                    text: qsTr("Overlay Text Color")
+                    text: qsTr("Overlays")
+                    font.pointSize: 12
+                    id: uiOverlayLabel
+                }
+                Label {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
+                    text: qsTr("Text")
                     font.pointSize: 12
                     id: uiOverlayTextColor
                 }
@@ -1280,6 +1287,8 @@ Flickable {
                 AutoResizingComboBox {
                     id: uiOverlayTextColorValue
                     textRole: "text"
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
                     model: ListModel {
                         id: uiOverlayTextColorValueModel
                         ListElement {
@@ -1317,15 +1326,17 @@ Flickable {
 
                 Label {
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
-                    text: qsTr("Overlay Background Color")
+                    anchors.leftMargin: 20
+                    text: qsTr("Background")
                     font.pointSize: 12
                     id: uiOverlayBackgroundColor
                 }
 
                 AutoResizingComboBox {
                     id: uiOverlayBackgroundColorValue
-                    textRole: "text"
+                    textRole: "text"        
+                    anchors.left: parent.left            
+                    anchors.leftMargin: 20
                     model: ListModel {
                         id: uiOverlayBackgroundColorValueModel
                         ListElement {
@@ -1341,7 +1352,7 @@ Flickable {
                     onActivated : {
                         StreamingPreferences.uiOverlayBackgroundColor = uiOverlayBackgroundColorValueModel.get(currentIndex).val
                     }
-                    
+
                     Component.onCompleted: {
                         var saved_color = StreamingPreferences.uiOverlayBackgroundColor
                         currentIndex = 0
@@ -1359,17 +1370,18 @@ Flickable {
                 
                 Label {
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
-                    text: qsTr("Overlay Background Opacity: %1\%").arg(StreamingPreferences.uiOverlayOpacityPerc)
+                    anchors.leftMargin: 20
+                    text: qsTr("Opacity: %1\%").arg(StreamingPreferences.uiOverlayOpacityPerc)
                     font.pointSize: 12
                     id: uiOverlayOpacityValue
                 }
 
                 Slider {
                     id: overlayOpacitySlider
-
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
                     value: StreamingPreferences.uiOverlayOpacityPerc
-                    width: parent.width
+                    width: parent.width - 20
 
                     stepSize: 5
                     from : 0
