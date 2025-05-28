@@ -2007,6 +2007,44 @@ void Session::execInternal()
     // Toggle the stats overlay if requested by the user
     m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
 
+    Uint8 alpha = (255 * ((float)m_Preferences->uiOverlayOpacityPerc / 100));
+    switch (m_Preferences->uiOverlayBackgroundColor) {
+        case StreamingPreferences::UIOverlayBackgroundColor::UIOB_BLACK:
+            m_OverlayManager.setOverlayBackgroundRGBA(0, 0, 0, alpha);
+            break;
+        case StreamingPreferences::UIOverlayBackgroundColor::UIOB_WHITE:
+            m_OverlayManager.setOverlayBackgroundRGBA(255, 255, 255, alpha);
+            break;
+        default:
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unknown overlay background color: %d",
+                        m_Preferences->uiOverlayBackgroundColor);
+            // Default to black
+            m_OverlayManager.setOverlayBackgroundRGBA(0, 0, 0, alpha);
+            break;
+    }
+    
+
+    switch (m_Preferences->uiOverlayTextColor) {
+        case StreamingPreferences::UIOverlayTextColor::UIOT_WHITE:
+            m_OverlayManager.setOverlayTextColorRGBA(255, 255, 255, 255);
+            break;
+        case StreamingPreferences::UIOverlayTextColor::UIOT_BLACK:
+            m_OverlayManager.setOverlayTextColorRGBA(0, 0, 0, 255);
+            break;
+        case StreamingPreferences::UIOverlayTextColor::UIOT_YELLOW:
+            m_OverlayManager.setOverlayTextColorRGBA(255, 255, 50, 255);
+            break;
+        default:
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unknown overlay text color: %d",
+                        m_Preferences->uiOverlayTextColor);
+            // Default to white
+            m_OverlayManager.setOverlayTextColorRGBA(255, 255, 255, 255);
+            break;
+    }
+    
+
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;

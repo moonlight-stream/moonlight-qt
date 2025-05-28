@@ -99,6 +99,19 @@ public:
         LANG_TA,
     };
     Q_ENUM(Language);
+    enum UIOverlayTextColor
+    {
+        UIOT_WHITE,
+        UIOT_BLACK,
+        UIOT_YELLOW,
+    };
+    Q_ENUM(UIOverlayTextColor);
+    enum UIOverlayBackgroundColor
+    {
+        UIOB_BLACK,
+        UIOB_WHITE,
+    };
+    Q_ENUM(UIOverlayBackgroundColor);
 
     enum CaptureSysKeysMode
     {
@@ -142,6 +155,9 @@ public:
     Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
+    Q_PROPERTY(int uiOverlayOpacityPerc MEMBER uiOverlayOpacityPerc NOTIFY uiOverlayOpacityChanged)
+    Q_PROPERTY(UIOverlayTextColor uiOverlayTextColor MEMBER uiOverlayTextColor NOTIFY uiOverlayTextColorChanged)
+    Q_PROPERTY(UIOverlayBackgroundColor uiOverlayBackgroundColor MEMBER uiOverlayBackgroundColor NOTIFY uiOverlayBackgroundColorChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
 
@@ -174,6 +190,9 @@ public:
     bool reverseScrollDirection;
     bool swapFaceButtons;
     bool keepAwake;
+    int uiOverlayOpacityPerc;
+    UIOverlayTextColor uiOverlayTextColor;
+    UIOverlayBackgroundColor uiOverlayBackgroundColor;
     int packetSize;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
@@ -220,6 +239,9 @@ signals:
     void swapFaceButtonsChanged();
     void captureSysKeysModeChanged();
     void keepAwakeChanged();
+    void uiOverlayOpacityChanged();
+    void uiOverlayTextColorChanged();
+    void uiOverlayBackgroundColorChanged();
     void languageChanged();
 
 private:

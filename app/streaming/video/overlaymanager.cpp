@@ -8,11 +8,7 @@ OverlayManager::OverlayManager() :
     m_FontData(Path::readDataFile("ModeSeven.ttf"))
 {
     memset(m_Overlays, 0, sizeof(m_Overlays));
-
-    m_Overlays[OverlayType::OverlayDebug].color = {0xD0, 0xD0, 0x00, 0xFF};
     m_Overlays[OverlayType::OverlayDebug].fontSize = 20;
-
-    m_Overlays[OverlayType::OverlayStatusUpdate].color = {0xCC, 0x00, 0x00, 0xFF};
     m_Overlays[OverlayType::OverlayStatusUpdate].fontSize = 36;
 
     // While TTF will usually not be initialized here, it is valid for that not to
@@ -92,6 +88,21 @@ void OverlayManager::setOverlayTextUpdated(OverlayType type)
     }
 }
 
+void OverlayManager::setOverlayBackgroundRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+    m_overlayBackgroundColor.r = r;
+    m_overlayBackgroundColor.g = g;
+    m_overlayBackgroundColor.b = b;
+    m_overlayBackgroundColor.a = a;
+}
+void OverlayManager::setOverlayTextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+    m_overlayTextColor.r = r;
+    m_overlayTextColor.g = g;
+    m_overlayTextColor.b = b;
+    m_overlayTextColor.a = a;
+}
+
 void OverlayManager::setOverlayState(OverlayType type, bool enabled)
 {
     bool stateChanged = m_Overlays[type].enabled != enabled;
@@ -106,11 +117,6 @@ void OverlayManager::setOverlayState(OverlayType type, bool enabled)
 
         notifyOverlayUpdated(type);
     }
-}
-
-SDL_Color OverlayManager::getOverlayColor(OverlayType type)
-{
-    return m_Overlays[type].color;
 }
 
 void OverlayManager::setOverlayRenderer(IOverlayRenderer* renderer)
@@ -155,11 +161,33 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
 
     if (m_Overlays[type].enabled) {
         // The _Wrapped variant is required for line breaks to work
-        SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(m_Overlays[type].font,
+        SDL_Surface* textSurface = TTF_RenderText_Blended_Wrapped(m_Overlays[type].font,
                                                               m_Overlays[type].text,
-                                                              m_Overlays[type].color,
+                                                              m_overlayTextColor,
                                                               1024);
-        SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, surface);
+        if (textSurface != nullptr) { // it worked
+            // create new surface with a background and blit them together
+            SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0,
+                                                                    textSurface->w,
+                                                                    textSurface->h,
+                                                                    32,
+                                                                    textSurface->format->format);
+
+            SDL_FillRect(surface, nullptr, SDL_MapRGBA(surface->format,
+                                                        m_overlayBackgroundColor.r,
+                                                        m_overlayBackgroundColor.g,
+                                                        m_overlayBackgroundColor.b,
+                                                        m_overlayBackgroundColor.a));
+
+            SDL_SetSurfaceBlendMode(textSurface, SDL_BLENDMODE_BLEND);
+            SDL_BlitSurface(textSurface, nullptr, surface, nullptr);
+            SDL_FreeSurface(textSurface);
+            SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, surface);
+
+        } else {
+            SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, textSurface);
+        }
+
     }
 
     // Notify the renderer

@@ -38,6 +38,8 @@ public:
     SDL_Surface* getUpdatedOverlaySurface(OverlayType type);
 
     void setOverlayRenderer(IOverlayRenderer* renderer);
+    void setOverlayBackgroundRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
+    void setOverlayTextColorRGBA(Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
 private:
     void notifyOverlayUpdated(OverlayType type);
@@ -45,12 +47,13 @@ private:
     struct {
         bool enabled;
         int fontSize;
-        SDL_Color color;
         char text[512];
 
         TTF_Font* font;
         SDL_Surface* surface;
     } m_Overlays[OverlayMax];
+    SDL_Color m_overlayBackgroundColor = {0, 0, 0, 128}; // See through grey background
+    SDL_Color m_overlayTextColor = {255, 255, 255, 255}; // White text
     IOverlayRenderer* m_Renderer;
     QByteArray m_FontData;
 };
