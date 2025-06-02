@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>Bu bilgisayarda hiç uygulama yok gibi görünüyor ya da bazı uygulamalar gizlenmiş</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="361"/>
@@ -779,7 +779,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation type="unfinished"></translation>
+        <translation>Varsayılanı Kullan (%1 Mbps)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
