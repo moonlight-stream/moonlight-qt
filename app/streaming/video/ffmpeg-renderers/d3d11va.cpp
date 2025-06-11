@@ -1366,7 +1366,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    if(m_VideoProcessor && m_VideoEnhancement->isVideoEnhancementEnabled()){
+    if(!m_AmfInitialized && m_VideoProcessor && m_VideoEnhancement->isVideoEnhancementEnabled()){
         initializeVideoProcessor();
     }
 
