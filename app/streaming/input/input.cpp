@@ -301,6 +301,15 @@ void SdlInputHandler::notifyFocusLost()
     // Raise all keys that are currently pressed. If we don't do this, certain keys
     // used in shortcuts that cause focus loss (such as Alt+Tab) may get stuck down.
     raiseAllKeys();
+
+    // Re-enable text input when window loses focus
+    SDL_StartTextInput();
+}
+
+void SdlInputHandler::notifyFocusGained()
+{
+    // Disable text input when window gains focus to prevent IME popup interference
+    SDL_StopTextInput();
 }
 
 bool SdlInputHandler::isCaptureActive()
