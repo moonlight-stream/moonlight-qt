@@ -27,7 +27,6 @@ public:
 
 private slots:
     void onComputerFound(NvComputer *computer);
-    void onComputerUpdated(NvComputer *computer);
     void onComputerSeekTimeout();
 
 private:

@@ -304,8 +304,7 @@ NvHTTP::getAppList()
                 // We must have a valid app before advancing to the next one
                 if (!apps.isEmpty() && !apps.last().isInitialized()) {
                     qWarning() << "Invalid applist XML";
-                    Q_ASSERT(false);
-                    return QVector<NvApp>();
+                    throw std::runtime_error("Invalid applist XML");
                 }
                 apps.append(NvApp());
             }
