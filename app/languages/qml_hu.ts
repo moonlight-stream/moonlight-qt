@@ -28,7 +28,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="320"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>Az alkalmazás azonnali elindítása a gép kiválasztásakor, az alkalmazásválasztó rács kihagyásával.</translation>
+        <translation>Az alkalmazás azonnali elindítása a gazdagép kiválasztásakor, kihagyva az alkalmazásválasztó rácsot.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="329"/>
@@ -38,22 +38,22 @@
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>Rejtsd el ezt a játékot az alkalmazás rácsról. Az elrejtett játékok eléréséhez kattints a jobb gombbal a gép elemre, és válaszd a %1 lehetőséget.</translation>
+        <translation>Játék elrejtése az alkalmazásrácsról. Az elrejtett játékok eléréséhez kattints jobb gombbal a gazdagépre, majd válaszd a(z) %1 lehetőséget.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>View All Apps</source>
-        <translation>Összes alkalmazás</translation>
+        <translation>Összes alkalmazás megjelenítése</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation>Úgy tűnik, ezen a számítógépen nincs elérhető applikáció, vagy néhány applikáció rejtve van</translation>
+        <translation>Úgy tűnik, ezen a számítógépen nincs elérhető alkalmazás, vagy néhány alkalmazás rejtve van</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="361"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Biztos, hogy ki akarsz lépni %1? Minden el nem mentett haladás elveszik.</translation>
+        <translation>Biztosan ki akarsz lépni ebből: %1? Minden el nem mentett haladás elveszik.</translation>
     </message>
 </context>
 <context>
@@ -61,12 +61,12 @@
     <message>
         <location filename="../gui/CliPair.qml" line="8"/>
         <source>Establishing connection to PC...</source>
-        <translation>A PC-vel való kapcsolat létrehozása...</translation>
+        <translation>Kapcsolat létrehozása a számítógéppel...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="12"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation>Párosítás... Kérlek, írd be a &apos;%1&apos;-et a %2-nél.</translation>
+        <translation>Párosítás... Írd be a(z) &apos;%1&apos; kódot a(z) %2 gépen.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="80"/>
@@ -79,7 +79,7 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>A PC-vel való kapcsolat létrehozása...</translation>
+        <translation>Kapcsolat létrehozása a számítógéppel...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
@@ -92,7 +92,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="8"/>
         <source>Establishing connection to PC...</source>
-        <translation>A PC-vel való kapcsolat létrehozása...</translation>
+        <translation>Kapcsolat létrehozása a számítógéppel...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="12"/>
@@ -102,7 +102,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="77"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Biztos, hogy ki akarsz lépni %1? Minden el nem mentett haladás elveszik.</translation>
+        <translation>Biztosan ki akarsz lépni ebből: %1? Minden el nem mentett haladás elveszik.</translation>
     </message>
 </context>
 <context>
@@ -189,7 +189,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation>Futó játék ID: %1</translation>
+        <translation>Futó játék azonosítója: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
@@ -202,7 +202,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation>Gamepad leképezés</translation>
+        <translation>Gamepad-hozzárendelés</translation>
     </message>
 </context>
 <context>
@@ -210,7 +210,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="359"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation>Hiányzó hangrögzítő eszköz. A GeForce Experience újratelepítése megoldja ezt a hibát.</translation>
+        <translation>Hiányzik egy hangrögzítő eszköz. A GeForce Experience újratelepítése valószínűleg megoldja a problémát.</translation>
     </message>
 </context>
 <context>
@@ -228,27 +228,27 @@
     <message>
         <location filename="../gui/PcView.qml" line="66"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Ennek a számítógépnek az internetkapcsolata blokkolja a Moonlightot. Előfordulhat, hogy az interneten keresztüli streaming nem működik, amíg ehhez a hálózathoz csatlakozik.</translation>
+        <translation>Ennek a számítógépnek az internetkapcsolata blokkolja a Moonlightot. Lehetséges, hogy az internetes streamelés nem fog működni ezen a hálózaton.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="69"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation>Kattints a Súgó gombra a lehetséges megoldásokért.</translation>
+        <translation>A lehetséges megoldásokért kattints a Súgó gombra.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="99"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation>Az automatikus PC-felfedezés le van tiltva. Add hozzá a számítógépet manuálisan.</translation>
+        <translation>Az automatikus számítógép-felismerés ki van kapcsolva. Add hozzá a számítógépet manuálisan.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="98"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation>Kompatibilis gépeket keres a helyi hálózaton...</translation>
+        <translation>Kompatibilis gazdagépek keresése a helyi hálózaton...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="183"/>
         <source>Wake PC</source>
-        <translation>PC felébredése</translation>
+        <translation>Számítógép felébresztése</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="189"/>
@@ -258,12 +258,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="198"/>
         <source>Rename PC</source>
-        <translation>PC átnevezése</translation>
+        <translation>Számítógép átnevezése</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="207"/>
         <source>Delete PC</source>
-        <translation>PC törlése</translation>
+        <translation>Számítógép törlése</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="216"/>
@@ -273,7 +273,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="228"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>A GeForce Experience %1-en lévő verzióját a Moonlight ezen buildje nem támogatja. Frissítened kell a Moonlightot, hogy a %1-ről streamelni tudj.</translation>
+        <translation>A(z) %1 számítógépen futó GeForce Experience verzióját a Moonlight jelenlegi verziója nem támogatja. A streameléshez frissítened kell a Moonlightot.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="331"/>
@@ -283,32 +283,32 @@
     <message>
         <location filename="../gui/PcView.qml" line="342"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation>Úgy tűnik, hogy ez a hálózat nem blokkolja a Moonlightot Ha továbbra is gondot okoz a csatlakozás, ellenőrizze a számítógép tűzfalának beállításait.</translation>
+        <translation>Úgy tűnik, ez a hálózat nem blokkolja a Moonlightot. Ha továbbra sem sikerül a csatlakozás, ellenőrizd a számítógép tűzfalbeállításait.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="342"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>Ha interneten keresztül próbálsz streamelni, telepítsd a Moonlight Internet Hosting Toolt a játékgépedre, és futtasd a mellékelt Internet Streaming Tester programot, hogy ellenőrizd a játékgéped internetkapcsolatát.</translation>
+        <translation>Ha interneten keresztül szeretnél streamelni, telepítsd a Moonlight Internet Hosting Toolt a játékgépedre, és futtasd a mellékelt Internet Streaming Testert, hogy ellenőrizd a játékgéped internetkapcsolatát.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="346"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Úgy tűnik, hogy a számítógép jelenlegi hálózati kapcsolata blokkolja a Moonlightot. Előfordulhat, hogy az interneten keresztüli streaming nem működik, amíg ehhez a hálózathoz csatlakozik.</translation>
+        <translation>Úgy tűnik, a számítógép jelenlegi hálózati kapcsolata blokkolja a Moonlightot. Lehetséges, hogy az internetes streamelés nem fog működni ezen a hálózaton.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="346"/>
         <source>The following network ports were blocked:</source>
-        <translation>A következő hálózati portok voltak blokkolva:</translation>
+        <translation>A következő hálózati portok lettek blokkolva:</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="338"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation>A hálózati tesztet nem lehetett elvégezni, mert a Moonlight egyik kapcsolat tesztelő szervere sem volt elérhető erről a számítógépről. Ellenőrizze az internetkapcsolatot, vagy próbálja meg később újra.</translation>
+        <translation>A hálózati teszt nem hajtható végre, mert a Moonlight egyik kapcsolat-tesztelő szervere sem érhető el erről a számítógépről. Ellenőrizd az internetkapcsolatot, vagy próbáld meg később újra.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="167"/>
         <source>PC Status: %1</source>
-        <translation>PC állapota: %1</translation>
+        <translation>Számítógép állapota: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="167"/>
@@ -323,22 +323,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="173"/>
         <source>View All Apps</source>
-        <translation>Összes alkalmazás</translation>
+        <translation>Összes alkalmazás megjelenítése</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="304"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation>Kérlek, írd be a %1-et a központi számítógépen. Ez a párbeszédpanel bezárul, ha a párosítás befejeződött.</translation>
+        <translation>Kérlek, írd be a(z) %1 kódot a gazdagépen. A párosítás befejezése után ez az ablak automatikusan bezárul.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="305"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation>Ha a host PC-n Sunshine fut, lépj a Sunshine webes felhasználói felületére a PIN-kód megadásához.</translation>
+        <translation>Ha a gazdagépen a Sunshine fut, nyisd meg a Sunshine webes felületét, és ott add meg a PIN-kódot.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="317"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation>Biztos, hogy el akarod távolítani a &apos;%1&apos;-et?</translation>
+        <translation>Biztosan el szeretnéd távolítani ezt: &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="331"/>
@@ -356,22 +356,22 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="586"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation>A számítógép PIN-kódja nem egyezett. Kérlek, próbáld meg újra.</translation>
+        <translation>A számítógépen megadott PIN-kód nem egyezett. Próbáld meg újra.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="590"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>Nem lehet párosítani, amíg egy korábbi munkamenet még mindig fut a számítógépen. Zárd be a futó játékokat, vagy indítsd újra a számítógépet, majd próbáld meg újra a párosítást.</translation>
+        <translation>Nem lehet párosítani, amíg egy korábbi munkamenet még fut a számítógépen. Zárd be a futó játékokat, vagy indítsd újra a számítógépet, majd próbáld meg újra a párosítást.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="593"/>
         <source>Pairing failed. Please try again.</source>
-        <translation>A párosítás nem sikerült. Kérlek, próbáld újra.</translation>
+        <translation>A párosítás nem sikerült. Próbáld meg újra.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="597"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation>Egy újabb párosítási kísérlet már folyamatban van.</translation>
+        <translation>Már folyamatban van egy párosítási kísérlet.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="607"/>
@@ -384,7 +384,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="657"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation>A futójátékot nem ez a PC indította el. A játékot a gazdaszámítógépen manuálisan kell befejeznie, vagy azt az eszközt kell használnia, amely eredetileg elindította a játékot.</translation>
+        <translation>A futó játékot nem ez a számítógép indította el. Lépj ki a játékból a gazdagépen, vagy használd azt az eszközt, amelyik eredetileg elindította.</translation>
     </message>
 </context>
 <context>
@@ -392,36 +392,36 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation>%1 már párosítva van</translation>
+        <translation>A(z) %1 már párosítva van</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation>Nem sikerült csatlakozni %1-hez</translation>
+        <translation>Nem sikerült csatlakozni ehhez: %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>A %1 számítógépet nem párosították. Kérjük, nyissa meg a Moonlightot a párosításhoz a streaming előtt.</translation>
+        <translation>A(z) %1 számítógép még nincs párosítva. Indítsd el a Moonlightot a párosításhoz, mielőtt streamelnél.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation>Az alkalmazás kilépése sikertelen, ok: %1</translation>
+        <translation>Nem sikerült kilépni az alkalmazásból, ok: %1</translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation>Nem sikerült megtalálni az alkalmazást %1</translation>
+        <translation>Nem sikerült megtalálni a(z) %1 alkalmazást</translation>
     </message>
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation>A %1 számítógépet nem párosították. Kérjük, nyissa meg a Moonlightot a párosításhoz, mielőtt lekérné a játékok listáját.</translation>
+        <translation>A(z) %1 számítógép még nincs párosítva. Indítsd el a Moonlightot a párosításhoz, mielőtt lekérnéd a játéklistát.</translation>
     </message>
 </context>
 <context>
@@ -457,7 +457,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="13"/>
         <source>Quitting %1...</source>
-        <translation>Kilépés %1...</translation>
+        <translation>%1 bezárása...</translation>
     </message>
 </context>
 <context>
@@ -465,42 +465,42 @@
     <message>
         <location filename="../streaming/session.cpp" line="114"/>
         <source>No video received from host.</source>
-        <translation>Nem érkezett videó a házigazdától.</translation>
+        <translation>Nem érkezik videó a gazdagéptől.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="115"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Ellenőrizze a tűzfalát és a porttovábbítási szabályokat a port(ok) tekintetében: %1</translation>
+        <translation>Ellenőrizd a tűzfal- és porttovábbítási beállításokat a következő port(ok) esetén: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="120"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation>A hálózati kapcsolat nem működik jól. Csökkentse a videó bitrátájának beállítását, vagy próbálkozzon gyorsabb kapcsolattal.</translation>
+        <translation>A hálózati kapcsolat nem működik megfelelően. Csökkentsd a videó bitrátáját, vagy próbálkozz gyorsabb kapcsolattal.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="126"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation>Valami elromlott a host PC-n a stream indításakor.</translation>
+        <translation>Valami hiba történt a gazdagépen a stream indításakor.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="127"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation>Győződjön meg róla, hogy nincs DRM-védett tartalom megnyitva a fogadó számítógépen. Megpróbálhatja újraindítani a gazdaszámítógépet is.</translation>
+        <translation>Győződj meg róla, hogy nincs megnyitva DRM-védett tartalom a gazdagépen. Megpróbálhatod újraindítani is a gazdagépet.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="141"/>
         <source>Connection terminated</source>
-        <translation>Kapcsolat megszakadt</translation>
+        <translation>A kapcsolat megszakadt</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="966"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>A GeForce Experience %1-en lévő verzióját a Moonlight ezen buildje nem támogatja. Frissítenie kell a Moonlightot, hogy a %1-ről tudjon streamelni.</translation>
+        <translation>A(z) %1 számítógépen futó GeForce Experience verzióját a Moonlight jelenlegi verziója nem támogatja. A streameléshez frissítened kell a Moonlightot.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="971"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation>A távoli asztali egér mód engedélyezése problémákat okozhat a játékokban.</translation>
+        <translation>A távoli asztali egér mód bekapcsolása problémákat okozhat játék közben.</translation>
     </message>
     <message>
         <source>HDR is not supported with software decoding.</source>
@@ -509,87 +509,87 @@
     <message>
         <location filename="../streaming/session.cpp" line="975"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>A szoftveres dekódolást erőltető beállítások gyenge streaming-teljesítményt okozhatnak.</translation>
+        <translation>A szoftveres dekódolás erőltetése rontja a streamelés teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1005"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation>A gazdaszámítógép nem támogatja a HEVC kódolást.</translation>
+        <translation>A gazdagép nem támogatja a HEVC kódolást.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1022"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation>A szoftveres dekódolás használata a HEVC GPU-támogatás nélküli erőltetése miatt. Ez gyenge streaming teljesítményt okozhat.</translation>
+        <translation>A szoftveres dekódolás HEVC-re való kényszerítés miatt van használatban GPU-támogatás nélkül. Ez ronthatja a streamelés teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="981"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation>Az Ön host szoftvere vagy GPU-ja nem támogatja az AV1 kódolást.</translation>
+        <translation>A gazdagépen futó szoftver vagy a GPU nem támogatja az AV1 kódolást.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="998"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation>A szoftveres dekódolás használata a GPU-támogatás nélküli AV1 kényszerítése miatt. Ez gyenge streaming teljesítményt okozhat.</translation>
+        <translation>A szoftveres dekódolás AV1-re való kényszerítés miatt van használatban GPU-támogatás nélkül. Ez ronthatja a streamelés teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1064"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation>A gazdaszámítógép nem támogatja a HDR-streaminget.</translation>
+        <translation>A gazdagép nem támogatja a HDR streamelést.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1056"/>
         <source>HDR is not supported using the H.264 codec.</source>
-        <translation>A HDR nem támogatott a H.264 kodek használatával.</translation>
+        <translation>A HDR nem támogatott H.264 kodek használata esetén.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1079"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation>Ennek a számítógépnek a GPU-ja nem támogatja az AV1 Main10 dekódolást a HDR streaminghez.</translation>
+        <translation>Ennek a számítógépnek a GPU-ja nem támogatja az AV1 Main10 dekódolást HDR streameléshez.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1060"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation>Ennek a számítógépnek a GPU-ja nem támogatja a 10 bites HEVC vagy AV1 dekódolást a HDR streaminghez.</translation>
+        <translation>Ennek a számítógépnek a GPU-ja nem támogatja a 10 bites HEVC- vagy AV1-dekódolást a HDR streameléshez.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1112"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation>A központi számítógép és az ügyfélszámítógép nem támogatja ugyanazokat a HDR-videokodeceket.</translation>
+        <translation>A gazdagép és a kliensgép nem támogatja ugyanazokat a HDR videokodekeket.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1205"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
-        <translation>A H.264 kodek nem támogatja a 4K felbontást meghaladó videofelbontásokat.</translation>
+        <translation>A H.264 kodek nem támogatja a 4K fölötti videofelbontásokat.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1595"/>
         <source>Host returned error: %1</source>
-        <translation>A hoszt hibát küldött vissza: %1</translation>
+        <translation>A gazdagép hibát küldött vissza: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="132"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation>A gazdaszámítógép végzetes videokódolási hibát jelentett.</translation>
+        <translation>A gazdagép végzetes videókódolási hibát jelzett.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="133"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation>Próbálja meg letiltani a HDR módot, megváltoztatni a streaming felbontást, vagy megváltoztatni a fogadó számítógép kijelzőjének felbontását.</translation>
+        <translation>Próbáld meg kikapcsolni a HDR-t, módosítani a streamelési felbontást, vagy megváltoztatni a gazdagép kijelzőjének felbontását.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="142"/>
         <source>Error code: %1</source>
-        <translation>Hiba kód: %1</translation>
+        <translation>Hibakód: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1036"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation>A szoftveres dekódolás a GPU-támogatás nélküli H.264 kényszerítése miatt. Ez gyenge streaming teljesítményt okozhat.</translation>
+        <translation>A szoftveres dekódolás H.264-re való kényszerítés miatt van használatban GPU-támogatás nélkül. Ez ronthatja a streamelés teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1046"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation>A központi számítógép és az ügyfélszámítógép nem ugyanazokat a videokodekkeket támogatja. Ez gyenge streaming teljesítményt okozhat.</translation>
+        <translation>A gazdagép és a kliensgép nem támogatja ugyanazokat a videókodekeket. Ez ronthatja a stream teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1049"/>
@@ -810,7 +810,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="846"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation>A képkockák ütemezése csökkenti a mikro-dadogást a túl korán érkező képkockák késleltetésével</translation>
+        <translation>A képkockák ütemezése csökkenti a mikroszaggatást azáltal, hogy késlelteti a túl korán érkező képkockákat</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="856"/>
