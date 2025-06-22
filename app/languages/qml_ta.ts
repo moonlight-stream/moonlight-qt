@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>இந்த கணினியில் எந்த பயன்பாடுகளும் இருப்பதாகத் தெரியவில்லை அல்லது சில பயன்பாடுகள் மறைக்கப்பட்டுள்ளன</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="361"/>
@@ -610,22 +610,22 @@
     <message>
         <location filename="../streaming/session.cpp" line="1119"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation>உங்கள் புரவலன் பிசி YUV 4: 4: 4 ச்ட்ரீமிங்கை ஆதரிக்கவில்லை.</translation>
+        <translation>உங்கள் புரவலன் பிசி YUV 4:4:4 ச்ட்ரீமிங்கை ஆதரிக்கவில்லை.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1127"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation>தேர்ந்தெடுக்கப்பட்ட வீடியோ கோடெக்கிற்கான உங்கள் புரவலன் பிசி YUV 4: 4: 4 ச்ட்ரீமிங்கை ஆதரிக்கவில்லை.</translation>
+        <translation>தேர்ந்தெடுக்கப்பட்ட வீடியோ கோடெக்கிற்கான உங்கள் புரவலன் பிசி YUV 4:4:4 ச்ட்ரீமிங்கை ஆதரிக்கவில்லை.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1142"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation>சி.பீ.யூ உதவி இல்லாமல் YUV 4: 4: 4 ஐ கட்டாயப்படுத்த உங்கள் தேர்வு காரணமாக மென்பொருள் டிகோடிங்கைப் பயன்படுத்துதல். இது மோசமான ச்ட்ரீமிங் செயல்திறனை ஏற்படுத்தக்கூடும்.</translation>
+        <translation>சி.பீ.யூ உதவி இல்லாமல் YUV 4:4:4 ஐ கட்டாயப்படுத்த உங்கள் தேர்வு காரணமாக மென்பொருள் டிகோடிங்கைப் பயன்படுத்துதல். இது மோசமான ச்ட்ரீமிங் செயல்திறனை ஏற்படுத்தக்கூடும்.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1148"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation>இந்த கணினியின் சி.பீ.யூ YUV 4: 4: 4 தேர்ந்தெடுக்கப்பட்ட வீடியோ கோடெக்கிற்கான டிகோடிங்கை ஆதரிக்கவில்லை.</translation>
+        <translation>இந்தக் கணினியின் சி.பீ.யூ YUV 4:4:4 தேர்ந்தெடுக்கப்பட்ட வீடியோ கோடெக்கிற்கான டிகோடிங்கை ஆதரிக்கவில்லை.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1157"/>
@@ -784,7 +784,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation type="unfinished"></translation>
+        <translation>இயல்புநிலையைப் பயன்படுத்து (%1 Mbps)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -825,7 +825,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="895"/>
         <source>5.1 surround sound</source>
-        <translation>5.1 ஒலி ஒலி</translation>
+        <translation>5.1 சுற்று ஒலி</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="899"/>
@@ -1163,7 +1163,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1648"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation>YUV 4: 4: 4 ஐ இயக்கவும் (சோதனை)</translation>
+        <translation>YUV 4:4:4 ஐ இயக்கவும் (சோதனை)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1670"/>
@@ -1173,7 +1173,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1672"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation>YUV 4: 4: 4 இந்த கணினியில் ஆதரிக்கப்படவில்லை.</translation>
+        <translation>YUV 4:4:4 இந்தக் கணினியில் ஆதரிக்கப்படவில்லை.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1678"/>
