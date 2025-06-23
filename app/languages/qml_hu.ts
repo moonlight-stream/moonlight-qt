@@ -519,7 +519,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1022"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation>A szoftveres dekódolás HEVC-re való kényszerítés miatt van használatban GPU-támogatás nélkül. Ez ronthatja a streamelés teljesítményét.</translation>
+        <translation>Szoftveres dekódolás van használatban, mert a HEVC dekódolást GPU támogatás nélkül kényszerítetted. Ez ronthatja a streamelés teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="981"/>
@@ -529,7 +529,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="998"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation>A szoftveres dekódolás AV1-re való kényszerítés miatt van használatban GPU-támogatás nélkül. Ez ronthatja a streamelés teljesítményét.</translation>
+        <translation>Szoftveres dekódolás van használatban, mert az AV1 dekódolást GPU támogatás nélkül kényszerítetted. Ez ronthatja a streamelés teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1064"/>
@@ -584,88 +584,88 @@
     <message>
         <location filename="../streaming/session.cpp" line="1036"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation>A szoftveres dekódolás H.264-re való kényszerítés miatt van használatban GPU-támogatás nélkül. Ez ronthatja a streamelés teljesítményét.</translation>
+        <translation>Szoftveres dekódolás van használatban, mert a H.264 dekódolást GPU támogatás nélkül kényszerítetted. Ez ronthatja a streamelés teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1046"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation>A gazdagép és a kliensgép nem támogatja ugyanazokat a videókodekeket. Ez ronthatja a stream teljesítményét.</translation>
+        <translation>A gazdagép és a kliensgép nem támogatja ugyanazokat a videokodekeket. Ez ronthatja a stream teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1049"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation>Az ügyfél GPU-ja nem támogatja a H.264 dekódolást. Ez gyenge streaming teljesítményt okozhat.</translation>
+        <translation>A kliens GPU-ja nem támogatja a H.264 dekódolást. Ez ronthatja a streamelés teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1085"/>
         <location filename="../streaming/session.cpp" line="1103"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation>Szoftveres dekódolás használata a HDR GPU-támogatás nélküli erőltetése miatt. Ez gyenge streaming teljesítményt okozhat.</translation>
+        <translation>Szoftveres dekódolás van használatban, mert a HDR feldolgozást GPU támogatás nélkül kényszerítetted. Ez ronthatja a streamelés teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1097"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation>Ennek a számítógépnek a GPU-ja nem támogatja a HEVC Main10 dekódolást a HDR streaminghez.</translation>
+        <translation>Ennek a számítógépnek a GPU-ja nem támogatja a HEVC Main10 dekódolást a HDR streameléshez.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1119"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation>A kiszolgáló számítógép nem támogatja a YUV 4:4:4 formátumot.</translation>
+        <translation>A gazdagép nem támogatja a YUV 4:4:4 streamelést.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1127"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation>A kiszolgáló számítógép nem támogatja a YUV 4:4:4 formátumot a kiválasztott kodekhez.</translation>
+        <translation>A gazdagép nem támogatja a YUV 4:4:4 streamelést a kiválasztott kodek esetén.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1142"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation>Szoftveres dekódolás használata a GPU-támogatás nélküli YUV 4:4:4 kényszerítése miatt. Ez gyenge streaming teljesítményt okozhat.</translation>
+        <translation>Szoftveres dekódolás van használatban, mert a YUV 4:4:4 feldolgozást GPU támogatás nélkül kényszerítetted. Ez ronthatja a streamelés teljesítményét.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1148"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation>Ennek a számítógépnek a GPU-ja nem támogatja a YUV 4:4:4:4 dekódolást a kiválasztott videokódekhez.</translation>
+        <translation>Ennek a számítógépnek a GPU-ja nem támogatja a YUV 4:4:4:4 dekódolást a kiválasztott videokodekhez.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1157"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation>A 4K streaminghez GeForce Experience 3.0 vagy magasabb verzió szükséges.</translation>
+        <translation>A 4K streameléshez GeForce Experience 3.0 vagy újabb szükséges.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1172"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation>A kiválasztott térhatású hangbeállítást az aktuális audioeszköz nem támogatja.</translation>
+        <translation>Az aktuális hangkártya nem támogatja a kiválasztott térhatású beállítást.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1178"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation>Nem sikerült megnyitni az audio eszközt. A hang nem lesz elérhető a munkamenet alatt.</translation>
+        <translation>Nem sikerült megnyitni a hangeszközt. A munkamenet alatt nem lesz hang.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1183"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation>A csatlakoztatott gamepad nem rendelkezik leképezéssel, és nem használható. Ennek megoldásához látogasson el a Moonlight súgóhoz.</translation>
+        <translation>A csatlakoztatott gamepad nincs konfigurálva, így nem használható. A megoldáshoz keresd fel a Moonlight súgót.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1201"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation>A fogadó számítógép GPU-ja nem támogatja a 4K felbontás feletti videofelbontások streamelését.</translation>
+        <translation>A gazdagép GPU-ja nem támogatja a 4K fölötti videofelbontás streamelését.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1219"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation>A hardveres dekódolás kikényszerítésére vonatkozó beállítása nem teljesíthető, mivel a számítógép GPU-ja nem támogatja a hardveres dekódolást.</translation>
+        <translation>A hardveres dekódolás kényszerítése nem lehetséges, mert a számítógép GPU-ja nem támogatja.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1222"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation>Az Ön által kiválasztott codec és a hardveres dekódolás erőltetése nem kompatibilis. A számítógép GPU-ja nem támogatja a választott codec dekódolását.</translation>
+        <translation>A választott kodek és a hardveres dekódolás kényszerítése nem kompatibilis. A számítógép GPU-ja nem támogatja a választott kodek dekódolást.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="2269"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
-        <translation>Nem sikerült inicializálni a videó dekódert. Kérjük, ellenőrizze a streaming beállításokat, és próbálja újra.</translation>
+        <translation>Nem sikerült inicializálni a videódekódert. Ellenőrizd a streaming beállításokat, majd próbáld újra.</translation>
     </message>
 </context>
 <context>
@@ -683,7 +683,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="124"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
-        <translation>A számítógépéhez vagy hálózati kapcsolatához túl magas értékek beállítása késedelmet, akadozást vagy hibákat okozhat.</translation>
+        <translation>Túl magas értékek beállítása a számítógéphez vagy hálózathoz akadozást, késleltetést vagy hibákat okozhat.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="106"/>
@@ -713,17 +713,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="375"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
-        <translation>Az egyéni felbontásokat a GeForce Experience hivatalosan nem támogatja, ezért nem fogja beállítani a gazdaképernyő felbontását. Ezt manuálisan kell beállítania a játékban.</translation>
+        <translation>Az egyéni felbontásokat a GeForce Experience hivatalosan nem támogatja, így nem állítja be a gazdagép képernyőfelbontását. Ezt manuálisan kell beállítanod játék közben.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="376"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
-        <translation>Az ügyfél vagy a fogadó számítógép által nem támogatott felbontások streaming hibákat okozhatnak.</translation>
+        <translation>A kliens vagy a gazdagép által nem támogatott felbontások streamelési hibákat okozhatnak.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="382"/>
         <source>Enter a custom resolution:</source>
-        <translation>Adjon meg egy egyéni felbontást:</translation>
+        <translation>Adj meg egy egyéni felbontást:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="604"/>
@@ -738,7 +738,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="680"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
-        <translation>Lassabb kapcsolatok esetén csökkentse a bitrátát. A képminőség javításához növelje a bitrátát.</translation>
+        <translation>Lassabb kapcsolatoknál csökkentsd a bitrátát, jobb képminőséghez növeld.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="702"/>
@@ -759,7 +759,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="812"/>
         <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation>A teljes képernyő általában a legjobb teljesítményt nyújtja, de a keret nélküli ablakos megjelenítés jobban működik az olyan funkciókkal, mint a macOS Spaces, az Alt+Tab, a képernyőfotó-eszközök, a képernyőn megjelenő átfedések, stb.</translation>
+        <translation>A teljes képernyős mód általában jobb teljesítményt nyújt, de a szegély nélküli ablak jobban működhet olyan funkciókkal, mint a macOS Spaces, az Alt+Tab, képernyőfotók, átfedések stb.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="748"/>
@@ -774,12 +774,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation>Natív (kivéve Notch)</translation>
+        <translation>Natív (Notch nélkül)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation>Alapértelmezett használata (%1 Mbps)</translation>
+        <translation>Alapértelmezés használata (%1 Mbps)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -800,17 +800,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="829"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation>A V-Sync kikapcsolása lehetővé teszi a képkocka alatti renderelési késleltetést, de látható tépődést eredményezhet</translation>
+        <translation>A V-Sync kikapcsolása csökkentheti a késleltetést, de képtörést okozhat</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="836"/>
         <source>Frame pacing</source>
-        <translation>Képkocka-tempó</translation>
+        <translation>Képkocka-ütemezés</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="846"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation>A képkockák ütemezése csökkenti a mikroszaggatást azáltal, hogy késlelteti a túl korán érkező képkockákat</translation>
+        <translation>A képkockák ütemezése csökkenti a mikroakadozást azáltal, hogy késlelteti a túl korán érkező képkockákat</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="856"/>
@@ -825,7 +825,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="895"/>
         <source>5.1 surround sound</source>
-        <translation>5.1 Térhatású hangzás</translation>
+        <translation>5.1 térhatású hangzás</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="899"/>
@@ -835,22 +835,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="913"/>
         <source>Mute host PC speakers while streaming</source>
-        <translation>A host PC hangszóróinak elnémítása streaming közben</translation>
+        <translation>A gazdagép hangszóróinak elnémítása streamelés közben</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="923"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
-        <translation>Minden folyamatban lévő játékot újra kell indítania ahhoz, hogy ez a beállítás érvénybe lépjen</translation>
+        <translation>A módosítás érvénybe lépéséhez indítsd újra a játékot</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="929"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
-        <translation>Hangfolyam elnémítása, ha nem a Moonlight az aktív ablak</translation>
+        <translation>A hang elnémítása, ha nem a Moonlight az aktív ablak</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="940"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
-        <translation>Elnémítja a Moonlight hangját, amikor az Alt+Tab billentyűkombinációval kilépsz a streamből, vagy egy másik ablakra kattintasz.</translation>
+        <translation>Elnémítja a Moonlight hangját, amikor Alt+Tabbal kilépsz a streamből, vagy egy másik ablakra váltasz.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="989"/>
@@ -870,17 +870,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1160"/>
         <source>You must restart Moonlight for this change to take effect</source>
-        <translation>A módosítás érvénybe lépéséhez újra kell indítania a Moonlightot</translation>
+        <translation>A módosítás érvénybe lépéséhez újra kell indítanod a Moonlightot</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1177"/>
         <source>GUI display mode</source>
-        <translation>GUI megjelenítési mód</translation>
+        <translation>Felület megjelenítési módja</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1214"/>
         <source>Maximized</source>
-        <translation>Maximált</translation>
+        <translation>Maximalizált</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1287"/>
@@ -890,12 +890,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1308"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation>Ez lehetővé teszi a zökkenőmentes egérvezérlést az ügyfél egérkurzorának rögzítése nélkül. Ideális távoli asztali használatra, de a legtöbb játékban nem működik.</translation>
+        <translation>Ez lehetővé teszi a zökkenőmentes egérvezérlést az kliens kurzorának rögzítése nélkül. Ideális távoli asztalhoz, de a legtöbb játékban nem működik.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1310"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation>MEGJEGYZÉS: A GeForce Experience egy hibája miatt előfordulhat, hogy ez az opció nem működik megfelelően, ha a fogadó számítógép több monitorral rendelkezik.</translation>
+        <translation>MEGJEGYZÉS: A GeForce Experience egy hibája miatt előfordulhat, hogy ez az opció nem működik megfelelően, ha a gazdagépen több monitor van.</translation>
     </message>
     <message>
         <source>Enabling HDR overrides manual decoder selections.</source>
@@ -904,22 +904,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1625"/>
         <source>Enable HDR (Experimental)</source>
-        <translation>HDR engedélyezése (kísérleti)</translation>
+        <translation>HDR engedélyezése (Kísérleti)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1640"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation>A stream HDR-képes lesz, de egyes játékoknál előfordulhat, hogy a HDR mód engedélyezéséhez HDR-monitorra van szükség a fogadó számítógépen.</translation>
+        <translation>A stream HDR-képes lesz, de egyes játékoknál előfordulhat, hogy a HDR mód engedélyezéséhez HDR-monitorra lesz szükség a gazdagépen.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1642"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation>A HDR streaming nem támogatott ezen a számítógépen.</translation>
+        <translation>A HDR streamelés nem támogatott ezen a számítógépen.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1729"/>
         <source>Show performance stats while streaming</source>
-        <translation>Teljesítmény statisztikák mutatása streamelés közben</translation>
+        <translation>Teljesítménystatisztikák megjelenítése streamelés közben</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1739"/>
@@ -929,12 +929,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1740"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation>Bármikor átválthatod streamelés közben a Ctrl+Alt+Shift+S vagy Select+L1+R1+X használatával.</translation>
+        <translation>Bármikor be- kikapcsolhatod streamelés közben a Ctrl+Alt+Shift+S vagy Select+L1+R1+X billentyűkkel.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1741"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation>A teljesítmény átfedés nem támogatott Steam Link-en és Raspberry PI-n.</translation>
+        <translation>A teljesítményátfedés nem támogatott Steam Linken vagy Raspberry PI-n.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1329"/>
@@ -974,17 +974,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1461"/>
         <source>Force gamepad #1 always connected</source>
-        <translation>Force gamepad #1 mindig csatlakoztatva</translation>
+        <translation>Az 1-es gamepad mindig legyen csatlakoztatva</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1471"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
-        <translation>Kényszeríti, hogy egyetlen gamepad mindig csatlakoztatva maradjon a hosthoz, még akkor is, ha valójában egyetlen gamepad sincs csatlakoztatva a számítógéphez.</translation>
+        <translation>Kényszeríti, hogy egyetlen gamepad mindig csatlakozva legyen a gazdagéphez, akkor is, ha nincs fizikailag csatlakoztatva.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1309"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
-        <translation>Ezt streaming közben a Ctrl+Alt+Shift+M billentyűkombinációval kapcsolhatja be.</translation>
+        <translation>Ezt streaming közben a Ctrl+Alt+Shift+M billentyűkombinációval kapcsolhatod be.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1479"/>
@@ -1004,7 +1004,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="949"/>
         <source>Host Settings</source>
-        <translation>Host beállítások</translation>
+        <translation>Gazdagép beállítások</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1510"/>
@@ -1029,7 +1029,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1253"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation>Frissíti a Discord-állapotodat, hogy megjelenítse a játék nevét, amelyet közvetítesz.</translation>
+        <translation>Frissíti a Discord-állapotodat, hogy megjelenítse az általad streamelt játék nevét.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1472"/>
@@ -1039,7 +1039,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1298"/>
         <source>Optimize mouse for remote desktop instead of games</source>
-        <translation>Játékok helyett távoli asztali egér optimalizálása</translation>
+        <translation>Egér optimalizálása távoli asztalhoz (nem játékhoz)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="512"/>
@@ -1072,22 +1072,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1259"/>
         <source>Keep the display awake while streaming</source>
-        <translation>A kijelző ébren tartása streaming közben</translation>
+        <translation>A kijelző ébren tartása streamelés közben</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1269"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation>Megakadályozza a képernyővédő elindulását vagy a kijelző alvó üzemmódba kapcsolását streaming közben.</translation>
+        <translation>Megakadályozza a képernyővédő elindulását vagy a kijelző alvó üzemmódba kapcsolását streamelés közben.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1320"/>
         <source>Capture system keyboard shortcuts</source>
-        <translation>A rendszer billentyűparancsok rögzítése</translation>
+        <translation>Rendszerszintű billentyűparancsok rögzítése</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1328"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation>Ez lehetővé teszi a rendszerszintű billentyűparancsok, például az Alt+Tab billentyűparancsok rögzítését, amelyeket normál esetben az ügyfél operációs rendszere kezelne streaming közben.</translation>
+        <translation>Ez lehetővé teszi a rendszerszintű billentyűparancsok, például az Alt+Tab billentyűparancsok rögzítését, amelyeket normál esetben a kliensgép operációs rendszere kezelne streamelés közben.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1358"/>
@@ -1107,17 +1107,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="959"/>
         <source>Optimize game settings for streaming</source>
-        <translation>Játékbeállítások optimalizálása streaminghez</translation>
+        <translation>Játékbeállítások optimalizálása streameléshez</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="970"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation>Alkalmazás kilépése a fogadó számítógépen a stream befejezése után</translation>
+        <translation>Alkalmazás bezárása a gazdagépen a stream befejezése után</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="980"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation>Ez bezárja a streaming alatt lévő alkalmazást vagy játékot, amikor befejezi a streaminget. Elveszít minden el nem mentett haladást!</translation>
+        <translation>Ez bezárja a streamelés alatt lévő alkalmazást vagy játékot, amikor befejezed a streamelést. Minden el nem mentett haladásod elveszik!</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1520"/>
@@ -1128,22 +1128,22 @@
         <location filename="../gui/SettingsView.qml" line="1545"/>
         <location filename="../gui/SettingsView.qml" line="1598"/>
         <source>Automatic (Recommended)</source>
-        <translation>Automatikus (ajánlott)</translation>
+        <translation>Automatikus (Ajánlott)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1549"/>
         <source>Force software decoding</source>
-        <translation>Szoftveres dekódolás kikényszerítése</translation>
+        <translation>Szoftveres dekódolás kényszerítése</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1553"/>
         <source>Force hardware decoding</source>
-        <translation>Hardveres dekódolás kikényszerítése</translation>
+        <translation>Hardveres dekódolás kényszerítése</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1568"/>
         <source>Video codec</source>
-        <translation>Videó codec</translation>
+        <translation>Videokodek</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1602"/>
@@ -1158,17 +1158,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1610"/>
         <source>AV1 (Experimental)</source>
-        <translation>AV1 (kísérleti)</translation>
+        <translation>AV1 (Kísérleti)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1648"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation>YUV 4:4:4 bekapcsolása (kísérleti)</translation>
+        <translation>YUV 4:4:4 engedélyzése (Kísérleti)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1670"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation>Jó választás távoli asztal és szöveges játékok streameléséhez, de nem ajánlott gyors tempójú játékokhoz.</translation>
+        <translation>Jó választás távoli asztalok és szövegközpontú játékok streameléséhez, de nem ajánlott gyors tempójú játékokhoz.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1672"/>
@@ -1178,22 +1178,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1678"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation>Bitrátakorlát feloldása (kísérleti)</translation>
+        <translation>Bitrátakorlát feloldása (Kísérleti)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1691"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation>Ez rendkívül magas videobitrátákat tesz lehetővé a Sunshine hostokkal való használathoz. Csak Ethernet LAN-kapcsolaton keresztüli streaming esetén ajánlott a használata.</translation>
+        <translation>Ez rendkívül magas videobitrátákat tesz elérhetővé a Sunshine gazdagépeken való használathoz. Csak Ethernet LAN-kapcsolaton keresztüli streamelés esetén ajánlott a használata.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1697"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation>Automatikusan megtalálja a helyi hálózaton lévő számítógépeket (ajánlott)</translation>
+        <translation>Automatikusan megtalálja a helyi hálózaton lévő számítógépeket (Ajánlott)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1718"/>
         <source>Automatically detect blocked connections (Recommended)</source>
-        <translation>Automatikusan észleli a blokkolt kapcsolatokat (ajánlott)</translation>
+        <translation>Automatikusan észleli a blokkolt kapcsolatokat (Ajánlott)</translation>
     </message>
 </context>
 <context>
@@ -1201,7 +1201,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <source>Resuming %1...</source>
-        <translation>Folytatódik %1...</translation>
+        <translation>%1 folytatása...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>
@@ -1212,17 +1212,17 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="25"/>
         <source>Starting %1 failed: Error %2</source>
-        <translation>A %1 indítása sikertelen volt: Hiba %2</translation>
+        <translation>A(z) %1 indítása sikertelen: %2 hiba</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Ellenőrizze a tűzfalát és a porttovábbítási szabályokat a port(ok) tekintetében: %1</translation>
+        <translation>Ellenőrizd a tűzfalbeállításaidat és a porttovábbítási szabályokat a %1 port(ok) tekintetében</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="76"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Ennek a számítógépnek az internetkapcsolata blokkolja a Moonlight. Előfordulhat, hogy az interneten keresztüli streaming nem működik, amíg ehhez a hálózathoz csatlakozik.</translation>
+        <translation>Ennek a számítógépnek az internetkapcsolata blokkolja a Moonlightot. Előfordulhat, hogy az interneten keresztüli streamelés nem működik, amíg ehhez a hálózathoz csatlakozik.</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="167"/>
@@ -1237,7 +1237,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Start+Select+L1+R1</source>
-        <translation>Start+Kiválasztás+L1+R1</translation>
+        <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="168"/>
@@ -1260,42 +1260,42 @@
     <message>
         <location filename="../gui/main.qml" line="305"/>
         <source>Join our community on Discord</source>
-        <translation>Csatlakozzon közösségünkhöz a Discordon</translation>
+        <translation>Csatlakozz közösségünkhöz a Discordon</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="324"/>
         <source>Add PC manually</source>
-        <translation>PC manuális hozzáadása</translation>
+        <translation>Számítógép manuális hozzáadása</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="364"/>
         <source>Update available for Moonlight: Version %1</source>
-        <translation>Frissítés elérhető a Moonlighthoz: Verzió %1</translation>
+        <translation>Frissítés érhető el a Moonlighthoz: Verzió %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="411"/>
         <source>Gamepad Mapper</source>
-        <translation>Gamepad leképező</translation>
+        <translation>Gamepad hozzárendelő</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="457"/>
         <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
-        <translation>A hardveres gyorsítás nem működik az XWaylanden. Az XWaylanden való folytatás gyenge streaming teljesítményt eredményezhet. Próbálja meg a QT_QPA_PLATFORM=wayland beállítással futtatni, vagy váltson X11-re.</translation>
+        <translation>A hardveres gyorsítás nem működik XWayland-en. XWayland-en való streamelés gyenge teljesítményt eredményezhet. Próbálja meg a QT_QPA_PLATFORM=wayland beállítással futtatni, vagy váltson X11-re.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="466"/>
         <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
-        <translation>A Moonlight ezen verziója nincs optimalizálva a számítógépedre. Kérjük, töltse le a Moonlight &apos;%1&apos; verzióját a legjobb streaming teljesítmény eléréséhez.</translation>
+        <translation>A Moonlight ezen verziója nincs optimalizálva a számítógépedre. Töltsd le a Moonlight &apos;%1&apos; verzióját a legjobb streamelési teljesítmény eléréséhez.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="475"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>A Moonlight leképezés nélkül érzékelte a gamepadokat:</translation>
+        <translation>A Moonlight hozzárendelés nélkül érzékelte ezeket a gamepadokat:</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="515"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation>Adja meg a központi számítógép IP-címét:</translation>
+        <translation>Adja meg a gazdagép IP-címét:</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="388"/>
@@ -1305,7 +1305,7 @@
     <message>
         <location filename="../gui/main.qml" line="449"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation>A Moonlight nem észlelt működő hardveres gyorsított videó dekódert. A streaming teljesítménye jelentősen csökkenhet ebben a konfigurációban.</translation>
+        <translation>A Moonlight nem észlelt működő hardveres gyorsított videó dekódert. A streamelés teljesítménye jelentősen csökkenhet ebben a konfigurációban.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="451"/>
@@ -1320,12 +1320,12 @@
     <message>
         <location filename="../gui/main.qml" line="477"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation>Kattintson a Súgó gombra a gamepadok leképezésével kapcsolatos információkért.</translation>
+        <translation>Kattintson a Súgó gombra a gamepadok hozzárendelésével kapcsolatos információkért.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="485"/>
         <source>Are you sure you want to quit?</source>
-        <translation>Biztos, hogy ki akarsz lépni?</translation>
+        <translation>Biztosan ki akarsz lépni?</translation>
     </message>
 </context>
 </TS>
