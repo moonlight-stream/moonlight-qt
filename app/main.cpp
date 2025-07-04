@@ -360,11 +360,18 @@ int main(int argc, char *argv[])
 
     // Serialize log messages on a single thread
     s_LoggerThread.setMaxThreadCount(1);
-
     s_LoggerTime.start();
-    qInstallMessageHandler(qtLogToDiskHandler);
-    SDL_LogSetOutputFunction(sdlLogToDiskHandler, nullptr);
 
+    // Register our logger with all libraries
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_SetLogOutputFunction(sdlLogToDiskHandler, nullptr);
+#else
+    SDL_LogOutputFunction oldSdlLogFn;
+    void* oldSdlLogUserdata;
+    SDL_LogGetOutputFunction(&oldSdlLogFn, &oldSdlLogUserdata);
+    SDL_LogSetOutputFunction(sdlLogToDiskHandler, nullptr);
+#endif
+    qInstallMessageHandler(qtLogToDiskHandler);
 #ifdef HAVE_FFMPEG
     av_log_set_callback(ffmpegLogToDiskHandler);
 #endif
@@ -801,6 +808,17 @@ int main(int argc, char *argv[])
     // Give worker tasks time to properly exit. Fixes PendingQuitTask
     // sometimes freezing and blocking process exit.
     QThreadPool::globalInstance()->waitForDone(30000);
+
+    // Restore the default logger for all libraries before shutting down ours
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_SetLogOutputFunction(SDL_GetDefaultLogOutputFunction(), nullptr);
+#else
+    SDL_LogSetOutputFunction(oldSdlLogFn, oldSdlLogUserdata);
+#endif
+    qInstallMessageHandler(nullptr);
+#ifdef HAVE_FFMPEG
+    av_log_set_callback(av_log_default_callback);
+#endif
 
     // Wait for pending log messages to be printed
     s_LoggerThread.waitForDone();
