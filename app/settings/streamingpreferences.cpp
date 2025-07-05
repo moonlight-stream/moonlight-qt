@@ -50,6 +50,9 @@
 #define SER_SWAPFACEBUTTONS "swapfacebuttons"
 #define SER_CAPTURESYSKEYS "capturesyskeys"
 #define SER_KEEPAWAKE "keepawake"
+#define SER_UIOVERLAYOPACITY "uiOverlayOpacityPerc"
+#define SER_UIOVERLAYTEXTCOLOR "uiOverlayTextColor"
+#define SER_UIOVERLAYBACKGROUNDCOLOR "uiOverlayBackgroundColor"
 #define SER_LANGUAGE "language"
 
 #define CURRENT_DEFAULT_VER 2
@@ -147,7 +150,13 @@ void StreamingPreferences::reload()
     reverseScrollDirection = settings.value(SER_REVERSESCROLL, false).toBool();
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
+    uiOverlayOpacityPerc = settings.value(SER_UIOVERLAYOPACITY, 50).toInt();
     enableHdr = settings.value(SER_HDR, false).toBool();
+
+    uiOverlayTextColor = static_cast<UIOverlayTextColor>(settings.value(SER_UIOVERLAYTEXTCOLOR,
+                                                  static_cast<int>(UIOverlayTextColor::UIOT_WHITE)).toInt());
+    uiOverlayBackgroundColor = static_cast<UIOverlayBackgroundColor>(settings.value(SER_UIOVERLAYBACKGROUNDCOLOR,
+                                                  static_cast<int>(UIOverlayBackgroundColor::UIOB_BLACK)).toInt());
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
@@ -355,6 +364,9 @@ void StreamingPreferences::save()
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
+    settings.setValue(SER_UIOVERLAYOPACITY, uiOverlayOpacityPerc);
+    settings.setValue(SER_UIOVERLAYTEXTCOLOR, uiOverlayTextColor);
+    settings.setValue(SER_UIOVERLAYBACKGROUNDCOLOR, uiOverlayBackgroundColor);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps, bool yuv444)
