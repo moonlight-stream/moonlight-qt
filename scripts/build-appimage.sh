@@ -2,7 +2,7 @@ BUILD_CONFIG="release"
 
 fail()
 {
-	echo "$1" 1>&2
+	echo "$1"
 	exit 1
 }
 
@@ -15,6 +15,13 @@ VERSION=`cat $SOURCE_ROOT/app/version.txt`
 
 command -v qmake >/dev/null 2>&1 || fail "Unable to find 'qmake' in your PATH!"
 command -v linuxdeployqt >/dev/null 2>&1 || fail "Unable to find 'linuxdeployqt' in your PATH!"
+
+echo "MOONLIGHT BUILD ENVIRONMENT"
+qmake --version
+echo "QT_ROOT_DIR=$QT_ROOT_DIR"
+echo "PATH=$PATH"
+echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
+echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH"
 
 echo Cleaning output directories
 rm -rf $BUILD_FOLDER
@@ -47,9 +54,18 @@ pushd $BUILD_FOLDER
 make install || fail "Make install failed!"
 popd
 
+echo Updating metadata
+perl -pi -e 's/__GITHUB_REF_NAME__/$ENV{GITHUB_REF_NAME}/' $DEPLOY_FOLDER/usr/share/metainfo/com.moonlight_stream.Moonlight.appdata.xml
+perl -pi -e 's/__GITHUB_SHA__/$ENV{GITHUB_SHA}/' $DEPLOY_FOLDER/usr/share/metainfo/com.moonlight_stream.Moonlight.appdata.xml
+
 echo Creating AppImage
 pushd $INSTALLER_FOLDER
-VERSION=$VERSION linuxdeployqt $DEPLOY_FOLDER/usr/share/applications/com.moonlight_stream.Moonlight.desktop -qmldir=$SOURCE_ROOT/app/gui -appimage || fail "linuxdeployqt failed!"
+VERSION=$VERSION \
+  linuxdeployqt \
+  $DEPLOY_FOLDER/usr/share/applications/com.moonlight_stream.Moonlight.desktop \
+  -qmldir=$SOURCE_ROOT/app/gui \
+  -appimage \
+  -exclude-libs=libqsqlmimer || fail "linuxdeployqt failed!"
 popd
 
 echo Build successful
