@@ -812,6 +812,66 @@ Flickable {
                     ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
                 }
 
+                Row {
+                    id: customWindowSizeRow
+                    spacing: 5
+                    width: parent.width
+                    visible: StreamingPreferences.windowMode === StreamingPreferences.WM_WINDOWED
+
+                    Label {
+                        text: qsTr("Custom window size:")
+                        font.pointSize: 12
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Item {
+                        width: windowModeComboBox.width -
+                               customWindowSizeRow.children[0].width -
+                               customWindowSizeRow.children[2].width -
+                               customWindowSizeRow.children[3].width -
+                               customWindowSizeRow.children[4].width -
+                               customWindowSizeRow.spacing * 4
+                        height: 1
+                    }
+
+                    TextField {
+                        id: windowWidthField
+                        width: 75
+                        placeholderText: StreamingPreferences.width.toString()
+                        text: StreamingPreferences.windowWidth > 0 ? StreamingPreferences.windowWidth.toString() : ""
+                        validator: IntValidator { bottom: 256; top: 8192 }
+                        onEditingFinished: {
+                            if (text) {
+                                StreamingPreferences.windowWidth = parseInt(text)
+                            } else {
+                                StreamingPreferences.windowWidth = 0
+                            }
+                        }
+                    }
+
+                    Label {
+                        text: "x"
+                        font.bold: true
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    TextField {
+                        id: windowHeightField
+                        width: 75
+                        placeholderText: StreamingPreferences.height.toString()
+                        text: StreamingPreferences.windowHeight > 0 ? StreamingPreferences.windowHeight.toString() : ""
+                        validator: IntValidator { bottom: 256; top: 8192 }
+                        onEditingFinished: {
+                            if (text) {
+                                StreamingPreferences.windowHeight = parseInt(text)
+                            } else {
+                                StreamingPreferences.windowHeight = 0
+                            }
+                        }
+                    }
+                }
+
+
                 CheckBox {
                     id: vsyncCheck
                     width: parent.width
