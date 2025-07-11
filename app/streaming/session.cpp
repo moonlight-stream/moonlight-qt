@@ -1345,39 +1345,47 @@ void Session::getWindowDimensions(int& x, int& y,
         }
     }
 
-    SDL_Rect usableBounds;
-    if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
-        // Don't use more than 80% of the display to leave room for system UI
-        // and ensure the target size is not odd (otherwise one of the sides
-        // of the image will have a one-pixel black bar next to it).
-        SDL_Rect src, dst;
-        src.x = src.y = dst.x = dst.y = 0;
-        src.w = m_StreamConfig.width;
-        src.h = m_StreamConfig.height;
-        dst.w = ((int)SDL_ceilf(usableBounds.w * 0.80f) & ~0x1);
-        dst.h = ((int)SDL_ceilf(usableBounds.h * 0.80f) & ~0x1);
+    // Use custom window size if specified
+    if (m_Preferences->windowMode == StreamingPreferences::WM_WINDOWED &&
+            m_Preferences->windowWidth > 0 && m_Preferences->windowHeight > 0) {
+        width = m_Preferences->windowWidth;
+        height = m_Preferences->windowHeight;
+    }
+    else {
+        SDL_Rect usableBounds;
+        if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
+            // Don't use more than 80% of the display to leave room for system UI
+            // and ensure the target size is not odd (otherwise one of the sides
+            // of the image will have a one-pixel black bar next to it).
+            SDL_Rect src, dst;
+            src.x = src.y = dst.x = dst.y = 0;
+            src.w = m_StreamConfig.width;
+            src.h = m_StreamConfig.height;
+            dst.w = ((int)SDL_ceilf(usableBounds.w * 0.80f) & ~0x1);
+            dst.h = ((int)SDL_ceilf(usableBounds.h * 0.80f) & ~0x1);
 
-        // Scale the window size while preserving aspect ratio
-        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+            // Scale the window size while preserving aspect ratio
+            StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
-        // If the stream window can fit within the usable drawing area with 1:1
-        // scaling, do that rather than filling the screen.
-        if (m_StreamConfig.width < dst.w && m_StreamConfig.height < dst.h) {
+            // If the stream window can fit within the usable drawing area with 1:1
+            // scaling, do that rather than filling the screen.
+            if (m_StreamConfig.width < dst.w && m_StreamConfig.height < dst.h) {
+                width = m_StreamConfig.width;
+                height = m_StreamConfig.height;
+            }
+            else {
+                width = dst.w;
+                height = dst.h;
+            }
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetDisplayUsableBounds() failed: %s",
+                         SDL_GetError());
+
             width = m_StreamConfig.width;
             height = m_StreamConfig.height;
         }
-        else {
-            width = dst.w;
-            height = dst.h;
-        }
-    }
-    else {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetDisplayUsableBounds() failed: %s",
-                     SDL_GetError());
-
-        width = m_StreamConfig.width;
-        height = m_StreamConfig.height;
     }
 
     x = y = SDL_WINDOWPOS_CENTERED_DISPLAY(displayIndex);
