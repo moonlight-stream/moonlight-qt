@@ -838,9 +838,15 @@ Flickable {
                         id: windowWidthField
                         width: 75
                         placeholderText: StreamingPreferences.width.toString()
-                        text: StreamingPreferences.windowWidth > 0 ? StreamingPreferences.windowWidth.toString() : ""
                         validator: IntValidator { bottom: 256; top: 8192 }
-                        onEditingFinished: {
+
+                        Component.onCompleted: {
+                            if (StreamingPreferences.windowWidth > 0) {
+                                text = StreamingPreferences.windowWidth.toString()
+                            }
+                        }
+
+                        onTextChanged: {
                             if (text) {
                                 StreamingPreferences.windowWidth = parseInt(text)
                             } else {
@@ -859,9 +865,15 @@ Flickable {
                         id: windowHeightField
                         width: 75
                         placeholderText: StreamingPreferences.height.toString()
-                        text: StreamingPreferences.windowHeight > 0 ? StreamingPreferences.windowHeight.toString() : ""
                         validator: IntValidator { bottom: 256; top: 8192 }
-                        onEditingFinished: {
+
+                        Component.onCompleted: {
+                            if (StreamingPreferences.windowHeight > 0) {
+                                text = StreamingPreferences.windowHeight.toString()
+                            }
+                        }
+
+                        onTextChanged: {
                             if (text) {
                                 StreamingPreferences.windowHeight = parseInt(text)
                             } else {
