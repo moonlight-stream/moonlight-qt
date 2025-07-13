@@ -1,0 +1,79 @@
+name: Test Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-macos:
+    name: Test macOS Build
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.7.0'
+        host: 'mac'
+        target: 'desktop'
+        modules: 'qtmultimedia'
+    
+    - name: Install dependencies
+      run: |
+        brew install ffmpeg opus sdl2 sdl2_ttf
+    
+    - name: Build
+      run: |
+        export PATH="$Qt6_DIR/bin:$PATH"
+        qmake6 moonlight-qt.pro CONFIG+=release
+        make -j$(sysctl -n hw.ncpu)
+    
+    - name: Verify Build
+      run: |
+        ls -la app/Moonlight.app/Contents/MacOS/
+        file app/Moonlight.app/Contents/MacOS/Moonlight
+
+  test-linux:
+    name: Test Linux Build
+    runs-on: ubuntu-20.04
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.7.0'
+        host: 'linux'
+        target: 'desktop'
+        modules: 'qtmultimedia qtwayland'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libegl1-mesa-dev libgl1-mesa-dev libopus-dev libsdl2-dev \
+          libsdl2-ttf-dev libssl-dev libavcodec-dev libavformat-dev \
+          libswscale-dev libva-dev libvdpau-dev libxkbcommon-dev \
+          wayland-protocols libdrm-dev
+    
+    - name: Build
+      run: |
+        export PATH="$Qt6_DIR/bin:$PATH"
+        qmake6 moonlight-qt.pro CONFIG+=release
+        make -j$(nproc)
+    
+    - name: Verify Build
+      run: |
+        ls -la app/moonlight*
+        file app/moonlight*

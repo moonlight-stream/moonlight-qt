@@ -1,0 +1,14 @@
+executing config test SL
++ cd /Users/will/code/artemis/config.tests/SL && /opt/homebrew/bin/qmake6  -spec /opt/homebrew/share/qt/mkspecs/macx-clang "CONFIG -= qt debug_and_release app_bundle lib_bundle" /Users/will/code/artemis/config.tests/SL
++ cd /Users/will/code/artemis/config.tests/SL && MAKEFLAGS= make
+> /Library/Developer/CommandLineTools/usr/bin/clang++ -c -pipe -stdlib=libc++ -O2 -std=gnu++1z  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mmacosx-version-min=14.0 -Wall -Wextra  -I. -I/opt/homebrew/share/qt/mkspecs/macx-clang -o main.o main.cpp
+> main.cpp:1:10: fatal error: 'SLVideo.h' file not found
+>     1 | #include <SLVideo.h>
+>       |          ^~~~~~~~~~~
+> 1 error generated.
+> make: *** [main.o] Error 1
+test SL FAILED
+executing config test EGL
++ cd /Users/will/code/artemis/config.tests/EGL && /opt/homebrew/bin/qmake6  -spec /opt/homebrew/share/qt/mkspecs/macx-clang "CONFIG -= qt debug_and_release app_bundle lib_bundle" /Users/will/code/artemis/config.tests/EGL
+> Project ERROR: egl development package not found
+test EGL FAILED

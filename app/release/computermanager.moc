@@ -1,0 +1,411 @@
+/****************************************************************************
+** Meta object code from reading C++ file 'computermanager.cpp'
+**
+** Created by: The Qt Meta Object Compiler version 69 (Qt 6.9.1)
+**
+** WARNING! All changes made in this file will be lost!
+*****************************************************************************/
+
+#include <QtCore/qmetatype.h>
+
+#include <QtCore/qtmochelpers.h>
+
+#include <memory>
+
+
+#include <QtCore/qxptype_traits.h>
+#if !defined(Q_MOC_OUTPUT_REVISION)
+#error "The header file 'computermanager.cpp' doesn't include <QObject>."
+#elif Q_MOC_OUTPUT_REVISION != 69
+#error "This file was generated using the moc from 6.9.1. It"
+#error "cannot be used with the include files from this version of Qt."
+#error "(The moc has changed too much.)"
+#endif
+
+#ifndef Q_CONSTINIT
+#define Q_CONSTINIT
+#endif
+
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
+QT_WARNING_DISABLE_GCC("-Wuseless-cast")
+namespace {
+struct qt_meta_tag_ZN15PcMonitorThreadE_t {};
+} // unnamed namespace
+
+template <> constexpr inline auto PcMonitorThread::qt_create_metaobjectdata<qt_meta_tag_ZN15PcMonitorThreadE_t>()
+{
+    namespace QMC = QtMocConstants;
+    QtMocHelpers::StringRefStorage qt_stringData {
+        "PcMonitorThread",
+        "computerStateChanged",
+        "",
+        "NvComputer*",
+        "computer"
+    };
+
+    QtMocHelpers::UintData qt_methods {
+        // Signal 'computerStateChanged'
+        QtMocHelpers::SignalData<void(NvComputer *)>(1, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 3, 4 },
+        }}),
+    };
+    QtMocHelpers::UintData qt_properties {
+    };
+    QtMocHelpers::UintData qt_enums {
+    };
+    return QtMocHelpers::metaObjectData<PcMonitorThread, qt_meta_tag_ZN15PcMonitorThreadE_t>(QMC::MetaObjectFlag{}, qt_stringData,
+            qt_methods, qt_properties, qt_enums);
+}
+Q_CONSTINIT const QMetaObject PcMonitorThread::staticMetaObject = { {
+    QMetaObject::SuperData::link<QThread::staticMetaObject>(),
+    qt_staticMetaObjectStaticContent<qt_meta_tag_ZN15PcMonitorThreadE_t>.stringdata,
+    qt_staticMetaObjectStaticContent<qt_meta_tag_ZN15PcMonitorThreadE_t>.data,
+    qt_static_metacall,
+    nullptr,
+    qt_staticMetaObjectRelocatingContent<qt_meta_tag_ZN15PcMonitorThreadE_t>.metaTypes,
+    nullptr
+} };
+
+void PcMonitorThread::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
+{
+    auto *_t = static_cast<PcMonitorThread *>(_o);
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        switch (_id) {
+        case 0: _t->computerStateChanged((*reinterpret_cast< std::add_pointer_t<NvComputer*>>(_a[1]))); break;
+        default: ;
+        }
+    }
+    if (_c == QMetaObject::IndexOfMethod) {
+        if (QtMocHelpers::indexOfMethod<void (PcMonitorThread::*)(NvComputer * )>(_a, &PcMonitorThread::computerStateChanged, 0))
+            return;
+    }
+}
+
+const QMetaObject *PcMonitorThread::metaObject() const
+{
+    return QObject::d_ptr->metaObject ? QObject::d_ptr->dynamicMetaObject() : &staticMetaObject;
+}
+
+void *PcMonitorThread::qt_metacast(const char *_clname)
+{
+    if (!_clname) return nullptr;
+    if (!strcmp(_clname, qt_staticMetaObjectStaticContent<qt_meta_tag_ZN15PcMonitorThreadE_t>.strings))
+        return static_cast<void*>(this);
+    return QThread::qt_metacast(_clname);
+}
+
+int PcMonitorThread::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
+{
+    _id = QThread::qt_metacall(_c, _id, _a);
+    if (_id < 0)
+        return _id;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        if (_id < 1)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 1;
+    }
+    if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
+        if (_id < 1)
+            *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
+        _id -= 1;
+    }
+    return _id;
+}
+
+// SIGNAL 0
+void PcMonitorThread::computerStateChanged(NvComputer * _t1)
+{
+    QMetaObject::activate<void>(this, &staticMetaObject, 0, nullptr, _t1);
+}
+namespace {
+struct qt_meta_tag_ZN18PendingPairingTaskE_t {};
+} // unnamed namespace
+
+template <> constexpr inline auto PendingPairingTask::qt_create_metaobjectdata<qt_meta_tag_ZN18PendingPairingTaskE_t>()
+{
+    namespace QMC = QtMocConstants;
+    QtMocHelpers::StringRefStorage qt_stringData {
+        "PendingPairingTask",
+        "pairingCompleted",
+        "",
+        "NvComputer*",
+        "computer",
+        "error"
+    };
+
+    QtMocHelpers::UintData qt_methods {
+        // Signal 'pairingCompleted'
+        QtMocHelpers::SignalData<void(NvComputer *, QString)>(1, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 3, 4 }, { QMetaType::QString, 5 },
+        }}),
+    };
+    QtMocHelpers::UintData qt_properties {
+    };
+    QtMocHelpers::UintData qt_enums {
+    };
+    return QtMocHelpers::metaObjectData<PendingPairingTask, qt_meta_tag_ZN18PendingPairingTaskE_t>(QMC::MetaObjectFlag{}, qt_stringData,
+            qt_methods, qt_properties, qt_enums);
+}
+Q_CONSTINIT const QMetaObject PendingPairingTask::staticMetaObject = { {
+    QMetaObject::SuperData::link<QObject::staticMetaObject>(),
+    qt_staticMetaObjectStaticContent<qt_meta_tag_ZN18PendingPairingTaskE_t>.stringdata,
+    qt_staticMetaObjectStaticContent<qt_meta_tag_ZN18PendingPairingTaskE_t>.data,
+    qt_static_metacall,
+    nullptr,
+    qt_staticMetaObjectRelocatingContent<qt_meta_tag_ZN18PendingPairingTaskE_t>.metaTypes,
+    nullptr
+} };
+
+void PendingPairingTask::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
+{
+    auto *_t = static_cast<PendingPairingTask *>(_o);
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        switch (_id) {
+        case 0: _t->pairingCompleted((*reinterpret_cast< std::add_pointer_t<NvComputer*>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[2]))); break;
+        default: ;
+        }
+    }
+    if (_c == QMetaObject::IndexOfMethod) {
+        if (QtMocHelpers::indexOfMethod<void (PendingPairingTask::*)(NvComputer * , QString )>(_a, &PendingPairingTask::pairingCompleted, 0))
+            return;
+    }
+}
+
+const QMetaObject *PendingPairingTask::metaObject() const
+{
+    return QObject::d_ptr->metaObject ? QObject::d_ptr->dynamicMetaObject() : &staticMetaObject;
+}
+
+void *PendingPairingTask::qt_metacast(const char *_clname)
+{
+    if (!_clname) return nullptr;
+    if (!strcmp(_clname, qt_staticMetaObjectStaticContent<qt_meta_tag_ZN18PendingPairingTaskE_t>.strings))
+        return static_cast<void*>(this);
+    if (!strcmp(_clname, "QRunnable"))
+        return static_cast< QRunnable*>(this);
+    return QObject::qt_metacast(_clname);
+}
+
+int PendingPairingTask::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
+{
+    _id = QObject::qt_metacall(_c, _id, _a);
+    if (_id < 0)
+        return _id;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        if (_id < 1)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 1;
+    }
+    if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
+        if (_id < 1)
+            *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
+        _id -= 1;
+    }
+    return _id;
+}
+
+// SIGNAL 0
+void PendingPairingTask::pairingCompleted(NvComputer * _t1, QString _t2)
+{
+    QMetaObject::activate<void>(this, &staticMetaObject, 0, nullptr, _t1, _t2);
+}
+namespace {
+struct qt_meta_tag_ZN15PendingQuitTaskE_t {};
+} // unnamed namespace
+
+template <> constexpr inline auto PendingQuitTask::qt_create_metaobjectdata<qt_meta_tag_ZN15PendingQuitTaskE_t>()
+{
+    namespace QMC = QtMocConstants;
+    QtMocHelpers::StringRefStorage qt_stringData {
+        "PendingQuitTask",
+        "quitAppFailed",
+        "",
+        "error"
+    };
+
+    QtMocHelpers::UintData qt_methods {
+        // Signal 'quitAppFailed'
+        QtMocHelpers::SignalData<void(QString)>(1, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QString, 3 },
+        }}),
+    };
+    QtMocHelpers::UintData qt_properties {
+    };
+    QtMocHelpers::UintData qt_enums {
+    };
+    return QtMocHelpers::metaObjectData<PendingQuitTask, qt_meta_tag_ZN15PendingQuitTaskE_t>(QMC::MetaObjectFlag{}, qt_stringData,
+            qt_methods, qt_properties, qt_enums);
+}
+Q_CONSTINIT const QMetaObject PendingQuitTask::staticMetaObject = { {
+    QMetaObject::SuperData::link<QObject::staticMetaObject>(),
+    qt_staticMetaObjectStaticContent<qt_meta_tag_ZN15PendingQuitTaskE_t>.stringdata,
+    qt_staticMetaObjectStaticContent<qt_meta_tag_ZN15PendingQuitTaskE_t>.data,
+    qt_static_metacall,
+    nullptr,
+    qt_staticMetaObjectRelocatingContent<qt_meta_tag_ZN15PendingQuitTaskE_t>.metaTypes,
+    nullptr
+} };
+
+void PendingQuitTask::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
+{
+    auto *_t = static_cast<PendingQuitTask *>(_o);
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        switch (_id) {
+        case 0: _t->quitAppFailed((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1]))); break;
+        default: ;
+        }
+    }
+    if (_c == QMetaObject::IndexOfMethod) {
+        if (QtMocHelpers::indexOfMethod<void (PendingQuitTask::*)(QString )>(_a, &PendingQuitTask::quitAppFailed, 0))
+            return;
+    }
+}
+
+const QMetaObject *PendingQuitTask::metaObject() const
+{
+    return QObject::d_ptr->metaObject ? QObject::d_ptr->dynamicMetaObject() : &staticMetaObject;
+}
+
+void *PendingQuitTask::qt_metacast(const char *_clname)
+{
+    if (!_clname) return nullptr;
+    if (!strcmp(_clname, qt_staticMetaObjectStaticContent<qt_meta_tag_ZN15PendingQuitTaskE_t>.strings))
+        return static_cast<void*>(this);
+    if (!strcmp(_clname, "QRunnable"))
+        return static_cast< QRunnable*>(this);
+    return QObject::qt_metacast(_clname);
+}
+
+int PendingQuitTask::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
+{
+    _id = QObject::qt_metacall(_c, _id, _a);
+    if (_id < 0)
+        return _id;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        if (_id < 1)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 1;
+    }
+    if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
+        if (_id < 1)
+            *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
+        _id -= 1;
+    }
+    return _id;
+}
+
+// SIGNAL 0
+void PendingQuitTask::quitAppFailed(QString _t1)
+{
+    QMetaObject::activate<void>(this, &staticMetaObject, 0, nullptr, _t1);
+}
+namespace {
+struct qt_meta_tag_ZN14PendingAddTaskE_t {};
+} // unnamed namespace
+
+template <> constexpr inline auto PendingAddTask::qt_create_metaobjectdata<qt_meta_tag_ZN14PendingAddTaskE_t>()
+{
+    namespace QMC = QtMocConstants;
+    QtMocHelpers::StringRefStorage qt_stringData {
+        "PendingAddTask",
+        "computerAddCompleted",
+        "",
+        "QVariant",
+        "success",
+        "detectedPortBlocking",
+        "computerStateChanged",
+        "NvComputer*",
+        "computer"
+    };
+
+    QtMocHelpers::UintData qt_methods {
+        // Signal 'computerAddCompleted'
+        QtMocHelpers::SignalData<void(QVariant, QVariant)>(1, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 3, 4 }, { 0x80000000 | 3, 5 },
+        }}),
+        // Signal 'computerStateChanged'
+        QtMocHelpers::SignalData<void(NvComputer *)>(6, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 7, 8 },
+        }}),
+    };
+    QtMocHelpers::UintData qt_properties {
+    };
+    QtMocHelpers::UintData qt_enums {
+    };
+    return QtMocHelpers::metaObjectData<PendingAddTask, qt_meta_tag_ZN14PendingAddTaskE_t>(QMC::MetaObjectFlag{}, qt_stringData,
+            qt_methods, qt_properties, qt_enums);
+}
+Q_CONSTINIT const QMetaObject PendingAddTask::staticMetaObject = { {
+    QMetaObject::SuperData::link<QObject::staticMetaObject>(),
+    qt_staticMetaObjectStaticContent<qt_meta_tag_ZN14PendingAddTaskE_t>.stringdata,
+    qt_staticMetaObjectStaticContent<qt_meta_tag_ZN14PendingAddTaskE_t>.data,
+    qt_static_metacall,
+    nullptr,
+    qt_staticMetaObjectRelocatingContent<qt_meta_tag_ZN14PendingAddTaskE_t>.metaTypes,
+    nullptr
+} };
+
+void PendingAddTask::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
+{
+    auto *_t = static_cast<PendingAddTask *>(_o);
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        switch (_id) {
+        case 0: _t->computerAddCompleted((*reinterpret_cast< std::add_pointer_t<QVariant>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<QVariant>>(_a[2]))); break;
+        case 1: _t->computerStateChanged((*reinterpret_cast< std::add_pointer_t<NvComputer*>>(_a[1]))); break;
+        default: ;
+        }
+    }
+    if (_c == QMetaObject::IndexOfMethod) {
+        if (QtMocHelpers::indexOfMethod<void (PendingAddTask::*)(QVariant , QVariant )>(_a, &PendingAddTask::computerAddCompleted, 0))
+            return;
+        if (QtMocHelpers::indexOfMethod<void (PendingAddTask::*)(NvComputer * )>(_a, &PendingAddTask::computerStateChanged, 1))
+            return;
+    }
+}
+
+const QMetaObject *PendingAddTask::metaObject() const
+{
+    return QObject::d_ptr->metaObject ? QObject::d_ptr->dynamicMetaObject() : &staticMetaObject;
+}
+
+void *PendingAddTask::qt_metacast(const char *_clname)
+{
+    if (!_clname) return nullptr;
+    if (!strcmp(_clname, qt_staticMetaObjectStaticContent<qt_meta_tag_ZN14PendingAddTaskE_t>.strings))
+        return static_cast<void*>(this);
+    if (!strcmp(_clname, "QRunnable"))
+        return static_cast< QRunnable*>(this);
+    return QObject::qt_metacast(_clname);
+}
+
+int PendingAddTask::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
+{
+    _id = QObject::qt_metacall(_c, _id, _a);
+    if (_id < 0)
+        return _id;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        if (_id < 2)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 2;
+    }
+    if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
+        if (_id < 2)
+            *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
+        _id -= 2;
+    }
+    return _id;
+}
+
+// SIGNAL 0
+void PendingAddTask::computerAddCompleted(QVariant _t1, QVariant _t2)
+{
+    QMetaObject::activate<void>(this, &staticMetaObject, 0, nullptr, _t1, _t2);
+}
+
+// SIGNAL 1
+void PendingAddTask::computerStateChanged(NvComputer * _t1)
+{
+    QMetaObject::activate<void>(this, &staticMetaObject, 1, nullptr, _t1);
+}
+QT_WARNING_POP

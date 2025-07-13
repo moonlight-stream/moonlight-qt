@@ -1,0 +1,182 @@
+name: Build Artemis Qt
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+env:
+  QT_VERSION: '6.7.0'
+
+jobs:
+  build-windows:
+    name: Windows Build
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2022_64'
+        modules: 'qtmultimedia qtwayland'
+    
+    - name: Setup MSVC
+      uses: microsoft/setup-msbuild@v1.3
+    
+    - name: Install 7-Zip
+      run: choco install 7zip
+    
+    - name: Build
+      run: |
+        $env:PATH += ";$env:Qt6_DIR\bin"
+        scripts\build-arch.bat Release
+    
+    - name: Generate Bundle
+      run: scripts\generate-bundle.bat Release
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artemis-windows-${{ matrix.arch }}
+        path: build/installer-${{ matrix.arch }}-Release/MoonlightPortable-${{ matrix.arch }}-*.zip
+
+  build-macos:
+    name: macOS Build
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: 'mac'
+        target: 'desktop'
+        modules: 'qtmultimedia'
+    
+    - name: Install dependencies
+      run: |
+        brew install create-dmg ffmpeg opus sdl2 sdl2_ttf
+    
+    - name: Build
+      run: |
+        export PATH="$Qt6_DIR/bin:$PATH"
+        scripts/generate-dmg.sh Release
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artemis-macos
+        path: build/installer-Release/Moonlight-*.dmg
+
+  build-linux:
+    name: Linux Build
+    runs-on: ubuntu-20.04
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: 'linux'
+        target: 'desktop'
+        modules: 'qtmultimedia qtwayland'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libegl1-mesa-dev libgl1-mesa-dev libopus-dev libsdl2-dev \
+          libsdl2-ttf-dev libssl-dev libavcodec-dev libavformat-dev \
+          libswscale-dev libva-dev libvdpau-dev libxkbcommon-dev \
+          wayland-protocols libdrm-dev nasm libgbm-dev \
+          libfreetype6-dev libasound2-dev libdbus-1-dev \
+          libgles2-mesa-dev libglu1-mesa-dev libibus-1.0-dev \
+          libpulse-dev libudev-dev libx11-dev libxcursor-dev \
+          libxext-dev libxi-dev libxinerama-dev libxrandr-dev \
+          libxss-dev libxt-dev libxv-dev libxxf86vm-dev \
+          libxcb-dri3-dev libx11-xcb-dev
+    
+    - name: Build
+      run: |
+        export PATH="$Qt6_DIR/bin:$PATH"
+        scripts/build-appimage.sh
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artemis-linux
+        path: build/installer-release/Moonlight-*-x86_64.AppImage
+
+  build-steamlink:
+    name: Steam Link Build
+    runs-on: ubuntu-20.04
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    
+    - name: Setup Steam Link SDK
+      run: |
+        sudo apt install -y libc6:i386 libstdc++6:i386
+        git clone --depth=1 https://github.com/ValveSoftware/steamlink-sdk.git $HOME/steamlink-sdk
+    
+    - name: Build
+      run: |
+        export STEAMLINK_SDK_PATH=$HOME/steamlink-sdk
+        scripts/build-steamlink-app.sh
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artemis-steamlink
+        path: build/installer-release/Moonlight-SteamLink-*.zip
+
+  release:
+    name: Create Release
+    if: github.event_name == 'release'
+    needs: [build-windows, build-macos, build-linux, build-steamlink]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+    
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          artifacts/artemis-windows-x64/*
+          artifacts/artemis-windows-arm64/*
+          artifacts/artemis-macos/*
+          artifacts/artemis-linux/*
+          artifacts/artemis-steamlink/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
