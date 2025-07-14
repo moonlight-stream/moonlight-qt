@@ -9,7 +9,7 @@ on:
     types: [ published ]
 
 env:
-  QT_VERSION: '6.5.3'
+  QT_VERSION: '6.8.1'
 
 jobs:
   build-windows:

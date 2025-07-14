@@ -20,7 +20,7 @@ jobs:
     - name: Setup Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.5.3'
+        version: '6.8.1'
         host: 'mac'
         target: 'desktop'
         modules: 'qtmultimedia'
@@ -73,7 +73,7 @@ jobs:
     - name: Setup Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.5.3'
+        version: '6.8.1'
         host: 'linux'
         target: 'desktop'
         modules: 'qtmultimedia'
