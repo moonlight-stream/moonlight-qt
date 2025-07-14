@@ -178,6 +178,13 @@ public:
     QImage
     getBoxArt(int appId);
 
+    // Artemis clipboard sync endpoints (Apollo servers only)
+    QString
+    getClipboardContent();
+
+    bool
+    sendClipboardContent(const QString& content);
+
     static
     QVector<NvDisplayMode>
     getDisplayModeList(QString serverInfo);

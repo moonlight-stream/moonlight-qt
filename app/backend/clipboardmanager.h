@@ -36,6 +36,9 @@ public:
     Q_INVOKABLE void enableSmartSync(bool enabled);
     Q_INVOKABLE bool isSmartSyncEnabled() const;
 
+    // Apollo server detection (clipboard sync only works with Apollo servers)
+    Q_INVOKABLE bool isClipboardSyncSupported() const;
+
     // Auto-sync triggers (matches Android behavior)
     Q_INVOKABLE void onStreamStarted();
     Q_INVOKABLE void onStreamResumed();
@@ -56,10 +59,11 @@ public:
 
 signals:
     void clipboardSyncStarted();
-    void clipboardSyncCompleted(bool success, const QString &message);
+    void clipboardSyncCompleted();
     void clipboardSyncFailed(const QString &error);
     void clipboardContentChanged();
     void showToast(const QString &message);
+    void apolloSupportChanged(bool supported);
 
 private slots:
     void onClipboardChanged();

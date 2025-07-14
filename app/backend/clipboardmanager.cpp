@@ -39,6 +39,16 @@ void ClipboardManager::setConnection(NvComputer *computer, NvHTTP *http)
     m_http = http;
     
     qDebug() << "ClipboardManager: Connected to" << (computer ? computer->name : "null");
+    
+    // Check and emit Apollo support status
+    bool supported = isClipboardSyncSupported();
+    emit apolloSupportChanged(supported);
+    
+    if (supported) {
+        qDebug() << "ClipboardManager: Apollo server detected - clipboard sync available";
+    } else {
+        qDebug() << "ClipboardManager: Non-Apollo server - clipboard sync not available";
+    }
 }
 
 void ClipboardManager::disconnect()
@@ -47,6 +57,8 @@ void ClipboardManager::disconnect()
     m_http = nullptr;
     m_syncInProgress = false;
     
+    emit apolloSupportChanged(false);
+    
     qDebug() << "ClipboardManager: Disconnected";
 }
 
@@ -54,6 +66,12 @@ bool ClipboardManager::sendClipboard(bool force)
 {
     if (!m_http || !m_computer) {
         qWarning() << "ClipboardManager: No connection available for clipboard sync";
+        return false;
+    }
+
+    if (!isClipboardSyncSupported()) {
+        qWarning() << "ClipboardManager: Clipboard sync not supported (not an Apollo server)";
+        emit clipboardSyncFailed("Clipboard sync only works with Apollo/Sunshine servers");
         return false;
     }
 
@@ -75,6 +93,12 @@ bool ClipboardManager::getClipboard()
 {
     if (!m_http || !m_computer) {
         qWarning() << "ClipboardManager: No connection available for clipboard sync";
+        return false;
+    }
+
+    if (!isClipboardSyncSupported()) {
+        qWarning() << "ClipboardManager: Clipboard sync not supported (not an Apollo server)";
+        emit clipboardSyncFailed("Clipboard sync only works with Apollo/Sunshine servers");
         return false;
     }
 
@@ -101,6 +125,39 @@ void ClipboardManager::enableSmartSync(bool enabled)
 bool ClipboardManager::isSmartSyncEnabled() const
 {
     return m_smartSyncEnabled;
+}
+
+bool ClipboardManager::isClipboardSyncSupported() const
+{
+    if (!m_computer || !m_http) {
+        return false;
+    }
+
+    // Clipboard sync only works with Apollo servers (not GeForce Experience)
+    // Apollo servers can be detected by checking for specific server info fields
+    try {
+        QString serverInfo = m_http->getServerInfo(NvHTTP::NVLL_ERROR, true);
+        
+        // Apollo servers typically have different server info structure
+        // Check for Apollo-specific fields or version patterns
+        QString serverVersion = m_http->getXmlString(serverInfo, "appversion");
+        QString serverName = m_http->getXmlString(serverInfo, "hostname");
+        
+        // Apollo/Sunshine servers typically don't have GFE version info
+        QString gfeVersion = m_http->getXmlString(serverInfo, "GfeVersion");
+        
+        // If no GFE version but has app version, likely Apollo/Sunshine
+        bool isApollo = gfeVersion.isEmpty() && !serverVersion.isEmpty();
+        
+        qDebug() << "ClipboardManager: Apollo detection - GFE:" << gfeVersion 
+                 << "AppVer:" << serverVersion << "IsApollo:" << isApollo;
+        
+        return isApollo;
+    }
+    catch (const std::exception& e) {
+        qWarning() << "ClipboardManager: Failed to detect Apollo server:" << e.what();
+        return false;
+    }
 }
 
 void ClipboardManager::onStreamStarted()
@@ -273,59 +330,26 @@ bool ClipboardManager::sendClipboardToServer(const QString &content)
     emit clipboardSyncStarted();
     m_syncInProgress = true;
 
-    // Matches Android NvHTTP.sendClipboard() implementation
-    QNetworkRequest request;
-    request.setUrl(QUrl(QString("https://%1:%2/actions/clipboard?type=text")
-                       .arg(m_computer->activeAddress)
-                       .arg(m_computer->httpsPort)));
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "text/plain");
+    // Use the new NvHTTP clipboard method
+    bool success = m_http->sendClipboardContent(content);
     
-    // Add authentication headers if needed
-    if (m_http) {
-        // TODO: Add proper authentication headers from NvHTTP
-    }
-
-    QNetworkReply *reply = m_http->sendClipboardContent(content);
-    if (!reply) {
-        m_syncInProgress = false;
-        emit clipboardSyncFailed("Failed to create network request");
-        return false;
-    }
-
-    connect(reply, &QNetworkReply::finished, this, [this, reply, content]() {
-        m_syncInProgress = false;
+    m_syncInProgress = false;
+    
+    if (success) {
+        markAsOwnContent(content);
+        emit clipboardSyncCompleted();
         
-        if (reply->error() == QNetworkReply::NoError) {
-            // Matches Android: empty response means success
-            QString response = reply->readAll();
-            bool success = response.isEmpty();
-            
-            if (success) {
-                m_lastSentContent = content;
-                markAsOwnContent(content);
-                
-                emit clipboardSyncCompleted(true, "Clipboard sent successfully");
-                if (m_showToast) {
-                    emit showToast("Clipboard sent successfully");
-                }
-            } else {
-                emit clipboardSyncFailed("Server returned error");
-                if (m_showToast) {
-                    emit showToast("Failed to send clipboard");
-                }
-            }
-        } else {
-            QString error = QString("Network error: %1").arg(reply->errorString());
-            emit clipboardSyncFailed(error);
-            if (m_showToast) {
-                emit showToast("Failed to send clipboard: " + reply->errorString());
-            }
+        if (m_showToast) {
+            emit showToast("Clipboard uploaded to server");
         }
         
-        reply->deleteLater();
-    });
-
-    return true;
+        qDebug() << "ClipboardManager: Successfully sent clipboard to server";
+        return true;
+    } else {
+        emit clipboardSyncFailed("Failed to send clipboard to server");
+        qWarning() << "ClipboardManager: Failed to send clipboard to server";
+        return false;
+    }
 }
 
 QString ClipboardManager::getClipboardFromServer()
@@ -337,50 +361,23 @@ QString ClipboardManager::getClipboardFromServer()
     emit clipboardSyncStarted();
     m_syncInProgress = true;
 
-    // Matches Android NvHTTP.getClipboard() implementation
-    QNetworkRequest request;
-    request.setUrl(QUrl(QString("https://%1:%2/actions/clipboard?type=text")
-                       .arg(m_computer->activeAddress)
-                       .arg(m_computer->httpsPort)));
+    // Use the new NvHTTP clipboard method
+    QString content = m_http->getClipboardContent();
     
-    // Add authentication headers if needed
-    if (m_http) {
-        // TODO: Add proper authentication headers from NvHTTP
-    }
-
-    QNetworkReply *reply = m_http->getClipboardContent();
-    if (!reply) {
-        m_syncInProgress = false;
-        emit clipboardSyncFailed("Failed to create network request");
-        return QString();
-    }
-
-    QString result;
-    connect(reply, &QNetworkReply::finished, this, [this, reply, &result]() {
-        m_syncInProgress = false;
+    m_syncInProgress = false;
+    
+    if (!content.isEmpty()) {
+        emit clipboardSyncCompleted();
         
-        if (reply->error() == QNetworkReply::NoError) {
-            result = reply->readAll();
-            
-            if (!result.isEmpty()) {
-                emit clipboardSyncCompleted(true, "Clipboard received successfully");
-                if (m_showToast) {
-                    emit showToast("Clipboard received successfully");
-                }
-            }
-        } else {
-            QString error = QString("Network error: %1").arg(reply->errorString());
-            emit clipboardSyncFailed(error);
-            if (m_showToast) {
-                emit showToast("Failed to get clipboard: " + reply->errorString());
-            }
+        if (m_showToast) {
+            emit showToast("Clipboard downloaded from server");
         }
         
-        reply->deleteLater();
-    });
-
-    // Wait for the request to complete (synchronous for now)
-    // TODO: Make this properly asynchronous
-    
-    return result;
+        qDebug() << "ClipboardManager: Successfully received clipboard from server";
+        return content;
+    } else {
+        emit clipboardSyncFailed("Failed to get clipboard from server");
+        qWarning() << "ClipboardManager: Failed to get clipboard from server";
+        return QString();
+    }
 }
