@@ -1,7 +1,61 @@
-*pro.user
+# Qt build artifacts
+Makefile*
+*.o
+*.a
+*.app/
+.qmake.cache
+.qmake.stash
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.pro.user*
 
-
-**/.vs/
+# Build directories
 build/
+release/
+debug/
+
+# Platform specific
+*.dmg
+*.exe
+*.deb
+*.rpm
+*.AppImage
+*.zip
+*.tar.gz
+
+# Qt Creator
+*.pro.user
+*.autosave
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+*.dSYM/
+
+# Windows
+Thumbs.db
+*.pdb
+
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+
+# Generated QML cache
+*qmlcache*
+
+# Config tests
 config.tests/*/.qmake.stash
 config.tests/*/Makefile
+
+# Visual Studio
+**/.vs/
