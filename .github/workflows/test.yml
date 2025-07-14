@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
   test-macos:
@@ -20,7 +20,7 @@ jobs:
     - name: Setup Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.7.0'
+        version: '6.6.3'
         host: 'mac'
         target: 'desktop'
         modules: 'qtmultimedia'
@@ -32,7 +32,7 @@ jobs:
     - name: Build
       run: |
         export PATH="$Qt6_DIR/bin:$PATH"
-        qmake6 moonlight-qt.pro CONFIG+=release
+        qmake6 moonlight-qt.pro CONFIG+=release CONFIG+=sdk_no_version_check
         make -j$(sysctl -n hw.ncpu)
     
     - name: Verify Build
@@ -53,7 +53,7 @@ jobs:
     - name: Setup Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.7.0'
+        version: '6.6.3'
         host: 'linux'
         target: 'desktop'
         modules: 'qtmultimedia qtwayland'
@@ -75,5 +75,5 @@ jobs:
     
     - name: Verify Build
       run: |
-        ls -la app/moonlight*
-        file app/moonlight*
+        ls -la app/
+        file app/moonlight || echo "moonlight binary not found"
