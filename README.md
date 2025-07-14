@@ -1,16 +1,50 @@
-# Moonlight PC
+# Artemis Qt
 
-[Moonlight PC](https://moonlight-stream.org) is an open source PC client for NVIDIA GameStream and [Sunshine](https://github.com/LizardByte/Sunshine).
+[Artemis Qt](https://github.com/wjbeckett/artemis) is an enhanced cross-platform client for NVIDIA GameStream and [Apollo](https://github.com/ClassicOldSong/Apollo)/[Sunshine](https://github.com/LizardByte/Sunshine) servers. It's a fork of [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt) that brings the advanced features from [Artemis Android](https://github.com/ClassicOldSong/moonlight-android) to desktop platforms.
 
-Moonlight also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and [iOS](https://github.com/moonlight-stream/moonlight-ios).
+**Perfect for Steam Deck and other handheld gaming devices!**
 
-You can follow development on our [Discord server](https://moonlight-stream.org/discord) and help translate Moonlight into your language on [Weblate](https://hosted.weblate.org/projects/moonlight/moonlight-qt/).
+[![Build Status](https://github.com/wjbeckett/artemis/workflows/Build%20Artemis%20Qt/badge.svg)](https://github.com/wjbeckett/artemis/actions)
+[![Downloads](https://img.shields.io/github/downloads/wjbeckett/artemis/total)](https://github.com/wjbeckett/artemis/releases)
 
- [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/glj5cxqwy2w3bglv/branch/master?svg=true)](https://ci.appveyor.com/project/cgutman/moonlight-qt/branch/master)
- [![Downloads](https://img.shields.io/github/downloads/moonlight-stream/moonlight-qt/total)](https://github.com/moonlight-stream/moonlight-qt/releases)
- [![Translation Status](https://hosted.weblate.org/widgets/moonlight/-/moonlight-qt/svg-badge.svg)](https://hosted.weblate.org/projects/moonlight/moonlight-qt/)
+## ✨ Artemis Features
 
-## Features
+Artemis Qt includes all the features of Moonlight Qt, plus these enhanced capabilities:
+
+### 🎯 Phase 1 (Foundation) - In Development
+- **📋 Clipboard Sync** - Seamlessly sync clipboard content between client and server
+- **⚡ Server Commands** - Execute custom commands on the Apollo/Sunshine server
+- **🔐 OTP Pairing** - One-Time Password pairing for enhanced security
+
+### 🎮 Phase 2 (Client Controls) - Planned
+- **🖥️ Fractional Refresh Rate** - Client-side control for custom refresh rates (e.g., 90Hz, 120Hz)
+- **📐 Resolution Scaling** - Client-side resolution scaling for better performance
+- **🖼️ Virtual Display Control** - Choose whether to use virtual displays
+
+### 🚀 Phase 3 (Advanced) - Future
+- **📱 App Ordering** - Custom app ordering without compatibility mode
+- **🔍 Permission Viewing** - View and manage server-side permissions
+- **🎯 Input-Only Mode** - Stream input without video for remote control scenarios
+
+## 🎮 Perfect for Steam Deck
+
+Artemis Qt is specifically optimized for handheld gaming devices like the Steam Deck:
+
+- **Embedded Mode** - Optimized UI for handheld devices
+- **GPU-Optimized Rendering** - Efficient rendering for lower-power GPUs
+- **Touch-Friendly Interface** - Designed for touch and gamepad navigation
+- **Power Efficient** - Optimized for battery life
+
+## 📥 Downloads
+
+### Latest Release
+- **[Windows x64/ARM64](https://github.com/wjbeckett/artemis/releases/latest)** - Native Windows builds
+- **[macOS Universal](https://github.com/wjbeckett/artemis/releases/latest)** - Intel and Apple Silicon support
+- **[Linux AppImage](https://github.com/wjbeckett/artemis/releases/latest)** - Universal Linux compatibility
+- **[Steam Deck Package](https://github.com/wjbeckett/artemis/releases/latest)** - Optimized for Steam Deck
+- **[Flatpak](https://github.com/wjbeckett/artemis/releases/latest)** - Sandboxed Linux package
+
+## 🎮 Moonlight Features (Inherited)
  - Hardware accelerated video decoding on Windows, Mac, and Linux
  - H.264, HEVC, and AV1 codec support (AV1 requires Sunshine and a supported host GPU)
  - YUV 4:4:4 support (Sunshine only)
@@ -37,60 +71,125 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 
 Hosting for Moonlight's Debian and L4T package repositories is graciously provided for free by [Cloudsmith](https://cloudsmith.com).
 
-## Building
+## 🛠️ Building from Source
 
-### Windows Build Requirements
-* Qt 6.7 SDK or later (earlier versions may work but are not officially supported)
-* [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
-* Select **MSVC** option during Qt installation. MinGW is not supported.
-* [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
-* Graphics Tools (only if running debug builds)
-  * Install "Graphics Tools" in the Optional Features page of the Windows Settings app.
-  * Alternatively, run `dism /online /add-capability /capabilityname:Tools.Graphics.DirectX~~~~0.0.1.0` and reboot.
+### Quick Start
+```bash
+# Clone the repository
+git clone https://github.com/wjbeckett/artemis.git
+cd artemis
 
-### macOS Build Requirements
-* Qt 6.7 SDK or later (earlier versions may work but are not officially supported)
-* Xcode 14 or later (earlier versions may work but are not officially supported)
-* [create-dmg](https://github.com/sindresorhus/create-dmg) (only if building DMGs for use on non-development Macs)
+# Run the development setup script
+chmod +x scripts/setup-dev.sh
+./scripts/setup-dev.sh
 
-### Linux/Unix Build Requirements
-* Qt 6 is recommended, but Qt 5.9 or later is also supported (replace `qmake6` with `qmake` when using Qt 5).
-* GCC or Clang
-* FFmpeg 4.0 or later
-* Install the required packages:
-  * Debian/Ubuntu:
-    * Base Requirements: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libsdl2-dev libsdl2-ttf-dev libssl-dev libavcodec-dev libavformat-dev libswscale-dev libva-dev libvdpau-dev libxkbcommon-dev wayland-protocols libdrm-dev`
-    * Qt 6 (Recommended): `qt6-base-dev qt6-declarative-dev libqt6svg6-dev qml6-module-qtquick-controls qml6-module-qtquick-templates qml6-module-qtquick-layouts qml6-module-qtqml-workerscript qml6-module-qtquick-window qml6-module-qtquick`
-    * Qt 5: `qtbase5-dev qt5-qmake qtdeclarative5-dev qtquickcontrols2-5-dev qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2 qtwayland5`
-  * RedHat/Fedora (RPM Fusion repo required):
-    * Base Requirements: `openssl-devel SDL2-devel SDL2_ttf-devel ffmpeg-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel libdrm-devel`
-    * Qt 6 (Recommended): `qt6-qtsvg-devel qt6-qtdeclarative-devel`
-    * Qt 5: `qt5-qtsvg-devel qt5-qtquickcontrols2-devel`
-* Building the Vulkan renderer requires a `libplacebo-dev`/`libplacebo-devel` version of at least v7.349.0 and FFmpeg 6.1 or later.
+# The script will install dependencies and build the project
+```
 
-### Steam Link Build Requirements
-* [Steam Link SDK](https://github.com/ValveSoftware/steamlink-sdk) cloned on your build system
-* STEAMLINK_SDK_PATH environment variable set to the Steam Link SDK path
+### Manual Build Requirements
 
-### Build Setup Steps
-1. Install the latest Qt SDK (and optionally, the Qt Creator IDE) from https://www.qt.io/download
-    * You can install Qt via Homebrew on macOS, but you will need to use `brew install qt --with-debug` to be able to create debug builds of Moonlight.
-    * You may also use your Linux distro's package manager for the Qt SDK as long as the packages are Qt 5.9 or later.
-    * This step is not required for building on Steam Link, because the Steam Link SDK includes Qt 5.14.
-2. Run `git submodule update --init --recursive` from within `moonlight-qt/`
-3. Open the project in Qt Creator or build from qmake on the command line.
-    * To build a binary for use on non-development machines, use the scripts in the `scripts` folder.
-        * For Windows builds, use `scripts\build-arch.bat` and `scripts\generate-bundle.bat`. Execute these scripts from the root of the repository within a Qt command prompt. Ensure  7-Zip binary directory is on your `%PATH%`.
-        * For macOS builds, use `scripts/generate-dmg.sh`. Execute this script from the root of the repository and ensure Qt's `bin` folder is in your `$PATH`.
-        * For Steam Link builds, run `scripts/build-steamlink-app.sh` from the root of the repository.
-    * To build from the command line for development use on macOS or Linux, run `qmake6 moonlight-qt.pro` then `make debug` or `make release`
-    * To create an embedded build for a single-purpose device, use `qmake6 "CONFIG+=embedded" moonlight-qt.pro` and build normally.
-        * This build will lack windowed mode, Discord/Help links, and other features that don't make sense on an embedded device.
-        * For platforms with poor GPU performance, add `"CONFIG+=gpuslow"` to prefer direct KMSDRM rendering over GL/Vulkan renderers. Direct KMSDRM rendering can use dedicated YUV/RGB conversion and scaling hardware rather than slower GPU shaders for these operations.
+#### All Platforms
+- **Qt 6.7+** (Qt 6.8+ recommended)
+- **FFmpeg 4.0+**
+- **SDL2** and **SDL2_ttf**
+- **OpenSSL**
+- **Opus codec**
 
-## Contribute
-1. Fork us
-2. Write code
-3. Send Pull Requests
+#### Platform-Specific Requirements
 
-Check out our [website](https://moonlight-stream.org) for project links and information.
+**Windows:**
+- Visual Studio 2022 with MSVC
+- 7-Zip (for packaging)
+
+**macOS:**
+- Xcode 14+
+- Homebrew: `brew install qt6 ffmpeg opus sdl2 sdl2_ttf create-dmg`
+
+**Linux:**
+```bash
+# Ubuntu/Debian
+sudo apt install qt6-base-dev qt6-declarative-dev libqt6svg6-dev \
+  qml6-module-qtquick-controls qml6-module-qtquick-templates \
+  qml6-module-qtquick-layouts libegl1-mesa-dev libgl1-mesa-dev \
+  libopus-dev libsdl2-dev libsdl2-ttf-dev libssl-dev \
+  libavcodec-dev libavformat-dev libswscale-dev libva-dev \
+  libvdpau-dev libxkbcommon-dev wayland-protocols libdrm-dev
+
+# Fedora/RHEL
+sudo dnf install qt6-qtbase-devel qt6-qtdeclarative-devel \
+  qt6-qtsvg-devel openssl-devel SDL2-devel SDL2_ttf-devel \
+  ffmpeg-devel libva-devel libvdpau-devel opus-devel \
+  pulseaudio-libs-devel alsa-lib-devel libdrm-devel
+```
+
+### Build Commands
+```bash
+# Initialize submodules
+git submodule update --init --recursive
+
+# Configure and build
+qmake6 moonlight-qt.pro CONFIG+=release
+make -j$(nproc)  # Linux
+make -j$(sysctl -n hw.ncpu)  # macOS
+nmake  # Windows
+```
+
+## 🎮 Features Comparison
+
+| Feature | Moonlight Qt | Artemis Qt |
+|---------|--------------|------------|
+| GameStream/Sunshine Support | ✅ | ✅ |
+| Hardware Video Decoding | ✅ | ✅ |
+| HDR Streaming | ✅ | ✅ |
+| 7.1 Surround Sound | ✅ | ✅ |
+| Multi-touch Support | ✅ | ✅ |
+| **Clipboard Sync** | ❌ | ✅ |
+| **Server Commands** | ❌ | ✅ |
+| **OTP Pairing** | ❌ | ✅ |
+| **Fractional Refresh Rates** | ❌ | 🚧 |
+| **Resolution Scaling** | ❌ | 🚧 |
+| **Virtual Display Control** | ❌ | 🚧 |
+| **Custom App Ordering** | ❌ | 📋 |
+| **Permission Viewing** | ❌ | 📋 |
+| **Input-Only Mode** | ❌ | 📋 |
+
+Legend: ✅ Available, 🚧 In Development, 📋 Planned
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how to get started:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes** and test thoroughly
+4. **Commit your changes**: `git commit -m 'Add amazing feature'`
+5. **Push to the branch**: `git push origin feature/amazing-feature`
+6. **Open a Pull Request**
+
+### Development Guidelines
+- Follow the existing code style
+- Add tests for new features
+- Update documentation as needed
+- Test on multiple platforms when possible
+
+## 🔗 Related Projects
+
+- **[Artemis Android](https://github.com/ClassicOldSong/moonlight-android)** - The original Artemis for Android
+- **[Apollo Server](https://github.com/ClassicOldSong/Apollo)** - Enhanced GameStream server
+- **[Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt)** - The upstream project
+- **[Sunshine](https://github.com/LizardByte/Sunshine)** - Open-source GameStream server
+
+## 📄 License
+
+This project is licensed under the GPL v3 License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **[ClassicOldSong](https://github.com/ClassicOldSong)** - Creator of Artemis Android and Apollo server
+- **[Moonlight Team](https://github.com/moonlight-stream)** - For the excellent foundation
+- **[LizardByte](https://github.com/LizardByte)** - For the Sunshine server
+- **All contributors** who help make this project better
+
+---
+
+**Made with ❤️ for the gaming community**

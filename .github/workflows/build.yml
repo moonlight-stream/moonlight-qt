@@ -162,6 +162,140 @@ jobs:
         name: artemis-linux
         path: artemis-linux.tar.gz
 
+  build-appimage:
+    name: AppImage Build
+    runs-on: ubuntu-20.04  # Use older Ubuntu for better compatibility
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: ${{ env.QT_VERSION }}
+        host: 'linux'
+        target: 'desktop'
+        modules: 'qtmultimedia'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libegl1-mesa-dev libgl1-mesa-dev libopus-dev libsdl2-dev \
+          libsdl2-ttf-dev libssl-dev libavcodec-dev libavformat-dev \
+          libswscale-dev libva-dev libvdpau-dev libxkbcommon-dev \
+          wayland-protocols libdrm-dev nasm libgbm-dev \
+          libfreetype6-dev libasound2-dev libdbus-1-dev \
+          libgles2-mesa-dev libglu1-mesa-dev libibus-1.0-dev \
+          libpulse-dev libudev-dev libx11-dev libxcursor-dev \
+          libxext-dev libxi-dev libxinerama-dev libxrandr-dev \
+          libxss-dev libxt-dev libxv-dev libxxf86vm-dev \
+          libxcb-dri3-dev libx11-xcb-dev file wget
+    
+    - name: Build
+      run: |
+        export PATH="$Qt6_DIR/bin:$PATH"
+        qmake6 moonlight-qt.pro CONFIG+=release
+        make -j$(nproc)
+    
+    - name: Create AppImage
+      run: |
+        # Download linuxdeploy and Qt plugin
+        wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+        wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+        chmod +x linuxdeploy*.AppImage
+        
+        # Create AppDir structure
+        mkdir -p AppDir/usr/bin
+        cp app/moonlight AppDir/usr/bin/artemis
+        
+        # Create desktop file
+        mkdir -p AppDir/usr/share/applications
+        cat > AppDir/usr/share/applications/artemis.desktop << EOF
+        [Desktop Entry]
+        Name=Artemis
+        Comment=Game streaming client for Apollo/Sunshine
+        Exec=artemis
+        Icon=artemis
+        Terminal=false
+        Type=Application
+        Categories=Game;Network;
+        EOF
+        
+        # Create icon (placeholder - you'll want to replace with actual Artemis icon)
+        mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+        cp app/res/moonlight.svg AppDir/usr/share/icons/hicolor/256x256/apps/artemis.svg
+        
+        # Build AppImage
+        export QML_SOURCES_PATHS=app/gui
+        ./linuxdeploy-x86_64.AppImage --appdir AppDir --plugin qt --output appimage
+        
+        # Rename to artemis
+        mv Artemis*.AppImage artemis-linux.AppImage
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artemis-appimage
+        path: artemis-linux.AppImage
+
+  build-flatpak:
+    name: Flatpak Build
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
+    
+    - name: Setup Flatpak
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y flatpak flatpak-builder
+        sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        sudo flatpak install -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08 org.kde.Platform//6.6 org.kde.Sdk//6.6
+    
+    - name: Create Flatpak manifest
+      run: |
+        cat > com.artemis.Artemis.yml << EOF
+        app-id: com.artemis.Artemis
+        runtime: org.kde.Platform
+        runtime-version: '6.6'
+        sdk: org.kde.Sdk
+        command: artemis
+        finish-args:
+          - --share=ipc
+          - --socket=x11
+          - --socket=wayland
+          - --socket=pulseaudio
+          - --device=all
+          - --share=network
+          - --filesystem=home
+        modules:
+          - name: artemis
+            buildsystem: qmake
+            config-opts:
+              - CONFIG+=release
+            sources:
+              - type: dir
+                path: .
+        EOF
+    
+    - name: Build Flatpak
+      run: |
+        flatpak-builder --force-clean --repo=repo build-dir com.artemis.Artemis.yml
+        flatpak build-bundle repo artemis.flatpak com.artemis.Artemis
+    
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artemis-flatpak
+        path: artemis.flatpak
+
   build-steamdeck:
     name: Steam Deck Build
     runs-on: ubuntu-22.04
@@ -195,20 +329,9 @@ jobs:
           libxss-dev libxt-dev libxv-dev libxxf86vm-dev \
           libxcb-dri3-dev libx11-xcb-dev
     
-    - name: Clean any existing build
-      run: |
-        rm -f .qmake.stash .qmake.cache
-        find . -name "Makefile*" -delete
-        # Clean submodule build artifacts
-        rm -rf moonlight-common-c/Makefile* moonlight-common-c/.qmake.stash
-        rm -rf qmdnsengine/Makefile* qmdnsengine/.qmake.stash 
-        rm -rf h264bitstream/Makefile* h264bitstream/.qmake.stash
-        rm -rf app/Makefile* app/.qmake.stash
-    
     - name: Build for Steam Deck
       run: |
         export PATH="$Qt6_DIR/bin:$PATH"
-        export QMAKE="$Qt6_DIR/bin/qmake6"
         # Configure for Steam Deck specific optimizations
         qmake6 moonlight-qt.pro CONFIG+=release CONFIG+=embedded CONFIG+=gpuslow
         make -j$(nproc)
@@ -217,6 +340,7 @@ jobs:
       run: |
         mkdir -p steamdeck-package
         cp app/moonlight steamdeck-package/artemis
+        
         # Create desktop file for Steam Deck
         cat > steamdeck-package/artemis.desktop << EOF
         [Desktop Entry]
@@ -226,8 +350,35 @@ jobs:
         Icon=artemis
         Terminal=false
         Type=Application
-        Categories=Game;
+        Categories=Game;Network;
         EOF
+        
+        # Create installation script
+        cat > steamdeck-package/install.sh << 'EOF'
+        #!/bin/bash
+        # Artemis Steam Deck Installation Script
+        
+        INSTALL_DIR="$HOME/.local/share/artemis"
+        DESKTOP_DIR="$HOME/.local/share/applications"
+        
+        echo "Installing Artemis for Steam Deck..."
+        
+        # Create directories
+        mkdir -p "$INSTALL_DIR"
+        mkdir -p "$DESKTOP_DIR"
+        
+        # Copy binary
+        cp artemis "$INSTALL_DIR/"
+        chmod +x "$INSTALL_DIR/artemis"
+        
+        # Install desktop file
+        sed "s|Exec=artemis|Exec=$INSTALL_DIR/artemis|g" artemis.desktop > "$DESKTOP_DIR/artemis.desktop"
+        
+        echo "Installation complete!"
+        echo "You can now add Artemis as a non-Steam game in Steam."
+        EOF
+        chmod +x steamdeck-package/install.sh
+        
         tar -czf artemis-steamdeck.tar.gz -C steamdeck-package .
     
     - name: Upload Artifacts
@@ -240,7 +391,7 @@ jobs:
   release:
     name: Create Release
     if: github.event_name == 'release'
-    needs: [build-windows, build-macos, build-linux, build-steamdeck]
+    needs: [build-windows, build-macos, build-linux, build-appimage, build-flatpak, build-steamdeck]
     runs-on: ubuntu-latest
     
     steps:
@@ -256,6 +407,8 @@ jobs:
           artifacts/artemis-windows/*
           artifacts/artemis-macos/*
           artifacts/artemis-linux/*
+          artifacts/artemis-appimage/*
+          artifacts/artemis-flatpak/*
           artifacts/artemis-steamdeck/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
