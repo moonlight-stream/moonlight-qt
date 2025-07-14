@@ -74,9 +74,21 @@ jobs:
       run: |
         brew install create-dmg ffmpeg opus sdl2 sdl2_ttf
     
+    - name: Clean any existing build
+      run: |
+        rm -f .qmake.stash .qmake.cache
+        find . -name "Makefile*" -delete
+        # Clean submodule build artifacts
+        rm -rf moonlight-common-c/Makefile* moonlight-common-c/.qmake.stash
+        rm -rf qmdnsengine/Makefile* qmdnsengine/.qmake.stash 
+        rm -rf h264bitstream/Makefile* h264bitstream/.qmake.stash
+        rm -rf soundio/Makefile* soundio/.qmake.stash
+        rm -rf app/Makefile* app/.qmake.stash
+    
     - name: Build
       run: |
         export PATH="$Qt6_DIR/bin:$PATH"
+        export QMAKE="$Qt6_DIR/bin/qmake6"
         qmake6 moonlight-qt.pro CONFIG+=release CONFIG+=sdk_no_version_check
         make -j$(sysctl -n hw.ncpu)
     
@@ -92,7 +104,7 @@ jobs:
 
   build-linux:
     name: Linux Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     
     steps:
     - name: Checkout
@@ -123,9 +135,20 @@ jobs:
           libxss-dev libxt-dev libxv-dev libxxf86vm-dev \
           libxcb-dri3-dev libx11-xcb-dev
     
+    - name: Clean any existing build
+      run: |
+        rm -f .qmake.stash .qmake.cache
+        find . -name "Makefile*" -delete
+        # Clean submodule build artifacts
+        rm -rf moonlight-common-c/Makefile* moonlight-common-c/.qmake.stash
+        rm -rf qmdnsengine/Makefile* qmdnsengine/.qmake.stash 
+        rm -rf h264bitstream/Makefile* h264bitstream/.qmake.stash
+        rm -rf app/Makefile* app/.qmake.stash
+    
     - name: Build
       run: |
         export PATH="$Qt6_DIR/bin:$PATH"
+        export QMAKE="$Qt6_DIR/bin/qmake6"
         qmake6 moonlight-qt.pro CONFIG+=release
         make -j$(nproc)
     
@@ -141,7 +164,7 @@ jobs:
 
   build-steamdeck:
     name: Steam Deck Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     
     steps:
     - name: Checkout
@@ -172,9 +195,20 @@ jobs:
           libxss-dev libxt-dev libxv-dev libxxf86vm-dev \
           libxcb-dri3-dev libx11-xcb-dev
     
+    - name: Clean any existing build
+      run: |
+        rm -f .qmake.stash .qmake.cache
+        find . -name "Makefile*" -delete
+        # Clean submodule build artifacts
+        rm -rf moonlight-common-c/Makefile* moonlight-common-c/.qmake.stash
+        rm -rf qmdnsengine/Makefile* qmdnsengine/.qmake.stash 
+        rm -rf h264bitstream/Makefile* h264bitstream/.qmake.stash
+        rm -rf app/Makefile* app/.qmake.stash
+    
     - name: Build for Steam Deck
       run: |
         export PATH="$Qt6_DIR/bin:$PATH"
+        export QMAKE="$Qt6_DIR/bin/qmake6"
         # Configure for Steam Deck specific optimizations
         qmake6 moonlight-qt.pro CONFIG+=release CONFIG+=embedded CONFIG+=gpuslow
         make -j$(nproc)

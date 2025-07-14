@@ -29,9 +29,29 @@ jobs:
       run: |
         brew install ffmpeg opus sdl2 sdl2_ttf
     
+    - name: Clean any existing build
+      run: |
+        rm -f .qmake.stash .qmake.cache
+        find . -name "Makefile*" -delete
+        # Clean submodule build artifacts
+        rm -rf moonlight-common-c/Makefile* moonlight-common-c/.qmake.stash
+        rm -rf qmdnsengine/Makefile* qmdnsengine/.qmake.stash 
+        rm -rf h264bitstream/Makefile* h264bitstream/.qmake.stash
+        rm -rf soundio/Makefile* soundio/.qmake.stash
+        rm -rf app/Makefile* app/.qmake.stash
+    
+    - name: Debug Qt setup
+      run: |
+        echo "Qt6_DIR: $Qt6_DIR"
+        echo "PATH: $PATH"
+        which qmake6 || echo "qmake6 not found in PATH"
+        ls -la "$Qt6_DIR/bin/" || echo "Qt6_DIR/bin not found"
+    
     - name: Build
       run: |
         export PATH="$Qt6_DIR/bin:$PATH"
+        export QMAKE="$Qt6_DIR/bin/qmake6"
+        echo "Using qmake at: $(which qmake6)"
         qmake6 moonlight-qt.pro CONFIG+=release CONFIG+=sdk_no_version_check
         make -j$(sysctl -n hw.ncpu)
     
@@ -42,7 +62,7 @@ jobs:
 
   test-linux:
     name: Test Linux Build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     
     steps:
     - name: Checkout
@@ -67,9 +87,20 @@ jobs:
           libswscale-dev libva-dev libvdpau-dev libxkbcommon-dev \
           wayland-protocols libdrm-dev
     
+    - name: Clean any existing build
+      run: |
+        rm -f .qmake.stash .qmake.cache
+        find . -name "Makefile*" -delete
+        # Clean submodule build artifacts
+        rm -rf moonlight-common-c/Makefile* moonlight-common-c/.qmake.stash
+        rm -rf qmdnsengine/Makefile* qmdnsengine/.qmake.stash 
+        rm -rf h264bitstream/Makefile* h264bitstream/.qmake.stash
+        rm -rf app/Makefile* app/.qmake.stash
+    
     - name: Build
       run: |
         export PATH="$Qt6_DIR/bin:$PATH"
+        export QMAKE="$Qt6_DIR/bin/qmake6"
         qmake6 moonlight-qt.pro CONFIG+=release
         make -j$(nproc)
     
