@@ -9,7 +9,7 @@ on:
     types: [ published ]
 
 env:
-  QT_VERSION: '6.6.3'
+  QT_VERSION: '6.5.3'
 
 jobs:
   build-windows:
@@ -118,7 +118,7 @@ jobs:
         version: ${{ env.QT_VERSION }}
         host: 'linux'
         target: 'desktop'
-        modules: 'qtmultimedia qtwayland'
+        modules: 'qtmultimedia'
     
     - name: Install dependencies
       run: |
@@ -178,7 +178,7 @@ jobs:
         version: ${{ env.QT_VERSION }}
         host: 'linux'
         target: 'desktop'
-        modules: 'qtmultimedia qtwayland'
+        modules: 'qtmultimedia'
     
     - name: Install dependencies
       run: |
