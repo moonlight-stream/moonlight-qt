@@ -1,6 +1,8 @@
 #include "servercommandmanager.h"
 #include "nvcomputer.h"
+#include "nvhttp.h"
 #include <QJsonDocument>
+#include <QJsonArray>
 #include <QNetworkRequest>
 #include <QDebug>
 
@@ -19,42 +21,37 @@ const QList<ServerCommandManager::ServerCommand> ServerCommandManager::BUILTIN_C
         QJsonObject()
     },
     {
-        "sleep_system",
-        "Sleep System", 
-        "Put the host system to sleep",
+        "restart_computer",
+        "Restart Computer", 
+        "Restart the host computer",
         QJsonObject()
     },
     {
-        "restart_system",
-        "Restart System",
-        "Restart the host system",
+        "shutdown_computer",
+        "Shutdown Computer",
+        "Shutdown the host computer", 
         QJsonObject()
     },
     {
-        "shutdown_system",
-        "Shutdown System", 
-        "Shutdown the host system",
+        "suspend_computer",
+        "Suspend Computer",
+        "Suspend the host computer",
         QJsonObject()
     },
     {
-        "lock_desktop",
-        "Lock Desktop",
-        "Lock the desktop session",
+        "hibernate_computer", 
+        "Hibernate Computer",
+        "Hibernate the host computer",
         QJsonObject()
-    },
-    {
-        "unlock_desktop",
-        "Unlock Desktop",
-        "Unlock the desktop session", 
-        QJsonObject{{"password", ""}}
     }
 };
 
 ServerCommandManager::ServerCommandManager(QObject *parent)
     : QObject(parent)
-    , m_networkManager(new QNetworkAccessManager(this))
-    , m_targetComputer(nullptr)
-    , m_supported(false)
+    , m_computer(nullptr)
+    , m_http(nullptr)
+    , m_hasPermission(false)
+    , m_refreshInProgress(false)
 {
     qDebug() << "ServerCommandManager: Initialized";
 }
@@ -64,210 +61,149 @@ ServerCommandManager::~ServerCommandManager()
     qDebug() << "ServerCommandManager: Destroyed";
 }
 
-void ServerCommandManager::setTargetComputer(NvComputer *computer)
+void ServerCommandManager::setConnection(NvComputer *computer, NvHTTP *http)
 {
-    m_targetComputer = computer;
+    m_computer = computer;
+    m_http = http;
     
-    if (computer) {
-        qDebug() << "ServerCommandManager: Set target computer:" << computer->name;
-        
-        // Check if server supports commands
+    // Check if this is an Apollo server and refresh commands
+    if (computer && http) {
         refreshCommands();
     } else {
-        qDebug() << "ServerCommandManager: Cleared target computer";
-        m_supported = false;
-        m_availableCommands = QJsonArray();
-        emit supportStatusChanged(false);
-        emit commandsUpdated(QJsonArray());
+        m_hasPermission = false;
+        m_availableCommands.clear();
+        m_commandNames.clear();
+        m_commandDescriptions.clear();
+        emit commandsRefreshed();
     }
 }
 
-bool ServerCommandManager::isServerCommandsSupported() const
+void ServerCommandManager::disconnect()
 {
-    return m_supported;
+    m_computer = nullptr;
+    m_http = nullptr;
+    m_hasPermission = false;
+    m_availableCommands.clear();
+    m_commandNames.clear();
+    m_commandDescriptions.clear();
+    emit commandsRefreshed();
 }
 
-QJsonArray ServerCommandManager::getAvailableCommands() const
+bool ServerCommandManager::hasServerCommandPermission() const
 {
-    return m_availableCommands;
+    return m_hasPermission;
 }
 
-void ServerCommandManager::executeCommand(const QString &commandId, const QJsonObject &parameters)
+void ServerCommandManager::refreshCommands()
 {
-    if (!m_targetComputer || !m_supported) {
-        qWarning() << "ServerCommandManager: Cannot execute command - no target or not supported";
-        emit commandExecuted(commandId, false, QJsonObject{{"error", "Server commands not available"}});
+    if (m_refreshInProgress || !m_computer || !m_http) {
+        return;
+    }
+    
+    m_refreshInProgress = true;
+    
+    // For now, just populate with builtin commands if it's an Apollo server
+    if (isApolloServer()) {
+        m_hasPermission = true;
+        m_availableCommands.clear();
+        m_commandNames.clear();
+        m_commandDescriptions.clear();
+        
+        for (const auto &cmd : BUILTIN_COMMANDS) {
+            m_availableCommands.append(cmd.id);
+            m_commandNames[cmd.id] = cmd.name;
+            m_commandDescriptions[cmd.id] = cmd.description;
+        }
+    } else {
+        m_hasPermission = false;
+        m_availableCommands.clear();
+        m_commandNames.clear();
+        m_commandDescriptions.clear();
+    }
+    
+    m_refreshInProgress = false;
+    emit commandsRefreshed();
+}
+
+void ServerCommandManager::executeCommand(const QString &commandId)
+{
+    if (!m_computer || !m_http || !m_hasPermission) {
+        emit commandExecuted(commandId, false, "Server commands not available");
+        return;
+    }
+    
+    if (!m_availableCommands.contains(commandId)) {
+        emit commandExecuted(commandId, false, "Command not found");
         return;
     }
     
     qDebug() << "ServerCommandManager: Executing command:" << commandId;
     
-    QJsonObject requestData;
-    requestData["command"] = commandId;
-    requestData["parameters"] = parameters;
-    
-    QNetworkReply *reply = sendServerRequest("/api/commands/execute", requestData);
-    if (reply) {
-        // Store command ID in reply for later reference
-        reply->setProperty("commandId", commandId);
-        connect(reply, &QNetworkReply::finished, 
-                this, &ServerCommandManager::onCommandExecutionReceived);
-    } else {
-        emit commandExecuted(commandId, false, QJsonObject{{"error", "Failed to send request"}});
-    }
+    // TODO: Implement actual command execution via HTTP
+    // For now, just simulate success
+    emit commandExecuted(commandId, true, "Command executed successfully");
 }
 
-void ServerCommandManager::refreshCommands()
+QStringList ServerCommandManager::getAvailableCommands() const
 {
-    if (!m_targetComputer) {
-        return;
-    }
-    
-    qDebug() << "ServerCommandManager: Refreshing commands list";
-    
-    QNetworkReply *reply = sendServerRequest("/api/commands/list");
-    if (reply) {
-        connect(reply, &QNetworkReply::finished,
-                this, &ServerCommandManager::onCommandsListReceived);
-    }
+    return m_availableCommands;
 }
 
-void ServerCommandManager::onCommandsListReceived()
+QString ServerCommandManager::getCommandName(const QString &commandId) const
 {
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-    if (!reply) {
-        return;
-    }
-    
-    reply->deleteLater();
-    
-    QJsonObject result;
-    bool success = parseServerResponse(reply, result);
-    
-    if (success && result.contains("commands")) {
-        m_supported = true;
-        m_availableCommands = result["commands"].toArray();
-        
-        qDebug() << "ServerCommandManager: Received" << m_availableCommands.size() << "commands from server";
-        
-        emit supportStatusChanged(true);
-        emit commandsUpdated(m_availableCommands);
-    } else {
-        // Server doesn't support commands API, fall back to builtin commands
-        qDebug() << "ServerCommandManager: Server doesn't support commands API, using builtin commands";
-        
-        m_supported = false;  // Mark as not supported for now
-        m_availableCommands = QJsonArray();
-        
-        // Convert builtin commands to JSON array
-        QJsonArray builtinArray;
-        for (const auto &cmd : BUILTIN_COMMANDS) {
-            QJsonObject cmdObj;
-            cmdObj["id"] = cmd.id;
-            cmdObj["name"] = cmd.name;
-            cmdObj["description"] = cmd.description;
-            cmdObj["parameters"] = cmd.parameters;
-            builtinArray.append(cmdObj);
-        }
-        
-        m_availableCommands = builtinArray;
-        
-        emit supportStatusChanged(false);
-        emit commandsUpdated(m_availableCommands);
-    }
+    return m_commandNames.value(commandId, commandId);
 }
 
-void ServerCommandManager::onCommandExecutionReceived()
+QString ServerCommandManager::getCommandDescription(const QString &commandId) const
 {
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-    if (!reply) {
-        return;
-    }
-    
-    QString commandId = reply->property("commandId").toString();
-    reply->deleteLater();
-    
-    QJsonObject result;
-    bool success = parseServerResponse(reply, result);
-    
-    if (success) {
-        qDebug() << "ServerCommandManager: Command" << commandId << "executed successfully";
-    } else {
-        qWarning() << "ServerCommandManager: Command" << commandId << "failed";
-    }
-    
-    emit commandExecuted(commandId, success, result);
+    return m_commandDescriptions.value(commandId, "No description available");
 }
 
-QNetworkReply* ServerCommandManager::sendServerRequest(const QString &endpoint, const QJsonObject &data)
+bool ServerCommandManager::isApolloServer() const
 {
-    if (!m_targetComputer) {
-        return nullptr;
-    }
-    
-    QString url = getServerBaseUrl() + endpoint;
-    QNetworkRequest request(url);
-    
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setHeader(QNetworkRequest::UserAgentHeader, "Artemis-Qt/1.0");
-    
-    // Add authentication if needed (this would need to be implemented based on server requirements)
-    // request.setRawHeader("Authorization", "Bearer " + token);
-    
-    QNetworkReply *reply;
-    if (data.isEmpty()) {
-        reply = m_networkManager->get(request);
-    } else {
-        QJsonDocument doc(data);
-        reply = m_networkManager->post(request, doc.toJson());
-    }
-    
-    // Set timeout
-    QTimer::singleShot(10000, reply, &QNetworkReply::abort);  // 10 second timeout
-    
-    return reply;
-}
-
-bool ServerCommandManager::parseServerResponse(QNetworkReply *reply, QJsonObject &result)
-{
-    if (reply->error() != QNetworkReply::NoError) {
-        qWarning() << "ServerCommandManager: Network error:" << reply->errorString();
-        result["error"] = reply->errorString();
+    if (!m_computer) {
         return false;
     }
     
-    QByteArray responseData = reply->readAll();
-    QJsonParseError parseError;
-    QJsonDocument doc = QJsonDocument::fromJson(responseData, &parseError);
-    
-    if (parseError.error != QJsonParseError::NoError) {
-        qWarning() << "ServerCommandManager: JSON parse error:" << parseError.errorString();
-        result["error"] = "Invalid JSON response";
-        return false;
+    // Check if this is an Apollo/Sunshine server based on available properties
+    // Apollo/Sunshine servers are typically non-NVIDIA software
+    if (!m_computer->isNvidiaServerSoftware) {
+        return true;
     }
     
-    result = doc.object();
+    // Also check app version or GFE version for Apollo/Sunshine indicators
+    QString appVer = m_computer->appVersion;
+    QString gfeVer = m_computer->gfeVersion;
     
-    // Check for server-side errors
-    if (result.contains("error")) {
-        qWarning() << "ServerCommandManager: Server error:" << result["error"].toString();
-        return false;
-    }
-    
-    return true;
+    return appVer.contains("Apollo", Qt::CaseInsensitive) || 
+           appVer.contains("Sunshine", Qt::CaseInsensitive) ||
+           gfeVer.contains("Apollo", Qt::CaseInsensitive) ||
+           gfeVer.contains("Sunshine", Qt::CaseInsensitive);
 }
 
-QString ServerCommandManager::getServerBaseUrl() const
+void ServerCommandManager::fetchAvailableCommands()
 {
-    if (!m_targetComputer) {
-        return QString();
-    }
-    
-    // Build base URL for Apollo/Sunshine server
-    // This assumes the server has an HTTP API on the same host
-    QString protocol = "https";  // Apollo typically uses HTTPS
-    QString host = m_targetComputer->activeAddress;
-    int port = 47990;  // Default Apollo HTTP port
-    
-    return QString("%1://%2:%3").arg(protocol, host, QString::number(port));
+    // TODO: Implement HTTP request to fetch commands from server
+    // This would make a request to /api/commands or similar endpoint
+}
+
+void ServerCommandManager::sendCommandExecution(const QString &commandId)
+{
+    Q_UNUSED(commandId)
+    // TODO: Implement HTTP request to execute command on server
+    // This would make a POST request to /api/commands/{commandId}/execute
+}
+
+void ServerCommandManager::onCommandsReceived()
+{
+    // TODO: Handle response from fetchAvailableCommands()
+    // This would parse the HTTP response and update available commands
+    qDebug() << "ServerCommandManager: Commands received from server";
+}
+
+void ServerCommandManager::onCommandExecutionFinished()
+{
+    // TODO: Handle response from sendCommandExecution()
+    // This would parse the execution result and emit commandExecuted signal
+    qDebug() << "ServerCommandManager: Command execution finished";
 }

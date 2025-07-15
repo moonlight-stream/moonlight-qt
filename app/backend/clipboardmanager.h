@@ -9,6 +9,10 @@
 class NvComputer;
 class NvHTTP;
 
+// Declare opaque pointers for Qt's meta-object system
+Q_DECLARE_OPAQUE_POINTER(NvComputer*)
+Q_DECLARE_OPAQUE_POINTER(NvHTTP*)
+
 /**
  * @brief Manages clipboard synchronization between client and server
  * 

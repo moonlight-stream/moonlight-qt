@@ -3,9 +3,14 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QAbstractListModel>
+#include <QJsonObject>
 
 class NvComputer;
 class NvHTTP;
+
+// Declare opaque pointers for Qt's meta-object system
+Q_DECLARE_OPAQUE_POINTER(NvComputer*)
+Q_DECLARE_OPAQUE_POINTER(NvHTTP*)
 
 /**
  * @brief Manages server commands functionality with Apollo servers
@@ -20,6 +25,14 @@ class ServerCommandManager : public QObject
     QML_ELEMENT
 
 public:
+    // Server command structure (matches Android ServerCommand)
+    struct ServerCommand {
+        QString id;
+        QString name;
+        QString description;
+        QJsonObject parameters;
+    };
+
     explicit ServerCommandManager(QObject *parent = nullptr);
     ~ServerCommandManager();
 
@@ -60,6 +73,9 @@ private:
     void sendCommandExecution(const QString &commandId);
 
 private:
+    // Builtin commands (matches Android implementation)
+    static const QList<ServerCommand> BUILTIN_COMMANDS;
+    
     NvComputer *m_computer;
     NvHTTP *m_http;
     

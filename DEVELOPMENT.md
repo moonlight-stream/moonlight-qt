@@ -178,12 +178,23 @@ This document tracks our progress on implementing Artemis features in the Qt cli
 - 🔄 **Ready for Moonlight Qt integration**
 
 ### Next Steps
-1. Extend NvHTTP class with clipboard endpoints (`sendClipboardContent`, `getClipboardContent`)
-2. Extend NvPairingManager with OTP support (add `&otpauth=` parameter)
-3. Extend NvComputer with Apollo permission tracking (`apolloOperations` field)
-4. Integrate managers with existing session management
-5. Create UI components for settings and dialogs
-6. Test with actual Apollo server
+1. **Create feature branch**: `feature/nvhttp-clipboard-endpoints`
+2. Extend NvHTTP class with clipboard endpoints (`sendClipboardContent`, `getClipboardContent`)
+3. **Create feature branch**: `feature/nvpairing-otp-support`
+4. Extend NvPairingManager with OTP support (add `&otpauth=` parameter)
+5. **Create feature branch**: `feature/nvcomputer-apollo-permissions`
+6. Extend NvComputer with Apollo permission tracking (`apolloOperations` field)
+7. **Create feature branch**: `feature/session-manager-integration`
+8. Integrate managers with existing session management
+9. **Create feature branch**: `feature/artemis-ui-components`
+10. Create UI components for settings and dialogs
+11. **Create feature branch**: `feature/apollo-server-testing`
+12. Test with actual Apollo server
+
+### Git Workflow
+- **Feature branches**: `feature/*` → PR to `development` → PR to `main`
+- **Bug fixes**: `fix/*` → PR to `development` → PR to `main`
+- **Hotfixes**: `hotfix/*` → PR to `main` (critical only)
 
 ## 🛠️ Technical Architecture
 

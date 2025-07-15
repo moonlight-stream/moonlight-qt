@@ -29,6 +29,50 @@ The core Artemis protocol implementations are now complete and ready for integra
 ### 🔄 **Next: Integration Phase**
 Ready to integrate with existing Moonlight Qt components.
 
+## 🌿 Git Workflow & Branching Strategy
+
+### Branch Structure
+- **`main`** - Production-ready releases only
+- **`development`** - Integration branch for completed features
+- **`feature/*`** - Individual feature development branches
+- **`fix/*`** - Bug fix branches
+- **`hotfix/*`** - Critical production fixes
+
+### Development Workflow
+```bash
+# 1. Create feature branch from development
+git checkout development
+git pull origin development
+git checkout -b feature/clipboard-ui-integration
+
+# 2. Develop and commit changes
+git add .
+git commit -m "feat: add clipboard sync UI components"
+
+# 3. Push feature branch
+git push origin feature/clipboard-ui-integration
+
+# 4. Create PR: feature/clipboard-ui-integration → development
+# 5. After review and merge, create PR: development → main
+```
+
+### Branch Naming Convention
+- `feature/clipboard-ui-integration`
+- `feature/otp-pairing-dialog`
+- `feature/server-commands-menu`
+- `fix/clipboard-sync-loop`
+- `hotfix/critical-crash-fix`
+
+### Commit Message Format
+```
+type(scope): description
+
+feat(clipboard): add smart sync settings UI
+fix(otp): resolve PIN validation edge case
+docs(readme): update installation instructions
+test(clipboard): add unit tests for sync logic
+```
+
 ---
 
 ## 🔍 Understanding Artemis Features

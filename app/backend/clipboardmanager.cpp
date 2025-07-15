@@ -1,7 +1,7 @@
 #include "clipboardmanager.h"
 #include "nvcomputer.h"
 #include "nvhttp.h"
-#include <QApplication>
+#include <QGuiApplication>
 #include <QMimeData>
 #include <QDebug>
 #include <QNetworkReply>
@@ -14,7 +14,7 @@ const QString ClipboardManager::CLIPBOARD_IDENTIFIER = "artemis_qt_clipboard_syn
 
 ClipboardManager::ClipboardManager(QObject *parent)
     : QObject(parent)
-    , m_clipboard(QApplication::clipboard())
+    , m_clipboard(QGuiApplication::clipboard())
     , m_computer(nullptr)
     , m_http(nullptr)
     , m_smartSyncEnabled(false)
