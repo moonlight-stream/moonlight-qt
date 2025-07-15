@@ -583,7 +583,9 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0),
-      m_DropAudioEndTime(0)
+      m_DropAudioEndTime(0),
+      m_MicrophoneCapture(nullptr),
+      m_MicrophoneEnabled(false)
 {
 }
 
@@ -1778,6 +1780,11 @@ void Session::execInternal()
         return;
     }
 
+    // Initialize microphone capture
+    if (!initializeMicrophoneCapture()) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Microphone initialization failed, continuing without microphone");
+    }
+
     // Wait for any old session to finish cleanup
     s_ActiveSessionSemaphore.acquire();
 
@@ -1816,6 +1823,15 @@ void Session::execInternal()
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
+    }
+
+    // Start microphone capture if enabled and initialized
+    if (m_MicrophoneCapture && m_MicrophoneEnabled) {
+        if (m_MicrophoneCapture->start()) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Microphone streaming started");
+        } else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to start microphone streaming");
+        }
     }
 
     int x, y, width, height;
@@ -2367,6 +2383,13 @@ DispatchDeferredCleanup:
     delete m_InputHandler;
     m_InputHandler = nullptr;
 
+    // Stop and cleanup microphone capture
+    if (m_MicrophoneCapture) {
+        m_MicrophoneCapture->stop();
+        delete m_MicrophoneCapture;
+        m_MicrophoneCapture = nullptr;
+    }
+
     // Destroy the decoder, since this must be done on the main thread
     // NB: This must happen before LiStopConnection() for pull-based
     // decoders.
@@ -2414,5 +2437,35 @@ DispatchDeferredCleanup:
     // When it is complete, it will release our s_ActiveSessionSemaphore
     // reference.
     QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
+}
+
+bool Session::initializeMicrophoneCapture()
+{
+    // Check if microphone is enabled in preferences
+    if (!m_Preferences->enableMicrophone) {
+        return true; // Not an error, just disabled
+    }
+
+    // Create microphone capture instance
+    m_MicrophoneCapture = new MicrophoneCapture(this);
+    
+    // Calculate microphone stream port (base port + 13)
+    QString serverAddress = m_Computer->activeAddress.address();
+    int micPort = 47987 + 13; // Port 48000 by default
+    
+    // Initialize microphone with stream configuration
+    if (!m_MicrophoneCapture->initialize(serverAddress, micPort, m_StreamConfig)) {
+        delete m_MicrophoneCapture;
+        m_MicrophoneCapture = nullptr;
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to initialize microphone capture");
+        return false;
+    }
+    
+    // Enable microphone based on preferences
+    m_MicrophoneCapture->setEnabled(m_Preferences->enableMicrophone);
+    m_MicrophoneEnabled = m_Preferences->enableMicrophone;
+    
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Microphone capture initialized successfully");
+    return true;
 }
 
