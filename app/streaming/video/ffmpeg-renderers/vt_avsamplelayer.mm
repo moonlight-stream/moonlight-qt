@@ -506,7 +506,7 @@ public:
                 break;
             }
 
-            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(type);
+            SDL_Color color = Session::get()->getOverlayManager().getOverlayTextColor();
             [m_OverlayTextFields[type] setTextColor:[NSColor colorWithSRGBRed:color.r / 255.0 green:color.g / 255.0 blue:color.b / 255.0 alpha:color.a / 255.0]];
             [m_OverlayTextFields[type] setFont:[NSFont messageFontOfSize:Session::get()->getOverlayManager().getOverlayFontSize(type)]];
 
