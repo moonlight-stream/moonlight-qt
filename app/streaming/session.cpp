@@ -1344,7 +1344,7 @@ void Session::getWindowDimensions(int& x, int& y,
             }
         }
     }
-
+  
     // Use custom window size if specified
     if (m_Preferences->enableCustomWindowSize &&
             m_Preferences->windowMode == StreamingPreferences::WM_WINDOWED &&
