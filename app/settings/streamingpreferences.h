@@ -146,7 +146,8 @@ public:
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged)
     Q_PROPERTY(int windowWidth MEMBER windowWidth NOTIFY windowWidthChanged)
-    Q_PROPERTY(int windowHeight MEMBER windowHeight NOTIFY windowHeightChanged);
+    Q_PROPERTY(int windowHeight MEMBER windowHeight NOTIFY windowHeightChanged)
+    Q_PROPERTY(bool enableCustomWindowSize MEMBER enableCustomWindowSize NOTIFY enableCustomWindowSizeChanged);
 
     Q_INVOKABLE bool retranslate();
 
@@ -191,6 +192,7 @@ public:
     CaptureSysKeysMode captureSysKeysMode;
     int windowWidth;
     int windowHeight;
+    bool enableCustomWindowSize;
 
 signals:
     void displayModeChanged();
@@ -230,6 +232,7 @@ signals:
     void languageChanged();
     void windowWidthChanged();
     void windowHeightChanged();
+    void enableCustomWindowSizeChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);

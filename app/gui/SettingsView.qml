@@ -812,32 +812,30 @@ Flickable {
                     ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
                 }
 
-                Row {
+                RowLayout {
                     id: customWindowSizeRow
-                    spacing: 5
                     width: parent.width
                     visible: StreamingPreferences.windowMode === StreamingPreferences.WM_WINDOWED
 
-                    Label {
+                    CheckBox {
+                        id: enableCustomWindowSizeCheck
                         text: qsTr("Custom window size:")
                         font.pointSize: 12
-                        verticalAlignment: Text.AlignVCenter
+                        checked: StreamingPreferences.enableCustomWindowSize
+                        onCheckedChanged: {
+                            StreamingPreferences.enableCustomWindowSize = checked
+                        }
                     }
 
                     Item {
-                        width: windowModeComboBox.width -
-                               customWindowSizeRow.children[0].width -
-                               customWindowSizeRow.children[2].width -
-                               customWindowSizeRow.children[3].width -
-                               customWindowSizeRow.children[4].width -
-                               customWindowSizeRow.spacing * 4
-                        height: 1
+                        Layout.fillWidth: true
                     }
 
                     TextField {
                         id: windowWidthField
                         width: 75
-                        placeholderText: StreamingPreferences.width.toString()
+                        enabled: enableCustomWindowSizeCheck.checked
+                        placeholderText: qsTr("width")
                         validator: IntValidator { bottom: 256; top: 8192 }
 
                         Component.onCompleted: {
@@ -864,7 +862,8 @@ Flickable {
                     TextField {
                         id: windowHeightField
                         width: 75
-                        placeholderText: StreamingPreferences.height.toString()
+                        enabled: enableCustomWindowSizeCheck.checked
+                        placeholderText: qsTr("height")
                         validator: IntValidator { bottom: 256; top: 8192 }
 
                         Component.onCompleted: {

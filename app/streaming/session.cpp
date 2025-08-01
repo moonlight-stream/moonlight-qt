@@ -1346,7 +1346,8 @@ void Session::getWindowDimensions(int& x, int& y,
     }
 
     // Use custom window size if specified
-    if (m_Preferences->windowMode == StreamingPreferences::WM_WINDOWED &&
+    if (m_Preferences->enableCustomWindowSize &&
+            m_Preferences->windowMode == StreamingPreferences::WM_WINDOWED &&
             m_Preferences->windowWidth > 0 && m_Preferences->windowHeight > 0) {
         width = m_Preferences->windowWidth;
         height = m_Preferences->windowHeight;
@@ -1354,26 +1355,23 @@ void Session::getWindowDimensions(int& x, int& y,
     else {
         SDL_Rect usableBounds;
         if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
-            // Don't use more than 80% of the display to leave room for system UI
-            // and ensure the target size is not odd (otherwise one of the sides
-            // of the image will have a one-pixel black bar next to it).
-            SDL_Rect src, dst;
-            src.x = src.y = dst.x = dst.y = 0;
-            src.w = m_StreamConfig.width;
-            src.h = m_StreamConfig.height;
-            dst.w = ((int)SDL_ceilf(usableBounds.w * 0.80f) & ~0x1);
-            dst.h = ((int)SDL_ceilf(usableBounds.h * 0.80f) & ~0x1);
-
-            // Scale the window size while preserving aspect ratio
-            StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-            // If the stream window can fit within the usable drawing area with 1:1
-            // scaling, do that rather than filling the screen.
-            if (m_StreamConfig.width < dst.w && m_StreamConfig.height < dst.h) {
+            // If the stream resolution fits within the usable display area, use it directly
+            if (m_StreamConfig.width <= usableBounds.w &&
+                m_StreamConfig.height <= usableBounds.h) {
                 width = m_StreamConfig.width;
                 height = m_StreamConfig.height;
-            }
-            else {
+            } else {
+                // Otherwise, use 80% of usable bounds and preserve aspect ratio
+                SDL_Rect src, dst;
+                src.x = src.y = dst.x = dst.y = 0;
+                src.w = m_StreamConfig.width;
+                src.h = m_StreamConfig.height;
+
+                dst.w = ((int)(usableBounds.w * 0.80f)) & ~0x1;  // even width
+                dst.h = ((int)(usableBounds.h * 0.80f)) & ~0x1;  // even height
+
+                StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
                 width = dst.w;
                 height = dst.h;
             }

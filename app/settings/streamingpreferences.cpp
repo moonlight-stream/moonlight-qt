@@ -53,6 +53,7 @@
 #define SER_LANGUAGE "language"
 #define SER_WINDOW_WIDTH "windowwidth"
 #define SER_WINDOW_HEIGHT "windowheight"
+#define SER_ENABLE_CUSTOM_WINDOW_SIZE "enablecustomwindowsize"
 
 #define CURRENT_DEFAULT_VER 2
 
@@ -169,6 +170,7 @@ void StreamingPreferences::reload()
                                                      static_cast<int>(Language::LANG_AUTO)).toInt());
     windowWidth = settings.value(SER_WINDOW_WIDTH, 0).toInt();
     windowHeight = settings.value(SER_WINDOW_HEIGHT, 0).toInt();
+    enableCustomWindowSize = settings.value(SER_ENABLE_CUSTOM_WINDOW_SIZE, false).toBool();
 
 
     // Perform default settings updates as required based on last default version
@@ -361,6 +363,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_KEEPAWAKE, keepAwake);
     settings.setValue(SER_WINDOW_WIDTH, windowWidth);
     settings.setValue(SER_WINDOW_HEIGHT, windowHeight);
+    settings.setValue(SER_ENABLE_CUSTOM_WINDOW_SIZE, enableCustomWindowSize);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps, bool yuv444)
