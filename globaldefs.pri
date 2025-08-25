@@ -9,6 +9,17 @@ CONFIG(release, debug|release) {
     DEFINES += NDEBUG
 }
 
+# Enable CFG, EHCont, and CET
+*-msvc {
+    QMAKE_CFLAGS += -guard:cf -guard:ehcont
+    QMAKE_CXXFLAGS += -guard:cf -guard:ehcont
+    QMAKE_LFLAGS += -guard:cf -guard:ehcont
+
+    contains(QT_ARCH, x86_64) {
+        QMAKE_LFLAGS += -cetcompat
+    }
+}
+
 # Enable ASan for Linux or macOS
 #CONFIG += sanitizer sanitize_address
 
