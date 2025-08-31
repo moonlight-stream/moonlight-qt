@@ -87,7 +87,7 @@ public:
 
     bool getToggleOptionValue(QString name, bool defaultValue) const
     {
-        static QRegularExpression re(QString("^(%1|no-%1)$").arg(name));
+        QRegularExpression re(QString("^(%1|no-%1)$").arg(name));
         QStringList options = optionNames().filter(re);
         if (options.isEmpty()) {
             return defaultValue;
