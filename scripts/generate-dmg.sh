@@ -46,7 +46,7 @@ popd
 echo Saving dSYM file
 pushd $BUILD_FOLDER
 dsymutil app/Moonlight.app/Contents/MacOS/Moonlight -o Moonlight-$VERSION.dsym || fail "dSYM creation failed!"
-cp -R Moonlight-$VERSION.dsym $INSTALLER_FOLDER || fail "dSYM copy failed!"
+cp -Rv Moonlight-$VERSION.dsym $INSTALLER_FOLDER || fail "dSYM copy failed!"
 popd
 
 echo Creating app bundle
@@ -57,6 +57,10 @@ macdeployqt $BUILD_FOLDER/app/Moonlight.app $EXTRA_ARGS -qmldir=$SOURCE_ROOT/app
 
 echo Removing dSYM files from app bundle
 find $BUILD_FOLDER/app/Moonlight.app/ -name '*.dSYM' | xargs rm -rf
+
+echo Add build metadata
+defaults write $BUILD_FOLDER/app/Moonlight.app/Contents/Info GitBranch $GITHUB_REF_NAME
+defaults write $BUILD_FOLDER/app/Moonlight.app/Contents/Info GitSha $GITHUB_SHA
 
 if [ "$SIGNING_IDENTITY" != "" ]; then
   echo Signing app bundle
@@ -77,11 +81,13 @@ fi
 
 if [ "$NOTARY_KEYCHAIN_PROFILE" != "" ]; then
   echo Uploading to App Notary service
-  xcrun notarytool submit --keychain-profile "$NOTARY_KEYCHAIN_PROFILE" --wait $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg || fail "Notary submission failed"
+  xcrun notarytool submit --keychain-profile "$NOTARY_KEYCHAIN_PROFILE" --wait $INSTALLER_FOLDER/Moonlight-$VERSION.dmg || fail "Notary submission failed"
 
   echo Stapling notary ticket to DMG
-  xcrun stapler staple -v $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg || fail "Notary ticket stapling failed!"
+  xcrun stapler staple -v $INSTALLER_FOLDER/Moonlight-$VERSION.dmg || fail "Notary ticket stapling failed!"
 fi
 
-mv $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg $INSTALLER_FOLDER/Moonlight-$VERSION.dmg
+mv -v $INSTALLER_FOLDER/Moonlight-$VERSION.dmg $INSTALLER_FOLDER/Moonlight-$VERSION.dmg
+
+ls -lR $INSTALLER_FOLDER
 echo Build successful

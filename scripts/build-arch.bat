@@ -4,6 +4,7 @@ setlocal enableDelayedExpansion
 rem Run from Qt command prompt with working directory set to root of repo
 
 set BUILD_CONFIG=%1
+set BUILD_ARCH=%2
 
 rem Convert to lower case for windeployqt
 if /I "%BUILD_CONFIG%"=="debug" (
@@ -57,7 +58,7 @@ set QT_PATH=%QT_PATH:\qmake.bat=%
 set QT_PATH=%QT_PATH:\qmake.cmd=%
 
 echo QT_PATH=%QT_PATH%
-if not x%QT_PATH:_arm64=%==x%QT_PATH% (
+if /I "%BUILD_ARCH%"=="arm64" (
     set ARCH=arm64
 
     rem Replace the _arm64 suffix with _64 to get the x64 bin path
@@ -72,18 +73,8 @@ if not x%QT_PATH:_arm64=%==x%QT_PATH% (
         set WINDEPLOYQT_CMD=!HOSTBIN_PATH!\windeployqt.exe --qtpaths %QT_PATH%\qtpaths.bat
     )
 ) else (
-    if not x%QT_PATH:_64=%==x%QT_PATH% (
-        set ARCH=x64
-        set WINDEPLOYQT_CMD=windeployqt.exe
-    ) else (
-        if not x%QT_PATH:msvc=%==x%QT_PATH% (
-            set ARCH=x86
-            set WINDEPLOYQT_CMD=windeployqt.exe
-        ) else (
-            echo Unable to determine Qt architecture
-            goto Error
-        )
-    )
+    set ARCH=x64
+    set WINDEPLOYQT_CMD=windeployqt.exe
 )
 
 echo Detected target architecture: %ARCH%
@@ -126,7 +117,7 @@ rmdir /s /q %DEPLOY_FOLDER%
 rmdir /s /q %BUILD_FOLDER%
 rmdir /s /q %INSTALLER_FOLDER%
 rmdir /s /q %SYMBOLS_FOLDER%
-mkdir %BUILD_ROOT%
+if not exist %BUILD_ROOT% mkdir %BUILD_ROOT%
 mkdir %DEPLOY_FOLDER%
 mkdir %BUILD_FOLDER%
 mkdir %INSTALLER_FOLDER%

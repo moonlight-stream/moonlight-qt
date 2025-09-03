@@ -1,0 +1,38 @@
+#include <windows.h>
+
+IDI_ICON1 ICON "moonlight.ico"
+
+1 TYPELIB "Moonlight.rc"
+
+1 VERSIONINFO
+ FILEVERSION 6,1,0,0
+ PRODUCTVERSION 6,1,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS VS_FF_DEBUG
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE VFT_APP
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "Comments", "https://github.com/moonlight-stream/moonlight-qt\0"
+            VALUE "CompanyName", "Moonlight Game Streaming Project\0"
+            VALUE "FileDescription", "__GITHUB_REF_NAME__/__GITHUB_SHA__\0"
+            VALUE "FileVersion", "6.1.0.0\0"
+            VALUE "LegalCopyright", "License: GNU GPLv3\0"
+            VALUE "OriginalFilename", "Moonlight.exe\0"
+            VALUE "ProductName", "Moonlight\0"
+            VALUE "ProductVersion", "6.1.0.0\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
