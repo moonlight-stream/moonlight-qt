@@ -53,6 +53,7 @@ Item {
 
         BusyIndicator {
             id: stageSpinner
+            running: visible
         }
 
         Label {

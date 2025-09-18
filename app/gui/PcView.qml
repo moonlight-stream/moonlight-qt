@@ -90,6 +90,7 @@ CenteredGridView {
         BusyIndicator {
             id: searchSpinner
             visible: StreamingPreferences.enableMdns
+            running: visible
         }
 
         Label {
@@ -143,6 +144,7 @@ CenteredGridView {
             width: 75
             height: 75
             visible: model.statusUnknown
+            running: visible
         }
 
         Label {
