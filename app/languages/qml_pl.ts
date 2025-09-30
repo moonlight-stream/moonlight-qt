@@ -883,121 +883,122 @@
         <translation>Okno zmaksymalizowane</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1287"/>
+        <location filename="../gui/SettingsView.qml" line="1242"/>
+        <source>Show configuration warnings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1298"/>
         <source>Input Settings</source>
         <translation>Ustawienia urządzeń wejściowych</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1308"/>
+        <location filename="../gui/SettingsView.qml" line="1319"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>Umożliwia to płynne sterowanie myszą bez przechwytywania kursora myszy klienta. Jest to idealne rozwiązanie dla użycia jako pulpitu zdalnego, ale nie będzie działać poprawnie w większości gier.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1310"/>
+        <location filename="../gui/SettingsView.qml" line="1321"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>UWAGA: Z powodu błędu w aplikacji GeForce Experience ta opcja może nie działać poprawnie, jeśli komputer-gospodarz posiada podłączone wiele monitorów.</translation>
     </message>
     <message>
-        <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="vanished">Włączenie HDR nadpisuje manualny wybór dekodera.</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1625"/>
+        <location filename="../gui/SettingsView.qml" line="1677"/>
         <source>Enable HDR (Experimental)</source>
         <translation>Włącz HDR (funkcja eksperymentalna)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1640"/>
+        <location filename="../gui/SettingsView.qml" line="1692"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
         <translation>Strumieniowanie będzie obsługiwać technologię HDR, ale niektóre gry mogą wymagać monitora HDR na komputerze-gospodarzu, aby tryb HDR był dostępny.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1642"/>
+        <location filename="../gui/SettingsView.qml" line="1694"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>Na tym komputerze nie jest obsługiwane strumieniowanie w trybie HDR.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1729"/>
+        <location filename="../gui/SettingsView.qml" line="1781"/>
         <source>Show performance stats while streaming</source>
         <translation>Wyświetlanie statystyk wydajności podczas przesyłania strumieniowego</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1739"/>
+        <location filename="../gui/SettingsView.qml" line="1791"/>
         <source>Display real-time stream performance information while streaming.</source>
         <translation>Wyświetlanie informacji o wydajności strumienia w czasie rzeczywistym podczas przesyłania strumieniowego.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1740"/>
+        <location filename="../gui/SettingsView.qml" line="1792"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
         <translation>Możesz to przełączyć w dowolnym momencie podczas przesyłania strumieniowego za pomocą kombinacji klawiszy Ctrl+Alt+Shift+S lub Select+L1+R1+X.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1741"/>
+        <location filename="../gui/SettingsView.qml" line="1793"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
         <translation>Nakładka wydajności nie jest obsługiwana na Steam Link lub Raspberry Pi.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1329"/>
+        <location filename="../gui/SettingsView.qml" line="1340"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>UWAGA: Niektóre skróty klawiszowe, takie jak Ctrl+Alt+Del w systemie Windows, nie mogą być przechwytywane przez żadną aplikację, w tym Moonlight.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1392"/>
+        <location filename="../gui/SettingsView.qml" line="1444"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>Użyj ekranu dotykowego jako wirtualnego gładzika</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1409"/>
+        <location filename="../gui/SettingsView.qml" line="1461"/>
         <source>Swap left and right mouse buttons</source>
         <translation>Zamień lewy i prawy przycisk myszy</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1421"/>
+        <location filename="../gui/SettingsView.qml" line="1473"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>Odwróć kierunek przewijania myszy</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1435"/>
+        <location filename="../gui/SettingsView.qml" line="1487"/>
         <source>Gamepad Settings</source>
         <translation>Ustawienia kontrolera</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1445"/>
+        <location filename="../gui/SettingsView.qml" line="1497"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>Zamień przyciski A/B i X/Y</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1455"/>
+        <location filename="../gui/SettingsView.qml" line="1507"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>Przełącza kontrolery w układ przycisków znany z kontrolerów Nintendo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1461"/>
+        <location filename="../gui/SettingsView.qml" line="1513"/>
         <source>Force gamepad #1 always connected</source>
         <translation>Wymuś, aby kontroler #1 był zawsze podłączony</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1471"/>
+        <location filename="../gui/SettingsView.qml" line="1523"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>Wymusza, aby kontroler zawsze pozostawał połączony z komputerem-gospodarzem, nawet jeśli do komputera nie jest podłączony żaden kontroler.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1309"/>
+        <location filename="../gui/SettingsView.qml" line="1320"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>Możesz przełączyć to ustawienie podczas strumieniowania, używając kombinacji klawiszy Ctrl+Alt+Shift+M.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1479"/>
+        <location filename="../gui/SettingsView.qml" line="1531"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>Włącz sterowanie myszą za pomocą kontrolera poprzez przytrzymanie przycisku &quot;Start&quot;</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1490"/>
+        <location filename="../gui/SettingsView.qml" line="1542"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>Przetwarzaj dane wejściowe z kontrolera, nawet gdy Moonlight jest uruchomiony w tle</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1501"/>
+        <location filename="../gui/SettingsView.qml" line="1553"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>Umożliwia Moonlight przechwytywanie danych wejściowych z kontrolera, nawet jeśli nie jest on aktualnie wybranym oknem</translation>
     </message>
@@ -1007,7 +1008,7 @@
         <translation>Ustawienia gospodarza</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1510"/>
+        <location filename="../gui/SettingsView.qml" line="1562"/>
         <source>Advanced Settings</source>
         <translation>Zaawansowane ustawienia</translation>
     </message>
@@ -1022,22 +1023,22 @@
         <translation>Pokaż ostrzeżenia o jakości połączenia</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1243"/>
+        <location filename="../gui/SettingsView.qml" line="1254"/>
         <source>Discord Rich Presence integration</source>
         <translation>Integracja z usługą Discord Rich Presence</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1253"/>
+        <location filename="../gui/SettingsView.qml" line="1264"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>Aktualizuje status Discorda, wyświetlając nazwę gry, którą strumieniujesz.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1472"/>
+        <location filename="../gui/SettingsView.qml" line="1524"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>Włącz tę opcję tylko w przypadku strumieniowania gry, która, po jej uruchomieniu, nie obsługuje podłączania kontrolerów.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1298"/>
+        <location filename="../gui/SettingsView.qml" line="1309"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>Zoptymalizuj mysz pod kątem pulpitu zdalnego, a nie gier</translation>
     </message>
@@ -1070,37 +1071,37 @@
         <translation>60 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1259"/>
+        <location filename="../gui/SettingsView.qml" line="1270"/>
         <source>Keep the display awake while streaming</source>
         <translation>Nie zezwalaj na usypianie ekranu podczas przesyłania strumieniowego</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1269"/>
+        <location filename="../gui/SettingsView.qml" line="1280"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
         <translation>Uniemożliwia uruchomienie wygaszacza ekranu lub przejście ekranu w stan uśpienia podczas gdy strumieniowanie jest aktywne.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1320"/>
+        <location filename="../gui/SettingsView.qml" line="1331"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>Przechwytuj systemowy skróty klawiaturowe</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1328"/>
+        <location filename="../gui/SettingsView.qml" line="1339"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>Umożliwia podczas strumieniowania przechwytywanie ogólnosystemowych skrótów klawiaturowych, takich jak Alt+Tab, które normalnie byłyby obsługiwane przez system operacyjny komputera-klienta.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1358"/>
+        <location filename="../gui/SettingsView.qml" line="1369"/>
         <source>in fullscreen</source>
         <translation>w trybie pełnoekranowym</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1362"/>
+        <location filename="../gui/SettingsView.qml" line="1373"/>
         <source>always</source>
         <translation>zawsze</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1402"/>
+        <location filename="../gui/SettingsView.qml" line="1454"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>Po wybraniu tej opcji ekran dotykowy działa jak gładzik. W innym wypadku, ekran dotykowy będzie bezpośrednio sterował wskaźnikiem myszy.</translation>
     </message>
@@ -1120,78 +1121,148 @@
         <translation>Spowoduje to po zakończeniu strumieniowania zamknięcie aplikacji lub gry, która jest strumieniowana. Wszystkie niezapisane postępy zostaną utracone!</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1520"/>
+        <location filename="../gui/SettingsView.qml" line="1405"/>
+        <source>Local shortcuts to keep:</source>
+        <translation>Lokalne skróty do zachowania:</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1415"/>
+        <source>Ctrl+Alt+Del, Ctrl+Shift+Esc, ...</source>
+        <translation>Ctrl+Alt+Del, Ctrl+Shift+Esc, ...</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1425"/>
+        <source>Keyboard shortcuts format:</source>
+        <translation>Format skrótów klawiaturowych:</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1426"/>
+        <source>- Separate shortcuts with commas</source>
+        <translation>- Oddziel skróty przecinkami</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1427"/>
+        <source>- Combine keys using the + symbol</source>
+        <translation>- Łącz klawisze używając symbolu +</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1428"/>
+        <source>Special keys:</source>
+        <translation>Klawisze specjalne:</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1429"/>
+        <source>- Ctrl, Alt, Shift</source>
+        <translation>- Ctrl, Alt, Shift</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1430"/>
+        <source>- Meta (Windows key)</source>
+        <translation>- Meta (klawisz Windows)</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1431"/>
+        <source>- Esc, Tab, Space</source>
+        <translation>- Esc, Tab, Spacja</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1432"/>
+        <source>- F1, F2, F3, etc.</source>
+        <translation>- F1, F2, F3 itd.</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1433"/>
+        <source>- Up, Down, Left, Right (arrow keys)</source>
+        <translation>- Góra, Dół, Lewo, Prawo (klawisze strzałek)</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1434"/>
+        <source>- Home, End, PgUp, PgDown</source>
+        <translation>- Home, End, PgUp, PgDown</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1435"/>
+        <source>- Ins, Del</source>
+        <translation>- Ins, Del</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1436"/>
+        <source>Examples: Ctrl+Alt+Del, Meta+L, Ctrl+Shift+Esc</source>
+        <translation>Przykłady: Ctrl+Alt+Del, Meta+L, Ctrl+Shift+Esc</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1572"/>
         <source>Video decoder</source>
         <translation>Dekoder wideo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1545"/>
-        <location filename="../gui/SettingsView.qml" line="1598"/>
+        <location filename="../gui/SettingsView.qml" line="1597"/>
+        <location filename="../gui/SettingsView.qml" line="1650"/>
         <source>Automatic (Recommended)</source>
         <translation>Automatyczny (zalecane)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1549"/>
+        <location filename="../gui/SettingsView.qml" line="1601"/>
         <source>Force software decoding</source>
         <translation>Wymuś dekodowanie programowe</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1553"/>
+        <location filename="../gui/SettingsView.qml" line="1605"/>
         <source>Force hardware decoding</source>
         <translation>Wymuś dekodowanie sprzętowe</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1568"/>
+        <location filename="../gui/SettingsView.qml" line="1620"/>
         <source>Video codec</source>
         <translation>Kodek wideo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1602"/>
+        <location filename="../gui/SettingsView.qml" line="1654"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1606"/>
+        <location filename="../gui/SettingsView.qml" line="1658"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1610"/>
+        <location filename="../gui/SettingsView.qml" line="1662"/>
         <source>AV1 (Experimental)</source>
         <translation>AV1 (eksperymentalne)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1648"/>
+        <location filename="../gui/SettingsView.qml" line="1700"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1670"/>
+        <location filename="../gui/SettingsView.qml" line="1722"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1672"/>
+        <location filename="../gui/SettingsView.qml" line="1724"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1678"/>
+        <location filename="../gui/SettingsView.qml" line="1730"/>
         <source>Unlock bitrate limit (Experimental)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1691"/>
+        <location filename="../gui/SettingsView.qml" line="1743"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1697"/>
+        <location filename="../gui/SettingsView.qml" line="1749"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>Automatycznie wyszukuj komputery w sieci lokalnej (zalecane)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1718"/>
+        <location filename="../gui/SettingsView.qml" line="1770"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>Automatycznie wykrywaj zablokowane połączenia (zalecane)</translation>
     </message>
