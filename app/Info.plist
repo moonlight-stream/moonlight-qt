@@ -39,10 +39,12 @@
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Moonlight uses the local network to connect to your gaming PC for streaming.</string>
 	<key>CFBundleVersion</key>
-	<string>VERSION</string>
+	<string>6.1.0</string>
 	<key>CFBundleShortVersionString</key>
-	<string>VERSION</string>
+	<string>6.1.0</string>
 	<key>CFBundleDisplayName</key>
 	<string>Moonlight</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.games</string>
 </dict>
 </plist>
