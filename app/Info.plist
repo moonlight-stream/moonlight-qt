@@ -2,8 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>GCSupportsGameMode</key>
+	<true/>
 	<key>CFBundleExecutable</key>
 	<string>Moonlight</string>
+	<key>LSSupportsGameMode</key>
+	<true/>
 	<key>CFBundleGetInfoString</key>
 	<string>Stream games and other applications from another PC</string>
 	<key>CFBundleIconFile</key>
@@ -44,5 +48,7 @@
 	<string>VERSION</string>
 	<key>CFBundleDisplayName</key>
 	<string>Moonlight</string>
+    <key>LSApplicationCategoryType</key>
+	<string>public.app-category.games</string>
 </dict>
 </plist>
