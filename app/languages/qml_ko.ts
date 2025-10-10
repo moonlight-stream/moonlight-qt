@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>이 컴퓨터에는 앱이 없거나 숨겨져 있습니다</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="361"/>
@@ -600,7 +600,7 @@
         <location filename="../streaming/session.cpp" line="1085"/>
         <location filename="../streaming/session.cpp" line="1103"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>GPU 지원 없이 HDR을 강제로 사용하도록 선택했기 때문에 소프트웨어 디코딩을 사용하고 있습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1097"/>
@@ -610,22 +610,22 @@
     <message>
         <location filename="../streaming/session.cpp" line="1119"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>호스트 PC가 YUV 4:4:4 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1127"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>호스트 PC가 선택한 비디오 코덱에 대해 YUV 4:4:4 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1142"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>GPU 지원 없이 YUV 4:4:4를 강제로 사용하도록 설정하여 소프트웨어 디코딩을 사용하고 있습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1148"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 PC의 GPU는 선택된 비디오 코덱에 대한 YUV 4:4:4 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1157"/>
@@ -784,7 +784,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation type="unfinished"></translation>
+        <translation>기본값 사용 (%1 Mbps)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -1163,27 +1163,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1648"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>YUV 4:4:4 활성화 (실험용)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1670"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
+        <translation>데스크탑이나 텍스트가 많은 게임의 스트리밍에는 적합하지만, 빠르게 진행되는 게임에는 권장하지 않습니다.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1672"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 PC에서는 YUV 4:4:4가 지원되지 않습니다.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1678"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>비트레이트 제한 해제 (실험용)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1691"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 기능은 Sunshine 호스트에서 매우 높은 비디오 비트레이트를 사용할 수 있도록 합니다. 이더넷 LAN 연결을 통해 스트리밍할 때만 사용해야 합니다.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1697"/>

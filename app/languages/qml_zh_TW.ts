@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>這台電腦上似乎沒有任何應用程式，或是有些應用程式正被隱藏</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="361"/>
@@ -110,12 +110,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished">線上</translation>
+        <translation>線上</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished">離線</translation>
+        <translation>離線</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -124,77 +124,77 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>未知</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>已配對</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>未配對</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>名稱: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>狀態: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>作用中位址</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>本地位址</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>遠端位址</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>IPv6 位址: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>手動位址: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>MAC 位址: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>配對狀態: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>執行中遊戲ID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTPS 連接埠: %1</translation>
     </message>
 </context>
 <context>
@@ -268,7 +268,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="216"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>檢視詳細資料</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="228"/>
@@ -505,7 +505,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="142"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>錯誤碼: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="966"/>
@@ -600,7 +600,7 @@
         <location filename="../streaming/session.cpp" line="1085"/>
         <location filename="../streaming/session.cpp" line="1103"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>由於您選擇在GPU不支援的情況強制啟用 HDR，正在使用軟體解碼。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1097"/>
@@ -610,22 +610,22 @@
     <message>
         <location filename="../streaming/session.cpp" line="1119"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>您的主機不支援 YUV 4:4:4 串流格式。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1127"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>您的主機不支援所選視訊編碼器的 YUV 4:4:4 串流格式。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1142"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>由於您選擇在GPU不支援的情況強制啟用 YUV 4:4:4，正在使用軟體解碼。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1148"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>您的主機的 GPU 不支援所選視訊編碼器的 YUV 4:4:4 串流格式。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1157"/>
@@ -774,17 +774,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="182"/>
         <source>Native</source>
-        <translation type="unfinished"></translation>
+        <translation>原生</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
+        <translation>原生 (不包括瀏海區域)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation type="unfinished"></translation>
+        <translation>使用預設值 (%1 Mbps)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -924,22 +924,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1729"/>
         <source>Show performance stats while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>串流時顯示效能資訊</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1739"/>
         <source>Display real-time stream performance information while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>串流進行時顯示即時效能資訊。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1740"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation type="unfinished"></translation>
+        <translation>你可以在串流時隨時按下 Ctrl+Alt+Shift+S 或是 Select+L1+R1+X 來切換它。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1741"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam Link 或是 Raspberry Pi 不支援顯示效能資訊的覆蓋式介面。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1329"/>
@@ -1163,27 +1163,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1648"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>啟用 YUV 4:4:4 (實驗性)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1670"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
+        <translation>適合用來串流桌面畫面和文字量大的遊戲，但不建議用在節奏快的遊戲上。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1672"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>此電腦不支援 YUV 4:4:4。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1678"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>解鎖位元率上限 (實驗性)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1691"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>這個選項可解鎖讓 Sunshine 主機可使用極高影片位元率。但僅建議在有線區域網路（乙太網路）環境下串流時使用。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1697"/>

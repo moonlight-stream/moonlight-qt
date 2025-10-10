@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>Dieser Computer scheint keine Anwendungen zu haben oder einige Anwendungen sind versteckt</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="361"/>
@@ -620,12 +620,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="1142"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>YUV 4:4:4 ausgewählt, aber nicht von der GPU unterstützt. Softwaredekodierung wird verwendet. Dies kann zu schlechter Streaming-Leistung führen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1148"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Die GPU dieses PCs unterstützt für den ausgewählten Video-Codec keine YUV 4:4:4-Dekodierung.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1157"/>
@@ -784,7 +784,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation type="unfinished"></translation>
+        <translation>Standard verwenden (%1 Mbit/s)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -1163,27 +1163,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1648"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Verwende YUV 4:4:4 (Experimentell)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1670"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gut zum Streamen von Desktopanwendungen und textlastigen Spielen, aber nicht für rasante Spiele empfohlen.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1672"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dieser PC hat keine YUV 4:4:4-Unterstützung.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1678"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Bitrate-Limit aufheben (Experimentell)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1691"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Schaltet extrem hohe Video-Bitraten für die Verwendung mit Sunshine-Hosts frei. Sollte nur zum Streaming über eine Ethernet-LAN-Verbindung verwendet werden.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1697"/>

@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>На този компютър изглежда няма никакви приложения, или може някои от тях да са скрити</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="361"/>
@@ -784,7 +784,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation type="unfinished"></translation>
+        <translation>По подразбиране (%1 Мбит/сек)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
