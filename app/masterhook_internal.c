@@ -2,7 +2,9 @@
 // which must be in a separate compilation unit due to fcntl.h doing
 // unwanted redirection of open() to open64().
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include "SDL_compat.h"
 #include <dlfcn.h>
@@ -11,6 +13,7 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <sys/stat.h>
+#include <pthread.h>
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -33,7 +36,7 @@ extern struct stat g_DrmMasterStat;
 #define MAX_SDL_FD_COUNT 8
 int g_SdlDrmMasterFds[MAX_SDL_FD_COUNT];
 int g_SdlDrmMasterFdCount = 0;
-SDL_SpinLock g_FdTableLock = 0;
+pthread_mutex_t g_FdTableLock = PTHREAD_MUTEX_INITIALIZER;
 
 // Caller must hold g_FdTableLock
 int getSdlFdEntryIndex(bool unused)
@@ -55,7 +58,7 @@ int getSdlFdEntryIndex(bool unused)
 // Returns true if the final SDL FD was removed
 bool removeSdlFd(int fd)
 {
-    SDL_AtomicLock(&g_FdTableLock);
+    pthread_mutex_lock(&g_FdTableLock);
     if (g_SdlDrmMasterFdCount != 0) {
         // Clear the entry for this fd from the table
         for (int i = 0; i < MAX_SDL_FD_COUNT; i++) {
@@ -67,11 +70,11 @@ bool removeSdlFd(int fd)
         }
 
         if (g_SdlDrmMasterFdCount == 0) {
-            SDL_AtomicUnlock(&g_FdTableLock);
+            pthread_mutex_unlock(&g_FdTableLock);
             return true;
         }
     }
-    SDL_AtomicUnlock(&g_FdTableLock);
+    pthread_mutex_unlock(&g_FdTableLock);
     return false;
 }
 
@@ -82,12 +85,12 @@ int takeMasterFromSdlFd()
 
     // Since all SDL FDs are actually dups of each other
     // we can take master from any one of them.
-    SDL_AtomicLock(&g_FdTableLock);
+    pthread_mutex_lock(&g_FdTableLock);
     int fdIndex = getSdlFdEntryIndex(false);
     if (fdIndex != -1) {
         fd = g_SdlDrmMasterFds[fdIndex];
     }
-    SDL_AtomicUnlock(&g_FdTableLock);
+    pthread_mutex_unlock(&g_FdTableLock);
 
     if (fd >= 0 && drmDropMaster(fd) == 0) {
         return fd;
@@ -126,12 +129,12 @@ int openHook(const char *funcname, const char *pathname, int flags, va_list va)
                 int allocatedFdIndex;
 
                 // It is our device. Time to do the magic!
-                SDL_AtomicLock(&g_FdTableLock);
+                pthread_mutex_lock(&g_FdTableLock);
 
                 // Get a free index for us to put the new entry
                 freeFdIndex = getSdlFdEntryIndex(true);
                 if (freeFdIndex < 0) {
-                    SDL_AtomicUnlock(&g_FdTableLock);
+                    pthread_mutex_unlock(&g_FdTableLock);
                     SDL_assert(freeFdIndex >= 0);
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                  "No unused SDL FD table entries!");
@@ -151,7 +154,7 @@ int openHook(const char *funcname, const char *pathname, int flags, va_list va)
                 else {
                     // Drop master on Qt's FD so we can pick it up for SDL.
                     if (drmDropMaster(g_QtDrmMasterFd) < 0) {
-                        SDL_AtomicUnlock(&g_FdTableLock);
+                        pthread_mutex_unlock(&g_FdTableLock);
                         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                      "Failed to drop master on Qt DRM FD: %d",
                                      errno);
@@ -182,7 +185,7 @@ int openHook(const char *funcname, const char *pathname, int flags, va_list va)
                     g_SdlDrmMasterFdCount++;
                 }
 
-                SDL_AtomicUnlock(&g_FdTableLock);
+                pthread_mutex_unlock(&g_FdTableLock);
             }
         }
     }

@@ -9,7 +9,9 @@
 // The specific kernel change required to run without root is:
 // https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=45bc3d26c95a8fc63a7d8668ca9e57ef0883351c
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 // NOTE: This file MUST NOT include fcntl.h due to open() -> open64()
 // redirection that happens when _FILE_OFFSET_BITS=64!
