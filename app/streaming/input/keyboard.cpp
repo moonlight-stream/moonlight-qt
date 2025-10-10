@@ -3,6 +3,33 @@
 #include <Limelight.h>
 #include "SDL_compat.h"
 
+// Inculde Windows virtual key and function definitions
+#ifdef Q_OS_WIN32
+#include <windows.h>
+// Prevent redefinition warnings
+#ifndef KEYEVENTF_KEYUP
+#define KEYEVENTF_KEYUP 0x0002
+#endif
+#ifndef VK_TAB
+#define VK_TAB 0x09
+#endif
+#ifndef VK_MENU
+#define VK_MENU 0x12  // ALT key
+#endif
+#ifndef VK_LEFT
+#define VK_LEFT 0x25
+#endif
+#ifndef VK_RIGHT
+#define VK_RIGHT 0x27
+#endif
+#ifndef VK_LWIN
+#define VK_LWIN 0x5B
+#endif
+#ifndef VK_LCONTROL
+#define VK_LCONTROL 0xA2
+#endif
+#endif
+
 #define VK_0 0x30
 #define VK_A 0x41
 
@@ -170,7 +197,13 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         return;
     }
 
-    // Check for our special key combos
+    // Check for user-configured local shortcuts
+    if (event->state == SDL_PRESSED && isLocalShortcut(event->keysym.sym, event->keysym.mod)) {
+        // If this is a shortcut to keep locally, don't send it to the remote host
+        return;
+    }
+
+    // Check for our special key combos (Ctrl+Alt+Shift+key)
     if ((event->state == SDL_PRESSED) &&
             (event->keysym.mod & KMOD_CTRL) &&
             (event->keysym.mod & KMOD_ALT) &&

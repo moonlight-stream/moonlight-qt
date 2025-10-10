@@ -883,121 +883,122 @@
         <translation>அதிகபட்சம்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1287"/>
+        <location filename="../gui/SettingsView.qml" line="1242"/>
+        <source>Show configuration warnings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1298"/>
         <source>Input Settings</source>
         <translation>உள்ளீட்டு அமைப்புகள்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1308"/>
+        <location filename="../gui/SettingsView.qml" line="1319"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>இது வாடிக்கையாளரின் மவுச் கர்சரைக் கைப்பற்றாமல் தடையற்ற சுட்டி கட்டுப்பாட்டை செயல்படுத்துகிறது. தொலைநிலை டெச்க்டாப் பயன்பாட்டிற்கு இது ஏற்றது, ஆனால் பெரும்பாலான விளையாட்டுகளில் வேலை செய்யாது.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1310"/>
+        <location filename="../gui/SettingsView.qml" line="1321"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>குறிப்பு: சியிபோர்ச் அனுபவத்தில் ஒரு பிழை காரணமாக, உங்கள் புரவலன் கணினியில் பல மானிட்டர்கள் இருந்தால் இந்த விருப்பம் சரியாக வேலை செய்யாது.</translation>
     </message>
     <message>
-        <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="vanished">Das Aktivieren von HDR überschreibt die manuelle Decoder-Auswahl.</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1625"/>
+        <location filename="../gui/SettingsView.qml" line="1677"/>
         <source>Enable HDR (Experimental)</source>
         <translation>HDR ஐ இயக்கவும் (சோதனை)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1640"/>
+        <location filename="../gui/SettingsView.qml" line="1692"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
         <translation>ச்ட்ரீம் எச்டிஆர்-திறன் கொண்டதாக இருக்கும், ஆனால் சில விளையாட்டுகளுக்கு எச்டிஆர் பயன்முறையை இயக்க உங்கள் புரவலன் கணினியில் எச்டிஆர் மானிட்டர் தேவைப்படலாம்.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1642"/>
+        <location filename="../gui/SettingsView.qml" line="1694"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>இந்த கணினியில் எச்டிஆர் ச்ட்ரீமிங் ஆதரிக்கப்படவில்லை.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1729"/>
+        <location filename="../gui/SettingsView.qml" line="1781"/>
         <source>Show performance stats while streaming</source>
         <translation>ச்ட்ரீமிங் செய்யும் போது செயல்திறன் புள்ளிவிவரங்களைக் காட்டு</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1739"/>
+        <location filename="../gui/SettingsView.qml" line="1791"/>
         <source>Display real-time stream performance information while streaming.</source>
         <translation>ச்ட்ரீமிங் செய்யும் போது நிகழ்நேர ச்ட்ரீம் செயல்திறன் தகவலைக் காண்பி.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1740"/>
+        <location filename="../gui/SettingsView.qml" line="1792"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
         <translation>Ctrl+Alt+Shift+S ஐப் பயன்படுத்தி ச்ட்ரீமிங் செய்யும் போது எந்த நேரத்திலும் அதை மாற்றலாம் அல்லது+L1+R1+X ஐத் தேர்ந்தெடுக்கலாம்.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1741"/>
+        <location filename="../gui/SettingsView.qml" line="1793"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
         <translation>செயல்திறன் மேலடுக்கு நீராவி இணைப்பு அல்லது ராச்பெர்ரி பையில் ஆதரிக்கப்படவில்லை.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1329"/>
+        <location filename="../gui/SettingsView.qml" line="1340"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>குறிப்பு: சாளரங்களில் உள்ள Ctrl+Alt+DEL போன்ற சில விசைப்பலகை குறுக்குவழிகளை மூன்லைட் உட்பட எந்தவொரு பயன்பாட்டினாலும் தடுக்க முடியாது.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1392"/>
+        <location filename="../gui/SettingsView.qml" line="1444"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>தொடுதிரையை மெய்நிகர் டிராக்பேடாகப் பயன்படுத்தவும்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1409"/>
+        <location filename="../gui/SettingsView.qml" line="1461"/>
         <source>Swap left and right mouse buttons</source>
         <translation>இடது மற்றும் வலது சுட்டி பொத்தான்களை மாற்றவும்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1421"/>
+        <location filename="../gui/SettingsView.qml" line="1473"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>தலைகீழ் சுட்டி ச்க்ரோலிங் திசை</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1435"/>
+        <location filename="../gui/SettingsView.qml" line="1487"/>
         <source>Gamepad Settings</source>
         <translation>கேம்பேட் அமைப்புகள்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1445"/>
+        <location filename="../gui/SettingsView.qml" line="1497"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>A/B மற்றும் X/y கேம்பேட் பொத்தான்களை மாற்றவும்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1455"/>
+        <location filename="../gui/SettingsView.qml" line="1507"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>இது கேம்பேட்களை நிண்டெண்டோ-பாணி பொத்தானை அமைப்பாக மாற்றுகிறது</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1461"/>
+        <location filename="../gui/SettingsView.qml" line="1513"/>
         <source>Force gamepad #1 always connected</source>
         <translation>கேம்பேட் #1 எப்போதும் இணைக்கப்பட்டுள்ளது</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1471"/>
+        <location filename="../gui/SettingsView.qml" line="1523"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>இந்த கணினியுடன் உண்மையில் கேம்பேடுகள் எதுவும் இணைக்கப்படாவிட்டாலும், ஓச்டுடன் எப்போதும் இணைந்திருக்க ஒரு கேம்பேடை கட்டாயப்படுத்துகிறது.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1309"/>
+        <location filename="../gui/SettingsView.qml" line="1320"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>Ctrl+Alt+Shift+M ஐப் பயன்படுத்தி ச்ட்ரீமிங் செய்யும் போது இதை மாற்றலாம்.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1479"/>
+        <location filename="../gui/SettingsView.qml" line="1531"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>&apos;தொடக்க&apos; பொத்தானை வைத்திருப்பதன் மூலம் கேம்பேடுகளுடன் சுட்டி கட்டுப்பாட்டை இயக்கவும்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1490"/>
+        <location filename="../gui/SettingsView.qml" line="1542"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>மூன்லைட் பின்னணியில் இருக்கும்போது கேம்பேட் உள்ளீட்டை செயலாக்குங்கள்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1501"/>
+        <location filename="../gui/SettingsView.qml" line="1553"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>கேம்பேட் உள்ளீடுகளை மையமாக இல்லாவிட்டாலும் கூட மூன்லைட் அனுமதிக்கிறது</translation>
     </message>
@@ -1007,7 +1008,7 @@
         <translation>புரவலன் அமைப்புகள்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1510"/>
+        <location filename="../gui/SettingsView.qml" line="1562"/>
         <source>Advanced Settings</source>
         <translation>மேம்பட்ட அமைப்புகள்</translation>
     </message>
@@ -1022,22 +1023,22 @@
         <translation>இணைப்பு தர எச்சரிக்கைகளைக் காட்டு</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1243"/>
+        <location filename="../gui/SettingsView.qml" line="1254"/>
         <source>Discord Rich Presence integration</source>
         <translation>முரண்பாடு பணக்கார இருப்பு ஒருங்கிணைப்பு</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1253"/>
+        <location filename="../gui/SettingsView.qml" line="1264"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>நீங்கள் ச்ட்ரீமிங் செய்யும் விளையாட்டின் பெயரைக் காட்ட உங்கள் முரண்பாடு நிலையைப் புதுப்பிக்கிறது.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1472"/>
+        <location filename="../gui/SettingsView.qml" line="1524"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>தொடக்கத்திற்குப் பிறகு கேம்பேடுகள் இணைக்கப்படுவதை ஆதரிக்காத ஒரு விளையாட்டை ச்ட்ரீமிங் செய்யும் போது மட்டுமே இந்த விருப்பத்தை இயக்கவும்.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1298"/>
+        <location filename="../gui/SettingsView.qml" line="1309"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>விளையாட்டுகளுக்கு பதிலாக ரிமோட் டெச்க்டாப்பிற்கு சுட்டியை மேம்படுத்தவும்</translation>
     </message>
@@ -1070,37 +1071,37 @@
         <translation>60 எஃப்.பி.எச்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1259"/>
+        <location filename="../gui/SettingsView.qml" line="1270"/>
         <source>Keep the display awake while streaming</source>
         <translation>ச்ட்ரீமிங் செய்யும் போது காட்சியை விழித்திருங்கள்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1269"/>
+        <location filename="../gui/SettingsView.qml" line="1280"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
         <translation>ச்கிரீன்சேவர் தொடங்குவதைத் தடுக்கிறது அல்லது ச்ட்ரீமிங் செய்யும் போது காட்சி தூங்குவதைத் தடுக்கிறது.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1320"/>
+        <location filename="../gui/SettingsView.qml" line="1331"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>கணினி விசைப்பலகை குறுக்குவழிகளைப் பிடிக்கவும்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1328"/>
+        <location filename="../gui/SettingsView.qml" line="1339"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>இது ச்ட்ரீமிங் செய்யும் போது கிளையன்ட் OS ஆல் கையாளப்படும் Alt+TAB போன்ற கணினி அளவிலான விசைப்பலகை குறுக்குவழிகளைக் கைப்பற்ற உதவுகிறது.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1358"/>
+        <location filename="../gui/SettingsView.qml" line="1369"/>
         <source>in fullscreen</source>
         <translation>முழுத் திரையில்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1362"/>
+        <location filename="../gui/SettingsView.qml" line="1373"/>
         <source>always</source>
         <translation>எப்போதும்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1402"/>
+        <location filename="../gui/SettingsView.qml" line="1454"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>சரிபார்க்கும்போது, தொடுதிரை டிராக்பேட் போல செயல்படுகிறது. தேர்வு செய்யப்படும்போது, தொடுதிரை சுட்டி சுட்டிக்காட்டி நேரடியாகக் கட்டுப்படுத்தும்.</translation>
     </message>
@@ -1120,78 +1121,148 @@
         <translation>இது உங்கள் ச்ட்ரீமை முடிக்கும்போது நீங்கள் ச்ட்ரீமிங் செய்யும் பயன்பாடு அல்லது விளையாட்டை மூடும். நீங்கள் சேமிக்கப்படாத முன்னேற்றத்தை இழப்பீர்கள்!</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1520"/>
+        <location filename="../gui/SettingsView.qml" line="1405"/>
+        <source>Local shortcuts to keep:</source>
+        <translation>காப்பாற்ற வேண்டிய உள்ளூர் குறுக்குவழிகள்:</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1415"/>
+        <source>Ctrl+Alt+Del, Ctrl+Shift+Esc, ...</source>
+        <translation>Ctrl+Alt+Del, Ctrl+Shift+Esc, ...</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1425"/>
+        <source>Keyboard shortcuts format:</source>
+        <translation>தட்டச்சு குறுக்குவழிகளின் வடிவம்:</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1426"/>
+        <source>- Separate shortcuts with commas</source>
+        <translation>- குறுக்குவழிகளை காமாக்களால் பிரிக்கவும்</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1427"/>
+        <source>- Combine keys using the + symbol</source>
+        <translation>- + சின்னத்தை பயன்படுத்தி விசைகளை ஒன்றிணைக்கவும்</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1428"/>
+        <source>Special keys:</source>
+        <translation>சிறப்பு விசைகள்:</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1429"/>
+        <source>- Ctrl, Alt, Shift</source>
+        <translation>- Ctrl, Alt, Shift</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1430"/>
+        <source>- Meta (Windows key)</source>
+        <translation>- மெட்டா (Windows விசை)</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1431"/>
+        <source>- Esc, Tab, Space</source>
+        <translation>- Esc, Tab, Space</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1432"/>
+        <source>- F1, F2, F3, etc.</source>
+        <translation>- F1, F2, F3, மற்றும் பிற</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1433"/>
+        <source>- Up, Down, Left, Right (arrow keys)</source>
+        <translation>- மேல், கீழ், இடது, வலது (அம்பு விசைகள்)</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1434"/>
+        <source>- Home, End, PgUp, PgDown</source>
+        <translation>- Home, End, PgUp, PgDown</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1435"/>
+        <source>- Ins, Del</source>
+        <translation>- Ins, Del</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1436"/>
+        <source>Examples: Ctrl+Alt+Del, Meta+L, Ctrl+Shift+Esc</source>
+        <translation>உதாரணங்கள்: Ctrl+Alt+Del, Meta+L, Ctrl+Shift+Esc</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1572"/>
         <source>Video decoder</source>
         <translation>வீடியோ டிகோடர்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1545"/>
-        <location filename="../gui/SettingsView.qml" line="1598"/>
+        <location filename="../gui/SettingsView.qml" line="1597"/>
+        <location filename="../gui/SettingsView.qml" line="1650"/>
         <source>Automatic (Recommended)</source>
         <translation>தானியங்கி (பரிந்துரைக்கப்படுகிறது)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1549"/>
+        <location filename="../gui/SettingsView.qml" line="1601"/>
         <source>Force software decoding</source>
         <translation>மென்பொருள் டிகோடிங்கை கட்டாயப்படுத்துங்கள்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1553"/>
+        <location filename="../gui/SettingsView.qml" line="1605"/>
         <source>Force hardware decoding</source>
         <translation>வன்பொருள் டிகோடிங்கை கட்டாயப்படுத்துங்கள்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1568"/>
+        <location filename="../gui/SettingsView.qml" line="1620"/>
         <source>Video codec</source>
         <translation>வீடியோ கோடெக்</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1602"/>
+        <location filename="../gui/SettingsView.qml" line="1654"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1606"/>
+        <location filename="../gui/SettingsView.qml" line="1658"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1610"/>
+        <location filename="../gui/SettingsView.qml" line="1662"/>
         <source>AV1 (Experimental)</source>
         <translation>ஏ.வி 1 (சோதனை)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1648"/>
+        <location filename="../gui/SettingsView.qml" line="1700"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
         <translation>YUV 4: 4: 4 ஐ இயக்கவும் (சோதனை)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1670"/>
+        <location filename="../gui/SettingsView.qml" line="1722"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
         <translation>டெச்க்டாப் மற்றும் உரை-கனமான விளையாட்டுகளை ச்ட்ரீமிங் செய்வது நல்லது, ஆனால் வேகமான விளையாட்டுகளுக்கு பரிந்துரைக்கப்படவில்லை.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1672"/>
+        <location filename="../gui/SettingsView.qml" line="1724"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
         <translation>YUV 4: 4: 4 இந்த கணினியில் ஆதரிக்கப்படவில்லை.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1678"/>
+        <location filename="../gui/SettingsView.qml" line="1730"/>
         <source>Unlock bitrate limit (Experimental)</source>
         <translation>பிட்ரேட் வரம்பைத் திறக்கவும் (சோதனை)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1691"/>
+        <location filename="../gui/SettingsView.qml" line="1743"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
         <translation>இது சன்சைன் ஓச்ட்களுடன் பயன்படுத்த மிக உயர்ந்த வீடியோ பிட்ரேட்டுகளை திறக்கிறது. ஈத்தர்நெட் லேன் இணைப்பு வழியாக ச்ட்ரீமிங் செய்யும் போது மட்டுமே இது பயன்படுத்தப்பட வேண்டும்.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1697"/>
+        <location filename="../gui/SettingsView.qml" line="1749"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>உள்ளக நெட்வொர்க்கில் பிசிக்களை தானாகவே கண்டறியவும் (பரிந்துரைக்கப்படுகிறது)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1718"/>
+        <location filename="../gui/SettingsView.qml" line="1770"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>தடுக்கப்பட்ட இணைப்புகளை தானாக கண்டறியவும் (பரிந்துரைக்கப்படுகிறது)</translation>
     </message>

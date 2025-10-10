@@ -34,6 +34,15 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_DragButton(0),
       m_NumFingersDown(0)
 {
+    // Init user-defined local shortcuts
+    if (!prefs.localShortcuts.isEmpty()) {
+        m_LocalShortcuts = prefs.localShortcuts.split(",", Qt::SkipEmptyParts);
+        // Clean up shortcuts (remove spaces)
+        for (int i = 0; i < m_LocalShortcuts.length(); i++) {
+            m_LocalShortcuts[i] = m_LocalShortcuts[i].trimmed();
+        }
+    }
+
     // System keys are always captured when running without a DE
     if (!WMUtils::isRunningDesktopEnvironment()) {
         m_CaptureSystemKeysMode = StreamingPreferences::CSK_ALWAYS;
@@ -444,4 +453,219 @@ void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
     else {
         handleRelativeFingerEvent(event);
     }
+}
+
+// This function checks if the current key combination matches a shortcut to keep locally
+bool SdlInputHandler::isLocalShortcut(SDL_Keycode keyCode, int keyMod)
+{
+    if (m_LocalShortcuts.isEmpty()) {
+        return false;
+    }
+
+    QString shortcutStr;
+
+    // Build the textual representation of the shortcut
+    if (keyMod & KMOD_CTRL) {
+        shortcutStr += "Ctrl+";
+    }
+    if (keyMod & KMOD_ALT) {
+        shortcutStr += "Alt+";
+    }
+    if (keyMod & KMOD_SHIFT) {
+        shortcutStr += "Shift+";
+    }
+    if (keyMod & KMOD_GUI) {
+        // Depending on the platform, the GUI key can be Windows, Command, or Meta
+        shortcutStr += "Meta+";
+    }
+
+    // Add the main key (convert keyCode to a readable string)
+    switch (keyCode) {
+    // For letters (a-z)
+    case SDLK_a: case SDLK_b: case SDLK_c: case SDLK_d: case SDLK_e:
+    case SDLK_f: case SDLK_g: case SDLK_h: case SDLK_i: case SDLK_j:
+    case SDLK_k: case SDLK_l: case SDLK_m: case SDLK_n: case SDLK_o:
+    case SDLK_p: case SDLK_q: case SDLK_r: case SDLK_s: case SDLK_t:
+    case SDLK_u: case SDLK_v: case SDLK_w: case SDLK_x: case SDLK_y:
+    case SDLK_z:
+        // For letters, use uppercase
+        shortcutStr += QChar('A' + (keyCode - SDLK_a));
+        break;
+
+    // For numbers (0-9)
+    case SDLK_0: case SDLK_1: case SDLK_2: case SDLK_3: case SDLK_4:
+    case SDLK_5: case SDLK_6: case SDLK_7: case SDLK_8: case SDLK_9:
+        // For numbers, use the digit
+        shortcutStr += QChar('0' + (keyCode - SDLK_0));
+        break;
+
+    // For function keys (F1-F24)
+    case SDLK_F1: case SDLK_F2: case SDLK_F3: case SDLK_F4:
+    case SDLK_F5: case SDLK_F6: case SDLK_F7: case SDLK_F8:
+    case SDLK_F9: case SDLK_F10: case SDLK_F11: case SDLK_F12:
+    case SDLK_F13: case SDLK_F14: case SDLK_F15: case SDLK_F16:
+    case SDLK_F17: case SDLK_F18: case SDLK_F19: case SDLK_F20:
+    case SDLK_F21: case SDLK_F22: case SDLK_F23: case SDLK_F24:
+        // For function keys
+        shortcutStr += "F" + QString::number(keyCode - SDLK_F1 + 1);
+        break;
+
+    // Arrow keys
+    case SDLK_LEFT:
+        shortcutStr += "Left";
+        break;
+    case SDLK_RIGHT:
+        shortcutStr += "Right";
+        break;
+    case SDLK_UP:
+        shortcutStr += "Up";
+        break;
+    case SDLK_DOWN:
+        shortcutStr += "Down";
+        break;
+
+    case SDLK_TAB:
+        shortcutStr += "Tab";
+        break;
+    case SDLK_ESCAPE:
+        shortcutStr += "Esc";
+        break;
+    case SDLK_DELETE:
+        shortcutStr += "Del";
+        break;
+    case SDLK_INSERT:
+        shortcutStr += "Ins";
+        break;
+    case SDLK_HOME:
+        shortcutStr += "Home";
+        break;
+    case SDLK_END:
+        shortcutStr += "End";
+        break;
+    case SDLK_PAGEUP:
+        shortcutStr += "PgUp";
+        break;
+    case SDLK_PAGEDOWN:
+        shortcutStr += "PgDown";
+        break;
+    case SDLK_PRINTSCREEN:
+        shortcutStr += "PrintScreen";
+        break;
+    case SDLK_PAUSE:
+        shortcutStr += "Pause";
+        break;
+    default:
+        // For other keys, use the numeric code
+        shortcutStr += QString::number(keyCode);
+        break;
+    }
+
+    // Check if this shortcut is in our list of shortcuts to keep locally
+    bool isLocalShortcutResult = m_LocalShortcuts.contains(shortcutStr, Qt::CaseInsensitive);
+
+    if (isLocalShortcutResult) {
+        // If we detect a special Windows shortcut
+        // we will simulate it locally
+        executeLocalShortcut(shortcutStr);
+    }
+
+    return isLocalShortcutResult;
+}
+
+#ifdef Q_OS_WIN32
+#include <windows.h>
+#endif
+
+// Static variable for shortcut debounce control
+static quint32 s_lastShortcutTime = 0;
+static QString s_lastExecutedShortcut;
+// Minimum time in milliseconds between two executions of the same shortcut
+static const quint32 SHORTCUT_DEBOUNCE_TIME = 500;
+
+// Function to execute local shortcuts
+void SdlInputHandler::executeLocalShortcut(const QString& shortcut)
+{
+#ifdef Q_OS_WIN32
+    // On Windows, we can directly simulate system shortcuts
+
+    // Check debounce to avoid multiple executions in quick succession
+    quint32 currentTime = SDL_GetTicks();
+    if (s_lastExecutedShortcut == shortcut &&
+        (currentTime - s_lastShortcutTime) < SHORTCUT_DEBOUNCE_TIME) {
+        // Ignore this shortcut if it was executed recently
+        return;
+    }
+
+    // Update the execution time of the last shortcut
+    s_lastShortcutTime = currentTime;
+    s_lastExecutedShortcut = shortcut;
+
+    setCaptureActive(false);
+    raiseAllKeys();
+
+    // Shortcut decomposition
+    bool hasCtrl = shortcut.contains("Ctrl+", Qt::CaseInsensitive);
+    bool hasAlt = shortcut.contains("Alt+", Qt::CaseInsensitive);
+    bool hasShift = shortcut.contains("Shift+", Qt::CaseInsensitive);
+    bool hasWin = shortcut.contains("Meta+", Qt::CaseInsensitive) || shortcut.contains("Win+", Qt::CaseInsensitive);
+
+    // Get the main key at the end
+    QString mainKey = shortcut.mid(shortcut.lastIndexOf('+') + 1);
+
+    // Convert the main key to Windows virtual key code
+    WORD vkCode = 0;
+
+    if (mainKey.length() == 1) {
+        // For simple letters A-Z
+        if (mainKey[0] >= 'A' && mainKey[0] <= 'Z') {
+            vkCode = mainKey[0].toLatin1();
+        }
+        // For numbers 0-9
+        else if (mainKey[0] >= '0' && mainKey[0] <= '9') {
+            vkCode = mainKey[0].toLatin1();
+        }
+    }
+    else if (mainKey.compare("Tab", Qt::CaseInsensitive) == 0) {
+        vkCode = VK_TAB;
+    }
+    else if (mainKey.compare("Left", Qt::CaseInsensitive) == 0) {
+        vkCode = VK_LEFT;
+    }
+    else if (mainKey.compare("Right", Qt::CaseInsensitive) == 0) {
+        vkCode = VK_RIGHT;
+    }
+    else if (mainKey.compare("Up", Qt::CaseInsensitive) == 0) {
+        vkCode = VK_UP;
+    }
+    else if (mainKey.compare("Down", Qt::CaseInsensitive) == 0) {
+        vkCode = VK_DOWN;
+    }
+    else if (mainKey.compare("Esc", Qt::CaseInsensitive) == 0) {
+        vkCode = VK_ESCAPE;
+    }
+
+    // Execute the shortcut if we found a valid code for the main key
+    if (vkCode != 0) {
+        // Press the modifiers
+        if (hasCtrl) keybd_event(VK_CONTROL, 0, 0, 0);
+        if (hasAlt) keybd_event(VK_MENU, 0, 0, 0);  // VK_MENU is Alt
+        if (hasShift) keybd_event(VK_SHIFT, 0, 0, 0);
+        if (hasWin) keybd_event(VK_LWIN, 0, 0, 0);
+
+        Sleep(10);
+
+        // Press and release the main key
+        keybd_event(vkCode, 0, 0, 0);
+        Sleep(50);
+        keybd_event(vkCode, 0, KEYEVENTF_KEYUP, 0);
+
+        Sleep(10);
+
+        // Release modifiers in reverse order
+        if (hasWin) keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0);
+        if (hasShift) keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
+        if (hasAlt) keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);
+        if (hasCtrl) keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);
+    }
+#endif
 }

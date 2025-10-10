@@ -1361,7 +1361,7 @@ Flickable {
                             activated(currentIndex)
                         }
 
-                        enabled: captureSysKeysCheck.checked && captureSysKeysCheck.enabled
+                        visible: SystemProperties.hasDesktopEnvironment && captureSysKeysCheck.checked
                         textRole: "text"
                         model: ListModel {
                             id: captureSysKeysModeListModel
@@ -1393,6 +1393,47 @@ Flickable {
                         onEnabledChanged: {
                             updatePref()
                         }
+                    }
+                }
+
+                Row {
+                    spacing: 5
+                    width: parent.width
+                    visible: captureSysKeysCheck.checked
+
+                    Label {
+                        text: qsTr("Local shortcuts to keep:")
+                        font.pointSize: 12
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    TextField {
+                        id: localShortcutsField
+                        width: Math.min(parent.width * 0.6, 500)
+                        font.pointSize: 12
+                        text: StreamingPreferences.localShortcuts
+                        placeholderText: qsTr("Ctrl+Alt+Del, Ctrl+Shift+Esc, ...")
+                        anchors.verticalCenter: parent.verticalCenter
+                        hoverEnabled: true
+                        onTextChanged: {
+                            StreamingPreferences.localShortcuts = text
+                        }
+
+                        ToolTip.delay: 1000
+                        ToolTip.timeout: 10000
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Keyboard shortcuts format:") + "\n\n" +
+                                qsTr("- Separate shortcuts with commas") + "\n" +
+                                qsTr("- Combine keys using the + symbol") + "\n\n" +
+                                qsTr("Special keys:") + "\n" +
+                                qsTr("- Ctrl, Alt, Shift") + "\n" +
+                                qsTr("- Meta (Windows key)") + "\n" +
+                                qsTr("- Esc, Tab, Space") + "\n" +
+                                qsTr("- F1, F2, F3, etc.") + "\n" +
+                                qsTr("- Up, Down, Left, Right (arrow keys)") + "\n" +
+                                qsTr("- Home, End, PgUp, PgDown") + "\n" +
+                                qsTr("- Ins, Del") + "\n\n" +
+                                qsTr("Examples: Ctrl+Alt+Del, Meta+L, Ctrl+Shift+Esc")
                     }
                 }
 

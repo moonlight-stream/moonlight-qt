@@ -142,6 +142,10 @@ public:
 
     bool isSystemKeyCaptureActive();
 
+    bool isLocalShortcut(SDL_Keycode keyCode, int keyMod);
+
+    void executeLocalShortcut(const QString& shortcut);
+
     void setCaptureActive(bool active);
 
     bool isMouseInVideoRegion(int mouseX, int mouseY, int windowWidth = -1, int windowHeight = -1);
@@ -221,6 +225,7 @@ private:
     QStringList m_IgnoreDeviceGuids;
     StreamingPreferences::CaptureSysKeysMode m_CaptureSystemKeysMode;
     int m_MouseCursorCapturedVisibilityState;
+    QStringList m_LocalShortcuts; // List of user-defined local shortcuts
 
     struct {
         KeyCombo keyCombo;
