@@ -151,7 +151,7 @@ Item {
         // middle of the animation on Windows, which looks very
         // obviously broken.
         interval: 100
-        onTriggered: stageSpinner.running = true
+        onTriggered: stageSpinner.visible = true
     }
 
     Loader {
@@ -188,7 +188,8 @@ Item {
 
         BusyIndicator {
             id: stageSpinner
-            running: false
+            running: visible
+            visible: false
         }
 
         Label {
