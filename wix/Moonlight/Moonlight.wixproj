@@ -1,4 +1,4 @@
-<Project Sdk="WixToolset.Sdk/5.0.1" ToolsVersion="5.0">
+<Project Sdk="WixToolset.Sdk/6.0.2" ToolsVersion="5.0">
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>Debug</DefineConstants>
   </PropertyGroup>
@@ -16,8 +16,8 @@
     <Exec Command='signtool.exe $(SIGNTOOL_PARAMS) %(SignMsi.FullPath)' />
   </Target>
   <ItemGroup>
-    <PackageReference Include="WixToolset.Firewall.wixext" Version="5.0.1" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.1" />
-    <PackageReference Include="WixToolset.Heat" Version="5.0.1" />
+    <PackageReference Include="WixToolset.Firewall.wixext" Version="6.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
+    <PackageReference Include="WixToolset.Heat" Version="6.0.2" />
   </ItemGroup>
 </Project>

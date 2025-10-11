@@ -1,4 +1,4 @@
-<Project Sdk="WixToolset.Sdk/5.0.1">
+<Project Sdk="WixToolset.Sdk/6.0.2">
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
   </PropertyGroup>
@@ -19,7 +19,7 @@
     <Exec Command='signtool.exe $(SIGNTOOL_PARAMS) %(SignBundle.FullPath)' />
   </Target>
   <ItemGroup>
-    <PackageReference Include="WixToolset.Bal.wixext" Version="5.0.1" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.1" />
+    <PackageReference Include="WixToolset.Bal.wixext" Version="6.0.2" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
   </ItemGroup>
 </Project>
