@@ -913,7 +913,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
         <source>Show configuration warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>Afficher les avertissements de configuration</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1270"/>
