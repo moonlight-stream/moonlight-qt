@@ -54,7 +54,7 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 * [create-dmg](https://github.com/sindresorhus/create-dmg) (only if building DMGs for use on non-development Macs)
 
 ### Linux/Unix Build Requirements
-* Qt 6 is recommended, but Qt 5.9 or later is also supported (replace `qmake6` with `qmake` when using Qt 5).
+* Qt 6 is recommended, but Qt 5.12 or later is also supported (replace `qmake6` with `qmake` when using Qt 5).
 * GCC or Clang
 * FFmpeg 4.0 or later
 * Install the required packages:
@@ -75,7 +75,7 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 ### Build Setup Steps
 1. Install the latest Qt SDK (and optionally, the Qt Creator IDE) from https://www.qt.io/download
     * You can install Qt via Homebrew on macOS, but you will need to use `brew install qt --with-debug` to be able to create debug builds of Moonlight.
-    * You may also use your Linux distro's package manager for the Qt SDK as long as the packages are Qt 5.9 or later.
+    * You may also use your Linux distro's package manager for the Qt SDK as long as the packages are Qt 5.12 or later.
     * This step is not required for building on Steam Link, because the Steam Link SDK includes Qt 5.14.
 2. Run `git submodule update --init --recursive` from within `moonlight-qt/`
 3. Open the project in Qt Creator or build from qmake on the command line.

@@ -9,8 +9,7 @@
 #include <QThread>
 #include <QThreadPool>
 #include <QCoreApplication>
-
-#include <random>
+#include <QRandomGenerator>
 
 #define SER_HOSTS "hosts"
 #define SER_HOSTS_BACKUP "hostsbackup"
@@ -966,14 +965,9 @@ void ComputerManager::addNewHost(NvAddress address, bool mdns, NvAddress mdnsIpv
     QThreadPool::globalInstance()->start(addTask);
 }
 
-// TODO: Use QRandomGenerator when we drop Qt 5.9 support
 QString ComputerManager::generatePinString()
 {
-    std::uniform_int_distribution<int> dist(0, 9999);
-    std::random_device rd;
-    std::mt19937 engine(rd());
-
-    return QString::asprintf("%04u", dist(engine));
+    return QString::asprintf("%04u", QRandomGenerator::system()->bounded(10000));
 }
 
 #include "computermanager.moc"

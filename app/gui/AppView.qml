@@ -38,7 +38,7 @@ CenteredGridView {
         activated = true
 
         // Highlight the first item if a gamepad is connected
-        if (currentIndex == -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
+        if (currentIndex === -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
             currentIndex = 0
         }
 
@@ -94,9 +94,9 @@ CenteredGridView {
                 // the image size checks if this is not an app collector game. We know the officially
                 // supported games all have box art, so this check is not required.
                 if (!model.isAppCollectorGame &&
-                    ((sourceSize.width == 130 && sourceSize.height == 180) || // GFE 2.0 placeholder image
-                     (sourceSize.width == 628 && sourceSize.height == 888) || // GFE 3.0 placeholder image
-                     (sourceSize.width == 200 && sourceSize.height == 266)))  // Our no_app_image.png
+                    ((sourceSize.width === 130 && sourceSize.height === 180) || // GFE 2.0 placeholder image
+                     (sourceSize.width === 628 && sourceSize.height === 888) || // GFE 3.0 placeholder image
+                     (sourceSize.width === 200 && sourceSize.height === 266)))  // Our no_app_image.png
                 {
                     isPlaceholder = true
                 }
@@ -299,18 +299,15 @@ CenteredGridView {
             sourceComponent: NavigableMenu {
                 id: appContextMenu
                 NavigableMenuItem {
-                    parentMenu: appContextMenu
                     text: model.running ? qsTr("Resume Game") : qsTr("Launch Game")
                     onTriggered: launchOrResumeSelectedApp(true)
                 }
                 NavigableMenuItem {
-                    parentMenu: appContextMenu
                     text: qsTr("Quit Game")
                     onTriggered: doQuitGame()
                     visible: model.running
                 }
                 NavigableMenuItem {
-                    parentMenu: appContextMenu
                     checkable: true
                     checked: model.directLaunch
                     text: qsTr("Direct Launch")
@@ -323,7 +320,6 @@ CenteredGridView {
                     ToolTip.visible: hovered
                 }
                 NavigableMenuItem {
-                    parentMenu: appContextMenu
                     checkable: true
                     checked: model.hidden
                     text: qsTr("Hide Game")
