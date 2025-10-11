@@ -11,10 +11,6 @@ win32:!winrt {
     SUBDIRS += AntiHooking
     app.depends += AntiHooking
 }
-!winrt:win32|macx {
-    SUBDIRS += soundio
-    app.depends += soundio
-}
 
 # Support debug and release builds from command line for CI
 CONFIG += debug_and_release

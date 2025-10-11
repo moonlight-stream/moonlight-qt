@@ -1,10 +1,6 @@
 #include "../session.h"
 #include "renderers/renderer.h"
 
-#ifdef HAVE_SOUNDIO
-#include "renderers/soundioaudiorenderer.h"
-#endif
-
 #ifdef HAVE_SLAUDIO
 #include "renderers/slaud.h"
 #endif
@@ -29,12 +25,6 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
         TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
         return nullptr;
     }
-#ifdef HAVE_SOUNDIO
-    else if (mlAudio == "libsoundio") {
-        TRY_INIT_RENDERER(SoundIoAudioRenderer, opusConfig)
-        return nullptr;
-    }
-#endif
 #if defined(HAVE_SLAUDIO)
     else if (mlAudio == "slaudio") {
         TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
@@ -55,11 +45,8 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
     TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
 #endif
 
-    // Default to SDL and use libsoundio as a fallback
+    // Default to SDL
     TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
-#ifdef HAVE_SOUNDIO
-    TRY_INIT_RENDERER(SoundIoAudioRenderer, opusConfig)
-#endif
 
     return nullptr;
 }

@@ -157,7 +157,7 @@ win32 {
     CONFIG += ffmpeg libplacebo
 }
 win32:!winrt {
-    CONFIG += soundio discord-rpc
+    CONFIG += discord-rpc
 }
 macx {
     !disable-prebuilts {
@@ -166,11 +166,7 @@ macx {
     }
 
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework QuartzCore
-
-    # For libsoundio
-    LIBS += -framework CoreAudio -framework AudioUnit
-
-    CONFIG += ffmpeg soundio
+    CONFIG += ffmpeg
 }
 
 SOURCES += \
@@ -414,13 +410,6 @@ macx {
     HEADERS += \
         streaming/video/ffmpeg-renderers/vt.h
 }
-soundio {
-    message(libsoundio audio renderer selected)
-
-    DEFINES += HAVE_SOUNDIO SOUNDIO_STATIC_LIBRARY
-    SOURCES += streaming/audio/renderers/soundioaudiorenderer.cpp
-    HEADERS += streaming/audio/renderers/soundioaudiorenderer.h
-}
 discord-rpc {
     message(Discord integration enabled)
 
@@ -510,15 +499,6 @@ else:unix: LIBS += -L$$OUT_PWD/../qmdnsengine/ -lqmdnsengine
 
 INCLUDEPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
 DEPENDPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
-
-soundio {
-    win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../soundio/release/ -lsoundio
-    else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../soundio/debug/ -lsoundio
-    else:unix: LIBS += -L$$OUT_PWD/../soundio/ -lsoundio
-
-    INCLUDEPATH += $$PWD/../soundio/libsoundio
-    DEPENDPATH += $$PWD/../soundio/libsoundio
-}
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../h264bitstream/release/ -lh264bitstream
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../h264bitstream/debug/ -lh264bitstream
