@@ -129,14 +129,9 @@ CenteredGridView {
                     implicitWidth: 85
                     implicitHeight: 85
 
-                    Image {
-                        source: "qrc:/res/play_arrow_FILL1_wght700_GRAD200_opsz48.svg"
-                        anchors.centerIn: parent
-                        sourceSize {
-                            width: 75
-                            height: 75
-                        }
-                    }
+                    icon.source: "qrc:/res/play_arrow_FILL1_wght700_GRAD200_opsz48.svg"
+                    icon.width: 75
+                    icon.height: 75
 
                     onClicked: {
                         launchOrResumeSelectedApp(true)
@@ -157,14 +152,9 @@ CenteredGridView {
                     implicitWidth: 85
                     implicitHeight: 85
 
-                    Image {
-                        source: "qrc:/res/stop_FILL1_wght700_GRAD200_opsz48.svg"
-                        anchors.centerIn: parent
-                        sourceSize {
-                            width: 75
-                            height: 75
-                        }
-                    }
+                    icon.source: "qrc:/res/stop_FILL1_wght700_GRAD200_opsz48.svg"
+                    icon.width: 75
+                    icon.height: 75
 
                     onClicked: {
                         doQuitGame()
