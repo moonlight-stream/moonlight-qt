@@ -30,7 +30,7 @@ bool VTBaseRenderer::checkDecoderCapabilities(id<MTLDevice> device, PDECODER_PAR
         if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
             // Exclude all GPUs earlier than macOSGPUFamily2
             // https://developer.apple.com/documentation/metal/mtlfeatureset/mtlfeatureset_macos_gpufamily2_v1
-            if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily2_v1]) {
+            if ([device supportsFamily:MTLGPUFamilyMac2]) {
                 if ([device.name containsString:@"Intel"]) {
                     // 500-series Intel GPUs are Skylake and don't support Main10 hardware decoding
                     if ([device.name containsString:@" 5"]) {
