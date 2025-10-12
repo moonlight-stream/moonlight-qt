@@ -100,10 +100,7 @@ class Session : public QObject
 
 public:
     explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
-
-    // NB: This may not get destroyed for a long time! Don't put any cleanup here.
-    // Use Session::exec() or DeferredSessionCleanupTask instead.
-    virtual ~Session() {};
+    virtual ~Session();
 
     Q_INVOKABLE void exec(QWindow* qtWindow);
 
@@ -255,7 +252,7 @@ private:
     NvApp m_App;
     SDL_Window* m_Window;
     IVideoDecoder* m_VideoDecoder;
-    SDL_SpinLock m_DecoderLock;
+    SDL_mutex* m_DecoderLock;
     bool m_AudioDisabled;
     bool m_AudioMuted;
     Uint32 m_FullScreenFlag;

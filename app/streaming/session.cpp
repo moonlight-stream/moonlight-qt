@@ -213,12 +213,12 @@ void Session::clSetHdrMode(bool enabled)
     // If we're in the process of recreating our decoder when we get
     // this callback, we'll drop it. The main thread will make the
     // callback when it finishes creating the new decoder.
-    if (SDL_AtomicTryLock(&s_ActiveSession->m_DecoderLock)) {
+    if (SDL_TryLockMutex(s_ActiveSession->m_DecoderLock) == 0) {
         IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
         if (decoder != nullptr) {
             decoder->setHdrMode(enabled);
         }
-        SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+        SDL_UnlockMutex(s_ActiveSession->m_DecoderLock);
     }
 }
 
@@ -375,15 +375,15 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     // safely return DR_OK and wait for the IDR frame request by
     // the decoder reinitialization code.
 
-    if (SDL_AtomicTryLock(&s_ActiveSession->m_DecoderLock)) {
+    if (SDL_TryLockMutex(s_ActiveSession->m_DecoderLock) == 0) {
         IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
         if (decoder != nullptr) {
             int ret = decoder->submitDecodeUnit(du);
-            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+            SDL_UnlockMutex(s_ActiveSession->m_DecoderLock);
             return ret;
         }
         else {
-            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+            SDL_UnlockMutex(s_ActiveSession->m_DecoderLock);
             return DR_OK;
         }
     }
@@ -570,7 +570,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_App(app),
       m_Window(nullptr),
       m_VideoDecoder(nullptr),
-      m_DecoderLock(0),
+      m_DecoderLock(SDL_CreateMutex()),
       m_AudioMuted(false),
       m_QtWindow(nullptr),
       m_UnexpectedTermination(true), // Failure prior to streaming is unexpected
@@ -585,6 +585,14 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_AudioSampleCount(0),
       m_DropAudioEndTime(0)
 {
+}
+
+Session::~Session()
+{
+    // NB: This may not get destroyed for a long time! Don't put any non-trivial cleanup here.
+    // Use Session::exec() or DeferredSessionCleanupTask instead.
+
+    SDL_DestroyMutex(m_DecoderLock);
 }
 
 bool Session::initialize()
@@ -1482,10 +1490,10 @@ void Session::toggleFullscreen()
     // On Apple Silicon Macs, the AVSampleBufferDisplayLayer may cause WindowServer
     // to deadlock when transitioning out of fullscreen. Destroy the decoder before
     // exiting fullscreen as a workaround. See issue #973.
-    SDL_AtomicLock(&m_DecoderLock);
+    SDL_LockMutex(m_DecoderLock);
     delete m_VideoDecoder;
     m_VideoDecoder = nullptr;
-    SDL_AtomicUnlock(&m_DecoderLock);
+    SDL_UnlockMutex(m_DecoderLock);
 #endif
 
     // Actually enter/leave fullscreen
@@ -2216,7 +2224,7 @@ void Session::execInternal()
                             event.type);
             }
 
-            SDL_AtomicLock(&m_DecoderLock);
+            SDL_LockMutex(m_DecoderLock);
 
             // Destroy the old decoder
             delete m_VideoDecoder;
@@ -2262,7 +2270,7 @@ void Session::execInternal()
                                    enableVsync && m_Preferences->framePacing,
                                    false,
                                    s_ActiveSession->m_VideoDecoder)) {
-                    SDL_AtomicUnlock(&m_DecoderLock);
+                    SDL_UnlockMutex(m_DecoderLock);
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                  "Failed to recreate decoder after reset");
                     emit displayLaunchError(tr("Unable to initialize video decoder. Please check your streaming settings and try again."));
@@ -2288,7 +2296,7 @@ void Session::execInternal()
             // After a window resize, we need to reset the pointer lock region
             m_InputHandler->updatePointerRegionLock();
 
-            SDL_AtomicUnlock(&m_DecoderLock);
+            SDL_UnlockMutex(m_DecoderLock);
             break;
 
         case SDL_KEYUP:
@@ -2367,10 +2375,10 @@ DispatchDeferredCleanup:
     // Destroy the decoder, since this must be done on the main thread
     // NB: This must happen before LiStopConnection() for pull-based
     // decoders.
-    SDL_AtomicLock(&m_DecoderLock);
+    SDL_LockMutex(m_DecoderLock);
     delete m_VideoDecoder;
     m_VideoDecoder = nullptr;
-    SDL_AtomicUnlock(&m_DecoderLock);
+    SDL_UnlockMutex(m_DecoderLock);
 
     // Propagate state changes from the SDL window back to the Qt window
     //
