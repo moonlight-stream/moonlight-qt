@@ -327,7 +327,7 @@ libdrm {
     linux {
         message(Master hooks enabled)
         SOURCES += masterhook.c masterhook_internal.c
-        LIBS += -ldl
+        LIBS += -ldl -pthread
     }
 }
 cuda {

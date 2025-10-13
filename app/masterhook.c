@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <sys/stat.h>
+#include <pthread.h>
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -34,6 +35,33 @@
 // should be the master at any given time. With the position of our
 // hooks, that is definitely not trivial.
 #if SDL_VERSION_ATLEAST(2, 0, 15)
+
+// We don't include fcntl.h, so we have to define this ourselves
+typedef int (*fn_open_t)(const char *pathname, int flags, ...);
+
+// Pointers to the real implementations of these libdrm functions
+static pthread_once_t s_InitDrmFunctions = PTHREAD_ONCE_INIT;
+static typeof(drmModeSetCrtc)* fn_drmModeSetCrtc;
+static typeof(drmModePageFlip)* fn_drmModePageFlip;
+static typeof(drmModeAtomicCommit)* fn_drmModeAtomicCommit;
+
+static void lookupRealDrmFunctions() {
+    fn_drmModeSetCrtc = dlsym(RTLD_NEXT, "drmModeSetCrtc");
+    fn_drmModePageFlip = dlsym(RTLD_NEXT, "drmModePageFlip");
+    fn_drmModeAtomicCommit = dlsym(RTLD_NEXT, "drmModeAtomicCommit");
+}
+
+// Pointers to the real implementations of these libc functions
+static pthread_once_t s_InitLibCFunctions = PTHREAD_ONCE_INIT;
+static fn_open_t *fn_open;
+static fn_open_t *fn_open64;
+static typeof(close) *fn_close;
+
+static void lookupRealLibCFunctions() {
+    fn_open = dlsym(RTLD_NEXT, "open");
+    fn_open64 = dlsym(RTLD_NEXT, "open64");
+    fn_close = dlsym(RTLD_NEXT, "close");
+}
 
 // Qt's DRM master FD grabbed by our hook
 int g_QtDrmMasterFd = -1;
@@ -59,6 +87,9 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
                    uint32_t x, uint32_t y, uint32_t *connectors, int count,
                    drmModeModeInfoPtr mode)
 {
+    // Lookup the real libdrm function pointers if we haven't yet
+    pthread_once(&s_InitDrmFunctions, lookupRealDrmFunctions);
+
     // Grab the first DRM Master FD that makes it in here. This will be the Qt
     // EGLFS backend's DRM FD, on which we will call drmDropMaster() later.
     if (g_QtDrmMasterFd == -1 && drmIsMaster(fd)) {
@@ -70,7 +101,7 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
     }
 
     // Call into the real thing
-    int err = ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtcId, bufferId, x, y, connectors, count, mode);
+    int err = fn_drmModeSetCrtc(fd, crtcId, bufferId, x, y, connectors, count, mode);
     if (err == 0 && fd == g_QtDrmMasterFd) {
         // Free old CRTC state (if any)
         if (g_QtCrtcState) {
@@ -92,13 +123,16 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
 // This hook will temporarily retake DRM master to allow Qt to render while SDL has a DRM FD open
 int drmModePageFlip(int fd, uint32_t crtc_id, uint32_t fb_id, uint32_t flags, void *user_data)
 {
+    // Lookup the real libdrm function pointers if we haven't yet
+    pthread_once(&s_InitDrmFunctions, lookupRealDrmFunctions);
+
     // Call into the real thing
-    int err = ((typeof(drmModePageFlip)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtc_id, fb_id, flags, user_data);
+    int err = fn_drmModePageFlip(fd, crtc_id, fb_id, flags, user_data);
     if (err == -EACCES && fd == g_QtDrmMasterFd) {
         // If SDL took master from us, try to grab it back temporarily
         int oldMasterFd = takeMasterFromSdlFd();
         drmSetMaster(fd);
-        err = ((typeof(drmModePageFlip)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtc_id, fb_id, flags, user_data);
+        err = fn_drmModePageFlip(fd, crtc_id, fb_id, flags, user_data);
         drmDropMaster(fd);
         if (oldMasterFd != -1) {
             drmSetMaster(oldMasterFd);
@@ -111,6 +145,9 @@ int drmModePageFlip(int fd, uint32_t crtc_id, uint32_t fb_id, uint32_t flags, vo
 int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
                         uint32_t flags, void *user_data)
 {
+    // Lookup the real libdrm function pointers if we haven't yet
+    pthread_once(&s_InitDrmFunctions, lookupRealDrmFunctions);
+
     // Grab the first DRM Master FD that makes it in here. This will be the Qt
     // EGLFS backend's DRM FD, on which we will call drmDropMaster() later.
     if (g_QtDrmMasterFd == -1 && drmIsMaster(fd)) {
@@ -122,12 +159,12 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
     }
 
     // Call into the real thing
-    int err = ((typeof(drmModeAtomicCommit)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, req, flags, user_data);
+    int err = fn_drmModeAtomicCommit(fd, req, flags, user_data);
     if (err == -EACCES && fd == g_QtDrmMasterFd) {
         // If SDL took master from us, try to grab it back temporarily
         int oldMasterFd = takeMasterFromSdlFd();
         drmSetMaster(fd);
-        err = ((typeof(drmModeAtomicCommit)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, req, flags, user_data);
+        err = fn_drmModeAtomicCommit(fd, req, flags, user_data);
         drmDropMaster(fd);
         if (oldMasterFd != -1) {
             drmSetMaster(oldMasterFd);
@@ -140,22 +177,28 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
 // hook this variant of open(), since that's what SDL uses. When we see
 // the open a FD for the same card as the Qt DRM master FD, we'll drop
 // master on the Qt FD to allow the new FD to have master.
-int openHook(const char *funcname, const char *pathname, int flags, va_list va);
+int openHook(fn_open_t *real_open, typeof(close) *real_close, const char *pathname, int flags, va_list va);
 
 int open(const char *pathname, int flags, ...)
 {
+    // Lookup the real libc functions if we haven't yet
+    pthread_once(&s_InitLibCFunctions, lookupRealLibCFunctions);
+
     va_list va;
     va_start(va, flags);
-    int fd = openHook(__FUNCTION__, pathname, flags, va);
+    int fd = openHook(fn_open, fn_close, pathname, flags, va);
     va_end(va);
     return fd;
 }
 
 int open64(const char *pathname, int flags, ...)
 {
+    // Lookup the real libc functions if we haven't yet
+    pthread_once(&s_InitLibCFunctions, lookupRealLibCFunctions);
+
     va_list va;
     va_start(va, flags);
-    int fd = openHook(__FUNCTION__, pathname, flags, va);
+    int fd = openHook(fn_open64, fn_close, pathname, flags, va);
     va_end(va);
     return fd;
 }
@@ -164,11 +207,14 @@ int open64(const char *pathname, int flags, ...)
 // after SDL closes its DRM FD.
 int close(int fd)
 {
+    // Lookup the real libc functions if we haven't yet
+    pthread_once(&s_InitLibCFunctions, lookupRealLibCFunctions);
+
     // Remove this entry from the SDL FD table
     bool lastSdlFd = removeSdlFd(fd);
 
     // Call the real thing
-    int ret = ((typeof(close)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd);
+    int ret = fn_close(fd);
 
     // If we closed the last SDL FD, restore master to the Qt FD
     if (ret == 0 && lastSdlFd) {
@@ -180,15 +226,16 @@ int close(int fd)
 
         // Reset the CRTC state to how Qt configured it
         if (g_QtCrtcState) {
-            int err = ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, "drmModeSetCrtc"))(g_QtDrmMasterFd,
-                                                                                    g_QtCrtcState->crtc_id,
-                                                                                    g_QtCrtcState->buffer_id,
-                                                                                    g_QtCrtcState->x,
-                                                                                    g_QtCrtcState->y,
-                                                                                    g_QtCrtcConnectors,
-                                                                                    g_QtCrtcConnectorCount,
-                                                                                    g_QtCrtcState->mode_valid ?
-                                                                                          &g_QtCrtcState->mode : NULL);
+            SDL_assert(fn_drmModeSetCrtc != NULL);
+            int err = fn_drmModeSetCrtc(g_QtDrmMasterFd,
+                                        g_QtCrtcState->crtc_id,
+                                        g_QtCrtcState->buffer_id,
+                                        g_QtCrtcState->x,
+                                        g_QtCrtcState->y,
+                                        g_QtCrtcConnectors,
+                                        g_QtCrtcConnectorCount,
+                                        g_QtCrtcState->mode_valid ?
+                                              &g_QtCrtcState->mode : NULL);
             if (err < 0) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "Failed to restore CRTC state to Qt DRM FD: %d",
