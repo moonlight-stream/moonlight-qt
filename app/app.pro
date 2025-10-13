@@ -325,9 +325,11 @@ libdrm {
     HEADERS += streaming/video/ffmpeg-renderers/drm.h
 
     linux {
-        message(Master hooks enabled)
-        SOURCES += masterhook.c masterhook_internal.c
-        LIBS += -ldl -pthread
+        !disable-masterhooks {
+            message(Master hooks enabled)
+            SOURCES += masterhook.c masterhook_internal.c
+            LIBS += -ldl -pthread
+        }
     }
 }
 cuda {
