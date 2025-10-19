@@ -519,8 +519,18 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     // Setup decoding parameters
     m_VideoDecoderCtx->width = params->width;
     m_VideoDecoderCtx->height = params->height;
-    m_VideoDecoderCtx->pix_fmt = requiredFormat != AV_PIX_FMT_NONE ? requiredFormat : m_FrontendRenderer->getPreferredPixelFormat(params->videoFormat);
     m_VideoDecoderCtx->get_format = ffGetFormat;
+
+    // For non-hwaccel decoders, set the pix_fmt to hint to the decoder which
+    // format should be used. This is necessary for certain decoders like the
+    // out-of-tree nvv4l2dec decoders for L4T platforms. We do not do this
+    // for hwaccel decoders because it causes the AV1 Vulkan video decoder in
+    // FFmpeg 7.0-8.0 to incorrectly believe ff_get_format() was called.
+    // See #1511.
+    if (m_HwDecodeCfg == nullptr) {
+        m_VideoDecoderCtx->pix_fmt = (requiredFormat != AV_PIX_FMT_NONE) ?
+            requiredFormat : m_FrontendRenderer->getPreferredPixelFormat(params->videoFormat);
+    }
 
     AVDictionary* options = nullptr;
 
