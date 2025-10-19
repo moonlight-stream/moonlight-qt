@@ -714,6 +714,10 @@ void ComputerManager::addNewHostManually(QString address)
         // If there wasn't a port specified, use the default
         addNewHost(NvAddress(url.host(), url.port(DEFAULT_HTTP_PORT)), false);
     }
+    else if (QHostAddress(address).protocol() == QAbstractSocket::IPv6Protocol) {
+        // The user specified an IPv6 literal without URL escaping, so use the default port
+        addNewHost(NvAddress(address, DEFAULT_HTTP_PORT), false);
+    }
     else {
         emit computerAddCompleted(false, false);
     }
