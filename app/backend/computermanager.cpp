@@ -74,6 +74,13 @@ private:
 
     void run() override
     {
+        // Reduce the power and performance impact of our
+        // computer status polling while it's running.
+        setPriority(QThread::LowPriority);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+        setServiceLevel(QThread::QualityOfService::Eco);
+#endif
+
         // Always fetch the applist the first time
         int pollsSinceLastAppListFetch = POLLS_PER_APPLIST_FETCH;
         while (!isInterruptionRequested()) {
