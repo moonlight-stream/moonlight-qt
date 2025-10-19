@@ -72,6 +72,13 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 * [Steam Link SDK](https://github.com/ValveSoftware/steamlink-sdk) cloned on your build system
 * STEAMLINK_SDK_PATH environment variable set to the Steam Link SDK path
 
+**Steam Link Hardware Limitations**  
+Moonlight builds for Steam Link are subject to hardware limitations of the Steam Link device:
+* Maximum resolution: **1080p (1920x1080)**
+* Maximum framerate: **60 FPS**
+* Maximum video bitrate: **40 Mbps**
+* **HDR streaming is not supported** on the original hardware
+
 ### Build Setup Steps
 1. Install the latest Qt SDK (and optionally, the Qt Creator IDE) from https://www.qt.io/download
     * You can install Qt via Homebrew on macOS, but you will need to use `brew install qt --with-debug` to be able to create debug builds of Moonlight.
