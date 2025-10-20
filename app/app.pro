@@ -122,7 +122,9 @@ unix:if(!macx|disable-prebuilts) {
                 }
             }
 
-            !disable-cuda {
+            # Disabled by default due to reliability issues. See #1314.
+            # CUDA interop is superseded by VDPAU and Vulkan Video.
+            enable-cuda {
                 packagesExist(ffnvcodec) {
                     PKGCONFIG += ffnvcodec
                     CONFIG += cuda
