@@ -29,9 +29,9 @@ public:
     }
 
 private:
-    bool tryPollComputer(NvAddress address, bool& changed)
+    bool tryPollComputer(QNetworkAccessManager* nam, NvAddress address, bool& changed)
     {
-        NvHTTP http(address, 0, m_Computer->serverCert);
+        NvHTTP http(address, 0, m_Computer->serverCert, nam);
 
         QString serverInfo;
         try {
@@ -52,9 +52,9 @@ private:
         return true;
     }
 
-    bool updateAppList(bool& changed)
+    bool updateAppList(QNetworkAccessManager* nam, bool& changed)
     {
-        NvHTTP http(m_Computer);
+        NvHTTP http(m_Computer, nam);
 
         QVector<NvApp> appList;
 
@@ -81,6 +81,14 @@ private:
         setServiceLevel(QThread::QualityOfService::Eco);
 #endif
 
+        // Share the QNetworkAccessManager to conserve resources when polling.
+        // Each instance creates a worker thread, so sharing them ensures that
+        // we are not spamming a new thread for every single polling attempt.
+        //
+        // Since QThread inherit the priority of the current thread, this also
+        // ensures that the NAM's worker thread will inherit our lower priority.
+        QNetworkAccessManager nam;
+
         // Always fetch the applist the first time
         int pollsSinceLastAppListFetch = POLLS_PER_APPLIST_FETCH;
         while (!isInterruptionRequested()) {
@@ -93,7 +101,7 @@ private:
                         return;
                     }
 
-                    if (tryPollComputer(address, stateChanged)) {
+                    if (tryPollComputer(&nam, address, stateChanged)) {
                         if (!wasOnline) {
                             qInfo() << m_Computer->name << "is now online at" << m_Computer->activeAddress.toString();
                         }
@@ -124,7 +132,7 @@ private:
                     stateChanged = false;
                 }
 
-                if (updateAppList(stateChanged)) {
+                if (updateAppList(&nam, stateChanged)) {
                     pollsSinceLastAppListFetch = 0;
                 }
             }

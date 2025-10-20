@@ -109,9 +109,9 @@ public:
         NVLL_VERBOSE
     };
 
-    explicit NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert);
+    explicit NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert, QNetworkAccessManager* nam = nullptr);
 
-    explicit NvHTTP(NvComputer* computer);
+    explicit NvHTTP(NvComputer* computer, QNetworkAccessManager* nam = nullptr);
 
     static
     int
@@ -196,6 +196,6 @@ private:
                    NvLogLevel logLevel);
 
     NvAddress m_Address;
-    QNetworkAccessManager m_Nam;
+    QNetworkAccessManager* m_Nam;
     QSslCertificate m_ServerCert;
 };

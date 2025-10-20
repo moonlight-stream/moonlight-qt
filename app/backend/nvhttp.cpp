@@ -18,7 +18,8 @@
 #define RESUME_TIMEOUT_MS 30000
 #define QUIT_TIMEOUT_MS 30000
 
-NvHTTP::NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert) :
+NvHTTP::NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert, QNetworkAccessManager* nam) :
+    m_Nam(nam ? nam : new QNetworkAccessManager(this)),
     m_ServerCert(serverCert)
 {
     m_BaseUrlHttp.setScheme("http");
@@ -29,13 +30,11 @@ NvHTTP::NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert
 
     // Never use a proxy server
     QNetworkProxy noProxy(QNetworkProxy::NoProxy);
-    m_Nam.setProxy(noProxy);
-
-    connect(&m_Nam, &QNetworkAccessManager::sslErrors, this, &NvHTTP::handleSslErrors);
+    m_Nam->setProxy(noProxy);
 }
 
-NvHTTP::NvHTTP(NvComputer* computer) :
-    NvHTTP(computer->activeAddress, computer->activeHttpsPort, computer->serverCert)
+NvHTTP::NvHTTP(NvComputer* computer, QNetworkAccessManager* nam) :
+    NvHTTP(computer->activeAddress, computer->activeHttpsPort, computer->serverCert, nam)
 {
 
 }
@@ -492,15 +491,15 @@ NvHTTP::openConnection(QUrl baseUrl,
     request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
 #endif
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0) && QT_VERSION < QT_VERSION_CHECK(5, 15, 1) && !defined(QT_NO_BEARERMANAGEMENT)
-    // HACK: Set network accessibility to work around QTBUG-80947 (introduced in Qt 5.14.0 and fixed in Qt 5.15.1)
-    QT_WARNING_PUSH
-    QT_WARNING_DISABLE_DEPRECATED
-    m_Nam.setNetworkAccessible(QNetworkAccessManager::Accessible);
-    QT_WARNING_POP
+#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
+    // Use fine-grained idle timeouts to avoid calling QNetworkAccessManager::clearAccessCache(),
+    // which tears down the NAM's global thread each time. We must not keep persistent connections
+    // or GFE will puke.
+    request.setAttribute(QNetworkRequest::ConnectionCacheExpiryTimeoutSecondsAttribute, 0);
 #endif
 
-    QNetworkReply* reply = m_Nam.get(request);
+    auto sslErrorsConnection = connect(m_Nam, &QNetworkAccessManager::sslErrors, this, &NvHTTP::handleSslErrors);
+    QNetworkReply* reply = m_Nam->get(request);
 
     // Run the request with a timeout if requested
     QEventLoop loop;
@@ -523,9 +522,11 @@ NvHTTP::openConnection(QUrl baseUrl,
         reply->abort();
     }
 
-    // We must clear out cached authentication and connections or
-    // GFE will puke next time
-    m_Nam.clearAccessCache();
+#if QT_VERSION < QT_VERSION_CHECK(6, 3, 0)
+    // If we couldn't use fine-grained connection idle timeouts, kill them all now
+    m_Nam->clearAccessCache();
+#endif
+    disconnect(sslErrorsConnection);
 
     // Handle error
     if (reply->error() != QNetworkReply::NoError)
