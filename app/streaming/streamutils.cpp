@@ -180,7 +180,7 @@ bool StreamUtils::hasFastAes()
     return getauxval(AT_HWCAP2) & HWCAP2_AES;
 #elif defined(Q_OS_LINUX) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 8
     return getauxval(AT_HWCAP) & HWCAP_AES;
-#elif defined(Q_PROCESSOR_RISCV)
+#elif defined(Q_OS_LINUX) && defined(Q_PROCESSOR_RISCV)
     riscv_hwprobe pairs[1] = {
         { RISCV_HWPROBE_KEY_IMA_EXT_0, 0 },
     };
