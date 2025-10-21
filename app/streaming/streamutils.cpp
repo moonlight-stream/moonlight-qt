@@ -68,6 +68,10 @@ static int __riscv_hwprobe(struct riscv_hwprobe *pairs, size_t pair_count,
 #endif
 #endif
 
+#if defined(Q_OS_FREEBSD) || defined(Q_OS_OPENBSD)
+#include <sys/auxv.h>
+#endif
+
 Uint32 StreamUtils::getPlatformWindowFlags()
 {
 #if defined(Q_OS_DARWIN)
@@ -176,6 +180,14 @@ bool StreamUtils::hasFastAes()
 #elif defined(Q_OS_DARWIN)
     // Everything that runs Catalina and later has AES-NI or ARMv8 crypto instructions
     return true;
+#elif (defined(Q_OS_FREEBSD) || defined(Q_OS_OPENBSD)) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 4
+    unsigned long hwcap2 = 0;
+    elf_aux_info(AT_HWCAP2, &hwcap2, sizeof(hwcap2));
+    return (hwcap2 & HWCAP2_AES);
+#elif (defined(Q_OS_FREEBSD) || defined(Q_OS_OPENBSD)) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 8
+    unsigned long hwcap = 0;
+    elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap));
+    return (hwcap & HWCAP_AES);
 #elif defined(Q_OS_LINUX) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 4
     return getauxval(AT_HWCAP2) & HWCAP2_AES;
 #elif defined(Q_OS_LINUX) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 8
