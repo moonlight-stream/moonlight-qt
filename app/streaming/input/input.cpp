@@ -302,14 +302,20 @@ void SdlInputHandler::notifyFocusLost()
     // used in shortcuts that cause focus loss (such as Alt+Tab) may get stuck down.
     raiseAllKeys();
 
-    // Re-enable text input when window loses focus
+#ifdef Q_OS_WIN32
+    // Re-enable text input when window loses focus as a workaround for an SDL bug.
+    // See #1617 for details.
     SDL_StartTextInput();
+#endif
 }
 
 void SdlInputHandler::notifyFocusGained()
 {
-    // Disable text input when window gains focus to prevent IME popup interference
+#ifdef Q_OS_WIN32
+    // Disable text input when window gains focus to prevent IME popup interference.
+    // See #1617 for details.
     SDL_StopTextInput();
+#endif
 }
 
 bool SdlInputHandler::isCaptureActive()
