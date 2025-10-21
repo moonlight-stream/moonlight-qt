@@ -9,6 +9,7 @@
 #include "input/input.h"
 #include "video/decoder.h"
 #include "audio/renderers/renderer.h"
+#include "audio/capture/microphonecapture.h"
 #include "video/overlaymanager.h"
 
 class SupportedVideoFormatList : public QList<int>
@@ -158,6 +159,8 @@ private:
 
     bool initializeAudioRenderer();
 
+    bool initializeMicrophoneCapture();
+
     bool testAudio(int audioConfiguration);
 
     int getAudioRendererCapabilities(int audioConfiguration);
@@ -279,6 +282,10 @@ private:
     OPUS_MULTISTREAM_CONFIGURATION m_OriginalAudioConfig;
     int m_AudioSampleCount;
     Uint32 m_DropAudioEndTime;
+
+    // Microphone capture
+    MicrophoneCapture* m_MicrophoneCapture;
+    bool m_MicrophoneEnabled;
 
     Overlay::OverlayManager m_OverlayManager;
 
