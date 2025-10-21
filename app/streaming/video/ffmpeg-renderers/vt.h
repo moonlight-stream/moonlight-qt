@@ -6,8 +6,15 @@
 #import <Metal/Metal.h>
 class VTBaseRenderer : public IFFmpegRenderer {
 public:
-    VTBaseRenderer(IFFmpegRenderer::RendererType type) : IFFmpegRenderer(type) {}
+    VTBaseRenderer(IFFmpegRenderer::RendererType type);
+    virtual ~VTBaseRenderer();
     bool checkDecoderCapabilities(id<MTLDevice> device, PDECODER_PARAMETERS params);
+    void setHdrMode(bool enabled) override;
+
+protected:
+    bool m_HdrMetadataChanged; // Manual reset
+    CFDataRef m_MasteringDisplayColorVolume;
+    CFDataRef m_ContentLightLevelInfo;
 };
 #endif
 

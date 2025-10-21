@@ -39,8 +39,6 @@ public:
           m_HwContext(nullptr),
           m_DisplayLayer(nullptr),
           m_FormatDesc(nullptr),
-          m_ContentLightLevelInfo(nullptr),
-          m_MasteringDisplayColorVolume(nullptr),
           m_StreamView(nullptr),
           m_DisplayLink(nullptr),
           m_LastColorSpace(-1),
@@ -88,14 +86,6 @@ public:
 
         if (m_ColorSpace != nullptr) {
             CGColorSpaceRelease(m_ColorSpace);
-        }
-
-        if (m_MasteringDisplayColorVolume != nullptr) {
-            CFRelease(m_MasteringDisplayColorVolume);
-        }
-
-        if (m_ContentLightLevelInfo != nullptr) {
-            CFRelease(m_ContentLightLevelInfo);
         }
 
         for (int i = 0; i < Overlay::OverlayMax; i++) {
@@ -201,63 +191,6 @@ public:
                             "V-sync wait timed out after 100 ms");
             }
             SDL_UnlockMutex(m_VsyncMutex);
-        }
-    }
-
-    virtual void setHdrMode(bool enabled) override
-    {
-        // Free existing HDR metadata
-        if (m_MasteringDisplayColorVolume != nullptr) {
-            CFRelease(m_MasteringDisplayColorVolume);
-            m_MasteringDisplayColorVolume = nullptr;
-        }
-        if (m_ContentLightLevelInfo != nullptr) {
-            CFRelease(m_ContentLightLevelInfo);
-            m_ContentLightLevelInfo = nullptr;
-        }
-
-        // Store new HDR metadata if available
-        SS_HDR_METADATA hdrMetadata;
-        if (enabled && LiGetHdrMetadata(&hdrMetadata)) {
-            if (hdrMetadata.displayPrimaries[0].x != 0 && hdrMetadata.maxDisplayLuminance != 0) {
-                // This data is all in big-endian
-                struct {
-                  vector_ushort2 primaries[3];
-                  vector_ushort2 white_point;
-                  uint32_t luminance_max;
-                  uint32_t luminance_min;
-                } __attribute__((packed, aligned(4))) mdcv;
-
-                // mdcv is in GBR order while SS_HDR_METADATA is in RGB order
-                mdcv.primaries[0].x = __builtin_bswap16(hdrMetadata.displayPrimaries[1].x);
-                mdcv.primaries[0].y = __builtin_bswap16(hdrMetadata.displayPrimaries[1].y);
-                mdcv.primaries[1].x = __builtin_bswap16(hdrMetadata.displayPrimaries[2].x);
-                mdcv.primaries[1].y = __builtin_bswap16(hdrMetadata.displayPrimaries[2].y);
-                mdcv.primaries[2].x = __builtin_bswap16(hdrMetadata.displayPrimaries[0].x);
-                mdcv.primaries[2].y = __builtin_bswap16(hdrMetadata.displayPrimaries[0].y);
-
-                mdcv.white_point.x = __builtin_bswap16(hdrMetadata.whitePoint.x);
-                mdcv.white_point.y = __builtin_bswap16(hdrMetadata.whitePoint.y);
-
-                // These luminance values are in 10000ths of a nit
-                mdcv.luminance_max = __builtin_bswap32((uint32_t)hdrMetadata.maxDisplayLuminance * 10000);
-                mdcv.luminance_min = __builtin_bswap32(hdrMetadata.minDisplayLuminance);
-
-                m_MasteringDisplayColorVolume = CFDataCreate(nullptr, (const UInt8*)&mdcv, sizeof(mdcv));
-            }
-
-            if (hdrMetadata.maxContentLightLevel != 0 && hdrMetadata.maxFrameAverageLightLevel != 0) {
-                // This data is all in big-endian
-                struct {
-                    uint16_t max_content_light_level;
-                    uint16_t max_frame_average_light_level;
-                } __attribute__((packed, aligned(2))) cll;
-
-                cll.max_content_light_level = __builtin_bswap16(hdrMetadata.maxContentLightLevel);
-                cll.max_frame_average_light_level = __builtin_bswap16(hdrMetadata.maxFrameAverageLightLevel);
-
-                m_ContentLightLevelInfo = CFDataCreate(nullptr, (const UInt8*)&cll, sizeof(cll));
-            }
         }
     }
 
@@ -573,8 +506,6 @@ private:
     AVBufferRef* m_HwContext;
     AVSampleBufferDisplayLayer* m_DisplayLayer;
     CMVideoFormatDescriptionRef m_FormatDesc;
-    CFDataRef m_ContentLightLevelInfo;
-    CFDataRef m_MasteringDisplayColorVolume;
     NSView* m_StreamView;
     dispatch_block_t m_OverlayUpdateBlocks[Overlay::OverlayMax];
     NSTextField* m_OverlayTextFields[Overlay::OverlayMax];

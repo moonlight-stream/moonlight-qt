@@ -326,7 +326,7 @@ public:
     {
         int colorspace = getFrameColorspace(frame);
         bool fullRange = isFrameFullRange(frame);
-        if (colorspace != m_LastColorSpace || fullRange != m_LastFullRange) {
+        if (colorspace != m_LastColorSpace || fullRange != m_LastFullRange || m_HdrMetadataChanged) {
             CGColorSpaceRef newColorSpace;
             ParamBuffer paramBuffer;
 
@@ -340,14 +340,13 @@ public:
                 paramBuffer.cscParams = (fullRange ? k_CscParams_Bt709Full : k_CscParams_Bt709Lim);
                 break;
             case COLORSPACE_REC_2020:
-                // https://developer.apple.com/documentation/metal/hdr_content/using_color_spaces_to_display_hdr_content
+                m_MetalLayer.pixelFormat = MTLPixelFormatBGR10A2Unorm;
                 if (frame->color_trc == AVCOL_TRC_SMPTE2084) {
+                    // https://developer.apple.com/documentation/metal/hdr_content/using_color_spaces_to_display_hdr_content
                     m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2100_PQ);
-                    m_MetalLayer.pixelFormat = MTLPixelFormatBGR10A2Unorm;
                 }
                 else {
                     m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2020);
-                    m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
                 }
                 paramBuffer.cscParams = (fullRange ? k_CscParams_Bt2020Full : k_CscParams_Bt2020Lim);
                 break;
@@ -357,6 +356,16 @@ public:
                 m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
                 paramBuffer.cscParams = (fullRange ? k_CscParams_Bt601Full : k_CscParams_Bt601Lim);
                 break;
+            }
+
+            // Set the EDR metadata for HDR10 to enable OS tonemapping
+            if (frame->color_trc == AVCOL_TRC_SMPTE2084 && m_MasteringDisplayColorVolume != nullptr) {
+                m_MetalLayer.EDRMetadata = [CAEDRMetadata HDR10MetadataWithDisplayInfo:(__bridge NSData*)m_MasteringDisplayColorVolume
+                                                                           contentInfo:(__bridge NSData*)m_ContentLightLevelInfo
+                                                                    opticalOutputScale:203.0];
+            }
+            else {
+                m_MetalLayer.EDRMetadata = nullptr;
             }
 
             paramBuffer.bitnessScaleFactor = getBitnessScaleFactor(frame);
@@ -410,6 +419,7 @@ public:
 
             m_LastColorSpace = colorspace;
             m_LastFullRange = fullRange;
+            m_HdrMetadataChanged = false;
         }
 
         return true;
