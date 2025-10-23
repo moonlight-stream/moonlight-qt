@@ -2358,6 +2358,7 @@ void Session::execInternal()
                 m_InputHandler->updatePointerRegionLock();
                 break;
             }
+            break;
         }
     }
 
