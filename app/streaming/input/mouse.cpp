@@ -269,8 +269,10 @@ void SdlInputHandler::updatePointerRegionLock()
     // toggled it themselves using the keyboard shortcut. If that's the case, they
     // have full control over it and we don't touch it anymore.
     if (!m_PointerRegionLockToggledByUser) {
-        // Lock the pointer in true full-screen mode and leave it unlocked in other modes
-        m_PointerRegionLockActive = (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN;
+        // Lock the pointer in true full-screen mode or in any fullscreen mode when only a single monitor is present
+        Uint32 fullscreenFlags = SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
+        m_PointerRegionLockActive = (fullscreenFlags == SDL_WINDOW_FULLSCREEN) ||
+                                    (fullscreenFlags != 0 && SDL_GetNumVideoDisplays() == 1);
     }
 
     // If region lock is enabled, grab the cursor so it can't accidentally leave our window.

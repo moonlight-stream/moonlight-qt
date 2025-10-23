@@ -2351,6 +2351,13 @@ void Session::execInternal()
         case SDL_FINGERUP:
             m_InputHandler->handleTouchFingerEvent(&event.tfinger);
             break;
+        case SDL_DISPLAYEVENT:
+            switch (event.display.event) {
+            case SDL_DISPLAYEVENT_CONNECTED:
+            case SDL_DISPLAYEVENT_DISCONNECTED:
+                m_InputHandler->updatePointerRegionLock();
+                break;
+            }
         }
     }
 
