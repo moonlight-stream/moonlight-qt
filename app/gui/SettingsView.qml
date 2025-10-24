@@ -1279,6 +1279,133 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Prevents the screensaver from starting or the display from going to sleep while streaming.")
                 }
+            
+                Label {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10
+                    text: qsTr("Overlays")
+                    font.pointSize: 12
+                    id: uiOverlayLabel
+                }
+                Label {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
+                    text: qsTr("Text")
+                    font.pointSize: 12
+                    id: uiOverlayTextColor
+                }
+
+                AutoResizingComboBox {
+                    id: uiOverlayTextColorValue
+                    textRole: "text"
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
+                    model: ListModel {
+                        id: uiOverlayTextColorValueModel
+                        ListElement {
+                            text: qsTr("White")
+                            val: 0
+                        }
+                        ListElement {
+                            text: qsTr("Black")
+                            val: 1
+                        }
+                        ListElement {
+                            text: qsTr("Yellow")
+                            val: 2
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        StreamingPreferences.uiOverlayTextColor = uiOverlayTextColorValueModel.get(currentIndex).val
+                    }
+
+                    Component.onCompleted: {
+                        var saved_color = StreamingPreferences.uiOverlayTextColor
+                        currentIndex = 0
+                        for (var i = 0; i < uiOverlayTextColorValueModel.count; i++) {
+                            var el_val = uiOverlayTextColorValueModel.get(i).val;
+                            if (saved_color === el_val) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+
+                        activated(currentIndex)
+                    }
+                }
+
+                Label {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
+                    text: qsTr("Background")
+                    font.pointSize: 12
+                    id: uiOverlayBackgroundColor
+                }
+
+                AutoResizingComboBox {
+                    id: uiOverlayBackgroundColorValue
+                    textRole: "text"        
+                    anchors.left: parent.left            
+                    anchors.leftMargin: 20
+                    model: ListModel {
+                        id: uiOverlayBackgroundColorValueModel
+                        ListElement {
+                            text: qsTr("Black")
+                            val: 0
+                        }
+                        ListElement {
+                            text: qsTr("White")
+                            val: 1
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        StreamingPreferences.uiOverlayBackgroundColor = uiOverlayBackgroundColorValueModel.get(currentIndex).val
+                    }
+
+                    Component.onCompleted: {
+                        var saved_color = StreamingPreferences.uiOverlayBackgroundColor
+                        currentIndex = 0
+                        for (var i = 0; i < uiOverlayBackgroundColorValueModel.count; i++) {
+                            var el_val = uiOverlayBackgroundColorValueModel.get(i).val;
+                            if (saved_color === el_val) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+
+                        activated(currentIndex)
+                    }
+                }
+                
+                Label {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
+                    text: qsTr("Opacity: %1\%").arg(StreamingPreferences.uiOverlayOpacityPerc)
+                    font.pointSize: 12
+                    id: uiOverlayOpacityValue
+                }
+
+                Slider {
+                    id: overlayOpacitySlider
+                    anchors.left: parent.left
+                    anchors.leftMargin: 20
+                    value: StreamingPreferences.uiOverlayOpacityPerc
+                    width: parent.width - 20
+
+                    stepSize: 5
+                    from : 0
+                    to: 100
+
+                    snapMode: "SnapOnRelease"
+
+                    onValueChanged: {
+                        uiOverlayOpacityValue.text = qsTr("Overlay Background Opacity: %1\%").arg(value)
+                        StreamingPreferences.uiOverlayOpacityPerc = value
+                    }
+                
+                }           
             }
         }
     }
@@ -1749,7 +1876,7 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Display real-time stream performance information while streaming.") + "\n\n" +
                                   qsTr("You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.") + "\n\n" +
-                                  qsTr("The performance overlay is not supported on Steam Link or Raspberry Pi.")
+                                  qsTr("The performance overlay is not supported on Steam Link.")
                 }
             }
         }
