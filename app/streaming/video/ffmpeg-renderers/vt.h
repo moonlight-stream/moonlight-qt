@@ -12,6 +12,8 @@ public:
     void setHdrMode(bool enabled) override;
 
 protected:
+    bool isAppleSilicon();
+
     bool m_HdrMetadataChanged; // Manual reset
     CFDataRef m_MasteringDisplayColorVolume;
     CFDataRef m_ContentLightLevelInfo;

@@ -828,7 +828,7 @@ public:
     void startDisplayLink()
     {
         if (@available(macOS 14, *)) {
-            if (m_MetalDisplayLink != nullptr || !m_MetalLayer.displaySyncEnabled) {
+            if (m_MetalDisplayLink != nullptr || !m_MetalLayer.displaySyncEnabled || !isAppleSilicon()) {
                 return;
             }
 

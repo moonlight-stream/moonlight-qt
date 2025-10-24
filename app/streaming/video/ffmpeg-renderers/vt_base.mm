@@ -9,6 +9,9 @@
 #import <AVFoundation/AVFoundation.h>
 #import <Metal/Metal.h>
 
+#include <mach/machine.h>
+#include <sys/sysctl.h>
+
 VTBaseRenderer::VTBaseRenderer(IFFmpegRenderer::RendererType type) :
     IFFmpegRenderer(type),
     m_HdrMetadataChanged(false),
@@ -25,6 +28,23 @@ VTBaseRenderer::~VTBaseRenderer() {
     if (m_ContentLightLevelInfo != nullptr) {
         CFRelease(m_ContentLightLevelInfo);
     }
+}
+
+bool VTBaseRenderer::isAppleSilicon() {
+    static uint32_t cpuType = 0;
+    if (cpuType == 0) {
+        size_t size = sizeof(cpuType);
+        int err = sysctlbyname("hw.cputype", &cpuType, &size, NULL, 0);
+        if (err != 0) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "sysctlbyname(hw.cputype) failed: %d", err);
+            return false;
+        }
+    }
+
+    // Apple Silicon Macs have CPU_ARCH_ABI64 set, so we need to mask that off.
+    // For some reason, 64-bit Intel Macs don't seem to have CPU_ARCH_ABI64 set.
+    return (cpuType & ~CPU_ARCH_MASK) == CPU_TYPE_ARM;
 }
 
 bool VTBaseRenderer::checkDecoderCapabilities(id<MTLDevice> device, PDECODER_PARAMETERS params) {

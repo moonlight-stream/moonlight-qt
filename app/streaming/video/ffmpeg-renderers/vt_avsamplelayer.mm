@@ -10,8 +10,6 @@
 #include <streaming/session.h>
 
 #include <mach/mach_time.h>
-#include <mach/machine.h>
-#include <sys/sysctl.h>
 #import <Cocoa/Cocoa.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
@@ -325,23 +323,6 @@ public:
             return false;
         }
 
-        bool isAppleSilicon = false;
-        {
-            uint32_t cpuType;
-            size_t size = sizeof(cpuType);
-
-            err = sysctlbyname("hw.cputype", &cpuType, &size, NULL, 0);
-            if (err == 0) {
-                // Apple Silicon Macs have CPU_ARCH_ABI64 set, so we need to mask that off.
-                // For some reason, 64-bit Intel Macs don't seem to have CPU_ARCH_ABI64 set.
-                isAppleSilicon = (cpuType & ~CPU_ARCH_MASK) == CPU_TYPE_ARM;
-            }
-            else {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "sysctlbyname(hw.cputype) failed: %d", err);
-            }
-        }
-
         if (qgetenv("VT_FORCE_INDIRECT") == "1") {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Using indirect rendering due to environment variable");
@@ -385,7 +366,7 @@ public:
             //
             // https://github.com/moonlight-stream/moonlight-qt/issues/493
             // https://github.com/moonlight-stream/moonlight-qt/issues/722
-            if (isAppleSilicon && !(params->videoFormat & VIDEO_FORMAT_MASK_10BIT)) {
+            if (isAppleSilicon() && !(params->videoFormat & VIDEO_FORMAT_MASK_10BIT)) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using layer rasterization workaround");
                 if (info.info.cocoa.window.screen != nullptr) {
