@@ -96,7 +96,7 @@ void logToLoggerStream(QString& message)
 #if defined(QT_DEBUG) && defined(Q_OS_WIN32)
     // Output log messages to a debugger if attached
     if (IsDebuggerPresent()) {
-        static QString lineBuffer;
+        thread_local QString lineBuffer;
         lineBuffer += message;
         if (message.endsWith('\n')) {
             OutputDebugStringW(lineBuffer.toStdWString().c_str());
