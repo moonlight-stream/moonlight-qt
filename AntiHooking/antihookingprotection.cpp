@@ -207,6 +207,28 @@ private:
         // Since the RTSS OSD doesn't even work with DXVA2, we'll just block the hooks entirely.
         L"RTSSHooks.dll",
         L"RTSSHooks64.dll",
+
+        // Bandicam's Vulkan layer DLL crashes during destruction of the Vulkan swapchain
+        // bdcamvk64+0x10b73:
+        // 00007ffa`be3b0b73 498b5630        mov     rdx,qword ptr [r14+30h] ds:00000000`00000030=????????????????
+        //
+        // bdcamvk64+0x10b73
+        // libplacebo_357!vk_sw_destroy+0x14f [D:\a\moonlight-deps\moonlight-deps\libplacebo\src\vulkan\swapchain.c @ 460]
+        // libplacebo_357!pl_swapchain_destroy+0x1a [D:\a\moonlight-deps\moonlight-deps\libplacebo\src\swapchain.c @ 30]
+        // Moonlight!PlVkRenderer::~PlVkRenderer+0x159 [D:\a\moonlight-qt\app\streaming\video\ffmpeg-renderers\plvk.cpp @ 140]
+        // Moonlight!PlVkRenderer::`scalar deleting destructor'+0x17
+        // Moonlight!FFmpegVideoDecoder::reset+0x203 [D:\a\moonlight-qt\app\streaming\video\ffmpeg.cpp @ 301]
+        // Moonlight!FFmpegVideoDecoder::~FFmpegVideoDecoder+0x22 [D:\a\moonlight-qt\app\streaming\video\ffmpeg.cpp @ 257]
+        // Moonlight!FFmpegVideoDecoder::`scalar deleting destructor'+0x17
+        // Moonlight!Session::getDecoderInfo+0x19a [D:\a\moonlight-qt\app\streaming\session.cpp @ 415]
+        // Moonlight!SystemProperties::querySdlVideoInfoInternal+0x134 [D:\a\moonlight-qt\app\backend\systemproperties.cpp @ 161]
+        // Moonlight!SystemProperties::querySdlVideoInfo+0x97 [D:\a\moonlight-qt\app\backend\systemproperties.cpp @ 123]
+        // Moonlight!SystemProperties::SystemProperties+0x4bf [D:\a\moonlight-qt\app\backend\systemproperties.cpp @ 75]
+        //
+        // https://github.com/moonlight-stream/moonlight-qt/issues/1425
+        // https://github.com/moonlight-stream/moonlight-qt/issues/1579
+        L"bdcamvk32.dll",
+        L"bdcamvk64.dll",
     };
 };
 
