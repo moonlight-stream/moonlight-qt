@@ -417,3 +417,15 @@ int StreamUtils::getDrmFd(bool preferRenderNode)
 
     return -1;
 }
+
+extern QAtomicInt g_AsyncLoggingEnabled;
+
+void StreamUtils::enterAsyncLoggingMode()
+{
+    g_AsyncLoggingEnabled.ref();
+}
+
+void StreamUtils::exitAsyncLoggingMode()
+{
+    g_AsyncLoggingEnabled.deref();
+}

@@ -2014,6 +2014,9 @@ void Session::execInternal()
     // Toggle the stats overlay if requested by the user
     m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
 
+    // Switch to async logging mode when we enter the SDL loop
+    StreamUtils::enterAsyncLoggingMode();
+
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
@@ -2363,6 +2366,9 @@ void Session::execInternal()
     }
 
 DispatchDeferredCleanup:
+    // Switch back to synchronous logging mode
+    StreamUtils::exitAsyncLoggingMode();
+
     // Uncapture the mouse and hide the window immediately,
     // so we can return to the Qt GUI ASAP.
     m_InputHandler->setCaptureActive(false);

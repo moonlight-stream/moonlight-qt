@@ -60,9 +60,16 @@
 // Log to console for debug Mac builds
 #endif
 
+// StreamUtils::setAsyncLogging() exposes control of this to the Session
+// class to enable async logging once the stream has started.
+//
+// FIXME: Clean this up
+QAtomicInt g_AsyncLoggingEnabled;
+
 static QElapsedTimer s_LoggerTime;
 static QTextStream s_LoggerStream(stderr);
 static QThreadPool s_LoggerThread;
+static QMutex s_SyncLoggerMutex;
 static bool s_SuppressVerboseOutput;
 static QRegularExpression k_RikeyRegex("&rikey=\\w+");
 static QRegularExpression k_RikeyIdRegex("&rikeyid=[\\d-]+");
@@ -127,8 +134,16 @@ void logToLoggerStream(QString& message)
     }
 #endif
 
-    // Queue the log message to be written asynchronously
-    s_LoggerThread.start(new LoggerTask(message));
+    if (g_AsyncLoggingEnabled) {
+        // Queue the log message to be written asynchronously
+        s_LoggerThread.start(new LoggerTask(message));
+    }
+    else {
+        // QTextStream is not thread-safe, so we must lock
+        QMutexLocker locker(&s_SyncLoggerMutex);
+        s_LoggerStream << message;
+        s_LoggerStream.flush();
+    }
 }
 
 void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const char* message)
@@ -296,6 +311,11 @@ LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
     }
     else {
         qCritical() << "Unhandled exception! Failed to open dump file:" << qDmpFileName << "with error" << GetLastError();
+    }
+
+    // Sleep for a moment to allow the logging thread to finish up before crashing
+    if (g_AsyncLoggingEnabled) {
+        Sleep(500);
     }
 
     // Let the program crash and WER collect a dump
@@ -825,6 +845,9 @@ int main(int argc, char *argv[])
 #ifdef HAVE_FFMPEG
     av_log_set_callback(av_log_default_callback);
 #endif
+
+    // We should not be in async logging mode anymore
+    Q_ASSERT(g_AsyncLoggingEnabled == 0);
 
     // Wait for pending log messages to be printed
     s_LoggerThread.waitForDone();
