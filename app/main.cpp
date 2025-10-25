@@ -90,6 +90,11 @@ public:
 
     void run() override
     {
+        // QTextStream is not thread-safe, so we must lock. This will generally
+        // only contend in synchronous logging mode or during a transition
+        // between synchronous and asynchronous. Asynchronous won't contend in
+        // the common case because we only have a single logging thread.
+        QMutexLocker locker(&s_SyncLoggerMutex);
         s_LoggerStream << m_Msg;
         s_LoggerStream.flush();
     }
@@ -122,15 +127,8 @@ void logToLoggerStream(QString& message)
         return;
     }
     else if (oldLogSize >= k_MaxLogSizeBytes - message.size()) {
-        s_LoggerThread.waitForDone();
-        s_LoggerStream << "Log size limit reached!";
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-        s_LoggerStream << Qt::endl;
-#else
-        s_LoggerStream << endl;
-#endif
-        s_LoggerStream.flush();
-        return;
+        // Write one final message
+        message = "Log size limit reached!";
     }
 #endif
 
@@ -139,10 +137,8 @@ void logToLoggerStream(QString& message)
         s_LoggerThread.start(new LoggerTask(message));
     }
     else {
-        // QTextStream is not thread-safe, so we must lock
-        QMutexLocker locker(&s_SyncLoggerMutex);
-        s_LoggerStream << message;
-        s_LoggerStream.flush();
+        // Log the message immediately
+        LoggerTask(message).run();
     }
 }
 
