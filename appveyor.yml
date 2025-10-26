@@ -4,15 +4,11 @@ clone_depth: 1
 
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
-      BUILD_TARGET: steamlink
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2204
       BUILD_TARGET: linux
       FFMPEG_CONFIGURE_ARGS: --enable-pic --disable-static --enable-shared --disable-all --enable-avcodec --enable-avformat --enable-swscale --enable-decoder=h264 --enable-decoder=hevc --enable-decoder=av1 --enable-hwaccel=h264_vaapi --enable-hwaccel=hevc_vaapi --enable-hwaccel=av1_vaapi --enable-hwaccel=h264_vdpau --enable-hwaccel=hevc_vdpau --enable-hwaccel=av1_vdpau --enable-libdrm --enable-hwaccel=h264_vulkan --enable-hwaccel=hevc_vulkan --enable-hwaccel=av1_vulkan --enable-libdav1d --enable-decoder=libdav1d
 
 install:
-  - sh: '[ "$BUILD_TARGET" != steamlink ] || sudo apt install -y libc6:i386 libstdc++6:i386'
-  - sh: '[ "$BUILD_TARGET" != steamlink ] || git clone --depth=1 https://github.com/ValveSoftware/steamlink-sdk.git $HOME/steamlink-sdk'
   - sh: '[ "$BUILD_TARGET" != linux ] || wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -'
   - sh: '[ "$BUILD_TARGET" != linux ] || sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.4.313-jammy.list https://packages.lunarg.com/vulkan/1.4.313/lunarg-vulkan-1.4.313-jammy.list'
   - sh: '[ "$BUILD_TARGET" != linux ] || sudo apt update || true'
@@ -28,15 +24,12 @@ install:
 
 before_build:
   - sh: 'git -c submodule.libs.update=none submodule update --init --recursive'
-  - sh: '[ "$BUILD_TARGET" = linux ] || git submodule update --init --recursive'
   - sh: 'export CI_VERSION=r$APPVEYOR_BUILD_NUMBER'
 
 build_script:
   - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
-  - sh: '[ "$BUILD_TARGET" != steamlink ] || STEAMLINK_SDK_PATH=$HOME/steamlink-sdk scripts/build-steamlink-app.sh'
 
 after_build:
-  - sh: '[ "$BUILD_TARGET" != steamlink ] || appveyor PushArtifact build/installer-release/Moonlight-SteamLink-$CI_VERSION.zip'
   - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/Moonlight-$CI_VERSION-x86_64.AppImage'
 
 deploy: off
