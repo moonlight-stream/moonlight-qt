@@ -16,7 +16,12 @@ SOURCE_ROOT=$PWD
 BUILD_FOLDER=$BUILD_ROOT/build-$BUILD_CONFIG
 DEPLOY_FOLDER=$BUILD_ROOT/deploy-$BUILD_CONFIG
 INSTALLER_FOLDER=$BUILD_ROOT/installer-$BUILD_CONFIG
-VERSION=`cat $SOURCE_ROOT/app/version.txt`
+
+if [ -n "$CI_VERSION" ]; then
+  VERSION=$CI_VERSION
+else
+  VERSION=`cat $SOURCE_ROOT/app/version.txt`
+fi
 
 echo Cleaning output directories
 rm -rf $BUILD_FOLDER

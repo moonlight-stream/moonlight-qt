@@ -96,7 +96,13 @@ set BUILD_FOLDER=%BUILD_ROOT%\build-%ARCH%-%BUILD_CONFIG%
 set DEPLOY_FOLDER=%BUILD_ROOT%\deploy-%ARCH%-%BUILD_CONFIG%
 set INSTALLER_FOLDER=%BUILD_ROOT%\installer-%ARCH%-%BUILD_CONFIG%
 set SYMBOLS_FOLDER=%BUILD_ROOT%\symbols-%ARCH%-%BUILD_CONFIG%
-set /p VERSION=<%SOURCE_ROOT%\app\version.txt
+
+rem Allow CI to override the version.txt with an environment variable
+if defined CI_VERSION (
+    set VERSION=%CI_VERSION%
+) else (
+    set /p VERSION=<%SOURCE_ROOT%\app\version.txt
+)
 
 rem Use the correct VC tools for the specified architecture
 if /I "%ARCH%" EQU "x64" (
@@ -237,7 +243,7 @@ if "%ML_SYMBOL_STORE%" NEQ "" (
 )
 
 echo Building MSI
-msbuild -Restore %SOURCE_ROOT%\wix\Moonlight\Moonlight.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH% /p:MSBuildProjectExtensionsPath=%BUILD_FOLDER%\
+cmd /c "set VERSION= && msbuild -Restore %SOURCE_ROOT%\wix\Moonlight\Moonlight.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH% /p:MSBuildProjectExtensionsPath=%BUILD_FOLDER%\"
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Copying application binary to deployment directory

@@ -4,11 +4,6 @@ clone_depth: 1
 
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-      QTDIR: C:\Qt\6.9
-    - APPVEYOR_BUILD_WORKER_IMAGE: macOS-Sonoma
-      BUILD_TARGET: macos
-      QTDIR: Qt/6.6
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
       BUILD_TARGET: steamlink
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2204
@@ -16,11 +11,6 @@ environment:
       FFMPEG_CONFIGURE_ARGS: --enable-pic --disable-static --enable-shared --disable-all --enable-avcodec --enable-avformat --enable-swscale --enable-decoder=h264 --enable-decoder=hevc --enable-decoder=av1 --enable-hwaccel=h264_vaapi --enable-hwaccel=hevc_vaapi --enable-hwaccel=av1_vaapi --enable-hwaccel=h264_vdpau --enable-hwaccel=hevc_vdpau --enable-hwaccel=av1_vdpau --enable-libdrm --enable-hwaccel=h264_vulkan --enable-hwaccel=hevc_vulkan --enable-hwaccel=av1_vulkan --enable-libdav1d --enable-decoder=libdav1d
 
 install:
-  - cmd: 'copy /y scripts\appveyor\qmake.bat %QTDIR%\msvc2022_arm64\bin\'
-  - cmd: 'copy /y scripts\appveyor\qtpaths.bat %QTDIR%\msvc2022_arm64\bin\'
-  - cmd: 'copy /y scripts\appveyor\target_qt.conf %QTDIR%\msvc2022_arm64\bin\'
-  - sh: '[ "$BUILD_TARGET" != macos ] || nvm use node'
-  - sh: '[ "$BUILD_TARGET" != macos ] || npm install --global create-dmg'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || sudo apt install -y libc6:i386 libstdc++6:i386'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || git clone --depth=1 https://github.com/ValveSoftware/steamlink-sdk.git $HOME/steamlink-sdk'
   - sh: '[ "$BUILD_TARGET" != linux ] || wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -'
@@ -37,30 +27,16 @@ install:
   - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then mkdir $HOME/bin && wget -O $HOME/bin/linuxdeployqt https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage && chmod a+x $HOME/bin/linuxdeployqt; fi'
 
 before_build:
-  - 'git -c submodule.libs.update=none submodule update --init --recursive'
-  - cmd: 'git submodule update --init --recursive'
+  - sh: 'git -c submodule.libs.update=none submodule update --init --recursive'
   - sh: '[ "$BUILD_TARGET" = linux ] || git submodule update --init --recursive'
-  - cmd: 'set OLDPATH=%PATH%'
-  - cmd: 'set /p VERSION=<app\version.txt'
-  - sh: 'export VERSION=`cat app/version.txt`'
+  - sh: 'export CI_VERSION=r$APPVEYOR_BUILD_NUMBER'
 
 build_script:
-  - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2022_64\bin'
-  - cmd: 'scripts\build-arch.bat Release'
-  - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2022_arm64\bin'
-  - cmd: 'scripts\build-arch.bat Release'
-  - cmd: 'scripts\generate-bundle.bat Release'
   - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
-  - sh: '[ "$BUILD_TARGET" != macos ] || PATH=$PATH:$HOME/$QTDIR/macos/bin scripts/generate-dmg.sh Release'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || STEAMLINK_SDK_PATH=$HOME/steamlink-sdk scripts/build-steamlink-app.sh'
 
 after_build:
-  - cmd: 'appveyor PushArtifact build\installer-x64-Release\MoonlightPortable-x64-%VERSION%.zip -FileName MoonlightPortable-x64-r%APPVEYOR_BUILD_NUMBER%.zip'
-  - cmd: 'appveyor PushArtifact build\symbols-x64-Release\MoonlightDebuggingSymbols-x64-%VERSION%.zip -FileName MoonlightDebuggingSymbols-x64-r%APPVEYOR_BUILD_NUMBER%.zip'
-  - cmd: 'appveyor PushArtifact build\installer-arm64-Release\MoonlightPortable-arm64-%VERSION%.zip -FileName MoonlightPortable-arm64-r%APPVEYOR_BUILD_NUMBER%.zip'
-  - cmd: 'appveyor PushArtifact build\symbols-arm64-Release\MoonlightDebuggingSymbols-arm64-%VERSION%.zip -FileName MoonlightDebuggingSymbols-arm64-r%APPVEYOR_BUILD_NUMBER%.zip'
-  - sh: '[ "$BUILD_TARGET" != steamlink ] || appveyor PushArtifact build/installer-release/Moonlight-SteamLink-$VERSION.zip -FileName Moonlight-SteamLink-r$APPVEYOR_BUILD_NUMBER.zip'
-  - sh: '[ "$BUILD_TARGET" != macos ] || appveyor PushArtifact build/installer-Release/Moonlight-$VERSION.dmg -FileName Moonlight-r$APPVEYOR_BUILD_NUMBER.dmg'
-  - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/Moonlight-$VERSION-x86_64.AppImage -FileName Moonlight-r$APPVEYOR_BUILD_NUMBER-x86_64.AppImage'
+  - sh: '[ "$BUILD_TARGET" != steamlink ] || appveyor PushArtifact build/installer-release/Moonlight-SteamLink-$CI_VERSION.zip'
+  - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/Moonlight-$CI_VERSION-x86_64.AppImage'
 
 deploy: off

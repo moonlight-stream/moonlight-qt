@@ -6,6 +6,7 @@ Moonlight also has mobile versions for [Android](https://github.com/moonlight-st
 
 You can follow development on our [Discord server](https://moonlight-stream.org/discord) and help translate Moonlight into your language on [Weblate](https://hosted.weblate.org/projects/moonlight/moonlight-qt/).
 
+ [![Windows and macOS CI Builds](https://github.com/moonlight-stream/moonlight-qt/actions/workflows/build-win-mac.yml/badge.svg?branch=master)](https://github.com/moonlight-stream/moonlight-qt/actions/workflows/build-win-mac.yml?query=branch%3Amaster)
  [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/glj5cxqwy2w3bglv/branch/master?svg=true)](https://ci.appveyor.com/project/cgutman/moonlight-qt/branch/master)
  [![Downloads](https://img.shields.io/github/downloads/moonlight-stream/moonlight-qt/total)](https://github.com/moonlight-stream/moonlight-qt/releases)
  [![Translation Status](https://hosted.weblate.org/widgets/moonlight/-/moonlight-qt/svg-badge.svg)](https://hosted.weblate.org/projects/moonlight/moonlight-qt/)

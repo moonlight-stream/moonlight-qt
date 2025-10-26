@@ -1,0 +1,113 @@
+name: Build Windows and macOS
+
+on:
+  push:
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows
+          - os: windows-2025
+            qt_version: 6.10.0
+          # macOS
+          - os: macos-15
+            qt_version: 6.10.0
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 1
+
+      - name: Set CI version
+        shell: bash
+        run: |
+          CI_VERSION=`echo $GITHUB_SHA | cut -c1-6`
+          echo "CI_VERSION=$CI_VERSION" >> $GITHUB_ENV
+
+      - name: Install create-dmg (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install node
+          npm install --global create-dmg
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          cache: true
+          set-env: ${{ runner.os != 'Windows' }}
+          add-tools-to-path: ${{ runner.os != 'Windows' }}
+          version: ${{ matrix.qt_version }}
+
+      - name: Install Qt ARM64 (Windows)
+        if: runner.os == 'Windows'
+        uses: jurplel/install-qt-action@v4
+        with:
+          cache: true
+          set-env: false
+          add-tools-to-path: false
+          arch: win64_msvc2022_arm64_cross_compiled
+          version: ${{ matrix.qt_version }}
+
+      - name: Build x64 binaries (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set "PATH=%QT_PATH%;%PATH%"
+          scripts\build-arch.bat Release x64
+        env:
+          QT_PATH: ${{ runner.workspace }}\Qt\${{ matrix.qt_version }}\msvc2022_64\bin
+
+      - name: Build ARM64 binaries (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          set "PATH=%QT_PATH%;%PATH%"
+          scripts\build-arch.bat Release arm64
+        env:
+          QT_PATH: ${{ runner.workspace }}\Qt\${{ matrix.qt_version }}\msvc2022_arm64\bin
+
+      - name: Build Package
+        shell: pwsh
+        run: |
+          if ($Env:RUNNER_OS -eq "Windows") {
+            cmd /c scripts\generate-bundle.bat Release
+          } else {
+            bash scripts/generate-dmg.sh Release
+          }
+
+      - name: Collect Artifacts
+        shell: pwsh
+        run: |
+          New-Item -Path archive -ItemType Directory
+          if ($Env:RUNNER_OS -eq "Windows") {
+            Copy-Item -Path "build/installer-x64-release/*" -Destination archive
+            Copy-Item -Path "build/installer-arm64-release/*" -Destination archive
+          } else {
+            Copy-Item -Path "build/installer-Release/*.dmg" -Destination archive
+          }
+
+      - name: Upload Binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: Moonlight-${{ runner.os }}-${{ env.CI_VERSION }}
+          path: archive/*
+          compression-level: 0
+          if-no-files-found: error
+
+      - name: Upload Symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: zDevDbgSyms-${{ runner.os }}-${{ env.CI_VERSION }}
+          path: |
+            build/installer-*/*.dsym/*
+            build/symbols-*/*.pdb
+          if-no-files-found: error

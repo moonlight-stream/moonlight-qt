@@ -38,7 +38,13 @@ set BUILD_ROOT=%cd%\build
 set SOURCE_ROOT=%cd%
 set BUILD_FOLDER=%BUILD_ROOT%\build-%BUILD_CONFIG%
 set INSTALLER_FOLDER=%BUILD_ROOT%\installer-%BUILD_CONFIG%
-set /p VERSION=<%SOURCE_ROOT%\app\version.txt
+
+rem Allow CI to override the version.txt with an environment variable
+if defined CI_VERSION (
+    set VERSION=%CI_VERSION%
+) else (
+    set /p VERSION=<%SOURCE_ROOT%\app\version.txt
+)
 
 rem Ensure that all architectures have been built before the final bundle
 if not exist "%BUILD_ROOT%\build-x64-%BUILD_CONFIG%\Moonlight.msi" (
@@ -67,7 +73,7 @@ if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Building bundle
 rem Bundles are always x86 binaries
-msbuild -Restore %SOURCE_ROOT%\wix\MoonlightSetup\MoonlightSetup.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=x86 /p:MSBuildProjectExtensionsPath=%BUILD_FOLDER%\
+cmd /c "set VERSION= && msbuild -Restore %SOURCE_ROOT%\wix\MoonlightSetup\MoonlightSetup.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=x86 /p:MSBuildProjectExtensionsPath=%BUILD_FOLDER%\"
 if !ERRORLEVEL! NEQ 0 goto Error
 
 rem Rename the installer to match the publishing convention

@@ -11,7 +11,12 @@ SOURCE_ROOT=$PWD
 BUILD_FOLDER=$BUILD_ROOT/build-$BUILD_CONFIG
 DEPLOY_FOLDER=$BUILD_ROOT/deploy-$BUILD_CONFIG
 INSTALLER_FOLDER=$BUILD_ROOT/installer-$BUILD_CONFIG
-VERSION=`cat $SOURCE_ROOT/app/version.txt`
+
+if [ -n "$CI_VERSION" ]; then
+  VERSION=$CI_VERSION
+else
+  VERSION=`cat $SOURCE_ROOT/app/version.txt`
+fi
 
 command -v qmake6 >/dev/null 2>&1 || fail "Unable to find 'qmake6' in your PATH!"
 command -v linuxdeployqt >/dev/null 2>&1 || fail "Unable to find 'linuxdeployqt' in your PATH!"
