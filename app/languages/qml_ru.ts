@@ -885,7 +885,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
         <source>Show configuration warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибки конфигурации</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1298"/>
