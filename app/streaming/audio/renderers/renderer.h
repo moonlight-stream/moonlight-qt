@@ -15,8 +15,6 @@ public:
     // Return false if an unrecoverable error has occurred and the renderer must be reinitialized
     virtual bool submitAudio(int bytesWritten) = 0;
 
-    virtual int getCapabilities() = 0;
-
     virtual void remapChannels(POPUS_MULTISTREAM_CONFIGURATION) {
         // Use default channel mapping:
         // 0 - Front Left

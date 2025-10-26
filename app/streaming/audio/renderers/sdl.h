@@ -16,8 +16,6 @@ public:
 
     virtual bool submitAudio(int bytesWritten);
 
-    virtual int getCapabilities();
-
     virtual AudioFormat getAudioBufferFormat();
 
 private:

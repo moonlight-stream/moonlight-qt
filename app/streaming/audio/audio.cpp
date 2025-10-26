@@ -95,21 +95,15 @@ bool Session::initializeAudioRenderer()
 
 int Session::getAudioRendererCapabilities(int audioConfiguration)
 {
-    // Build a fake OPUS_MULTISTREAM_CONFIGURATION to give
-    // the renderer the channel count and sample rate.
-    OPUS_MULTISTREAM_CONFIGURATION opusConfig = {};
-    opusConfig.sampleRate = 48000;
-    opusConfig.samplesPerFrame = 240;
-    opusConfig.channelCount = CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(audioConfiguration);
+    int caps = 0;
 
-    IAudioRenderer* audioRenderer = createAudioRenderer(&opusConfig);
-    if (audioRenderer == nullptr) {
-        return 0;
-    }
+    // All audio renderers support arbitrary audio duration
+    caps |= CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
 
-    int caps = audioRenderer->getCapabilities();
-
-    delete audioRenderer;
+#ifdef STEAM_LINK
+    // Steam Link devices have slow Opus decoders
+    caps |= CAPABILITY_SLOW_OPUS_DECODER;
+#endif
 
     return caps;
 }

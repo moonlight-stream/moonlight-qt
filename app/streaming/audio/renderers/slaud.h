@@ -16,8 +16,6 @@ public:
 
     virtual bool submitAudio(int bytesWritten);
 
-    virtual int getCapabilities();
-
     virtual AudioFormat getAudioBufferFormat();
 
     virtual void remapChannels(POPUS_MULTISTREAM_CONFIGURATION opusConfig);
