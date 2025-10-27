@@ -84,22 +84,28 @@ jobs:
             bash scripts/generate-dmg.sh Release
           }
 
-      - name: Collect Artifacts
-        shell: pwsh
-        run: |
-          New-Item -Path archive -ItemType Directory
-          if ($Env:RUNNER_OS -eq "Windows") {
-            Copy-Item -Path "build/installer-x64-release/*" -Destination archive
-            Copy-Item -Path "build/installer-arm64-release/*" -Destination archive
-          } else {
-            Copy-Item -Path "build/installer-Release/*.dmg" -Destination archive
-          }
-
-      - name: Upload Binaries
+      - name: Upload Binaries (Windows x64)
         uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: Moonlight-${{ runner.os }}-x64-${{ env.CI_VERSION }}
+          path: build/deploy-x64-release/*
+          if-no-files-found: error
+
+      - name: Upload Binaries (Windows arm64)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: Moonlight-${{ runner.os }}-arm64-${{ env.CI_VERSION }}
+          path: build/deploy-arm64-release/*
+          if-no-files-found: error
+
+      - name: Upload Binaries (macOS)
+        uses: actions/upload-artifact@v4
+        if: runner.os == 'macOS'
         with:
           name: Moonlight-${{ runner.os }}-${{ env.CI_VERSION }}
-          path: archive/*
+          path: build/installer-Release/*.dmg
           compression-level: 0
           if-no-files-found: error
 
