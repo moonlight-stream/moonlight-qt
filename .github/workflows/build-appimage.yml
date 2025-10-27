@@ -1,17 +1,24 @@
-name: Build Linux AppImage
+---
+name: Build - Linux AppImage
+permissions:
+  contents: read
 
 on:
-  push:
-  pull_request:
-    branches: [ "master" ]
+  workflow_call:
+    inputs:
+      ci_version:
+        required: true
+        type: string
 
 jobs:
   build:
+    env:
+      CI_VERSION: ${{ inputs.ci_version }}
     runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: 'recursive'
           fetch-depth: 1
@@ -28,16 +35,11 @@ jobs:
             wayland-protocols libopus-dev libvdpau-dev libgl-dev libpipewire-0.3-dev vulkan-sdk
           sudo pip3 install meson
           mkdir -p dep_root/{bin,include,lib}
-          echo "DEP_ROOT=$PWD/dep_root" >> $GITHUB_ENV
-          echo "$PWD/dep_root/bin" >> $GITHUB_PATH
-
-      - name: Set CI version
-        run: |
-          CI_VERSION=`echo $GITHUB_SHA | cut -c1-6`
-          echo "CI_VERSION=$CI_VERSION" >> $GITHUB_ENV
+          echo "DEP_ROOT=$PWD/dep_root" >> "${GITHUB_ENV}"
+          echo "$PWD/dep_root/bin" >> "${GITHUB_PATH}"
 
       - name: Checkout SDL
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL
           ref: 235e4870af091ea7e3814ee2dbdb8e2ec627aaf0
@@ -52,7 +54,7 @@ jobs:
           sudo make install
 
       - name: Checkout SDL_ttf
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL_ttf
           ref: release-2.22.0
@@ -68,7 +70,7 @@ jobs:
           sudo make install
 
       - name: Checkout libva
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: intel/libva
           ref: 2.22.0
@@ -83,7 +85,7 @@ jobs:
           sudo make install
 
       - name: Checkout libplacebo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: haasn/libplacebo
           ref: 63a3d64ac32eaaa56aa60b5000d43c02544c6508
@@ -111,7 +113,7 @@ jobs:
           popd
 
       - name: Checkout FFmpeg
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: FFmpeg/FFmpeg
           ref: dd00a614e16a15db0b230dfe45790e913e593695
@@ -141,7 +143,7 @@ jobs:
           scripts/build-appimage.sh
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: Moonlight-LinuxAppImage-${{ env.CI_VERSION }}
           path: build/installer-release/Moonlight-${{ env.CI_VERSION }}-x86_64.AppImage
