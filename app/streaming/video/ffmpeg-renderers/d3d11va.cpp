@@ -28,32 +28,17 @@ typedef struct _VERTEX
 #define CSC_MATRIX_RAW_ELEMENT_COUNT 9
 #define CSC_MATRIX_PACKED_ELEMENT_COUNT 12
 
-static const float k_CscMatrix_Bt601Lim[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
-    1.1644f, 1.1644f, 1.1644f,
-    0.0f, -0.3917f, 2.0172f,
-    1.5960f, -0.8129f, 0.0f,
-};
-static const float k_CscMatrix_Bt601Full[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
+static const float k_CscMatrix_Bt601[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
     1.0f, 1.0f, 1.0f,
     0.0f, -0.3441f, 1.7720f,
     1.4020f, -0.7141f, 0.0f,
 };
-static const float k_CscMatrix_Bt709Lim[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
-    1.1644f, 1.1644f, 1.1644f,
-    0.0f, -0.2132f, 2.1124f,
-    1.7927f, -0.5329f, 0.0f,
-};
-static const float k_CscMatrix_Bt709Full[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
+static const float k_CscMatrix_Bt709[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
     1.0f, 1.0f, 1.0f,
     0.0f, -0.1873f, 1.8556f,
     1.5748f, -0.4681f, 0.0f,
 };
-static const float k_CscMatrix_Bt2020Lim[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
-    1.1644f, 1.1644f, 1.1644f,
-    0.0f, -0.1874f, 2.1418f,
-    1.6781f, -0.6505f, 0.0f,
-};
-static const float k_CscMatrix_Bt2020Full[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
+static const float k_CscMatrix_Bt2020[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
     1.0f, 1.0f, 1.0f,
     0.0f, -0.1646f, 1.8814f,
     1.4746f, -0.5714f, 0.0f,
@@ -61,15 +46,12 @@ static const float k_CscMatrix_Bt2020Full[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
 
 #define OFFSETS_ELEMENT_COUNT 3
 
-static const float k_Offsets_Lim[OFFSETS_ELEMENT_COUNT] = { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f };
-static const float k_Offsets_Full[OFFSETS_ELEMENT_COUNT] = { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f };
-
 typedef struct _CSC_CONST_BUF
 {
-    // CscMatrix value from above but packed appropriately
+    // CscMatrix value from above but packed and scaled
     float cscMatrix[CSC_MATRIX_PACKED_ELEMENT_COUNT];
 
-    // YUV offset values from above
+    // YUV offset values
     float offsets[OFFSETS_ELEMENT_COUNT];
 
     // Padding float to be a multiple of 16 bytes
@@ -721,6 +703,7 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
     bool fullRange = isFrameFullRange(frame);
     int colorspace = getFrameColorspace(frame);
     bool yuv444 = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_YUV444);
+    int bits = (colorspace == COLORSPACE_REC_2020) ? 10 : 8;
 
     // We have purpose-built shaders for the common Rec 601 (SDR) and Rec 2020 (HDR) YUV 4:2:0 cases
     if (!yuv444 && !fullRange && colorspace == COLORSPACE_REC_601) {
@@ -772,32 +755,42 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
         const float* rawCscMatrix;
         switch (colorspace) {
         case COLORSPACE_REC_601:
-            rawCscMatrix = fullRange ? k_CscMatrix_Bt601Full : k_CscMatrix_Bt601Lim;
+            rawCscMatrix = k_CscMatrix_Bt601;
             break;
         case COLORSPACE_REC_709:
-            rawCscMatrix = fullRange ? k_CscMatrix_Bt709Full : k_CscMatrix_Bt709Lim;
+            rawCscMatrix = k_CscMatrix_Bt709;
             break;
         case COLORSPACE_REC_2020:
-            rawCscMatrix = fullRange ? k_CscMatrix_Bt2020Full : k_CscMatrix_Bt2020Lim;
+            rawCscMatrix = k_CscMatrix_Bt2020;
             break;
         default:
             SDL_assert(false);
             return;
         }
 
+        int range = (1 << bits);
+        double yMin = (fullRange ? 0 : (16 << (bits - 8)));
+        double yMax = (fullRange ? (range - 1) : (235 << (bits - 8)));
+        double yScale = (range - 1) / (yMax - yMin);
+        double uvMin = (fullRange ? 0 : (16 << (bits - 8)));
+        double uvMax = (fullRange ? (range - 1) : (240 << (bits - 8)));
+        double uvScale = (range - 1) / (uvMax - uvMin);
+
+        // Calculate YUV offsets
+        constBuf.offsets[0] = yMin / (double)(range - 1);
+        constBuf.offsets[1] = (range / 2) / (double)(range - 1);
+        constBuf.offsets[2] = (range / 2) / (double)(range - 1);
+
         // We need to adjust our raw CSC matrix to be column-major and with float3 vectors
         // padded with a float in between each of them to adhere to HLSL requirements.
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 constBuf.cscMatrix[i * 4 + j] = rawCscMatrix[j * 3 + i];
+
+                // Scale the color matrix according to the color range
+                constBuf.cscMatrix[i * 4 + j] *= (j == 0) ? yScale : uvScale;
             }
         }
-
-        // No adjustments are needed to the float[3] array of offsets, so it can just
-        // be copied with memcpy().
-        memcpy(constBuf.offsets,
-               fullRange ? k_Offsets_Full : k_Offsets_Lim,
-               sizeof(constBuf.offsets));
 
         D3D11_SUBRESOURCE_DATA constData = {};
         constData.pSysMem = &constBuf;
