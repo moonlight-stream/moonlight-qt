@@ -28,8 +28,6 @@ public:
 
     enum PixelShaders {
         GENERIC_YUV_420,
-        BT_601_LIMITED_YUV_420,
-        BT_2020_LIMITED_YUV_420,
         GENERIC_AYUV,
         GENERIC_Y410,
         _COUNT
@@ -72,6 +70,8 @@ private:
     DECODER_PARAMETERS m_DecoderParams;
     int m_TextureAlignment;
     DXGI_FORMAT m_TextureFormat;
+    UINT m_TextureWidth;
+    UINT m_TextureHeight;
     int m_DisplayWidth;
     int m_DisplayHeight;
     int m_LastColorSpace;

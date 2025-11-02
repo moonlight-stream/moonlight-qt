@@ -54,16 +54,20 @@ typedef struct _CSC_CONST_BUF
     // YUV offset values
     float offsets[OFFSETS_ELEMENT_COUNT];
 
-    // Padding float to be a multiple of 16 bytes
+    // Padding float to end 16-byte boundary
     float padding;
+
+    // Chroma offset values
+    float chromaOffset[2];
+
+    // Padding to final 16-byte boundary
+    float padding2[2];
 } CSC_CONST_BUF, *PCSC_CONST_BUF;
 static_assert(sizeof(CSC_CONST_BUF) % 16 == 0, "Constant buffer sizes must be a multiple of 16");
 
 static const std::array<const char*, D3D11VARenderer::PixelShaders::_COUNT> k_VideoShaderNames =
 {
-    "d3d11_genyuv_pixel.fxc",
-    "d3d11_bt601lim_pixel.fxc",
-    "d3d11_bt2020lim_pixel.fxc",
+    "d3d11_yuv420_pixel.fxc",
     "d3d11_ayuv_pixel.fxc",
     "d3d11_y410_pixel.fxc",
 };
@@ -541,6 +545,8 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         D3D11_TEXTURE2D_DESC textureDesc;
         d3d11vaFramesContext->texture_infos->texture->GetDesc(&textureDesc);
         m_TextureFormat = textureDesc.Format;
+        m_TextureWidth = textureDesc.Width;
+        m_TextureHeight = textureDesc.Height;
 
         if (m_BindDecoderOutputTextures) {
             // Create SRVs for all textures in the decoder pool
@@ -705,107 +711,130 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
     bool yuv444 = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_YUV444);
     int bits = (colorspace == COLORSPACE_REC_2020) ? 10 : 8;
 
-    // We have purpose-built shaders for the common Rec 601 (SDR) and Rec 2020 (HDR) YUV 4:2:0 cases
-    if (!yuv444 && !fullRange && colorspace == COLORSPACE_REC_601) {
-        m_DeviceContext->PSSetShader(m_VideoPixelShaders[PixelShaders::BT_601_LIMITED_YUV_420].Get(), nullptr, 0);
-    }
-    else if (!yuv444 && !fullRange && colorspace == COLORSPACE_REC_2020) {
-        m_DeviceContext->PSSetShader(m_VideoPixelShaders[PixelShaders::BT_2020_LIMITED_YUV_420].Get(), nullptr, 0);
-    }
-    else {
-        if (yuv444) {
-            // We'll need to use one of the 4:4:4 shaders for this pixel format
-            switch (m_TextureFormat)
-            {
-            case DXGI_FORMAT_AYUV:
-                m_DeviceContext->PSSetShader(m_VideoPixelShaders[PixelShaders::GENERIC_AYUV].Get(), nullptr, 0);
-                break;
-            case DXGI_FORMAT_Y410:
-                m_DeviceContext->PSSetShader(m_VideoPixelShaders[PixelShaders::GENERIC_Y410].Get(), nullptr, 0);
-                break;
-            default:
-                SDL_assert(false);
-            }
-        }
-        else {
-            // We'll need to use the generic 4:2:0 shader for this colorspace and color range combo
-            m_DeviceContext->PSSetShader(m_VideoPixelShaders[PixelShaders::GENERIC_YUV_420].Get(), nullptr, 0);
-        }
-
-        // If nothing has changed since last frame, we're done
-        if (colorspace == m_LastColorSpace && fullRange == m_LastFullRange) {
-            return;
-        }
-
-        if (!yuv444) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Falling back to generic video pixel shader for %d (%s range)",
-                        colorspace,
-                        fullRange ? "full" : "limited");
-        }
-
-        D3D11_BUFFER_DESC constDesc = {};
-        constDesc.ByteWidth = sizeof(CSC_CONST_BUF);
-        constDesc.Usage = D3D11_USAGE_IMMUTABLE;
-        constDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        constDesc.CPUAccessFlags = 0;
-        constDesc.MiscFlags = 0;
-
-        CSC_CONST_BUF constBuf = {};
-        const float* rawCscMatrix;
-        switch (colorspace) {
-        case COLORSPACE_REC_601:
-            rawCscMatrix = k_CscMatrix_Bt601;
+    if (yuv444) {
+        // We'll need to use one of the 4:4:4 shaders for this pixel format
+        switch (m_TextureFormat)
+        {
+        case DXGI_FORMAT_AYUV:
+            m_DeviceContext->PSSetShader(m_VideoPixelShaders[PixelShaders::GENERIC_AYUV].Get(), nullptr, 0);
             break;
-        case COLORSPACE_REC_709:
-            rawCscMatrix = k_CscMatrix_Bt709;
-            break;
-        case COLORSPACE_REC_2020:
-            rawCscMatrix = k_CscMatrix_Bt2020;
+        case DXGI_FORMAT_Y410:
+            m_DeviceContext->PSSetShader(m_VideoPixelShaders[PixelShaders::GENERIC_Y410].Get(), nullptr, 0);
             break;
         default:
             SDL_assert(false);
-            return;
         }
+    }
+    else {
+        // We'll need to use the generic 4:2:0 shader for this colorspace and color range combo
+        m_DeviceContext->PSSetShader(m_VideoPixelShaders[PixelShaders::GENERIC_YUV_420].Get(), nullptr, 0);
+    }
 
-        int range = (1 << bits);
-        double yMin = (fullRange ? 0 : (16 << (bits - 8)));
-        double yMax = (fullRange ? (range - 1) : (235 << (bits - 8)));
-        double yScale = (range - 1) / (yMax - yMin);
-        double uvMin = (fullRange ? 0 : (16 << (bits - 8)));
-        double uvMax = (fullRange ? (range - 1) : (240 << (bits - 8)));
-        double uvScale = (range - 1) / (uvMax - uvMin);
+    // If nothing has changed since last frame, we're done
+    if (colorspace == m_LastColorSpace && fullRange == m_LastFullRange) {
+        return;
+    }
 
-        // Calculate YUV offsets
-        constBuf.offsets[0] = yMin / (double)(range - 1);
-        constBuf.offsets[1] = (range / 2) / (double)(range - 1);
-        constBuf.offsets[2] = (range / 2) / (double)(range - 1);
+    D3D11_BUFFER_DESC constDesc = {};
+    constDesc.ByteWidth = sizeof(CSC_CONST_BUF);
+    constDesc.Usage = D3D11_USAGE_IMMUTABLE;
+    constDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    constDesc.CPUAccessFlags = 0;
+    constDesc.MiscFlags = 0;
 
-        // We need to adjust our raw CSC matrix to be column-major and with float3 vectors
-        // padded with a float in between each of them to adhere to HLSL requirements.
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                constBuf.cscMatrix[i * 4 + j] = rawCscMatrix[j * 3 + i];
+    CSC_CONST_BUF constBuf = {};
+    const float* rawCscMatrix;
+    switch (colorspace) {
+    case COLORSPACE_REC_601:
+        rawCscMatrix = k_CscMatrix_Bt601;
+        break;
+    case COLORSPACE_REC_709:
+        rawCscMatrix = k_CscMatrix_Bt709;
+        break;
+    case COLORSPACE_REC_2020:
+        rawCscMatrix = k_CscMatrix_Bt2020;
+        break;
+    default:
+        SDL_assert(false);
+        return;
+    }
 
-                // Scale the color matrix according to the color range
-                constBuf.cscMatrix[i * 4 + j] *= (j == 0) ? yScale : uvScale;
-            }
+    int range = (1 << bits);
+    double yMin = (fullRange ? 0 : (16 << (bits - 8)));
+    double yMax = (fullRange ? (range - 1) : (235 << (bits - 8)));
+    double yScale = (range - 1) / (yMax - yMin);
+    double uvMin = (fullRange ? 0 : (16 << (bits - 8)));
+    double uvMax = (fullRange ? (range - 1) : (240 << (bits - 8)));
+    double uvScale = (range - 1) / (uvMax - uvMin);
+
+    // Calculate YUV offsets
+    constBuf.offsets[0] = yMin / (double)(range - 1);
+    constBuf.offsets[1] = (range / 2) / (double)(range - 1);
+    constBuf.offsets[2] = (range / 2) / (double)(range - 1);
+
+    // We need to adjust our raw CSC matrix to be column-major and with float3 vectors
+    // padded with a float in between each of them to adhere to HLSL requirements.
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            constBuf.cscMatrix[i * 4 + j] = rawCscMatrix[j * 3 + i];
+
+            // Scale the color matrix according to the color range
+            constBuf.cscMatrix[i * 4 + j] *= (j == 0) ? yScale : uvScale;
         }
+    }
 
-        D3D11_SUBRESOURCE_DATA constData = {};
-        constData.pSysMem = &constBuf;
+    switch (frame->chroma_location) {
+    default:
+    case AVCHROMA_LOC_LEFT:
+        constBuf.chromaOffset[0] = 0;
+        constBuf.chromaOffset[1] = 0.5;
+        break;
+    case AVCHROMA_LOC_CENTER:
+        constBuf.chromaOffset[0] = 0.5;
+        constBuf.chromaOffset[1] = 0.5;
+        break;
+    case AVCHROMA_LOC_TOPLEFT:
+        constBuf.chromaOffset[0] = 0;
+        constBuf.chromaOffset[1] = 0;
+        break;
+    case AVCHROMA_LOC_TOP:
+        constBuf.chromaOffset[0] = 0.5;
+        constBuf.chromaOffset[1] = 0;
+        break;
+    case AVCHROMA_LOC_BOTTOMLEFT:
+        constBuf.chromaOffset[0] = 0;
+        constBuf.chromaOffset[1] = 1.0;
+        break;
+    case AVCHROMA_LOC_BOTTOM:
+        constBuf.chromaOffset[0] = 0.5;
+        constBuf.chromaOffset[1] = 1.0;
+        break;
+    }
 
-        ComPtr<ID3D11Buffer> constantBuffer;
-        HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
-        if (SUCCEEDED(hr)) {
-            m_DeviceContext->PSSetConstantBuffers(1, 1, constantBuffer.GetAddressOf());
-        }
-        else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "ID3D11Device::CreateBuffer() failed: %x",
-                         hr);
-            return;
-        }
+    if (yuv444) {
+        // 4:4:4 has no subsampling
+        constBuf.chromaOffset[0] = 0;
+        constBuf.chromaOffset[1] = 0;
+    }
+    else {
+        // 4:2:0 has 2x2 subsampling
+        constBuf.chromaOffset[0] /= m_TextureWidth / 2;
+        constBuf.chromaOffset[1] /= m_TextureHeight / 2;
+    }
+
+    D3D11_SUBRESOURCE_DATA constData = {};
+    constData.pSysMem = &constBuf;
+
+    ComPtr<ID3D11Buffer> constantBuffer;
+    HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
+    if (SUCCEEDED(hr)) {
+        m_DeviceContext->PSSetConstantBuffers(1, 1, constantBuffer.GetAddressOf());
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "ID3D11Device::CreateBuffer() failed: %x",
+                     hr);
+        return;
     }
 
     m_LastColorSpace = colorspace;

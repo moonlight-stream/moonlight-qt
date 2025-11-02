@@ -16,4 +16,5 @@ cbuffer CSC_CONST_BUF : register(b1)
 {
     min16float3x3 cscMatrix;
     min16float3 offsets;
+    min16float2 chromaOffset; // Unused for 4:4:4
 };

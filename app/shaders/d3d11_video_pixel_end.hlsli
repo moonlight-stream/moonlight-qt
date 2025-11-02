@@ -2,7 +2,7 @@ min16float4 main(ShaderInput input) : SV_TARGET
 {
     // Clamp the chrominance texcoords to avoid sampling the row of texels adjacent to the alignment padding
     min16float3 yuv = min16float3(luminancePlane.Sample(theSampler, input.tex),
-                                  chrominancePlane.Sample(theSampler, min(input.tex, chromaTexMax.rg)));
+                                  chrominancePlane.Sample(theSampler, min(input.tex + chromaOffset, chromaTexMax.rg)));
 
     // Subtract the YUV offset for limited vs full range
     yuv -= offsets;
