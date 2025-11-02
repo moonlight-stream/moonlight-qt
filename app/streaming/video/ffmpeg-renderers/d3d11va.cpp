@@ -786,40 +786,37 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
     switch (frame->chroma_location) {
     default:
     case AVCHROMA_LOC_LEFT:
-        constBuf.chromaOffset[0] = 0;
-        constBuf.chromaOffset[1] = 0.5;
+        constBuf.chromaOffset[0] = 0.5;
+        constBuf.chromaOffset[1] = 0;
         break;
     case AVCHROMA_LOC_CENTER:
+        constBuf.chromaOffset[0] = 0;
+        constBuf.chromaOffset[1] = 0;
+        break;
+    case AVCHROMA_LOC_TOPLEFT:
         constBuf.chromaOffset[0] = 0.5;
         constBuf.chromaOffset[1] = 0.5;
         break;
-    case AVCHROMA_LOC_TOPLEFT:
-        constBuf.chromaOffset[0] = 0;
-        constBuf.chromaOffset[1] = 0;
-        break;
     case AVCHROMA_LOC_TOP:
-        constBuf.chromaOffset[0] = 0.5;
-        constBuf.chromaOffset[1] = 0;
+        constBuf.chromaOffset[0] = 0;
+        constBuf.chromaOffset[1] = 0.5;
         break;
     case AVCHROMA_LOC_BOTTOMLEFT:
-        constBuf.chromaOffset[0] = 0;
-        constBuf.chromaOffset[1] = 1.0;
+        constBuf.chromaOffset[0] = 0.5;
+        constBuf.chromaOffset[1] = -0.5;
         break;
     case AVCHROMA_LOC_BOTTOM:
-        constBuf.chromaOffset[0] = 0.5;
-        constBuf.chromaOffset[1] = 1.0;
+        constBuf.chromaOffset[0] = 0;
+        constBuf.chromaOffset[1] = -0.5;
         break;
     }
+    constBuf.chromaOffset[0] /= m_TextureWidth;
+    constBuf.chromaOffset[1] /= m_TextureHeight;
 
     if (yuv444) {
         // 4:4:4 has no subsampling
         constBuf.chromaOffset[0] = 0;
         constBuf.chromaOffset[1] = 0;
-    }
-    else {
-        // 4:2:0 has 2x2 subsampling
-        constBuf.chromaOffset[0] /= m_TextureWidth / 2;
-        constBuf.chromaOffset[1] /= m_TextureHeight / 2;
     }
 
     D3D11_SUBRESOURCE_DATA constData = {};
