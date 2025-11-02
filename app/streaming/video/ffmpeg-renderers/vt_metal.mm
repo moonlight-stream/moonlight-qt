@@ -31,6 +31,7 @@ struct CscParams
 struct ParamBuffer
 {
     CscParams cscParams;
+    vector_float2 chromaOffset;
     float bitnessScaleFactor;
 };
 
@@ -311,6 +312,40 @@ public:
                 paramBuffer.cscParams.matrix[i][0] *= yScale;
                 paramBuffer.cscParams.matrix[i][1] *= uvScale;
                 paramBuffer.cscParams.matrix[i][2] *= uvScale;
+            }
+
+            switch (frame->chroma_location) {
+            default:
+            case AVCHROMA_LOC_LEFT:
+                paramBuffer.chromaOffset[0] = 0;
+                paramBuffer.chromaOffset[1] = 0.5;
+                break;
+            case AVCHROMA_LOC_CENTER:
+                paramBuffer.chromaOffset[0] = 0.5;
+                paramBuffer.chromaOffset[1] = 0.5;
+                break;
+            case AVCHROMA_LOC_TOPLEFT:
+                paramBuffer.chromaOffset[0] = 0;
+                paramBuffer.chromaOffset[1] = 0;
+                break;
+            case AVCHROMA_LOC_TOP:
+                paramBuffer.chromaOffset[0] = 0.5;
+                paramBuffer.chromaOffset[1] = 0;
+                break;
+            case AVCHROMA_LOC_BOTTOMLEFT:
+                paramBuffer.chromaOffset[0] = 0;
+                paramBuffer.chromaOffset[1] = 1.0;
+                break;
+            case AVCHROMA_LOC_BOTTOM:
+                paramBuffer.chromaOffset[0] = 0.5;
+                paramBuffer.chromaOffset[1] = 1.0;
+                break;
+            }
+
+            if (m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) {
+                // 4:4:4 has no subsampling
+                paramBuffer.chromaOffset[0] = 0;
+                paramBuffer.chromaOffset[1] = 0;
             }
 
             // Set the EDR metadata for HDR10 to enable OS tonemapping
@@ -676,6 +711,7 @@ public:
 
         m_Window = params->window;
         m_FrameRateRange = CAFrameRateRangeMake(params->frameRate, params->frameRate, params->frameRate);
+        m_VideoFormat = params->videoFormat;
 
         id<MTLDevice> device = getMetalDevice();
         if (!device) {
@@ -972,6 +1008,7 @@ private:
     id<MTLCommandQueue> m_CommandQueue;
     id<MTLTexture> m_SwMappingTextures[MAX_VIDEO_PLANES];
     SDL_MetalView m_MetalView;
+    int m_VideoFormat;
     int m_LastColorSpace;
     bool m_LastFullRange;
     int m_LastFrameWidth;
