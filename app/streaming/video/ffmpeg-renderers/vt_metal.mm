@@ -34,18 +34,7 @@ struct ParamBuffer
     float bitnessScaleFactor;
 };
 
-static const CscParams k_CscParams_Bt601Lim = {
-    // CSC Matrix
-    {
-        { 1.1644f, 0.0f, 1.5960f },
-        { 1.1644f, -0.3917f, -0.8129f },
-        { 1.1644f, 2.0172f, 0.0f }
-    },
-
-    // Offsets
-    { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f },
-};
-static const CscParams k_CscParams_Bt601Full = {
+static const CscParams k_CscParams_Bt601 = {
     // CSC Matrix
     {
         { 1.0f, 0.0f, 1.4020f },
@@ -53,21 +42,10 @@ static const CscParams k_CscParams_Bt601Full = {
         { 1.0f, 1.7720f, 0.0f },
     },
 
-    // Offsets
-    { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f },
+    // Zero-initialized YUV offsets
+    { 0.0f, 0.0f, 0.0f },
 };
-static const CscParams k_CscParams_Bt709Lim = {
-    // CSC Matrix
-    {
-        { 1.1644f, 0.0f, 1.7927f },
-        { 1.1644f, -0.2132f, -0.5329f },
-        { 1.1644f, 2.1124f, 0.0f },
-    },
-
-    // Offsets
-    { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f },
-};
-static const CscParams k_CscParams_Bt709Full = {
+static const CscParams k_CscParams_Bt709 = {
     // CSC Matrix
     {
         { 1.0f, 0.0f, 1.5748f },
@@ -75,21 +53,10 @@ static const CscParams k_CscParams_Bt709Full = {
         { 1.0f, 1.8556f, 0.0f },
     },
 
-    // Offsets
-    { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f },
+    // Zero-initialized YUV offsets
+    { 0.0f, 0.0f, 0.0f },
 };
-static const CscParams k_CscParams_Bt2020Lim = {
-    // CSC Matrix
-    {
-        { 1.1644f, 0.0f, 1.6781f },
-        { 1.1644f, -0.1874f, -0.6505f },
-        { 1.1644f, 2.1418f, 0.0f },
-    },
-
-    // Offsets
-    { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f },
-};
-static const CscParams k_CscParams_Bt2020Full = {
+static const CscParams k_CscParams_Bt2020 = {
     // CSC Matrix
     {
         { 1.0f, 0.0f, 1.4746f },
@@ -97,8 +64,8 @@ static const CscParams k_CscParams_Bt2020Full = {
         { 1.0f, 1.8814f, 0.0f },
     },
 
-    // Offsets
-    { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f },
+    // Zero-initialized YUV offsets
+    { 0.0f, 0.0f, 0.0f },
 };
 
 struct Vertex
@@ -296,6 +263,7 @@ public:
         if (colorspace != m_LastColorSpace || fullRange != m_LastFullRange || m_HdrMetadataChanged) {
             CGColorSpaceRef newColorSpace;
             ParamBuffer paramBuffer;
+            int bits = (colorspace == COLORSPACE_REC_2020) ? 10 : 8;
 
             // Stop the display link before changing the Metal layer
             stopDisplayLink();
@@ -304,7 +272,7 @@ public:
             case COLORSPACE_REC_709:
                 m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_709);
                 m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-                paramBuffer.cscParams = (fullRange ? k_CscParams_Bt709Full : k_CscParams_Bt709Lim);
+                paramBuffer.cscParams = k_CscParams_Bt709;
                 break;
             case COLORSPACE_REC_2020:
                 m_MetalLayer.pixelFormat = MTLPixelFormatBGR10A2Unorm;
@@ -315,14 +283,34 @@ public:
                 else {
                     m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2020);
                 }
-                paramBuffer.cscParams = (fullRange ? k_CscParams_Bt2020Full : k_CscParams_Bt2020Lim);
+                paramBuffer.cscParams = k_CscParams_Bt2020;
                 break;
             default:
             case COLORSPACE_REC_601:
                 m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
                 m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-                paramBuffer.cscParams = (fullRange ? k_CscParams_Bt601Full : k_CscParams_Bt601Lim);
+                paramBuffer.cscParams = k_CscParams_Bt601;
                 break;
+            }
+
+            int range = (1 << bits);
+            double yMin = (fullRange ? 0 : (16 << (bits - 8)));
+            double yMax = (fullRange ? (range - 1) : (235 << (bits - 8)));
+            double yScale = (range - 1) / (yMax - yMin);
+            double uvMin = (fullRange ? 0 : (16 << (bits - 8)));
+            double uvMax = (fullRange ? (range - 1) : (240 << (bits - 8)));
+            double uvScale = (range - 1) / (uvMax - uvMin);
+
+            // Calculate YUV offsets
+            paramBuffer.cscParams.offsets[0] = yMin / (double)(range - 1);
+            paramBuffer.cscParams.offsets[1] = (range / 2) / (double)(range - 1);
+            paramBuffer.cscParams.offsets[2] = (range / 2) / (double)(range - 1);
+
+            // Scale the color matrix according to the color range
+            for (int i = 0; i < 3; i++) {
+                paramBuffer.cscParams.matrix[i][0] *= yScale;
+                paramBuffer.cscParams.matrix[i][1] *= uvScale;
+                paramBuffer.cscParams.matrix[i][2] *= uvScale;
             }
 
             // Set the EDR metadata for HDR10 to enable OS tonemapping
