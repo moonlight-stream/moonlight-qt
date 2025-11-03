@@ -709,7 +709,7 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
     bool fullRange = isFrameFullRange(frame);
     int colorspace = getFrameColorspace(frame);
     bool yuv444 = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_YUV444);
-    int bits = (colorspace == COLORSPACE_REC_2020) ? 10 : 8;
+    int bits = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? 10 : 8;
 
     if (yuv444) {
         // We'll need to use one of the 4:4:4 shaders for this pixel format

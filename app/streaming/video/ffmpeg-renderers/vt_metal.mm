@@ -264,7 +264,7 @@ public:
         if (colorspace != m_LastColorSpace || fullRange != m_LastFullRange || m_HdrMetadataChanged) {
             CGColorSpaceRef newColorSpace;
             ParamBuffer paramBuffer;
-            int bits = (colorspace == COLORSPACE_REC_2020) ? 10 : 8;
+            int bits = (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ? 10 : 8;
 
             // Stop the display link before changing the Metal layer
             stopDisplayLink();
