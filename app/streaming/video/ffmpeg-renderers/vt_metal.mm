@@ -317,28 +317,28 @@ public:
             switch (frame->chroma_location) {
             default:
             case AVCHROMA_LOC_LEFT:
-                paramBuffer.chromaOffset[0] = 0;
-                paramBuffer.chromaOffset[1] = 0.5;
+                paramBuffer.chromaOffset[0] = 0.5;
+                paramBuffer.chromaOffset[1] = 0;
                 break;
             case AVCHROMA_LOC_CENTER:
+                paramBuffer.chromaOffset[0] = 0;
+                paramBuffer.chromaOffset[1] = 0;
+                break;
+            case AVCHROMA_LOC_TOPLEFT:
                 paramBuffer.chromaOffset[0] = 0.5;
                 paramBuffer.chromaOffset[1] = 0.5;
                 break;
-            case AVCHROMA_LOC_TOPLEFT:
-                paramBuffer.chromaOffset[0] = 0;
-                paramBuffer.chromaOffset[1] = 0;
-                break;
             case AVCHROMA_LOC_TOP:
-                paramBuffer.chromaOffset[0] = 0.5;
-                paramBuffer.chromaOffset[1] = 0;
+                paramBuffer.chromaOffset[0] = 0;
+                paramBuffer.chromaOffset[1] = 0.5;
                 break;
             case AVCHROMA_LOC_BOTTOMLEFT:
-                paramBuffer.chromaOffset[0] = 0;
-                paramBuffer.chromaOffset[1] = 1.0;
+                paramBuffer.chromaOffset[0] = 0.5;
+                paramBuffer.chromaOffset[1] = -0.5;
                 break;
             case AVCHROMA_LOC_BOTTOM:
-                paramBuffer.chromaOffset[0] = 0.5;
-                paramBuffer.chromaOffset[1] = 1.0;
+                paramBuffer.chromaOffset[0] = 0;
+                paramBuffer.chromaOffset[1] = -0.5;
                 break;
             }
 

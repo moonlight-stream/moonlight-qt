@@ -26,8 +26,8 @@ fragment float4 ps_draw_biplanar(Vertex v [[ stage_in ]],
                                  texture2d<float> luminancePlane [[ texture(0) ]],
                                  texture2d<float> chrominancePlane [[ texture(1) ]])
 {
-    float2 chromaOffset = float2(cscParams.chromaOffset.x / chrominancePlane.get_width(),
-                                 cscParams.chromaOffset.y / chrominancePlane.get_height());
+    float2 chromaOffset = float2(cscParams.chromaOffset.x / luminancePlane.get_width(),
+                                 cscParams.chromaOffset.y / luminancePlane.get_height());
     float3 yuv = float3(luminancePlane.sample(s, v.texCoords).r,
                         chrominancePlane.sample(s, v.texCoords + chromaOffset).rg);
     yuv *= cscParams.bitnessScaleFactor;
@@ -46,13 +46,11 @@ fragment float4 ps_draw_triplanar(Vertex v [[ stage_in ]],
                                   texture2d<float> chrominancePlaneU [[ texture(1) ]],
                                   texture2d<float> chrominancePlaneV [[ texture(2) ]])
 {
-    float2 chromaOffsetU = float2(cscParams.chromaOffset.x / chrominancePlaneU.get_width(),
-                                  cscParams.chromaOffset.y / chrominancePlaneU.get_height());
-    float2 chromaOffsetV = float2(cscParams.chromaOffset.x / chrominancePlaneV.get_width(),
-                                  cscParams.chromaOffset.y / chrominancePlaneV.get_height());
+    float2 chromaOffset = float2(cscParams.chromaOffset.x / luminancePlane.get_width(),
+                                 cscParams.chromaOffset.y / luminancePlane.get_height());
     float3 yuv = float3(luminancePlane.sample(s, v.texCoords).r,
-                        chrominancePlaneU.sample(s, v.texCoords + chromaOffsetU).r,
-                        chrominancePlaneV.sample(s, v.texCoords + chromaOffsetV).r);
+                        chrominancePlaneU.sample(s, v.texCoords + chromaOffset).r,
+                        chrominancePlaneV.sample(s, v.texCoords + chromaOffset).r);
     yuv *= cscParams.bitnessScaleFactor;
     yuv -= cscParams.offsets;
 
