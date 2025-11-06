@@ -534,8 +534,13 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
     m_NextSurfaceIndex = (m_NextSurfaceIndex + 1) % OUTPUT_SURFACE_COUNT;
 
     // We need to create the mixer on the fly, because we don't know the dimensions
-    // of our video surfaces in advance of decoding
-    if (m_VideoMixer == 0) {
+    // of our video surfaces in advance of decoding. We also need to recreate it when
+    // the frame format or size changes.
+    if (hasFrameFormatChanged(frame)) {
+        if (m_VideoMixer != 0) {
+            m_VdpVideoMixerDestroy(m_VideoMixer);
+        }
+
         VdpChromaType videoSurfaceChroma;
         uint32_t videoSurfaceWidth, videoSurfaceHeight;
         status = m_VdpVideoSurfaceGetParameters(videoSurface, &videoSurfaceChroma,
