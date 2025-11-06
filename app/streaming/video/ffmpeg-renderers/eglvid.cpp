@@ -271,6 +271,9 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
         return;
     }
 
+    // Adjust the viewport to the whole window before rendering the overlays
+    glViewport(0, 0, viewportWidth, viewportHeight);
+
     glUseProgram(m_OverlayShaderProgram);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_OverlayVbos[type]);
@@ -281,7 +284,6 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[type]);
-    glUniform1i(m_OverlayShaderProgramParams[OVERLAY_PARAM_TEXTURE], 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
@@ -367,6 +369,12 @@ bool EGLRenderer::compileShaders() {
         m_ShaderProgramParams[NV12_PARAM_CHROMA_OFFSET] = glGetUniformLocation(m_ShaderProgram, "chromaOffset");
         m_ShaderProgramParams[NV12_PARAM_PLANE1] = glGetUniformLocation(m_ShaderProgram, "plane1");
         m_ShaderProgramParams[NV12_PARAM_PLANE2] = glGetUniformLocation(m_ShaderProgram, "plane2");
+
+        // Set up constant uniforms
+        glUseProgram(m_ShaderProgram);
+        glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE1], 0);
+        glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE2], 1);
+        glUseProgram(0);
     }
     else if (m_EGLImagePixelFormat == AV_PIX_FMT_DRM_PRIME) {
         m_ShaderProgram = compileShader("egl_opaque.vert", "egl_opaque.frag");
@@ -375,6 +383,11 @@ bool EGLRenderer::compileShaders() {
         }
 
         m_ShaderProgramParams[OPAQUE_PARAM_TEXTURE] = glGetUniformLocation(m_ShaderProgram, "uTexture");
+
+        // Set up constant uniforms
+        glUseProgram(m_ShaderProgram);
+        glUniform1i(m_ShaderProgramParams[OPAQUE_PARAM_TEXTURE], 0);
+        glUseProgram(0);
     }
     else {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -390,6 +403,10 @@ bool EGLRenderer::compileShaders() {
     }
 
     m_OverlayShaderProgramParams[OVERLAY_PARAM_TEXTURE] = glGetUniformLocation(m_OverlayShaderProgram, "uTexture");
+
+    glUseProgram(m_OverlayShaderProgram);
+    glUniform1i(m_OverlayShaderProgramParams[OVERLAY_PARAM_TEXTURE], 0);
+    glUseProgram(0);
 
     return true;
 }
@@ -805,33 +822,26 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     glUseProgram(m_ShaderProgram);
     m_glBindVertexArrayOES(m_VAO);
 
-    // Bind parameters for the shaders
-    if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12 || m_EGLImagePixelFormat == AV_PIX_FMT_P010) {
-        // If the frame format has changed, we'll need to recompute the constants
-        if (hasFrameFormatChanged(frame)) {
-            getFramePremultipliedCscConstants(frame, m_PremultipliedColorMatrix, m_YuvOffsets);
+    // If the frame format has changed, we'll need to recompute the constants
+    if (hasFrameFormatChanged(frame) && (m_EGLImagePixelFormat == AV_PIX_FMT_NV12 || m_EGLImagePixelFormat == AV_PIX_FMT_P010)) {
+        std::array<float, 9> colorMatrix;
+        std::array<float, 3> yuvOffsets;
+        std::array<float, 2> chromaOffset;
 
-            getFrameChromaCositingOffsets(frame, m_ChromaOffset);
-            m_ChromaOffset[0] /= frame->width;
-            m_ChromaOffset[1] /= frame->height;
-        }
+        getFramePremultipliedCscConstants(frame, colorMatrix, yuvOffsets);
+        getFrameChromaCositingOffsets(frame, chromaOffset);
+        chromaOffset[0] /= frame->width;
+        chromaOffset[1] /= frame->height;
 
-        glUniformMatrix3fv(m_ShaderProgramParams[NV12_PARAM_YUVMAT], 1, GL_FALSE, m_PremultipliedColorMatrix.data());
-        glUniform3fv(m_ShaderProgramParams[NV12_PARAM_OFFSET], 1, m_YuvOffsets.data());
-        glUniform2fv(m_ShaderProgramParams[NV12_PARAM_CHROMA_OFFSET], 1, m_ChromaOffset.data());
-        glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE1], 0);
-        glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE2], 1);
-    }
-    else if (m_EGLImagePixelFormat == AV_PIX_FMT_DRM_PRIME) {
-        glUniform1i(m_ShaderProgramParams[OPAQUE_PARAM_TEXTURE], 0);
+        glUniformMatrix3fv(m_ShaderProgramParams[NV12_PARAM_YUVMAT], 1, GL_FALSE, colorMatrix.data());
+        glUniform3fv(m_ShaderProgramParams[NV12_PARAM_OFFSET], 1, yuvOffsets.data());
+        glUniform2fv(m_ShaderProgramParams[NV12_PARAM_CHROMA_OFFSET], 1, chromaOffset.data());
     }
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     m_glBindVertexArrayOES(0);
 
-    // Adjust the viewport to the whole window before rendering the overlays
-    glViewport(0, 0, drawableWidth, drawableHeight);
     for (int i = 0; i < Overlay::OverlayMax; i++) {
         renderOverlay((Overlay::OverlayType)i, drawableWidth, drawableHeight);
     }

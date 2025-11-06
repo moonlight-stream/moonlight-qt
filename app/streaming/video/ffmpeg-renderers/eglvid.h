@@ -63,9 +63,6 @@ private:
 #define NV12_PARAM_PLANE1 3
 #define NV12_PARAM_PLANE2 4
 #define OPAQUE_PARAM_TEXTURE 0
-    std::array<float, 9> m_PremultipliedColorMatrix;
-    std::array<float, 3> m_YuvOffsets;
-    std::array<float, 2> m_ChromaOffset;
     int m_ShaderProgramParams[5];
 
 #define OVERLAY_PARAM_TEXTURE 0
