@@ -17,7 +17,6 @@ SdlRenderer::SdlRenderer()
       m_VideoFormat(0),
       m_Renderer(nullptr),
       m_Texture(nullptr),
-      m_ColorSpace(-1),
       m_NeedsYuvToRgbConversion(false),
       m_SwsContext(nullptr),
       m_RgbFrame(av_frame_alloc()),
@@ -286,11 +285,8 @@ ReadbackRetry:
         }
     }
 
-    // Because the specific YUV color conversion shader is established at
-    // texture creation for most SDL render backends, we need to recreate
-    // the texture when the colorspace changes.
-    int colorspace = getFrameColorspace(frame);
-    if (colorspace != m_ColorSpace) {
+    // Recreate the texture if the frame format or size changes
+    if (hasFrameFormatChanged(frame)) {
 #ifdef HAVE_CUDA
         if (m_CudaGLHelper != nullptr) {
             delete m_CudaGLHelper;
@@ -299,17 +295,6 @@ ReadbackRetry:
 #endif
 
         if (m_Texture != nullptr) {
-            SDL_DestroyTexture(m_Texture);
-            m_Texture = nullptr;
-        }
-
-        m_ColorSpace = colorspace;
-    }
-
-    // Recreate the texture if the frame changed in size
-    if (m_Texture != nullptr) {
-        int width, height;
-        if (SDL_QueryTexture(m_Texture, nullptr, nullptr, &width, &height) == 0 && (frame->width != width || frame->height != height)) {
             SDL_DestroyTexture(m_Texture);
             m_Texture = nullptr;
         }
@@ -400,7 +385,7 @@ ReadbackRetry:
         }
         else {
             // SDL will perform YUV conversion on the GPU
-            switch (colorspace)
+            switch (getFrameColorspace(frame))
             {
             case COLORSPACE_REC_709:
                 SDL_assert(!isFrameFullRange(frame));
