@@ -364,6 +364,7 @@ bool EGLRenderer::compileShaders() {
 
         m_ShaderProgramParams[NV12_PARAM_YUVMAT] = glGetUniformLocation(m_ShaderProgram, "yuvmat");
         m_ShaderProgramParams[NV12_PARAM_OFFSET] = glGetUniformLocation(m_ShaderProgram, "offset");
+        m_ShaderProgramParams[NV12_PARAM_CHROMA_OFFSET] = glGetUniformLocation(m_ShaderProgram, "chromaOffset");
         m_ShaderProgramParams[NV12_PARAM_PLANE1] = glGetUniformLocation(m_ShaderProgram, "plane1");
         m_ShaderProgramParams[NV12_PARAM_PLANE2] = glGetUniformLocation(m_ShaderProgram, "plane2");
     }
@@ -649,63 +650,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     return err == GL_NO_ERROR;
 }
 
-const float *EGLRenderer::getColorOffsets(const AVFrame* frame) {
-    static const float limitedOffsets[] = { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f };
-    static const float fullOffsets[] = { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f };
-
-    return isFrameFullRange(frame) ? fullOffsets : limitedOffsets;
-}
-
-const float *EGLRenderer::getColorMatrix(const AVFrame* frame) {
-    /* The conversion matrices are shamelessly stolen from linux:
-     * drivers/media/platform/imx-pxp.c:pxp_setup_csc
-     */
-    static const float bt601Lim[] = {
-        1.1644f, 1.1644f, 1.1644f,
-        0.0f, -0.3917f, 2.0172f,
-        1.5960f, -0.8129f, 0.0f
-    };
-    static const float bt601Full[] = {
-        1.0f, 1.0f, 1.0f,
-        0.0f, -0.3441f, 1.7720f,
-        1.4020f, -0.7141f, 0.0f
-    };
-    static const float bt709Lim[] = {
-        1.1644f, 1.1644f, 1.1644f,
-        0.0f, -0.2132f, 2.1124f,
-        1.7927f, -0.5329f, 0.0f
-    };
-    static const float bt709Full[] = {
-        1.0f, 1.0f, 1.0f,
-        0.0f, -0.1873f, 1.8556f,
-        1.5748f, -0.4681f, 0.0f
-    };
-    static const float bt2020Lim[] = {
-        1.1644f, 1.1644f, 1.1644f,
-        0.0f, -0.1874f, 2.1418f,
-        1.6781f, -0.6505f, 0.0f
-    };
-    static const float bt2020Full[] = {
-        1.0f, 1.0f, 1.0f,
-        0.0f, -0.1646f, 1.8814f,
-        1.4746f, -0.5714f, 0.0f
-    };
-
-    bool fullRange = isFrameFullRange(frame);
-    switch (getFrameColorspace(frame)) {
-        case COLORSPACE_REC_601:
-            return fullRange ? bt601Full : bt601Lim;
-        case COLORSPACE_REC_709:
-            return fullRange ? bt709Full : bt709Lim;
-        case COLORSPACE_REC_2020:
-            return fullRange ? bt2020Full : bt2020Lim;
-        default:
-            SDL_assert(false);
-    }
-
-    return bt601Lim;
-}
-
 bool EGLRenderer::specialize() {
     SDL_assert(!m_VAO);
 
@@ -863,8 +807,18 @@ void EGLRenderer::renderFrame(AVFrame* frame)
 
     // Bind parameters for the shaders
     if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12 || m_EGLImagePixelFormat == AV_PIX_FMT_P010) {
-        glUniformMatrix3fv(m_ShaderProgramParams[NV12_PARAM_YUVMAT], 1, GL_FALSE, getColorMatrix(frame));
-        glUniform3fv(m_ShaderProgramParams[NV12_PARAM_OFFSET], 1, getColorOffsets(frame));
+        // If the frame format has changed, we'll need to recompute the constants
+        if (hasFrameFormatChanged(frame)) {
+            getFramePremultipliedCscConstants(frame, m_PremultipliedColorMatrix, m_YuvOffsets);
+
+            getFrameChromaCositingOffsets(frame, m_ChromaOffset);
+            m_ChromaOffset[0] /= frame->width;
+            m_ChromaOffset[1] /= frame->height;
+        }
+
+        glUniformMatrix3fv(m_ShaderProgramParams[NV12_PARAM_YUVMAT], 1, GL_FALSE, m_PremultipliedColorMatrix.data());
+        glUniform3fv(m_ShaderProgramParams[NV12_PARAM_OFFSET], 1, m_YuvOffsets.data());
+        glUniform2fv(m_ShaderProgramParams[NV12_PARAM_CHROMA_OFFSET], 1, m_ChromaOffset.data());
         glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE1], 0);
         glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE2], 1);
     }

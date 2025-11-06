@@ -7,13 +7,14 @@ in vec2 vTextCoord;
 
 uniform mat3 yuvmat;
 uniform vec3 offset;
+uniform vec2 chromaOffset;
 uniform samplerExternalOES plane1;
 uniform samplerExternalOES plane2;
 
 void main() {
 	vec3 YCbCr = vec3(
 		texture2D(plane1, vTextCoord)[0],
-		texture2D(plane2, vTextCoord).xy
+	        texture2D(plane2, vTextCoord + chromaOffset).xy
 	);
 
 	YCbCr -= offset;
