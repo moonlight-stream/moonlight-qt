@@ -95,8 +95,6 @@ private:
     uint32_t m_CrtcId;
     uint32_t m_PlaneId;
     uint32_t m_CurrentFbId;
-    bool m_LastFullRange;
-    int m_LastColorSpace;
     drmModePlanePtr m_Plane;
     drmModePropertyPtr m_ColorEncodingProp;
     drmModePropertyPtr m_ColorRangeProp;
