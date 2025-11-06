@@ -74,8 +74,6 @@ private:
     UINT m_TextureHeight;
     int m_DisplayWidth;
     int m_DisplayHeight;
-    int m_LastColorSpace;
-    bool m_LastFullRange;
     AVColorTransferCharacteristic m_LastColorTrc;
 
     bool m_AllowTearing;

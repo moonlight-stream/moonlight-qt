@@ -27,23 +27,6 @@ typedef struct _VERTEX
 
 #define CSC_MATRIX_RAW_ELEMENT_COUNT 9
 #define CSC_MATRIX_PACKED_ELEMENT_COUNT 12
-
-static const float k_CscMatrix_Bt601[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
-    1.0f, 1.0f, 1.0f,
-    0.0f, -0.3441f, 1.7720f,
-    1.4020f, -0.7141f, 0.0f,
-};
-static const float k_CscMatrix_Bt709[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
-    1.0f, 1.0f, 1.0f,
-    0.0f, -0.1873f, 1.8556f,
-    1.5748f, -0.4681f, 0.0f,
-};
-static const float k_CscMatrix_Bt2020[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
-    1.0f, 1.0f, 1.0f,
-    0.0f, -0.1646f, 1.8814f,
-    1.4746f, -0.5714f, 0.0f,
-};
-
 #define OFFSETS_ELEMENT_COUNT 3
 
 typedef struct _CSC_CONST_BUF
@@ -77,8 +60,6 @@ D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
       m_DecoderSelectionPass(decoderSelectionPass),
       m_DevicesWithFL11Support(0),
       m_DevicesWithCodecSupport(0),
-      m_LastColorSpace(-1),
-      m_LastFullRange(false),
       m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
       m_AllowTearing(false),
       m_OverlayLock(0),
@@ -706,10 +687,7 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
 
 void D3D11VARenderer::bindColorConversion(AVFrame* frame)
 {
-    bool fullRange = isFrameFullRange(frame);
-    int colorspace = getFrameColorspace(frame);
     bool yuv444 = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_YUV444);
-    int bits = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? 10 : 8;
 
     if (yuv444) {
         // We'll need to use one of the 4:4:4 shaders for this pixel format
@@ -731,7 +709,7 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
     }
 
     // If nothing has changed since last frame, we're done
-    if (colorspace == m_LastColorSpace && fullRange == m_LastFullRange) {
+    if (!hasFrameFormatChanged(frame)) {
         return;
     }
 
@@ -743,81 +721,24 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
     constDesc.MiscFlags = 0;
 
     CSC_CONST_BUF constBuf = {};
-    const float* rawCscMatrix;
-    switch (colorspace) {
-    case COLORSPACE_REC_601:
-        rawCscMatrix = k_CscMatrix_Bt601;
-        break;
-    case COLORSPACE_REC_709:
-        rawCscMatrix = k_CscMatrix_Bt709;
-        break;
-    case COLORSPACE_REC_2020:
-        rawCscMatrix = k_CscMatrix_Bt2020;
-        break;
-    default:
-        SDL_assert(false);
-        return;
-    }
+    std::array<float, 9> cscMatrix;
+    std::array<float, 3> yuvOffsets;
+    getFramePremultipliedCscConstants(frame, cscMatrix, yuvOffsets);
 
-    int range = (1 << bits);
-    double yMin = (fullRange ? 0 : (16 << (bits - 8)));
-    double yMax = (fullRange ? (range - 1) : (235 << (bits - 8)));
-    double yScale = (range - 1) / (yMax - yMin);
-    double uvMin = (fullRange ? 0 : (16 << (bits - 8)));
-    double uvMax = (fullRange ? (range - 1) : (240 << (bits - 8)));
-    double uvScale = (range - 1) / (uvMax - uvMin);
+    std::copy(yuvOffsets.cbegin(), yuvOffsets.cend(), constBuf.offsets);
 
-    // Calculate YUV offsets
-    constBuf.offsets[0] = yMin / (double)(range - 1);
-    constBuf.offsets[1] = (range / 2) / (double)(range - 1);
-    constBuf.offsets[2] = (range / 2) / (double)(range - 1);
-
-    // We need to adjust our raw CSC matrix to be column-major and with float3 vectors
+    // We need to adjust our CSC matrix to be column-major and with float3 vectors
     // padded with a float in between each of them to adhere to HLSL requirements.
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
-            constBuf.cscMatrix[i * 4 + j] = rawCscMatrix[j * 3 + i];
-
-            // Scale the color matrix according to the color range
-            constBuf.cscMatrix[i * 4 + j] *= (j == 0) ? yScale : uvScale;
+            constBuf.cscMatrix[i * 4 + j] = cscMatrix[j * 3 + i];
         }
     }
 
-    switch (frame->chroma_location) {
-    default:
-    case AVCHROMA_LOC_LEFT:
-        constBuf.chromaOffset[0] = 0.5;
-        constBuf.chromaOffset[1] = 0;
-        break;
-    case AVCHROMA_LOC_CENTER:
-        constBuf.chromaOffset[0] = 0;
-        constBuf.chromaOffset[1] = 0;
-        break;
-    case AVCHROMA_LOC_TOPLEFT:
-        constBuf.chromaOffset[0] = 0.5;
-        constBuf.chromaOffset[1] = 0.5;
-        break;
-    case AVCHROMA_LOC_TOP:
-        constBuf.chromaOffset[0] = 0;
-        constBuf.chromaOffset[1] = 0.5;
-        break;
-    case AVCHROMA_LOC_BOTTOMLEFT:
-        constBuf.chromaOffset[0] = 0.5;
-        constBuf.chromaOffset[1] = -0.5;
-        break;
-    case AVCHROMA_LOC_BOTTOM:
-        constBuf.chromaOffset[0] = 0;
-        constBuf.chromaOffset[1] = -0.5;
-        break;
-    }
-    constBuf.chromaOffset[0] /= m_TextureWidth;
-    constBuf.chromaOffset[1] /= m_TextureHeight;
-
-    if (yuv444) {
-        // 4:4:4 has no subsampling
-        constBuf.chromaOffset[0] = 0;
-        constBuf.chromaOffset[1] = 0;
-    }
+    std::array<float, 2> chromaOffset;
+    getFrameChromaCositingOffsets(frame, chromaOffset);
+    constBuf.chromaOffset[0] = chromaOffset[0] / m_TextureWidth;
+    constBuf.chromaOffset[1] = chromaOffset[1] / m_TextureHeight;
 
     D3D11_SUBRESOURCE_DATA constData = {};
     constData.pSysMem = &constBuf;
@@ -833,9 +754,6 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
                      hr);
         return;
     }
-
-    m_LastColorSpace = colorspace;
-    m_LastFullRange = fullRange;
 }
 
 void D3D11VARenderer::renderVideo(AVFrame* frame)
