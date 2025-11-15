@@ -67,7 +67,7 @@ double BandwidthTracker::GetPeakMbps() {
 }
 
 unsigned int BandwidthTracker::GetWindowSeconds() {
-    return windowSeconds.count();
+    return (unsigned int)windowSeconds.count();
 }
 
 /// private methods

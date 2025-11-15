@@ -621,12 +621,22 @@ int main(int argc, char *argv[])
     if (AttachConsole(ATTACH_PARENT_PROCESS)) {
         // If we didn't have an old stdout/stderr handle, use the new CONOUT$ handle
         if (IS_UNSPECIFIED_HANDLE(oldConOut)) {
-            freopen("CONOUT$", "w", stdout);
-            setvbuf(stdout, NULL, _IONBF, 0);
+            FILE* fp;
+            if (freopen_s(&fp, "CONOUT$", "w", stdout) == 0) {
+                setvbuf(fp, NULL, _IONBF, 0);
+            }
+            else {
+                freopen_s(&fp, "NUL", "w", stdout);
+            }
         }
         if (IS_UNSPECIFIED_HANDLE(oldConErr)) {
-            freopen("CONOUT$", "w", stderr);
-            setvbuf(stderr, NULL, _IONBF, 0);
+            FILE* fp;
+            if (freopen_s(&fp, "CONOUT$", "w", stderr) == 0) {
+                setvbuf(fp, NULL, _IONBF, 0);
+            }
+            else {
+                freopen_s(&fp, "NUL", "w", stderr);
+            }
         }
     }
 #endif

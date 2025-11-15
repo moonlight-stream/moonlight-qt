@@ -97,6 +97,8 @@ int Session::getAudioRendererCapabilities(int audioConfiguration)
 {
     int caps = 0;
 
+    Q_UNUSED(audioConfiguration);
+
     // All audio renderers support arbitrary audio duration
     caps |= CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
 
