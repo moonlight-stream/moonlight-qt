@@ -441,6 +441,11 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
             overlayRect.x0 = 0;
             overlayRect.y0 = 0;
         }
+        else if (type == Overlay::OverlayBitrate) {
+            // Top left (below debug overlay if both are enabled)
+            overlayRect.x0 = 0;
+            overlayRect.y0 = 0;
+        }
 
         overlayRect.x1 = overlayRect.x0 + newSurface->w;
         overlayRect.y1 = overlayRect.y0 + newSurface->h;

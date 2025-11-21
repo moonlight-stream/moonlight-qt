@@ -123,6 +123,17 @@ public:
 
     void setShouldExitAfterQuit();
 
+    int getCurrentAdjustedBitrate() const
+    {
+        return m_AutoAdjustBitrateActive && m_Preferences->autoAdjustBitrate ?
+               m_CurrentAdjustedBitrate : m_Preferences->bitrateKbps;
+    }
+
+    int getMaxBitrateLimit() const
+    {
+        return m_Preferences->bitrateKbps;
+    }
+
 signals:
     void stageStarting(QString stage);
 
@@ -281,6 +292,12 @@ private:
     Uint32 m_DropAudioEndTime;
 
     Overlay::OverlayManager m_OverlayManager;
+
+    // Bitrate adjustment state
+    int m_CurrentAdjustedBitrate;
+    int m_LastBitrateCheckTime;
+    int m_LastConnectionStatus;
+    bool m_AutoAdjustBitrateActive;
 
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
     static Session* s_ActiveSession;

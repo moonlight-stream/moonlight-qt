@@ -504,6 +504,11 @@ public:
                     renderRect.x = 0;
                     renderRect.y = m_LastDrawableHeight - overlayTexture.height;
                 }
+                else if (i == Overlay::OverlayBitrate) {
+                    // Top left (below debug overlay if both are enabled)
+                    renderRect.x = 0;
+                    renderRect.y = m_LastDrawableHeight - overlayTexture.height;
+                }
 
                 renderRect.w = overlayTexture.width;
                 renderRect.h = overlayTexture.height;
