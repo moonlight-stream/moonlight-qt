@@ -119,6 +119,11 @@ public:
         return m_OverlayManager;
     }
 
+    StreamingPreferences* getPreferences() const
+    {
+        return m_Preferences;
+    }
+
     void flushWindowEvents();
 
     void setShouldExitAfterQuit();

@@ -761,6 +761,7 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
     int offset = 0;
     const char* codecString;
     int ret;
+    StreamingPreferences* prefs = Session::get() ? Session::get()->getPreferences() : nullptr;
 
     // Start with an empty string
     output[offset] = 0;
@@ -835,60 +836,120 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 
     if (stats.receivedFps > 0) {
         if (m_VideoDecoderCtx != nullptr) {
+            // Video stream info
+            if (!prefs || prefs->showStatsVideoStream) {
+                ret = snprintf(&output[offset],
+                               length - offset,
+                               "Video stream: %dx%d %.2f FPS (Codec: %s)\n",
+                               m_VideoDecoderCtx->width,
+                               m_VideoDecoderCtx->height,
+                               stats.totalFps,
+                               codecString);
+                if (ret < 0 || ret >= length - offset) {
+                    SDL_assert(false);
+                    return;
+                }
+                offset += ret;
+            }
+
 #ifdef DISPLAY_BITRATE
+            // Bitrate stats (only if DISPLAY_BITRATE is defined)
             double avgVideoMbps = m_BwTracker.GetAverageMbps();
             double peakVideoMbps = m_BwTracker.GetPeakMbps();
-#endif
-
             int currentBitrateKbps = Session::get() ? Session::get()->getCurrentAdjustedBitrate() : 0;
             int maxBitrateKbps = Session::get() ? Session::get()->getMaxBitrateLimit() : 0;
+
+            if (!prefs || prefs->showStatsCurrentBitrate) {
+                ret = snprintf(&output[offset],
+                               length - offset,
+                               "Current bitrate: %.1f Mbps\n",
+                               currentBitrateKbps / 1000.0);
+                if (ret < 0 || ret >= length - offset) {
+                    SDL_assert(false);
+                    return;
+                }
+                offset += ret;
+            }
+
+            if (!prefs || prefs->showStatsMaxBitrate) {
+                ret = snprintf(&output[offset],
+                               length - offset,
+                               "Max bitrate limit: %.1f Mbps\n",
+                               maxBitrateKbps / 1000.0);
+                if (ret < 0 || ret >= length - offset) {
+                    SDL_assert(false);
+                    return;
+                }
+                offset += ret;
+            }
+
+            if (!prefs || prefs->showStatsAvgBitrate) {
+                ret = snprintf(&output[offset],
+                               length - offset,
+                               "Average bitrate: %.1f Mbps\n",
+                               avgVideoMbps);
+                if (ret < 0 || ret >= length - offset) {
+                    SDL_assert(false);
+                    return;
+                }
+                offset += ret;
+            }
+
+            if (!prefs || prefs->showStatsPeakBitrate) {
+                ret = snprintf(&output[offset],
+                               length - offset,
+                               "Peak bitrate (%us): %.1f Mbps\n",
+                               m_BwTracker.GetWindowSeconds(),
+                               peakVideoMbps);
+                if (ret < 0 || ret >= length - offset) {
+                    SDL_assert(false);
+                    return;
+                }
+                offset += ret;
+            }
+#endif
+        }
+
+        // Frame rate stats
+        if (!prefs || prefs->showStatsIncomingFps) {
             ret = snprintf(&output[offset],
                            length - offset,
-                           "Video stream: %dx%d %.2f FPS (Codec: %s)\n"
-#ifdef DISPLAY_BITRATE
-                           "Current bitrate: %.1f Mbps\n"
-                           "Max bitrate limit: %.1f Mbps\n"
-                           "Average bitrate: %.1f Mbps, Peak (%us): %.1f Mbps\n"
-#endif
-                           ,
-                           m_VideoDecoderCtx->width,
-                           m_VideoDecoderCtx->height,
-                           stats.totalFps,
-                           codecString
-#ifdef DISPLAY_BITRATE
-                           ,
-                           currentBitrateKbps / 1000.0,
-                           maxBitrateKbps / 1000.0,
-                           avgVideoMbps,
-                           m_BwTracker.GetWindowSeconds(),
-                           peakVideoMbps
-#endif
-                           );
+                           "Incoming frame rate from network: %.2f FPS\n",
+                           stats.receivedFps);
             if (ret < 0 || ret >= length - offset) {
                 SDL_assert(false);
                 return;
             }
-
             offset += ret;
         }
 
-        ret = snprintf(&output[offset],
-                       length - offset,
-                       "Incoming frame rate from network: %.2f FPS\n"
-                       "Decoding frame rate: %.2f FPS\n"
-                       "Rendering frame rate: %.2f FPS\n",
-                       stats.receivedFps,
-                       stats.decodedFps,
-                       stats.renderedFps);
-        if (ret < 0 || ret >= length - offset) {
-            SDL_assert(false);
-            return;
+        if (!prefs || prefs->showStatsDecodingFps) {
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           "Decoding frame rate: %.2f FPS\n",
+                           stats.decodedFps);
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+            offset += ret;
         }
 
-        offset += ret;
+        if (!prefs || prefs->showStatsRenderingFps) {
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           "Rendering frame rate: %.2f FPS\n",
+                           stats.renderedFps);
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+            offset += ret;
+        }
     }
 
-    if (stats.framesWithHostProcessingLatency > 0) {
+    // Host processing latency
+    if (stats.framesWithHostProcessingLatency > 0 && (!prefs || prefs->showStatsHostLatency)) {
         ret = snprintf(&output[offset],
                        length - offset,
                        "Host processing latency min/max/average: %.1f/%.1f/%.1f ms\n",
@@ -913,26 +974,83 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
             snprintf(rttString, sizeof(rttString), "N/A");
         }
 
-        ret = snprintf(&output[offset],
-                       length - offset,
-                       "Frames dropped by your network connection: %.2f%%\n"
-                       "Frames dropped due to network jitter: %.2f%%\n"
-                       "Average network latency: %s\n"
-                       "Average decoding time: %.2f ms\n"
-                       "Average frame queue delay: %.2f ms\n"
-                       "Average rendering time (including monitor V-sync latency): %.2f ms\n",
-                       (float)stats.networkDroppedFrames / stats.totalFrames * 100,
-                       (float)stats.pacerDroppedFrames / stats.decodedFrames * 100,
-                       rttString,
-                       (double)(stats.totalDecodeTimeUs / 1000.0) / stats.decodedFrames,
-                       (double)(stats.totalPacerTimeUs / 1000.0) / stats.renderedFrames,
-                       (double)(stats.totalRenderTimeUs / 1000.0) / stats.renderedFrames);
-        if (ret < 0 || ret >= length - offset) {
-            SDL_assert(false);
-            return;
+        // Network dropped frames
+        if (!prefs || prefs->showStatsNetworkDropped) {
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           "Frames dropped by your network connection: %.2f%%\n",
+                           (float)stats.networkDroppedFrames / stats.totalFrames * 100);
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+            offset += ret;
         }
 
-        offset += ret;
+        // Jitter dropped frames
+        if (!prefs || prefs->showStatsJitterDropped) {
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           "Frames dropped due to network jitter: %.2f%%\n",
+                           (float)stats.pacerDroppedFrames / stats.decodedFrames * 100);
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+            offset += ret;
+        }
+
+        // Network latency
+        if (!prefs || prefs->showStatsNetworkLatency) {
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           "Average network latency: %s\n",
+                           rttString);
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+            offset += ret;
+        }
+
+        // Decoding time
+        if (!prefs || prefs->showStatsDecodingTime) {
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           "Average decoding time: %.2f ms\n",
+                           (double)(stats.totalDecodeTimeUs / 1000.0) / stats.decodedFrames);
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+            offset += ret;
+        }
+
+        // Frame queue delay
+        if (!prefs || prefs->showStatsQueueDelay) {
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           "Average frame queue delay: %.2f ms\n",
+                           (double)(stats.totalPacerTimeUs / 1000.0) / stats.renderedFrames);
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+            offset += ret;
+        }
+
+        // Rendering time
+        if (!prefs || prefs->showStatsRenderingTime) {
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           "Average rendering time (including monitor V-sync latency): %.2f ms\n",
+                           (double)(stats.totalRenderTimeUs / 1000.0) / stats.renderedFrames);
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+            offset += ret;
+        }
     }
 }
 
@@ -1879,22 +1997,71 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         
         // Update bitrate overlay if it's enabled
         if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayBitrate)) {
+            StreamingPreferences* prefs = Session::get()->getPreferences();
             int currentBitrateKbps = Session::get()->getCurrentAdjustedBitrate();
             int maxBitrateKbps = Session::get()->getMaxBitrateLimit();
             double avgVideoMbps = m_BwTracker.GetAverageMbps();
             double peakVideoMbps = m_BwTracker.GetPeakMbps();
             
             char bitrateText[256];
-            snprintf(bitrateText, sizeof(bitrateText),
-                    "Current bitrate: %.1f Mbps\n"
-                    "Max bitrate limit: %.1f Mbps\n"
-                    "Average bitrate: %.1f Mbps\n"
-                    "Peak bitrate (%us): %.1f Mbps",
-                    currentBitrateKbps / 1000.0,
-                    maxBitrateKbps / 1000.0,
-                    avgVideoMbps,
-                    m_BwTracker.GetWindowSeconds(),
-                    peakVideoMbps);
+            int offset = 0;
+            bool firstStat = true;
+            
+            // Build bitrate text conditionally based on preferences
+            if (!prefs || prefs->showBitrateCurrent) {
+                int ret = snprintf(&bitrateText[offset], sizeof(bitrateText) - offset,
+                        "%sCurrent bitrate: %.1f Mbps",
+                        firstStat ? "" : "\n",
+                        currentBitrateKbps / 1000.0);
+                if (ret < 0 || ret >= sizeof(bitrateText) - offset) {
+                    SDL_assert(false);
+                    return DR_OK;
+                }
+                offset += ret;
+                firstStat = false;
+            }
+            
+            if (!prefs || prefs->showBitrateMax) {
+                int ret = snprintf(&bitrateText[offset], sizeof(bitrateText) - offset,
+                        "%sMax bitrate limit: %.1f Mbps",
+                        firstStat ? "" : "\n",
+                        maxBitrateKbps / 1000.0);
+                if (ret < 0 || ret >= sizeof(bitrateText) - offset) {
+                    SDL_assert(false);
+                    return DR_OK;
+                }
+                offset += ret;
+                firstStat = false;
+            }
+            
+            if (!prefs || prefs->showBitrateAverage) {
+                int ret = snprintf(&bitrateText[offset], sizeof(bitrateText) - offset,
+                        "%sAverage bitrate: %.1f Mbps",
+                        firstStat ? "" : "\n",
+                        avgVideoMbps);
+                if (ret < 0 || ret >= sizeof(bitrateText) - offset) {
+                    SDL_assert(false);
+                    return DR_OK;
+                }
+                offset += ret;
+                firstStat = false;
+            }
+            
+            if (!prefs || prefs->showBitratePeak) {
+                int ret = snprintf(&bitrateText[offset], sizeof(bitrateText) - offset,
+                        "%sPeak bitrate (%us): %.1f Mbps",
+                        firstStat ? "" : "\n",
+                        m_BwTracker.GetWindowSeconds(),
+                        peakVideoMbps);
+                if (ret < 0 || ret >= sizeof(bitrateText) - offset) {
+                    SDL_assert(false);
+                    return DR_OK;
+                }
+                offset += ret;
+                firstStat = false;
+            }
+            
+            bitrateText[offset] = '\0';
             
             Session::get()->getOverlayManager().updateOverlayText(Overlay::OverlayBitrate, bitrateText);
             Session::get()->getOverlayManager().setOverlayTextUpdated(Overlay::OverlayBitrate);

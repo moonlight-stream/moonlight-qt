@@ -130,6 +130,27 @@ public:
     Q_PROPERTY(bool detectNetworkBlocking MEMBER detectNetworkBlocking NOTIFY detectNetworkBlockingChanged)
     Q_PROPERTY(bool showPerformanceOverlay MEMBER showPerformanceOverlay NOTIFY showPerformanceOverlayChanged)
     Q_PROPERTY(bool showBitrateOverlay MEMBER showBitrateOverlay NOTIFY showBitrateOverlayChanged)
+    // Performance stats overlay individual stat toggles
+    Q_PROPERTY(bool showStatsVideoStream MEMBER showStatsVideoStream NOTIFY showStatsVideoStreamChanged)
+    Q_PROPERTY(bool showStatsCurrentBitrate MEMBER showStatsCurrentBitrate NOTIFY showStatsCurrentBitrateChanged)
+    Q_PROPERTY(bool showStatsMaxBitrate MEMBER showStatsMaxBitrate NOTIFY showStatsMaxBitrateChanged)
+    Q_PROPERTY(bool showStatsAvgBitrate MEMBER showStatsAvgBitrate NOTIFY showStatsAvgBitrateChanged)
+    Q_PROPERTY(bool showStatsPeakBitrate MEMBER showStatsPeakBitrate NOTIFY showStatsPeakBitrateChanged)
+    Q_PROPERTY(bool showStatsIncomingFps MEMBER showStatsIncomingFps NOTIFY showStatsIncomingFpsChanged)
+    Q_PROPERTY(bool showStatsDecodingFps MEMBER showStatsDecodingFps NOTIFY showStatsDecodingFpsChanged)
+    Q_PROPERTY(bool showStatsRenderingFps MEMBER showStatsRenderingFps NOTIFY showStatsRenderingFpsChanged)
+    Q_PROPERTY(bool showStatsHostLatency MEMBER showStatsHostLatency NOTIFY showStatsHostLatencyChanged)
+    Q_PROPERTY(bool showStatsNetworkDropped MEMBER showStatsNetworkDropped NOTIFY showStatsNetworkDroppedChanged)
+    Q_PROPERTY(bool showStatsJitterDropped MEMBER showStatsJitterDropped NOTIFY showStatsJitterDroppedChanged)
+    Q_PROPERTY(bool showStatsNetworkLatency MEMBER showStatsNetworkLatency NOTIFY showStatsNetworkLatencyChanged)
+    Q_PROPERTY(bool showStatsDecodingTime MEMBER showStatsDecodingTime NOTIFY showStatsDecodingTimeChanged)
+    Q_PROPERTY(bool showStatsQueueDelay MEMBER showStatsQueueDelay NOTIFY showStatsQueueDelayChanged)
+    Q_PROPERTY(bool showStatsRenderingTime MEMBER showStatsRenderingTime NOTIFY showStatsRenderingTimeChanged)
+    // Bitrate overlay individual stat toggles
+    Q_PROPERTY(bool showBitrateCurrent MEMBER showBitrateCurrent NOTIFY showBitrateCurrentChanged)
+    Q_PROPERTY(bool showBitrateMax MEMBER showBitrateMax NOTIFY showBitrateMaxChanged)
+    Q_PROPERTY(bool showBitrateAverage MEMBER showBitrateAverage NOTIFY showBitrateAverageChanged)
+    Q_PROPERTY(bool showBitratePeak MEMBER showBitratePeak NOTIFY showBitratePeakChanged)
     Q_PROPERTY(AudioConfig audioConfig MEMBER audioConfig NOTIFY audioConfigChanged)
     Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
     Q_PROPERTY(bool enableHdr MEMBER enableHdr NOTIFY enableHdrChanged)
@@ -172,6 +193,27 @@ public:
     bool detectNetworkBlocking;
     bool showPerformanceOverlay;
     bool showBitrateOverlay;
+    // Performance stats overlay individual stat toggles
+    bool showStatsVideoStream;
+    bool showStatsCurrentBitrate;
+    bool showStatsMaxBitrate;
+    bool showStatsAvgBitrate;
+    bool showStatsPeakBitrate;
+    bool showStatsIncomingFps;
+    bool showStatsDecodingFps;
+    bool showStatsRenderingFps;
+    bool showStatsHostLatency;
+    bool showStatsNetworkDropped;
+    bool showStatsJitterDropped;
+    bool showStatsNetworkLatency;
+    bool showStatsDecodingTime;
+    bool showStatsQueueDelay;
+    bool showStatsRenderingTime;
+    // Bitrate overlay individual stat toggles
+    bool showBitrateCurrent;
+    bool showBitrateMax;
+    bool showBitrateAverage;
+    bool showBitratePeak;
     bool swapMouseButtons;
     bool muteOnFocusLoss;
     bool backgroundGamepad;
@@ -219,6 +261,27 @@ signals:
     void detectNetworkBlockingChanged();
     void showPerformanceOverlayChanged();
     void showBitrateOverlayChanged();
+    // Performance stats overlay individual stat toggle signals
+    void showStatsVideoStreamChanged();
+    void showStatsCurrentBitrateChanged();
+    void showStatsMaxBitrateChanged();
+    void showStatsAvgBitrateChanged();
+    void showStatsPeakBitrateChanged();
+    void showStatsIncomingFpsChanged();
+    void showStatsDecodingFpsChanged();
+    void showStatsRenderingFpsChanged();
+    void showStatsHostLatencyChanged();
+    void showStatsNetworkDroppedChanged();
+    void showStatsJitterDroppedChanged();
+    void showStatsNetworkLatencyChanged();
+    void showStatsDecodingTimeChanged();
+    void showStatsQueueDelayChanged();
+    void showStatsRenderingTimeChanged();
+    // Bitrate overlay individual stat toggle signals
+    void showBitrateCurrentChanged();
+    void showBitrateMaxChanged();
+    void showBitrateAverageChanged();
+    void showBitratePeakChanged();
     void mouseButtonsChanged();
     void muteOnFocusLossChanged();
     void backgroundGamepadChanged();

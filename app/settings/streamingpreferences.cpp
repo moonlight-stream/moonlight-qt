@@ -44,6 +44,27 @@
 #define SER_DETECTNETBLOCKING "detectnetblocking"
 #define SER_SHOWPERFOVERLAY "showperfoverlay"
 #define SER_SHOWBITRATEOVERLAY "showbitrateoverlay"
+// Performance stats overlay individual stat toggle keys
+#define SER_SHOWSTATSVIDEOSTREAM "showstatsvideostream"
+#define SER_SHOWSTATSCURRENTBITRATE "showstatscurrentbitrate"
+#define SER_SHOWSTATSMAXBITRATE "showstatsmaxbitrate"
+#define SER_SHOWSTATSAVGBITRATE "showstatsavgbitrate"
+#define SER_SHOWSTATSPEAKBITRATE "showstatspeakbitrate"
+#define SER_SHOWSTATSINCOMINGFPS "showstatsincomingfps"
+#define SER_SHOWSTATSDECODINGFPS "showstatsdecodingfps"
+#define SER_SHOWSTATSRENDERINGFPS "showstatsrenderingfps"
+#define SER_SHOWSTATSHOSTLATENCY "showstatshostlatency"
+#define SER_SHOWSTATSNETWORKDROPPED "showstatsnetworkdropped"
+#define SER_SHOWSTATSJITTERDROPPED "showstatsjitterdropped"
+#define SER_SHOWSTATSNETWORKLATENCY "showstatsnetworklatency"
+#define SER_SHOWSTATSDECODINGTIME "showstatsdecodingtime"
+#define SER_SHOWSTATSQUEUEDELAY "showstatsqueuedelay"
+#define SER_SHOWSTATSRENDERINGTIME "showstatsrenderingtime"
+// Bitrate overlay individual stat toggle keys
+#define SER_SHOWBITRATECURRENT "showbitratecurrent"
+#define SER_SHOWBITRATEMAX "showbitratemax"
+#define SER_SHOWBITRATEAVERAGE "showbitrateaverage"
+#define SER_SHOWBITRATEPEAK "showbitratepeak"
 #define SER_SWAPMOUSEBUTTONS "swapmousebuttons"
 #define SER_MUTEONFOCUSLOSS "muteonfocusloss"
 #define SER_BACKGROUNDGAMEPAD "backgroundgamepad"
@@ -142,6 +163,27 @@ void StreamingPreferences::reload()
     detectNetworkBlocking = settings.value(SER_DETECTNETBLOCKING, true).toBool();
     showPerformanceOverlay = settings.value(SER_SHOWPERFOVERLAY, false).toBool();
     showBitrateOverlay = settings.value(SER_SHOWBITRATEOVERLAY, false).toBool();
+    // Performance stats overlay individual stat toggles (default to true for backward compatibility)
+    showStatsVideoStream = settings.value(SER_SHOWSTATSVIDEOSTREAM, true).toBool();
+    showStatsCurrentBitrate = settings.value(SER_SHOWSTATSCURRENTBITRATE, true).toBool();
+    showStatsMaxBitrate = settings.value(SER_SHOWSTATSMAXBITRATE, true).toBool();
+    showStatsAvgBitrate = settings.value(SER_SHOWSTATSAVGBITRATE, true).toBool();
+    showStatsPeakBitrate = settings.value(SER_SHOWSTATSPEAKBITRATE, true).toBool();
+    showStatsIncomingFps = settings.value(SER_SHOWSTATSINCOMINGFPS, true).toBool();
+    showStatsDecodingFps = settings.value(SER_SHOWSTATSDECODINGFPS, true).toBool();
+    showStatsRenderingFps = settings.value(SER_SHOWSTATSRENDERINGFPS, true).toBool();
+    showStatsHostLatency = settings.value(SER_SHOWSTATSHOSTLATENCY, true).toBool();
+    showStatsNetworkDropped = settings.value(SER_SHOWSTATSNETWORKDROPPED, true).toBool();
+    showStatsJitterDropped = settings.value(SER_SHOWSTATSJITTERDROPPED, true).toBool();
+    showStatsNetworkLatency = settings.value(SER_SHOWSTATSNETWORKLATENCY, true).toBool();
+    showStatsDecodingTime = settings.value(SER_SHOWSTATSDECODINGTIME, true).toBool();
+    showStatsQueueDelay = settings.value(SER_SHOWSTATSQUEUEDELAY, true).toBool();
+    showStatsRenderingTime = settings.value(SER_SHOWSTATSRENDERINGTIME, true).toBool();
+    // Bitrate overlay individual stat toggles (default to true for backward compatibility)
+    showBitrateCurrent = settings.value(SER_SHOWBITRATECURRENT, true).toBool();
+    showBitrateMax = settings.value(SER_SHOWBITRATEMAX, true).toBool();
+    showBitrateAverage = settings.value(SER_SHOWBITRATEAVERAGE, true).toBool();
+    showBitratePeak = settings.value(SER_SHOWBITRATEPEAK, true).toBool();
     packetSize = settings.value(SER_PACKETSIZE, 0).toInt();
     swapMouseButtons = settings.value(SER_SWAPMOUSEBUTTONS, false).toBool();
     muteOnFocusLoss = settings.value(SER_MUTEONFOCUSLOSS, false).toBool();
@@ -342,6 +384,27 @@ void StreamingPreferences::save()
     settings.setValue(SER_DETECTNETBLOCKING, detectNetworkBlocking);
     settings.setValue(SER_SHOWPERFOVERLAY, showPerformanceOverlay);
     settings.setValue(SER_SHOWBITRATEOVERLAY, showBitrateOverlay);
+    // Performance stats overlay individual stat toggles
+    settings.setValue(SER_SHOWSTATSVIDEOSTREAM, showStatsVideoStream);
+    settings.setValue(SER_SHOWSTATSCURRENTBITRATE, showStatsCurrentBitrate);
+    settings.setValue(SER_SHOWSTATSMAXBITRATE, showStatsMaxBitrate);
+    settings.setValue(SER_SHOWSTATSAVGBITRATE, showStatsAvgBitrate);
+    settings.setValue(SER_SHOWSTATSPEAKBITRATE, showStatsPeakBitrate);
+    settings.setValue(SER_SHOWSTATSINCOMINGFPS, showStatsIncomingFps);
+    settings.setValue(SER_SHOWSTATSDECODINGFPS, showStatsDecodingFps);
+    settings.setValue(SER_SHOWSTATSRENDERINGFPS, showStatsRenderingFps);
+    settings.setValue(SER_SHOWSTATSHOSTLATENCY, showStatsHostLatency);
+    settings.setValue(SER_SHOWSTATSNETWORKDROPPED, showStatsNetworkDropped);
+    settings.setValue(SER_SHOWSTATSJITTERDROPPED, showStatsJitterDropped);
+    settings.setValue(SER_SHOWSTATSNETWORKLATENCY, showStatsNetworkLatency);
+    settings.setValue(SER_SHOWSTATSDECODINGTIME, showStatsDecodingTime);
+    settings.setValue(SER_SHOWSTATSQUEUEDELAY, showStatsQueueDelay);
+    settings.setValue(SER_SHOWSTATSRENDERINGTIME, showStatsRenderingTime);
+    // Bitrate overlay individual stat toggles
+    settings.setValue(SER_SHOWBITRATECURRENT, showBitrateCurrent);
+    settings.setValue(SER_SHOWBITRATEMAX, showBitrateMax);
+    settings.setValue(SER_SHOWBITRATEAVERAGE, showBitrateAverage);
+    settings.setValue(SER_SHOWBITRATEPEAK, showBitratePeak);
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
     settings.setValue(SER_HDR, enableHdr);
     settings.setValue(SER_YUV444, enableYUV444);

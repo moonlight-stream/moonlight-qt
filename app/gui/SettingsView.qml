@@ -1752,6 +1752,246 @@ Flickable {
                                   qsTr("The performance overlay is not supported on Steam Link or Raspberry Pi.")
                 }
 
+                // Expandable section for performance stats individual toggles
+                Column {
+                    width: parent.width
+                    spacing: 5
+                    visible: showPerformanceOverlay.checked
+
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: "#444"
+                    }
+
+                    Label {
+                        width: parent.width
+                        text: qsTr("Performance Stats Options:")
+                        font.pointSize: 11
+                        font.bold: true
+                        wrapMode: Text.Wrap
+                    }
+
+                    // Video info group
+                    Label {
+                        width: parent.width
+                        text: qsTr("Video Information:")
+                        font.pointSize: 10
+                        font.italic: true
+                        wrapMode: Text.Wrap
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Video stream info (resolution, FPS, codec)")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsVideoStream
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsVideoStream = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    // Bitrate group
+                    Label {
+                        width: parent.width
+                        text: qsTr("Bitrate Information:")
+                        font.pointSize: 10
+                        font.italic: true
+                        wrapMode: Text.Wrap
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Current bitrate")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsCurrentBitrate
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsCurrentBitrate = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Max bitrate limit")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsMaxBitrate
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsMaxBitrate = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Average bitrate")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsAvgBitrate
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsAvgBitrate = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Peak bitrate")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsPeakBitrate
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsPeakBitrate = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    // Frame rates group
+                    Label {
+                        width: parent.width
+                        text: qsTr("Frame Rates:")
+                        font.pointSize: 10
+                        font.italic: true
+                        wrapMode: Text.Wrap
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Incoming frame rate from network")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsIncomingFps
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsIncomingFps = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Decoding frame rate")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsDecodingFps
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsDecodingFps = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Rendering frame rate")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsRenderingFps
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsRenderingFps = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    // Latency group
+                    Label {
+                        width: parent.width
+                        text: qsTr("Latency:")
+                        font.pointSize: 10
+                        font.italic: true
+                        wrapMode: Text.Wrap
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Host processing latency")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsHostLatency
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsHostLatency = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Average network latency (RTT)")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsNetworkLatency
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsNetworkLatency = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    // Dropped frames group
+                    Label {
+                        width: parent.width
+                        text: qsTr("Dropped Frames:")
+                        font.pointSize: 10
+                        font.italic: true
+                        wrapMode: Text.Wrap
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Frames dropped by network connection")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsNetworkDropped
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsNetworkDropped = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Frames dropped due to network jitter")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsJitterDropped
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsJitterDropped = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    // Timing group
+                    Label {
+                        width: parent.width
+                        text: qsTr("Timing:")
+                        font.pointSize: 10
+                        font.italic: true
+                        wrapMode: Text.Wrap
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Average decoding time")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsDecodingTime
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsDecodingTime = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Average frame queue delay")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsQueueDelay
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsQueueDelay = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Average rendering time")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showStatsRenderingTime
+                        onCheckedChanged: {
+                            StreamingPreferences.showStatsRenderingTime = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+                }
+
                 CheckBox {
                     id: showBitrateOverlay
                     width: parent.width
@@ -1767,6 +2007,71 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Display real-time bitrate information while streaming.") + "\n\n" +
                                   qsTr("Shows current, average, and peak bitrate values.")
+                }
+
+                // Expandable section for bitrate overlay individual toggles
+                Column {
+                    width: parent.width
+                    spacing: 5
+                    visible: showBitrateOverlay.checked
+
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: "#444"
+                    }
+
+                    Label {
+                        width: parent.width
+                        text: qsTr("Bitrate Overlay Options:")
+                        font.pointSize: 11
+                        font.bold: true
+                        wrapMode: Text.Wrap
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Current bitrate")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showBitrateCurrent
+                        onCheckedChanged: {
+                            StreamingPreferences.showBitrateCurrent = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Max bitrate limit")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showBitrateMax
+                        onCheckedChanged: {
+                            StreamingPreferences.showBitrateMax = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Average bitrate")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showBitrateAverage
+                        onCheckedChanged: {
+                            StreamingPreferences.showBitrateAverage = checked
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Peak bitrate")
+                        font.pointSize: 11
+                        checked: StreamingPreferences.showBitratePeak
+                        onCheckedChanged: {
+                            StreamingPreferences.showBitratePeak = checked
+                            StreamingPreferences.save()
+                        }
+                    }
                 }
             }
         }
