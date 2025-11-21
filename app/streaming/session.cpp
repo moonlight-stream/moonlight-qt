@@ -2052,10 +2052,6 @@ void Session::execInternal()
                 case CONN_STATUS_POOR:
                     // Reduce bitrate by half (exponential decay)
                     adjustedBitrate = (int)(adjustedBitrate * 0.5f);
-                    // Ensure we don't go below a minimum (e.g., 1 Mbps)
-                    if (adjustedBitrate < 1000) {
-                        adjustedBitrate = 1000;
-                    }
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                "Poor network conditions detected. Reducing bitrate from %d to %d kbps",
                                m_CurrentAdjustedBitrate, adjustedBitrate);

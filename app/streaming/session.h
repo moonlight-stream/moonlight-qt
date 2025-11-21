@@ -129,6 +129,11 @@ public:
                m_CurrentAdjustedBitrate : m_Preferences->bitrateKbps;
     }
 
+    int getMaxBitrateLimit() const
+    {
+        return m_Preferences->bitrateKbps;
+    }
+
 signals:
     void stageStarting(QString stage);
 

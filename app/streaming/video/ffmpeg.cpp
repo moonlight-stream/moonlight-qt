@@ -841,11 +841,13 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 #endif
 
             int currentBitrateKbps = Session::get() ? Session::get()->getCurrentAdjustedBitrate() : 0;
+            int maxBitrateKbps = Session::get() ? Session::get()->getMaxBitrateLimit() : 0;
             ret = snprintf(&output[offset],
                            length - offset,
                            "Video stream: %dx%d %.2f FPS (Codec: %s)\n"
 #ifdef DISPLAY_BITRATE
                            "Current bitrate: %.1f Mbps\n"
+                           "Max bitrate limit: %.1f Mbps\n"
                            "Average bitrate: %.1f Mbps, Peak (%us): %.1f Mbps\n"
 #endif
                            ,
@@ -856,6 +858,7 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 #ifdef DISPLAY_BITRATE
                            ,
                            currentBitrateKbps / 1000.0,
+                           maxBitrateKbps / 1000.0,
                            avgVideoMbps,
                            m_BwTracker.GetWindowSeconds(),
                            peakVideoMbps
@@ -1877,15 +1880,18 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         // Update bitrate overlay if it's enabled
         if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayBitrate)) {
             int currentBitrateKbps = Session::get()->getCurrentAdjustedBitrate();
+            int maxBitrateKbps = Session::get()->getMaxBitrateLimit();
             double avgVideoMbps = m_BwTracker.GetAverageMbps();
             double peakVideoMbps = m_BwTracker.GetPeakMbps();
             
             char bitrateText[256];
             snprintf(bitrateText, sizeof(bitrateText),
                     "Current bitrate: %.1f Mbps\n"
+                    "Max bitrate limit: %.1f Mbps\n"
                     "Average bitrate: %.1f Mbps\n"
                     "Peak bitrate (%us): %.1f Mbps",
                     currentBitrateKbps / 1000.0,
+                    maxBitrateKbps / 1000.0,
                     avgVideoMbps,
                     m_BwTracker.GetWindowSeconds(),
                     peakVideoMbps);
