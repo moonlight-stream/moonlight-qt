@@ -413,6 +413,9 @@ public:
             case Overlay::OverlayDebug:
                 [m_OverlayTextFields[type] setAlignment:NSTextAlignmentLeft];
                 break;
+            case Overlay::OverlayBitrate:
+                [m_OverlayTextFields[type] setAlignment:NSTextAlignmentLeft];
+                break;
             case Overlay::OverlayStatusUpdate:
                 [m_OverlayTextFields[type] setAlignment:NSTextAlignmentRight];
                 break;

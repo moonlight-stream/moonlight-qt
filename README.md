@@ -20,6 +20,8 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
  - Gamepad support with force feedback and motion controls for up to 16 players
  - Support for both pointer capture (for games) and direct mouse control (for remote desktop)
  - Support for passing system-wide keyboard shortcuts like Alt+Tab to the host
+ - Automatic bitrate adjustment with exponential decay algorithm (reduces by half on poor network, increases by quarter on good network)
+ - Real-time bitrate overlay display showing current, average, and peak bitrate values
  
 ## Downloads
 - [Windows, macOS, and Steam Link](https://github.com/moonlight-stream/moonlight-qt/releases)

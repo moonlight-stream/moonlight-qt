@@ -185,11 +185,17 @@ void Session::clConnectionStatusUpdate(int connectionStatus)
                 "Connection status update: %d",
                 connectionStatus);
 
-    if (!s_ActiveSession->m_Preferences->connectionWarnings) {
+    Session* session = s_ActiveSession;
+    
+    // Update connection status for bitrate adjustment
+    // The actual adjustment happens in the main loop every second
+    session->m_LastConnectionStatus = connectionStatus;
+
+    if (!session->m_Preferences->connectionWarnings) {
         return;
     }
 
-    if (s_ActiveSession->m_MouseEmulationRefCount > 0) {
+    if (session->m_MouseEmulationRefCount > 0) {
         // Don't display the overlay if mouse emulation is already using it
         return;
     }
@@ -197,13 +203,13 @@ void Session::clConnectionStatusUpdate(int connectionStatus)
     switch (connectionStatus)
     {
     case CONN_STATUS_POOR:
-        s_ActiveSession->m_OverlayManager.updateOverlayText(Overlay::OverlayStatusUpdate,
-                                                            s_ActiveSession->m_StreamConfig.bitrate > 5000 ?
+        session->m_OverlayManager.updateOverlayText(Overlay::OverlayStatusUpdate,
+                                                            session->m_StreamConfig.bitrate > 5000 ?
                                                                 "Slow connection to PC\nReduce your bitrate" : "Poor connection to PC");
-        s_ActiveSession->m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, true);
+        session->m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, true);
         break;
     case CONN_STATUS_OKAY:
-        s_ActiveSession->m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, false);
+        session->m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, false);
         break;
     }
 }
@@ -679,6 +685,12 @@ bool Session::initialize()
 
     m_StreamConfig.fps = m_Preferences->fps;
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
+    
+    // Initialize bitrate adjustment state
+    m_CurrentAdjustedBitrate = m_Preferences->bitrateKbps;
+    m_LastBitrateCheckTime = SDL_GetTicks();
+    m_LastConnectionStatus = CONN_STATUS_OKAY;
+    m_AutoAdjustBitrateActive = m_Preferences->autoAdjustBitrate;
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
@@ -2017,6 +2029,7 @@ void Session::execInternal()
 
     // Toggle the stats overlay if requested by the user
     m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
+    m_OverlayManager.setOverlayState(Overlay::OverlayBitrate, m_Preferences->showBitrateOverlay);
 
     // Switch to async logging mode when we enter the SDL loop
     StreamUtils::enterAsyncLoggingMode();
@@ -2024,7 +2037,48 @@ void Session::execInternal()
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
+    Uint32 lastBitrateCheckTime = SDL_GetTicks();
     for (;;) {
+        // Check bitrate adjustment every 1 second
+        Uint32 currentTime = SDL_GetTicks();
+        if (m_AutoAdjustBitrateActive && m_Preferences->autoAdjustBitrate) {
+            Uint32 timeSinceLastCheck = currentTime - lastBitrateCheckTime;
+            if (timeSinceLastCheck >= 1000) {
+                int originalBitrate = m_Preferences->bitrateKbps;
+                int adjustedBitrate = m_CurrentAdjustedBitrate;
+                
+                // Use the last known connection status
+                switch (m_LastConnectionStatus) {
+                case CONN_STATUS_POOR:
+                    // Reduce bitrate by half (exponential decay)
+                    adjustedBitrate = (int)(adjustedBitrate * 0.5f);
+                    // Ensure we don't go below a minimum (e.g., 1 Mbps)
+                    if (adjustedBitrate < 1000) {
+                        adjustedBitrate = 1000;
+                    }
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                               "Poor network conditions detected. Reducing bitrate from %d to %d kbps",
+                               m_CurrentAdjustedBitrate, adjustedBitrate);
+                    break;
+                    
+                case CONN_STATUS_OKAY:
+                    // Increase bitrate by quarter (exponential growth)
+                    adjustedBitrate = (int)(adjustedBitrate * 1.25f);
+                    // Don't exceed the original/user-set bitrate
+                    if (adjustedBitrate > originalBitrate) {
+                        adjustedBitrate = originalBitrate;
+                    }
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                               "Good network conditions detected. Increasing bitrate from %d to %d kbps",
+                               m_CurrentAdjustedBitrate, adjustedBitrate);
+                    break;
+                }
+                
+                m_CurrentAdjustedBitrate = adjustedBitrate;
+                lastBitrateCheckTime = currentTime;
+            }
+        }
+        
 #if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)
         // SDL 2.0.18 has a proper wait event implementation that uses platform
         // support to block on events rather than polling on Windows, macOS, X11,
