@@ -52,8 +52,11 @@
 #include <QImage>
 #include <QGuiApplication>
 #include <QCursor>
-#include <QWindow>
 #include <QScreen>
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QQuickOpenGLUtils>
+#endif
 
 #define CONN_TEST_SERVER "qt.conntest.moonlight-stream.org"
 
@@ -595,8 +598,10 @@ Session::~Session()
     SDL_DestroyMutex(m_DecoderLock);
 }
 
-bool Session::initialize()
+bool Session::initialize(QQuickWindow* qtWindow)
 {
+    m_QtWindow = qtWindow;
+
 #ifdef Q_OS_DARWIN
     if (qEnvironmentVariableIntValue("I_WANT_BUGGY_FULLSCREEN") == 0) {
         // If we have a notch and the user specified one of the two native display modes
@@ -937,37 +942,16 @@ bool Session::initialize()
         return false;
     }
 
-    if (m_Preferences->configurationWarnings) {
-        // Display launch warnings in Qt only after destroying SDL's window.
-        // This avoids conflicts between the windows on display subsystems
-        // such as KMSDRM that only support a single window.
-        for (const auto &text : m_LaunchWarnings) {
-            // Emit the warning to the UI
-            emit displayLaunchWarning(text);
-
-            // Wait a little bit so the user can actually read what we just said.
-            // This wait is a little longer than the actual toast timeout (3 seconds)
-            // to allow it to transition off the screen before continuing.
-            uint32_t start = SDL_GetTicks();
-            while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 3500)) {
-                SDL_Delay(5);
-
-                if (!m_ThreadedExec) {
-                    // Pump the UI loop while we wait if we're on the main thread
-                    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-                    QCoreApplication::sendPostedEvents();
-                }
-            }
-        }
-    }
-
     return true;
 }
 
 void Session::emitLaunchWarning(QString text)
 {
-    // Queue this launch warning to be displayed after validation
-    m_LaunchWarnings.append(text);
+    if (m_Preferences->configurationWarnings) {
+        // Queue this launch warning to be displayed after validation
+        m_LaunchWarnings.append(text);
+        emit launchWarningsChanged();
+    }
 }
 
 bool Session::validateLaunch(SDL_Window* testWindow)
@@ -1717,72 +1701,8 @@ void Session::setShouldExitAfterQuit()
     m_ShouldExitAfterQuit = true;
 }
 
-class ExecThread : public QThread
+void Session::start()
 {
-public:
-    ExecThread(Session* session) :
-        QThread(nullptr),
-        m_Session(session)
-    {
-        setObjectName("Session Exec");
-    }
-
-    void run() override
-    {
-        m_Session->execInternal();
-    }
-
-    Session* m_Session;
-};
-
-void Session::exec(QWindow* qtWindow)
-{
-    m_QtWindow = qtWindow;
-
-    // Use a separate thread for the streaming session on X11 or Wayland
-    // to ensure we don't stomp on Qt's GL context. This breaks when using
-    // the Qt EGLFS backend, so we will restrict this to X11
-    m_ThreadedExec = WMUtils::isRunningX11() || WMUtils::isRunningWayland();
-
-    if (m_ThreadedExec) {
-        // Run the streaming session on a separate thread for Linux/BSD
-        ExecThread execThread(this);
-        execThread.start();
-
-        // Until the SDL streaming window is created, we should continue
-        // to update the Qt UI to allow warning messages to display and
-        // make sure that the Qt window can hide itself.
-        while (!execThread.wait(10) && m_Window == nullptr) {
-            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-            QCoreApplication::sendPostedEvents();
-        }
-        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-        QCoreApplication::sendPostedEvents();
-
-        // SDL is in charge now. Wait until the streaming thread exits
-        // to further update the Qt window.
-        execThread.wait();
-    }
-    else {
-        // Run the streaming session on the main thread for Windows and macOS
-        execInternal();
-    }
-}
-
-void Session::execInternal()
-{
-    // Complete initialization in this deferred context to avoid
-    // calling expensive functions in the constructor (during the
-    // process of loading the StreamSegue).
-    //
-    // NB: This initializes the SDL video subsystem, so it must be
-    // called on the main thread.
-    if (!initialize()) {
-        emit sessionFinished(0);
-        emit readyForDeletion();
-        return;
-    }
-
     // Wait for any old session to finish cleanup
     s_ActiveSessionSemaphore.acquire();
 
@@ -1793,27 +1713,15 @@ void Session::execInternal()
     // NB: m_InputHandler must be initialize before starting the connection.
     m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height);
 
-    AsyncConnectionStartThread asyncConnThread(this);
-    if (!m_ThreadedExec) {
-        // Kick off the async connection thread while we sit here and pump the event loop
-        asyncConnThread.start();
-        while (!asyncConnThread.wait(10)) {
-            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-            QCoreApplication::sendPostedEvents();
-        }
+    // Kick off the async connection thread then return to the caller to pump the event loop
+    auto thread = new AsyncConnectionStartThread(this);
+    QObject::connect(thread, &QThread::finished, this, &Session::exec);
+    QObject::connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+    thread->start();
+}
 
-        // Pump the event loop one last time to ensure we pick up any events from
-        // the thread that happened while it was in the final successful QThread::wait().
-        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-        QCoreApplication::sendPostedEvents();
-    }
-    else {
-        // We're already in a separate thread so run the connection operations
-        // synchronously and don't pump the event loop. The main thread is already
-        // pumping the event loop for us.
-        asyncConnThread.run();
-    }
-
+void Session::exec()
+{
     // If the connection failed, clean up and abort the connection.
     if (!m_AsyncConnectionSuccess) {
         delete m_InputHandler;
@@ -2433,6 +2341,13 @@ DispatchDeferredCleanup:
     }
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+    // Reset this thread's OpenGL state back to what Qt expects
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QQuickOpenGLUtils::resetOpenGLState();
+#else
+    m_QtWindow->resetOpenGLState();
+#endif
 
     // Cleanup can take a while, so dispatch it to a worker thread.
     // When it is complete, it will release our s_ActiveSessionSemaphore
