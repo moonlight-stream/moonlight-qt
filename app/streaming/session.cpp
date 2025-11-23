@@ -185,11 +185,15 @@ void Session::clConnectionStatusUpdate(int connectionStatus)
                 "Connection status update: %d",
                 connectionStatus);
 
+    // Store the connection status for stats display
+    s_ActiveSession->m_ConnectionStatus = connectionStatus;
+
     if (!s_ActiveSession->m_Preferences->connectionWarnings) {
         return;
     }
 
     if (s_ActiveSession->m_MouseEmulationRefCount > 0) {
+        
         // Don't display the overlay if mouse emulation is already using it
         return;
     }
@@ -583,7 +587,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0),
-      m_DropAudioEndTime(0)
+      m_DropAudioEndTime(0),
+      m_ConnectionStatus(CONN_STATUS_OKAY) // Initialize to OKAY, will be updated by callback
 {
 }
 
@@ -679,6 +684,7 @@ bool Session::initialize()
 
     m_StreamConfig.fps = m_Preferences->fps;
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
+    m_StreamConfig.autoBitrateEnabled = m_Preferences->autoBitrateEnabled ? 1 : 0;
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
@@ -1682,6 +1688,9 @@ bool Session::startConnectionAsync()
                                                                          false);
     }
 
+    // Set auto bitrate flag based on checkbox state
+    m_StreamConfig.autoBitrateEnabled = m_Preferences->autoAdjustBitrate ? 1 : 0;
+
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks, &m_AudioCallbacks,
                                 NULL, 0, NULL, 0);
@@ -1693,6 +1702,16 @@ bool Session::startConnectionAsync()
 
     emit connectionStarted();
     return true;
+}
+
+int Session::getHostMaxBitrateKbps() const
+{
+    int hostMaxBitrate = LiGetHostMaxBitrateKbps();
+    // If host didn't send a max limit, fallback to configured bitrate
+    if (hostMaxBitrate == 0) {
+        return m_StreamConfig.bitrate;
+    }
+    return hostMaxBitrate;
 }
 
 void Session::flushWindowEvents()
