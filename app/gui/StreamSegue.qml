@@ -186,21 +186,18 @@ Item {
                 var text = session.launchWarnings[i]
                 console.warn(text)
 
-                // Show the tooltip
+                // Show the tooltip for 3 seconds
                 var toast = Qt.createQmlObject('import QtQuick.Controls 2.2; ToolTip {}', parent, '')
+                toast.timeout = 3000
                 toast.text = text
                 toast.y += yOffset
                 toast.visible = true
 
-                // Hide the tooltip when the connection starts or fails
-                session.connectionStarted.connect(toast.hide)
-                session.sessionFinished.connect(toast.hide)
-
                 // Offset the next toast below the previous one
                 yOffset = toast.y + toast.padding + toast.height
 
-                // Allow the user 3.5 seconds to read the tooltip(s)
-                startSessionTimer.interval = 3500;
+                // Allow an extra 500 ms for the tooltip's fade-out animation to finish
+                startSessionTimer.interval = toast.timeout + 500;
             }
 
             // Start the timer to wait for toasts (or start the session immediately)
