@@ -684,7 +684,7 @@ bool Session::initialize()
 
     m_StreamConfig.fps = m_Preferences->fps;
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
-    m_StreamConfig.autoBitrateEnabled = m_Preferences->autoBitrateEnabled ? 1 : 0;
+    m_StreamConfig.autoBitrateEnabled = m_Preferences->autoAdjustBitrate ? 1 : 0;
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
