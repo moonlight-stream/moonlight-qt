@@ -2342,13 +2342,6 @@ DispatchDeferredCleanup:
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
-    // Reset this thread's OpenGL state back to what Qt expects
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    QQuickOpenGLUtils::resetOpenGLState();
-#else
-    m_QtWindow->resetOpenGLState();
-#endif
-
     // Cleanup can take a while, so dispatch it to a worker thread.
     // When it is complete, it will release our s_ActiveSessionSemaphore
     // reference.
