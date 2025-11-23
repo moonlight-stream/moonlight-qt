@@ -106,6 +106,7 @@ private:
     SDL_Rect m_OverlayRect[Overlay::OverlayMax];
 
 #ifdef HAVE_LIBVA_X11
+    Display* m_XDisplay;
     Window m_XWindow;
 #endif
 

@@ -34,6 +34,11 @@ VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
     SDL_zero(m_PrimeDescriptor);
 #endif
 
+#ifdef HAVE_LIBVA_X11
+    m_XDisplay = nullptr;
+    m_XWindow = None;
+#endif
+
 #ifdef HAVE_LIBVA_DRM
     m_DrmFd = -1;
 #endif
@@ -74,6 +79,12 @@ VAAPIRenderer::~VAAPIRenderer()
     }
 #endif
 
+#ifdef HAVE_LIBVA_X11
+    if (m_XDisplay != nullptr) {
+        XCloseDisplay(m_XDisplay);
+    }
+#endif
+
     if (m_OverlayMutex != nullptr) {
         SDL_DestroyMutex(m_OverlayMutex);
     }
@@ -98,7 +109,19 @@ VAAPIRenderer::openDisplay(SDL_Window* window)
     if (info.subsystem == SDL_SYSWM_X11) {
 #ifdef HAVE_LIBVA_X11
         m_XWindow = info.info.x11.window;
-        display = vaGetDisplay(info.info.x11.display);
+
+        // It's possible to enter this function several times as we're probing VA drivers.
+        // Only open the new Display object the first time through.
+        if (m_XDisplay == nullptr) {
+            m_XDisplay = XOpenDisplay(XDisplayString(info.info.x11.display));
+            if (m_XDisplay == nullptr) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Unable to clone SDL X11 display for VAAPI");
+                return nullptr;
+            }
+        }
+
+        display = vaGetDisplay(m_XDisplay);
         if (display == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Unable to open X11 display for VAAPI");
