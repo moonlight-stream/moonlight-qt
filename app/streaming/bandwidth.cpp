@@ -66,6 +66,25 @@ double BandwidthTracker::GetPeakMbps() {
     return peak;
 }
 
+double BandwidthTracker::GetCurrentMbps() {
+    std::lock_guard<std::mutex> lock(mtx);
+    auto now = steady_clock::now();
+    auto ms = duration_cast<milliseconds>(now.time_since_epoch());
+    int currentIndex = (ms.count() / bucketIntervalMs) % bucketCount;
+    
+    // Look at the most recently completed bucket (previous bucket from current)
+    int previousIndex = (currentIndex - 1 + bucketCount) % bucketCount;
+    const Bucket &bucket = buckets[previousIndex];
+    
+    // Check if the bucket is valid and completed
+    if (isValid(bucket, now) && (now - bucket.start >= milliseconds(bucketIntervalMs))) {
+        return getBucketMbps(bucket);
+    }
+    
+    // No valid completed bucket exists
+    return 0.0;
+}
+
 unsigned int BandwidthTracker::GetWindowSeconds() {
     return (unsigned int)windowSeconds.count();
 }
