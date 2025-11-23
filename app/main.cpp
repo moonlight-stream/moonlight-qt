@@ -475,12 +475,12 @@ int main(int argc, char *argv[])
 #endif
     }
 
-#ifndef Q_PROCESSOR_X86
     // Some ARM and RISC-V embedded devices don't have working GLX which can cause
     // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
-    // on non-x86 platforms, since GLX is deprecated anyway.
+    // on all platforms for both SDL and Qt. This also avoids GLX-EGL interop issues
+    // when trying to use EGL on the main thread after Qt uses GLX.
     SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
-#endif
+    qputenv("QT_XCB_GL_INTEGRATION", "xcb_egl");
 
 #ifdef Q_OS_MACOS
     // This avoids using the default keychain for SSL, which may cause
