@@ -749,11 +749,45 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     // The following code assumes the global measure was already started first
     SDL_assert(dst.measurementStartUs <= src.measurementStartUs);
 
-    double timeDiffSecs = (double)(LiGetMicroseconds() - dst.measurementStartUs) / 1000000.0;
+    double timeDiffSecs = (double)(LiGetMillis() * 1000 - dst.measurementStartUs) / 1000000.0;
     dst.totalFps        = (double)dst.totalFrames / timeDiffSecs;
     dst.receivedFps     = (double)dst.receivedFrames / timeDiffSecs;
     dst.decodedFps      = (double)dst.decodedFrames / timeDiffSecs;
     dst.renderedFps     = (double)dst.renderedFrames / timeDiffSecs;
+}
+
+// Get network quality string from moonlight-common-c connection status
+// Uses the single source of truth from moonlight-common-c's connection assessment
+// Indicates if status came from host or client calculation
+static const char* getNetworkQualityString()
+{
+    if (Session::get() == nullptr) {
+        return "Unknown";
+    }
+    
+    int connectionStatus = Session::get()->getConnectionStatus();
+    bool fromHost = LiIsConnectionStatusFromHost();
+    
+    const char* quality;
+    switch (connectionStatus) {
+    case CONN_STATUS_POOR:
+        quality = "Poor";
+        break;
+    case CONN_STATUS_OKAY:
+        quality = "Good";
+        break;
+    default:
+        return "Unknown";
+    }
+    
+    // Format with source indicator
+    static char result[32];
+    if (fromHost) {
+        snprintf(result, sizeof(result), "%s (Host)", quality);
+    } else {
+        snprintf(result, sizeof(result), "%s (Client)", quality);
+    }
+    return result;
 }
 
 void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, int length)
@@ -836,15 +870,21 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
     if (stats.receivedFps > 0) {
         if (m_VideoDecoderCtx != nullptr) {
 #ifdef DISPLAY_BITRATE
+            double currentVideoMbps = m_BwTracker.GetCurrentMbps();
             double avgVideoMbps = m_BwTracker.GetAverageMbps();
             double peakVideoMbps = m_BwTracker.GetPeakMbps();
+            int hostMaxBitrateKbps = 0;
+            if (Session::get() != nullptr) {
+                hostMaxBitrateKbps = Session::get()->getHostMaxBitrateKbps();
+            }
+            double hostMaxBitrateMbps = hostMaxBitrateKbps / 1000.0;
 #endif
 
             ret = snprintf(&output[offset],
                            length - offset,
                            "Video stream: %dx%d %.2f FPS (Codec: %s)\n"
 #ifdef DISPLAY_BITRATE
-                           "Bitrate: %.1f Mbps, Peak (%us): %.1f\n"
+                           "Bitrate: Current: %.1f Mbps, Avg: %.1f Mbps, Peak (%us): %.1f Mbps, Max Limit: %.1f Mbps\n"
 #endif
                            ,
                            m_VideoDecoderCtx->width,
@@ -853,9 +893,11 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
                            codecString
 #ifdef DISPLAY_BITRATE
                            ,
+                           currentVideoMbps,
                            avgVideoMbps,
                            m_BwTracker.GetWindowSeconds(),
-                           peakVideoMbps
+                           peakVideoMbps,
+                           hostMaxBitrateMbps
 #endif
                            );
             if (ret < 0 || ret >= length - offset) {
@@ -897,6 +939,50 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
         offset += ret;
     }
 
+    // Display auto bitrate statistics if enabled
+    const AUTO_BITRATE_STATS* autoBitrateStats = LiGetAutoBitrateStats();
+    if (autoBitrateStats != NULL && autoBitrateStats->enabled) {
+        char lastAdjustmentStr[64];
+        if (autoBitrateStats->last_adjustment_time_ms > 0) {
+            // last_adjustment_time_ms is relative to session start
+            // Since stats are sent every ~1 second, we can estimate "time ago" by comparing
+            // with current session time. For simplicity, show time since session start when adjustment occurred.
+            // In practice, this will be close to "time ago" since adjustments happen during active streaming.
+            double adjustment_time_sec = autoBitrateStats->last_adjustment_time_ms / 1000.0;
+            
+            // Estimate: if adjustment was very recent (within last 5 seconds of session), show "recently"
+            // Otherwise show the time
+            if (adjustment_time_sec < 5.0) {
+                snprintf(lastAdjustmentStr, sizeof(lastAdjustmentStr), "Recently");
+            } else if (adjustment_time_sec < 60.0) {
+                snprintf(lastAdjustmentStr, sizeof(lastAdjustmentStr), "%.0fs into session", adjustment_time_sec);
+            } else {
+                double minutes = adjustment_time_sec / 60.0;
+                snprintf(lastAdjustmentStr, sizeof(lastAdjustmentStr), "%.1fmin into session", minutes);
+            }
+        } else {
+            snprintf(lastAdjustmentStr, sizeof(lastAdjustmentStr), "Never");
+        }
+
+        ret = snprintf(&output[offset],
+                       length - offset,
+                       "\nAuto Bitrate:\n"
+                       "Current encoder bitrate: %u Kbps\n"
+                       "Frame loss: %.2f%%\n"
+                       "Last adjustment: %s\n"
+                       "Total adjustments: %u\n",
+                       autoBitrateStats->current_bitrate_kbps,
+                       autoBitrateStats->loss_percentage,
+                       lastAdjustmentStr,
+                       autoBitrateStats->adjustment_count);
+        if (ret < 0 || ret >= length - offset) {
+            SDL_assert(false);
+            return;
+        }
+
+        offset += ret;
+    }
+
     if (stats.renderedFrames != 0) {
         char rttString[32];
 
@@ -907,17 +993,21 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
             snprintf(rttString, sizeof(rttString), "N/A");
         }
 
+        const char* networkQuality = getNetworkQualityString();
+        
         ret = snprintf(&output[offset],
                        length - offset,
                        "Frames dropped by your network connection: %.2f%%\n"
                        "Frames dropped due to network jitter: %.2f%%\n"
                        "Average network latency: %s\n"
+                       "Network quality: %s\n"
                        "Average decoding time: %.2f ms\n"
                        "Average frame queue delay: %.2f ms\n"
                        "Average rendering time (including monitor V-sync latency): %.2f ms\n",
                        (float)stats.networkDroppedFrames / stats.totalFrames * 100,
                        (float)stats.pacerDroppedFrames / stats.decodedFrames * 100,
                        rttString,
+                       networkQuality,
                        (double)(stats.totalDecodeTimeUs / 1000.0) / stats.decodedFrames,
                        (double)(stats.totalPacerTimeUs / 1000.0) / stats.renderedFrames,
                        (double)(stats.totalRenderTimeUs / 1000.0) / stats.renderedFrames);
@@ -1760,7 +1850,7 @@ void FFmpegVideoDecoder::decoderThreadProc()
                     av_log_set_level(AV_LOG_INFO);
 
                     // Capture a frame timestamp to measuring pacing delay
-                    frame->pkt_dts = LiGetMicroseconds();
+                    frame->pkt_dts = LiGetMillis() * 1000;
 
                     if (!m_FrameInfoQueue.isEmpty()) {
                         // Data buffers in the DU are not valid here!
@@ -1769,10 +1859,10 @@ void FFmpegVideoDecoder::decoderThreadProc()
                         // Count time in avcodec_send_packet() and avcodec_receive_frame()
                         // as time spent decoding. Also count time spent in the decode unit
                         // queue because that's directly caused by decoder latency.
-                        m_ActiveWndVideoStats.totalDecodeTimeUs += (LiGetMicroseconds() - du.enqueueTimeUs);
+                        m_ActiveWndVideoStats.totalDecodeTimeUs += (LiGetMillis() * 1000 - du.enqueueTimeMs * 1000);
 
                         // Store the presentation time (90 kHz timebase)
-                        frame->pts = (int64_t)du.rtpTimestamp;
+                        frame->pts = (int64_t)du.presentationTimeMs * 90;
                     }
 
                     m_ActiveWndVideoStats.decodedFrames++;
@@ -1845,7 +1935,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     }
 
     if (!m_LastFrameNumber) {
-        m_ActiveWndVideoStats.measurementStartUs = LiGetMicroseconds();
+        m_ActiveWndVideoStats.measurementStartUs = LiGetMillis() * 1000;
         m_LastFrameNumber = du->frameNumber;
     }
     else {
@@ -1858,7 +1948,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     m_BwTracker.AddBytes(du->fullLength);
 
     // Flip stats windows roughly every second
-    if (LiGetMicroseconds() > m_ActiveWndVideoStats.measurementStartUs + 1000000) {
+    if (LiGetMillis() * 1000 > m_ActiveWndVideoStats.measurementStartUs + 1000000) {
         // Update overlay stats if it's enabled
         if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)) {
             VIDEO_STATS lastTwoWndStats = {};
@@ -1877,7 +1967,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         // Move this window into the last window slot and clear it for next window
         SDL_memcpy(&m_LastWndVideoStats, &m_ActiveWndVideoStats, sizeof(m_ActiveWndVideoStats));
         SDL_zero(m_ActiveWndVideoStats);
-        m_ActiveWndVideoStats.measurementStartUs = LiGetMicroseconds();
+        m_ActiveWndVideoStats.measurementStartUs = LiGetMillis() * 1000;
     }
 
     if (du->frameHostProcessingLatency != 0) {
@@ -1920,7 +2010,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         m_Pkt->flags = 0;
     }
 
-    m_ActiveWndVideoStats.totalReassemblyTimeUs += (du->enqueueTimeUs - du->receiveTimeUs);
+    m_ActiveWndVideoStats.totalReassemblyTimeUs += (du->enqueueTimeMs * 1000 - du->receiveTimeMs * 1000);
 
     err = avcodec_send_packet(m_VideoDecoderCtx, m_Pkt);
     if (err < 0) {
