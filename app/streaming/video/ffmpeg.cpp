@@ -964,14 +964,15 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
             snprintf(lastAdjustmentStr, sizeof(lastAdjustmentStr), "Never");
         }
 
+        double currentBitrateMbps = autoBitrateStats->current_bitrate_kbps / 1000.0;
         ret = snprintf(&output[offset],
                        length - offset,
                        "\nAuto Bitrate:\n"
-                       "Current encoder bitrate: %u Kbps\n"
+                       "Current encoder bitrate: %.2f Mbps\n"
                        "Frame loss: %.2f%%\n"
                        "Last adjustment: %s\n"
                        "Total adjustments: %u\n",
-                       autoBitrateStats->current_bitrate_kbps,
+                       currentBitrateMbps,
                        autoBitrateStats->loss_percentage,
                        lastAdjustmentStr,
                        autoBitrateStats->adjustment_count);
