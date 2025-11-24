@@ -818,10 +818,25 @@ bool Session::initialize(QQuickWindow* qtWindow)
             }
         }
 #else
-        // Deprioritize AV1 unless we can't hardware decode HEVC and have HDR enabled.
+        // Deprioritize AV1 unless we can't hardware decode HEVC, and have HDR enabled
+        // or we're on Windows.
+        //
+        // Normally, we'd assume hardware that can't decode HEVC definitely can't decode
+        // AV1 either, and we wouldn't even bother probing for AV1 support. However, some
+        // Windows business systems have HEVC support disabled in firmware from the factory,
+        // yet they can still decode AV1 in hardware. To avoid falling back to H.264 on
+        // these systems, we don't deprioritize AV1. This firmware-based HEVC licensing
+        // behavior seems to be unique to Windows, and Linux on the same system is able
+        // to decode HEVC in hardware normally using VAAPI.
+        // https://www.reddit.com/r/GeForceNOW/comments/1omsckt/psa_be_wary_of_purchasing_dell_computers_with/
+        //
         // We want to keep AV1 at the top of the list for HDR with software decoding
         // because dav1d is higher performance than FFmpeg's HEVC software decoder.
-        if (hevcDA == DecoderAvailability::Hardware || !m_Preferences->enableHdr) {
+        if (hevcDA == DecoderAvailability::Hardware
+#ifndef Q_OS_WIN32
+            || !m_Preferences->enableHdr
+#endif
+            ) {
             m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1);
         }
 #endif
