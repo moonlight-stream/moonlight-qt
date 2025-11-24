@@ -116,6 +116,8 @@ public:
     Q_PROPERTY(bool autoAdjustBitrate MEMBER autoAdjustBitrate NOTIFY autoAdjustBitrateChanged)
     Q_PROPERTY(bool enableVsync MEMBER enableVsync NOTIFY enableVsyncChanged)
     Q_PROPERTY(bool gameOptimizations MEMBER gameOptimizations NOTIFY gameOptimizationsChanged)
+    Q_PROPERTY(bool connectionWarnings MEMBER connectionWarnings NOTIFY connectionWarningsChanged)
+    Q_PROPERTY(bool disablePoorNetworkWarning MEMBER disablePoorNetworkWarning NOTIFY disablePoorNetworkWarningChanged)
     Q_PROPERTY(bool playAudioOnHost MEMBER playAudioOnHost NOTIFY playAudioOnHostChanged)
     Q_PROPERTY(bool multiController MEMBER multiController NOTIFY multiControllerChanged)
     Q_PROPERTY(bool enableMdns MEMBER enableMdns NOTIFY enableMdnsChanged)
@@ -123,7 +125,6 @@ public:
     Q_PROPERTY(bool absoluteMouseMode MEMBER absoluteMouseMode NOTIFY absoluteMouseModeChanged)
     Q_PROPERTY(bool absoluteTouchMode MEMBER absoluteTouchMode NOTIFY absoluteTouchModeChanged)
     Q_PROPERTY(bool framePacing MEMBER framePacing NOTIFY framePacingChanged)
-    Q_PROPERTY(bool connectionWarnings MEMBER connectionWarnings NOTIFY connectionWarningsChanged)
     Q_PROPERTY(bool configurationWarnings MEMBER configurationWarnings NOTIFY configurationWarningsChanged)
     Q_PROPERTY(bool richPresence MEMBER richPresence NOTIFY richPresenceChanged)
     Q_PROPERTY(bool gamepadMouse MEMBER gamepadMouse NOTIFY gamepadMouseChanged)
@@ -157,6 +158,8 @@ public:
     bool autoAdjustBitrate;
     bool enableVsync;
     bool gameOptimizations;
+    bool connectionWarnings;
+    bool disablePoorNetworkWarning;
     bool playAudioOnHost;
     bool multiController;
     bool enableMdns;
@@ -164,7 +167,6 @@ public:
     bool absoluteMouseMode;
     bool absoluteTouchMode;
     bool framePacing;
-    bool connectionWarnings;
     bool configurationWarnings;
     bool richPresence;
     bool gamepadMouse;
@@ -195,6 +197,7 @@ signals:
     void autoAdjustBitrateChanged();
     void enableVsyncChanged();
     void gameOptimizationsChanged();
+    void disablePoorNetworkWarningChanged();
     void playAudioOnHostChanged();
     void multiControllerChanged();
     void unsupportedFpsChanged();
@@ -232,4 +235,3 @@ private:
 
     QQmlEngine* m_QmlEngine;
 };
-

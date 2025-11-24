@@ -188,7 +188,8 @@ void Session::clConnectionStatusUpdate(int connectionStatus)
     // Store the connection status for stats display
     s_ActiveSession->m_ConnectionStatus = connectionStatus;
 
-    if (!s_ActiveSession->m_Preferences->connectionWarnings) {
+    if (!s_ActiveSession->m_Preferences->connectionWarnings ||
+        s_ActiveSession->m_Preferences->disablePoorNetworkWarning) {
         return;
     }
 
