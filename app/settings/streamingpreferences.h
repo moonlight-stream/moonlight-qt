@@ -197,7 +197,6 @@ signals:
     void autoAdjustBitrateChanged();
     void enableVsyncChanged();
     void gameOptimizationsChanged();
-    void connectionWarningsChanged();
     void disablePoorNetworkWarningChanged();
     void playAudioOnHostChanged();
     void multiControllerChanged();
