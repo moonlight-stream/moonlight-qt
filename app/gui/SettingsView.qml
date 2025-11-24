@@ -1259,6 +1259,21 @@ Flickable {
                 }
 
                 CheckBox {
+                    id: disablePoorWarningCheck
+                    width: parent.width
+                    text: qsTr("Disable poor connection warning message")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.disablePoorNetworkWarning
+                    onCheckedChanged: {
+                        StreamingPreferences.disablePoorNetworkWarning = checked
+                    }
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("When checked, the on-screen poor connection warning will not be shown.")
+                }
+
+                CheckBox {
                     id: configurationWarningsCheck
                     width: parent.width
                     text: qsTr("Show configuration warnings")
