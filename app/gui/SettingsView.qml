@@ -1788,6 +1788,73 @@ Flickable {
                                   qsTr("You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.") + "\n\n" +
                                   qsTr("The performance overlay is not supported on Steam Link or Raspberry Pi.")
                 }
+
+                Column {
+                    width: parent.width
+                    spacing: 5
+                    visible: showPerformanceOverlay.checked
+                    enabled: showPerformanceOverlay.checked
+
+                    property int statsFlags: StreamingPreferences.performanceOverlayStats
+
+                    function setFlag(mask, enabled) {
+                        if (enabled) {
+                            StreamingPreferences.performanceOverlayStats = statsFlags | mask
+                        }
+                        else {
+                            StreamingPreferences.performanceOverlayStats = statsFlags & ~mask
+                        }
+
+                        statsFlags = StreamingPreferences.performanceOverlayStats
+                    }
+
+                    Label {
+                        width: parent.width
+                        wrapMode: Text.Wrap
+                        text: qsTr("Performance overlay metrics")
+                        font.pointSize: 12
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Video stream details")
+                        font.pointSize: 12
+                        checked: StreamingPreferences.performanceOverlayStats & StreamingPreferences.PerformanceOverlayStatVideoStream
+                        onCheckedChanged: parent.setFlag(StreamingPreferences.PerformanceOverlayStatVideoStream, checked)
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Frame rate statistics")
+                        font.pointSize: 12
+                        checked: StreamingPreferences.performanceOverlayStats & StreamingPreferences.PerformanceOverlayStatFrameRates
+                        onCheckedChanged: parent.setFlag(StreamingPreferences.PerformanceOverlayStatFrameRates, checked)
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Host processing latency")
+                        font.pointSize: 12
+                        checked: StreamingPreferences.performanceOverlayStats & StreamingPreferences.PerformanceOverlayStatHostLatency
+                        onCheckedChanged: parent.setFlag(StreamingPreferences.PerformanceOverlayStatHostLatency, checked)
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Adaptive bitrate information")
+                        font.pointSize: 12
+                        checked: StreamingPreferences.performanceOverlayStats & StreamingPreferences.PerformanceOverlayStatAutoBitrate
+                        onCheckedChanged: parent.setFlag(StreamingPreferences.PerformanceOverlayStatAutoBitrate, checked)
+                    }
+
+                    CheckBox {
+                        width: parent.width
+                        text: qsTr("Network and decoding health")
+                        font.pointSize: 12
+                        checked: StreamingPreferences.performanceOverlayStats & StreamingPreferences.PerformanceOverlayStatNetwork
+                        onCheckedChanged: parent.setFlag(StreamingPreferences.PerformanceOverlayStatNetwork, checked)
+                    }
+                }
             }
         }
     }

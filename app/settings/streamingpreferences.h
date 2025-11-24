@@ -108,6 +108,17 @@ public:
     };
     Q_ENUM(CaptureSysKeysMode);
 
+    enum PerformanceOverlayStat
+    {
+        PerformanceOverlayStatVideoStream = 0x1,
+        PerformanceOverlayStatFrameRates = 0x2,
+        PerformanceOverlayStatHostLatency = 0x4,
+        PerformanceOverlayStatAutoBitrate = 0x8,
+        PerformanceOverlayStatNetwork = 0x10,
+        PerformanceOverlayStatAll = 0x1F,
+    };
+    Q_ENUM(PerformanceOverlayStat);
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
@@ -130,6 +141,7 @@ public:
     Q_PROPERTY(bool gamepadMouse MEMBER gamepadMouse NOTIFY gamepadMouseChanged)
     Q_PROPERTY(bool detectNetworkBlocking MEMBER detectNetworkBlocking NOTIFY detectNetworkBlockingChanged)
     Q_PROPERTY(bool showPerformanceOverlay MEMBER showPerformanceOverlay NOTIFY showPerformanceOverlayChanged)
+    Q_PROPERTY(int performanceOverlayStats MEMBER performanceOverlayStats NOTIFY performanceOverlayStatsChanged)
     Q_PROPERTY(AudioConfig audioConfig MEMBER audioConfig NOTIFY audioConfigChanged)
     Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
     Q_PROPERTY(bool enableHdr MEMBER enableHdr NOTIFY enableHdrChanged)
@@ -172,6 +184,7 @@ public:
     bool gamepadMouse;
     bool detectNetworkBlocking;
     bool showPerformanceOverlay;
+    int performanceOverlayStats;
     bool swapMouseButtons;
     bool muteOnFocusLoss;
     bool backgroundGamepad;
@@ -219,6 +232,7 @@ signals:
     void gamepadMouseChanged();
     void detectNetworkBlockingChanged();
     void showPerformanceOverlayChanged();
+    void performanceOverlayStatsChanged();
     void mouseButtonsChanged();
     void muteOnFocusLossChanged();
     void backgroundGamepadChanged();
