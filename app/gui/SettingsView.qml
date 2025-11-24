@@ -669,7 +669,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: bitrateTitle
-                    text: qsTr("Video bitrate:")
+                    text: StreamingPreferences.autoAdjustBitrate ? qsTr("Auto bitrate maximum:") : qsTr("Video bitrate:")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -703,10 +703,6 @@ Flickable {
                             StreamingPreferences.bitrateKbps = value
                         }
 
-                        onMoved: {
-                            StreamingPreferences.autoAdjustBitrate = false
-                        }
-
                         Component.onCompleted: {
                             // Refresh the text after translations change
                             languageChanged.connect(valueChanged)
@@ -724,6 +720,32 @@ Flickable {
                             slider.value = defaultBitrate
                         }
                     }
+                }
+
+                CheckBox {
+                    id: autoAdjustBitrate
+                    width: parent.width
+                    text: qsTr("Automatically adjust bitrate")
+                    font.pointSize: 12
+
+                    checked: StreamingPreferences.autoAdjustBitrate
+                    onCheckedChanged: {
+                        StreamingPreferences.autoAdjustBitrate = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Let the host adjust bitrate dynamically during the stream. The slider sets the maximum bitrate cap.")
+                }
+
+                Label {
+                    width: parent.width
+                    font.pointSize: 9
+                    wrapMode: Text.Wrap
+                    color: "#808080"
+                    text: qsTr("When enabled, the host will adjust bitrate based on network conditions. The slider sets the maximum bitrate cap.")
+                    visible: autoAdjustBitrate.visible
                 }
 
                 Label {
