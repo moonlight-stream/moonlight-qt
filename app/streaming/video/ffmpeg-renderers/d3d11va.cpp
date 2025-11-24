@@ -448,10 +448,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     // https://github.com/FFmpeg/FFmpeg/blob/a234e5cd80224c95a205c1f3e297d8c04a1374c3/libavcodec/dxva2.c#L609-L616
     m_TextureAlignment = (params->videoFormat & VIDEO_FORMAT_MASK_H264) ? 16 : 128;
 
-    if (!setupRenderingResources()) {
-        return false;
-    }
-
     {
         m_HwDeviceContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_D3D11VA);
         if (!m_HwDeviceContext) {
@@ -528,6 +524,10 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         m_TextureFormat = textureDesc.Format;
         m_TextureWidth = textureDesc.Width;
         m_TextureHeight = textureDesc.Height;
+
+        if (!setupRenderingResources()) {
+            return false;
+        }
 
         if (m_BindDecoderOutputTextures) {
             // Create SRVs for all textures in the decoder pool
@@ -798,15 +798,8 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
         }
     }
     else {
-        // Copy this frame (minus alignment padding) into our video texture
-        D3D11_BOX srcBox;
-        srcBox.left = 0;
-        srcBox.top = 0;
-        srcBox.right = m_DecoderParams.width;
-        srcBox.bottom = m_DecoderParams.height;
-        srcBox.front = 0;
-        srcBox.back = 1;
-        m_DeviceContext->CopySubresourceRegion(m_VideoTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
+        // Copy this frame into our video texture
+        m_DeviceContext->CopySubresourceRegion(m_VideoTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], nullptr);
 
         // SRV 0 is always mapped to the video texture
         srvIndex = 0;
@@ -1345,10 +1338,10 @@ bool D3D11VARenderer::setupRenderingResources()
         SDL_FRect renderRect;
         StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, m_DisplayWidth, m_DisplayHeight);
 
-        // If we're binding the decoder output textures directly, don't sample from the alignment padding area
+        // Don't sample from the alignment padding area
         SDL_assert(m_TextureAlignment != 0);
-        float uMax = m_BindDecoderOutputTextures ? ((float)m_DecoderParams.width / FFALIGN(m_DecoderParams.width, m_TextureAlignment)) : 1.0f;
-        float vMax = m_BindDecoderOutputTextures ? ((float)m_DecoderParams.height / FFALIGN(m_DecoderParams.height, m_TextureAlignment)) : 1.0f;
+        float uMax = (float)m_DecoderParams.width / m_TextureWidth;
+        float vMax = (float)m_DecoderParams.height / m_TextureHeight;
 
         VERTEX verts[] =
         {
@@ -1387,12 +1380,9 @@ bool D3D11VARenderer::setupRenderingResources()
         constDesc.CPUAccessFlags = 0;
         constDesc.MiscFlags = 0;
 
-        int textureWidth = m_BindDecoderOutputTextures ? FFALIGN(m_DecoderParams.width, m_TextureAlignment) : m_DecoderParams.width;
-        int textureHeight = m_BindDecoderOutputTextures ? FFALIGN(m_DecoderParams.height, m_TextureAlignment) : m_DecoderParams.height;
-
         float chromaUVMax[3] = {};
-        chromaUVMax[0] = m_DecoderParams.width != textureWidth ? ((float)(m_DecoderParams.width - 1) / textureWidth) : 1.0f;
-        chromaUVMax[1] = m_DecoderParams.height != textureHeight ? ((float)(m_DecoderParams.height - 1) / textureHeight) : 1.0f;
+        chromaUVMax[0] = m_DecoderParams.width != (int)m_TextureWidth ? ((float)(m_DecoderParams.width - 1) / m_TextureWidth) : 1.0f;
+        chromaUVMax[1] = m_DecoderParams.height != (int)m_TextureHeight ? ((float)(m_DecoderParams.height - 1) / m_TextureHeight) : 1.0f;
 
         D3D11_SUBRESOURCE_DATA constData = {};
         constData.pSysMem = chromaUVMax;
@@ -1476,8 +1466,8 @@ bool D3D11VARenderer::setupVideoTexture()
     HRESULT hr;
     D3D11_TEXTURE2D_DESC texDesc = {};
 
-    texDesc.Width = m_DecoderParams.width;
-    texDesc.Height = m_DecoderParams.height;
+    texDesc.Width = m_TextureWidth;
+    texDesc.Height = m_TextureHeight;
     texDesc.MipLevels = 1;
     texDesc.ArraySize = 1;
     texDesc.Format = m_TextureFormat;
