@@ -968,7 +968,7 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
         ret = snprintf(&output[offset],
                        length - offset,
                        "\nAuto Bitrate:\n"
-                       "Current encoder bitrate: %.2f Mbps\n"
+                       "Current total bitrate: %.2f Mbps\n"
                        "Frame loss: %.2f%%\n"
                        "Last adjustment: %s\n"
                        "Total adjustments: %u\n",
