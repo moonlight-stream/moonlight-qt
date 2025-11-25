@@ -17,6 +17,8 @@ extern "C" {
 #include "ffmpeg-renderers/d3d11va.h"
 #endif
 
+#include <cmath>
+
 #ifdef Q_OS_DARWIN
 #include "ffmpeg-renderers/vt.h"
 #endif
@@ -235,7 +237,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_VideoFormat(0),
       m_NeedsSpsFixup(false),
       m_TestOnly(testOnly),
-      m_DecoderThread(nullptr)
+      m_DecoderThread(nullptr),
+      m_SessionStartTimestampMs(SDL_GetTicks64())
 {
     SDL_zero(m_ActiveWndVideoStats);
     SDL_zero(m_LastWndVideoStats);
@@ -956,21 +959,20 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
     if (includeAutoBitrate && autoBitrateStats != NULL && autoBitrateStats->enabled) {
         char lastAdjustmentStr[64];
         if (autoBitrateStats->last_adjustment_time_ms > 0) {
-            // last_adjustment_time_ms is relative to session start
-            // Since stats are sent every ~1 second, we can estimate "time ago" by comparing
-            // with current session time. For simplicity, show time since session start when adjustment occurred.
-            // In practice, this will be close to "time ago" since adjustments happen during active streaming.
-            double adjustment_time_sec = autoBitrateStats->last_adjustment_time_ms / 1000.0;
-            
-            // Estimate: if adjustment was very recent (within last 5 seconds of session), show "recently"
-            // Otherwise show the time
-            if (adjustment_time_sec < 5.0) {
+            uint64_t currentSessionTimeMs = SDL_GetTicks64() - m_SessionStartTimestampMs;
+
+            if (currentSessionTimeMs > autoBitrateStats->last_adjustment_time_ms) {
+                uint64_t lastAdjustmentAgeMs = currentSessionTimeMs - autoBitrateStats->last_adjustment_time_ms;
+                unsigned long long minutesAgo = (unsigned long long)llround(lastAdjustmentAgeMs / 60000.0);
+
+                snprintf(lastAdjustmentStr,
+                         sizeof(lastAdjustmentStr),
+                         "%llu minute%s ago",
+                         minutesAgo,
+                         minutesAgo == 1 ? "" : "s");
+            }
+            else {
                 snprintf(lastAdjustmentStr, sizeof(lastAdjustmentStr), "Recently");
-            } else if (adjustment_time_sec < 60.0) {
-                snprintf(lastAdjustmentStr, sizeof(lastAdjustmentStr), "%.0fs into session", adjustment_time_sec);
-            } else {
-                double minutes = adjustment_time_sec / 60.0;
-                snprintf(lastAdjustmentStr, sizeof(lastAdjustmentStr), "%.1fmin into session", minutes);
             }
         } else {
             snprintf(lastAdjustmentStr, sizeof(lastAdjustmentStr), "Never");
