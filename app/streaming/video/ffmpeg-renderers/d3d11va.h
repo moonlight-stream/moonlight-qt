@@ -60,7 +60,7 @@ private:
     Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
     Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
     Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_DeviceContext;
+    Microsoft::WRL::ComPtr<ID3D11DeviceContext1> m_DeviceContext;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
     SupportedFenceType m_FenceType;
     SDL_mutex* m_ContextLock;

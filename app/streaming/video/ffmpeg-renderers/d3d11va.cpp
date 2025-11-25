@@ -129,6 +129,7 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
     DXGI_ADAPTER_DESC1 adapterDesc;
     D3D_FEATURE_LEVEL featureLevel;
     HRESULT hr;
+    ComPtr<ID3D11DeviceContext> deviceContext;
 
     SDL_assert(!m_Device);
     SDL_assert(!m_DeviceContext);
@@ -178,7 +179,7 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                            D3D11_SDK_VERSION,
                            &m_Device,
                            &featureLevel,
-                           &m_DeviceContext);
+                           &deviceContext);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "D3D11CreateDevice() failed: %x",
@@ -196,6 +197,16 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         // Remember that we found a non-software D3D11 devices with support for
         // feature level 11.0 or later (Fermi, Terascale 2, or Ivy Bridge and later)
         m_DevicesWithFL11Support++;
+    }
+
+    hr = deviceContext.As(&m_DeviceContext);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "ID3D11DeviceContext::QueryInterface(ID3D11DeviceContext1) failed: %x",
+                     hr);
+        m_DeviceContext.Reset();
+        m_Device.Reset();
+        goto Exit;
     }
 
     bool ok;
@@ -805,7 +816,9 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
     }
     else {
         // Copy this frame into our video texture
-        m_DeviceContext->CopySubresourceRegion(m_VideoTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], nullptr);
+        m_DeviceContext->CopySubresourceRegion1(m_VideoTexture.Get(), 0, 0, 0, 0,
+                                                (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1],
+                                                nullptr, D3D11_COPY_DISCARD);
 
         // SRV 0 is always mapped to the video texture
         srvIndex = 0;
