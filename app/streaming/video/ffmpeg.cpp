@@ -796,6 +796,16 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
     const char* codecString;
     int ret;
 
+    StreamingPreferences* prefs = StreamingPreferences::get();
+    int enabledStats = prefs ? prefs->performanceOverlayStats
+                             : static_cast<int>(StreamingPreferences::PerformanceOverlayStatAll);
+
+    const bool includeVideoStream = enabledStats & StreamingPreferences::PerformanceOverlayStatVideoStream;
+    const bool includeFrameRates = enabledStats & StreamingPreferences::PerformanceOverlayStatFrameRates;
+    const bool includeHostLatency = enabledStats & StreamingPreferences::PerformanceOverlayStatHostLatency;
+    const bool includeAutoBitrate = enabledStats & StreamingPreferences::PerformanceOverlayStatAutoBitrate;
+    const bool includeNetworkStats = enabledStats & StreamingPreferences::PerformanceOverlayStatNetwork;
+
     // Start with an empty string
     output[offset] = 0;
 
@@ -868,7 +878,7 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
     }
 
     if (stats.receivedFps > 0) {
-        if (m_VideoDecoderCtx != nullptr) {
+        if (includeVideoStream && m_VideoDecoderCtx != nullptr) {
 #ifdef DISPLAY_BITRATE
             double currentVideoMbps = m_BwTracker.GetCurrentMbps();
             double avgVideoMbps = m_BwTracker.GetAverageMbps();
@@ -908,23 +918,25 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
             offset += ret;
         }
 
-        ret = snprintf(&output[offset],
-                       length - offset,
-                       "Incoming frame rate from network: %.2f FPS\n"
-                       "Decoding frame rate: %.2f FPS\n"
-                       "Rendering frame rate: %.2f FPS\n",
-                       stats.receivedFps,
-                       stats.decodedFps,
-                       stats.renderedFps);
-        if (ret < 0 || ret >= length - offset) {
-            SDL_assert(false);
-            return;
-        }
+        if (includeFrameRates) {
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           "Incoming frame rate from network: %.2f FPS\n"
+                           "Decoding frame rate: %.2f FPS\n"
+                           "Rendering frame rate: %.2f FPS\n",
+                           stats.receivedFps,
+                           stats.decodedFps,
+                           stats.renderedFps);
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
 
-        offset += ret;
+            offset += ret;
+        }
     }
 
-    if (stats.framesWithHostProcessingLatency > 0) {
+    if (includeHostLatency && stats.framesWithHostProcessingLatency > 0) {
         ret = snprintf(&output[offset],
                        length - offset,
                        "Host processing latency min/max/average: %.1f/%.1f/%.1f ms\n",
@@ -941,7 +953,7 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 
     // Display auto bitrate statistics if enabled
     const AUTO_BITRATE_STATS* autoBitrateStats = LiGetAutoBitrateStats();
-    if (autoBitrateStats != NULL && autoBitrateStats->enabled) {
+    if (includeAutoBitrate && autoBitrateStats != NULL && autoBitrateStats->enabled) {
         char lastAdjustmentStr[64];
         if (autoBitrateStats->last_adjustment_time_ms > 0) {
             // last_adjustment_time_ms is relative to session start
@@ -984,7 +996,7 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
         offset += ret;
     }
 
-    if (stats.renderedFrames != 0) {
+    if (includeNetworkStats && stats.renderedFrames != 0) {
         char rttString[32];
 
         if (stats.lastRtt != 0) {
