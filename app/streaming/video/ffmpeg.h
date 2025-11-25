@@ -116,6 +116,7 @@ private:
     bool m_TestOnly;
     SDL_Thread* m_DecoderThread;
     SDL_atomic_t m_DecoderThreadShouldQuit;
+    uint64_t m_SessionStartTimestampMs;
 
     // Data buffers in the queued DU are not valid
     QQueue<DECODE_UNIT> m_FrameInfoQueue;
