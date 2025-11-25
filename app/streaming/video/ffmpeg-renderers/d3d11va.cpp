@@ -43,8 +43,8 @@ typedef struct _CSC_CONST_BUF
     // Chroma offset values
     float chromaOffset[2];
 
-    // Padding to final 16-byte boundary
-    float padding2[2];
+    // Max UV coordinates to avoid sampling alignment padding
+    float chromaUVMax[2];
 } CSC_CONST_BUF, *PCSC_CONST_BUF;
 static_assert(sizeof(CSC_CONST_BUF) % 16 == 0, "Constant buffer sizes must be a multiple of 16");
 
@@ -740,13 +740,19 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
     constBuf.chromaOffset[0] = chromaOffset[0] / m_TextureWidth;
     constBuf.chromaOffset[1] = chromaOffset[1] / m_TextureHeight;
 
+    // Limit chroma texcoords to avoid sampling from alignment texels
+    constBuf.chromaUVMax[0] = m_DecoderParams.width != (int)m_TextureWidth ?
+                                  ((float)(m_DecoderParams.width - 1) / m_TextureWidth) : 1.0f;
+    constBuf.chromaUVMax[1] = m_DecoderParams.height != (int)m_TextureHeight ?
+                                  ((float)(m_DecoderParams.height - 1) / m_TextureHeight) : 1.0f;
+
     D3D11_SUBRESOURCE_DATA constData = {};
     constData.pSysMem = &constBuf;
 
     ComPtr<ID3D11Buffer> constantBuffer;
     HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
     if (SUCCEEDED(hr)) {
-        m_DeviceContext->PSSetConstantBuffers(1, 1, constantBuffer.GetAddressOf());
+        m_DeviceContext->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
     }
     else {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -1364,35 +1370,6 @@ bool D3D11VARenderer::setupRenderingResources()
 
         hr = m_Device->CreateBuffer(&vbDesc, &vbData, &m_VideoVertexBuffer);
         if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "ID3D11Device::CreateBuffer() failed: %x",
-                         hr);
-            return false;
-        }
-    }
-
-    // Create our fixed constant buffer to limit chroma texcoords and avoid sampling from alignment texels.
-    {
-        D3D11_BUFFER_DESC constDesc = {};
-        constDesc.ByteWidth = sizeof(CSC_CONST_BUF);
-        constDesc.Usage = D3D11_USAGE_IMMUTABLE;
-        constDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        constDesc.CPUAccessFlags = 0;
-        constDesc.MiscFlags = 0;
-
-        float chromaUVMax[3] = {};
-        chromaUVMax[0] = m_DecoderParams.width != (int)m_TextureWidth ? ((float)(m_DecoderParams.width - 1) / m_TextureWidth) : 1.0f;
-        chromaUVMax[1] = m_DecoderParams.height != (int)m_TextureHeight ? ((float)(m_DecoderParams.height - 1) / m_TextureHeight) : 1.0f;
-
-        D3D11_SUBRESOURCE_DATA constData = {};
-        constData.pSysMem = chromaUVMax;
-
-        ComPtr<ID3D11Buffer> constantBuffer;
-        HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
-        if (SUCCEEDED(hr)) {
-            m_DeviceContext->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
-        }
-        else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreateBuffer() failed: %x",
                          hr);
