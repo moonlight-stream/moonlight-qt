@@ -1,0 +1,98 @@
+---
+name: Release
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      ci_version: ${{ steps.set-ci-version.outputs.ci_version }}
+    steps:
+      - name: Set CI version from release tag
+        id: set-ci-version
+        shell: bash
+        run: |
+          # Extract version from release tag, remove 'v' prefix if present
+          TAG="${{ github.event.release.tag_name }}"
+          CI_VERSION="${TAG#v}"
+          echo "ci_version=${CI_VERSION}" >> "${GITHUB_OUTPUT}"
+
+  build-appimage:
+    needs: setup
+    uses: ./.github/workflows/build-appimage.yml
+    with:
+      ci_version: ${{ needs.setup.outputs.ci_version }}
+
+  build-steamlink:
+    needs: setup
+    uses: ./.github/workflows/build-steamlink.yml
+    with:
+      ci_version: ${{ needs.setup.outputs.ci_version }}
+
+  build-windows-macos:
+    needs: setup
+    uses: ./.github/workflows/build-win-mac.yml
+    with:
+      ci_version: ${{ needs.setup.outputs.ci_version }}
+
+  upload-artifacts:
+    needs: [setup, build-appimage, build-steamlink, build-windows-macos]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download AppImage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Moonlight-LinuxAppImage-${{ needs.setup.outputs.ci_version }}
+          path: artifacts/
+
+      - name: Download Steam Link artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Moonlight-SteamLink-${{ needs.setup.outputs.ci_version }}
+          path: artifacts/
+
+      - name: Download Windows x64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Moonlight-Windows-x64-${{ needs.setup.outputs.ci_version }}
+          path: artifacts/windows-x64/
+
+      - name: Download Windows ARM64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Moonlight-Windows-arm64-${{ needs.setup.outputs.ci_version }}
+          path: artifacts/windows-arm64/
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Moonlight-macOS-${{ needs.setup.outputs.ci_version }}
+          path: artifacts/
+
+      - name: Create Windows ZIP archives
+        shell: bash
+        run: |
+          # Create ZIP archive for Windows x64 deployment directory
+          # This preserves original filenames (Moonlight.exe, DLLs, etc.) inside the archive
+          cd artifacts/windows-x64
+          zip -r ../Moonlight-Windows-x64-${{ needs.setup.outputs.ci_version }}.zip .
+          cd ../..
+
+          # Create ZIP archive for Windows ARM64 deployment directory
+          cd artifacts/windows-arm64
+          zip -r ../Moonlight-Windows-arm64-${{ needs.setup.outputs.ci_version }}.zip .
+          cd ../..
+
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+          prerelease: ${{ github.event.release.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
