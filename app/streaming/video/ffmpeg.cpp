@@ -238,7 +238,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_NeedsSpsFixup(false),
       m_TestOnly(testOnly),
       m_DecoderThread(nullptr),
-      m_SessionStartTimestampMs(SDL_GetTicks64())
+      m_SessionStartTimestampMs(SDL_GetTicks64()),
+      m_LastFrameReceiveTimeMs(0)
 {
     SDL_zero(m_ActiveWndVideoStats);
     SDL_zero(m_LastWndVideoStats);
@@ -282,6 +283,7 @@ void FFmpegVideoDecoder::reset()
 
     m_FramesIn = m_FramesOut = 0;
     m_FrameInfoQueue.clear();
+    m_LastFrameReceiveTimeMs = 0;
 
     delete m_Pacer;
     m_Pacer = nullptr;
@@ -734,6 +736,10 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     dst.totalHostProcessingLatency += src.totalHostProcessingLatency;
     dst.framesWithHostProcessingLatency += src.framesWithHostProcessingLatency;
 
+    if (src.videoMegabitsPerSec != 0) {
+        dst.videoMegabitsPerSec = src.videoMegabitsPerSec;
+    }
+
     if (!LiGetEstimatedRttInfo(&dst.lastRtt, &dst.lastRttVariance)) {
         dst.lastRtt = 0;
         dst.lastRttVariance = 0;
@@ -913,6 +919,24 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
                            hostMaxBitrateMbps
 #endif
                            );
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+
+            offset += ret;
+
+            if (stats.videoMegabitsPerSec > 0.0) {
+                ret = snprintf(&output[offset],
+                               length - offset,
+                               "Previous frame bitrate: %.2f Mbps\n",
+                               stats.videoMegabitsPerSec);
+            }
+            else {
+                ret = snprintf(&output[offset],
+                               length - offset,
+                               "Previous frame bitrate: N/A\n");
+            }
             if (ret < 0 || ret >= length - offset) {
                 SDL_assert(false);
                 return;
@@ -1961,6 +1985,13 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     }
 
     m_BwTracker.AddBytes(du->fullLength);
+
+    if (m_LastFrameReceiveTimeMs != 0 && du->receiveTimeMs > m_LastFrameReceiveTimeMs) {
+        uint64_t deltaMs = du->receiveTimeMs - m_LastFrameReceiveTimeMs;
+        double frameBits = static_cast<double>(du->fullLength) * 8.0;
+        m_ActiveWndVideoStats.videoMegabitsPerSec = frameBits / static_cast<double>(deltaMs) / 1000.0;
+    }
+    m_LastFrameReceiveTimeMs = du->receiveTimeMs;
 
     // Flip stats windows roughly every second
     if (LiGetMillis() * 1000 > m_ActiveWndVideoStats.measurementStartUs + 1000000) {
