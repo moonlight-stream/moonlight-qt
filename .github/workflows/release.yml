@@ -61,19 +61,58 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: Moonlight-Windows-x64-${{ needs.setup.outputs.ci_version }}
-          path: artifacts/
+          path: artifacts/windows-x64/
 
       - name: Download Windows ARM64 artifacts
         uses: actions/download-artifact@v4
         with:
           name: Moonlight-Windows-arm64-${{ needs.setup.outputs.ci_version }}
-          path: artifacts/
+          path: artifacts/windows-arm64/
 
       - name: Download macOS artifacts
         uses: actions/download-artifact@v4
         with:
           name: Moonlight-macOS-${{ needs.setup.outputs.ci_version }}
           path: artifacts/
+
+      - name: Rename Windows artifacts to avoid duplicates
+        shell: bash
+        run: |
+          # Rename files in windows-x64 directory to include -x64 suffix
+          find artifacts/windows-x64 -type f -exec bash -c '
+            for file; do
+              dir=$(dirname "$file")
+              name=$(basename "$file")
+              # Extract filename and extension
+              if [[ "$name" =~ ^(.+)(\.[^.]+)$ ]]; then
+                base="${BASH_REMATCH[1]}"
+                ext="${BASH_REMATCH[2]}"
+                newname="${base}-x64${ext}"
+              else
+                # No extension, just append suffix
+                newname="${name}-x64"
+              fi
+              mv "$file" "$dir/$newname"
+            done
+          ' _ {} +
+
+          # Rename files in windows-arm64 directory to include -arm64 suffix
+          find artifacts/windows-arm64 -type f -exec bash -c '
+            for file; do
+              dir=$(dirname "$file")
+              name=$(basename "$file")
+              # Extract filename and extension
+              if [[ "$name" =~ ^(.+)(\.[^.]+)$ ]]; then
+                base="${BASH_REMATCH[1]}"
+                ext="${BASH_REMATCH[2]}"
+                newname="${base}-arm64${ext}"
+              else
+                # No extension, just append suffix
+                newname="${name}-arm64"
+              fi
+              mv "$file" "$dir/$newname"
+            done
+          ' _ {} +
 
       - name: Upload artifacts to release
         uses: softprops/action-gh-release@v1
