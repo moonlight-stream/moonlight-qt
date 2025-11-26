@@ -40,7 +40,7 @@
 				<ul>
 					<li>Experimental YUV 4:4:4 support for improved text clarity during remote desktop usage</li>
 					<li>HDR is now supported with software decoding (requires GPU with Vulkan support)</li>
-					<li>Bitrate limit can now be increased to 500 Mbps</li>
+                                        <li>Bitrate limit can now be increased to 1 Gbps</li>
 					<li>Audio decoding now uses 32-bit floating point format</li>
 				</ul>
 				<p>Bugfixes:</p>
