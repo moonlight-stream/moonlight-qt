@@ -15,17 +15,6 @@
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." Schedule="afterInstallInitialize" />
     <MediaTemplate CompressionLevel="high" EmbedCab="yes" />
 
-    <Property Id="MPSSVC_START">
-      <RegistrySearch Id="MpsSvcStart"
-                      Root="HKLM"
-                      Key="System\CurrentControlSet\Services\MpsSvc"
-                      Name="Start"
-                      Type="raw" />
-    </Property>
-
-    <Launch Condition="Installed OR MPSSVC_START=&quot;#2&quot;"
-            Message="Setup cannot proceed because the Windows Firewall service has been improperly disabled or stopped. You must start the Windows Firewall service (MpsSvc) to continue. If you would like to disable Windows Firewall properly, use the Windows Firewall options in Control Panel." />
-
     <Property Id="APPDATAFOLDER" Value="%LOCALAPPDATA%\Moonlight Game Streaming Project" />
 
     <!-- There's no way to delete a registry key on uninstall but not major upgrade, so
