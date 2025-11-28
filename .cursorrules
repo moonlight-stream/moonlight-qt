@@ -1,0 +1,48 @@
+# Cursor IDE Agent Rules for Moonlight-Qt
+
+## Pull Request Target
+
+- **ALWAYS** create pull requests against the `alexworland` organization repository
+- When creating PRs, ensure the target repository is `alexworland/moonlight-qt` (or the appropriate repository name in the alexworland org)
+
+## Code Documentation Requirements
+
+### Doxygen Comments
+
+When editing, removing, or adding code, classes, functions, or structures:
+
+1. **Update Doxygen comments** to reflect all changes:
+   - Use `@brief` for brief descriptions
+   - Use `@param` for function parameters (with `[in]`, `[out]`, or `[in,out]` as appropriate)
+   - Use `@return` for return value descriptions
+   - Use `@class` or `@struct` for class/struct documentation
+   - Use `@def` for macro definitions
+   - Use `@file` for file-level documentation
+
+2. **Follow existing Doxygen patterns** in the codebase:
+   ```cpp
+   /**
+    * @brief Brief description of the function/class.
+    * @param param_name Description of parameter.
+    * @return Description of return value.
+    */
+   ```
+
+3. **Remove Doxygen comments** when removing code/classes/functions
+
+4. **Add Doxygen comments** when adding new public APIs, classes, or significant functions
+
+### Inline Comments
+
+- Add relevant inline comments to explain complex logic, non-obvious behavior, or important implementation details
+- Use `//` for single-line comments
+- Use `/* */` for multi-line comments when appropriate
+- Ensure comments enhance code readability and maintainability
+- Pay special attention to Qt-specific code patterns and QML integration points
+
+## Code Style
+
+- Follow the existing code style and formatting conventions in the repository
+- Maintain consistency with surrounding code
+- Follow Qt coding conventions for Qt-specific code
+
