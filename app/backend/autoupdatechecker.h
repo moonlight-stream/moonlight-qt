@@ -1,8 +1,16 @@
+/**
+ * @file app/backend/autoupdatechecker.h
+ * @brief Checks for application updates automatically.
+ */
+
 #pragma once
 
 #include <QObject>
 #include <QNetworkAccessManager>
 
+/**
+ * @brief Automatically checks for application updates and notifies when new versions are available.
+ */
 class AutoUpdateChecker : public QObject
 {
     Q_OBJECT

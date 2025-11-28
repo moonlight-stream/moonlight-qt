@@ -1,7 +1,15 @@
+/**
+ * @file app/streaming/streamutils.h
+ * @brief Utility functions for streaming operations.
+ */
+
 #pragma once
 
 #include "SDL_compat.h"
 
+/**
+ * @brief Utility functions for video streaming, window management, and platform-specific operations.
+ */
 class StreamUtils
 {
 public:

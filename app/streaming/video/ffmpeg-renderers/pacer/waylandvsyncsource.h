@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/pacer/waylandvsyncsource.h
+ * @brief Wayland VSync source implementation for Linux.
+ */
+
 #pragma once
 
 #include "pacer.h"
@@ -5,6 +10,9 @@
 #include <wayland-client-core.h>
 #include <wayland-client-protocol.h>
 
+/**
+ * @brief Wayland-based VSync source for frame synchronization on Linux.
+ */
 class WaylandVsyncSource : public IVsyncSource
 {
 public:

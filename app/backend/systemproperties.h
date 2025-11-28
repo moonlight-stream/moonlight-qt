@@ -1,8 +1,16 @@
+/**
+ * @file app/backend/systemproperties.h
+ * @brief Provides system properties and capabilities information.
+ */
+
 #pragma once
 
 #include <QObject>
 #include <QRect>
 
+/**
+ * @brief Provides system properties, capabilities, and environment information for the Moonlight client.
+ */
 class SystemProperties : public QObject
 {
     Q_OBJECT

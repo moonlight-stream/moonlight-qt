@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/pacer/pacer.h
+ * @brief Video frame pacing and VSync synchronization.
+ */
+
 #pragma once
 
 #include "../../decoder.h"
@@ -7,6 +12,9 @@
 #include <QMutex>
 #include <QWaitCondition>
 
+/**
+ * @brief Interface for VSync source implementations.
+ */
 class IVsyncSource {
 public:
     virtual ~IVsyncSource() {}
@@ -22,6 +30,9 @@ public:
     }
 };
 
+/**
+ * @brief Manages video frame pacing and synchronization with display refresh rate.
+ */
 class Pacer
 {
 public:

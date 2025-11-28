@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/renderer.h
+ * @brief FFmpeg video renderer interface and implementations.
+ */
+
 #pragma once
 
 #include "SDL_compat.h"

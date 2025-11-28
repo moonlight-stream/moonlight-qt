@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/decoder.h
+ * @brief Video decoder interface and statistics for Moonlight Qt.
+ */
+
 #pragma once
 
 #include <Limelight.h>

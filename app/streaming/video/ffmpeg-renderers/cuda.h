@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/cuda.h
+ * @brief CUDA-based hardware-accelerated video renderer.
+ */
+
 #pragma once
 
 #include "renderer.h"
@@ -8,6 +13,9 @@ extern "C" {
     #include <libavutil/hwcontext_cuda.h>
 }
 
+/**
+ * @brief CUDA hardware-accelerated video renderer using NVIDIA GPUs.
+ */
 class CUDARenderer : public IFFmpegRenderer {
 public:
     CUDARenderer();

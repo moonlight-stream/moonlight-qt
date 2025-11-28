@@ -1,3 +1,8 @@
+/**
+ * @file app/backend/nvpairingmanager.h
+ * @brief Manages pairing process with GameStream servers.
+ */
+
 #pragma once
 
 #include "identitymanager.h"
@@ -6,6 +11,9 @@
 #include <openssl/x509.h>
 #include <openssl/evp.h>
 
+/**
+ * @brief Manages the pairing process with GameStream servers using PIN authentication.
+ */
 class NvPairingManager
 {
 public:

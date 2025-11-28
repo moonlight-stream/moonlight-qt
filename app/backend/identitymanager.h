@@ -1,3 +1,8 @@
+/**
+ * @file app/backend/identitymanager.h
+ * @brief Manages client identity, certificates, and SSL configuration.
+ */
+
 #pragma once
 
 #include <QSslConfiguration>
@@ -5,6 +10,9 @@
 #include <QSslKey>
 #include <QSettings>
 
+/**
+ * @brief Manages client identity, SSL certificates, and private keys for GameStream authentication.
+ */
 class IdentityManager
 {
 public:

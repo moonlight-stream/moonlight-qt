@@ -1,3 +1,8 @@
+/**
+ * @file app/backend/nvcomputer.h
+ * @brief Computer information and management for GameStream hosts.
+ */
+
 #pragma once
 
 #include "nvhttp.h"

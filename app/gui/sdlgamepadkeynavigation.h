@@ -1,3 +1,8 @@
+/**
+ * @file app/gui/sdlgamepadkeynavigation.h
+ * @brief Gamepad-based keyboard navigation for the UI.
+ */
+
 #pragma once
 
 #include <QTimer>
@@ -7,6 +12,9 @@
 
 #include "settings/streamingpreferences.h"
 
+/**
+ * @brief Enables gamepad-based keyboard navigation in the user interface.
+ */
 class SdlGamepadKeyNavigation : public QObject
 {
     Q_OBJECT

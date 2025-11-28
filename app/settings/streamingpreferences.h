@@ -1,3 +1,8 @@
+/**
+ * @file app/settings/streamingpreferences.h
+ * @brief Streaming preferences and configuration management.
+ */
+
 #pragma once
 
 #include <QObject>

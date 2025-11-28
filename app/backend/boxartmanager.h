@@ -1,3 +1,8 @@
+/**
+ * @file app/backend/boxartmanager.h
+ * @brief Manages loading and caching of application box art images.
+ */
+
 #pragma once
 
 #include "computermanager.h"
@@ -6,6 +11,9 @@
 #include <QThreadPool>
 #include <QRunnable>
 
+/**
+ * @brief Manages loading, caching, and retrieval of GameStream application box art.
+ */
 class BoxArtManager : public QObject
 {
     Q_OBJECT

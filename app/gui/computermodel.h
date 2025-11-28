@@ -1,8 +1,16 @@
+/**
+ * @file app/gui/computermodel.h
+ * @brief Qt model for displaying GameStream computers in the UI.
+ */
+
 #include "backend/computermanager.h"
 #include "streaming/session.h"
 
 #include <QAbstractListModel>
 
+/**
+ * @brief Qt model for managing and displaying GameStream computers in the user interface.
+ */
 class ComputerModel : public QAbstractListModel
 {
     Q_OBJECT

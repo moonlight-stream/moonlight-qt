@@ -1,10 +1,27 @@
+/**
+ * @file app/backend/nvaddress.h
+ * @brief Represents a GameStream server address and port.
+ */
+
 #pragma once
 
 #include <QHostAddress>
 
+/**
+ * @def DEFAULT_HTTP_PORT
+ * @brief Default HTTP port for GameStream.
+ */
 #define DEFAULT_HTTP_PORT 47989
+
+/**
+ * @def DEFAULT_HTTPS_PORT
+ * @brief Default HTTPS port for GameStream.
+ */
 #define DEFAULT_HTTPS_PORT 47984
 
+/**
+ * @brief Represents a network address and port for GameStream communication.
+ */
 class NvAddress
 {
 public:

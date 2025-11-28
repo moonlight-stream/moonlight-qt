@@ -1,3 +1,8 @@
+/**
+ * @file app/backend/computermanager.h
+ * @brief Computer manager for discovering and managing GameStream hosts.
+ */
+
 #pragma once
 
 #include "nvcomputer.h"
