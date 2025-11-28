@@ -126,15 +126,3 @@ jobs:
                     'Then copy the generated HTML files from `build-docs/html/` to the `docs/html/` directory and commit them.'
             })
 
-      - name: Comment on PR (no changes)
-        if: steps.check-skip.outputs.skip != 'true' && steps.check-changes.outputs.has_changes == 'false'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'ℹ️ No documentation changes detected. Documentation is up to date.'
-            })
-
