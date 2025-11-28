@@ -104,6 +104,7 @@ jobs:
         working-directory: deps
         env:
           DAV1D_VER: 1.5.1
+          GIT_HTTP_VERSION: 1.1
         run: |
           git clone --branch $DAV1D_VER --depth 1 https://code.videolan.org/videolan/dav1d.git
           pushd dav1d
