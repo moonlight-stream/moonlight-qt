@@ -1,3 +1,8 @@
+/**
+ * @file app/gui/appmodel.h
+ * @brief Qt model for displaying GameStream applications in the UI.
+ */
+
 #pragma once
 
 #include "backend/boxartmanager.h"
@@ -6,6 +11,9 @@
 
 #include <QAbstractListModel>
 
+/**
+ * @brief Qt model for managing and displaying GameStream applications in the user interface.
+ */
 class AppModel : public QAbstractListModel
 {
     Q_OBJECT

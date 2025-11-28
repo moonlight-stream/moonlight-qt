@@ -1,7 +1,15 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/dxutil.h
+ * @brief DirectX utility functions for hardware decoder detection.
+ */
+
 #pragma once
 
 #include <Limelight.h>
 
+/**
+ * @brief Utility functions for DirectX hardware decoder capabilities.
+ */
 class DXUtil
 {
 public:

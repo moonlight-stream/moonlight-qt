@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/drm.h
+ * @brief Direct Rendering Manager (DRM) renderer implementation for Linux.
+ */
+
 #pragma once
 
 #include "renderer.h"
@@ -13,6 +18,9 @@
 #include <set>
 
 // Newer libdrm headers have these HDR structs, but some older ones don't.
+/**
+ * @brief DRM definitions namespace.
+ */
 namespace DrmDefs
 {
     // HDR structs is copied from linux include/linux/hdmi.h

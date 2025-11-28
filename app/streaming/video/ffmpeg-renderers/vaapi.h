@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/vaapi.h
+ * @brief Video Acceleration API (VAAPI) renderer implementation for Linux.
+ */
+
 #pragma once
 
 #include "renderer.h"

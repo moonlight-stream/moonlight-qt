@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/overlaymanager.h
+ * @brief Manages on-screen overlays during video streaming.
+ */
+
 #pragma once
 
 #include <QString>
@@ -5,8 +10,14 @@
 #include "SDL_compat.h"
 #include <SDL_ttf.h>
 
+/**
+ * @brief Namespace for overlay management during video streaming.
+ */
 namespace Overlay {
 
+/**
+ * @brief Types of overlays that can be displayed.
+ */
 enum OverlayType {
     OverlayDebug,
     OverlayStatusUpdate,

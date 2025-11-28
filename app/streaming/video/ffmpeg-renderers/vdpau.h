@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/vdpau.h
+ * @brief Video Decode and Presentation API for Unix (VDPAU) renderer implementation.
+ */
+
 #pragma once
 
 #include "renderer.h"
@@ -8,6 +13,9 @@ extern "C" {
 #include <libavutil/hwcontext_vdpau.h>
 }
 
+/**
+ * @brief VDPAU hardware-accelerated video renderer for Linux systems.
+ */
 class VDPAURenderer : public IFFmpegRenderer
 {
 public:

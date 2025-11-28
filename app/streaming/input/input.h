@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/input/input.h
+ * @brief Input handling for gamepad, keyboard, and mouse during streaming.
+ */
+
 #pragma once
 
 #include "settings/streamingpreferences.h"

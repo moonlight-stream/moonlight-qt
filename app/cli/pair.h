@@ -1,3 +1,8 @@
+/**
+ * @file app/cli/pair.h
+ * @brief Command-line interface for pairing with GameStream servers.
+ */
+
 #pragma once
 
 #include <QObject>
@@ -8,12 +13,18 @@ class NvComputer;
 class Session;
 class StreamingPreferences;
 
+/**
+ * @brief Command-line interface for pairing with GameStream servers.
+ */
 namespace CliPair
 {
 
 class Event;
 class LauncherPrivate;
 
+/**
+ * @brief Launches the pairing process from the command line.
+ */
 class Launcher : public QObject
 {
     Q_OBJECT

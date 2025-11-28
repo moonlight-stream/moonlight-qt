@@ -1,3 +1,8 @@
+/**
+ * @file app/backend/nvhttp.h
+ * @brief HTTP client for GameStream protocol communication.
+ */
+
 #pragma once
 
 #include "identitymanager.h"

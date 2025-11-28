@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/d3d11va.h
+ * @brief Direct3D 11 Video Acceleration renderer implementation.
+ */
+
 #pragma once
 
 #include "renderer.h"
@@ -11,6 +16,9 @@ extern "C" {
 
 #include <wrl/client.h>
 
+/**
+ * @brief Direct3D 11 Video Acceleration (D3D11VA) hardware-accelerated video renderer.
+ */
 class D3D11VARenderer : public IFFmpegRenderer
 {
 public:

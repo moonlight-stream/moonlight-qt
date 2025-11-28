@@ -1,3 +1,8 @@
+/**
+ * @file app/main.cpp
+ * @brief Main entry point for Moonlight Qt application.
+ */
+
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -320,6 +325,12 @@ LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
 #endif
 
+/**
+ * @brief Main entry point for Moonlight Qt application.
+ * @param argc Number of command line arguments.
+ * @param argv Array of command line argument strings.
+ * @return Application exit code.
+ */
 int main(int argc, char *argv[])
 {
     SDL_SetMainReady();

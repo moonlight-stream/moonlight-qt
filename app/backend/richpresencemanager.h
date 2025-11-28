@@ -1,3 +1,8 @@
+/**
+ * @file app/backend/richpresencemanager.h
+ * @brief Manages Discord rich presence integration for GameStream sessions.
+ */
+
 #pragma once
 
 #include "settings/streamingpreferences.h"
@@ -6,6 +11,9 @@
 #include <discord_rpc.h>
 #endif
 
+/**
+ * @brief Manages Discord rich presence status updates during GameStream sessions.
+ */
 class RichPresenceManager
 {
 public:

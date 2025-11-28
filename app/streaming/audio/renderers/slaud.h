@@ -1,8 +1,16 @@
+/**
+ * @file app/streaming/audio/renderers/slaud.h
+ * @brief SLVideo audio renderer implementation.
+ */
+
 #pragma once
 
 #include "renderer.h"
 #include <SLAudio.h>
 
+/**
+ * @brief Audio renderer using SLVideo audio library.
+ */
 class SLAudioRenderer : public IAudioRenderer
 {
 public:

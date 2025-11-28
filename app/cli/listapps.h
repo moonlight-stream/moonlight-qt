@@ -1,3 +1,8 @@
+/**
+ * @file app/cli/listapps.h
+ * @brief Command-line interface for listing available GameStream applications.
+ */
+
 #pragma once
 
 #include "commandlineparser.h"
@@ -8,11 +13,17 @@
 class ComputerManager;
 class NvComputer;
 
+/**
+ * @brief Command-line interface for listing GameStream applications.
+ */
 namespace CliListApps
 {
 
 class LauncherPrivate;
 
+/**
+ * @brief Launches the list apps command from the command line.
+ */
 class Launcher : public QObject
 {
     Q_OBJECT

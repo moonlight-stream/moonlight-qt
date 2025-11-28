@@ -1,3 +1,8 @@
+/**
+ * @file app/cli/quitstream.h
+ * @brief Command-line interface for quitting running GameStream sessions.
+ */
+
 #pragma once
 
 #include <QObject>
@@ -6,11 +11,17 @@
 class ComputerManager;
 class NvComputer;
 
+/**
+ * @brief Command-line interface for quitting running GameStream sessions.
+ */
 namespace CliQuitStream
 {
 
 class LauncherPrivate;
 
+/**
+ * @brief Launches the quit stream command from the command line.
+ */
 class Launcher : public QObject
 {
     Q_OBJECT

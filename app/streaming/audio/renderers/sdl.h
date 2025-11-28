@@ -1,8 +1,16 @@
+/**
+ * @file app/streaming/audio/renderers/sdl.h
+ * @brief SDL audio renderer implementation.
+ */
+
 #pragma once
 
 #include "renderer.h"
 #include "SDL_compat.h"
 
+/**
+ * @brief Audio renderer using SDL audio subsystem.
+ */
 class SdlAudioRenderer : public IAudioRenderer
 {
 public:

@@ -1,9 +1,17 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/vt.h
+ * @brief VideoToolbox renderer implementation for macOS/iOS.
+ */
+
 #pragma once
 
 #include "renderer.h"
 
 #ifdef __OBJC__
 #import <Metal/Metal.h>
+/**
+ * @brief Base VideoToolbox renderer using Metal for macOS/iOS.
+ */
 class VTBaseRenderer : public IFFmpegRenderer {
 public:
     VTBaseRenderer(IFFmpegRenderer::RendererType type);
@@ -23,6 +31,9 @@ protected:
 // A factory is required to avoid pulling in
 // incompatible Objective-C headers.
 
+/**
+ * @brief Factory for creating VideoToolbox Metal renderers.
+ */
 class VTMetalRendererFactory {
 public:
     static

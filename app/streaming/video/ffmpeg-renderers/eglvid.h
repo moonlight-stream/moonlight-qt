@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/eglvid.h
+ * @brief EGL-based video renderer implementation.
+ */
+
 #pragma once
 
 #include "renderer.h"
@@ -6,6 +11,9 @@
 #include <SDL_egl.h>
 #include <SDL_opengles2.h>
 
+/**
+ * @brief EGL-based video renderer using OpenGL ES 2.0.
+ */
 class EGLRenderer : public IFFmpegRenderer {
 public:
     EGLRenderer(IFFmpegRenderer *backendRenderer);

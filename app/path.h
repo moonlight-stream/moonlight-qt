@@ -1,8 +1,16 @@
+/**
+ * @file app/path.h
+ * @brief Path utility class for file and directory management.
+ */
+
 #pragma once
 
 #include <QString>
 #include <QFileInfo>
 
+/**
+ * @brief Utility class for managing application paths and file operations.
+ */
 class Path
 {
 public:

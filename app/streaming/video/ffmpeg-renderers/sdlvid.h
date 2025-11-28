@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/sdlvid.h
+ * @brief SDL-based software video renderer implementation.
+ */
+
 #pragma once
 
 #include "renderer.h"
@@ -11,6 +16,9 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+/**
+ * @brief SDL-based software video renderer with optional CUDA acceleration.
+ */
 class SdlRenderer : public IFFmpegRenderer {
 public:
     SdlRenderer();
