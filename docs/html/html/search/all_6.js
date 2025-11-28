@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['failed_0',['failed',['../class_cli_pair_1_1_launcher.html#aee5b2dc0362b6a921ed4f16e7623cd18',1,'CliPair::Launcher::failed()'],['../class_cli_quit_stream_1_1_launcher.html#a3e2c45bffa0952766132610d9d39e4de',1,'CliQuitStream::Launcher::failed()'],['../class_cli_start_stream_1_1_launcher.html#a11877f851df604c8d66b486132a166cc',1,'CliStartStream::Launcher::failed()'],['../class_nv_pairing_manager.html#a5a8de66ecdae9e56a3d08a9d2c9326b2afde5121efcd0d21395799443287ec36f',1,'NvPairingManager::FAILED']]],
+  ['failed_5fdecodes_5freset_5fthreshold_1',['FAILED_DECODES_RESET_THRESHOLD',['../ffmpeg_8cpp.html#a047bcf780ddaf3641cb180b9d0fc10f3',1,'ffmpeg.cpp']]],
+  ['fast_5ffail_5ftimeout_5fms_2',['FAST_FAIL_TIMEOUT_MS',['../nvhttp_8cpp.html#a361d66f22e6fe072d5451de97bac9d92',1,'nvhttp.cpp']]],
+  ['features_3',['Features',['../md__2home_2runner_2work_2moonlight-qt_2moonlight-qt_2_r_e_a_d_m_e.html#autotoc_md1',1,'']]],
+  ['ff_5fdxva2_5fworkaround_5fintel_5fclearvideo_4',['FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO',['../dxva2_8cpp.html#a548f1d5c8e02c1615c7f3569428c990c',1,'dxva2.cpp']]],
+  ['ff_5fpool_5fsize_5ftype_5',['FF_POOL_SIZE_TYPE',['../dxva2_8h.html#abb2757e2d3f451aaed9f930f1cc0ca3e',1,'dxva2.h']]],
+  ['ffmpeg_2ecpp_6',['ffmpeg.cpp',['../ffmpeg_8cpp.html',1,'']]],
+  ['ffmpeg_2eh_7',['ffmpeg.h',['../ffmpeg_8h.html',1,'']]],
+  ['ffmpeg_5fvideosamples_2ecpp_8',['ffmpeg_videosamples.cpp',['../ffmpeg__videosamples_8cpp.html',1,'']]],
+  ['ffmpegvideodecoder_9',['ffmpegvideodecoder',['../class_f_fmpeg_video_decoder.html',1,'FFmpegVideoDecoder'],['../class_f_fmpeg_video_decoder.html#a6d51ae4cb7b708a829d078e3c6f38f22',1,'FFmpegVideoDecoder::FFmpegVideoDecoder()']]],
+  ['flags_10',['flags',['../structdma__buf__sync.html#a50414538a6470064e4e115cecdadba18',1,'dma_buf_sync']]],
+  ['float32ne_11',['Float32NE',['../class_i_audio_renderer.html#aafaf4708050983928caa915e884e5d78a807029d80e560647a4400a80c5b7441d',1,'IAudioRenderer']]],
+  ['flushwindowevents_12',['flushWindowEvents',['../class_session.html#a8ebd0d4733e2800d924c26d5e2655ae8',1,'Session']]],
+  ['font_13',['font',['../class_overlay_1_1_overlay_manager.html#a74da7ccef48cb91864207cdec02a5ca0',1,'Overlay::OverlayManager']]],
+  ['fontsize_14',['fontSize',['../class_overlay_1_1_overlay_manager.html#a360c8fa2403b28440dd9c791cc53fb4d',1,'Overlay::OverlayManager']]],
+  ['fourcc_5fcode_15',['fourcc_code',['../eglimagefactory_8cpp.html#aa22aaae0f0619113f80ec577f4cf7944',1,'eglimagefactory.cpp']]],
+  ['fps_16',['fps',['../class_streaming_preferences.html#a56d8e31942a487ae7cb41c416f3b8316',1,'StreamingPreferences']]],
+  ['framepacing_17',['framePacing',['../class_streaming_preferences.html#a8b6d42ea76629af4578c90f56e3f0278',1,'StreamingPreferences']]],
+  ['framepacingchanged_18',['framePacingChanged',['../class_streaming_preferences.html#abe1adf433cb6a7412a1f86b8d8d409d2',1,'StreamingPreferences']]],
+  ['framerate_19',['frameRate',['../struct___d_e_c_o_d_e_r___p_a_r_a_m_e_t_e_r_s.html#a2b716e090d95f11a0f5d1c9e1affd753',1,'_DECODER_PARAMETERS']]],
+  ['frameswithhostprocessinglatency_20',['framesWithHostProcessingLatency',['../struct___v_i_d_e_o___s_t_a_t_s.html#a95bc2afaee6d321459bf3f010326d45f',1,'_VIDEO_STATS']]],
+  ['freeeglimages_21',['freeEGLImages',['../class_egl_image_factory.html#ad302e243dcb5f6480e555c209ca0f802',1,'EglImageFactory']]],
+  ['friendlynativearchname_22',['friendlyNativeArchName',['../class_system_properties.html#a01c34581aff27f3a42cd6cd056b3713c',1,'SystemProperties']]]
+];

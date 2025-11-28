@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['tap_5fbutton_5frelease_5fdelay_0',['TAP_BUTTON_RELEASE_DELAY',['../reltouch_8cpp.html#a54d42143573b086e0ee7f7b9c90d4e74',1,'reltouch.cpp']]],
+  ['testconnectionforcomputer_1',['testConnectionForComputer',['../class_computer_model.html#a59e387b9381915df2437495725e0b0db',1,'ComputerModel']]],
+  ['testonly_2',['testOnly',['../struct___d_e_c_o_d_e_r___p_a_r_a_m_e_t_e_r_s.html#a2e72c873ce2a5585d576f4abb770d715',1,'_DECODER_PARAMETERS']]],
+  ['testrenderframe_3',['testrenderframe',['../class_drm_renderer.html#a679e4e15e367cbe51129648903b06ee1',1,'DrmRenderer::testRenderFrame()'],['../class_e_g_l_renderer.html#abe61f5c5abb5222951a3f67592a9e5da',1,'EGLRenderer::testRenderFrame()'],['../class_pl_vk_renderer.html#a2daf4f04261b51b60e6c4957b502003c',1,'PlVkRenderer::testRenderFrame()'],['../class_i_f_fmpeg_renderer.html#a19f93c0d1323b5ce61e8af630d73d142',1,'IFFmpegRenderer::testRenderFrame()'],['../class_sdl_renderer.html#a03c8a3b850936613c1efcb8b72eff992',1,'SdlRenderer::testRenderFrame()']]],
+  ['text_4',['text',['../class_overlay_1_1_overlay_manager.html#afc50fb79f03668fbaba505f25381f177',1,'Overlay::OverlayManager']]],
+  ['thanks_5',['Special Thanks',['../md__2home_2runner_2work_2moonlight-qt_2moonlight-qt_2_r_e_a_d_m_e.html#autotoc_md4',1,'']]],
+  ['throw_5fbad_5falloc_5fif_5fnull_6',['THROW_BAD_ALLOC_IF_NULL',['../utils_8h.html#a358b41dd653cdbf4f0979c9b24c13621',1,'utils.h']]],
+  ['timedout_7',['timedout',['../class_cli_pair_1_1_event.html#a4b7676a767a4ffde4b1143836743ac2caae462d06cafb290e4e7f66d358731f1b',1,'CliPair::Event::Timedout'],['../class_cli_start_stream_1_1_event.html#a7e25b9e037509bdc31d9eb2d506d226cabea84daa28db17cfe620ec3cb8f3af1e',1,'CliStartStream::Event::Timedout']]],
+  ['timer_5fslack_5fms_8',['TIMER_SLACK_MS',['../pacer_8cpp.html#a3e27c00eeca7e802c4c79fb68115615c',1,'pacer.cpp']]],
+  ['toqstring_9',['toqstring',['../class_qt_network_reply_exception.html#ad5c9ce6a4b3f6572aecbf451b10434e7',1,'QtNetworkReplyException::toQString()'],['../class_gfe_http_response_exception.html#a2d126e2365c457fe216b78ef656d7804',1,'GfeHttpResponseException::toQString()']]],
+  ['tostring_10',['toString',['../class_nv_address.html#a950584b31f1773b723f4dd36c6cfce5b',1,'NvAddress']]],
+  ['totaldecodetimeus_11',['totalDecodeTimeUs',['../struct___v_i_d_e_o___s_t_a_t_s.html#a4b48f8fdfcb718a1aefe554c93eaa969',1,'_VIDEO_STATS']]],
+  ['totalfps_12',['totalFps',['../struct___v_i_d_e_o___s_t_a_t_s.html#a6d7f7b676aa297cd7b5b865a91ec6366',1,'_VIDEO_STATS']]],
+  ['totalframes_13',['totalFrames',['../struct___v_i_d_e_o___s_t_a_t_s.html#a88d4130e40b029144d18e3ebdc2b1332',1,'_VIDEO_STATS']]],
+  ['totalhostprocessinglatency_14',['totalHostProcessingLatency',['../struct___v_i_d_e_o___s_t_a_t_s.html#aff620bdb508cc64edb6ff1684acefadd',1,'_VIDEO_STATS']]],
+  ['totalpacertimeus_15',['totalPacerTimeUs',['../struct___v_i_d_e_o___s_t_a_t_s.html#a71e166a68578d2dae9d930a3e071af94',1,'_VIDEO_STATS']]],
+  ['totalreassemblytimeus_16',['totalReassemblyTimeUs',['../struct___v_i_d_e_o___s_t_a_t_s.html#a4be6b02559c22388a81d4b322f963bef',1,'_VIDEO_STATS']]],
+  ['totalrendertimeus_17',['totalRenderTimeUs',['../struct___v_i_d_e_o___s_t_a_t_s.html#a8658b1a63aa5244cc0f4aa2f4a2d5a16',1,'_VIDEO_STATS']]],
+  ['tries_5fbefore_5fofflining_18',['TRIES_BEFORE_OFFLINING',['../computermanager_8cpp.html#a77c093397c8900b02eb1d91192b8fb79',1,'computermanager.cpp']]],
+  ['try_5finit_5frenderer_19',['TRY_INIT_RENDERER',['../audio_8cpp.html#a5511a7828507b186cf6ceb7089abf6e2',1,'audio.cpp']]],
+  ['try_5fpreferred_5fpixel_5fformat_20',['TRY_PREFERRED_PIXEL_FORMAT',['../ffmpeg_8cpp.html#afc7f28030f7006a61feb4d7de7cf93a1',1,'ffmpeg.cpp']]],
+  ['try_5fsupported_5fnon_5fpreferred_5fpixel_5fformat_21',['TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT',['../ffmpeg_8cpp.html#a07a3dfdf83a2d46f1add7854b140c881',1,'ffmpeg.cpp']]],
+  ['tu_22',['tu',['../struct___v_e_r_t_e_x.html#af05ffec852540f48660c026a4418b9e3',1,'_VERTEX']]],
+  ['tv_23',['tv',['../struct___v_e_r_t_e_x.html#ac4db0bf39149fd05e2a3a64016fb3c29',1,'_VERTEX']]],
+  ['type_24',['type',['../class_cli_start_stream_1_1_event.html#a7e25b9e037509bdc31d9eb2d506d226c',1,'CliStartStream::Event::Type'],['../class_cli_quit_stream_1_1_event.html#a54f1dd0da936eee6f9b4dbbd3088c14d',1,'CliQuitStream::Event::Type'],['../class_cli_pair_1_1_event.html#a4b7676a767a4ffde4b1143836743ac2c',1,'CliPair::Event::Type'],['../class_cli_list_apps_1_1_event.html#afcae618bd541a1a8bf954a193b31f888',1,'CliListApps::Event::Type'],['../class_cli_start_stream_1_1_event.html#a0129f2c0214fb010dd8f2f5a1189f650',1,'CliStartStream::Event::type'],['../class_cli_quit_stream_1_1_event.html#a054d3d6c79b84110e4f79ccf9f629d26',1,'CliQuitStream::Event::type'],['../class_cli_pair_1_1_event.html#acc112a3d4816bbf839d0373b8d05384b',1,'CliPair::Event::type'],['../class_cli_list_apps_1_1_event.html#a643ef1b66e6ae46bd867c2a6c1bea740',1,'CliListApps::Event::type']]]
+];

@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['u_0',['u',['../struct___o_v_e_r_l_a_y___v_e_r_t_e_x.html#a83dfd9b814e33101f1ba977d116d4ce3',1,'_OVERLAY_VERTEX']]],
+  ['ui_5ffullscreen_1',['UI_FULLSCREEN',['../class_streaming_preferences.html#add814d64fb1d46478fff6cd1a91b24a5ab06f88f40cbf09582dd5f7abdfa8afd9',1,'StreamingPreferences']]],
+  ['ui_5fmaximized_2',['UI_MAXIMIZED',['../class_streaming_preferences.html#add814d64fb1d46478fff6cd1a91b24a5a6c0e8cc9293510835ee02c81db0ec25f',1,'StreamingPreferences']]],
+  ['ui_5fwindowed_3',['UI_WINDOWED',['../class_streaming_preferences.html#add814d64fb1d46478fff6cd1a91b24a5a4efa3469306bf292c1c0b5ee64827d98',1,'StreamingPreferences']]],
+  ['uidisplaymode_4',['uidisplaymode',['../class_streaming_preferences.html#add814d64fb1d46478fff6cd1a91b24a5',1,'StreamingPreferences::UIDisplayMode'],['../class_streaming_preferences.html#afc27c5b768cfcfe080deed0179af5587',1,'StreamingPreferences::uiDisplayMode']]],
+  ['uidisplaymodechanged_5',['uiDisplayModeChanged',['../class_streaming_preferences.html#a46fd290b049876ca005f5e1433f0a342',1,'StreamingPreferences']]],
+  ['uniqueaddresses_6',['uniqueAddresses',['../class_nv_computer.html#afc8f49e60060a502ed02f6f65f3a1210',1,'NvComputer']]],
+  ['unix_20build_20requirements_7',['Linux/Unix Build Requirements',['../md__2home_2runner_2work_2moonlight-qt_2moonlight-qt_2_r_e_a_d_m_e.html#autotoc_md8',1,'']]],
+  ['unknown_8',['unknown',['../class_i_f_fmpeg_renderer.html#a7d3ed2d532805069db5d6b205e06ba64a88183b946cc5f0e8c96b2e66e1c74a7e',1,'IFFmpegRenderer::Unknown'],['../class_i_f_fmpeg_renderer.html#a2d77d50ad7b5525601a83608432ac05ea88183b946cc5f0e8c96b2e66e1c74a7e',1,'IFFmpegRenderer::Unknown']]],
+  ['unlockbitrate_9',['unlockBitrate',['../class_streaming_preferences.html#a329db46a8a8aa4c3d9c1e75c4ae2e5a8',1,'StreamingPreferences']]],
+  ['unlockbitratechanged_10',['unlockBitrateChanged',['../class_streaming_preferences.html#a3b3b74318c554bffd536da38b3e3d1d4',1,'StreamingPreferences']]],
+  ['unmappedgamepads_11',['unmappedGamepads',['../class_system_properties.html#a5bb26c9791b844de6748409124e47798',1,'SystemProperties']]],
+  ['unmappedgamepadschanged_12',['unmappedGamepadsChanged',['../class_system_properties.html#aabf1e942f2e857091d5375bc934533a5',1,'SystemProperties']]],
+  ['unregistertextures_13',['unregisterTextures',['../class_c_u_d_a_g_l_interop_helper.html#a1140b56ab27eafdfd3d1c7e2c9937b77',1,'CUDAGLInteropHelper']]],
+  ['unsupportedfpschanged_14',['unsupportedFpsChanged',['../class_streaming_preferences.html#adc046997b8d144f44700e4a86f078c68',1,'StreamingPreferences']]],
+  ['update_15',['update',['../class_nv_computer.html#a00779b30b72c46550fa7d9e4e09fc7c9',1,'NvComputer']]],
+  ['updatekeyboardgrabstate_16',['updateKeyboardGrabState',['../class_sdl_input_handler.html#a4a54fa4b886d9766c96f4d7fa18c489a',1,'SdlInputHandler']]],
+  ['updateoverlaytext_17',['updateOverlayText',['../class_overlay_1_1_overlay_manager.html#a78a9d186eae2fd35e49865be5d5c99e4',1,'Overlay::OverlayManager']]],
+  ['updatepointerregionlock_18',['updatePointerRegionLock',['../class_sdl_input_handler.html#a3acdbe816fb7241002002e94bd8b1032',1,'SdlInputHandler']]],
+  ['usesmaterial3theme_19',['usesMaterial3Theme',['../class_system_properties.html#a28c83db81dae31ab2c3b7bd2295becd4',1,'SystemProperties']]],
+  ['utils_2eh_20',['utils.h',['../utils_8h.html',1,'']]],
+  ['uuid_21',['uuid',['../class_nv_computer.html#a9323e6a40abd41739c5006dfd1a3cb64',1,'NvComputer']]]
+];
