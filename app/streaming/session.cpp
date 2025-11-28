@@ -1724,10 +1724,10 @@ void Session::exec(QWindow* qtWindow)
     }
 }
 
+bool alt_tab_pressed = false;
 #ifdef Q_OS_WIN32
 HHOOK g_hook = NULL;
 HWND g_appWindow = NULL;
-bool alt_tab_pressed = false;
 // Hook procedure
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode != HC_ACTION) {
