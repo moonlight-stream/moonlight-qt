@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/session.h
+ * @brief Streaming session management for Moonlight Qt client.
+ */
+
 #pragma once
 
 #include <QSemaphore>

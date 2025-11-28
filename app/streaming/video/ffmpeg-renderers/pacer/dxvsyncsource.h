@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.h
+ * @brief DirectX VSync source implementation for Windows.
+ */
+
 #pragma once
 
 #include "pacer.h"

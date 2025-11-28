@@ -1,3 +1,8 @@
+/**
+ * @file app/backend/computerseeker.h
+ * @brief Computer discovery and seeking functionality.
+ */
+
 #pragma once
 
 #include <QObject>
@@ -6,6 +11,9 @@ class ComputerManager;
 class NvComputer;
 class QTimer;
 
+/**
+ * @brief Seeks and discovers GameStream computers on the network.
+ */
 class ComputerSeeker : public QObject
 {
     Q_OBJECT

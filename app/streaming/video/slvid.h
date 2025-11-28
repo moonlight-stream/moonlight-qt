@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/slvid.h
+ * @brief SLVideo-based video decoder implementation.
+ */
+
 #pragma once
 
 #include "decoder.h"
@@ -5,6 +10,9 @@
 
 #include <SLVideo.h>
 
+/**
+ * @brief Video decoder implementation using SLVideo library.
+ */
 class SLVideoDecoder : public IVideoDecoder, public Overlay::IOverlayRenderer
 {
 public:

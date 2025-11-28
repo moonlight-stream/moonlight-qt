@@ -1,8 +1,16 @@
+/**
+ * @file app/settings/compatfetcher.h
+ * @brief Fetches GameStream compatibility information.
+ */
+
 #pragma once
 
 #include <QObject>
 #include <QNetworkAccessManager>
 
+/**
+ * @brief Fetches GameStream server compatibility information from remote sources.
+ */
 class CompatFetcher : public QObject
 {
     Q_OBJECT

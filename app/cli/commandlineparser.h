@@ -1,3 +1,8 @@
+/**
+ * @file app/cli/commandlineparser.h
+ * @brief Command-line argument parsing for Moonlight Qt.
+ */
+
 #pragma once
 
 #include "settings/streamingpreferences.h"
@@ -5,6 +10,9 @@
 #include <QMap>
 #include <QString>
 
+/**
+ * @brief Global command-line parser for application-level commands.
+ */
 class GlobalCommandLineParser
 {
 public:
@@ -37,6 +45,9 @@ private:
     QString m_Host;
 };
 
+/**
+ * @brief Command-line parser for pairing operations.
+ */
 class PairCommandLineParser
 {
 public:

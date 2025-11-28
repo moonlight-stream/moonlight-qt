@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg.h
+ * @brief FFmpeg-based video decoder implementation.
+ */
+
 #pragma once
 
 #include <functional>
@@ -13,6 +18,9 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
+/**
+ * @brief FFmpeg-based video decoder for GameStream video decoding.
+ */
 class FFmpegVideoDecoder : public IVideoDecoder {
 public:
     FFmpegVideoDecoder(bool testOnly);

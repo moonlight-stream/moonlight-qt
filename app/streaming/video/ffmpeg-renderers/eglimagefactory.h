@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/eglimagefactory.h
+ * @brief EGL image factory for importing hardware frames into EGL.
+ */
+
 #pragma once
 
 #include "renderer.h"
@@ -6,6 +11,9 @@
 #include <va/va_drmcommon.h>
 #endif
 
+/**
+ * @brief Factory for creating EGL images from hardware-accelerated video frames.
+ */
 class EglImageFactory
 {
 public:

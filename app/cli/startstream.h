@@ -1,3 +1,8 @@
+/**
+ * @file app/cli/startstream.h
+ * @brief Command-line interface for starting streaming sessions.
+ */
+
 #pragma once
 
 #include <QObject>
@@ -8,12 +13,18 @@ class NvComputer;
 class Session;
 class StreamingPreferences;
 
+/**
+ * @brief Command-line interface for starting GameStream sessions.
+ */
 namespace CliStartStream
 {
 
 class Event;
 class LauncherPrivate;
 
+/**
+ * @brief Launches a streaming session from the command line.
+ */
 class Launcher : public QObject
 {
     Q_OBJECT

@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/plvk.h
+ * @brief libplacebo Vulkan renderer implementation.
+ */
+
 #pragma once
 
 #include "renderer.h"
@@ -10,6 +15,9 @@
 #include <libplacebo/renderer.h>
 #include <libplacebo/vulkan.h>
 
+/**
+ * @brief libplacebo-based Vulkan video renderer with advanced color processing.
+ */
 class PlVkRenderer : public IFFmpegRenderer {
 public:
     PlVkRenderer(bool hwaccel = false, IFFmpegRenderer *backendRenderer = nullptr);

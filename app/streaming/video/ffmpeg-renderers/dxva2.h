@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/dxva2.h
+ * @brief DirectX Video Acceleration 2 (DXVA2) renderer implementation.
+ */
+
 #pragma once
 
 #include "renderer.h"
@@ -12,6 +17,9 @@ extern "C" {
 
 #include <wrl/client.h>
 
+/**
+ * @brief DirectX Video Acceleration 2 (DXVA2) hardware-accelerated video renderer for Windows.
+ */
 class DXVA2Renderer : public IFFmpegRenderer
 {
 public:

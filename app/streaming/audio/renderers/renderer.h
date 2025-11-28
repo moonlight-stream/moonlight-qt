@@ -1,8 +1,16 @@
+/**
+ * @file app/streaming/audio/renderers/renderer.h
+ * @brief Audio renderer interface for GameStream audio playback.
+ */
+
 #pragma once
 
 #include <Limelight.h>
 #include <QtGlobal>
 
+/**
+ * @brief Interface for audio renderer implementations.
+ */
 class IAudioRenderer
 {
 public:

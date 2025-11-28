@@ -1,0 +1,128 @@
+name: Build and Commit Documentation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'app/**'
+      - '.github/workflows/build-docs.yml'
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: write  # Required to commit back to PR branch
+  pull-requests: write  # Required to add comments to PR
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for skip ci in commit message
+        id: check-skip
+        run: |
+          LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
+          if echo "$LAST_COMMIT_MSG" | grep -q "\[skip ci\]"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping workflow - commit message contains [skip ci]"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Git
+        if: steps.check-skip.outputs.skip != 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        if: steps.check-skip.outputs.skip != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            doxygen \
+            graphviz \
+            cmake \
+            build-essential \
+            libssl-dev
+
+      - name: Build documentation
+        if: steps.check-skip.outputs.skip != 'true'
+        working-directory: docs
+        run: |
+          mkdir -p build-docs
+          cd build-docs
+          cmake .. -DBUILD_DOCS=ON
+          cmake --build . --target docs
+        continue-on-error: true
+
+      - name: Prepare documentation directory
+        if: steps.check-skip.outputs.skip != 'true'
+        run: |
+          mkdir -p docs/html
+
+      - name: Copy documentation
+        if: steps.check-skip.outputs.skip != 'true' && (success() || failure())
+        run: |
+          if [ -d "docs/build-docs/html" ]; then
+            cp -r docs/build-docs/html/* docs/html/ || true
+          fi
+        continue-on-error: true
+
+      - name: Check for documentation changes
+        id: check-changes
+        if: steps.check-skip.outputs.skip != 'true'
+        run: |
+          if [ -n "$(git status --porcelain docs/html/)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            git status --short docs/html/
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No documentation changes detected"
+          fi
+
+      - name: Commit and push documentation
+        if: steps.check-skip.outputs.skip != 'true' && steps.check-changes.outputs.has_changes == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          git add docs/html/
+          git commit -m "docs: Auto-generate Doxygen documentation [skip ci]" || exit 0
+          # Only push if PR is from same repository (not a fork)
+          git push origin HEAD:${{ github.event.pull_request.head.ref }} || exit 0
+
+      - name: Comment on PR (docs committed)
+        if: steps.check-skip.outputs.skip != 'true' && steps.check-changes.outputs.has_changes == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '📚 Documentation has been automatically generated and committed to this PR.\n\n' +
+                    'The generated documentation is available in the `docs/html/` directory.'
+            })
+
+      - name: Comment on PR (fork - docs generated but not committed)
+        if: steps.check-skip.outputs.skip != 'true' && steps.check-changes.outputs.has_changes == 'true' && github.event.pull_request.head.repo.full_name != github.repository
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '📚 Documentation has been generated, but cannot be automatically committed to this PR because it is from a fork.\n\n' +
+                    'To include the generated documentation, please run the following commands locally:\n' +
+                    '```bash\n' +
+                    'cd docs && mkdir -p build-docs && cd build-docs\n' +
+                    'cmake .. -DBUILD_DOCS=ON\n' +
+                    'cmake --build . --target docs\n' +
+                    '```\n\n' +
+                    'Then copy the generated HTML files from `build-docs/html/` to the `docs/html/` directory and commit them.'
+            })
+

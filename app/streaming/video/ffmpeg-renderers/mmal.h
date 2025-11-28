@@ -1,3 +1,8 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/mmal.h
+ * @brief Multi-Media Abstraction Layer (MMAL) renderer implementation for Raspberry Pi.
+ */
+
 #pragma once
 
 #include "renderer.h"
@@ -7,6 +12,9 @@
 #include <interface/mmal/util/mmal_util_params.h>
 #include <interface/mmal/util/mmal_default_components.h>
 
+/**
+ * @brief MMAL hardware-accelerated video renderer for Raspberry Pi.
+ */
 class MmalRenderer : public IFFmpegRenderer {
 public:
     MmalRenderer();

@@ -1,9 +1,17 @@
+/**
+ * @file app/settings/mappingmanager.h
+ * @brief SDL gamepad mapping management.
+ */
+
 #pragma once
 
 #include "mappingfetcher.h"
 
 #include <QSettings>
 
+/**
+ * @brief Represents an SDL gamepad mapping with GUID and mapping string.
+ */
 class SdlGamepadMapping
 {
 public:
@@ -57,6 +65,9 @@ private:
     QString m_Mapping;
 };
 
+/**
+ * @brief Manages SDL gamepad mappings and applies them to the system.
+ */
 class MappingManager
 {
 public:

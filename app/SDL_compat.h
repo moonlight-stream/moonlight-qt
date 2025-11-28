@@ -1,7 +1,9 @@
-//
-// Compatibility header for older version of SDL.
-// Include this instead of SDL.h directly.
-//
+/**
+ * @file app/SDL_compat.h
+ * @brief Compatibility header for older versions of SDL.
+ * 
+ * Include this instead of SDL.h directly to ensure compatibility with older SDL versions.
+ */
 
 #pragma once
 

@@ -1,7 +1,15 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/swframemapper.h
+ * @brief Software frame mapper for converting hardware frames to software frames.
+ */
+
 #pragma once
 
 #include "renderer.h"
 
+/**
+ * @brief Maps hardware-accelerated video frames to software frames for processing.
+ */
 class SwFrameMapper
 {
 public:

@@ -1,7 +1,15 @@
+/**
+ * @file app/backend/nvapp.h
+ * @brief NVIDIA GameStream application structure.
+ */
+
 #pragma once
 
 #include <QSettings>
 
+/**
+ * @brief Represents a GameStream application with its properties.
+ */
 class NvApp
 {
 public:

@@ -1,7 +1,15 @@
+/**
+ * @file app/streaming/video/ffmpeg-renderers/genhwaccel.h
+ * @brief Generic hardware-accelerated video renderer implementation.
+ */
+
 #pragma once
 
 #include "renderer.h"
 
+/**
+ * @brief Generic hardware-accelerated video renderer supporting various FFmpeg hardware device types.
+ */
 class GenericHwAccelRenderer : public IFFmpegRenderer
 {
 public:
