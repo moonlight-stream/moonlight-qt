@@ -17,6 +17,8 @@
 #define SER_BITRATE "bitrate"
 #define SER_UNLOCK_BITRATE "unlockbitrate"
 #define SER_AUTOADJUSTBITRATE "autoadjustbitrate"
+#define SER_AUTOBITRATE_MIN_KBPS "autobitrateminkbps"
+#define SER_AUTOBITRATE_MAX_KBPS "autobitratemaxkbps"
 #define SER_FULLSCREEN "fullscreen"
 #define SER_VSYNC "vsync"
 #define SER_GAMEOPTS "gameopts"
@@ -127,6 +129,16 @@ void StreamingPreferences::reload()
     bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps, enableYUV444)).toInt();
     unlockBitrate = settings.value(SER_UNLOCK_BITRATE, false).toBool();
     autoAdjustBitrate = settings.value(SER_AUTOADJUSTBITRATE, false).toBool();
+    // Default min to 1 Kbps, max to current bitrateKbps
+    autoBitrateMinKbps = settings.value(SER_AUTOBITRATE_MIN_KBPS, 1).toInt();
+    autoBitrateMaxKbps = settings.value(SER_AUTOBITRATE_MAX_KBPS, bitrateKbps).toInt();
+    // Ensure min is at least 1 and max is at least min
+    if (autoBitrateMinKbps < 1) {
+        autoBitrateMinKbps = 1;
+    }
+    if (autoBitrateMaxKbps < autoBitrateMinKbps) {
+        autoBitrateMaxKbps = bitrateKbps > 0 ? bitrateKbps : autoBitrateMinKbps;
+    }
     enableVsync = settings.value(SER_VSYNC, true).toBool();
     gameOptimizations = settings.value(SER_GAMEOPTS, true).toBool();
     playAudioOnHost = settings.value(SER_HOSTAUDIO, false).toBool();
@@ -328,6 +340,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_BITRATE, bitrateKbps);
     settings.setValue(SER_UNLOCK_BITRATE, unlockBitrate);
     settings.setValue(SER_AUTOADJUSTBITRATE, autoAdjustBitrate);
+    settings.setValue(SER_AUTOBITRATE_MIN_KBPS, autoBitrateMinKbps);
+    settings.setValue(SER_AUTOBITRATE_MAX_KBPS, autoBitrateMaxKbps);
     settings.setValue(SER_VSYNC, enableVsync);
     settings.setValue(SER_GAMEOPTS, gameOptimizations);
     settings.setValue(SER_HOSTAUDIO, playAudioOnHost);

@@ -282,11 +282,25 @@ Flickable {
                                 StreamingPreferences.height = selectedHeight
 
                                 if (StreamingPreferences.autoAdjustBitrate) {
-                                    StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
+                                    var defaultBitrate = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
                                                                                                               StreamingPreferences.height,
                                                                                                               StreamingPreferences.fps,
                                                                                                               StreamingPreferences.enableYUV444);
-                                    slider.value = StreamingPreferences.bitrateKbps
+                                    StreamingPreferences.bitrateKbps = defaultBitrate
+                                    StreamingPreferences.autoBitrateMaxKbps = defaultBitrate
+                                    // Ensure min doesn't exceed new max
+                                    if (StreamingPreferences.autoBitrateMinKbps > StreamingPreferences.autoBitrateMaxKbps) {
+                                        StreamingPreferences.autoBitrateMinKbps = StreamingPreferences.autoBitrateMaxKbps
+                                    }
+                                    if (slider.visible) {
+                                        slider.value = defaultBitrate
+                                    }
+                                    if (maxBitrateSlider.visible) {
+                                        maxBitrateSlider.value = defaultBitrate
+                                    }
+                                    if (minBitrateSlider.visible) {
+                                        minBitrateSlider.value = StreamingPreferences.autoBitrateMinKbps
+                                    }
                                 }
                             }
 
@@ -450,11 +464,25 @@ Flickable {
                                 StreamingPreferences.fps = selectedFps
 
                                 if (StreamingPreferences.autoAdjustBitrate) {
-                                    StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
+                                    var defaultBitrate = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
                                                                                                               StreamingPreferences.height,
                                                                                                               StreamingPreferences.fps,
                                                                                                               StreamingPreferences.enableYUV444);
-                                    slider.value = StreamingPreferences.bitrateKbps
+                                    StreamingPreferences.bitrateKbps = defaultBitrate
+                                    StreamingPreferences.autoBitrateMaxKbps = defaultBitrate
+                                    // Ensure min doesn't exceed new max
+                                    if (StreamingPreferences.autoBitrateMinKbps > StreamingPreferences.autoBitrateMaxKbps) {
+                                        StreamingPreferences.autoBitrateMinKbps = StreamingPreferences.autoBitrateMaxKbps
+                                    }
+                                    if (slider.visible) {
+                                        slider.value = defaultBitrate
+                                    }
+                                    if (maxBitrateSlider.visible) {
+                                        maxBitrateSlider.value = defaultBitrate
+                                    }
+                                    if (minBitrateSlider.visible) {
+                                        minBitrateSlider.value = StreamingPreferences.autoBitrateMinKbps
+                                    }
                                 }
                             }
 
@@ -669,7 +697,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: bitrateTitle
-                    text: StreamingPreferences.autoAdjustBitrate ? qsTr("Auto bitrate maximum:") : qsTr("Video bitrate:")
+                    text: StreamingPreferences.autoAdjustBitrate ? qsTr("Auto bitrate range:") : qsTr("Video bitrate:")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -677,14 +705,16 @@ Flickable {
                 Label {
                     width: parent.width
                     id: bitrateDesc
-                    text: qsTr("Lower the bitrate on slower connections. Raise the bitrate to increase image quality.")
+                    text: StreamingPreferences.autoAdjustBitrate ? qsTr("Set the minimum and maximum bitrate range for automatic adjustment.") : qsTr("Lower the bitrate on slower connections. Raise the bitrate to increase image quality.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
                 }
 
+                // Single slider when auto bitrate is disabled
                 Row {
                     width: parent.width
                     spacing: 5
+                    visible: !StreamingPreferences.autoAdjustBitrate
 
                     Slider {
                         id: slider
@@ -716,8 +746,90 @@ Flickable {
                         onClicked: {
                             var defaultBitrate = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
                             StreamingPreferences.bitrateKbps = defaultBitrate
-                            StreamingPreferences.autoAdjustBitrate = true
                             slider.value = defaultBitrate
+                        }
+                    }
+                }
+
+                // Two sliders when auto bitrate is enabled
+                Column {
+                    width: parent.width
+                    visible: StreamingPreferences.autoAdjustBitrate
+                    spacing: 10
+
+                    Column {
+                        width: parent.width
+                        spacing: 5
+
+                        Label {
+                            width: parent.width
+                            text: qsTr("Minimum bitrate: %1 Kbps").arg(StreamingPreferences.autoBitrateMinKbps)
+                            font.pointSize: 10
+                        }
+
+                        Slider {
+                            id: minBitrateSlider
+                            width: parent.width
+
+                            value: StreamingPreferences.autoBitrateMinKbps
+                            stepSize: 1
+                            from: 1
+                            to: Math.max(1, StreamingPreferences.autoBitrateMaxKbps - 1)
+
+                            snapMode: "SnapOnRelease"
+
+                            onValueChanged: {
+                                StreamingPreferences.autoBitrateMinKbps = Math.floor(value)
+                                // Ensure max is at least min + 1 (to allow valid range)
+                                var newMin = StreamingPreferences.autoBitrateMinKbps
+                                var maxSliderMax = StreamingPreferences.unlockBitrate ? 1000000 : 150000
+                                if (StreamingPreferences.autoBitrateMaxKbps <= newMin) {
+                                    // Set max to min + 1, but clamp to slider maximum
+                                    StreamingPreferences.autoBitrateMaxKbps = Math.min(newMin + 1, maxSliderMax)
+                                }
+                                // Update max slider's minimum
+                                maxBitrateSlider.from = newMin + 1
+                                // Ensure max slider value is still valid
+                                if (maxBitrateSlider.value < maxBitrateSlider.from) {
+                                    maxBitrateSlider.value = StreamingPreferences.autoBitrateMaxKbps
+                                }
+                            }
+                        }
+                    }
+
+                    Column {
+                        width: parent.width
+                        spacing: 5
+
+                        Label {
+                            width: parent.width
+                            text: qsTr("Maximum bitrate: %1 Mbps").arg((StreamingPreferences.autoBitrateMaxKbps / 1000.0).toFixed(1))
+                            font.pointSize: 10
+                        }
+
+                        Slider {
+                            id: maxBitrateSlider
+                            width: parent.width
+
+                            value: StreamingPreferences.autoBitrateMaxKbps
+                            stepSize: 500
+                            from: StreamingPreferences.autoBitrateMinKbps + 1
+                            to: StreamingPreferences.unlockBitrate ? 1000000 : 150000
+
+                            snapMode: "SnapOnRelease"
+
+                            onValueChanged: {
+                                StreamingPreferences.autoBitrateMaxKbps = Math.floor(value)
+                                // Ensure min is at most max
+                                if (StreamingPreferences.autoBitrateMinKbps > StreamingPreferences.autoBitrateMaxKbps) {
+                                    StreamingPreferences.autoBitrateMinKbps = StreamingPreferences.autoBitrateMaxKbps
+                                }
+                                // Update min slider's maximum and value if needed
+                                minBitrateSlider.to = Math.max(1, StreamingPreferences.autoBitrateMaxKbps - 1)
+                                if (minBitrateSlider.value > minBitrateSlider.to) {
+                                    minBitrateSlider.value = StreamingPreferences.autoBitrateMinKbps
+                                }
+                            }
                         }
                     }
                 }
@@ -731,12 +843,22 @@ Flickable {
                     checked: StreamingPreferences.autoAdjustBitrate
                     onCheckedChanged: {
                         StreamingPreferences.autoAdjustBitrate = checked
+                        if (checked) {
+                            // Initialize min/max if not already set
+                            if (StreamingPreferences.autoBitrateMinKbps < 1) {
+                                StreamingPreferences.autoBitrateMinKbps = 1
+                            }
+                            var defaultMax = StreamingPreferences.bitrateKbps > 0 ? StreamingPreferences.bitrateKbps : StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
+                            if (StreamingPreferences.autoBitrateMaxKbps < StreamingPreferences.autoBitrateMinKbps) {
+                                StreamingPreferences.autoBitrateMaxKbps = defaultMax
+                            }
+                        }
                     }
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Let the host adjust bitrate dynamically during the stream. The slider sets the maximum bitrate cap.")
+                    ToolTip.text: qsTr("Let the host adjust bitrate dynamically during the stream. Use the min/max sliders to set the bitrate range.")
                 }
 
                 Label {
@@ -744,7 +866,7 @@ Flickable {
                     font.pointSize: 9
                     wrapMode: Text.Wrap
                     color: "#808080"
-                    text: qsTr("When enabled, the host will adjust bitrate based on network conditions. The slider sets the maximum bitrate cap.")
+                    text: qsTr("When enabled, the host will adjust bitrate based on network conditions. Use the min/max sliders to set the bitrate range.")
                     visible: autoAdjustBitrate.visible
                 }
 
@@ -1729,8 +1851,15 @@ Flickable {
                     checked: StreamingPreferences.unlockBitrate
                     onCheckedChanged: {
                         StreamingPreferences.unlockBitrate = checked
-                        StreamingPreferences.bitrateKbps = Math.min(StreamingPreferences.bitrateKbps, slider.to)
-                        slider.value = StreamingPreferences.bitrateKbps
+                        if (slider.visible) {
+                            StreamingPreferences.bitrateKbps = Math.min(StreamingPreferences.bitrateKbps, slider.to)
+                            slider.value = StreamingPreferences.bitrateKbps
+                        }
+                        if (maxBitrateSlider.visible) {
+                            maxBitrateSlider.to = StreamingPreferences.unlockBitrate ? 1000000 : 150000
+                            StreamingPreferences.autoBitrateMaxKbps = Math.min(StreamingPreferences.autoBitrateMaxKbps, maxBitrateSlider.to)
+                            maxBitrateSlider.value = StreamingPreferences.autoBitrateMaxKbps
+                        }
                     }
 
                     ToolTip.delay: 1000

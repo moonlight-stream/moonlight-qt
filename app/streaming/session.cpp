@@ -686,6 +686,8 @@ bool Session::initialize()
     m_StreamConfig.fps = m_Preferences->fps;
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
     m_StreamConfig.autoBitrateEnabled = m_Preferences->autoAdjustBitrate ? 1 : 0;
+    m_StreamConfig.autoBitrateMinKbps = m_Preferences->autoBitrateMinKbps;
+    m_StreamConfig.autoBitrateMaxKbps = m_Preferences->autoBitrateMaxKbps;
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
@@ -1691,6 +1693,8 @@ bool Session::startConnectionAsync()
 
     // Set auto bitrate flag based on checkbox state
     m_StreamConfig.autoBitrateEnabled = m_Preferences->autoAdjustBitrate ? 1 : 0;
+    m_StreamConfig.autoBitrateMinKbps = m_Preferences->autoBitrateMinKbps;
+    m_StreamConfig.autoBitrateMaxKbps = m_Preferences->autoBitrateMaxKbps;
 
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks, &m_AudioCallbacks,
