@@ -38,8 +38,6 @@ signals:
 
 private:
     void querySdlVideoInfo();
-    void querySdlVideoInfoInternal();
-    void refreshDisplaysInternal();
 
     bool hasHardwareAcceleration;
     bool rendererAlwaysFullScreen;

@@ -95,36 +95,7 @@ int SystemProperties::getRefreshRate(int displayIndex)
     return monitorRefreshRates.value(displayIndex);
 }
 
-class QuerySdlVideoThread : public QThread
-{
-public:
-    QuerySdlVideoThread(SystemProperties* me) :
-        QThread(nullptr),
-        m_Me(me) {}
-
-    void run() override
-    {
-        m_Me->querySdlVideoInfoInternal();
-    }
-
-    SystemProperties* m_Me;
-};
-
 void SystemProperties::querySdlVideoInfo()
-{
-    if (WMUtils::isRunningX11() || WMUtils::isRunningWayland()) {
-        // Use a separate thread to temporarily initialize SDL
-        // video to avoid stomping on Qt's X11 and OGL state.
-        QuerySdlVideoThread thread(this);
-        thread.start();
-        thread.wait();
-    }
-    else {
-        querySdlVideoInfoInternal();
-    }
-}
-
-void SystemProperties::querySdlVideoInfoInternal()
 {
     hasHardwareAcceleration = false;
 
@@ -136,8 +107,7 @@ void SystemProperties::querySdlVideoInfoInternal()
     }
 
     // Update display related attributes (max FPS, native resolution, etc).
-    // We call the internal variant because we're already in a safe thread context.
-    refreshDisplaysInternal();
+    refreshDisplays();
 
     SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
                                               SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
@@ -163,36 +133,7 @@ void SystemProperties::querySdlVideoInfoInternal()
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
-class RefreshDisplaysThread : public QThread
-{
-public:
-    RefreshDisplaysThread(SystemProperties* me) :
-        QThread(nullptr),
-        m_Me(me) {}
-
-    void run() override
-    {
-        m_Me->refreshDisplaysInternal();
-    }
-
-    SystemProperties* m_Me;
-};
-
 void SystemProperties::refreshDisplays()
-{
-    if (WMUtils::isRunningX11() || WMUtils::isRunningWayland()) {
-        // Use a separate thread to temporarily initialize SDL
-        // video to avoid stomping on Qt's X11 and OGL state.
-        RefreshDisplaysThread thread(this);
-        thread.start();
-        thread.wait();
-    }
-    else {
-        refreshDisplaysInternal();
-    }
-}
-
-void SystemProperties::refreshDisplaysInternal()
 {
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
