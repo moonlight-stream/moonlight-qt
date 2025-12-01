@@ -497,6 +497,18 @@ int main(int argc, char *argv[])
     }
 #endif
 
+#if !defined(Q_OS_WIN32) || QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // Moonlight requires the non-threaded renderer because we depend
+    // on being able to control the render thread by blocking in the
+    // main thread (and pumping events from the main thread when needed).
+    // That doesn't work with the threaded renderer which causes all
+    // sorts of odd behavior depending on the platform.
+    //
+    // NB: Windows defaults to the "windows" non-threaded render loop on
+    // Qt 5 and the threaded render loop on Qt 6.
+    qputenv("QSG_RENDER_LOOP", "basic");
+#endif
+
 #if defined(Q_OS_DARWIN) && defined(QT_DEBUG)
     // Enable Metal valiation for debug builds
     qputenv("MTL_DEBUG_LAYER", "1");
