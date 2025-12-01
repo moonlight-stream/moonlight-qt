@@ -418,9 +418,9 @@ int main(int argc, char *argv[])
 #endif
 
     // We keep this at function scope to ensure it stays around while we're running,
-    // becaue the Qt QPA will need to read it. Since the temporary file is only
+    // because the Qt QPA will need to read it. Since the temporary file is only
     // created when open() is called, this doesn't do any harm for other platforms.
-    QTemporaryFile eglfsConfigFile("eglfs_override_XXXXXX.conf");
+    QTemporaryFile eglfsConfigFile;
 
     // Avoid using High DPI on EGLFS. It breaks font rendering.
     // https://bugreports.qt.io/browse/QTBUG-64377
@@ -463,6 +463,7 @@ int main(int argc, char *argv[])
                         qInfo() << "Overriding default Qt EGLFS card selection to" << cardOverride;
                         QTextStream(&eglfsConfigFile) << "{ \"device\": \"" << cardOverride << "\" }";
                         qputenv("QT_QPA_EGLFS_KMS_CONFIG", eglfsConfigFile.fileName().toUtf8());
+                        eglfsConfigFile.close();
                     }
                 }
             }
