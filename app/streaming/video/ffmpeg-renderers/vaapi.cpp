@@ -418,7 +418,11 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     // The Snap (core22) and Focal/Jammy Mesa drivers have a bug that causes
     // a large amount of video latency when using more than one reference frame
     // and severe rendering glitches on my Ryzen 3300U system.
-    m_HasRfiLatencyBug = vendorStr.contains("Gallium", Qt::CaseInsensitive) && qgetenv("IGNORE_RFI_LATENCY_BUG") != "1";
+    //
+    // This seems to no longer be a problem on Ubuntu 24.04 (even using core22),
+    // so let's disable this workaround by default in preparation for permanent
+    // removal if nobody encounters this again for a while.
+    m_HasRfiLatencyBug = vendorStr.contains("Gallium", Qt::CaseInsensitive) && qgetenv("HAS_RFI_LATENCY_BUG") == "1";
     if (m_HasRfiLatencyBug) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "VAAPI driver is affected by RFI latency bug");
