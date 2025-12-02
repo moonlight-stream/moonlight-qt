@@ -582,7 +582,7 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
     lockContext(this);
 
     // Clear the back buffer
-    const float clearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    const float clearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
     m_DeviceContext->ClearRenderTargetView(m_RenderTargetView.Get(), clearColor);
 
     // Bind the back buffer. This needs to be done each time,
