@@ -47,6 +47,40 @@ bool WMUtils::isRunningX11()
     return false;
 }
 
+bool WMUtils::isRunningX11NvidiaProprietaryDriver()
+{
+#ifdef HAS_X11
+    static SDL_atomic_t isRunningOnX11NvidiaDriver;
+
+    // If the value is not set yet, populate it now.
+    int val = SDL_AtomicGet(&isRunningOnX11NvidiaDriver);
+    if (!(val & VALUE_SET)) {
+        Display* display = XOpenDisplay(nullptr);
+        bool nvidiaDriver = false;
+
+        if (display != nullptr) {
+            int opcode, event, error;
+
+            // We use the presence of the NV-CONTROL extension to indicate
+            // that the Nvidia proprietary driver is in use on native X11
+            nvidiaDriver = XQueryExtension(display, "NV-CONTROL", &opcode, &event, &error);
+
+            XCloseDisplay(display);
+        }
+
+        // Populate the value to return and have for next time.
+        // This can race with another thread populating the same data,
+        // but that's no big deal.
+        val = VALUE_SET | (nvidiaDriver ? VALUE_TRUE : 0);
+        SDL_AtomicSet(&isRunningOnX11NvidiaDriver, val);
+    }
+
+    return !!(val & VALUE_TRUE);
+#endif
+
+    return false;
+}
+
 bool WMUtils::isRunningWayland()
 {
 #ifdef HAS_WAYLAND

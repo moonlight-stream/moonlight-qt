@@ -7,6 +7,7 @@
 
 namespace WMUtils {
     bool isRunningX11();
+    bool isRunningX11NvidiaProprietaryDriver();
     bool isRunningWayland();
     bool isRunningWindowManager();
     bool isRunningDesktopEnvironment();

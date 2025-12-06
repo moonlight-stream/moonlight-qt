@@ -476,12 +476,18 @@ int main(int argc, char *argv[])
 #endif
     }
 
-    // Some ARM and RISC-V embedded devices don't have working GLX which can cause
-    // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
-    // on all platforms for both SDL and Qt. This also avoids GLX-EGL interop issues
-    // when trying to use EGL on the main thread after Qt uses GLX.
-    SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
-    qputenv("QT_XCB_GL_INTEGRATION", "xcb_egl");
+    // Nvidia's proprietary driver has broken EGL support on X11, so don't use it.
+    // This will break the EGLRenderer, but that's fine on Nvidia because they
+    // support both VDPAU and Vulkan renderers instead.
+    // https://github.com/moonlight-stream/moonlight-qt/issues/1751
+    if (!WMUtils::isRunningX11NvidiaProprietaryDriver()) {
+        // Some ARM and RISC-V embedded devices don't have working GLX which can cause
+        // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
+        // on all platforms for both SDL and Qt. This also avoids GLX-EGL interop issues
+        // when trying to use EGL on the main thread after Qt uses GLX.
+        SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
+        qputenv("QT_XCB_GL_INTEGRATION", "xcb_egl");
+    }
 
 #ifdef Q_OS_MACOS
     // This avoids using the default keychain for SSL, which may cause
