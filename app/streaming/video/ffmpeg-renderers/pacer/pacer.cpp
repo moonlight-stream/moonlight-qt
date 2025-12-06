@@ -131,6 +131,7 @@ int Pacer::vsyncThread(void *context)
     return 0;
 }
 
+#include <QElapsedTimer>
 int Pacer::renderThread(void* context)
 {
     Pacer* me = reinterpret_cast<Pacer*>(context);
@@ -141,29 +142,39 @@ int Pacer::renderThread(void* context)
                     SDL_GetError());
     }
 
+    QElapsedTimer m_Timer;
     while (!me->m_Stopping) {
+        m_Timer.start();
         // Wait for the renderer to be ready for the next frame
         me->m_VsyncRenderer->waitToRender();
-
+        // qInfo() << "m_Timer (pacer): " << m_Timer.nsecsElapsed() << "ns (waitToRender)";
+        m_Timer.start();
         // Acquire the frame queue lock to protect the queue and
         // the not empty condition
         me->m_FrameQueueLock.lock();
-
+        // qInfo() << "m_Timer (pacer): " << m_Timer.nsecsElapsed() << "ns (lock)";
+        m_Timer.start();
         // Wait for a frame to be ready to render
         while (!me->m_Stopping && me->m_RenderQueue.isEmpty()) {
             me->m_RenderQueueNotEmpty.wait(&me->m_FrameQueueLock);
         }
-
+        // qInfo() << "m_Timer (pacer): " << m_Timer.nsecsElapsed() << "ns (m_RenderQueueNotEmpty)";
+        m_Timer.start();
         if (me->m_Stopping) {
             // Exit this thread
             me->m_FrameQueueLock.unlock();
             break;
         }
-
+        // qInfo() << "m_Timer (pacer): " << m_Timer.nsecsElapsed() << "ns (unlock)";
+        m_Timer.start();
         AVFrame* frame = me->m_RenderQueue.dequeue();
         me->m_FrameQueueLock.unlock();
-
+        // qInfo() << "m_Timer (pacer): " << m_Timer.nsecsElapsed() << "ns (dequeue)";
+        m_Timer.start();
         me->renderFrame(frame);
+        // qInfo() << "m_Timer (pacer): " << m_Timer.nsecsElapsed() << "ns (renderFrame)";
+        m_Timer.start();
+        // qInfo() << "m_Timer (pacer): --------------------------------";
     }
 
     // Notify the renderer that it is being destroyed soon

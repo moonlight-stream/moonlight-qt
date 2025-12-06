@@ -1,4 +1,4 @@
-QT += core quick network quickcontrols2 svg
+QT += core quick network quickcontrols2 svg concurrent
 CONFIG += c++11
 
 unix:!macx {
@@ -155,7 +155,7 @@ unix:if(!macx|disable-prebuilts) {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lswscale -lopus -ldxgi -ld3d11 -llibplacebo
+    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lswscale -lopus -ldxgi -ld3d11 -ld3d12 -ldxguid -llibplacebo -ld3dcompiler -ldxcompiler
     CONFIG += ffmpeg libplacebo
 }
 win32:!winrt {
@@ -167,7 +167,7 @@ macx {
         CONFIG += discord-rpc
     }
 
-    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework QuartzCore
+    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework MetalFx -framework QuartzCore
     CONFIG += ffmpeg
 }
 
@@ -210,6 +210,7 @@ SOURCES += \
     gui/sdlgamepadkeynavigation.cpp \
     streaming/video/overlaymanager.cpp \
     backend/systemproperties.cpp \
+    streaming/video/videoenhancement.cpp \
     wm.cpp
 
 HEADERS += \
@@ -247,7 +248,8 @@ HEADERS += \
     settings/mappingmanager.h \
     gui/sdlgamepadkeynavigation.h \
     streaming/video/overlaymanager.h \
-    backend/systemproperties.h
+    backend/systemproperties.h \
+    streaming/video/videoenhancement.h
 
 # Platform-specific renderers and decoders
 ffmpeg {
@@ -393,17 +395,95 @@ win32 {
     HEADERS += streaming/video/ffmpeg-renderers/dxutil.h
 }
 win32:!winrt {
-    message(DXVA2 and D3D11VA renderers selected)
+    message("DXVA2, D3D11renderers and D3D12renderers selected")
 
     SOURCES += \
         streaming/video/ffmpeg-renderers/dxva2.cpp \
         streaming/video/ffmpeg-renderers/d3d11va.cpp \
+        streaming/video/ffmpeg-renderers/d3d12va.cpp \
+        streaming/video/ffmpeg-renderers/d3d12va_shaders.cpp \
         streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.cpp
 
     HEADERS += \
         streaming/video/ffmpeg-renderers/dxva2.h \
         streaming/video/ffmpeg-renderers/d3d11va.h \
-        streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.h
+        streaming/video/ffmpeg-renderers/d3d12va.h \
+        streaming/video/ffmpeg-renderers/d3d12va_shaders.h \
+        streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.h \
+        
+    CONFIG(debug, debug|release) {
+        INCLUDEPATH += $$PWD/../third-party/stb_image
+    }
+}
+
+win32:!winrt {
+    message(NVIDIA VSR and TrueHDR technologies)
+    
+    # Required by NVIDIA RTX Video SDK; compilation fails without these linker flags
+    # as the SDK is compiled to work with Visual Studio initially
+    # Note: '/guard:ehcont,no' disables some EH checks
+    # For a standalone application without external modules, this poses virtually no risk
+    QMAKE_LFLAGS += /guard:ehcont,no
+    
+    LIBS += -ladvapi32
+    
+    OS_ARCHI = x64
+    contains(QT_ARCH, arm64) {
+        OS_ARCHI = arm64
+    }
+    
+    NGX_DLL_PATH_VSR = "$$PWD/../third-party/RTX_Video_SDK/bin/Windows/$${OS_ARCHI}/rel/nvngx_vsr.dll"
+    NGX_DLL_PATH_HDR = "$$PWD/../third-party/RTX_Video_SDK/bin/Windows/$${OS_ARCHI}/rel/nvngx_truehdr.dll"
+    
+    CONFIG(debug, debug|release) {
+        # Debug
+        copy_vsr.commands = $$quote(copy /Y $$shell_path($$NGX_DLL_PATH_VSR) $$shell_path("$$OUT_PWD/debug"))
+        copy_hdr.commands = $$quote(copy /Y $$shell_path($$NGX_DLL_PATH_HDR) $$shell_path("$$OUT_PWD/debug"))
+        LIBS += -L$$PWD/../third-party/RTX_Video_SDK/lib/Windows/$${OS_ARCHI} -lnvsdk_ngx_d_dbg
+    }
+    
+    CONFIG(release, debug|release) {
+        # Release
+        copy_vsr.commands = $$quote(copy /Y $$shell_path($$NGX_DLL_PATH_VSR) $$shell_path("$$OUT_PWD/release"))
+        copy_hdr.commands = $$quote(copy /Y $$shell_path($$NGX_DLL_PATH_HDR) $$shell_path("$$OUT_PWD/release"))
+        LIBS += -L$$PWD/../third-party/RTX_Video_SDK/lib/Windows/$${OS_ARCHI} -lnvsdk_ngx_d
+    }
+
+    QMAKE_POST_LINK += $$copy_vsr.commands & $$copy_hdr.commands
+    
+    INCLUDEPATH += $$PWD/../third-party/RTX_Video_SDK/include
+}
+
+win32:!winrt | unix:!macx {
+    message(AMD Upscaling technologies)
+
+    SOURCES += \
+        ../third-party/AMF/amf/public/common/AMFFactory.cpp \
+        ../third-party/AMF/amf/public/common/AMFSTL.cpp \
+        ../third-party/AMF/amf/public/common/Thread.cpp \
+        ../third-party/AMF/amf/public/common/TraceAdapter.cpp
+
+    INCLUDEPATH +=  \
+        $$PWD/../third-party/AMF/amf \
+        $$PWD/../third-party/FidelityFX-FSR/ffx-fsr
+}
+win32:!winrt {
+    SOURCES += ../third-party/AMF/amf/public/common/Windows/ThreadWindows.cpp
+}
+unix:!macx {
+    LIBS += -ldl
+    
+    SOURCES += ../third-party/AMF/amf/public/common/Linux/ThreadLinux.cpp
+}
+win32:!winrt | unix:!macx {
+    message(NVIDIA Image Scaling)
+
+    INCLUDEPATH += $$PWD/../third-party/NVIDIAImageScaling/NIS
+}
+win32:!winrt {
+    message(Direct3D 12 headers)
+
+    INCLUDEPATH += $$PWD/../third-party/DirectX-Headers/include
 }
 macx {
     message(VideoToolbox renderer selected)
