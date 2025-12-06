@@ -603,6 +603,15 @@ VAAPIRenderer::isDirectRenderingSupported()
                     "Using indirect rendering for YUV 4:4:4 video");
         return false;
     }
+    else if (m_OverlayFormat.fourcc == 0) {
+        // We ordinarily wouldn't consider lack of overlay support to be a
+        // dealbreaker for picking a renderer, however the only cases I've
+        // ever seen overlay format selection fail is on systems that will
+        // also silently fail in vaPutSurface() too.
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using indirect rendering due to lack of overlay support");
+        return false;
+    }
 
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
@@ -615,12 +624,6 @@ VAAPIRenderer::isDirectRenderingSupported()
             if (entrypoints[i] == VAEntrypointVideoProc) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using direct rendering with VAEntrypointVideoProc");
-
-                if (m_OverlayFormat.fourcc == 0) {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "Unable to find supported subpicture format. Overlays will be unavailable!");
-                }
-
                 return true;
             }
         }
