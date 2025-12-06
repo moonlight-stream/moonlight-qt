@@ -2,6 +2,7 @@
 #include "eglvid.h"
 
 #include "path.h"
+#include "utils.h"
 #include "streaming/session.h"
 #include "streaming/streamutils.h"
 
@@ -436,8 +437,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 
     // If we're using X11 GLX (both in SDL and Qt), don't use this renderer.
     // Switching between EGL and GLX can cause interoperability issues.
-    if (strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0 &&
-            !SDL_GetHintBoolean(SDL_HINT_VIDEO_X11_FORCE_EGL, SDL_FALSE)) {
+    if (!WMUtils::isEGLSafe()) {
         EGL_LOG(Warn, "Disabled due to use of GLX");
         return false;
     }

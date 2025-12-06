@@ -18,6 +18,10 @@
 #include <xf86drmMode.h>
 #endif
 
+#ifdef HAVE_EGL
+#include <EGL/egl.h>
+#endif
+
 #define VALUE_SET 0x01
 #define VALUE_TRUE 0x02
 
@@ -42,43 +46,39 @@ bool WMUtils::isRunningX11()
     }
 
     return !!(val & VALUE_TRUE);
-#endif
-
+#else
     return false;
+#endif
 }
 
-bool WMUtils::isRunningX11NvidiaProprietaryDriver()
+bool WMUtils::isRunningNvidiaProprietaryDriver()
 {
-#ifdef HAS_X11
-    static SDL_atomic_t isRunningOnX11NvidiaDriver;
+#ifdef HAVE_EGL
+    static SDL_atomic_t isRunningOnNvidiaDriver;
 
     // If the value is not set yet, populate it now.
-    int val = SDL_AtomicGet(&isRunningOnX11NvidiaDriver);
+    int val = SDL_AtomicGet(&isRunningOnNvidiaDriver);
     if (!(val & VALUE_SET)) {
-        Display* display = XOpenDisplay(nullptr);
         bool nvidiaDriver = false;
 
-        if (display != nullptr) {
-            int opcode, event, error;
-
-            // We use the presence of the NV-CONTROL extension to indicate
-            // that the Nvidia proprietary driver is in use on native X11
-            nvidiaDriver = XQueryExtension(display, "NV-CONTROL", &opcode, &event, &error);
-
-            XCloseDisplay(display);
+        EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        if (display != EGL_NO_DISPLAY && eglInitialize(display, nullptr, nullptr)) {
+            const char* vendorString = eglQueryString(display, EGL_VENDOR);
+            nvidiaDriver = vendorString && strstr(vendorString, "NVIDIA") != NULL;
+            eglTerminate(display);
         }
 
         // Populate the value to return and have for next time.
         // This can race with another thread populating the same data,
         // but that's no big deal.
         val = VALUE_SET | (nvidiaDriver ? VALUE_TRUE : 0);
-        SDL_AtomicSet(&isRunningOnX11NvidiaDriver, val);
+        SDL_AtomicSet(&isRunningOnNvidiaDriver, val);
     }
 
     return !!(val & VALUE_TRUE);
-#endif
-
+#else
     return false;
+#endif
 }
 
 bool WMUtils::isRunningWayland()
@@ -102,9 +102,9 @@ bool WMUtils::isRunningWayland()
     }
 
     return !!(val & VALUE_TRUE);
-#endif
-
+#else
     return false;
+#endif
 }
 
 bool WMUtils::isRunningWindowManager()
@@ -175,4 +175,15 @@ QString WMUtils::getDrmCardOverride()
 #endif
 
     return QString();
+}
+
+bool WMUtils::isEGLSafe()
+{
+    // We can use EGL if:
+    // a) We're not using X11/Wayland (EGLFS requires it)
+    // b) We're using Wayland (even XWayland is fine)
+    // c) We're using X11 but not the Nvidia proprietary driver
+    //
+    // https://github.com/moonlight-stream/moonlight-qt/issues/1751
+    return !WMUtils::isRunningWindowManager() || WMUtils::isRunningWayland() || !WMUtils::isRunningNvidiaProprietaryDriver();
 }
