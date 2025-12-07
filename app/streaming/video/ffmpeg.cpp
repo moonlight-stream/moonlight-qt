@@ -339,19 +339,20 @@ bool FFmpegVideoDecoder::initializeRendererInternal(IFFmpegRenderer* renderer, P
 
 bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool useAlternateFrontend)
 {
-    if (useAlternateFrontend) {
+    // For cases where we're already using Vulkan Video decoding, always use the Vulkan renderer too.
+    // The alternate frontend logic is primarily for cases where a different renderer like EGL or DRM
+    // may provide additional performance or HDR capabilities. Neither of these are true for Vulkan.
+    if (useAlternateFrontend && m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
         if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
 #if defined(HAVE_LIBPLACEBO_VULKAN) && !defined(VULKAN_IS_SLOW)
             // The Vulkan renderer can also handle HDR with a supported compositor. We prefer
             // rendering HDR with Vulkan if possible since it's more fully featured than DRM.
-            if (m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
-                m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
-                if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
-                    return true;
-                }
-                delete m_FrontendRenderer;
-                m_FrontendRenderer = nullptr;
+            m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
+            if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
+                return true;
             }
+            delete m_FrontendRenderer;
+            m_FrontendRenderer = nullptr;
 #endif
 
 #ifdef HAVE_DRM
@@ -370,28 +371,24 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
 #endif
 
 #if defined(HAVE_LIBPLACEBO_VULKAN) && defined(VULKAN_IS_SLOW)
-            if (m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
-                m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
-                if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
-                    return true;
-                }
-                delete m_FrontendRenderer;
-                m_FrontendRenderer = nullptr;
+            m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
+            if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
+                return true;
             }
+            delete m_FrontendRenderer;
+            m_FrontendRenderer = nullptr;
 #endif
         }
         else
         {
 #ifdef HAVE_LIBPLACEBO_VULKAN
             if (qgetenv("PREFER_VULKAN") == "1") {
-                if (m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
-                    m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
-                    if (initializeRendererInternal(m_FrontendRenderer, params)) {
-                        return true;
-                    }
-                    delete m_FrontendRenderer;
-                    m_FrontendRenderer = nullptr;
+                m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
+                if (initializeRendererInternal(m_FrontendRenderer, params)) {
+                    return true;
                 }
+                delete m_FrontendRenderer;
+                m_FrontendRenderer = nullptr;
             }
 #endif
         }
