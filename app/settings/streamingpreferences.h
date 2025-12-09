@@ -144,7 +144,10 @@ public:
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
-    Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
+    Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged)
+    Q_PROPERTY(int windowWidth MEMBER windowWidth NOTIFY windowWidthChanged)
+    Q_PROPERTY(int windowHeight MEMBER windowHeight NOTIFY windowHeightChanged)
+    Q_PROPERTY(bool enableCustomWindowSize MEMBER enableCustomWindowSize NOTIFY enableCustomWindowSizeChanged);
 
     Q_INVOKABLE bool retranslate();
 
@@ -187,6 +190,9 @@ public:
     UIDisplayMode uiDisplayMode;
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
+    int windowWidth;
+    int windowHeight;
+    bool enableCustomWindowSize;
 
 signals:
     void displayModeChanged();
@@ -224,6 +230,9 @@ signals:
     void captureSysKeysModeChanged();
     void keepAwakeChanged();
     void languageChanged();
+    void windowWidthChanged();
+    void windowHeightChanged();
+    void enableCustomWindowSizeChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);
