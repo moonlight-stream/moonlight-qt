@@ -10,7 +10,7 @@
 		<p>Moonlight can stream games and other applications from another PC with Sunshine or GeForce Experience software installed.</p>
 		<p>Features include:</p>
 		<ul>
-			<li>Hardware accelerated video decoding with VAAPI, VDPAU, and NVDEC support</li>
+			<li>Hardware accelerated video decoding with VAAPI, VDPAU, and Vulkan Video support</li>
 			<li>H.264, HEVC, and AV1 codec support</li>
 			<li>7.1 surround sound audio support</li>
 			<li>10-point multitouch support</li>
