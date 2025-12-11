@@ -5,7 +5,7 @@ $UpgradeCodes = @{ "X64" = "36F68A90-239C-34DF-B58C-64B30153CE35";
                    "ARM64" = "DC9BAE42-810B-423A-9E25-E4073F1C7B00"; }
 
 function Get-RedirectTarget([string]$Url) {
-    return (Invoke-WebRequest -Method Get -Uri $Url -MaximumRedirection 0 -ErrorAction SilentlyContinue).Headers.Location
+    return (Invoke-WebRequest -Method Get -Uri $Url -MaximumRedirection 0 -UseBasicParsing -ErrorAction SilentlyContinue).Headers.Location
 }
 
 function Print-WixForArch([string]$Arch) {
