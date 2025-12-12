@@ -1,0 +1,5 @@
+[wrap-git]
+url = https://github.com/aizvorski/h264bitstream.git
+revision = HEAD
+depth = 1
+patch_directory = h264bitstream
