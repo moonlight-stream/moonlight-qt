@@ -442,10 +442,19 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
             return false;
         }
 
-        // Prefer CUDA for XWayland and VDPAU for regular X11.
-        if (m_WindowSystem == SDL_SYSWM_X11 && vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
+        // Prefer Vulkan Video for Nvidia GPUs (and VDPAU for regular X11).
+        //
+        // We avoid the Nvidia VAAPI driver because:
+        // - It can hang in vaSyncSurface() during buffer import (older versions in particular)
+        // - The 16-bpc planar types cannot be imported into Vulkan due to incompatible DRM modifiers
+        // - EGL is broken in their driver, so we're stuck using the slow copy path in SDL renderer
+        if (
+#if !defined(HAVE_LIBPLACEBO_VULKAN) && !defined(HAVE_CUDA)
+            m_WindowSystem == SDL_SYSWM_X11 &&
+#endif
+            vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Deprioritizing VAAPI for NVIDIA driver on X11/XWayland. Set FORCE_VAAPI=1 to override.");
+                        "Deprioritizing VAAPI for NVIDIA driver. Set FORCE_VAAPI=1 to override.");
             return false;
         }
     }
