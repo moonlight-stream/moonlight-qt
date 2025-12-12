@@ -132,6 +132,7 @@ public:
         Vulkan,
         CUDA,
         D3D11VA,
+        D3D12VA,
         DRM,
         DXVA2,
         EGL,
@@ -307,6 +308,8 @@ public:
             return "CUDA";
         case RendererType::D3D11VA:
             return "D3D11VA";
+        case RendererType::D3D12VA:
+            return "D3D12VA";
         case RendererType::DRM:
             return "DRM";
         case RendererType::DXVA2:

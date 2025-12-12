@@ -8,6 +8,7 @@
 #include "decoder.h"
 #include "ffmpeg-renderers/renderer.h"
 #include "ffmpeg-renderers/pacer/pacer.h"
+#include "streaming/video/videoenhancement.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -31,6 +32,8 @@ public:
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info) override;
 
     virtual IFFmpegRenderer* getBackendRenderer();
+
+    const VIDEO_STATS& getGlobalVideoStats() const;
 
 private:
     bool completeInitialization(const AVCodec* decoder,
@@ -75,7 +78,7 @@ private:
                                IFFmpegRenderer::InitFailureReason* failureReason,
                                std::function<IFFmpegRenderer*()> createRendererFunc);
 
-    static IFFmpegRenderer* createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass);
+    static IFFmpegRenderer* createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass, PDECODER_PARAMETERS params);
 
     bool initializeRendererInternal(IFFmpegRenderer* renderer, PDECODER_PARAMETERS params);
 
@@ -116,6 +119,7 @@ private:
     bool m_TestOnly;
     SDL_Thread* m_DecoderThread;
     SDL_atomic_t m_DecoderThreadShouldQuit;
+    VideoEnhancement* m_VideoEnhancement;
 
     // Data buffers in the queued DU are not valid
     QQueue<DECODE_UNIT> m_FrameInfoQueue;

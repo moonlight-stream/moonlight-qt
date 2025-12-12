@@ -14,3 +14,15 @@
 	path = libs
 	url = https://github.com/cgutman/moonlight-qt-prebuilts.git
 	shallow = true
+[submodule "third-party/AMF"]
+	path = third-party/AMF
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/AMF.git
+[submodule "third-party/FidelityFX-FSR"]
+	path = third-party/FidelityFX-FSR
+	url = https://github.com/GPUOpen-Effects/FidelityFX-FSR.git
+[submodule "third-party/NVIDIAImageScaling"]
+	path = third-party/NVIDIAImageScaling
+	url = https://github.com/NVIDIAGameWorks/NVIDIAImageScaling.git
+[submodule "third-party/DirectX-Headers"]
+	path = third-party/DirectX-Headers
+	url = https://github.com/microsoft/DirectX-Headers.git

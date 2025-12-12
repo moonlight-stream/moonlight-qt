@@ -76,9 +76,6 @@
         <file>languages/qml_eo.qm</file>
         <file>languages/qml_ta.ts</file>
         <file>languages/qml_ta.qm</file>
-        <!-- Don't include pt_BR until it is more complete -->
-        <!--file>languages/qml_pt_BR.qm</file-->
-        <!--file>languages/qml_pt_BR.ts</file-->
     </qresource>
     <qresource prefix="/data">
         <file alias="gamecontrollerdb.txt">SDL_GameControllerDB/gamecontrollerdb.txt</file>
@@ -95,5 +92,16 @@
         <file alias="d3d11_ayuv_pixel.fxc">shaders/d3d11_ayuv_pixel.fxc</file>
         <file alias="d3d11_y410_pixel.fxc">shaders/d3d11_y410_pixel.fxc</file>
         <file alias="vt_renderer.metal">shaders/vt_renderer.metal</file>
+    </qresource>
+    <qresource prefix="/enhancer">
+        <file alias="copy_cs.hlsl">shaders/enhancer/copy_cs.hlsl</file>
+        <file alias="overlay_ps.hlsl">shaders/enhancer/overlay_ps.hlsl</file>
+        <file alias="overlay_vs.hlsl">shaders/enhancer/overlay_vs.hlsl</file>
+        <file alias="yuv_to_rgb_ps.hlsl">shaders/enhancer/yuv_to_rgb_ps.hlsl</file>
+        <file alias="NIS_Main.hlsl">shaders/enhancer/NVIDIA/NIS_Main.hlsl</file>
+        <file alias="NIS_Scaler.h">shaders/enhancer/NVIDIA/NIS_Scaler.h</file>
+        <file alias="FSR_Pass.hlsl">shaders/enhancer/AMD/FSR_Pass.hlsl</file>
+        <file alias="ffx_a.h">shaders/enhancer/AMD/ffx_a.h</file>
+        <file alias="ffx_fsr1.h">shaders/enhancer/AMD/ffx_fsr1.h</file>
     </qresource>
 </RCC>
