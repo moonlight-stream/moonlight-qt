@@ -20,6 +20,10 @@
 
 #ifdef HAVE_EGL
 #include <EGL/egl.h>
+
+#ifndef EGL_PLATFORM_X11_KHR
+#define EGL_PLATFORM_X11_KHR 0x31D5
+#endif
 #endif
 
 #define VALUE_SET 0x01
@@ -51,7 +55,7 @@ bool WMUtils::isRunningX11()
 #endif
 }
 
-bool WMUtils::isRunningNvidiaProprietaryDriver()
+bool WMUtils::isRunningNvidiaProprietaryDriverX11()
 {
 #ifdef HAVE_EGL
     static SDL_atomic_t isRunningOnNvidiaDriver;
@@ -61,7 +65,10 @@ bool WMUtils::isRunningNvidiaProprietaryDriver()
     if (!(val & VALUE_SET)) {
         bool nvidiaDriver = false;
 
-        EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        // Open the default X11 display. This is critical for accurate detection of the
+        // Nvidia driver under XWayland because eglGetDisplay(EGL_DEFAULT_DISPLAY) will
+        // return the Wayland display but Qt will use the X11 display.
+        EGLDisplay display = eglGetPlatformDisplay(EGL_PLATFORM_X11_KHR, EGL_DEFAULT_DISPLAY, nullptr);
         if (display != EGL_NO_DISPLAY && eglInitialize(display, nullptr, nullptr)) {
             const char* vendorString = eglQueryString(display, EGL_VENDOR);
             nvidiaDriver = vendorString && strstr(vendorString, "NVIDIA") != NULL;
@@ -177,13 +184,9 @@ QString WMUtils::getDrmCardOverride()
     return QString();
 }
 
-bool WMUtils::isEGLSafe()
+bool WMUtils::isX11EGLSafe()
 {
-    // We can use EGL if:
-    // a) We're not using X11/Wayland (EGLFS requires it)
-    // b) We're using Wayland (even XWayland is fine)
-    // c) We're using X11 but not the Nvidia proprietary driver
-    //
+    // Nvidia's driver has broken EGL support on X11 and XWayland
     // https://github.com/moonlight-stream/moonlight-qt/issues/1751
-    return !WMUtils::isRunningWindowManager() || WMUtils::isRunningWayland() || !WMUtils::isRunningNvidiaProprietaryDriver();
+    return !WMUtils::isRunningNvidiaProprietaryDriverX11();
 }

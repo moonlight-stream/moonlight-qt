@@ -14,15 +14,6 @@
 #include <SDL_syswm.h>
 
 // These are extensions, so some platform headers may not provide them
-#ifndef EGL_PLATFORM_WAYLAND_KHR
-#define EGL_PLATFORM_WAYLAND_KHR 0x31D8
-#endif
-#ifndef EGL_PLATFORM_X11_KHR
-#define EGL_PLATFORM_X11_KHR 0x31D5
-#endif
-#ifndef EGL_PLATFORM_GBM_KHR
-#define EGL_PLATFORM_GBM_KHR 0x31D7
-#endif
 #ifndef GL_UNPACK_ROW_LENGTH_EXT
 #define GL_UNPACK_ROW_LENGTH_EXT 0x0CF2
 #endif
@@ -437,7 +428,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 
     // If we're using X11 GLX (both in SDL and Qt), don't use this renderer.
     // Switching between EGL and GLX can cause interoperability issues.
-    if (!WMUtils::isEGLSafe()) {
+    if (strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0 && !WMUtils::isX11EGLSafe()) {
         EGL_LOG(Warn, "Disabled due to use of GLX");
         return false;
     }

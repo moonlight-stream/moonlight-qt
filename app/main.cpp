@@ -476,7 +476,7 @@ int main(int argc, char *argv[])
 #endif
     }
 
-    if (WMUtils::isEGLSafe()) {
+    if (WMUtils::isX11EGLSafe()) {
         // Some ARM and RISC-V embedded devices don't have working GLX which can cause
         // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
         // on all platforms for both SDL and Qt. This also avoids GLX-EGL interop issues
