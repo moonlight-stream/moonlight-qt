@@ -476,14 +476,22 @@ int main(int argc, char *argv[])
 #endif
     }
 
-    if (WMUtils::isX11EGLSafe()) {
-        // Some ARM and RISC-V embedded devices don't have working GLX which can cause
-        // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
-        // on all platforms for both SDL and Qt. This also avoids GLX-EGL interop issues
-        // when trying to use EGL on the main thread after Qt uses GLX.
-        SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
-        qputenv("QT_XCB_GL_INTEGRATION", "xcb_egl");
+    if (WMUtils::isRunningNvidiaProprietaryDriverX11() || qEnvironmentVariableIntValue("FORCE_QT_GLES")) {
+        // The Nvidia proprietary driver causes Qt to render a black window when using
+        // the default Desktop GL profile with EGL. AS a workaround, we default to
+        // OpenGL ES when running on Nvidia on X11.
+        // https://qt-project.atlassian.net/browse/QTBUG-106065
+        QSurfaceFormat fmt;
+        fmt.setRenderableType(QSurfaceFormat::OpenGLES);
+        QSurfaceFormat::setDefaultFormat(fmt);
     }
+
+    // Some ARM and RISC-V embedded devices don't have working GLX which can cause
+    // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
+    // on all platforms for both SDL and Qt. This also avoids GLX-EGL interop issues
+    // when trying to use EGL on the main thread after Qt uses GLX.
+    SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
+    qputenv("QT_XCB_GL_INTEGRATION", "xcb_egl");
 
 #ifdef Q_OS_MACOS
     // This avoids using the default keychain for SSL, which may cause

@@ -183,10 +183,3 @@ QString WMUtils::getDrmCardOverride()
 
     return QString();
 }
-
-bool WMUtils::isX11EGLSafe()
-{
-    // Nvidia's driver has broken EGL support on X11 and XWayland
-    // https://github.com/moonlight-stream/moonlight-qt/issues/1751
-    return !WMUtils::isRunningNvidiaProprietaryDriverX11();
-}

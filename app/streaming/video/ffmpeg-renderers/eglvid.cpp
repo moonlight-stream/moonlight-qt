@@ -426,13 +426,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // If we're using X11 GLX (both in SDL and Qt), don't use this renderer.
-    // Switching between EGL and GLX can cause interoperability issues.
-    if (strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0 && !WMUtils::isX11EGLSafe()) {
-        EGL_LOG(Warn, "Disabled due to use of GLX");
-        return false;
-    }
-
     // This hint will ensure we use EGL to retrieve our GL context,
     // even on X11 where that is not the default. EGL is required
     // to avoid a crash in Mesa.

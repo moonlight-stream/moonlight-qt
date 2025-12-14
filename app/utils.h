@@ -11,6 +11,5 @@ namespace WMUtils {
     bool isRunningWayland();
     bool isRunningWindowManager();
     bool isRunningDesktopEnvironment();
-    bool isX11EGLSafe();
     QString getDrmCardOverride();
 }
