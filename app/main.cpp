@@ -345,25 +345,22 @@ int SDLCALL signalHandlerThread(void* data)
         Session* session;
         switch (sig) {
         case SIGINT:
-            // If we get a SIGINT, we'll interrupt the current ongoing activity.
-            // If we're streaming, that will take you back to the Qt window.
+        case SIGTERM:
+            // Check if we have an active streaming session
             session = Session::get();
             if (session != nullptr) {
+                if (sig == SIGTERM) {
+                    // If this is a SIGTERM, set the flag to quit
+                    session->setShouldExitAfterQuit();
+                }
+
+                // Stop the streaming session
                 session->interrupt();
             }
             else {
                 // If we're not streaming, we'll close the whole app
                 QCoreApplication::instance()->quit();
             }
-            break;
-
-        case SIGTERM:
-            // If we get a SIGTERM, we'll terminate everything.
-            session = Session::get();
-            if (session != nullptr) {
-                session->interrupt();
-            }
-            QCoreApplication::instance()->quit();
             break;
 
         default:
