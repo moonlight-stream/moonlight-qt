@@ -5,6 +5,7 @@
 
 #include "drm.h"
 #include "string.h"
+#include <cstdlib>
 
 extern "C" {
     #include <libavutil/hwcontext_drm.h>
@@ -76,6 +77,9 @@ struct dma_buf_sync {
 #endif
 #ifndef DRM_MODE_COLORIMETRY_BT2020_RGB
 #define DRM_MODE_COLORIMETRY_BT2020_RGB  9
+#endif
+#ifndef DRM_MODE_COLORIMETRY_BT2020_YCC
+#define DRM_MODE_COLORIMETRY_BT2020_YCC  10
 #endif
 
 #include <unistd.h>
@@ -687,29 +691,16 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                         m_ColorspaceProp = prop;
                     }
                     else if (!strcmp(prop->name, "max bpc") && (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT)) {
-                        if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 16) == 0) {
+                        if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 10) == 0) {
                             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Enabled 48-bit HDMI Deep Color");
-                        }
-                        else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 12) == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Enabled 36-bit HDMI Deep Color");
-                        }
-                        else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 10) == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Enabled 30-bit HDMI Deep Color");
+                                        "Enabled 30-bit color (10 bpc)");
                         }
                         else {
                             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                         "drmModeObjectSetProperty(%s) failed: %d",
-                                         prop->name,
-                                         errno);
-                            // Non-fatal
+                                        "drmModeObjectSetProperty(%s) failed: %d",
+                                        prop->name,
+                                        errno);
                         }
-
-                        drmModeFreeProperty(prop);
-                    }
-                    else {
                         drmModeFreeProperty(prop);
                     }
                 }
@@ -820,10 +811,17 @@ int DrmRenderer::getRendererAttributes()
 
 void DrmRenderer::setHdrMode(bool enabled)
 {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "DrmRenderer::setHdrMode(%s) called",
+                enabled ? "enabled" : "disabled");
+
     if (m_ColorspaceProp != nullptr) {
+        // Try RGB colorspace first (matches Windows D3D11 behavior)
+        // Some displays handle RGB→YCbCr conversion better than receiving YCbCr directly
+        int colorimetry = enabled ? DRM_MODE_COLORIMETRY_BT2020_RGB : DRM_MODE_COLORIMETRY_DEFAULT;
         int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
                                            m_ColorspaceProp->prop_id,
-                                           enabled ? DRM_MODE_COLORIMETRY_BT2020_RGB : DRM_MODE_COLORIMETRY_DEFAULT);
+                                           colorimetry);
         if (err == 0) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Set HDMI Colorspace: %s",
@@ -844,35 +842,132 @@ void DrmRenderer::setHdrMode(bool enabled)
             m_HdrOutputMetadataBlobId = 0;
         }
 
-        if (enabled) {
-            DrmDefs::hdr_output_metadata outputMetadata;
-            SS_HDR_METADATA sunshineHdrMetadata;
+                if (enabled) {
+                    DrmDefs::hdr_output_metadata outputMetadata;
+                    SS_HDR_METADATA sunshineHdrMetadata;
 
-            // Sunshine will have HDR metadata but GFE will not
-            if (!LiGetHdrMetadata(&sunshineHdrMetadata)) {
-                memset(&sunshineHdrMetadata, 0, sizeof(sunshineHdrMetadata));
-            }
+                    // Sunshine will have HDR metadata but GFE will not
+                    bool hasMetadata = LiGetHdrMetadata(&sunshineHdrMetadata);
+                    if (!hasMetadata) {
+                        memset(&sunshineHdrMetadata, 0, sizeof(sunshineHdrMetadata));
+                    }
 
-            outputMetadata.metadata_type = 0; // HDMI_STATIC_METADATA_TYPE1
-            outputMetadata.hdmi_metadata_type1.eotf = 2; // SMPTE ST 2084
-            outputMetadata.hdmi_metadata_type1.metadata_type = 0; // Static Metadata Type 1
-            for (int i = 0; i < 3; i++) {
-                outputMetadata.hdmi_metadata_type1.display_primaries[i].x = sunshineHdrMetadata.displayPrimaries[i].x;
-                outputMetadata.hdmi_metadata_type1.display_primaries[i].y = sunshineHdrMetadata.displayPrimaries[i].y;
-            }
-            outputMetadata.hdmi_metadata_type1.white_point.x = sunshineHdrMetadata.whitePoint.x;
-            outputMetadata.hdmi_metadata_type1.white_point.y = sunshineHdrMetadata.whitePoint.y;
-            outputMetadata.hdmi_metadata_type1.max_display_mastering_luminance = sunshineHdrMetadata.maxDisplayLuminance;
-            outputMetadata.hdmi_metadata_type1.min_display_mastering_luminance = sunshineHdrMetadata.minDisplayLuminance;
-            outputMetadata.hdmi_metadata_type1.max_cll = sunshineHdrMetadata.maxContentLightLevel;
-            outputMetadata.hdmi_metadata_type1.max_fall = sunshineHdrMetadata.maxFrameAverageLightLevel;
+                    outputMetadata.metadata_type = 0; // HDMI_STATIC_METADATA_TYPE1
+                    outputMetadata.hdmi_metadata_type1.eotf = 2; // SMPTE ST 2084
+                    outputMetadata.hdmi_metadata_type1.metadata_type = 0; // Static Metadata Type 1
 
-            int err = drmModeCreatePropertyBlob(m_DrmFd, &outputMetadata, sizeof(outputMetadata), &m_HdrOutputMetadataBlobId);
-            if (err < 0) {
-                m_HdrOutputMetadataBlobId = 0;
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "drmModeCreatePropertyBlob() failed: %d",
-                             errno);
+                    // Use Sunshine's primaries if available, otherwise BT.2020 defaults
+                    if (hasMetadata && sunshineHdrMetadata.displayPrimaries[0].x != 0) {
+                        for (int i = 0; i < 3; i++) {
+                            outputMetadata.hdmi_metadata_type1.display_primaries[i].x = sunshineHdrMetadata.displayPrimaries[i].x;
+                            outputMetadata.hdmi_metadata_type1.display_primaries[i].y = sunshineHdrMetadata.displayPrimaries[i].y;
+                        }
+                        outputMetadata.hdmi_metadata_type1.white_point.x = sunshineHdrMetadata.whitePoint.x;
+                        outputMetadata.hdmi_metadata_type1.white_point.y = sunshineHdrMetadata.whitePoint.y;
+                    } else {
+                        // BT.2020 standard primaries
+                        outputMetadata.hdmi_metadata_type1.display_primaries[0].x = 0x8A48; // Red 0.7080
+                        outputMetadata.hdmi_metadata_type1.display_primaries[0].y = 0x3907; // Red 0.2920
+                        outputMetadata.hdmi_metadata_type1.display_primaries[1].x = 0x2134; // Green 0.1700
+                        outputMetadata.hdmi_metadata_type1.display_primaries[1].y = 0x9BAA; // Green 0.7970
+                        outputMetadata.hdmi_metadata_type1.display_primaries[2].x = 0x1996; // Blue 0.1310
+                        outputMetadata.hdmi_metadata_type1.display_primaries[2].y = 0x08FC; // Blue 0.0460
+                        outputMetadata.hdmi_metadata_type1.white_point.x = 0x3D12; // White 0.3127 (D65)
+                        outputMetadata.hdmi_metadata_type1.white_point.y = 0x4042; // White 0.3290 (D65)
+                    }
+
+                    // Log raw Sunshine values for debugging
+                    if (hasMetadata) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Raw Sunshine HDR Metadata: maxDisplayLuminance=%u, minDisplayLuminance=%u, maxContentLightLevel=%u, maxFrameAverageLightLevel=%u",
+                                    sunshineHdrMetadata.maxDisplayLuminance,
+                                    sunshineHdrMetadata.minDisplayLuminance,
+                                    sunshineHdrMetadata.maxContentLightLevel,
+                                    sunshineHdrMetadata.maxFrameAverageLightLevel);
+                    }
+
+                    // Use content-based metadata instead of display-based metadata
+                    //
+                    // WHY: Passing through source display values (from PC monitor or dummy plug)
+                    // causes issues because source display ≠ client display capabilities.
+                    // The source might report 351 nits (real monitor) or 9700 nits (calibrated
+                    // dummy plug), but this tells the client TV to tone-map incorrectly.
+                    //
+                    // SOLUTION: Use moderate content-based values that describe the video signal
+                    // itself, not any particular display. This lets each display's tone mapper
+                    // work with its own capabilities. 400 nits is a good balance that:
+                    // - Activates proper 10-bit BT.2020 color handling
+                    // - Avoids triggering aggressive TV tone mapping
+                    // - Works well across a wide range of displays
+                    //
+                    // This matches the approach used by Gamescope (Valve) and other modern
+                    // HDR implementations that prioritize display EDID over source metadata.
+                    //
+                    // Environment variable overrides (for fine-tuning):
+                    // - MOONLIGHT_HDR_MAX_NITS: max_display_mastering_luminance (default: 400)
+                    // - MOONLIGHT_HDR_MIN_NITS: min_display_mastering_luminance (default: 0)
+                    // - MOONLIGHT_HDR_MAX_CLL: max content light level (default: same as max_nits)
+                    // - MOONLIGHT_HDR_MAX_FALL: max frame average light level (default: max_nits/2)
+
+                    // Read environment variables for user tuning
+                    const char* envMaxNits = getenv("MOONLIGHT_HDR_MAX_NITS");
+                    const char* envMinNits = getenv("MOONLIGHT_HDR_MIN_NITS");
+                    const char* envMaxCll = getenv("MOONLIGHT_HDR_MAX_CLL");
+                    const char* envMaxFall = getenv("MOONLIGHT_HDR_MAX_FALL");
+
+                    uint16_t maxLuminance = envMaxNits ? atoi(envMaxNits) : 400;
+                    uint16_t minLuminance = envMinNits ? atoi(envMinNits) : 0;
+
+                    if (hasMetadata && sunshineHdrMetadata.maxDisplayLuminance > 0) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Ignoring Sunshine display metadata (%u nits) in favor of content-based value (%u nits)%s",
+                                    sunshineHdrMetadata.maxDisplayLuminance,
+                                    maxLuminance,
+                                    envMaxNits ? " [from MOONLIGHT_HDR_MAX_NITS]" : "");
+                    } else if (envMaxNits) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Using MOONLIGHT_HDR_MAX_NITS=%u nits", maxLuminance);
+                    }
+
+                    outputMetadata.hdmi_metadata_type1.max_display_mastering_luminance = maxLuminance;
+                    outputMetadata.hdmi_metadata_type1.min_display_mastering_luminance = minLuminance;
+
+                    // Critical: max_cll and max_fall must be non-zero for HDR to activate!
+                    // Allow environment variable override, otherwise use sensible defaults.
+                    uint16_t maxCll, maxFall;
+
+                    if (envMaxCll) {
+                        maxCll = atoi(envMaxCll);
+                    } else if (hasMetadata && sunshineHdrMetadata.maxContentLightLevel > 0) {
+                        maxCll = sunshineHdrMetadata.maxContentLightLevel;
+                    } else {
+                        maxCll = maxLuminance; // Default: same as max mastering luminance
+                    }
+
+                    if (envMaxFall) {
+                        maxFall = atoi(envMaxFall);
+                    } else if (hasMetadata && sunshineHdrMetadata.maxFrameAverageLightLevel > 0) {
+                        maxFall = sunshineHdrMetadata.maxFrameAverageLightLevel;
+                    } else {
+                        maxFall = maxLuminance / 2; // Default: half of max mastering luminance
+                    }
+
+                    outputMetadata.hdmi_metadata_type1.max_cll = maxCll;
+                    outputMetadata.hdmi_metadata_type1.max_fall = maxFall;
+
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Final HDR Metadata: hasMetadata=%d, max_mastering=%u, max_cll=%u, max_fall=%u",
+                                hasMetadata,
+                                outputMetadata.hdmi_metadata_type1.max_display_mastering_luminance,
+                                outputMetadata.hdmi_metadata_type1.max_cll,
+                                outputMetadata.hdmi_metadata_type1.max_fall);
+
+                    int err = drmModeCreatePropertyBlob(m_DrmFd, &outputMetadata, sizeof(outputMetadata), &m_HdrOutputMetadataBlobId);
+                    if (err < 0) {
+                        m_HdrOutputMetadataBlobId = 0;
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                    "drmModeCreatePropertyBlob() failed: %d",
+                                    errno);
                 // Non-fatal
             }
         }
