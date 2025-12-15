@@ -376,7 +376,7 @@ int SDLCALL signalHandlerThread(void* data)
 
 void configureSignalHandlers()
 {
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, signalFds) == -1) {
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, signalFds) == -1) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "socketpair() failed: %d",
                      errno);
