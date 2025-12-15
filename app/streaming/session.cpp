@@ -1742,6 +1742,12 @@ void Session::exec()
         return;
     }
 
+    // Pump the Qt event loop one last time before we create our SDL window
+    // This is sometimes necessary for the QML code to process any signals
+    // we've emitted from the async connection thread.
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    QCoreApplication::sendPostedEvents();
+
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
 
