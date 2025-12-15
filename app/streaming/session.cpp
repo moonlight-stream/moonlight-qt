@@ -1731,6 +1731,18 @@ void Session::start()
     thread->start();
 }
 
+void Session::interrupt()
+{
+    // Stop any connection in progress
+    LiInterruptConnection();
+
+    // Inject a quit event to our SDL event loop
+    SDL_Event event;
+    event.type = SDL_QUIT;
+    event.quit.timestamp = SDL_GetTicks();
+    SDL_PushEvent(&event);
+}
+
 void Session::exec()
 {
     // If the connection failed, clean up and abort the connection.

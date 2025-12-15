@@ -13,6 +13,11 @@
 #include <QTemporaryFile>
 #include <QRegularExpression>
 
+#ifdef Q_OS_UNIX
+#include <sys/socket.h>
+#include <signal.h>
+#endif
+
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
 // that might include SDL.h themselves.
@@ -320,6 +325,78 @@ LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
 #endif
 
+#ifdef Q_OS_UNIX
+
+static int signalFds[2];
+
+void handleSignal(int sig)
+{
+    send(signalFds[0], &sig, sizeof(sig), 0);
+}
+
+int SDLCALL signalHandlerThread(void* data)
+{
+    Q_UNUSED(data);
+
+    int sig;
+    while (recv(signalFds[1], &sig, sizeof(sig), MSG_WAITALL) == sizeof(sig)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Received signal: %d", sig);
+
+        Session* session;
+        switch (sig) {
+        case SIGINT:
+            // If we get a SIGINT, we'll interrupt the current ongoing activity.
+            // If we're streaming, that will take you back to the Qt window.
+            session = Session::get();
+            if (session != nullptr) {
+                session->interrupt();
+            }
+            else {
+                // If we're not streaming, we'll close the whole app
+                QCoreApplication::instance()->quit();
+            }
+            break;
+
+        case SIGTERM:
+            // If we get a SIGTERM, we'll terminate everything.
+            session = Session::get();
+            if (session != nullptr) {
+                session->interrupt();
+            }
+            QCoreApplication::instance()->quit();
+            break;
+
+        default:
+            Q_UNREACHABLE();
+        }
+    }
+
+    return 0;
+}
+
+void configureSignalHandlers()
+{
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, signalFds) == -1) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "socketpair() failed: %d",
+                     errno);
+        return;
+    }
+
+    // Create a thread to handle our signals safely outside of signal context
+    SDL_Thread* thread = SDL_CreateThread(signalHandlerThread, "Signal Handler", nullptr);
+    SDL_DetachThread(thread);
+
+    struct sigaction sa = {};
+    sa.sa_handler = handleSignal;
+    sa.sa_flags = SA_RESTART;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, nullptr);
+    sigaction(SIGTERM, &sa, nullptr);
+}
+
+#endif
+
 int main(int argc, char *argv[])
 {
     SDL_SetMainReady();
@@ -620,6 +697,14 @@ int main(int argc, char *argv[])
     if (QGuiApplication::platformName() == "eglfs" || QGuiApplication::platformName() == "linuxfb") {
         qputenv("SDL_VIDEODRIVER", "kmsdrm");
     }
+#endif
+
+#ifdef Q_OS_UNIX
+    // Register signal handlers to arbitrate between SDL and Qt.
+    // NB: This has to be done after the QGuiApplication is constructed to
+    // ensure Qt has already installed its VT signals before we override
+    // some of them with our own.
+    configureSignalHandlers();
 #endif
 
 #ifdef Q_OS_WIN32
