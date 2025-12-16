@@ -175,6 +175,7 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_ColorRangeProp(nullptr),
       m_HdrOutputMetadataProp(nullptr),
       m_ColorspaceProp(nullptr),
+      m_MaxBpcProp(nullptr),
       m_Version(nullptr),
       m_HdrOutputMetadataBlobId(0),
       m_SupportsAtomic(false),
@@ -243,6 +244,10 @@ DrmRenderer::~DrmRenderer()
 
     if (m_ColorspaceProp != nullptr) {
         drmModeFreeProperty(m_ColorspaceProp);
+    }
+
+    if (m_MaxBpcProp != nullptr) {
+        drmModeFreeProperty(m_MaxBpcProp);
     }
 
     // Free atomic modesetting properties
@@ -788,18 +793,8 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     else if (!strcmp(prop->name, "Colorspace")) {
                         m_ColorspaceProp = prop;
                     }
-                    else if (!strcmp(prop->name, "max bpc") && (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT)) {
-                        if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 10) == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Enabled 30-bit color (10 bpc)");
-                        }
-                        else {
-                            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                        "drmModeObjectSetProperty(%s) failed: %d",
-                                        prop->name,
-                                        errno);
-                        }
-                        drmModeFreeProperty(prop);
+                    else if (!strcmp(prop->name, "max bpc")) {
+                        m_MaxBpcProp = prop;
                     }
                 }
             }
@@ -1551,6 +1546,28 @@ void DrmRenderer::renderFrame(AVFrame* frame)
                             "COLOR_ENCODING property does not exist on output plane. Colors may be inaccurate!");
             }
         }
+
+        // Set max bpc (bits per channel) based on actual frame bit depth
+        {
+            int bitsPerChannel = getFrameBitsPerChannel(frame);
+
+            if (m_MaxBpcProp != nullptr) {
+                err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
+                                               m_MaxBpcProp->prop_id, bitsPerChannel);
+                if (err == 0) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Set max bpc to %d (%d-bit color)",
+                                bitsPerChannel, bitsPerChannel * 3);
+                }
+                else {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                 "drmModeObjectSetProperty(%s) failed: %d",
+                                 m_MaxBpcProp->name,
+                                 errno);
+                    // Non-fatal
+                }
+            }
+        }
     }
 
     // Update the overlay using atomic modesetting if supported, otherwise fall back to legacy API
@@ -1619,20 +1636,12 @@ void DrmRenderer::renderFrame(AVFrame* frame)
             }
 
             // Commit all changes atomically
-            // If we have a DRM lease (m_MustCloseDrmFd=true), we have exclusive access and can use NONBLOCK
-            // Otherwise we share master with EGLFS and must use ALLOW_MODESET
-            uint32_t flags;
-            if (m_MustCloseDrmFd) {
-                // We have exclusive access via lease - use NONBLOCK for best performance
-                flags = DRM_MODE_ATOMIC_NONBLOCK;
-            } else {
-                // Sharing with EGLFS - use ALLOW_MODESET to avoid EBUSY
-                flags = DRM_MODE_ATOMIC_ALLOW_MODESET;
-                // Ensure we have DRM master before atomic commit (EGLFS may have grabbed it)
-                drmSetMaster(m_DrmFd);
-            }
-
-            err = drmModeAtomicCommit(m_DrmFd, req, flags, NULL);
+            // We share the DRM master FD with EGLFS, so we need to:
+            // 1. Grab master temporarily before the commit
+            // 2. Use ALLOW_MODESET to avoid EBUSY when EGLFS reclaims master
+            // This allows both EGLFS (Qt UI) and video renderer to coexist on the same display
+            drmSetMaster(m_DrmFd);
+            err = drmModeAtomicCommit(m_DrmFd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
 
             if (err == 0) {
                 drmModeAtomicFree(req);
