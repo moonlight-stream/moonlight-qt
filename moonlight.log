@@ -1,0 +1,72 @@
+00:00:00 - Qt Info: Unable to detect Wayland or X11, so EGLFS will be used by default. Set QT_QPA_PLATFORM to override this.
+00:00:00 - Qt Info: Setting display mode by default. Set QT_QPA_EGLFS_ALWAYS_SET_MODE=0 to override this.
+00:00:00 - Qt Info: Overriding default Qt EGLFS card selection to "/dev/dri/card1"
+00:00:00 - SDL Info (0): Compiled with SDL 2.32.4
+00:00:00 - SDL Info (0): Running with SDL 2.32.4
+00:00:00 - Qt Info: No translation available for "en_US"
+00:00:00 - Qt Warning: qrc:/gui/main.qml:13:1: QML ApplicationWindow: ToolTip must be attached to an Item
+00:00:00 - Qt Info: Found "gamecontrollerdb.txt" at "/home/christopher/.cache/Moonlight Game Streaming Project/Moonlight/gamecontrollerdb.txt"
+00:00:00 - SDL Info (0): Loaded 404 new gamepad mappings
+00:00:00 - SDL Info (0): V-sync disabled
+00:00:00 - SDL Info (0): Sharing DRM FD with SDL
+00:00:00 - SDL Info (0): GPU driver: vc4
+00:00:00 - SDL Info (0): Plane 81 is active on CRTC 92
+00:00:00 - SDL Info (0): Plane 655 is active on CRTC 92
+00:00:00 - SDL Info (0): DRM atomic modesetting supported and enabled
+00:00:00 - SDL Error (0): drmModeObjectSetProperty(max bpc) failed: 13
+00:00:00 - SDL Info (0): Using direct rendering for HDR support
+00:00:00 - SDL Info (0): DrmRenderer::setHdrMode(disabled) called
+00:00:00 - SDL Info (0): HDR state will be applied atomically in next frame
+00:00:00 - SDL Info (0): Sharing DRM FD with SDL
+00:00:00 - SDL Info (0): GPU driver: vc4
+00:00:00 - SDL Info (0): Plane 81 is active on CRTC 92
+00:00:00 - SDL Info (0): Plane 655 is active on CRTC 92
+00:00:00 - SDL Info (0): DRM atomic modesetting supported and enabled
+00:00:00 - SDL Error (0): drmModeObjectSetProperty(max bpc) failed: 13
+00:00:00 - SDL Info (0): Using DRM renderer
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] nal_unit_type: 32(VPS), nuh_layer_id: 0, temporal_id: 0
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] nal_unit_type: 33(SPS), nuh_layer_id: 0, temporal_id: 0
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] nal_unit_type: 34(PPS), nuh_layer_id: 0, temporal_id: 0
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] nal_unit_type: 21(CRA_NUT), nuh_layer_id: 0, temporal_id: 0
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] nal_unit_type: 21(CRA_NUT), nuh_layer_id: 0, temporal_id: 0
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] nal_unit_type: 21(CRA_NUT), nuh_layer_id: 0, temporal_id: 0
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] nal_unit_type: 21(CRA_NUT), nuh_layer_id: 0, temporal_id: 0
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Decoding VPS
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Main 10 profile bitstream
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Decoding SPS
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Main 10 profile bitstream
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Decoding VUI
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Decoding PPS
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Format drm_prime chosen by get_format().
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Format drm_prime requires hwaccel hevc_v4l2request initialisation.
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] <<< ff_v4l2_request_init (1280x736 10 bits src_size 899584 dst_bufs 2
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] probe_video_device: path=/dev/video19 capabilities=0x4204000
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Adding: /dev/media2,/dev/video19 pix=0x35363253, type=10
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] probe_video_device: path=/dev/video20 capabilities=0x4202000
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] probe_video_device: missing required mem2mem capability
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] probe_video_device: path=/dev/video28 capabilities=0x4202000
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] probe_video_device: missing required mem2mem capability
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Trying V4L2 devices: /dev/media2,/dev/video19
+00:00:00 - FFmpeg: Dmabufs using Vidbuf
+00:00:00 - FFmpeg: ctl_cma_new2: Using dma_heap device /dev/dma_heap/vidbuf_cached
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Dmabufs opened - try dmabuf buffers
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] V4L2 HEVC stateless V4 probed successfully: driver v 0x60c3d
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Slots=9: Reordering=2, threads=1, hw+=-1
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] frame_params: avctx=0x55564bf8a2b0 ctx=0x55564bf84a70 hw_frames_ctx=0x55564c2609e0 hwfc=0x55564bf9dd50 pool=(nil) width=1344 height=736 initial_pool_size=0
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Failed to query ext id=0xa40a97, err=22
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] set_controls: Max slices 4096
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] set_controls: Entry point offsets 0
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Hwaccel V4L2 HEVC stateless V4; devices: /dev/media2,/dev/video19; buffers: src DMABuf, dst DMABuf; swfmt=rpi4_10
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] v4l2_req_frame_alloc: avctx=0x55564bf8a2b0 size=1096 data=0x55564c260010
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Output frame with POC 0/3.
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] Decoded frame with POC 0/3.
+00:00:00 - SDL Info (0): Selected DRM plane supports chosen decoding format: 30333050
+00:00:00 - SDL Info (0): FFmpeg-based video decoder chosen
+00:00:00 - FFmpeg: v4l2_req_frame_free: avctx=0x55564bf8a2b0 data=0x55564c260010
+00:00:00 - FFmpeg: [hevc @ 0x55564bf8a2b0] <<< ff_v4l2_request_uninit
+00:00:00 - FFmpeg: Free dmabuf ctl
+00:00:00 - SDL Info (0): DrmRenderer::setHdrMode(disabled) called
+00:00:00 - SDL Info (0): HDR state will be applied atomically in next frame
+00:00:00 - SDL Error (5): Could not restore CRTC
+00:00:00 - Qt Info: "CHallDesktop" is now online at "192.168.42.188:47989"
+00:00:00 - SDL Info (0): Captured Qt EGLFS DRM master fd (legacy): 9

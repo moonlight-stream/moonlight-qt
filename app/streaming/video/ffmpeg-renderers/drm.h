@@ -100,8 +100,24 @@ private:
     drmModePropertyPtr m_ColorRangeProp;
     drmModePropertyPtr m_HdrOutputMetadataProp;
     drmModePropertyPtr m_ColorspaceProp;
+    drmModePropertyPtr m_MaxBpcProp;
     drmVersionPtr m_Version;
     uint32_t m_HdrOutputMetadataBlobId;
+
+    // Atomic modesetting support
+    bool m_SupportsAtomic;
+    bool m_HdrEnabled; // Track HDR state for atomic commits
+    bool m_HdrStateChanged; // Flag to apply HDR state in next atomic commit
+    drmModePropertyPtr m_FbIdProp;
+    drmModePropertyPtr m_CrtcIdProp;
+    drmModePropertyPtr m_SrcXProp;
+    drmModePropertyPtr m_SrcYProp;
+    drmModePropertyPtr m_SrcWProp;
+    drmModePropertyPtr m_SrcHProp;
+    drmModePropertyPtr m_CrtcXProp;
+    drmModePropertyPtr m_CrtcYProp;
+    drmModePropertyPtr m_CrtcWProp;
+    drmModePropertyPtr m_CrtcHProp;
     SDL_Rect m_OutputRect;
     std::set<uint32_t> m_SupportedPlaneFormats;
 
