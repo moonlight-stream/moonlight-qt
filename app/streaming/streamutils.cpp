@@ -326,11 +326,25 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
     return true;
 }
 
+// External from masterhook.c - DRM lease FD if available
+#if SDL_VERSION_ATLEAST(2, 0, 15)
+extern "C" int g_DrmLeaseFd;
+#endif
+
 int StreamUtils::getDrmFdForWindow(SDL_Window* window, bool* mustClose)
 {
     *mustClose = false;
 
 #if defined(SDL_VIDEO_DRIVER_KMSDRM) && SDL_VERSION_ATLEAST(2, 0, 15)
+    // If a DRM lease was created by masterhook, use that instead
+    // This gives the video renderer exclusive access to DRM resources
+    if (g_DrmLeaseFd >= 0) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using DRM lease FD %d for video renderer (exclusive access)",
+                    g_DrmLeaseFd);
+        return g_DrmLeaseFd;
+    }
+
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
     if (!SDL_GetWindowWMInfo(window, &info)) {

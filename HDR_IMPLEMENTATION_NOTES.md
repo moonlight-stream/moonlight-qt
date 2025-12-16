@@ -36,10 +36,11 @@
 **Function:** `DrmRenderer::setHdrMode()`
 
 #### HDMI Colorspace
-- Set to: `DRM_MODE_COLORIMETRY_BT2020_RGB` (value 9)
-- Matches Windows D3D11 renderer behavior
-- Hardware handles YCbCr→RGB conversion
-- Using YCbCr end to end appears to make little no difference
+- Set to: `DRM_MODE_COLORIMETRY_BT2020_YCC` (value 10)
+- **Critical**: Must match actual video format (P010 = YCbCr)
+- Previous BT2020_RGB caused washed out colors on Raspberry Pi 5 (VC4 driver)
+- Intel i915 driver tolerates RGB/YCbCr mismatch, VC4 does not
+- YCbCr end-to-end ensures proper color reproduction across all drivers
 
 #### HDR Metadata Blob
 ```cpp
@@ -89,6 +90,25 @@ max_fall: 200 nits
 - **400 nits**: No HDR badge, but 10-bit BT.2020 signal displays correctly without crushing highlights
 
 **Solution:** Use 400 nits to avoid triggering aggressive tone mapping while still delivering proper 10-bit BT.2020 color.
+
+### Problem: Washed Out Colors on Raspberry Pi 5 (VC4 Driver)
+**Root Cause:** Mismatch between connector colorspace and actual video format.
+- Initial implementation used **BT2020_RGB** connector colorspace (to match Windows D3D11)
+- Actual video frames are in **YCbCr format** (P010 = 10-bit 4:2:0 YCbCr)
+- Intel i915 driver handles this mismatch gracefully with internal conversion
+- Broadcom VC4 driver (RPI5) does NOT - causes washed out, non-vibrant colors
+
+**Testing Evidence (2025-12-15):**
+- x86 Intel NUC (i915 driver) with BT2020_RGB: **HDR looks amazing, vibrant colors**
+- Raspberry Pi 5 (VC4 driver) with BT2020_RGB: **Washed out, colors don't "pop"**
+- Same LG UT7550AUA TV, same HDR metadata, different drivers = driver-specific issue
+- Confirmed via modetest logs: Both set Colorspace correctly, but VC4 doesn't handle RGB with YCbCr planes
+
+**Solution:** Use **BT2020_YCC** connector colorspace to match actual video format.
+- Connector colorspace must match plane format for proper hardware conversion
+- YCbCr video frames (P010) → BT2020_YCC connector colorspace
+- Lets the display controller/TV do proper BT.2020 YCbCr handling
+- Works correctly across both Intel and Broadcom drivers
 
 ### Why 400 Nits Is The Right Default
 
@@ -211,20 +231,22 @@ This matches Windows behavior where D3D11 converts to RGB before swapchain outpu
 
 ## Comparison with Other Implementations
 
-### Kodi
-- **Colorspace**: BT2020_YCC
+### Kodi ✅ Matches Our Colorspace Approach
+- **Colorspace**: BT2020_YCC (same as us now!)
 - **Luminance**: Extracted directly from video file metadata (AVMasteringDisplayMetadata, AVContentLightMetadata)
 - **Approach**: Uses per-content metadata embedded in video files by FFmpeg
 - **No Fallback**: If video has no HDR metadata, Kodi doesn't send any - only works for properly mastered HDR content
 - **Note**: Kodi is for local media playback where professional content has reliable embedded metadata
+- **Why YCC**: Video files are YCbCr format, so connector colorspace matches content format
 
-### Gamescope (Valve) ✅ Most Similar to Our Approach
-- **Colorspace**: BT2020_RGB (same as us)
+### Gamescope (Valve) ✅ Matches Our Luminance Approach
+- **Colorspace**: BT2020_RGB (Gamescope does compositing/RGB rendering, different from our use case)
 - **Luminance**: **Default: 400 nits for SDR content** (`--hdr-sdr-content-nits`, exactly matches our default!)
 - **ITM (Inverse Tone Mapping)**: Default 100 nits input → 1000 nits target for SDR→HDR conversion
 - **Approach**: Reads from display EDID when available, uses app-provided metadata with validation
 - **Key Insight**: Valve uses 400 nits as the baseline for SDR content brightness in HDR mode
 - **Our Implementation**: We use the same 400 nit baseline, but for game streaming instead of compositing
+- **Colorspace Difference**: Gamescope renders to RGB framebuffers (compositor), we pass through YCbCr video
 
 ### Windows Moonlight (D3D11) ❌ The Problem We Fixed
 - **Colorspace**: RGB (DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020)

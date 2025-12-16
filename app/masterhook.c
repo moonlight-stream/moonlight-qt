@@ -67,6 +67,10 @@ static void lookupRealLibCFunctions() {
 int g_QtDrmMasterFd = -1;
 struct stat g_DrmMasterStat;
 
+// DRM lease FD for video renderer (if lease creation succeeds)
+int g_DrmLeaseFd = -1;
+bool g_LeaseAttempted = false;
+
 // Last CRTC state for us to restore later
 drmModeCrtcPtr g_QtCrtcState;
 uint32_t* g_QtCrtcConnectors;
@@ -74,6 +78,107 @@ int g_QtCrtcConnectorCount;
 
 bool removeSdlFd(int fd);
 int takeMasterFromSdlFd(void);
+
+// Try to create a DRM lease for the video renderer
+// This is called once we have identified the CRTC/connector/plane from Qt's atomic commit
+void attemptDrmLease(int fd, drmModeAtomicReqPtr req)
+{
+    (void)req; // Unused - we query current config instead of inspecting the atomic request
+
+    // Only try once
+    if (g_LeaseAttempted || fd != g_QtDrmMasterFd) {
+        return;
+    }
+    g_LeaseAttempted = true;
+
+    // We need to extract the CRTC, connector, and plane IDs from the atomic request
+    // Unfortunately libdrm doesn't expose a way to inspect the atomic request,
+    // so we'll need to query the current configuration instead
+    drmModeResPtr resources = drmModeGetResources(fd);
+    if (!resources) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to get DRM resources for lease creation");
+        return;
+    }
+
+    // Find the active CRTC (the one Qt is using)
+    uint32_t crtcId = 0;
+    uint32_t connectorId = 0;
+    for (int i = 0; i < resources->count_crtcs; i++) {
+        drmModeCrtcPtr crtc = drmModeGetCrtc(fd, resources->crtcs[i]);
+        if (crtc && crtc->buffer_id != 0) {
+            crtcId = crtc->crtc_id;
+            // Find the connector for this CRTC
+            for (int j = 0; j < resources->count_connectors; j++) {
+                drmModeConnectorPtr connector = drmModeGetConnector(fd, resources->connectors[j]);
+                if (connector && connector->encoder_id != 0) {
+                    drmModeEncoderPtr encoder = drmModeGetEncoder(fd, connector->encoder_id);
+                    if (encoder && encoder->crtc_id == crtcId) {
+                        connectorId = connector->connector_id;
+                        drmModeFreeEncoder(encoder);
+                        drmModeFreeConnector(connector);
+                        break;
+                    }
+                    if (encoder) drmModeFreeEncoder(encoder);
+                }
+                if (connector) drmModeFreeConnector(connector);
+            }
+            drmModeFreeCrtc(crtc);
+            break;
+        }
+        if (crtc) drmModeFreeCrtc(crtc);
+    }
+
+    // Find the CRTC index for bitmask checks
+    uint32_t crtcIndex = 0;
+    for (int i = 0; i < resources->count_crtcs; i++) {
+        if (resources->crtcs[i] == crtcId) {
+            crtcIndex = i;
+            break;
+        }
+    }
+
+    // Find an overlay plane (we'll use the first overlay plane we find)
+    drmModePlaneResPtr planeRes = drmModeGetPlaneResources(fd);
+    uint32_t planeId = 0;
+    if (planeRes) {
+        for (uint32_t i = 0; i < planeRes->count_planes; i++) {
+            drmModePlanePtr plane = drmModeGetPlane(fd, planeRes->planes[i]);
+            if (plane) {
+                // Check if this plane can be used with our CRTC
+                if (plane->possible_crtcs & (1 << crtcIndex)) {
+                    planeId = plane->plane_id;
+                    drmModeFreePlane(plane);
+                    break;
+                }
+                drmModeFreePlane(plane);
+            }
+        }
+        drmModeFreePlaneResources(planeRes);
+    }
+
+    drmModeFreeResources(resources);
+
+    if (crtcId == 0 || connectorId == 0 || planeId == 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to identify CRTC/connector/plane for DRM lease (CRTC=%u, connector=%u, plane=%u)",
+                    crtcId, connectorId, planeId);
+        return;
+    }
+
+    // Try to create the lease
+    uint32_t objects[] = {crtcId, connectorId, planeId};
+    g_DrmLeaseFd = drmModeCreateLease(fd, objects, 3, 0, NULL);
+    if (g_DrmLeaseFd >= 0) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Created DRM lease for video renderer: CRTC %u, connector %u, plane %u (lease FD %d)",
+                    crtcId, connectorId, planeId, g_DrmLeaseFd);
+    } else {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to create DRM lease (errno=%d), video renderer will share DRM master",
+                    errno);
+    }
+}
 
 int drmIsMaster(int fd)
 {
@@ -98,6 +203,9 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Captured Qt EGLFS DRM master fd (legacy): %d",
                     g_QtDrmMasterFd);
+
+        // Try to create a DRM lease for the video renderer
+        attemptDrmLease(fd, NULL);
     }
 
     // Call into the real thing
@@ -156,6 +264,9 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Captured Qt EGLFS DRM master fd (atomic): %d",
                     g_QtDrmMasterFd);
+
+        // Try to create a DRM lease for the video renderer
+        attemptDrmLease(fd, req);
     }
 
     // Call into the real thing
