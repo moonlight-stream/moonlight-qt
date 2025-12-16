@@ -2,21 +2,20 @@
 
 ## TL;DR - Key Decisions
 
-**The Core Insight**: For game streaming, use **content-based metadata** (describes the video signal) instead of **display-based metadata** (describes the source monitor). This is different from traditional HDR video playback.
+**The Core Fix**: The washed-out colors on Raspberry Pi 5 were caused by two bugs:
+1. **Wrong colorspace**: BT2020_RGB connector colorspace with YCbCr video frames
+2. **COLOR_ENCODING not applied**: VC4 driver doesn't support setting COLOR_ENCODING via legacy DRM API
 
-**Why 400 Nits?**
-- Budget HDR TVs typically peak at 300-500 nits
-- 400 nits avoids triggering aggressive tone mapping while ensuring proper 10-bit BT.2020 color
-- Matches actual TV capabilities better than high values (1000+ nits cause blown highlights)
-- User-configurable via `MOONLIGHT_HDR_MAX_NITS` environment variable
+**The Solution**:
+- **BT2020_YCC colorspace** - Matches actual P010 YCbCr video format
+- **DRM atomic modesetting** - Properly applies COLOR_ENCODING property on VC4
+- **Passthrough HDR metadata from Sunshine** - Describes the source display's mastering environment
 
-**Why Ignore Source Metadata?**
-- Source = PC monitor or dummy plug (reports 9700 nits after calibration through streaming)
-- Client = Raspberry Pi TV (actually ~400 nits peak brightness)
-- Passing through source → TV tone-maps incorrectly → blown highlights or washed colors
-- Fixed 400 nits → TV displays signal faithfully
-
-**Implementation**: See [drm.cpp:888-956](app/streaming/video/ffmpeg-renderers/drm.cpp#L888-L956)
+**What the metadata means**:
+- HDR mastering metadata describes **where the content was created** (the source PC's monitor)
+- This is NOT describing the client TV's capabilities
+- The client TV uses this to understand the brightness range of the incoming signal
+- The TV then tone-maps the signal to its own capabilities
 
 ---
 
@@ -24,16 +23,18 @@
 
 ### What Works Now ✅
 - HDR mode activates properly on the TV
-- Using BT.2020 standard primaries (not source monitor's primaries)
-- Using BT2020_RGB colorspace (matches Windows behavior)
-- Using content-based luminance values (400 nits default, user-configurable)
+- Vibrant, accurate BT.2020 wide-gamut colors on both Intel and Raspberry Pi 5
+- Using BT.2020 standard primaries in metadata blob
+- Using BT2020_YCC colorspace (matches P010 YCbCr video format)
+- Passthrough of source display mastering metadata from Sunshine
 - Proper EOTF (SMPTE ST 2084 PQ curve)
-- Correct color encoding (BT.2020 YCbCr) on the plane
-- Environment variable support for fine-tuning
+- Correct color encoding (BT.2020 YCbCr) applied atomically on the plane
+- Dynamic bit depth (8/10/12-bit) based on actual frame format
+- Environment variable support for fine-tuning/overrides
 
 ### Current Configuration
 **File:** `app/streaming/video/ffmpeg-renderers/drm.cpp`
-**Function:** `DrmRenderer::setHdrMode()`
+**Functions:** `DrmRenderer::setHdrMode()`, `DrmRenderer::renderFrame()`
 
 #### HDMI Colorspace
 - Set to: `DRM_MODE_COLORIMETRY_BT2020_YCC` (value 10)
@@ -44,226 +45,177 @@
 
 #### HDR Metadata Blob
 ```cpp
-// Primaries: BT.2020 standard (not display panel primaries)
+// Primaries: BT.2020 standard (standard wide-gamut color space)
 Red:   (0.7080, 0.2920)
 Green: (0.1700, 0.7970)
 Blue:  (0.1310, 0.0460)
 White: (0.3127, 0.3290) D65
 
-// Luminance
-max_display_mastering_luminance: 400 nits
-min_display_mastering_luminance: 0 nits
-max_cll:  400 nits
-max_fall: 200 nits
+// Luminance - Passthrough from source display
+// Priority: env vars > Sunshine metadata > 400 nit fallback
+max_display_mastering_luminance: [from source or 400 nits default]
+min_display_mastering_luminance: [from source or 0 nits default]
+max_cll:  [from source or same as max_display_mastering_luminance]
+max_fall: [from source or max_display_mastering_luminance / 2]
 ```
 
 ## Issues Fixed
 
-### Problem: Washed Out Colors with Passthrough
-**Root Cause:** Original Moonlight passed through the source PC monitor's HDR metadata directly to the client display. This caused issues because:
-- Source monitor metadata (351 nits, specific primaries) ≠ Client TV capabilities
-- TV received conflicting information between metadata and actual content
-- TV's tone mapper applied incorrect mapping
+### Problem 1: Washed Out Colors on Raspberry Pi 5 (VC4 Driver) - MAIN ISSUE
+**Root Cause:** Two-part problem:
 
-**Solution:** Use content-based metadata instead of display-based metadata:
-- Use BT.2020 standard primaries (describes the video content)
-- Use moderate luminance values (400 nits) that work with most displays
-- Let each display's tone mapper handle its own capabilities
-
-### Problem: Dummy Plug Reporting Unrealistic Values (9700 nits)
-**Root Cause:** The Windows HDR calibration tool was run **through the streaming connection**, measuring the client TV instead of the dummy plug's actual capabilities. This created a circular dependency where:
-- Dummy plug reports 9700 nits (based on client TV measurement)
-- Moonlight receives 9700 nits and passes it to client TV
-- Client TV tone-maps assuming content is 9700 nits bright
-- Result: Blown out highlights
-
-**Solution:** Ignore source display metadata entirely and use fixed content-based values:
-- Always use 400 nits regardless of what Sunshine reports
-- This avoids the circular dependency problem
-- Works correctly whether source is a real monitor, dummy plug, virtual device, or misconfigured device
-
-### Problem: High Luminance Values Trigger Aggressive Tone Mapping
-**Root Cause:** Setting max_display_mastering_luminance to 1000+ nits causes budget HDR TVs to activate aggressive tone mapping. The "HDR badge" on these TVs just indicates tone mapping is active, not true wide-gamut HDR mode.
-
-**Testing Results:**
-- **1000-2000 nits**: HDR badge appears, but highlights blown out due to aggressive tone mapping
-- **400 nits**: No HDR badge, but 10-bit BT.2020 signal displays correctly without crushing highlights
-
-**Solution:** Use 400 nits to avoid triggering aggressive tone mapping while still delivering proper 10-bit BT.2020 color.
-
-### Problem: Washed Out Colors on Raspberry Pi 5 (VC4 Driver)
-**Root Cause:** Mismatch between connector colorspace and actual video format.
+**Part A: Wrong Colorspace**
 - Initial implementation used **BT2020_RGB** connector colorspace (to match Windows D3D11)
 - Actual video frames are in **YCbCr format** (P010 = 10-bit 4:2:0 YCbCr)
 - Intel i915 driver handles this mismatch gracefully with internal conversion
-- Broadcom VC4 driver (RPI5) does NOT - causes washed out, non-vibrant colors
+- Broadcom VC4 driver (RPI5) does NOT - requires exact format matching
+
+**Part B: COLOR_ENCODING Not Applied (VC4 limitation)**
+- VC4 DRM driver doesn't support setting COLOR_ENCODING via legacy DRM API
+- `drmModeObjectSetProperty()` succeeds but `drmModeSetPlane()` resets it to BT.709
+- Video frames are BT.2020 wide-gamut, hardware interprets as BT.709 narrow-gamut
+- Wide colors compressed into narrow space → washed out appearance
 
 **Testing Evidence (2025-12-15):**
-- x86 Intel NUC (i915 driver) with BT2020_RGB: **HDR looks amazing, vibrant colors**
-- Raspberry Pi 5 (VC4 driver) with BT2020_RGB: **Washed out, colors don't "pop"**
+- x86 Intel NUC (i915 driver) with legacy API: **HDR looks amazing, vibrant colors**
+- Raspberry Pi 5 (VC4 driver) with legacy API: **Washed out, colors don't "pop"**
 - Same LG UT7550AUA TV, same HDR metadata, different drivers = driver-specific issue
-- Confirmed via modetest logs: Both set Colorspace correctly, but VC4 doesn't handle RGB with YCbCr planes
+- Confirmed via modetest logs: Both set Colorspace correctly, but only i915 kept COLOR_ENCODING
 
-**Solution:** Use **BT2020_YCC** connector colorspace to match actual video format.
-- Connector colorspace must match plane format for proper hardware conversion
-- YCbCr video frames (P010) → BT2020_YCC connector colorspace
-- Lets the display controller/TV do proper BT.2020 YCbCr handling
-- Works correctly across both Intel and Broadcom drivers
+**Solution:**
+1. Changed connector colorspace to **BT2020_YCC** (matches P010 YCbCr format)
+2. Implemented **DRM atomic modesetting** to properly apply COLOR_ENCODING on VC4
+3. Atomic commits apply all properties (geometry + color) in one transaction
+4. VC4 now correctly interprets frames as BT.2020 YCbCr
 
-### Why 400 Nits Is The Right Default
+**Result:** Both Intel and Raspberry Pi 5 now show vibrant, accurate HDR colors
 
-**Industry Context:**
-- Most budget HDR TVs peak at 300-500 nits (confirmed by reviews and EDID analysis)
-- Professional HDR content is often mastered at 400-1000 nits
-- Gamescope (Valve) and Kodi use similar moderate values when EDID has no luminance data
-- The key insight: **match content metadata to the display's actual capabilities, not aspirational spec numbers**
+### Problem 2: Dynamic Bit Depth Support
+**Root Cause:** Bit depth was hardcoded to 10 during initialization when VIDEO_FORMAT_MASK_10BIT was detected.
 
-**What Happens with Different Values:**
-- **< 300 nits**: Some displays might not trigger HDR mode at all
-- **300-500 nits**: Sweet spot for budget HDR TVs - proper color, minimal aggressive tone mapping
-- **1000+ nits**: Triggers aggressive tone mapping on budget TVs → blown highlights
-- **2000+ nits**: Designed for OLED/high-end displays, causes severe issues on budget TVs
+**Solution:**
+- Store "max bpc" property pointer during init
+- Dynamically set based on actual frame bit depth using `getFrameBitsPerChannel(frame)`
+- Only triggered when frame format changes (zero steady-state performance impact)
+- Supports 8-bit, 10-bit, 12-bit automatically
 
-**Why Not Use Higher Values?**
-The mistake is thinking "higher nits = better HDR". In reality:
-- Metadata describes what the *content* looks like, not what you want the display to do
-- If you send 1000 nit metadata to a 400 nit TV, the TV thinks the content is 2.5x brighter than it can display
-- This causes the TV to aggressively compress highlights, losing detail
-- With 400 nit metadata matching the TV's capabilities, it displays the signal more faithfully
+### Understanding HDR Mastering Metadata
 
-## Future Improvements
+**What it means:**
+- HDR mastering metadata describes **the display environment where the content was created**
+- For game streaming, this is the source PC's monitor
+- Example: If the game was rendered on a 1000-nit monitor, metadata says "1000 nits"
+- The client TV receives this and knows: "This signal was created for a 1000-nit display"
 
-### 1. EDID-Based Dynamic Metadata (Gamescope Approach)
+**What the TV does with it:**
+1. Receives signal metadata: "This content was mastered on a 1000-nit display"
+2. Knows its own capabilities: "I can only display 400 nits peak"
+3. Applies tone mapping: "I need to compress 1000 nits → 400 nits"
+4. Result: Bright highlights are preserved but compressed to TV's range
 
-**What Gamescope Does:**
-- Uses libdisplay-info to parse EDID
-- Extracts display primaries from chromaticity coordinates
-- Reads HDR static metadata from CTA-861 extensions
-- Uses display's max_fall for default max_cll
-- Allows per-frame metadata override from apps
+**Why passthrough is correct:**
+- Games are rendered with the source display's brightness in mind
+- The metadata accurately describes that rendering environment
+- Each TV can then tone-map appropriately for its own capabilities
+- This is the standard HDR workflow (same as Blu-ray discs)
 
-**Implementation Plan:**
+**Current Implementation:**
 ```cpp
-// Add libdisplay-info dependency
-#include <libdisplay-info/edid.h>
-#include <libdisplay-info/cta.h>
-
-// In DrmRenderer::initialize()
-// 1. Read EDID from connector property
-// 2. Parse with libdisplay-info
-// 3. Extract HDR capabilities
-// 4. Use as defaults, with fallback to current values
+// Priority order:
+1. MOONLIGHT_HDR_MAX_NITS environment variable (user override)
+2. Sunshine metadata from source display (passthrough)
+3. 400 nit fallback (if no source metadata available)
 ```
-
-**Benefits:**
-- Accurate primaries for calibrated displays (Steam Deck OLED)
-- Display-specific luminance ranges
-- Better tone mapping on capable displays
-
-**Fallback Strategy:**
-- If EDID has no HDR info: use current BT.2020 defaults
-- If EDID has partial info: mix EDID + defaults
-- Always validate values are sane
-
-### 2. Per-Frame Dynamic Metadata
-
-**Concept:** Extract HDR metadata from video stream (if Sunshine provides it) and update blob per-frame for better dynamic range.
-
-**Challenges:**
-- Performance overhead of updating blob frequently
-- Need to validate Sunshine actually sends per-frame metadata
-- Fallback needed when no per-frame data
-
-### 3. User-Configurable Values ✅ IMPLEMENTED
-
-**Environment Variables:**
-```bash
-MOONLIGHT_HDR_MAX_NITS=400      # max_display_mastering_luminance (default: 400)
-MOONLIGHT_HDR_MIN_NITS=0        # min_display_mastering_luminance (default: 0)
-MOONLIGHT_HDR_MAX_CLL=400       # max_cll (default: same as MAX_NITS)
-MOONLIGHT_HDR_MAX_FALL=200      # max_fall (default: MAX_NITS/2)
-```
-
-**Usage Examples:**
-```bash
-# Match Horizon Zero Dawn's calibration exactly
-MOONLIGHT_HDR_MAX_NITS=360 ./app/moonlight
-
-# Try lower value to avoid badge entirely
-MOONLIGHT_HDR_MAX_NITS=300 ./app/moonlight
-
-# Try higher value for brighter displays
-MOONLIGHT_HDR_MAX_NITS=600 ./app/moonlight
-
-# Fine-tune all values independently
-MOONLIGHT_HDR_MAX_NITS=400 MOONLIGHT_HDR_MAX_CLL=500 MOONLIGHT_HDR_MAX_FALL=250 ./app/moonlight
-```
-
-**Benefits:**
-- Users can tune for their specific display
-- Easy A/B testing without recompilation
-- Game-specific values (e.g., match in-game calibration)
-- Works with shell scripts and launchers
 
 ## Technical Details
 
 ### Color Pipeline
 ```
-Sunshine (PC) → HEVC encode (YCbCr 4:2:0 10-bit)
+Sunshine (PC) → HEVC encode (YCbCr 4:2:0 10-bit, BT.2020)
     ↓
 Network stream
     ↓
-Moonlight decoder → YCbCr (P010 format)
+Moonlight decoder → YCbCr (P010 format, BT.2020)
     ↓
-DRM KMS Plane (COLOR_ENCODING: BT.2020 YCbCr)
+DRM KMS Plane (COLOR_ENCODING: BT.2020 YCbCr) ← Applied atomically
     ↓
 Display Controller → YCbCr to RGB conversion (automatic)
     ↓
-HDMI Output (Colorspace property: BT2020_RGB)
+HDMI Output (Colorspace: BT2020_YCC) ← Tells TV format is YCbCr
     ↓
-TV/Monitor → HDR tone mapping based on metadata blob
+TV/Monitor → Receives BT.2020 YCbCr signal + HDR metadata
+    ↓
+TV Tone Mapping → Maps source mastering range to TV capabilities
 ```
 
-### Why RGB Colorspace for YCbCr Content?
-The `Colorspace` property tells the display what format the **HDMI signal** is in, not what format the **video plane** uses. The display controller automatically converts YCbCr→RGB before HDMI output when `Colorspace` is set to RGB.
+### DRM Atomic Modesetting (The Fix for VC4)
 
-This matches Windows behavior where D3D11 converts to RGB before swapchain output.
+**Why atomic modesetting is required:**
+- Legacy API: `drmModeObjectSetProperty()` + `drmModeSetPlane()` = properties reset on VC4
+- Atomic API: All properties committed in one transaction = guaranteed to apply
+- VC4 driver only respects COLOR_ENCODING when set via atomic API
+
+**Implementation:**
+```cpp
+// Create atomic request
+drmModeAtomicReqPtr req = drmModeAtomicAlloc();
+
+// Add ALL properties to the request
+drmModeAtomicAddProperty(req, planeId, FB_ID, framebufferId);
+drmModeAtomicAddProperty(req, planeId, CRTC_ID, crtcId);
+// ... geometry properties ...
+drmModeAtomicAddProperty(req, planeId, COLOR_ENCODING, BT2020_YCC); // ← This now works!
+drmModeAtomicAddProperty(req, planeId, COLOR_RANGE, LIMITED);
+
+// Commit everything atomically
+drmModeAtomicCommit(fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
+```
+
+**Benefits:**
+- Proper COLOR_ENCODING on VC4 driver (Raspberry Pi 5)
+- Can set connector properties (Colorspace, HDR metadata) atomically with plane updates
+- Eliminates race conditions and EBUSY errors
+- Falls back to legacy API if atomic not supported
+
+### Shared DRM Master with EGLFS
+
+**The Challenge:**
+- Qt EGLFS holds DRM master for the UI
+- Video renderer also needs DRM access
+- Both need to work without interfering
+
+**The Solution:**
+- Share the same DRM FD (captured via masterhook.c from Qt)
+- Use `drmSetMaster()` to temporarily grab master before atomic commit
+- Use `DRM_MODE_ATOMIC_ALLOW_MODESET` flag to prevent EBUSY when EGLFS reclaims
+- Both Qt UI and video playback coexist peacefully
 
 ## Comparison with Other Implementations
 
-### Kodi ✅ Matches Our Colorspace Approach
-- **Colorspace**: BT2020_YCC (same as us now!)
-- **Luminance**: Extracted directly from video file metadata (AVMasteringDisplayMetadata, AVContentLightMetadata)
-- **Approach**: Uses per-content metadata embedded in video files by FFmpeg
-- **No Fallback**: If video has no HDR metadata, Kodi doesn't send any - only works for properly mastered HDR content
-- **Note**: Kodi is for local media playback where professional content has reliable embedded metadata
-- **Why YCC**: Video files are YCbCr format, so connector colorspace matches content format
+### Kodi ✅ Matches Our Approach
+- **Colorspace**: BT2020_YCC (same as us!)
+- **Luminance**: Extracted from video file metadata (AVMasteringDisplayMetadata)
+- **Atomic modesetting**: Uses atomic API for all DRM operations
+- **Approach**: Passthrough metadata embedded in video files
+- **Why YCC**: Video files are YCbCr format, connector colorspace matches content
 
-### Gamescope (Valve) ✅ Matches Our Luminance Approach
-- **Colorspace**: BT2020_RGB (Gamescope does compositing/RGB rendering, different from our use case)
-- **Luminance**: **Default: 400 nits for SDR content** (`--hdr-sdr-content-nits`, exactly matches our default!)
-- **ITM (Inverse Tone Mapping)**: Default 100 nits input → 1000 nits target for SDR→HDR conversion
-- **Approach**: Reads from display EDID when available, uses app-provided metadata with validation
-- **Key Insight**: Valve uses 400 nits as the baseline for SDR content brightness in HDR mode
-- **Our Implementation**: We use the same 400 nit baseline, but for game streaming instead of compositing
-- **Colorspace Difference**: Gamescope renders to RGB framebuffers (compositor), we pass through YCbCr video
+### Gamescope (Valve)
+- **Colorspace**: BT2020_RGB (Gamescope does RGB compositing, different use case)
+- **Luminance**: App-provided metadata, reads from display EDID when available
+- **Atomic modesetting**: Uses atomic API exclusively
+- **Approach**: Compositor with HDR → HDR and SDR → HDR (inverse tone mapping)
 
-### Windows Moonlight (D3D11) ❌ The Problem We Fixed
+### Windows Moonlight (D3D11)
 - **Colorspace**: RGB (DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020)
-- **Luminance**: Passes through source metadata directly
-- **Issue**: This is what caused our original washed-out/blown-out problems
-- **Why It's Wrong**: Source display (dummy plug: 9700 nits) ≠ client display (TV: ~400 nits)
+- **Luminance**: Passes through source metadata
+- **API**: D3D11 swap chain with HDR support
+- **Why it works on Windows**: DXGI handles YCbCr→RGB conversion before output
 
-### Why Our Approach Works Better for Game Streaming
-Traditional HDR implementations (Kodi, video players) can trust content metadata because:
-- Content is professionally mastered with known luminance values
-- The metadata describes the content accurately
-
-Game streaming is different:
-- "Source" metadata describes the PC's monitor, not the game content
-- Dummy plugs report nonsensical values (9700 nits from calibration through streaming)
-- Game engines generate content dynamically with varying brightness
-- **Solution**: Ignore source entirely, use fixed content-based values matching typical display capabilities
+### Why Our Approach Works for Game Streaming
+- **Matches video format**: YCbCr video → YCC colorspace (critical for VC4)
+- **Proper plane properties**: COLOR_ENCODING applied atomically (critical for VC4)
+- **Standard metadata**: Passthrough source mastering info (standard HDR workflow)
+- **Works on multiple drivers**: Intel i915 and Broadcom VC4 both supported
 
 ## Testing Notes
 
@@ -272,14 +224,13 @@ Game streaming is different:
 **Display Characteristics:**
 - Budget HDR TV (not OLED) - reviewed as "not bright enough to do HDR well"
 - Likely peak brightness around 400 nits (based on reviews and testing)
-- This explains why 400 nit metadata works perfectly - matches TV's actual capabilities
 
 **EDID Color Primaries:**
-- Red: (0.6396, 0.3300) - vs BT.2020 (0.7080, 0.2920) - ~10% smaller
-- Green: (0.2998, 0.5996) - vs BT.2020 (0.1700, 0.7970) - ~25% smaller
-- Blue: (0.1503, 0.0595) - vs BT.2020 (0.1310, 0.0460) - ~15% smaller
+- Red: (0.6396, 0.3300) - vs BT.2020 (0.7080, 0.2920) - ~10% smaller gamut
+- Green: (0.2998, 0.5996) - vs BT.2020 (0.1700, 0.7970) - ~25% smaller gamut
+- Blue: (0.1503, 0.0595) - vs BT.2020 (0.1310, 0.0460) - ~15% smaller gamut
 - White: (0.3125, 0.3291) - vs BT.2020 (0.3127, 0.3290) - perfect D65 match
-- Color gamut is significantly narrower than BT.2020, typical for budget HDR TVs
+- Color gamut is significantly narrower than BT.2020 (typical for budget HDR TVs)
 
 **EDID HDR Capabilities:**
 - ✅ Supports BT.2020 YCbCr and BT.2020 RGB colorimetry
@@ -288,91 +239,134 @@ Game streaming is different:
 - ❌ No luminance values in EDID (no max/min nits, no max_cll/max_fall)
 
 **Testing Results:**
-- Works well with 400 nit defaults (matches TV's actual peak brightness)
-- Shadow boost in-game settings helps with tone mapping
-- HDR badge behavior is inconsistent, and doesnt make much of a difference.
-- Badge just indicates tone mapping activity beyond a threshold, not HDR on/off
+- Works perfectly with BT2020_YCC colorspace + atomic modesetting
+- Vibrant colors on both Intel NUC and Raspberry Pi 5
+- HDR badge behavior varies (just indicates active tone mapping, not quality)
+- Source metadata passthrough works correctly
 
 ### Raspberry Pi 5
-- V3D display driver
+- Broadcom VC4 display driver
 - Direct DRM scanout (zero-copy)
 - Hardware YCbCr→RGB conversion
-- Works with both RGB and YCC colorspace
+- **Requires atomic modesetting for COLOR_ENCODING**
+- Works perfectly with BT2020_YCC colorspace
 
-### Testing Different Values
+### Intel NUC (Reference Platform)
+- Intel i915 display driver
+- Tolerates colorspace mismatches (but BT2020_YCC still better)
+- Works with both legacy and atomic modesetting
+- Perfect reference for "what HDR should look like"
 
-**Quick Test Script:**
+## Environment Variables
+
+### User Configuration
 ```bash
-# Test with default 400 nits
-./test-hdr.sh
-
-# Match Horizon Zero Dawn's calibration (360 nits)
-./test-hdr.sh 360
-
-# Try lower to avoid badge entirely
-./test-hdr.sh 300
-
-# Try higher for brighter displays
-./test-hdr.sh 600
+MOONLIGHT_HDR_MAX_NITS=1000     # Override source display mastering luminance
+MOONLIGHT_HDR_MIN_NITS=0        # Override min luminance
+MOONLIGHT_HDR_MAX_CLL=1000      # Override max content light level
+MOONLIGHT_HDR_MAX_FALL=500      # Override max frame-average light level
+MOONLIGHT_DISABLE_ATOMIC=1      # Force legacy API (for debugging)
 ```
 
-**Manual Testing:**
-```bash
-# Test specific values
-MOONLIGHT_HDR_MAX_NITS=360 ./app/moonlight
+### When to Use Overrides
 
-# Fine-tune all parameters
-MOONLIGHT_HDR_MAX_NITS=400 MOONLIGHT_HDR_MAX_CLL=500 MOONLIGHT_HDR_MAX_FALL=250 ./app/moonlight
+**Normally:** Let Sunshine provide the source metadata (passthrough mode)
+
+**Override when:**
+- Testing different values to see TV behavior
+- Source metadata is missing or incorrect
+- Specific game calibration recommendations
+- Debugging HDR issues
+
+**Examples:**
+```bash
+# Let Sunshine provide metadata (default, recommended)
+./app/moonlight
+
+# Override if source reports unrealistic values
+MOONLIGHT_HDR_MAX_NITS=400 ./app/moonlight
+
+# Match specific game calibration
+MOONLIGHT_HDR_MAX_NITS=360 ./app/moonlight  # Horizon Zero Dawn
+
+# Fine-tune all parameters independently
+MOONLIGHT_HDR_MAX_NITS=1000 MOONLIGHT_HDR_MAX_CLL=1500 ./app/moonlight
 ```
 
-**What to Look For:**
-- Blown out highlights (too high)
-- Washed out colors (too low)
-- Inconsistent badge behavior (normal on budget TVs)
-- In-game calibration recommendations
+## Future Improvements
+
+### 1. EDID-Based Fallback Values
+**Concept:** When Sunshine doesn't provide metadata, read client TV's EDID instead of hardcoded 400 nits
+
+**Implementation:**
+- Use libdisplay-info to parse EDID
+- Extract HDR static metadata from CTA-861 extensions
+- Use as fallback only (Sunshine metadata still has priority)
+- Validate values are sane
+
+**Benefits:**
+- Better fallback for displays that advertise capabilities
+- Still respects source metadata when available
+
+### 2. Per-Frame Dynamic Metadata
+**Concept:** Update HDR metadata per-frame for better dynamic range
+
+**Challenges:**
+- Performance overhead of frequent blob updates
+- Need to verify Sunshine sends per-frame metadata
+- Most content uses static metadata anyway
+
+### 3. Hardware Overlay Plane for Performance Stats
+**Concept:** Use second DRM plane for compositing performance overlay
+
+**Benefits:**
+- Performance overlay would work in HDR mode
+- Zero performance impact (hardware composition)
+- Maintains HDR quality
+
+**Implementation needed:**
+- Find available overlay plane
+- Render overlay to separate framebuffer
+- Composite via DRM atomic commit
 
 ## References
 
 - [DRM HDR Documentation](https://www.kernel.org/doc/html/latest/gpu/drm-kms.html#standard-connector-properties)
 - [CTA-861 HDR Standard](https://en.wikipedia.org/wiki/HDMI#Enhanced_features)
 - [Gamescope HDR Implementation](https://github.com/ValveSoftware/gamescope)
-- [libdisplay-info](https://gitlab.freedesktop.org/emersion/libdisplay-info)
+- [Kodi GBM Implementation](https://github.com/xbmc/xbmc)
 
 ## Quick Reference
 
 ### For Users
 ```bash
-# Default (works for most budget HDR TVs)
+# Default (recommended - uses source metadata)
 ./app/moonlight
 
-# Match your specific TV if you know its peak brightness
-MOONLIGHT_HDR_MAX_NITS=360 ./app/moonlight  # Horizon calibration value
-MOONLIGHT_HDR_MAX_NITS=500 ./app/moonlight  # Slightly brighter TV
-
-# Use the test script for easy experimentation
-./test-hdr.sh 360
+# Override if needed
+MOONLIGHT_HDR_MAX_NITS=400 ./app/moonlight
 ```
 
 ### For Developers
 - **File**: [drm.cpp](app/streaming/video/ffmpeg-renderers/drm.cpp)
-- **Function**: `DrmRenderer::setHdrMode(bool enabled)` at line 811
-- **Key Section**: Lines 888-956 (content-based metadata logic)
-- **Environment Variables**: Lines 912-918 (getenv calls)
+- **HDR Setup**: `DrmRenderer::setHdrMode()` at line ~908
+- **Metadata Logic**: Lines 1022-1068 (passthrough with fallback)
+- **Atomic Rendering**: `DrmRenderer::renderFrame()` at line ~1447
 
-### Understanding Your Display
+### Verifying It Works
 ```bash
-# Read your TV's EDID
-sudo cat /sys/class/drm/card1/card1-HDMI-A-1/edid | edid-decode
+# During active streaming, check DRM state
+sudo modetest -M vc4 -p
 
 # Look for:
-# - Color primaries (how wide is the color gamut?)
-# - HDR Static Metadata block (does it have luminance values?)
-# - Supported EOTFs (ST2084 = HDR10, HLG = broadcast HDR)
+# - Plane COLOR_ENCODING: value 2 (BT.2020 YCbCr) ✅
+# - Connector Colorspace: value 10 (BT2020_YCC) ✅
+# - HDR_OUTPUT_METADATA: blob with your metadata ✅
 ```
 
 ## Contributors
 
-- Initial HDR implementation: Moonlight-qt contributors
-- Clientside metadata fix: Claude Code debugging session (2025-12-15)
+- HDR atomic modesetting implementation: 2025-12-15 debugging session
 - Analysis based on Gamescope, Kodi, and Windows implementations
-- EDID analysis and documentation: LG UT7550AUA (2024 model, 86" 4K budget HDR TV)
+- EDID analysis: LG UT7550AUA (2024 model, 86" 4K budget HDR TV)
+- Testing platforms: Intel NUC (i915) and Raspberry Pi 5 (VC4)

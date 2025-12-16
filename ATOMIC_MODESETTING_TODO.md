@@ -1,6 +1,12 @@
-# Implementing Atomic Modesetting for VC4 HDR Fix
+# ✅ COMPLETED - Atomic Modesetting for VC4 HDR Fix
 
-## The Problem
+**Status**: Fully implemented in commit `9f626ea0` (2025-12-15)
+
+**This document is now historical** - kept for reference to show the problem analysis and solution design.
+
+---
+
+## The Problem (SOLVED)
 
 Raspberry Pi 5's Broadcom VC4 driver does not properly support setting `COLOR_ENCODING` via the legacy DRM API. This causes HDR colors to appear washed out because the hardware interprets BT.2020 wide-gamut content as BT.709 narrow-gamut.
 
