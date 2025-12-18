@@ -256,14 +256,25 @@ White: (0.3127, 0.3290) D65
 **Root Cause**: This is a **Sunshine-side issue**, not a Moonlight-Qt bug
 - Moonlight properly calls `LiStopConnection()` on stream termination
 - Sunshine is responsible for restoring host display settings
-- This bug may have motivated the creation of the Apollo Sunshine fork
+- Upstream Sunshine changes real display settings but restoration logic can fail
 
-**Status**:
-- ✅ Moonlight-Qt properly signals stream termination
-- ❌ Sunshine may fail to restore display settings (host-side bug)
-- See: Sunshine GitHub issues or Apollo Sunshine fork for potential fixes
+**Solutions**:
 
-**Workaround**: Manually restore display settings on host PC after streaming
+**Option 1: Use Apollo Sunshine Fork** ([GitHub](https://github.com/ClassicOldSong/Apollo))
+- Optionally uses [SudoVDA](https://github.com/SudoMaker/SudoVDA) virtual displays (Windows only)
+- When using virtual displays: Creates temporary displays instead of changing real ones
+- Displays auto-created on stream start, auto-removed on stream end
+- Can also work without virtual displays using client identity system
+- Remembers per-client display configurations automatically
+
+**Option 2: Fix Upstream Sunshine** (for developers)
+- Display restoration code exists but can fail silently
+- Needs investigation in `src/platform/windows/display_device.cpp`
+- Likely issues: cleanup not called on all exit paths, HDR state not saved/restored
+
+**Option 3: Manual Workaround**
+- Manually restore display settings on host PC after streaming
+- Use Windows display settings or third-party tools
 
 ---
 
