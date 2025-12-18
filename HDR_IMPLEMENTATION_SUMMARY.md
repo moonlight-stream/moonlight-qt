@@ -268,9 +268,21 @@ White: (0.3127, 0.3290) D65
 - Remembers per-client display configurations automatically
 
 **Option 2: Fix Upstream Sunshine** (for developers)
-- Display restoration code exists but can fail silently
-- Needs investigation in `src/platform/windows/display_device.cpp`
-- Likely issues: cleanup not called on all exit paths, HDR state not saved/restored
+- **Bug Found**: `src/display_device.cpp:660` - `std::ignore = settings_iface.revertSettings();`
+- The code **explicitly ignores** the return value of `revertSettings()` in shutdown paths
+- If reversion fails (timing issues, exclusive mode, etc.), it silently gives up without retry or logging
+- **Same bug exists in Apollo** - they avoid it by using virtual displays instead
+- **Fix**: Check return value and add error logging/retry logic:
+  ```cpp
+  if (try_once) {
+    if (!settings_iface.revertSettings()) {
+      BOOST_LOG(warning) << "Failed to revert display settings";
+      // Add retry or persistence for next boot
+    }
+    stop_token.requestStop();
+    return;
+  }
+  ```
 
 **Option 3: Manual Workaround**
 - Manually restore display settings on host PC after streaming
