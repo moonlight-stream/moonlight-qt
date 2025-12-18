@@ -237,7 +237,7 @@ White: (0.3127, 0.3290) D65
 
 ## Known Limitations
 
-### Performance Overlay Doesn't Work
+### 1. Performance Overlay Doesn't Work
 
 **Why**: DRM renderer doesn't implement `notifyOverlayUpdated()`
 - Overlays work with EGL renderer, but EGL breaks HDR metadata passthrough
@@ -248,6 +248,45 @@ White: (0.3127, 0.3290) D65
 - Zero performance impact (hardware composition)
 - Maintains HDR quality
 - Requires additional implementation
+
+### 2. Host Display Settings May Not Revert (Sunshine Issue)
+
+**Symptom**: After ending a Moonlight stream, the host PC's display settings (resolution, HDR mode) may not revert to their original state.
+
+**Root Cause**: This is a **Sunshine-side issue**, not a Moonlight-Qt bug
+- Moonlight properly calls `LiStopConnection()` on stream termination
+- Sunshine is responsible for restoring host display settings
+- Upstream Sunshine changes real display settings but restoration logic can fail
+
+**Solutions**:
+
+**Option 1: Use Apollo Sunshine Fork** ([GitHub](https://github.com/ClassicOldSong/Apollo))
+- Optionally uses [SudoVDA](https://github.com/SudoMaker/SudoVDA) virtual displays (Windows only)
+- When using virtual displays: Creates temporary displays instead of changing real ones
+- Displays auto-created on stream start, auto-removed on stream end
+- Can also work without virtual displays using client identity system
+- Remembers per-client display configurations automatically
+
+**Option 2: Fix Upstream Sunshine** (for developers)
+- **Bug Found**: `src/display_device.cpp:660` - `std::ignore = settings_iface.revertSettings();`
+- The code **explicitly ignores** the return value of `revertSettings()` in shutdown paths
+- If reversion fails (timing issues, exclusive mode, etc.), it silently gives up without retry or logging
+- **Same bug exists in Apollo** - they avoid it by using virtual displays instead
+- **Fix**: Check return value and add error logging/retry logic:
+  ```cpp
+  if (try_once) {
+    if (!settings_iface.revertSettings()) {
+      BOOST_LOG(warning) << "Failed to revert display settings";
+      // Add retry or persistence for next boot
+    }
+    stop_token.requestStop();
+    return;
+  }
+  ```
+
+**Option 3: Manual Workaround**
+- Manually restore display settings on host PC after streaming
+- Use Windows display settings or third-party tools
 
 ---
 

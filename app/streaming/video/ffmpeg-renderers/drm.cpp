@@ -203,8 +203,32 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
 
 DrmRenderer::~DrmRenderer()
 {
-    // Ensure we're out of HDR mode
+    // Ensure we're out of HDR mode and commit it immediately
+    // We can't rely on renderFrame() being called after setHdrMode(false)
     setHdrMode(false);
+
+    // Force immediate atomic commit to disable HDR (if atomic modesetting is supported)
+    if (m_SupportsAtomic && m_HdrStateChanged && m_ColorspaceProp && m_HdrOutputMetadataProp) {
+        drmModeAtomicReqPtr req = drmModeAtomicAlloc();
+        if (req) {
+            // Set connector properties to disable HDR
+            drmModeAtomicAddProperty(req, m_ConnectorId, m_ColorspaceProp->prop_id,
+                                   DRM_MODE_COLORIMETRY_DEFAULT);
+            drmModeAtomicAddProperty(req, m_ConnectorId, m_HdrOutputMetadataProp->prop_id, 0);
+
+            // Commit
+            drmSetMaster(m_DrmFd);
+            int err = drmModeAtomicCommit(m_DrmFd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
+            if (err == 0) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                           "HDR disabled in destructor");
+            } else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                           "Failed to disable HDR in destructor: %d", errno);
+            }
+            drmModeAtomicFree(req);
+        }
+    }
 
     for (int i = 0; i < k_SwFrameCount; i++) {
         if (m_SwFrame[i].primeFd) {
@@ -990,28 +1014,24 @@ void DrmRenderer::setHdrMode(bool enabled)
                                     sunshineHdrMetadata.maxFrameAverageLightLevel);
                     }
 
-                    // Use content-based metadata instead of display-based metadata
+                    // HDR Metadata Strategy: Passthrough from Sunshine with Fallbacks
                     //
-                    // WHY: Passing through source display values (from PC monitor or dummy plug)
-                    // causes issues because source display ≠ client display capabilities.
-                    // The source might report 351 nits (real monitor) or 9700 nits (calibrated
-                    // dummy plug), but this tells the client TV to tone-map incorrectly.
+                    // The HDR mastering metadata describes the display environment where the content
+                    // was created (the source PC's monitor). This is the standard HDR workflow used
+                    // by Blu-ray discs and video files. The client TV uses this information to
+                    // understand the brightness range of the incoming signal and tone-map it to its
+                    // own capabilities.
                     //
-                    // SOLUTION: Use moderate content-based values that describe the video signal
-                    // itself, not any particular display. This lets each display's tone mapper
-                    // work with its own capabilities. 400 nits is a good balance that:
-                    // - Activates proper 10-bit BT.2020 color handling
-                    // - Avoids triggering aggressive TV tone mapping
-                    // - Works well across a wide range of displays
+                    // Priority order:
+                    // 1. Environment variable overrides (user tuning)
+                    // 2. Sunshine metadata from source display (passthrough)
+                    // 3. 400 nit fallback (when no source metadata available)
                     //
-                    // This matches the approach used by Gamescope (Valve) and other modern
-                    // HDR implementations that prioritize display EDID over source metadata.
-                    //
-                    // Environment variable overrides (for fine-tuning):
-                    // - MOONLIGHT_HDR_MAX_NITS: max_display_mastering_luminance (default: 400)
-                    // - MOONLIGHT_HDR_MIN_NITS: min_display_mastering_luminance (default: 0)
-                    // - MOONLIGHT_HDR_MAX_CLL: max content light level (default: same as max_nits)
-                    // - MOONLIGHT_HDR_MAX_FALL: max frame average light level (default: max_nits/2)
+                    // Environment variable overrides:
+                    // - MOONLIGHT_HDR_MAX_NITS: max_display_mastering_luminance
+                    // - MOONLIGHT_HDR_MIN_NITS: min_display_mastering_luminance
+                    // - MOONLIGHT_HDR_MAX_CLL: max content light level
+                    // - MOONLIGHT_HDR_MAX_FALL: max frame average light level
 
                     // Read environment variables for user tuning
                     const char* envMaxNits = getenv("MOONLIGHT_HDR_MAX_NITS");
