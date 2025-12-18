@@ -237,7 +237,7 @@ White: (0.3127, 0.3290) D65
 
 ## Known Limitations
 
-### Performance Overlay Doesn't Work
+### 1. Performance Overlay Doesn't Work
 
 **Why**: DRM renderer doesn't implement `notifyOverlayUpdated()`
 - Overlays work with EGL renderer, but EGL breaks HDR metadata passthrough
@@ -248,6 +248,22 @@ White: (0.3127, 0.3290) D65
 - Zero performance impact (hardware composition)
 - Maintains HDR quality
 - Requires additional implementation
+
+### 2. Host Display Settings May Not Revert (Sunshine Issue)
+
+**Symptom**: After ending a Moonlight stream, the host PC's display settings (resolution, HDR mode) may not revert to their original state.
+
+**Root Cause**: This is a **Sunshine-side issue**, not a Moonlight-Qt bug
+- Moonlight properly calls `LiStopConnection()` on stream termination
+- Sunshine is responsible for restoring host display settings
+- This bug may have motivated the creation of the Apollo Sunshine fork
+
+**Status**:
+- ✅ Moonlight-Qt properly signals stream termination
+- ❌ Sunshine may fail to restore display settings (host-side bug)
+- See: Sunshine GitHub issues or Apollo Sunshine fork for potential fixes
+
+**Workaround**: Manually restore display settings on host PC after streaming
 
 ---
 

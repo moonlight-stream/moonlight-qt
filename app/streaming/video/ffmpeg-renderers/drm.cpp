@@ -203,8 +203,32 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
 
 DrmRenderer::~DrmRenderer()
 {
-    // Ensure we're out of HDR mode
+    // Ensure we're out of HDR mode and commit it immediately
+    // We can't rely on renderFrame() being called after setHdrMode(false)
     setHdrMode(false);
+
+    // Force immediate atomic commit to disable HDR (if atomic modesetting is supported)
+    if (m_SupportsAtomic && m_HdrStateChanged && m_ColorspaceProp && m_HdrOutputMetadataProp) {
+        drmModeAtomicReqPtr req = drmModeAtomicAlloc();
+        if (req) {
+            // Set connector properties to disable HDR
+            drmModeAtomicAddProperty(req, m_ConnectorId, m_ColorspaceProp->prop_id,
+                                   DRM_MODE_COLORIMETRY_DEFAULT);
+            drmModeAtomicAddProperty(req, m_ConnectorId, m_HdrOutputMetadataProp->prop_id, 0);
+
+            // Commit
+            drmSetMaster(m_DrmFd);
+            int err = drmModeAtomicCommit(m_DrmFd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
+            if (err == 0) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                           "HDR disabled in destructor");
+            } else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                           "Failed to disable HDR in destructor: %d", errno);
+            }
+            drmModeAtomicFree(req);
+        }
+    }
 
     for (int i = 0; i < k_SwFrameCount; i++) {
         if (m_SwFrame[i].primeFd) {
