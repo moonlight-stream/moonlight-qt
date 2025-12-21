@@ -995,7 +995,8 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             // check below.
             m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_AV1);
         }
-        else if (!m_Preferences->enableHdr && // HDR is checked below
+        else {
+            if (!m_Preferences->enableHdr && // HDR is checked below
                  m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
                  m_Preferences->videoCodecConfig != StreamingPreferences::VCC_AUTO && // Auto VCC is already checked in initialize()
                  getDecoderAvailability(testWindow,
@@ -1004,7 +1005,12 @@ bool Session::validateLaunch(SDL_Window* testWindow)
                                         m_StreamConfig.width,
                                         m_StreamConfig.height,
                                         m_StreamConfig.fps) != DecoderAvailability::Hardware) {
-            emitLaunchWarning(tr("Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance."));
+                emitLaunchWarning(tr("Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance."));
+            }
+
+            if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_AV1) {
+                m_SupportedVideoFormats.removeByMask(~VIDEO_FORMAT_MASK_AV1);
+            }
         }
     }
 
@@ -1019,7 +1025,8 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             // check below.
             m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_H265);
         }
-        else if (!m_Preferences->enableHdr && // HDR is checked below
+        else {
+            if (!m_Preferences->enableHdr && // HDR is checked below
                  m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
                  m_Preferences->videoCodecConfig != StreamingPreferences::VCC_AUTO && // Auto VCC is already checked in initialize()
                  getDecoderAvailability(testWindow,
@@ -1028,11 +1035,16 @@ bool Session::validateLaunch(SDL_Window* testWindow)
                                         m_StreamConfig.width,
                                         m_StreamConfig.height,
                                         m_StreamConfig.fps) != DecoderAvailability::Hardware) {
-            emitLaunchWarning(tr("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance."));
+                emitLaunchWarning(tr("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance."));
+            }
+
+            if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC) {
+                m_SupportedVideoFormats.removeByMask(~VIDEO_FORMAT_MASK_H265);
+            }
         }
     }
 
-    if (!(m_SupportedVideoFormats & VIDEO_FORMAT_MASK_H265) &&
+    if (!(m_SupportedVideoFormats & ~VIDEO_FORMAT_MASK_H264) &&
             m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO &&
             getDecoderAvailability(testWindow,
                                    m_Preferences->videoDecoderSelection,
