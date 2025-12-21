@@ -819,7 +819,7 @@ bool Session::initialize(QQuickWindow* qtWindow)
         }
 #else
         // Deprioritize AV1 unless we can't hardware decode HEVC, and have HDR enabled
-        // or we're on Windows.
+        // or we're on Windows or a non-x86 Linux/BSD.
         //
         // Normally, we'd assume hardware that can't decode HEVC definitely can't decode
         // AV1 either, and we wouldn't even bother probing for AV1 support. However, some
@@ -830,10 +830,16 @@ bool Session::initialize(QQuickWindow* qtWindow)
         // to decode HEVC in hardware normally using VAAPI.
         // https://www.reddit.com/r/GeForceNOW/comments/1omsckt/psa_be_wary_of_purchasing_dell_computers_with/
         //
+        // Some embedded Linux platforms have incomplete V4L2 decoding support which can
+        // lead to unusual cases where a system might support H.264 and AV1 but not HEVC,
+        // even if the underlying hardware supports all three. RK3588 is an example of
+        // such a SoC. To handle this situation, we will also probe for AV1 if we're on
+        // a non-x86 non-macOS UNIX system.
+        //
         // We want to keep AV1 at the top of the list for HDR with software decoding
         // because dav1d is higher performance than FFmpeg's HEVC software decoder.
         if (hevcDA == DecoderAvailability::Hardware
-#ifndef Q_OS_WIN32
+#if !defined(Q_OS_WIN32) && (!(defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN)) || defined(Q_PROCESSOR_X86))
             || !m_Preferences->enableHdr
 #endif
             ) {
