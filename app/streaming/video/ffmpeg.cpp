@@ -1049,7 +1049,14 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
             return nullptr;
 
         default:
-            return new GenericHwAccelRenderer(hwDecodeCfg->device_type);
+            if (hwDecodeCfg->pix_fmt != AV_PIX_FMT_DRM_PRIME) {
+                return new GenericHwAccelRenderer(hwDecodeCfg->device_type);
+            }
+            else {
+                // We already handle unknown devices types that
+                // output DRM_PRIME frames above in pass 0.
+                return nullptr;
+            }
         }
     }
     else {
