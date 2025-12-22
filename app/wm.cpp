@@ -88,6 +88,45 @@ bool WMUtils::isRunningNvidiaProprietaryDriverX11()
 #endif
 }
 
+bool WMUtils::supportsDesktopGLWithEGL()
+{
+#ifdef HAVE_EGL
+    static SDL_atomic_t supportsDesktopGL;
+
+    // If the value is not set yet, populate it now.
+    int val = SDL_AtomicGet(&supportsDesktopGL);
+    if (!(val & VALUE_SET)) {
+        bool desktopGL = false;
+
+        EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        if (display != EGL_NO_DISPLAY && eglInitialize(display, nullptr, nullptr)) {
+            EGLint matchingConfigs = 0;
+            EGLint const attribs[] =
+            {
+                EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+                EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+                EGL_NONE
+            };
+
+            desktopGL = eglChooseConfig(display, attribs, nullptr, 0, &matchingConfigs) == EGL_TRUE &&
+                        matchingConfigs > 0;
+            eglTerminate(display);
+        }
+
+        // Populate the value to return and have for next time.
+        // This can race with another thread populating the same data,
+        // but that's no big deal.
+        val = VALUE_SET | (desktopGL ? VALUE_TRUE : 0);
+        SDL_AtomicSet(&supportsDesktopGL, val);
+    }
+
+    return !!(val & VALUE_TRUE);
+#else
+    // Assume it does if we can't check ourselves
+    return true;
+#endif
+}
+
 bool WMUtils::isRunningWayland()
 {
 #ifdef HAS_WAYLAND
