@@ -24,6 +24,10 @@
 #ifndef EGL_PLATFORM_X11_KHR
 #define EGL_PLATFORM_X11_KHR 0x31D5
 #endif
+
+#ifndef EGL_PLATFORM_GBM_KHR
+#define EGL_PLATFORM_GBM_KHR 0x31D7
+#endif
 #endif
 
 #define VALUE_SET 0x01
@@ -96,9 +100,15 @@ bool WMUtils::supportsDesktopGLWithEGL()
     // If the value is not set yet, populate it now.
     int val = SDL_AtomicGet(&supportsDesktopGL);
     if (!(val & VALUE_SET)) {
-        bool desktopGL = false;
+        // Assume it does if we can't confirm
+        bool desktopGL = true;
 
-        EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        // Prefer GBM as some drivers (pvr) use swrast/llvmpipe for X11/XWayland,
+        // so we'll get a different (and incorrect) result if we query X11.
+        EGLDisplay display = eglGetPlatformDisplay(EGL_PLATFORM_GBM_KHR, EGL_DEFAULT_DISPLAY, nullptr);
+        if (display == EGL_NO_DISPLAY) {
+            display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+        }
         if (display != EGL_NO_DISPLAY && eglInitialize(display, nullptr, nullptr)) {
             EGLint matchingConfigs = 0;
             EGLint const attribs[] =
