@@ -473,7 +473,7 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     m_VideoFormat = params->videoFormat;
 
     // Don't bother initializing Pacer if we're not actually going to render
-    if (!testFrame) {
+    if (!m_TestOnly) {
         m_Pacer = new Pacer(m_FrontendRenderer, &m_ActiveWndVideoStats);
         if (!m_Pacer->initialize(params->window, params->frameRate,
                                  params->enableFramePacing || (params->enableVsync && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FORCE_PACING)))) {
@@ -662,8 +662,12 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
         }
 
         av_frame_free(&frame);
+
+        // Flush the codec to prepare for the real stream
+        avcodec_flush_buffers(m_VideoDecoderCtx);
     }
-    else {
+
+    if (!m_TestOnly) {
         if ((params->videoFormat & VIDEO_FORMAT_MASK_H264) &&
                 !(m_BackendRenderer->getDecoderCapabilities() & CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC)) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1065,6 +1069,26 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
     }
 }
 
+bool FFmpegVideoDecoder::isSeparateTestDecoderRequired(const AVCodec* decoder)
+{
+    // We can generally reuse the test decoder for real rendering as long as
+    // the decoder can handle a change in surface sizes while streaming.
+    // We know v4l2m2m can't handle this (see comment below), so let's just
+    // opt-out all non-hwaccel decoders just to be safe.
+    if (qEnvironmentVariableIntValue("SEPARATE_TEST_DECODER")) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using separate test decoder due to environment variable");
+        return true;
+    }
+    else if (getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using separate test decoder for non-hwaccel decoder");
+        return true;
+    }
+
+    return false;
+}
+
 bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                                                enum AVPixelFormat requiredFormat,
                                                PDECODER_PARAMETERS params,
@@ -1073,17 +1097,20 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                                                std::function<IFFmpegRenderer*()> createRendererFunc)
 {
     DECODER_PARAMETERS testFrameDecoderParams = *params;
+    bool separateTestDecoder = isSeparateTestDecoderRequired(decoder);
 
-    // Setup the test decoder parameters using the dimensions for the test frame. These are
-    // used to populate the AVCodecContext fields of the same names.
-    //
-    // While most decoders don't care what dimensions we specify here, V4L2M2M seems to puke
-    // if we pass whatever the native stream resolution is then decode a 720p test frame.
-    //
-    // For qcom-venus, it seems to lead to failures allocating capture buffers (bug #1042).
-    // For wave5 (VisionFive), it leads to an invalid pitch error when calling drmModeAddFB2().
-    testFrameDecoderParams.width = 1280;
-    testFrameDecoderParams.height = 720;
+    if (separateTestDecoder) {
+        // Setup the test decoder parameters using the dimensions for the test frame. These are
+        // used to populate the AVCodecContext fields of the same names.
+        //
+        // While most decoders don't care what dimensions we specify here, V4L2M2M seems to puke
+        // if we pass whatever the native stream resolution is then decode a 720p test frame.
+        //
+        // For qcom-venus, it seems to lead to failures allocating capture buffers (bug #1042).
+        // For wave5 (VisionFive), it leads to an invalid pitch error when calling drmModeAddFB2().
+        testFrameDecoderParams.width = 1280;
+        testFrameDecoderParams.height = 720;
+    }
 
     m_HwDecodeCfg = hwConfig;
 
@@ -1116,21 +1143,27 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                     return true;
                 }
 
-                // The test worked, so now let's initialize it for real
-                reset();
+                if (separateTestDecoder) {
+                    // The test worked, so now let's initialize it for real
+                    reset();
 
-                if ((m_BackendRenderer = createRendererFunc()) == nullptr) {
-                    // Out of memory
-                    break;
-                }
+                    if ((m_BackendRenderer = createRendererFunc()) == nullptr) {
+                        // Out of memory
+                        break;
+                    }
 
-                if (initializeRendererInternal(m_BackendRenderer, params) &&
-                    completeInitialization(decoder, requiredFormat, params, false, i == 0 /* EGL/DRM */)) {
-                    return true;
+                    if (initializeRendererInternal(m_BackendRenderer, params) &&
+                        completeInitialization(decoder, requiredFormat, params, false, i == 0 /* EGL/DRM */)) {
+                        return true;
+                    }
+                    else {
+                        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Decoder failed to initialize after successful test");
+                    }
                 }
                 else {
-                    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Decoder failed to initialize after successful test");
+                    // The test decoder can be used for real decoding
+                    return true;
                 }
             }
         }
