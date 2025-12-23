@@ -91,7 +91,7 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
     pthread_once(&s_InitDrmFunctions, lookupRealDrmFunctions);
 
     // Grab the first DRM Master FD that makes it in here. This will be the Qt
-    // EGLFS backend's DRM FD, on which we will call drmDropMaster() later.
+    // EGLFS backend's DRM FD, which will be shared with SDL/video renderer.
     if (g_QtDrmMasterFd == -1 && drmIsMaster(fd)) {
         g_QtDrmMasterFd = fd;
         fstat(g_QtDrmMasterFd, &g_DrmMasterStat);
@@ -149,7 +149,7 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
     pthread_once(&s_InitDrmFunctions, lookupRealDrmFunctions);
 
     // Grab the first DRM Master FD that makes it in here. This will be the Qt
-    // EGLFS backend's DRM FD, on which we will call drmDropMaster() later.
+    // EGLFS backend's DRM FD, which will be shared with SDL/video renderer.
     if (g_QtDrmMasterFd == -1 && drmIsMaster(fd)) {
         g_QtDrmMasterFd = fd;
         fstat(g_QtDrmMasterFd, &g_DrmMasterStat);

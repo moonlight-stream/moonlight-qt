@@ -5,6 +5,7 @@
 
 #include "drm.h"
 #include "string.h"
+#include <cstdlib>
 
 extern "C" {
     #include <libavutil/hwcontext_drm.h>
@@ -76,6 +77,9 @@ struct dma_buf_sync {
 #endif
 #ifndef DRM_MODE_COLORIMETRY_BT2020_RGB
 #define DRM_MODE_COLORIMETRY_BT2020_RGB  9
+#endif
+#ifndef DRM_MODE_COLORIMETRY_BT2020_YCC
+#define DRM_MODE_COLORIMETRY_BT2020_YCC  10
 #endif
 
 #include <unistd.h>
@@ -171,8 +175,22 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_ColorRangeProp(nullptr),
       m_HdrOutputMetadataProp(nullptr),
       m_ColorspaceProp(nullptr),
+      m_MaxBpcProp(nullptr),
       m_Version(nullptr),
       m_HdrOutputMetadataBlobId(0),
+      m_SupportsAtomic(false),
+      m_HdrEnabled(false),
+      m_HdrStateChanged(false),
+      m_FbIdProp(nullptr),
+      m_CrtcIdProp(nullptr),
+      m_SrcXProp(nullptr),
+      m_SrcYProp(nullptr),
+      m_SrcWProp(nullptr),
+      m_SrcHProp(nullptr),
+      m_CrtcXProp(nullptr),
+      m_CrtcYProp(nullptr),
+      m_CrtcWProp(nullptr),
+      m_CrtcHProp(nullptr),
       m_OutputRect{},
       m_SwFrameMapper(this),
       m_CurrentSwFrameIdx(0)
@@ -185,8 +203,32 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
 
 DrmRenderer::~DrmRenderer()
 {
-    // Ensure we're out of HDR mode
+    // Ensure we're out of HDR mode and commit it immediately
+    // We can't rely on renderFrame() being called after setHdrMode(false)
     setHdrMode(false);
+
+    // Force immediate atomic commit to disable HDR (if atomic modesetting is supported)
+    if (m_SupportsAtomic && m_HdrStateChanged && m_ColorspaceProp && m_HdrOutputMetadataProp) {
+        drmModeAtomicReqPtr req = drmModeAtomicAlloc();
+        if (req) {
+            // Set connector properties to disable HDR
+            drmModeAtomicAddProperty(req, m_ConnectorId, m_ColorspaceProp->prop_id,
+                                   DRM_MODE_COLORIMETRY_DEFAULT);
+            drmModeAtomicAddProperty(req, m_ConnectorId, m_HdrOutputMetadataProp->prop_id, 0);
+
+            // Commit
+            drmSetMaster(m_DrmFd);
+            int err = drmModeAtomicCommit(m_DrmFd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
+            if (err == 0) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                           "HDR disabled in destructor");
+            } else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                           "Failed to disable HDR in destructor: %d", errno);
+            }
+            drmModeAtomicFree(req);
+        }
+    }
 
     for (int i = 0; i < k_SwFrameCount; i++) {
         if (m_SwFrame[i].primeFd) {
@@ -226,6 +268,42 @@ DrmRenderer::~DrmRenderer()
 
     if (m_ColorspaceProp != nullptr) {
         drmModeFreeProperty(m_ColorspaceProp);
+    }
+
+    if (m_MaxBpcProp != nullptr) {
+        drmModeFreeProperty(m_MaxBpcProp);
+    }
+
+    // Free atomic modesetting properties
+    if (m_FbIdProp != nullptr) {
+        drmModeFreeProperty(m_FbIdProp);
+    }
+    if (m_CrtcIdProp != nullptr) {
+        drmModeFreeProperty(m_CrtcIdProp);
+    }
+    if (m_SrcXProp != nullptr) {
+        drmModeFreeProperty(m_SrcXProp);
+    }
+    if (m_SrcYProp != nullptr) {
+        drmModeFreeProperty(m_SrcYProp);
+    }
+    if (m_SrcWProp != nullptr) {
+        drmModeFreeProperty(m_SrcWProp);
+    }
+    if (m_SrcHProp != nullptr) {
+        drmModeFreeProperty(m_SrcHProp);
+    }
+    if (m_CrtcXProp != nullptr) {
+        drmModeFreeProperty(m_CrtcXProp);
+    }
+    if (m_CrtcYProp != nullptr) {
+        drmModeFreeProperty(m_CrtcYProp);
+    }
+    if (m_CrtcWProp != nullptr) {
+        drmModeFreeProperty(m_CrtcWProp);
+    }
+    if (m_CrtcHProp != nullptr) {
+        drmModeFreeProperty(m_CrtcHProp);
     }
 
     if (m_Plane != nullptr) {
@@ -650,6 +728,28 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         return DIRECT_RENDERING_INIT_FAILED;
     }
 
+    // DRM leasing is handled by masterhook.c - it creates a lease from Qt's EGLFS FD
+    // and passes it to us via g_DrmLeaseFd. If we got a lease, we have exclusive access
+    // and can use NONBLOCK for atomic commits. Otherwise we share master with EGLFS
+    // and must use ALLOW_MODESET.
+
+    // Check if driver supports atomic modesetting
+    // Allow disabling via environment variable for testing
+    const char* forceDisableAtomic = getenv("MOONLIGHT_DISABLE_ATOMIC");
+    if (forceDisableAtomic && atoi(forceDisableAtomic) == 1) {
+        m_SupportsAtomic = false;
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "DRM atomic modesetting disabled via MOONLIGHT_DISABLE_ATOMIC");
+    } else if (drmSetClientCap(m_DrmFd, DRM_CLIENT_CAP_ATOMIC, 1) == 0) {
+        m_SupportsAtomic = true;
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "DRM atomic modesetting supported and enabled");
+    } else {
+        m_SupportsAtomic = false;
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "DRM atomic modesetting not supported, using legacy API (COLOR_ENCODING may not work on VC4)");
+    }
+
     // Populate plane properties
     {
         drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, m_PlaneId, DRM_MODE_OBJECT_PLANE);
@@ -662,6 +762,37 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     }
                     else if (!strcmp(prop->name, "COLOR_RANGE")) {
                         m_ColorRangeProp = prop;
+                    }
+                    // Cache atomic modesetting property IDs
+                    else if (m_SupportsAtomic && !strcmp(prop->name, "FB_ID")) {
+                        m_FbIdProp = prop;
+                    }
+                    else if (m_SupportsAtomic && !strcmp(prop->name, "CRTC_ID")) {
+                        m_CrtcIdProp = prop;
+                    }
+                    else if (m_SupportsAtomic && !strcmp(prop->name, "SRC_X")) {
+                        m_SrcXProp = prop;
+                    }
+                    else if (m_SupportsAtomic && !strcmp(prop->name, "SRC_Y")) {
+                        m_SrcYProp = prop;
+                    }
+                    else if (m_SupportsAtomic && !strcmp(prop->name, "SRC_W")) {
+                        m_SrcWProp = prop;
+                    }
+                    else if (m_SupportsAtomic && !strcmp(prop->name, "SRC_H")) {
+                        m_SrcHProp = prop;
+                    }
+                    else if (m_SupportsAtomic && !strcmp(prop->name, "CRTC_X")) {
+                        m_CrtcXProp = prop;
+                    }
+                    else if (m_SupportsAtomic && !strcmp(prop->name, "CRTC_Y")) {
+                        m_CrtcYProp = prop;
+                    }
+                    else if (m_SupportsAtomic && !strcmp(prop->name, "CRTC_W")) {
+                        m_CrtcWProp = prop;
+                    }
+                    else if (m_SupportsAtomic && !strcmp(prop->name, "CRTC_H")) {
+                        m_CrtcHProp = prop;
                     }
                     else {
                         drmModeFreeProperty(prop);
@@ -686,31 +817,8 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     else if (!strcmp(prop->name, "Colorspace")) {
                         m_ColorspaceProp = prop;
                     }
-                    else if (!strcmp(prop->name, "max bpc") && (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT)) {
-                        if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 16) == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Enabled 48-bit HDMI Deep Color");
-                        }
-                        else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 12) == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Enabled 36-bit HDMI Deep Color");
-                        }
-                        else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 10) == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Enabled 30-bit HDMI Deep Color");
-                        }
-                        else {
-                            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                         "drmModeObjectSetProperty(%s) failed: %d",
-                                         prop->name,
-                                         errno);
-                            // Non-fatal
-                        }
-
-                        drmModeFreeProperty(prop);
-                    }
-                    else {
-                        drmModeFreeProperty(prop);
+                    else if (!strcmp(prop->name, "max bpc")) {
+                        m_MaxBpcProp = prop;
                     }
                 }
             }
@@ -820,14 +928,32 @@ int DrmRenderer::getRendererAttributes()
 
 void DrmRenderer::setHdrMode(bool enabled)
 {
-    if (m_ColorspaceProp != nullptr) {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "DrmRenderer::setHdrMode(%s) called",
+                enabled ? "enabled" : "disabled");
+
+    // If using atomic modesetting, defer applying connector properties until renderFrame()
+    // because connector properties must be set atomically along with plane properties
+    if (m_SupportsAtomic) {
+        m_HdrEnabled = enabled;
+        m_HdrStateChanged = true;
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "HDR state will be applied atomically in next frame");
+    }
+
+    if (m_ColorspaceProp != nullptr && !m_SupportsAtomic) {
+        // CRITICAL: Match colorspace to actual video format!
+        // Our video frames are YCbCr (P010 format), NOT RGB.
+        // Using BT2020_RGB with YCbCr frames causes washed out colors on some drivers (VC4/RPI5).
+        // Intel i915 handles this mismatch, but Broadcom VC4 does not.
+        int colorimetry = enabled ? DRM_MODE_COLORIMETRY_BT2020_YCC : DRM_MODE_COLORIMETRY_DEFAULT;
         int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
                                            m_ColorspaceProp->prop_id,
-                                           enabled ? DRM_MODE_COLORIMETRY_BT2020_RGB : DRM_MODE_COLORIMETRY_DEFAULT);
+                                           colorimetry);
         if (err == 0) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Set HDMI Colorspace: %s",
-                        enabled ? "BT.2020 RGB" : "Default");
+                        enabled ? "BT.2020 YCbCr" : "Default");
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -844,52 +970,160 @@ void DrmRenderer::setHdrMode(bool enabled)
             m_HdrOutputMetadataBlobId = 0;
         }
 
-        if (enabled) {
-            DrmDefs::hdr_output_metadata outputMetadata;
-            SS_HDR_METADATA sunshineHdrMetadata;
+                if (enabled) {
+                    DrmDefs::hdr_output_metadata outputMetadata;
+                    SS_HDR_METADATA sunshineHdrMetadata;
 
-            // Sunshine will have HDR metadata but GFE will not
-            if (!LiGetHdrMetadata(&sunshineHdrMetadata)) {
-                memset(&sunshineHdrMetadata, 0, sizeof(sunshineHdrMetadata));
-            }
+                    // Sunshine will have HDR metadata but GFE will not
+                    bool hasMetadata = LiGetHdrMetadata(&sunshineHdrMetadata);
+                    if (!hasMetadata) {
+                        memset(&sunshineHdrMetadata, 0, sizeof(sunshineHdrMetadata));
+                    }
 
-            outputMetadata.metadata_type = 0; // HDMI_STATIC_METADATA_TYPE1
-            outputMetadata.hdmi_metadata_type1.eotf = 2; // SMPTE ST 2084
-            outputMetadata.hdmi_metadata_type1.metadata_type = 0; // Static Metadata Type 1
-            for (int i = 0; i < 3; i++) {
-                outputMetadata.hdmi_metadata_type1.display_primaries[i].x = sunshineHdrMetadata.displayPrimaries[i].x;
-                outputMetadata.hdmi_metadata_type1.display_primaries[i].y = sunshineHdrMetadata.displayPrimaries[i].y;
-            }
-            outputMetadata.hdmi_metadata_type1.white_point.x = sunshineHdrMetadata.whitePoint.x;
-            outputMetadata.hdmi_metadata_type1.white_point.y = sunshineHdrMetadata.whitePoint.y;
-            outputMetadata.hdmi_metadata_type1.max_display_mastering_luminance = sunshineHdrMetadata.maxDisplayLuminance;
-            outputMetadata.hdmi_metadata_type1.min_display_mastering_luminance = sunshineHdrMetadata.minDisplayLuminance;
-            outputMetadata.hdmi_metadata_type1.max_cll = sunshineHdrMetadata.maxContentLightLevel;
-            outputMetadata.hdmi_metadata_type1.max_fall = sunshineHdrMetadata.maxFrameAverageLightLevel;
+                    outputMetadata.metadata_type = 0; // HDMI_STATIC_METADATA_TYPE1
+                    outputMetadata.hdmi_metadata_type1.eotf = 2; // SMPTE ST 2084
+                    outputMetadata.hdmi_metadata_type1.metadata_type = 0; // Static Metadata Type 1
 
-            int err = drmModeCreatePropertyBlob(m_DrmFd, &outputMetadata, sizeof(outputMetadata), &m_HdrOutputMetadataBlobId);
-            if (err < 0) {
-                m_HdrOutputMetadataBlobId = 0;
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "drmModeCreatePropertyBlob() failed: %d",
-                             errno);
+                    // Use Sunshine's primaries if available, otherwise BT.2020 defaults
+                    if (hasMetadata && sunshineHdrMetadata.displayPrimaries[0].x != 0) {
+                        for (int i = 0; i < 3; i++) {
+                            outputMetadata.hdmi_metadata_type1.display_primaries[i].x = sunshineHdrMetadata.displayPrimaries[i].x;
+                            outputMetadata.hdmi_metadata_type1.display_primaries[i].y = sunshineHdrMetadata.displayPrimaries[i].y;
+                        }
+                        outputMetadata.hdmi_metadata_type1.white_point.x = sunshineHdrMetadata.whitePoint.x;
+                        outputMetadata.hdmi_metadata_type1.white_point.y = sunshineHdrMetadata.whitePoint.y;
+                    } else {
+                        // BT.2020 standard primaries
+                        outputMetadata.hdmi_metadata_type1.display_primaries[0].x = 0x8A48; // Red 0.7080
+                        outputMetadata.hdmi_metadata_type1.display_primaries[0].y = 0x3907; // Red 0.2920
+                        outputMetadata.hdmi_metadata_type1.display_primaries[1].x = 0x2134; // Green 0.1700
+                        outputMetadata.hdmi_metadata_type1.display_primaries[1].y = 0x9BAA; // Green 0.7970
+                        outputMetadata.hdmi_metadata_type1.display_primaries[2].x = 0x1996; // Blue 0.1310
+                        outputMetadata.hdmi_metadata_type1.display_primaries[2].y = 0x08FC; // Blue 0.0460
+                        outputMetadata.hdmi_metadata_type1.white_point.x = 0x3D12; // White 0.3127 (D65)
+                        outputMetadata.hdmi_metadata_type1.white_point.y = 0x4042; // White 0.3290 (D65)
+                    }
+
+                    // Log raw Sunshine values for debugging
+                    if (hasMetadata) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Raw Sunshine HDR Metadata: maxDisplayLuminance=%u, minDisplayLuminance=%u, maxContentLightLevel=%u, maxFrameAverageLightLevel=%u",
+                                    sunshineHdrMetadata.maxDisplayLuminance,
+                                    sunshineHdrMetadata.minDisplayLuminance,
+                                    sunshineHdrMetadata.maxContentLightLevel,
+                                    sunshineHdrMetadata.maxFrameAverageLightLevel);
+                    }
+
+                    // HDR Metadata Strategy: Passthrough from Sunshine with Fallbacks
+                    //
+                    // The HDR mastering metadata describes the display environment where the content
+                    // was created (the source PC's monitor). This is the standard HDR workflow used
+                    // by Blu-ray discs and video files. The client TV uses this information to
+                    // understand the brightness range of the incoming signal and tone-map it to its
+                    // own capabilities.
+                    //
+                    // Priority order:
+                    // 1. Environment variable overrides (user tuning)
+                    // 2. Sunshine metadata from source display (passthrough)
+                    // 3. 400 nit fallback (when no source metadata available)
+                    //
+                    // Environment variable overrides:
+                    // - MOONLIGHT_HDR_MAX_NITS: max_display_mastering_luminance
+                    // - MOONLIGHT_HDR_MIN_NITS: min_display_mastering_luminance
+                    // - MOONLIGHT_HDR_MAX_CLL: max content light level
+                    // - MOONLIGHT_HDR_MAX_FALL: max frame average light level
+
+                    // Read environment variables for user tuning
+                    const char* envMaxNits = getenv("MOONLIGHT_HDR_MAX_NITS");
+                    const char* envMinNits = getenv("MOONLIGHT_HDR_MIN_NITS");
+                    const char* envMaxCll = getenv("MOONLIGHT_HDR_MAX_CLL");
+                    const char* envMaxFall = getenv("MOONLIGHT_HDR_MAX_FALL");
+
+                    // Use source display's mastering metadata (passthrough from host PC)
+                    // This is correct for game streaming where the game was rendered for the host's display
+                    uint16_t maxLuminance, minLuminance;
+
+                    if (envMaxNits) {
+                        maxLuminance = atoi(envMaxNits);
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Using MOONLIGHT_HDR_MAX_NITS=%u nits (override)", maxLuminance);
+                    } else if (hasMetadata && sunshineHdrMetadata.maxDisplayLuminance > 0) {
+                        maxLuminance = sunshineHdrMetadata.maxDisplayLuminance;
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Using source display mastering luminance: %u nits (passthrough)", maxLuminance);
+                    } else {
+                        maxLuminance = 400; // Fallback if no metadata available
+                        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                    "No source HDR metadata available, using fallback: %u nits", maxLuminance);
+                    }
+
+                    if (envMinNits) {
+                        minLuminance = atoi(envMinNits);
+                    } else if (hasMetadata && sunshineHdrMetadata.minDisplayLuminance > 0) {
+                        minLuminance = sunshineHdrMetadata.minDisplayLuminance;
+                    } else {
+                        minLuminance = 0;
+                    }
+
+                    outputMetadata.hdmi_metadata_type1.max_display_mastering_luminance = maxLuminance;
+                    outputMetadata.hdmi_metadata_type1.min_display_mastering_luminance = minLuminance;
+
+                    // Critical: max_cll and max_fall must be non-zero for HDR to activate!
+                    // Allow environment variable override, otherwise use sensible defaults.
+                    uint16_t maxCll, maxFall;
+
+                    if (envMaxCll) {
+                        maxCll = atoi(envMaxCll);
+                    } else if (hasMetadata && sunshineHdrMetadata.maxContentLightLevel > 0) {
+                        maxCll = sunshineHdrMetadata.maxContentLightLevel;
+                    } else {
+                        maxCll = maxLuminance; // Default: same as max mastering luminance
+                    }
+
+                    if (envMaxFall) {
+                        maxFall = atoi(envMaxFall);
+                    } else if (hasMetadata && sunshineHdrMetadata.maxFrameAverageLightLevel > 0) {
+                        maxFall = sunshineHdrMetadata.maxFrameAverageLightLevel;
+                    } else {
+                        maxFall = maxLuminance / 2; // Default: half of max mastering luminance
+                    }
+
+                    outputMetadata.hdmi_metadata_type1.max_cll = maxCll;
+                    outputMetadata.hdmi_metadata_type1.max_fall = maxFall;
+
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Final HDR Metadata: hasMetadata=%d, max_mastering=%u, max_cll=%u, max_fall=%u",
+                                hasMetadata,
+                                outputMetadata.hdmi_metadata_type1.max_display_mastering_luminance,
+                                outputMetadata.hdmi_metadata_type1.max_cll,
+                                outputMetadata.hdmi_metadata_type1.max_fall);
+
+                    int err = drmModeCreatePropertyBlob(m_DrmFd, &outputMetadata, sizeof(outputMetadata), &m_HdrOutputMetadataBlobId);
+                    if (err < 0) {
+                        m_HdrOutputMetadataBlobId = 0;
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                    "drmModeCreatePropertyBlob() failed: %d",
+                                    errno);
                 // Non-fatal
             }
         }
 
-        int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
-                                           m_HdrOutputMetadataProp->prop_id,
-                                           enabled ? m_HdrOutputMetadataBlobId : 0);
-        if (err == 0) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Set display HDR mode: %s", enabled ? "enabled" : "disabled");
-        }
-        else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "drmModeObjectSetProperty(%s) failed: %d",
-                         m_HdrOutputMetadataProp->name,
-                         errno);
-            // Non-fatal
+        // Only apply with legacy API if not using atomic modesetting
+        if (!m_SupportsAtomic) {
+            int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
+                                               m_HdrOutputMetadataProp->prop_id,
+                                               enabled ? m_HdrOutputMetadataBlobId : 0);
+            if (err == 0) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Set display HDR mode: %s", enabled ? "enabled" : "disabled");
+            }
+            else {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "drmModeObjectSetProperty(%s) failed: %d",
+                             m_HdrOutputMetadataProp->name,
+                             errno);
+                // Non-fatal
+            }
         }
     }
     else if (enabled) {
@@ -1249,8 +1483,9 @@ void DrmRenderer::renderFrame(AVFrame* frame)
         return;
     }
 
-    if (hasFrameFormatChanged(frame)) {
-        // Set COLOR_RANGE property for the plane
+    if (hasFrameFormatChanged(frame) && !m_SupportsAtomic) {
+        // Set COLOR_RANGE property for the plane (legacy API only)
+        // When using atomic modesetting, these properties are set in the atomic commit
         {
             const char* desiredValue = getDrmColorRangeValue(frame);
 
@@ -1331,9 +1566,130 @@ void DrmRenderer::renderFrame(AVFrame* frame)
                             "COLOR_ENCODING property does not exist on output plane. Colors may be inaccurate!");
             }
         }
+
+        // Set max bpc (bits per channel) based on actual frame bit depth
+        {
+            int bitsPerChannel = getFrameBitsPerChannel(frame);
+
+            if (m_MaxBpcProp != nullptr) {
+                err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
+                                               m_MaxBpcProp->prop_id, bitsPerChannel);
+                if (err == 0) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Set max bpc to %d (%d-bit color)",
+                                bitsPerChannel, bitsPerChannel * 3);
+                }
+                else {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                 "drmModeObjectSetProperty(%s) failed: %d",
+                                 m_MaxBpcProp->name,
+                                 errno);
+                    // Non-fatal
+                }
+            }
+        }
     }
 
-    // Update the overlay
+    // Update the overlay using atomic modesetting if supported, otherwise fall back to legacy API
+    if (m_SupportsAtomic && m_FbIdProp && m_CrtcIdProp &&
+        m_SrcXProp && m_SrcYProp && m_SrcWProp && m_SrcHProp &&
+        m_CrtcXProp && m_CrtcYProp && m_CrtcWProp && m_CrtcHProp) {
+
+        // Create atomic request
+        drmModeAtomicReqPtr req = drmModeAtomicAlloc();
+        if (req) {
+            // Add framebuffer and geometry
+            drmModeAtomicAddProperty(req, m_PlaneId, m_FbIdProp->prop_id, m_CurrentFbId);
+            drmModeAtomicAddProperty(req, m_PlaneId, m_CrtcIdProp->prop_id, m_CrtcId);
+
+            // Source rectangle (in 16.16 fixed point)
+            drmModeAtomicAddProperty(req, m_PlaneId, m_SrcXProp->prop_id, 0);
+            drmModeAtomicAddProperty(req, m_PlaneId, m_SrcYProp->prop_id, 0);
+            drmModeAtomicAddProperty(req, m_PlaneId, m_SrcWProp->prop_id, frame->width << 16);
+            drmModeAtomicAddProperty(req, m_PlaneId, m_SrcHProp->prop_id, frame->height << 16);
+
+            // Destination rectangle
+            drmModeAtomicAddProperty(req, m_PlaneId, m_CrtcXProp->prop_id, dst.x);
+            drmModeAtomicAddProperty(req, m_PlaneId, m_CrtcYProp->prop_id, dst.y);
+            drmModeAtomicAddProperty(req, m_PlaneId, m_CrtcWProp->prop_id, dst.w);
+            drmModeAtomicAddProperty(req, m_PlaneId, m_CrtcHProp->prop_id, dst.h);
+
+            // Color properties - THE FIX FOR VC4!
+            if (m_ColorEncodingProp) {
+                const char* desiredEncoding = getDrmColorEncodingValue(frame);
+                if (desiredEncoding) {
+                    for (int i = 0; i < m_ColorEncodingProp->count_enums; i++) {
+                        if (!strcmp(desiredEncoding, m_ColorEncodingProp->enums[i].name)) {
+                            drmModeAtomicAddProperty(req, m_PlaneId, m_ColorEncodingProp->prop_id,
+                                                   m_ColorEncodingProp->enums[i].value);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (m_ColorRangeProp) {
+                const char* desiredRange = getDrmColorRangeValue(frame);
+                if (desiredRange) {
+                    for (int i = 0; i < m_ColorRangeProp->count_enums; i++) {
+                        if (!strcmp(desiredRange, m_ColorRangeProp->enums[i].name)) {
+                            drmModeAtomicAddProperty(req, m_PlaneId, m_ColorRangeProp->prop_id,
+                                                   m_ColorRangeProp->enums[i].value);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Add connector properties for HDR if state changed
+            bool applyingHdrState = m_HdrStateChanged;
+            if (applyingHdrState) {
+                if (m_ColorspaceProp) {
+                    int colorimetry = m_HdrEnabled ? DRM_MODE_COLORIMETRY_BT2020_YCC : DRM_MODE_COLORIMETRY_DEFAULT;
+                    drmModeAtomicAddProperty(req, m_ConnectorId, m_ColorspaceProp->prop_id, colorimetry);
+                }
+
+                if (m_HdrOutputMetadataProp) {
+                    drmModeAtomicAddProperty(req, m_ConnectorId, m_HdrOutputMetadataProp->prop_id,
+                                           m_HdrEnabled ? m_HdrOutputMetadataBlobId : 0);
+                }
+            }
+
+            // Commit all changes atomically
+            // We share the DRM master FD with EGLFS, so we need to:
+            // 1. Grab master temporarily before the commit
+            // 2. Use ALLOW_MODESET to avoid EBUSY when EGLFS reclaims master
+            // This allows both EGLFS (Qt UI) and video renderer to coexist on the same display
+            drmSetMaster(m_DrmFd);
+            err = drmModeAtomicCommit(m_DrmFd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
+
+            if (err == 0) {
+                drmModeAtomicFree(req);
+                // Clear HDR state changed flag after successful commit
+                if (applyingHdrState) {
+                    m_HdrStateChanged = false;
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "HDR state applied atomically: %s", m_HdrEnabled ? "enabled" : "disabled");
+                }
+                // Success! Free the previous FB object
+                drmModeRmFB(m_DrmFd, lastFbId);
+                return;
+            } else {
+                // Only log the error on the first frame to avoid spam
+                static bool errorLogged = false;
+                if (!errorLogged) {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                               "drmModeAtomicCommit() failed: %d (%s), falling back to legacy API for all frames",
+                               errno, strerror(errno));
+                    errorLogged = true;
+                }
+                drmModeAtomicFree(req);
+                // Fall through to legacy path
+            }
+        }
+    }
+
+    // Legacy API path (fallback or when atomic not supported)
     err = drmModeSetPlane(m_DrmFd, m_PlaneId, m_CrtcId, m_CurrentFbId, 0,
                           dst.x, dst.y,
                           dst.w, dst.h,
