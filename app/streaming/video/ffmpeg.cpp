@@ -663,8 +663,13 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
 
         av_frame_free(&frame);
 
-        // Flush the codec to prepare for the real stream
-        avcodec_flush_buffers(m_VideoDecoderCtx);
+        if (!m_TestOnly) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Test decode successful");
+
+            // Flush the codec to prepare for the real stream
+            avcodec_flush_buffers(m_VideoDecoderCtx);
+        }
     }
 
     if (!m_TestOnly) {
@@ -1076,13 +1081,16 @@ bool FFmpegVideoDecoder::isSeparateTestDecoderRequired(const AVCodec* decoder)
     // We know v4l2m2m can't handle this (see comment below), so let's just
     // opt-out all non-hwaccel decoders just to be safe.
     if (qEnvironmentVariableIntValue("SEPARATE_TEST_DECODER")) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using separate test decoder due to environment variable");
         return true;
     }
     else if (getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using separate test decoder for non-hwaccel decoder");
+        return true;
+    }
+    else if (strcmp(decoder->name, "av1") == 0) {
+        // The core AV1 hwaccel decoding code (as of FFmpeg 8.0.1) does
+        // not correctly reinitialize the codec context when the frame
+        // size changes, so always use a separate test decoder for AV1
+        // until this is fixed.
         return true;
     }
 
@@ -1144,6 +1152,10 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                 }
 
                 if (separateTestDecoder) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Not reusing test decoder for %s",
+                                decoder->name);
+
                     // The test worked, so now let's initialize it for real
                     reset();
 
