@@ -6,6 +6,7 @@
 
 #include "streaming/session.h"
 #include "streaming/streamutils.h"
+#include "streaming/video/videoenhancement.h"
 
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -188,4 +189,77 @@ void SystemProperties::refreshDisplays()
     }
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
+}
+
+/**
+ * \brief Inform if the GPU is capable of Video enhancement
+ *
+ * Check if either Video Super-Resolution or SDR-to-HDR features can be used by the GPU.
+ *
+ * \return bool Returns true if the GPU is capable
+ */
+bool SystemProperties::isVideoEnhancementCapable()
+{
+    VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+    return videoEnhancement->isUIvisible() && (videoEnhancement->isVSRcapable() || videoEnhancement->isHDRcapable());
+}
+
+/**
+ * \brief Inform if the GPU's driver is at an experiemental state of Video enhancement implementation
+ *
+ * \return bool Returns true if it is experimental yet
+ */
+bool SystemProperties::isVideoEnhancementExperimental()
+{
+    VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+    return videoEnhancement->isExperimental();
+}
+
+/**
+ * \brief Inform if the menu is selectable (DEBUG mode)
+ *
+ * For Debugging purpose only, we allow the dropdown menu visible to test other algorithms
+ *
+ * \return bool Returns true if in debug mode
+ */
+bool SystemProperties::isVideoEnhancementSwitchable()
+{
+#if defined(QT_DEBUG) && defined(Q_OS_WIN)
+    return true;
+#else
+    return false;
+#endif
+}
+
+/**
+ * \brief Check if the vendor is AMD
+ *
+ * \return bool Returns true if the vendor is AMD
+ */
+bool SystemProperties::isVendorAMD()
+{
+    VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+    return videoEnhancement->isVendorAMD();
+}
+
+/**
+ * \brief Check if the vendor is Intel
+ *
+ * \return bool Returns true if the vendor is Intel
+ */
+bool SystemProperties::isVendorIntel()
+{
+    VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+    return videoEnhancement->isVendorIntel();
+}
+
+/**
+ * \brief Check if the vendor is NVIDIA
+ *
+ * \return bool Returns true if the vendor is NVIDIA
+ */
+bool SystemProperties::isVendorNVIDIA()
+{
+    VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+    return videoEnhancement->isVendorNVIDIA();
 }

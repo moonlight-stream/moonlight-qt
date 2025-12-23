@@ -6,3 +6,10 @@
 build/
 config.tests/*/.qmake.stash
 config.tests/*/Makefile
+third-party/
+!third-party/RTX_Video_SDK/
+!third-party/RTX_Video_SDK/**
+!third-party/stb_image/
+!third-party/stb_image/**
+!third-party/DirectXShaderCompiler/
+!third-party/DirectXShaderCompiler/**
