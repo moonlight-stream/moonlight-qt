@@ -580,7 +580,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_InputHandler(nullptr),
       m_MouseEmulationRefCount(0),
       m_FlushingWindowEventsRef(0),
-      m_ShouldExitAfterQuit(false),
+      m_ShouldExit(false),
       m_AsyncConnectionSuccess(false),
       m_PortTestResults(0),
       m_OpusDecoder(nullptr),
@@ -1279,8 +1279,7 @@ private:
         // Only quit the running app if our session terminated gracefully
         bool shouldQuit =
                 !m_Session->m_UnexpectedTermination &&
-                (m_Session->m_Preferences->quitAppAfter ||
-                 m_Session->m_ShouldExitAfterQuit);
+                m_Session->m_Preferences->quitAppAfter;
 
         // Notify the UI
         if (shouldQuit) {
@@ -1310,7 +1309,7 @@ private:
             }
 
             // Exit the entire program if requested
-            if (m_Session->m_ShouldExitAfterQuit) {
+            if (m_Session->m_ShouldExit) {
                 QCoreApplication::instance()->quit();
             }
 
@@ -1725,9 +1724,17 @@ void Session::flushWindowEvents()
     SDL_PushEvent(&flushEvent);
 }
 
-void Session::setShouldExitAfterQuit()
+void Session::setShouldExit(bool quitHostApp)
 {
-    m_ShouldExitAfterQuit = true;
+    // If the caller has explicitly asked us to quit the host app,
+    // override whatever the preferences say and do it. If the
+    // caller doesn't override to force quit, let the preferences
+    // dictate what we do.
+    if (quitHostApp) {
+        m_Preferences->quitAppAfter = true;
+    }
+
+    m_ShouldExit = true;
 }
 
 void Session::start()

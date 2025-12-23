@@ -144,7 +144,7 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
                     "Detected quitAndExit key combo");
 
         // Indicate that we want to exit afterwards
-        Session::get()->setShouldExitAfterQuit();
+        Session::get()->setShouldExit(true);
 
         // Push a quit event to the main loop
         SDL_Event quitExitEvent;
