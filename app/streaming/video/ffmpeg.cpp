@@ -1106,39 +1106,31 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
             break;
         }
 
-        // Initialize the backend renderer itself
-        if (initializeRendererInternal(m_BackendRenderer, (m_TestOnly || m_BackendRenderer->needsTestFrame()) ? &testFrameDecoderParams : params)) {
-            if (completeInitialization(decoder, requiredFormat,
-                                       (m_TestOnly || m_BackendRenderer->needsTestFrame()) ? &testFrameDecoderParams : params,
-                                       m_TestOnly || m_BackendRenderer->needsTestFrame(),
-                                       i == 0 /* EGL/DRM */)) {
+        // Initialize the backend renderer for testing
+        if (initializeRendererInternal(m_BackendRenderer, &testFrameDecoderParams)) {
+            if (completeInitialization(decoder, requiredFormat, &testFrameDecoderParams,
+                                       true, i == 0 /* EGL/DRM */)) {
                 if (m_TestOnly) {
                     // This decoder is only for testing capabilities, so don't bother
                     // creating a usable renderer
                     return true;
                 }
 
-                if (m_BackendRenderer->needsTestFrame()) {
-                    // The test worked, so now let's initialize it for real
-                    reset();
+                // The test worked, so now let's initialize it for real
+                reset();
 
-                    if ((m_BackendRenderer = createRendererFunc()) == nullptr) {
-                        // Out of memory
-                        break;
-                    }
+                if ((m_BackendRenderer = createRendererFunc()) == nullptr) {
+                    // Out of memory
+                    break;
+                }
 
-                    if (initializeRendererInternal(m_BackendRenderer, params) &&
-                        completeInitialization(decoder, requiredFormat, params, false, i == 0 /* EGL/DRM */)) {
-                        return true;
-                    }
-                    else {
-                        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Decoder failed to initialize after successful test");
-                    }
+                if (initializeRendererInternal(m_BackendRenderer, params) &&
+                    completeInitialization(decoder, requiredFormat, params, false, i == 0 /* EGL/DRM */)) {
+                    return true;
                 }
                 else {
-                    // No test required. Good to go now.
-                    return true;
+                    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Decoder failed to initialize after successful test");
                 }
             }
         }

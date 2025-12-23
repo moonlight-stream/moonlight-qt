@@ -16,7 +16,6 @@ public:
     virtual void prepareToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
-    virtual bool needsTestFrame() override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderColorspace() override;
 

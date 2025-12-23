@@ -48,11 +48,6 @@ void CUDARenderer::renderFrame(AVFrame*)
     SDL_assert(false);
 }
 
-bool CUDARenderer::needsTestFrame()
-{
-    return true;
-}
-
 bool CUDARenderer::isDirectRenderingSupported()
 {
     // We only support rendering via SDL read-back

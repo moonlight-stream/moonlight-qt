@@ -1151,15 +1151,6 @@ int D3D11VARenderer::getDecoderCapabilities()
            CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
 }
 
-bool D3D11VARenderer::needsTestFrame()
-{
-    // We can usually determine when D3D11VA will work based on which decoder GUIDs are supported,
-    // however there are some strange cases (Quadro P400 + Radeon HD 5570) where something goes
-    // horribly wrong and D3D11VideoDevice::CreateVideoDecoder() fails inside FFmpeg. We need to
-    // catch that case before we commit to using D3D11VA.
-    return true;
-}
-
 IFFmpegRenderer::InitFailureReason D3D11VARenderer::getInitFailureReason()
 {
     // In the specific case where we found at least one D3D11 hardware device but none of the

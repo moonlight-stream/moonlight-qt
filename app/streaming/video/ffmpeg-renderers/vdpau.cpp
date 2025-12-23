@@ -461,13 +461,6 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 }
 
-bool VDPAURenderer::needsTestFrame()
-{
-    // We need a test frame to see if this VDPAU driver
-    // supports the profile used for streaming
-    return true;
-}
-
 int VDPAURenderer::getDecoderColorspace()
 {
     // VDPAU defaults to Rec 601.

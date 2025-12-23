@@ -23,7 +23,6 @@ public:
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
-    virtual bool needsTestFrame() override;
     virtual InitFailureReason getInitFailureReason() override;
 
     enum PixelShaders {

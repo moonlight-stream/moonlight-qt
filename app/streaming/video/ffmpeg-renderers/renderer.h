@@ -193,12 +193,6 @@ public:
         return true;
     }
 
-    // NOTE: This can be called BEFORE initialize()!
-    virtual bool needsTestFrame() {
-        // No test frame required by default
-        return false;
-    }
-
     virtual int getDecoderCapabilities() {
         // No special capabilities by default
         return 0;

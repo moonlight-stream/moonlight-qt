@@ -48,11 +48,6 @@ void GenericHwAccelRenderer::renderFrame(AVFrame*)
     SDL_assert(false);
 }
 
-bool GenericHwAccelRenderer::needsTestFrame()
-{
-    return true;
-}
-
 bool GenericHwAccelRenderer::isDirectRenderingSupported()
 {
     // We only support rendering via read-back

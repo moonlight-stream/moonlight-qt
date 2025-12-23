@@ -340,13 +340,6 @@ int MmalRenderer::getRendererAttributes()
     return RENDERER_ATTRIBUTE_1080P_MAX;
 }
 
-bool MmalRenderer::needsTestFrame()
-{
-    // We won't be able to decode if the GPU memory is 64 MB or lower,
-    // so we must test before allowing the decoder to be used.
-    return true;
-}
-
 void MmalRenderer::renderFrame(AVFrame* frame)
 {
     MMAL_BUFFER_HEADER_T* buffer = (MMAL_BUFFER_HEADER_T*)frame->data[3];
