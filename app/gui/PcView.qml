@@ -201,6 +201,16 @@ CenteredGridView {
                     }
                 }
                 NavigableMenuItem {
+                    text: qsTr("Configure Wake")
+                    onTriggered: {
+                        configureWakeDialog.pcIndex = index
+                        configureWakeDialog.pcName = model.name
+                        configureWakeDialog.wakeMethod = computerModel.getWakeMethod(index)
+                        configureWakeDialog.httpWakeUrl = computerModel.getHttpWakeUrl(index)
+                        configureWakeDialog.open()
+                    }
+                }
+                NavigableMenuItem {
                     text: qsTr("Delete PC")
                     onTriggered: {
                         deletePcDialog.pcIndex = index
@@ -401,6 +411,107 @@ CenteredGridView {
         text: showPcDetailsDialog.pcDetails
         imageSrc: "qrc:/res/baseline-help_outline-24px.svg"
         standardButtons: Dialog.Ok
+    }
+
+    NavigableDialog {
+        id: configureWakeDialog
+        property int pcIndex: -1
+        property string pcName: ""
+        property int wakeMethod: 0
+        property string httpWakeUrl: ""
+        property bool urlValid: wolRadio.checked || computerModel.isValidWakeUrl(httpWakeUrlField.text.trim())
+
+        title: qsTr("Configure Wake: %1").arg(pcName)
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        onOpened: {
+            wolRadio.forceActiveFocus()
+            wolRadio.checked = (wakeMethod === 0)
+            httpRadio.checked = (wakeMethod === 1)
+            httpWakeUrlField.text = httpWakeUrl
+            standardButton(Dialog.Ok).enabled = urlValid
+        }
+
+        onClosed: {
+            httpWakeUrlField.clear()
+        }
+
+        onAccepted: {
+            var method = wolRadio.checked ? 0 : 1
+            computerModel.configureWake(pcIndex, method, httpWakeUrlField.text.trim())
+        }
+
+        // Disable OK button when HTTP wake is selected but URL is invalid
+        onUrlValidChanged: {
+            if (visible) {
+                standardButton(Dialog.Ok).enabled = urlValid
+            }
+        }
+
+        ColumnLayout {
+            spacing: 10
+
+            Label {
+                text: qsTr("Wake Method:")
+                font.bold: true
+            }
+
+            ButtonGroup {
+                id: wakeMethodGroup
+            }
+
+            RadioButton {
+                id: wolRadio
+                text: qsTr("Standard Wake-on-LAN (magic packet)")
+                ButtonGroup.group: wakeMethodGroup
+            }
+
+            RadioButton {
+                id: httpRadio
+                text: qsTr("HTTP Wake (for VPN/Tailscale)")
+                ButtonGroup.group: wakeMethodGroup
+            }
+
+            Label {
+                text: qsTr("HTTP Wake URL:")
+                font.bold: true
+                visible: httpRadio.checked
+            }
+
+            TextField {
+                id: httpWakeUrlField
+                Layout.fillWidth: true
+                Layout.minimumWidth: 400
+                placeholderText: "https://wakeonlan.your-tailnet.ts.net/wake?mac=aa:bb:cc:dd:ee:ff"
+                visible: httpRadio.checked
+
+                Keys.onReturnPressed: {
+                    if (configureWakeDialog.urlValid) {
+                        configureWakeDialog.accept()
+                    }
+                }
+                Keys.onEnterPressed: {
+                    if (configureWakeDialog.urlValid) {
+                        configureWakeDialog.accept()
+                    }
+                }
+            }
+
+            Label {
+                text: qsTr("Invalid URL. Please enter a valid HTTP or HTTPS URL.")
+                font.pointSize: 9
+                color: "red"
+                visible: httpRadio.checked && httpWakeUrlField.text.trim() !== "" && !computerModel.isValidWakeUrl(httpWakeUrlField.text.trim())
+            }
+
+            Label {
+                text: qsTr("A simple HTTP GET request with a 10-second timeout will be sent to this URL.")
+                font.pointSize: 9
+                font.italic: true
+                visible: httpRadio.checked
+                Layout.topMargin: 5
+            }
+        }
     }
 
     ScrollBar.vertical: ScrollBar {}
