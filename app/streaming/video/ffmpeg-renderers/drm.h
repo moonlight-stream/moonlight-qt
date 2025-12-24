@@ -59,7 +59,6 @@ public:
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
     virtual bool isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) override;
     virtual int getRendererAttributes() override;
-    virtual bool needsTestFrame() override;
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual bool isDirectRenderingSupported() override;
     virtual int getDecoderColorspace() override;

@@ -351,7 +351,7 @@ int SDLCALL signalHandlerThread(void* data)
             if (session != nullptr) {
                 if (sig == SIGTERM) {
                     // If this is a SIGTERM, set the flag to quit
-                    session->setShouldExitAfterQuit();
+                    session->setShouldExit();
                 }
 
                 // Stop the streaming session

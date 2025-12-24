@@ -26,7 +26,6 @@ public:
     virtual int getDecoderColorspace() override;
     virtual int getDecoderColorRange() override;
     virtual int getDecoderCapabilities() override;
-    virtual bool needsTestFrame() override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
     virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
 

@@ -1353,11 +1353,6 @@ void DrmRenderer::renderFrame(AVFrame* frame)
     drmModeRmFB(m_DrmFd, lastFbId);
 }
 
-bool DrmRenderer::needsTestFrame()
-{
-    return true;
-}
-
 bool DrmRenderer::testRenderFrame(AVFrame* frame) {
     uint32_t fbId;
 

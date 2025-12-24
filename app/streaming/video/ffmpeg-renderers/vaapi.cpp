@@ -575,14 +575,6 @@ VAAPIRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
 }
 
 bool
-VAAPIRenderer::needsTestFrame()
-{
-    // We need a test frame to see if this VAAPI driver
-    // supports the profile used for streaming
-    return true;
-}
-
-bool
 VAAPIRenderer::isDirectRenderingSupported()
 {
     if (qgetenv("VAAPI_FORCE_DIRECT") == "1") {

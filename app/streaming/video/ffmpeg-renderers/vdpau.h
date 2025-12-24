@@ -18,7 +18,6 @@ public:
     virtual void notifyOverlayUpdated(Overlay::OverlayType type) override;
     virtual void waitToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
-    virtual bool needsTestFrame() override;
     virtual int getDecoderColorspace() override;
     virtual int getDecoderCapabilities() override;
 

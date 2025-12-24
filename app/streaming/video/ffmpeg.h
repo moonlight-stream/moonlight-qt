@@ -79,6 +79,8 @@ private:
 
     bool initializeRendererInternal(IFFmpegRenderer* renderer, PDECODER_PARAMETERS params);
 
+    static bool isSeparateTestDecoderRequired(const AVCodec* decoder);
+
     void reset();
 
     void writeBuffer(PLENTRY entry, int& offset);

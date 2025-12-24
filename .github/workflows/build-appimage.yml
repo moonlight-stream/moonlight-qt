@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL
-          ref: 235e4870af091ea7e3814ee2dbdb8e2ec627aaf0
+          ref: 3eba0b6f8a21392f47b1b53a476e7633048de9b1
           path: deps/SDL
 
       - name: Build SDL
@@ -73,7 +73,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: intel/libva
-          ref: 2.22.0
+          ref: 2.23.0
           path: deps/libva
 
       - name: Build libva
@@ -88,7 +88,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: haasn/libplacebo
-          ref: 63a3d64ac32eaaa56aa60b5000d43c02544c6508
+          ref: bc90ef94944a3dcaab324b86d3e3769ad1d8698b
           path: deps/libplacebo
           submodules: 'recursive'
 
@@ -103,7 +103,7 @@ jobs:
       - name: Build dav1d
         working-directory: deps
         env:
-          DAV1D_VER: 1.5.1
+          DAV1D_VER: 1.5.2
         run: |
           git clone --branch $DAV1D_VER --depth 1 https://code.videolan.org/videolan/dav1d.git
           pushd dav1d
@@ -116,7 +116,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: FFmpeg/FFmpeg
-          ref: dd00a614e16a15db0b230dfe45790e913e593695
+          ref: n8.0.1
           path: deps/FFmpeg
 
       - name: Build FFmpeg

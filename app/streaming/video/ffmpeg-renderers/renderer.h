@@ -190,13 +190,10 @@ public:
         // If the renderer doesn't provide an explicit test routine,
         // we will always assume that any returned AVFrame can be
         // rendered successfully.
+        //
+        // NB: The test frame passed to this callback may differ in
+        // dimensions from the actual video stream.
         return true;
-    }
-
-    // NOTE: This can be called BEFORE initialize()!
-    virtual bool needsTestFrame() {
-        // No test frame required by default
-        return false;
     }
 
     virtual int getDecoderCapabilities() {

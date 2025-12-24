@@ -61,7 +61,6 @@ public:
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void renderFrame(AVFrame* frame) override;
-    virtual bool needsTestFrame() override;
     virtual bool isDirectRenderingSupported() override;
     virtual int getDecoderColorspace() override;
     virtual int getDecoderCapabilities() override;
