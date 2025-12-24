@@ -87,6 +87,12 @@ public:
         CS_OFFLINE
     };
 
+    enum WakeMethod
+    {
+        WM_WOL,   // Standard Wake-on-LAN (default)
+        WM_HTTP   // HTTP GET request to configured URL
+    };
+
     // Ephemeral traits
     ComputerState state;
     PairState pairState;
@@ -113,6 +119,8 @@ public:
     QSslCertificate serverCert;
     QVector<NvApp> appList;
     bool isNvidiaServerSoftware;
+    WakeMethod wakeMethod;
+    QString httpWakeUrl;
     // Remember to update isEqualSerialized() when adding fields here!
 
     // Synchronization
@@ -120,4 +128,5 @@ public:
 
 private:
     uint16_t externalPort;
+    bool performHttpWake(const QString& url, const QString& computerName) const;
 };
