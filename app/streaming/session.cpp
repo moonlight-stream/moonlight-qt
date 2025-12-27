@@ -1308,13 +1308,13 @@ private:
             } catch (const QtNetworkReplyException&) {
             }
 
-            // Exit the entire program if requested
-            if (m_Session->m_ShouldExit) {
-                QCoreApplication::instance()->quit();
-            }
-
             // Session is finished now
             emit m_Session->sessionFinished(m_Session->m_PortTestResults);
+        }
+
+        // Exit the entire program if requested
+        if (m_Session->m_ShouldExit) {
+            QCoreApplication::instance()->quit();
         }
     }
 
