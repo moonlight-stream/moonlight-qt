@@ -4,7 +4,7 @@
 #endif
 
 #include "drm.h"
-#include "string.h"
+#include "utils.h"
 
 extern "C" {
     #include <libavutil/hwcontext_drm.h>
@@ -80,6 +80,7 @@ struct dma_buf_sync {
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include <sys/mman.h>
 
@@ -576,8 +577,12 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // formats with the linear modifier on all planes, but doesn't actually
     // support raw YUV formats on the primary plane. Don't ever use primary
     // planes on Spacemit hardware to avoid triggering this bug.
-    bool ok, allowPrimaryPlane = !!qEnvironmentVariableIntValue("DRM_ALLOW_PRIMARY_PLANE", &ok);
-    if (!ok) {
+    bool allowPrimaryPlane;
+    if (Utils::getEnvironmentVariableOverride("DRM_ALLOW_PRIMARY_PLANE", &allowPrimaryPlane)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using DRM_ALLOW_PRIMARY_PLANE to override default plane selection logic");
+    }
+    else {
         allowPrimaryPlane = strcmp(m_Version->name, "spacemit") != 0;
     }
 

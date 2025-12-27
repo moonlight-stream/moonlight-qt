@@ -5,6 +5,7 @@
 #include <initguid.h>
 #include "dxva2.h"
 #include "dxutil.h"
+#include "utils.h"
 #include "../ffmpeg.h"
 #include <streaming/streamutils.h>
 #include <streaming/session.h>
@@ -390,16 +391,11 @@ bool DXVA2Renderer::initializeQuirksForAdapter(IDirect3D9Ex* d3d9ex, int adapter
     SDL_assert(m_DeviceQuirks == 0);
     SDL_assert(!m_Device);
 
-    {
-        bool ok;
-
-        m_DeviceQuirks = qEnvironmentVariableIntValue("DXVA2_QUIRK_FLAGS", &ok);
-        if (ok) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using DXVA2 quirk override: 0x%x",
-                        m_DeviceQuirks);
-            return true;
-        }
+    if (Utils::getEnvironmentVariableOverride("DXVA2_QUIRK_FLAGS", &m_DeviceQuirks)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using DXVA2 quirk override: 0x%x",
+                    m_DeviceQuirks);
+        return true;
     }
 
     UINT adapterCount = d3d9ex->GetAdapterCount();

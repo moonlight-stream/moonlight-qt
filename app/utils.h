@@ -14,3 +14,12 @@ namespace WMUtils {
     bool isRunningDesktopEnvironment();
     QString getDrmCardOverride();
 }
+
+namespace Utils {
+    template <typename T>
+    bool getEnvironmentVariableOverride(const char* name, T* value) {
+        bool ok;
+        *value = (T)qEnvironmentVariableIntValue(name, &ok);
+        return ok;
+    }
+}

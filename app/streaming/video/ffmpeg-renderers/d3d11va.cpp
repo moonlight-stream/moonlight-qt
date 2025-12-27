@@ -4,6 +4,7 @@
 #include "d3d11va.h"
 #include "dxutil.h"
 #include "path.h"
+#include "utils.h"
 
 #include "streaming/streamutils.h"
 #include "streaming/session.h"
@@ -209,28 +210,25 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         goto Exit;
     }
 
-    bool ok;
-    m_BindDecoderOutputTextures = !!qEnvironmentVariableIntValue("D3D11VA_FORCE_BIND", &ok);
-    if (!ok) {
+    if (Utils::getEnvironmentVariableOverride("D3D11VA_FORCE_BIND", &m_BindDecoderOutputTextures)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using D3D11VA_FORCE_BIND to override default bind/copy logic");
+    }
+    else {
         // Skip copying to our own internal texture on Intel GPUs due to
         // significant performance impact of the extra copy. See:
         // https://github.com/moonlight-stream/moonlight-qt/issues/1304
         m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086;
     }
-    else {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using D3D11VA_FORCE_BIND to override default bind/copy logic");
-    }
 
-    m_UseFenceHack = !!qEnvironmentVariableIntValue("D3D11VA_FORCE_FENCE", &ok);
-    if (!ok) {
+    if (Utils::getEnvironmentVariableOverride("D3D11VA_FORCE_FENCE", &m_UseFenceHack)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using D3D11VA_FORCE_FENCE to override default fence workaround logic");
+    }
+    else {
         // Old Intel GPUs (HD 4000) require a fence to properly synchronize
         // the video engine with the 3D engine for texture sampling.
         m_UseFenceHack = adapterDesc.VendorId == 0x8086 && featureLevel < D3D_FEATURE_LEVEL_11_1;
-    }
-    else {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using D3D11VA_FORCE_FENCE to override default fence workaround logic");
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,

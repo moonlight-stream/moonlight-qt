@@ -1,5 +1,6 @@
 #include <Limelight.h>
 #include "ffmpeg.h"
+#include "utils.h"
 #include "streaming/session.h"
 
 #include <h264_stream.h>
@@ -109,10 +110,9 @@ bool FFmpegVideoDecoder::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 
 int FFmpegVideoDecoder::getDecoderCapabilities()
 {
-    bool ok;
+    int capabilities;
 
-    int capabilities = qEnvironmentVariableIntValue("DECODER_CAPS", &ok);
-    if (ok) {
+    if (Utils::getEnvironmentVariableOverride("DECODER_CAPS", &capabilities)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Using decoder capability override: 0x%x",
                     capabilities);
@@ -1080,8 +1080,9 @@ bool FFmpegVideoDecoder::isSeparateTestDecoderRequired(const AVCodec* decoder)
     // the decoder can handle a change in surface sizes while streaming.
     // We know v4l2m2m can't handle this (see comment below), so let's just
     // opt-out all non-hwaccel decoders just to be safe.
-    if (qEnvironmentVariableIntValue("SEPARATE_TEST_DECODER")) {
-        return true;
+    bool value;
+    if (Utils::getEnvironmentVariableOverride("SEPARATE_TEST_DECODER", &value)) {
+        return value;
     }
     else if (getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE) {
         return true;

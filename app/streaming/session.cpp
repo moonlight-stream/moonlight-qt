@@ -533,28 +533,22 @@ bool Session::populateDecoderProperties(SDL_Window* window)
         m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
     }
 
-    {
-        bool ok;
+    if (Utils::getEnvironmentVariableOverride("COLOR_SPACE_OVERRIDE", &m_StreamConfig.colorSpace)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using colorspace override: %d",
+                    m_StreamConfig.colorSpace);
+    }
+    else {
+        m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
+    }
 
-        m_StreamConfig.colorSpace = qEnvironmentVariableIntValue("COLOR_SPACE_OVERRIDE", &ok);
-        if (ok) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using colorspace override: %d",
-                        m_StreamConfig.colorSpace);
-        }
-        else {
-            m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
-        }
-
-        m_StreamConfig.colorRange = qEnvironmentVariableIntValue("COLOR_RANGE_OVERRIDE", &ok);
-        if (ok) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using color range override: %d",
-                        m_StreamConfig.colorRange);
-        }
-        else {
-            m_StreamConfig.colorRange = decoder->getDecoderColorRange();
-        }
+    if (Utils::getEnvironmentVariableOverride("COLOR_RANGE_OVERRIDE", &m_StreamConfig.colorRange)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using color range override: %d",
+                    m_StreamConfig.colorRange);
+    }
+    else {
+        m_StreamConfig.colorRange = decoder->getDecoderColorRange();
     }
 
     if (decoder->isAlwaysFullScreen()) {

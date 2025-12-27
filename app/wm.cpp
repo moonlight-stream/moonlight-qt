@@ -176,8 +176,9 @@ bool WMUtils::isRunningWindowManager()
 
 bool WMUtils::isRunningDesktopEnvironment()
 {
-    if (qEnvironmentVariableIsSet("HAS_DESKTOP_ENVIRONMENT")) {
-        return qEnvironmentVariableIntValue("HAS_DESKTOP_ENVIRONMENT");
+    bool value;
+    if (Utils::getEnvironmentVariableOverride("HAS_DESKTOP_ENVIRONMENT", &value)) {
+        return value;
     }
 
 #if defined(Q_OS_WIN) || defined(Q_OS_DARWIN)
