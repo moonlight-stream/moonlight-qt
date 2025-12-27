@@ -261,6 +261,12 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     // https://doc-en.rvspace.org/VisionFive2/DG_Multimedia/JH7110_SDK/hevc_omx.html
     av_dict_set(options, "omx_pix_fmt", "nv12", 0);
 
+    // This option controls the pixel format for the h264_omx and hevc_omx decoders
+    // used on the TH1520 running RevyOS. The decoder will give us software frames
+    // by default but we can opt in for DRM_PRIME frames to dramatically improve
+    // streaming performance.
+    av_dict_set_int(options, "drm_prime", 1, 0);
+
     if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
         context->hw_device_ctx = av_buffer_ref(m_HwContext);
     }
