@@ -27,21 +27,23 @@ private:
     void renderOverlay(Overlay::OverlayType type, int viewportWidth, int viewportHeight);
     unsigned compileShader(const char* vertexShaderSrc, const char* fragmentShaderSrc);
     bool compileShaders();
-    bool specialize();
+    bool setupVideoRenderingState();
+    bool setupOverlayRenderingState();
     static int loadAndBuildShader(int shaderType, const char *filename);
 
     AVPixelFormat m_EGLImagePixelFormat;
     void *m_EGLDisplay;
     unsigned m_Textures[EGL_MAX_PLANES];
     unsigned m_OverlayTextures[Overlay::OverlayMax];
-    unsigned m_OverlayVbos[Overlay::OverlayMax];
+    unsigned m_OverlayVBOs[Overlay::OverlayMax];
+    unsigned m_OverlayVAOs[Overlay::OverlayMax];
     SDL_atomic_t m_OverlayHasValidData[Overlay::OverlayMax];
     unsigned m_ShaderProgram;
     unsigned m_OverlayShaderProgram;
     SDL_GLContext m_Context;
     SDL_Window *m_Window;
     IFFmpegRenderer *m_Backend;
-    unsigned int m_VAO;
+    unsigned int m_VideoVAO;
     bool m_BlockingSwapBuffers;
     EGLSync m_LastRenderSync;
     AVFrame* m_LastFrame;
