@@ -539,6 +539,16 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
         return false;
     }
 
+    QString optionVarName = QString("%1_AVOPTIONS").arg(decoder->name).toUpper();
+    QByteArray optionVarValue = qgetenv(optionVarName.toUtf8());
+    if (!optionVarValue.isNull()) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Applying FFmpeg option overrides for %s: %s",
+                    decoder->name,
+                    optionVarValue.constData());
+        av_dict_parse_string(&options, optionVarValue, "=", ":", 0);
+    }
+
     // Nobody must override our ffGetFormat
     SDL_assert(m_VideoDecoderCtx->get_format == ffGetFormat);
 
