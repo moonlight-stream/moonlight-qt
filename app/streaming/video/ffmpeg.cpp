@@ -339,20 +339,44 @@ bool FFmpegVideoDecoder::initializeRendererInternal(IFFmpegRenderer* renderer, P
 
 bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool useAlternateFrontend)
 {
+    bool glIsSlow;
+    bool vulkanIsSlow;
+
+    if (!Utils::getEnvironmentVariableOverride("GL_IS_SLOW", &glIsSlow)) {
+#ifdef GL_IS_SLOW
+        glIsSlow = true;
+#else
+        glIsSlow = false;
+#endif
+    }
+
+    if (!Utils::getEnvironmentVariableOverride("VULKAN_IS_SLOW", &vulkanIsSlow)) {
+#ifdef VULKAN_IS_SLOW
+        vulkanIsSlow = true;
+#else
+        vulkanIsSlow = false;
+#endif
+    }
+
+    Q_UNUSED(glIsSlow);
+    Q_UNUSED(vulkanIsSlow);
+
     // For cases where we're already using Vulkan Video decoding, always use the Vulkan renderer too.
     // The alternate frontend logic is primarily for cases where a different renderer like EGL or DRM
     // may provide additional performance or HDR capabilities. Neither of these are true for Vulkan.
     if (useAlternateFrontend && m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
         if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
-#if defined(HAVE_LIBPLACEBO_VULKAN) && !defined(VULKAN_IS_SLOW)
-            // The Vulkan renderer can also handle HDR with a supported compositor. We prefer
-            // rendering HDR with Vulkan if possible since it's more fully featured than DRM.
-            m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
-            if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
-                return true;
+#ifdef HAVE_LIBPLACEBO_VULKAN
+            if (!vulkanIsSlow) {
+                // The Vulkan renderer can also handle HDR with a supported compositor. We prefer
+                // rendering HDR with Vulkan if possible since it's more fully featured than DRM.
+                m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
+                if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
+                    return true;
+                }
+                delete m_FrontendRenderer;
+                m_FrontendRenderer = nullptr;
             }
-            delete m_FrontendRenderer;
-            m_FrontendRenderer = nullptr;
 #endif
 
 #ifdef HAVE_DRM
@@ -370,13 +394,17 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
             }
 #endif
 
-#if defined(HAVE_LIBPLACEBO_VULKAN) && defined(VULKAN_IS_SLOW)
-            m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
-            if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
-                return true;
+#ifdef HAVE_LIBPLACEBO_VULKAN
+            if (vulkanIsSlow) {
+                // Try Vulkan even if it's slow because we have no other renderer
+                // that can display HDR properly on Linux.
+                m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
+                if (initializeRendererInternal(m_FrontendRenderer, params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
+                    return true;
+                }
+                delete m_FrontendRenderer;
+                m_FrontendRenderer = nullptr;
             }
-            delete m_FrontendRenderer;
-            m_FrontendRenderer = nullptr;
 #endif
         }
         else
@@ -393,8 +421,9 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
 #endif
         }
 
-#if defined(HAVE_EGL) && !defined(GL_IS_SLOW)
-        if (m_BackendRenderer->canExportEGL()) {
+#ifdef HAVE_EGL
+        // Try EGLRenderer if GL is not slow on this platform
+        if (!glIsSlow && m_BackendRenderer->canExportEGL()) {
             m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
             if (initializeRendererInternal(m_FrontendRenderer, params)) {
                 return true;
@@ -416,22 +445,10 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
         // The backend renderer cannot directly render to the display, so
         // we will create an SDL or DRM renderer to draw the frames.
 
-#if (defined(VULKAN_IS_SLOW) || defined(GL_IS_SLOW)) && defined(HAVE_DRM)
-        // Try DrmRenderer first if we have a slow GPU
-        m_FrontendRenderer = new DrmRenderer(AV_HWDEVICE_TYPE_NONE, m_BackendRenderer);
-        if (initializeRendererInternal(m_FrontendRenderer, params)) {
-            return true;
-        }
-        delete m_FrontendRenderer;
-        m_FrontendRenderer = nullptr;
-#endif
-
-
-#if defined(GL_IS_SLOW) && defined(HAVE_EGL)
-        // We explicitly skipped EGL in the GL_IS_SLOW case above.
-        // If DRM didn't work either, try EGL now.
-        if (m_BackendRenderer->canExportEGL()) {
-            m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
+#ifdef HAVE_DRM
+        if (glIsSlow || vulkanIsSlow) {
+            // Try DrmRenderer first if we have a slow GPU
+            m_FrontendRenderer = new DrmRenderer(AV_HWDEVICE_TYPE_NONE, m_BackendRenderer);
             if (initializeRendererInternal(m_FrontendRenderer, params)) {
                 return true;
             }
@@ -440,13 +457,17 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
         }
 #endif
 
-#if defined(HAVE_LIBPLACEBO_VULKAN) && defined(VULKAN_IS_SLOW)
-        m_FrontendRenderer = new PlVkRenderer(false, m_BackendRenderer);
-        if (initializeRendererInternal(m_FrontendRenderer, params)) {
-            return true;
+#ifdef HAVE_EGL
+        // We explicitly skipped EGL in the GL_IS_SLOW case above.
+        // If DRM didn't work either, try EGL now.
+        if (glIsSlow && m_BackendRenderer->canExportEGL()) {
+            m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
+            if (initializeRendererInternal(m_FrontendRenderer, params)) {
+                return true;
+            }
+            delete m_FrontendRenderer;
+            m_FrontendRenderer = nullptr;
         }
-        delete m_FrontendRenderer;
-        m_FrontendRenderer = nullptr;
 #endif
 
         m_FrontendRenderer = new SdlRenderer();
@@ -1253,6 +1274,28 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
         return false;
     }
 
+    bool glIsSlow;
+    bool vulkanIsSlow;
+
+    if (!Utils::getEnvironmentVariableOverride("GL_IS_SLOW", &glIsSlow)) {
+#ifdef GL_IS_SLOW
+        glIsSlow = true;
+#else
+        glIsSlow = false;
+#endif
+    }
+
+    if (!Utils::getEnvironmentVariableOverride("VULKAN_IS_SLOW", &vulkanIsSlow)) {
+#ifdef VULKAN_IS_SLOW
+        vulkanIsSlow = true;
+#else
+        vulkanIsSlow = false;
+#endif
+    }
+
+    Q_UNUSED(glIsSlow);
+    Q_UNUSED(vulkanIsSlow);
+
     const AVPixelFormat* decoder_pix_fmts;
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
     if (avcodec_get_supported_config(nullptr, decoder, AV_CODEC_CONFIG_PIX_FORMAT, 0,
@@ -1291,15 +1334,15 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
     if (decoder_pix_fmts == NULL) {
         // Supported output pixel formats are unknown. We'll just try DRM/SDL and hope it can cope.
 
-#if defined(HAVE_DRM) && defined(GL_IS_SLOW)
-        if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, nullptr, nullptr,
+#ifdef HAVE_DRM
+        if ((glIsSlow || vulkanIsSlow) && tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, nullptr, nullptr,
                                   []() -> IFFmpegRenderer* { return new DrmRenderer(); })) {
             return true;
         }
 #endif
 
-#if defined(HAVE_LIBPLACEBO_VULKAN) && !defined(VULKAN_IS_SLOW)
-        if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, nullptr, nullptr,
+#ifdef HAVE_LIBPLACEBO_VULKAN
+        if (!vulkanIsSlow && tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, nullptr, nullptr,
                                   []() -> IFFmpegRenderer* { return new PlVkRenderer(); })) {
             return true;
         }
@@ -1342,12 +1385,14 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
 #ifdef HAVE_DRM
         TRY_PREFERRED_PIXEL_FORMAT(DrmRenderer);
 #endif
-#if defined(HAVE_LIBPLACEBO_VULKAN) && !defined(VULKAN_IS_SLOW)
-        TRY_PREFERRED_PIXEL_FORMAT(PlVkRenderer);
+#ifdef HAVE_LIBPLACEBO_VULKAN
+        if (!vulkanIsSlow) {
+            TRY_PREFERRED_PIXEL_FORMAT(PlVkRenderer);
+        }
 #endif
-#ifndef GL_IS_SLOW
-        TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
-#endif
+        if (!glIsSlow) {
+            TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
+        }
     }
 
     // Nothing prefers any of them. Let's see if anyone will tolerate one.
@@ -1355,35 +1400,39 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
 #ifdef HAVE_DRM
         TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(DrmRenderer);
 #endif
-#if defined(HAVE_LIBPLACEBO_VULKAN) && !defined(VULKAN_IS_SLOW)
-        TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(PlVkRenderer);
+#ifdef HAVE_LIBPLACEBO_VULKAN
+        if (!vulkanIsSlow) {
+            TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(PlVkRenderer);
+        }
 #endif
-#ifndef GL_IS_SLOW
-        TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(SdlRenderer);
-#endif
+        if (!glIsSlow) {
+            TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(SdlRenderer);
+        }
     }
 
-#if defined(HAVE_LIBPLACEBO_VULKAN) && defined(VULKAN_IS_SLOW)
-    // If we got here with VULKAN_IS_SLOW, DrmRenderer didn't work,
-    // so we have to resort to PlVkRenderer.
-    for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
-        TRY_PREFERRED_PIXEL_FORMAT(PlVkRenderer);
-    }
-    for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
-        TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(PlVkRenderer);
+#ifdef HAVE_LIBPLACEBO_VULKAN
+    if (vulkanIsSlow) {
+        // If we got here with VULKAN_IS_SLOW, DrmRenderer didn't work,
+        // so we have to resort to PlVkRenderer.
+        for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+            TRY_PREFERRED_PIXEL_FORMAT(PlVkRenderer);
+        }
+        for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+            TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(PlVkRenderer);
+        }
     }
 #endif
 
-#ifdef GL_IS_SLOW
-    // If we got here with GL_IS_SLOW, DrmRenderer didn't work, so we have
-    // to resort to SdlRenderer.
-    for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
-        TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
+    if (glIsSlow) {
+        // If we got here with GL_IS_SLOW, DrmRenderer didn't work, so we have
+        // to resort to SdlRenderer.
+        for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+            TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
+        }
+        for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+            TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(SdlRenderer);
+        }
     }
-    for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
-        TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(SdlRenderer);
-    }
-#endif
 
     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                 "No renderer can handle output from decoder: %s",
