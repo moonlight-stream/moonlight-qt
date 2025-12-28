@@ -277,6 +277,15 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     return true;
 }
 
+bool DrmRenderer::prepareDecoderContextInGetFormat(AVCodecContext*, AVPixelFormat)
+{
+#ifdef HAVE_EGL
+    // The surface pool is being reset, so clear the cached EGLImages
+    m_EglImageFactory.resetCache();
+#endif
+    return true;
+}
+
 void DrmRenderer::prepareToRender()
 {
     // Retake DRM master if we dropped it earlier
@@ -1485,8 +1494,7 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
         return -1;
     }
 
-    AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
-    return m_EglImageFactory.exportDRMImages(frame, drmFrame, dpy, images);
+    return m_EglImageFactory.exportDRMImages(frame, dpy, images);
 }
 
 void DrmRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {

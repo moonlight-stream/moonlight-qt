@@ -30,10 +30,6 @@ VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
       m_EglImageFactory(this)
 #endif
 {
-#ifdef HAVE_EGL
-    SDL_zero(m_PrimeDescriptor);
-#endif
-
 #ifdef HAVE_LIBVA_X11
     m_XDisplay = nullptr;
     m_XWindow = None;
@@ -571,6 +567,16 @@ VAAPIRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
                 "Using VAAPI accelerated renderer on %s",
                 SDL_GetCurrentVideoDriver());
 
+    return true;
+}
+
+bool
+VAAPIRenderer::prepareDecoderContextInGetFormat(AVCodecContext*, AVPixelFormat)
+{
+#ifdef HAVE_EGL
+    // The surface pool is being reset, so clear the cached EGLImages
+    m_EglImageFactory.resetCache();
+#endif
     return true;
 }
 
@@ -1138,7 +1144,6 @@ VAAPIRenderer::initializeEGL(EGLDisplay dpy,
 ssize_t
 VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
                                EGLImage images[EGL_MAX_PLANES]) {
-    ssize_t count;
     uint32_t exportFlags = VA_EXPORT_SURFACE_READ_ONLY;
 
     switch (m_EglExportType) {
@@ -1153,52 +1158,12 @@ VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
         return -1;
     }
 
-    auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
-    AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)hwFrameCtx->device_ctx->hwctx;
-    VASurfaceID surface_id = (VASurfaceID)(uintptr_t)frame->data[3];
-
-    VAStatus st = vaExportSurfaceHandle(vaDeviceContext->display,
-                                        surface_id,
-                                        VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
-                                        exportFlags,
-                                        &m_PrimeDescriptor);
-    if (st != VA_STATUS_SUCCESS) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "vaExportSurfaceHandle failed: %d", st);
-        return -1;
-    }
-
-    st = vaSyncSurface(vaDeviceContext->display, surface_id);
-    if (st != VA_STATUS_SUCCESS) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "vaSyncSurface() failed: %d", st);
-        goto fail;
-    }
-
-    count = m_EglImageFactory.exportVAImages(frame, &m_PrimeDescriptor, dpy, images);
-    if (count < 0) {
-        goto fail;
-    }
-
-    return count;
-
-fail:
-    for (size_t i = 0; i < m_PrimeDescriptor.num_objects; ++i) {
-        close(m_PrimeDescriptor.objects[i].fd);
-    }
-    m_PrimeDescriptor.num_layers = 0;
-    m_PrimeDescriptor.num_objects = 0;
-    return -1;
+    return m_EglImageFactory.exportVAImages(frame, exportFlags, dpy, images);
 }
 
 void
 VAAPIRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
     m_EglImageFactory.freeEGLImages(dpy, images);
-    for (size_t i = 0; i < m_PrimeDescriptor.num_objects; ++i) {
-        close(m_PrimeDescriptor.objects[i].fd);
-    }
-    m_PrimeDescriptor.num_layers = 0;
-    m_PrimeDescriptor.num_objects = 0;
 }
 
 #endif

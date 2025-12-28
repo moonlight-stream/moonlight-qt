@@ -54,6 +54,7 @@ public:
     virtual ~DrmRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
+    virtual bool prepareDecoderContextInGetFormat(AVCodecContext*, AVPixelFormat) override;
     virtual void prepareToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) override;

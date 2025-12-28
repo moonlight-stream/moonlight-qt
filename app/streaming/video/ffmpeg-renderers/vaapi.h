@@ -60,6 +60,7 @@ public:
     virtual ~VAAPIRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
+    virtual bool prepareDecoderContextInGetFormat(AVCodecContext*, AVPixelFormat) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool isDirectRenderingSupported() override;
     virtual int getDecoderColorspace() override;
@@ -122,7 +123,6 @@ private:
         Separate,
         Composed
     } m_EglExportType;
-    VADRMPRIMESurfaceDescriptor m_PrimeDescriptor;
     EglImageFactory m_EglImageFactory;
 #endif
 };
