@@ -874,7 +874,7 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         }
     }
 
-    m_Backend->freeEGLImages(m_EGLDisplay, imgs);
+    m_Backend->freeEGLImages();
 
     // Free the DMA-BUF backing the last frame now that it is definitely
     // no longer being used anymore. While the PRIME FD stays around until
@@ -899,6 +899,6 @@ bool EGLRenderer::testRenderFrame(AVFrame* frame)
         return false;
     }
 
-    m_Backend->freeEGLImages(m_EGLDisplay, imgs);
+    m_Backend->freeEGLImages();
     return true;
 }

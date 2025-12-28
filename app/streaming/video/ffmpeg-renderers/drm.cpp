@@ -1497,8 +1497,8 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     return m_EglImageFactory.exportDRMImages(frame, dpy, images);
 }
 
-void DrmRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
-    m_EglImageFactory.freeEGLImages(dpy, images);
+void DrmRenderer::freeEGLImages() {
+    m_EglImageFactory.freeEGLImages();
 }
 
 #endif

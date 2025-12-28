@@ -2,11 +2,11 @@
 
 #include "renderer.h"
 
-#include <unordered_map>
-
 #ifdef HAVE_LIBVA
 #include <va/va_drmcommon.h>
 #endif
+
+#include <optional>
 
 class EglImageFactory
 {
@@ -64,19 +64,14 @@ public:
     ssize_t exportVAImages(AVFrame* frame, uint32_t exportFlags, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]);
 #endif
 
+    void freeEGLImages();
+
     bool supportsImportingFormat(EGLDisplay dpy, EGLint format);
     bool supportsImportingModifier(EGLDisplay dpy, EGLint format, EGLuint64KHR modifier);
 
-    void freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]);
-
-private:
-    ssize_t queryImageCache(AVFrame* frame, EGLImage images[EGL_MAX_PLANES]);
-    void populateImageCache(AVFrame* frame, EglImageContext &&imgCtx);
-
 private:
     IFFmpegRenderer* m_Renderer;
-    bool m_CacheDisabled;
-    std::unordered_map<AVBuffer*, EglImageContext> m_CachedImages;
+    std::optional<EglImageContext> m_LastImageCtx;
     bool m_EGLExtDmaBuf;
     PFNEGLCREATEIMAGEPROC m_eglCreateImage;
     PFNEGLDESTROYIMAGEPROC m_eglDestroyImage;

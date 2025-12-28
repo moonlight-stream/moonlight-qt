@@ -26,7 +26,6 @@
 
 EglImageFactory::EglImageFactory(IFFmpegRenderer* renderer) :
     m_Renderer(renderer),
-    m_CacheDisabled(false),
     m_EGLExtDmaBuf(false),
     m_eglCreateImage(nullptr),
     m_eglDestroyImage(nullptr),
@@ -70,72 +69,18 @@ bool EglImageFactory::initializeEGL(EGLDisplay,
 
 void EglImageFactory::resetCache()
 {
-    m_CachedImages.clear();
-}
-
-ssize_t EglImageFactory::queryImageCache(AVFrame *frame, EGLImage images[EGL_MAX_PLANES])
-{
-    if (m_CacheDisabled) {
-        return -1;
-    }
-    else if (!frame->hw_frames_ctx) {
-        // If we don't have a AVHWFramesContext, we won't have a frame pool
-        // which means our caching logic of checking AVBuffer pointers won't
-        // work properly.
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "EGLImage caching disabled due to missing AVHWFramesContext");
-        m_CacheDisabled = true;
-        return -1;
-    }
-    else if (!frame->buf[0]) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "EGLImage caching disabled due to missing AVBufferRef");
-        m_CacheDisabled = true;
-        return -1;
-    }
-    else if (!frame->buf[0]->buffer) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "EGLImage caching disabled due to missing AVBuffer");
-        m_CacheDisabled = true;
-        return -1;
-    }
-    else if (m_CachedImages.size() >= 20) {
-        // This is a final fail-safe for the case where the buffers aren't
-        // actually being reused to avoid the cache size growing forever.
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "EGLImage caching disabled due to excessive cached image count");
-        m_CacheDisabled = true;
-        return -1;
-    }
-
-    auto imgCtx = m_CachedImages.find(frame->buf[0]->buffer);
-    if (imgCtx == m_CachedImages.end()) {
-        return -1;
-    }
-
-    memcpy(images, imgCtx->second.images, sizeof(EGLImage) * imgCtx->second.count);
-    return imgCtx->second.count;
-}
-
-void EglImageFactory::populateImageCache(AVFrame *frame, EglImageContext &&imgCtx)
-{
-    AVBuffer* cacheKey = m_CacheDisabled ? nullptr : frame->buf[0]->buffer;
-
-    // Move this entry into the cache
-    m_CachedImages.emplace(cacheKey, std::move(imgCtx));
+    // Cannot reset cache while in the middle of rendering
+    SDL_assert(!m_LastImageCtx.has_value());
 }
 
 #ifdef HAVE_DRM
 
 ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES])
 {
-    memset(images, 0, sizeof(EGLImage) * EGL_MAX_PLANES);
+    // freeEGLImages() must be called before exporting again
+    SDL_assert(!m_LastImageCtx.has_value());
 
-    // Check the cache first
-    if (ssize_t count = queryImageCache(frame, images); count > 0) {
-        return count;
-    }
-
+    SDL_assert(frame->format == AV_PIX_FMT_DRM_PRIME);
     AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
 
     // DRM requires composed layers rather than separate layers per plane
@@ -312,8 +257,8 @@ ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, EGLDisplay dpy, EGLImag
     // Copy the output from the image context before we move it
     images[0] = imgCtx.images[0];
 
-    // Move this image context into the cache
-    populateImageCache(frame, std::move(imgCtx));
+    // Store this image context
+    m_LastImageCtx.emplace(std::move(imgCtx));
 
     return 1;
 }
@@ -324,8 +269,10 @@ ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, EGLDisplay dpy, EGLImag
 
 ssize_t EglImageFactory::exportVAImages(AVFrame *frame, uint32_t exportFlags, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES])
 {
-    memset(images, 0, sizeof(EGLImage) * EGL_MAX_PLANES);
+    // freeEGLImages() must be called before exporting again
+    SDL_assert(!m_LastImageCtx.has_value());
 
+    SDL_assert(frame->format == AV_PIX_FMT_VAAPI);
     auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)hwFrameCtx->device_ctx->hwctx;
     VASurfaceID surface_id = (VASurfaceID)(uintptr_t)frame->data[3];
@@ -336,11 +283,6 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, uint32_t exportFlags, EG
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "vaSyncSurface() failed: %d", st);
         return -1;
-    }
-
-    // Check the cache first
-    if (ssize_t count = queryImageCache(frame, images); count > 0) {
-        return count;
     }
 
     EglImageContext imgCtx(dpy, m_eglDestroyImage, m_eglDestroyImageKHR);
@@ -544,8 +486,8 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, uint32_t exportFlags, EG
     ssize_t count = imgCtx.count;
     memcpy(images, imgCtx.images, sizeof(EGLImage) * imgCtx.count);
 
-    // Move this image context into the cache
-    populateImageCache(frame, std::move(imgCtx));
+    // Store this image context
+    m_LastImageCtx.emplace(std::move(imgCtx));
 
     return count;
 }
@@ -633,13 +575,7 @@ bool EglImageFactory::supportsImportingModifier(EGLDisplay dpy, EGLint format, E
 
 #endif
 
-void EglImageFactory::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
-    Q_UNUSED(dpy);
-    Q_UNUSED(images);
-
-    // When the cache is disabled, we just insert one element at a time
-    // with key of nullptr and clear it after every frame.
-    if (m_CacheDisabled) {
-        m_CachedImages.clear();
-    }
+void EglImageFactory::freeEGLImages() {
+    SDL_assert(m_LastImageCtx.has_value());
+    m_LastImageCtx.reset();
 }

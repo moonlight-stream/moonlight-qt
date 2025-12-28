@@ -1162,8 +1162,8 @@ VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
 }
 
 void
-VAAPIRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
-    m_EglImageFactory.freeEGLImages(dpy, images);
+VAAPIRenderer::freeEGLImages() {
+    m_EglImageFactory.freeEGLImages();
 }
 
 #endif
