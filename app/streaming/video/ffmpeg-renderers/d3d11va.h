@@ -61,6 +61,9 @@ private:
     Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext1> m_DeviceContext;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
+    Microsoft::WRL::ComPtr<ID3D11BlendState> m_VideoBlendState;
+    Microsoft::WRL::ComPtr<ID3D11BlendState> m_OverlayBlendState;
+
     SupportedFenceType m_FenceType;
     SDL_mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;

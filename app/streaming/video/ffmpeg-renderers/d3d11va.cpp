@@ -105,6 +105,9 @@ D3D11VARenderer::~D3D11VARenderer()
 
     m_OverlayPixelShader.Reset();
 
+    m_OverlayBlendState.Reset();
+    m_VideoBlendState.Reset();
+
     m_RenderTargetView.Reset();
     m_SwapChain.Reset();
 
@@ -690,8 +693,10 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
     m_DeviceContext->PSSetShader(m_OverlayPixelShader.Get(), nullptr, 0);
     m_DeviceContext->PSSetShaderResources(0, 1, overlayTextureResourceView.GetAddressOf());
 
-    // Draw the overlay
+    // Draw the overlay with alpha blending
+    m_DeviceContext->OMSetBlendState(m_OverlayBlendState.Get(), nullptr, 0xffffffff);
     m_DeviceContext->DrawIndexed(6, 0, 0);
+    m_DeviceContext->OMSetBlendState(m_VideoBlendState.Get(), nullptr, 0xffffffff);
 }
 
 void D3D11VARenderer::bindColorConversion(AVFrame* frame)
@@ -1379,7 +1384,7 @@ bool D3D11VARenderer::setupRenderingResources()
         }
     }
 
-    // Create our blend state
+    // Create our overlay blend state
     {
         D3D11_BLEND_DESC blendDesc = {};
         blendDesc.AlphaToCoverageEnable = FALSE;
@@ -1393,10 +1398,26 @@ bool D3D11VARenderer::setupRenderingResources()
         blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
         blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-        ComPtr<ID3D11BlendState> blendState;
-        hr = m_Device->CreateBlendState(&blendDesc, &blendState);
+        hr = m_Device->CreateBlendState(&blendDesc, &m_OverlayBlendState);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateBlendState() failed: %x",
+                         hr);
+            return false;
+        }
+    }
+
+    // Create and bind our video blend state
+    {
+        D3D11_BLEND_DESC blendDesc = {};
+        blendDesc.AlphaToCoverageEnable = FALSE;
+        blendDesc.IndependentBlendEnable = FALSE;
+        blendDesc.RenderTarget[0].BlendEnable = FALSE;
+        blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+        hr = m_Device->CreateBlendState(&blendDesc, &m_VideoBlendState);
         if (SUCCEEDED(hr)) {
-            m_DeviceContext->OMSetBlendState(blendState.Get(), nullptr, 0xffffffff);
+            m_DeviceContext->OMSetBlendState(m_VideoBlendState.Get(), nullptr, 0xffffffff);
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
