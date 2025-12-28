@@ -257,6 +257,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
 
     glUseProgram(m_OverlayShaderProgram);
 
+    // compileShader() ensures that aPosition and aTexCoord are indexes 0 and 1 respectively
     glBindBuffer(GL_ARRAY_BUFFER, m_OverlayVbos[type]);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(OVERLAY_VERTEX), (void*)offsetof(OVERLAY_VERTEX, x));
     glEnableVertexAttribArray(0);
@@ -314,7 +315,13 @@ unsigned EGLRenderer::compileShader(const char* vertexShaderSrc, const char* fra
 
     glAttachShader(shader, vertexShader);
     glAttachShader(shader, fragmentShader);
+
+    // Bind specific attribute locations for our standard vertex shader arguments
+    glBindAttribLocation(shader, 0, "aPosition");
+    glBindAttribLocation(shader, 1, "aTexCoord");
+
     glLinkProgram(shader);
+
     int status;
     glGetProgramiv(shader, GL_LINK_STATUS, &status);
     if (!status) {
@@ -671,6 +678,7 @@ bool EGLRenderer::specialize() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices, GL_STATIC_DRAW);
 
+    // compileShader() ensures that aPosition and aTexCoord are indexes 0 and 1 respectively
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof (float)));
