@@ -84,11 +84,9 @@
         <file alias="gamecontrollerdb.txt">SDL_GameControllerDB/gamecontrollerdb.txt</file>
         <file alias="ModeSeven.ttf">ModeSeven.ttf</file>
         <file alias="egl_nv12.frag">shaders/egl_nv12.frag</file>
-        <file alias="egl_nv12.vert">shaders/egl_nv12.vert</file>
         <file alias="egl_opaque.frag">shaders/egl_opaque.frag</file>
-        <file alias="egl_opaque.vert">shaders/egl_opaque.vert</file>
         <file alias="egl_overlay.frag">shaders/egl_overlay.frag</file>
-        <file alias="egl_overlay.vert">shaders/egl_overlay.vert</file>
+        <file alias="egl.vert">shaders/egl.vert</file>
         <file alias="d3d11_vertex.fxc">shaders/d3d11_vertex.fxc</file>
         <file alias="d3d11_overlay_pixel.fxc">shaders/d3d11_overlay_pixel.fxc</file>
         <file alias="d3d11_yuv420_pixel.fxc">shaders/d3d11_yuv420_pixel.fxc</file>
