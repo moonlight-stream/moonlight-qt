@@ -80,11 +80,6 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
 {
     SDL_assert(backendRenderer);
     SDL_assert(backendRenderer->canExportEGL());
-
-    // Save these global parameters so we can restore them in our destructor
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &m_OldContextProfileMask);
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &m_OldContextMajorVersion);
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &m_OldContextMinorVersion);
 }
 
 EGLRenderer::~EGLRenderer()
@@ -127,12 +122,6 @@ EGLRenderer::~EGLRenderer()
     }
 
     av_frame_free(&m_LastFrame);
-
-    // Reset the global properties back to what they were before
-    SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "0");
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, m_OldContextProfileMask);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, m_OldContextMajorVersion);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, m_OldContextMinorVersion);
 }
 
 bool EGLRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
@@ -412,8 +401,12 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // attempt to dereference a null pointer and crash Moonlight.
     // https://bugzilla.libsdl.org/show_bug.cgi?id=4350
     // https://hg.libsdl.org/SDL/rev/84618d571795
-    if (!SDL_VERSION_ATLEAST(2, 0, 10)) {
-        EGL_LOG(Error, "Not supported until SDL 2.0.10");
+    //
+    // SDL_HINT_VIDEO_X11_FORCE_EGL isn't supported until SDL 2.0.12
+    // and we need to use EGL to avoid triggering a crash in Mesa.
+    // https://gitlab.freedesktop.org/mesa/mesa/issues/1011
+    if (!SDL_VERSION_ATLEAST(2, 0, 12)) {
+        EGL_LOG(Error, "Not supported until SDL 2.0.12");
         m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
@@ -425,15 +418,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         EGL_LOG(Info, "EGL doesn't support HDR rendering");
         return false;
     }
-
-    // This hint will ensure we use EGL to retrieve our GL context,
-    // even on X11 where that is not the default. EGL is required
-    // to avoid a crash in Mesa.
-    // https://gitlab.freedesktop.org/mesa/mesa/issues/1011
-    SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
     int renderIndex;
     int maxRenderers = SDL_GetNumRenderDrivers();
