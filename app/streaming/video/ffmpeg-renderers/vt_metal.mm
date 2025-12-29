@@ -24,15 +24,15 @@ extern "C" {
 
 struct CscParams
 {
-    simd_float3 matrix[3];
-    simd_float3 offsets;
+    simd_half3x3 matrix;
+    simd_half3 offsets;
 };
 
 struct ParamBuffer
 {
     CscParams cscParams;
-    simd_float2 chromaOffset;
-    float bitnessScaleFactor;
+    simd_half2 chromaOffset;
+    simd_half1 bitnessScaleFactor;
 };
 
 struct Vertex
@@ -262,18 +262,14 @@ public:
         getFramePremultipliedCscConstants(frame, cscMatrix, yuvOffsets);
         getFrameChromaCositingOffsets(frame, chromaOffset);
 
-        // Copy the row-major CSC matrix into column-major for Metal
-        for (int i = 0; i < 3; i++) {
-            paramBuffer.cscParams.matrix[i] = simd_make_float3(cscMatrix[0 + i],
-                                                               cscMatrix[3 + i],
-                                                               cscMatrix[6 + i]);
-        }
-
-        paramBuffer.cscParams.offsets = simd_make_float3(yuvOffsets[0],
-                                                         yuvOffsets[1],
-                                                         yuvOffsets[2]);
-        paramBuffer.chromaOffset = simd_make_float2(chromaOffset[0],
-                                                    chromaOffset[1]);
+        paramBuffer.cscParams.matrix = simd_matrix(simd_make_half3(cscMatrix[0], cscMatrix[3], cscMatrix[6]),
+                                                   simd_make_half3(cscMatrix[1], cscMatrix[4], cscMatrix[7]),
+                                                   simd_make_half3(cscMatrix[2], cscMatrix[5], cscMatrix[8]));
+        paramBuffer.cscParams.offsets = simd_make_half3(yuvOffsets[0],
+                                                        yuvOffsets[1],
+                                                        yuvOffsets[2]);
+        paramBuffer.chromaOffset = simd_make_half2(chromaOffset[0],
+                                                   chromaOffset[1]);
 
         // Set the EDR metadata for HDR10 to enable OS tonemapping
         if (frame->color_trc == AVCOL_TRC_SMPTE2084 && m_MasteringDisplayColorVolume != nullptr) {
