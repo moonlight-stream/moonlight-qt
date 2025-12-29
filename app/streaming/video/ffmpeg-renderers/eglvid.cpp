@@ -803,7 +803,11 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         m_glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, imgs[i]);
     }
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    // We already called glClear() after last frame's SDL_GL_SwapWindow()
+    // to synchronize with our fence if swap buffers is blocking
+    if (!m_BlockingSwapBuffers) {
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
 
     int drawableWidth, drawableHeight;
     SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
