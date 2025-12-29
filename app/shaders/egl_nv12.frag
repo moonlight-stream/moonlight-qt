@@ -16,5 +16,5 @@ void main() {
     );
 
     YCbCr -= offset;
-    gl_FragColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0f);
+    gl_FragColor = vec4(clamp(yuvmat * YCbCr, 0.0, 1.0), 1.0);
 }
