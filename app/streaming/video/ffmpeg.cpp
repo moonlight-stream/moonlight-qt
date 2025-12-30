@@ -1751,8 +1751,23 @@ void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
         SDL_assert(nalEnd == entry->length);
 
         // Fixup the SPS to what OS X needs to use hardware acceleration
+        // This is also critical for decoding latency on the Pi 2.
         stream->sps->num_ref_frames = 1;
         stream->sps->vui.max_dec_frame_buffering = 1;
+
+        // NVENC doesn't seem to add bitstream restrictions anymore (591.59),
+        // so we need to add them ourselves if not present to ensure that
+        // the max_dec_frame_buffering option actually takes effect.
+        // We use the defaults for everything except max_dec_frame_buffering.
+        if (!stream->sps->vui.bitstream_restriction_flag) {
+            stream->sps->vui.bitstream_restriction_flag = 1;
+            stream->sps->vui.motion_vectors_over_pic_boundaries_flag = 1;
+            stream->sps->vui.max_bytes_per_pic_denom = 2;
+            stream->sps->vui.max_bits_per_mb_denom = 1;
+            stream->sps->vui.log2_max_mv_length_horizontal = 16;
+            stream->sps->vui.log2_max_mv_length_vertical = 16;
+            stream->sps->vui.num_reorder_frames = 0;
+        }
 
         int initialOffset = offset;
 
