@@ -911,6 +911,7 @@ bool Session::initialize(QQuickWindow* qtWindow)
             m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
             break;
         }
+        // Fall-through
     case StreamingPreferences::WM_FULLSCREEN_DESKTOP:
         // Only use full-screen desktop mode if we're running a desktop environment
         if (WMUtils::isRunningDesktopEnvironment()) {
