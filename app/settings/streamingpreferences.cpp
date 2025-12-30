@@ -109,8 +109,10 @@ void StreamingPreferences::reload()
 #ifdef Q_OS_DARWIN
     recommendedFullScreenMode = WindowMode::WM_FULLSCREEN_DESKTOP;
 #else
-    // Wayland doesn't support modesetting, so use fullscreen desktop mode.
-    if (WMUtils::isRunningWayland()) {
+    // Wayland doesn't support modesetting, so use fullscreen desktop mode
+    // unless we have a slow GPU (which can take advantage of wp_viewporter
+    // to reduce GPU load with lower resolution video streams).
+    if (WMUtils::isRunningWayland() && !WMUtils::isGpuSlow()) {
         recommendedFullScreenMode = WindowMode::WM_FULLSCREEN_DESKTOP;
     }
     else {

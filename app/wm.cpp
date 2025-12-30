@@ -205,6 +205,21 @@ bool WMUtils::isRunningDesktopEnvironment()
 #endif
 }
 
+bool WMUtils::isGpuSlow()
+{
+    bool ret;
+
+    if (!Utils::getEnvironmentVariableOverride("GL_IS_SLOW", &ret)) {
+#ifdef GL_IS_SLOW
+        ret = true;
+#else
+        ret = false;
+#endif
+    }
+
+    return ret;
+}
+
 QString WMUtils::getDrmCardOverride()
 {
 #ifdef HAVE_DRM
