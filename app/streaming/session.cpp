@@ -1432,9 +1432,13 @@ void Session::updateOptimalWindowDisplayMode()
 
     // On devices with slow GPUs, we will try to match the display mode
     // to the video stream to offload the scaling work to the display.
+    //
+    // We also try to match the video resolution if we're using KMSDRM,
+    // because scaling on the display is generally higher quality than
+    // scaling performed by drmModeSetPlane().
     bool matchVideo;
     if (!Utils::getEnvironmentVariableOverride("MATCH_DISPLAY_MODE_TO_VIDEO", &matchVideo)) {
-        matchVideo = WMUtils::isGpuSlow();
+        matchVideo = WMUtils::isGpuSlow() || QString(SDL_GetCurrentVideoDriver()) == "KMSDRM";
     }
 
     bestMode = desktopMode;
