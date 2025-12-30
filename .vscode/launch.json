@@ -1,0 +1,32 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Launch",
+            "program": "${workspaceFolder}/builddir/app/moonlight",
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "Attach",
+            "pid": "${input:pickMoonlightProcess}"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "pickMoonlightProcess",
+            "type": "command",
+            "command": "lldb.pickProcess",
+            "args": {
+                "filter": "moonlight"
+            }
+        }
+    ]
+}
