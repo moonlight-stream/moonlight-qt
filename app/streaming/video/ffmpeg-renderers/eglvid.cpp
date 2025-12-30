@@ -602,10 +602,12 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_GL_SetSwapInterval(1);
 
 #if SDL_VERSION_ATLEAST(2, 0, 15) && defined(SDL_VIDEO_DRIVER_KMSDRM)
-        // The SDL KMSDRM backend already enforces double buffering (due to
-        // SDL_HINT_VIDEO_DOUBLE_BUFFER=1), so calling glFinish() after
-        // SDL_GL_SwapWindow() will block an extra frame and lock rendering
-        // at 1/2 the display refresh rate.
+        // We don't use the fence to reduce latency on KMSDRM
+        // because it can have severe performance impacts when
+        // running on slow GPUs where the frame time exceeds
+        // the video stream's frame interval. The latency
+        // reduction is also less critical without a compositor
+        // adding latency too.
         if (info.subsystem != SDL_SYSWM_KMSDRM)
 #endif
         {
