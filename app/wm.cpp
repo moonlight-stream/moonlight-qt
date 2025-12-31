@@ -145,9 +145,20 @@ bool WMUtils::isRunningWayland()
     // If the value is not set yet, populate it now.
     int val = SDL_AtomicGet(&isRunningOnWayland);
     if (!(val & VALUE_SET)) {
-        struct wl_display* display = wl_display_connect(nullptr);
-        if (display != nullptr) {
-            wl_display_disconnect(display);
+        struct wl_display* display = nullptr;
+
+        // We need to avoid the default fallback to wayland-0 that wl_display_connect()
+        // will try for cases where we might be running from a TTY with a Wayland
+        // compositor running in another VT that happens to use the wayland-0 name.
+        if (!qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") ||
+            !qEnvironmentVariableIsEmpty("WAYLAND_SOCKET") ||
+            qgetenv("XDG_SESSION_TYPE") == "wayland") {
+
+            // This looks like it might be a Wayland environment, so give it a shot
+            display = wl_display_connect(nullptr);
+            if (display != nullptr) {
+                wl_display_disconnect(display);
+            }
         }
 
         // Populate the value to return and have for next time.
@@ -176,8 +187,9 @@ bool WMUtils::isRunningWindowManager()
 
 bool WMUtils::isRunningDesktopEnvironment()
 {
-    if (qEnvironmentVariableIsSet("HAS_DESKTOP_ENVIRONMENT")) {
-        return qEnvironmentVariableIntValue("HAS_DESKTOP_ENVIRONMENT");
+    bool value;
+    if (Utils::getEnvironmentVariableOverride("HAS_DESKTOP_ENVIRONMENT", &value)) {
+        return value;
     }
 
 #if defined(Q_OS_WIN) || defined(Q_OS_DARWIN)
@@ -191,6 +203,21 @@ bool WMUtils::isRunningDesktopEnvironment()
     // if we have a WM running.
     return isRunningWindowManager();
 #endif
+}
+
+bool WMUtils::isGpuSlow()
+{
+    bool ret;
+
+    if (!Utils::getEnvironmentVariableOverride("GL_IS_SLOW", &ret)) {
+#ifdef GL_IS_SLOW
+        ret = true;
+#else
+        ret = false;
+#endif
+    }
+
+    return ret;
 }
 
 QString WMUtils::getDrmCardOverride()

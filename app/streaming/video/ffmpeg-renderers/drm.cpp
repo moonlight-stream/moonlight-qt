@@ -4,7 +4,7 @@
 #endif
 
 #include "drm.h"
-#include "string.h"
+#include "utils.h"
 
 extern "C" {
     #include <libavutil/hwcontext_drm.h>
@@ -80,6 +80,7 @@ struct dma_buf_sync {
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include <sys/mman.h>
 
@@ -260,6 +261,12 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     // https://doc-en.rvspace.org/VisionFive2/DG_Multimedia/JH7110_SDK/hevc_omx.html
     av_dict_set(options, "omx_pix_fmt", "nv12", 0);
 
+    // This option controls the pixel format for the h264_omx and hevc_omx decoders
+    // used on the TH1520 running RevyOS. The decoder will give us software frames
+    // by default but we can opt in for DRM_PRIME frames to dramatically improve
+    // streaming performance.
+    av_dict_set_int(options, "drm_prime", 1, 0);
+
     if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
         context->hw_device_ctx = av_buffer_ref(m_HwContext);
     }
@@ -267,6 +274,15 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using DRM renderer");
 
+    return true;
+}
+
+bool DrmRenderer::prepareDecoderContextInGetFormat(AVCodecContext*, AVPixelFormat)
+{
+#ifdef HAVE_EGL
+    // The surface pool is being reset, so clear the cached EGLImages
+    m_EglImageFactory.resetCache();
+#endif
     return true;
 }
 
@@ -576,8 +592,12 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // formats with the linear modifier on all planes, but doesn't actually
     // support raw YUV formats on the primary plane. Don't ever use primary
     // planes on Spacemit hardware to avoid triggering this bug.
-    bool ok, allowPrimaryPlane = !!qEnvironmentVariableIntValue("DRM_ALLOW_PRIMARY_PLANE", &ok);
-    if (!ok) {
+    bool allowPrimaryPlane;
+    if (Utils::getEnvironmentVariableOverride("DRM_ALLOW_PRIMARY_PLANE", &allowPrimaryPlane)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using DRM_ALLOW_PRIMARY_PLANE to override default plane selection logic");
+    }
+    else {
         allowPrimaryPlane = strcmp(m_Version->name, "spacemit") != 0;
     }
 
@@ -1474,12 +1494,11 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
         return -1;
     }
 
-    AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
-    return m_EglImageFactory.exportDRMImages(frame, drmFrame, dpy, images);
+    return m_EglImageFactory.exportDRMImages(frame, dpy, images);
 }
 
-void DrmRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
-    m_EglImageFactory.freeEGLImages(dpy, images);
+void DrmRenderer::freeEGLImages() {
+    m_EglImageFactory.freeEGLImages();
 }
 
 #endif

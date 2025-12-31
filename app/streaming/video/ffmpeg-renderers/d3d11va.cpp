@@ -4,6 +4,7 @@
 #include "d3d11va.h"
 #include "dxutil.h"
 #include "path.h"
+#include "utils.h"
 
 #include "streaming/streamutils.h"
 #include "streaming/session.h"
@@ -103,6 +104,9 @@ D3D11VARenderer::~D3D11VARenderer()
     }
 
     m_OverlayPixelShader.Reset();
+
+    m_OverlayBlendState.Reset();
+    m_VideoBlendState.Reset();
 
     m_RenderTargetView.Reset();
     m_SwapChain.Reset();
@@ -209,28 +213,25 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         goto Exit;
     }
 
-    bool ok;
-    m_BindDecoderOutputTextures = !!qEnvironmentVariableIntValue("D3D11VA_FORCE_BIND", &ok);
-    if (!ok) {
+    if (Utils::getEnvironmentVariableOverride("D3D11VA_FORCE_BIND", &m_BindDecoderOutputTextures)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using D3D11VA_FORCE_BIND to override default bind/copy logic");
+    }
+    else {
         // Skip copying to our own internal texture on Intel GPUs due to
         // significant performance impact of the extra copy. See:
         // https://github.com/moonlight-stream/moonlight-qt/issues/1304
         m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086;
     }
-    else {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using D3D11VA_FORCE_BIND to override default bind/copy logic");
-    }
 
-    m_UseFenceHack = !!qEnvironmentVariableIntValue("D3D11VA_FORCE_FENCE", &ok);
-    if (!ok) {
+    if (Utils::getEnvironmentVariableOverride("D3D11VA_FORCE_FENCE", &m_UseFenceHack)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using D3D11VA_FORCE_FENCE to override default fence workaround logic");
+    }
+    else {
         // Old Intel GPUs (HD 4000) require a fence to properly synchronize
         // the video engine with the 3D engine for texture sampling.
         m_UseFenceHack = adapterDesc.VendorId == 0x8086 && featureLevel < D3D_FEATURE_LEVEL_11_1;
-    }
-    else {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using D3D11VA_FORCE_FENCE to override default fence workaround logic");
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -692,8 +693,10 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
     m_DeviceContext->PSSetShader(m_OverlayPixelShader.Get(), nullptr, 0);
     m_DeviceContext->PSSetShaderResources(0, 1, overlayTextureResourceView.GetAddressOf());
 
-    // Draw the overlay
+    // Draw the overlay with alpha blending
+    m_DeviceContext->OMSetBlendState(m_OverlayBlendState.Get(), nullptr, 0xffffffff);
     m_DeviceContext->DrawIndexed(6, 0, 0);
+    m_DeviceContext->OMSetBlendState(m_VideoBlendState.Get(), nullptr, 0xffffffff);
 }
 
 void D3D11VARenderer::bindColorConversion(AVFrame* frame)
@@ -1381,7 +1384,7 @@ bool D3D11VARenderer::setupRenderingResources()
         }
     }
 
-    // Create our blend state
+    // Create our overlay blend state
     {
         D3D11_BLEND_DESC blendDesc = {};
         blendDesc.AlphaToCoverageEnable = FALSE;
@@ -1395,10 +1398,26 @@ bool D3D11VARenderer::setupRenderingResources()
         blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
         blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-        ComPtr<ID3D11BlendState> blendState;
-        hr = m_Device->CreateBlendState(&blendDesc, &blendState);
+        hr = m_Device->CreateBlendState(&blendDesc, &m_OverlayBlendState);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateBlendState() failed: %x",
+                         hr);
+            return false;
+        }
+    }
+
+    // Create and bind our video blend state
+    {
+        D3D11_BLEND_DESC blendDesc = {};
+        blendDesc.AlphaToCoverageEnable = FALSE;
+        blendDesc.IndependentBlendEnable = FALSE;
+        blendDesc.RenderTarget[0].BlendEnable = FALSE;
+        blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+        hr = m_Device->CreateBlendState(&blendDesc, &m_VideoBlendState);
         if (SUCCEEDED(hr)) {
-            m_DeviceContext->OMSetBlendState(blendState.Get(), nullptr, 0xffffffff);
+            m_DeviceContext->OMSetBlendState(m_VideoBlendState.Get(), nullptr, 0xffffffff);
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

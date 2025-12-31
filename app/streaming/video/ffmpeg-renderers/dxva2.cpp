@@ -5,6 +5,7 @@
 #include <initguid.h>
 #include "dxva2.h"
 #include "dxutil.h"
+#include "utils.h"
 #include "../ffmpeg.h"
 #include <streaming/streamutils.h>
 #include <streaming/session.h>
@@ -374,7 +375,6 @@ bool DXVA2Renderer::initializeRenderer()
     m_Device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     m_Device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 
-    m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
     m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
     m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 
@@ -390,16 +390,11 @@ bool DXVA2Renderer::initializeQuirksForAdapter(IDirect3D9Ex* d3d9ex, int adapter
     SDL_assert(m_DeviceQuirks == 0);
     SDL_assert(!m_Device);
 
-    {
-        bool ok;
-
-        m_DeviceQuirks = qEnvironmentVariableIntValue("DXVA2_QUIRK_FLAGS", &ok);
-        if (ok) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using DXVA2 quirk override: 0x%x",
-                        m_DeviceQuirks);
-            return true;
-        }
+    if (Utils::getEnvironmentVariableOverride("DXVA2_QUIRK_FLAGS", &m_DeviceQuirks)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using DXVA2 quirk override: 0x%x",
+                    m_DeviceQuirks);
+        return true;
     }
 
     UINT adapterCount = d3d9ex->GetAdapterCount();
@@ -955,7 +950,10 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
         return;
     }
 
+    // Only enable blending when drawing the overlay
+    m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
     hr = m_Device->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, 2);
+    m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "DrawPrimitive() failed: %x",

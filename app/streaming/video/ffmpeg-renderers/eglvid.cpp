@@ -18,11 +18,11 @@
 #define GL_UNPACK_ROW_LENGTH_EXT 0x0CF2
 #endif
 
-typedef struct _OVERLAY_VERTEX
+typedef struct _VERTEX
 {
     float x, y;
     float u, v;
-} OVERLAY_VERTEX, *POVERLAY_VERTEX;
+} VERTEX, *PVERTEX;
 
 /* TODO:
  *  - handle more pixel formats
@@ -54,14 +54,15 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_EGLDisplay(EGL_NO_DISPLAY),
         m_Textures{0},
         m_OverlayTextures{0},
-        m_OverlayVbos{0},
+        m_OverlayVBOs{0},
+        m_OverlayVAOs{0},
         m_OverlayHasValidData{},
         m_ShaderProgram(0),
         m_OverlayShaderProgram(0),
         m_Context(0),
         m_Window(nullptr),
         m_Backend(backendRenderer),
-        m_VAO(0),
+        m_VideoVAO(0),
         m_BlockingSwapBuffers(false),
         m_LastRenderSync(EGL_NO_SYNC),
         m_LastFrame(av_frame_alloc()),
@@ -80,11 +81,6 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
 {
     SDL_assert(backendRenderer);
     SDL_assert(backendRenderer->canExportEGL());
-
-    // Save these global parameters so we can restore them in our destructor
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &m_OldContextProfileMask);
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &m_OldContextMajorVersion);
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &m_OldContextMinorVersion);
 }
 
 EGLRenderer::~EGLRenderer()
@@ -102,23 +98,18 @@ EGLRenderer::~EGLRenderer()
         if (m_OverlayShaderProgram) {
             glDeleteProgram(m_OverlayShaderProgram);
         }
-        if (m_VAO) {
+        if (m_VideoVAO) {
             SDL_assert(m_glDeleteVertexArraysOES != nullptr);
-            m_glDeleteVertexArraysOES(1, &m_VAO);
+            m_glDeleteVertexArraysOES(1, &m_VideoVAO);
         }
-        for (int i = 0; i < EGL_MAX_PLANES; i++) {
-            if (m_Textures[i] != 0) {
-                glDeleteTextures(1, &m_Textures[i]);
-            }
+        glDeleteTextures(EGL_MAX_PLANES, m_Textures);
+
+        glDeleteTextures(Overlay::OverlayMax, m_OverlayTextures);
+        glDeleteBuffers(Overlay::OverlayMax, m_OverlayVBOs);
+        if (m_glDeleteVertexArraysOES) {
+            m_glDeleteVertexArraysOES(Overlay::OverlayMax, m_OverlayVAOs);
         }
-        for (int i = 0; i < Overlay::OverlayMax; i++) {
-            if (m_OverlayTextures[i] != 0) {
-                glDeleteTextures(1, &m_OverlayTextures[i]);
-            }
-            if (m_OverlayVbos[i] != 0) {
-                glDeleteBuffers(1, &m_OverlayVbos[i]);
-            }
-        }
+
         SDL_GL_DeleteContext(m_Context);
     }
 
@@ -127,12 +118,6 @@ EGLRenderer::~EGLRenderer()
     }
 
     av_frame_free(&m_LastFrame);
-
-    // Reset the global properties back to what they were before
-    SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "0");
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, m_OldContextProfileMask);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, m_OldContextMajorVersion);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, m_OldContextMinorVersion);
 }
 
 bool EGLRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
@@ -190,24 +175,27 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
 
         glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[type]);
 
+        // If the pixel data isn't tightly packed, it requires special handling
         void* packedPixelData = nullptr;
-        if (m_GlesMajorVersion >= 3 || m_HasExtUnpackSubimage) {
-            // If we are GLES 3.0+ or have GL_EXT_unpack_subimage, GL can handle any pitch
-            SDL_assert(newSurface->pitch % newSurface->format->BytesPerPixel == 0);
-            glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, newSurface->pitch / newSurface->format->BytesPerPixel);
-        }
-        else if (newSurface->pitch != newSurface->w * newSurface->format->BytesPerPixel) {
-            // If we can't use GL_UNPACK_ROW_LENGTH and the surface isn't tightly packed,
-            // we must allocate a tightly packed buffer and copy our pixels there.
-            packedPixelData = malloc(newSurface->w * newSurface->h * newSurface->format->BytesPerPixel);
-            if (!packedPixelData) {
-                SDL_FreeSurface(newSurface);
-                return;
+        if (newSurface->pitch != newSurface->w * newSurface->format->BytesPerPixel) {
+            if (m_GlesMajorVersion >= 3 || m_HasExtUnpackSubimage) {
+                // If we are GLES 3.0+ or have GL_EXT_unpack_subimage, GL can handle any pitch
+                SDL_assert(newSurface->pitch % newSurface->format->BytesPerPixel == 0);
+                glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, newSurface->pitch / newSurface->format->BytesPerPixel);
             }
+            else {
+                // If we can't use GL_UNPACK_ROW_LENGTH, we must allocate a tightly packed buffer
+                // and copy our pixels there.
+                packedPixelData = malloc(newSurface->w * newSurface->h * newSurface->format->BytesPerPixel);
+                if (!packedPixelData) {
+                    SDL_FreeSurface(newSurface);
+                    return;
+                }
 
-            SDL_ConvertPixels(newSurface->w, newSurface->h,
-                              newSurface->format->format, newSurface->pixels, newSurface->pitch,
-                              newSurface->format->format, packedPixelData, newSurface->w * newSurface->format->BytesPerPixel);
+                SDL_ConvertPixels(newSurface->w, newSurface->h,
+                                  newSurface->format->format, newSurface->pixels, newSurface->pitch,
+                                  newSurface->format->format, packedPixelData, newSurface->w * newSurface->format->BytesPerPixel);
+            }
         }
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSurface->w, newSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
@@ -215,6 +203,9 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
 
         if (packedPixelData) {
             free(packedPixelData);
+        }
+        else if (newSurface->pitch != newSurface->w * newSurface->format->BytesPerPixel) {
+            glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);
         }
 
         SDL_FRect overlayRect;
@@ -242,7 +233,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
         // Convert screen space to normalized device coordinates
         StreamUtils::screenSpaceToNormalizedDeviceCoords(&overlayRect, viewportWidth, viewportHeight);
 
-        OVERLAY_VERTEX verts[] =
+        VERTEX verts[] =
         {
             {overlayRect.x + overlayRect.w, overlayRect.y + overlayRect.h, 1.0f, 0.0f},
             {overlayRect.x, overlayRect.y + overlayRect.h, 0.0f, 0.0f},
@@ -252,7 +243,8 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
             {overlayRect.x + overlayRect.w, overlayRect.y + overlayRect.h, 1.0f, 0.0f}
         };
 
-        glBindBuffer(GL_ARRAY_BUFFER, m_OverlayVbos[type]);
+        // Update the VBO for this overlay (already bound to a VAO)
+        glBindBuffer(GL_ARRAY_BUFFER, m_OverlayVBOs[type]);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
 
         SDL_AtomicSet(&m_OverlayHasValidData[type], 1);
@@ -268,16 +260,18 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
 
     glUseProgram(m_OverlayShaderProgram);
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_OverlayVbos[type]);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(OVERLAY_VERTEX), (void*)offsetof(OVERLAY_VERTEX, x));
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(OVERLAY_VERTEX), (void*)offsetof(OVERLAY_VERTEX, u));
-    glEnableVertexAttribArray(1);
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[type]);
 
+    // Temporarily enable blending to draw the overlays with alpha
+    glEnable(GL_BLEND);
+
+    // Draw the overlay
+    m_glBindVertexArrayOES(m_OverlayVAOs[type]);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    m_glBindVertexArrayOES(0);
+
+    glDisable(GL_BLEND);
 }
 
 int EGLRenderer::loadAndBuildShader(int shaderType,
@@ -325,7 +319,13 @@ unsigned EGLRenderer::compileShader(const char* vertexShaderSrc, const char* fra
 
     glAttachShader(shader, vertexShader);
     glAttachShader(shader, fragmentShader);
+
+    // Bind specific attribute locations for our standard vertex shader arguments
+    glBindAttribLocation(shader, 0, "aPosition");
+    glBindAttribLocation(shader, 1, "aTexCoord");
+
     glLinkProgram(shader);
+
     int status;
     glGetProgramiv(shader, GL_LINK_STATUS, &status);
     if (!status) {
@@ -351,7 +351,7 @@ bool EGLRenderer::compileShaders() {
 
     // XXX: TODO: other formats
     if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12 || m_EGLImagePixelFormat == AV_PIX_FMT_P010) {
-        m_ShaderProgram = compileShader("egl_nv12.vert", "egl_nv12.frag");
+        m_ShaderProgram = compileShader("egl.vert", "egl_nv12.frag");
         if (!m_ShaderProgram) {
             return false;
         }
@@ -369,7 +369,7 @@ bool EGLRenderer::compileShaders() {
         glUseProgram(0);
     }
     else if (m_EGLImagePixelFormat == AV_PIX_FMT_DRM_PRIME) {
-        m_ShaderProgram = compileShader("egl_opaque.vert", "egl_opaque.frag");
+        m_ShaderProgram = compileShader("egl.vert", "egl_opaque.frag");
         if (!m_ShaderProgram) {
             return false;
         }
@@ -389,7 +389,7 @@ bool EGLRenderer::compileShaders() {
         return false;
     }
 
-    m_OverlayShaderProgram = compileShader("egl_overlay.vert", "egl_overlay.frag");
+    m_OverlayShaderProgram = compileShader("egl.vert", "egl_overlay.frag");
     if (!m_OverlayShaderProgram) {
         return false;
     }
@@ -412,8 +412,12 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // attempt to dereference a null pointer and crash Moonlight.
     // https://bugzilla.libsdl.org/show_bug.cgi?id=4350
     // https://hg.libsdl.org/SDL/rev/84618d571795
-    if (!SDL_VERSION_ATLEAST(2, 0, 10)) {
-        EGL_LOG(Error, "Not supported until SDL 2.0.10");
+    //
+    // SDL_HINT_VIDEO_X11_FORCE_EGL isn't supported until SDL 2.0.12
+    // and we need to use EGL to avoid triggering a crash in Mesa.
+    // https://gitlab.freedesktop.org/mesa/mesa/issues/1011
+    if (!SDL_VERSION_ATLEAST(2, 0, 12)) {
+        EGL_LOG(Error, "Not supported until SDL 2.0.12");
         m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
@@ -425,15 +429,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         EGL_LOG(Info, "EGL doesn't support HDR rendering");
         return false;
     }
-
-    // This hint will ensure we use EGL to retrieve our GL context,
-    // even on X11 where that is not the default. EGL is required
-    // to avoid a crash in Mesa.
-    // https://gitlab.freedesktop.org/mesa/mesa/issues/1011
-    SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
     int renderIndex;
     int maxRenderers = SDL_GetNumRenderDrivers();
@@ -607,10 +602,12 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_GL_SetSwapInterval(1);
 
 #if SDL_VERSION_ATLEAST(2, 0, 15) && defined(SDL_VIDEO_DRIVER_KMSDRM)
-        // The SDL KMSDRM backend already enforces double buffering (due to
-        // SDL_HINT_VIDEO_DOUBLE_BUFFER=1), so calling glFinish() after
-        // SDL_GL_SwapWindow() will block an extra frame and lock rendering
-        // at 1/2 the display refresh rate.
+        // We don't use the fence to reduce latency on KMSDRM
+        // because it can have severe performance impacts when
+        // running on slow GPUs where the frame time exceeds
+        // the video stream's frame interval. The latency
+        // reduction is also less critical without a compositor
+        // adding latency too.
         if (info.subsystem != SDL_SYSWM_KMSDRM)
 #endif
         {
@@ -620,27 +617,9 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_GL_SetSwapInterval(0);
     }
 
-    glGenTextures(EGL_MAX_PLANES, m_Textures);
-    for (size_t i = 0; i < EGL_MAX_PLANES; ++i) {
-        glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_Textures[i]);
-        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    if (!setupVideoRenderingState() || !setupOverlayRenderingState()) {
+        return false;
     }
-
-    glGenBuffers(Overlay::OverlayMax, m_OverlayVbos);
-    glGenTextures(Overlay::OverlayMax, m_OverlayTextures);
-    for (size_t i = 0; i < Overlay::OverlayMax; ++i) {
-        glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[i]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    }
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     GLenum err = glGetError();
     if (err != GL_NO_ERROR)
@@ -652,51 +631,87 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     return err == GL_NO_ERROR;
 }
 
-bool EGLRenderer::specialize() {
-    SDL_assert(!m_VAO);
-
-    if (!compileShaders())
-        return false;
+bool EGLRenderer::setupVideoRenderingState() {
+    // Setup the video plane textures
+    glGenTextures(EGL_MAX_PLANES, m_Textures);
+    for (size_t i = 0; i < EGL_MAX_PLANES; ++i) {
+        glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_Textures[i]);
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    }
 
     // The viewport should have the aspect ratio of the video stream
-    static const float vertices[] = {
+    static const VERTEX vertices[] = {
         // pos .... // tex coords
-        1.0f, 1.0f, 1.0f, 0.0f,
-        1.0f, -1.0f, 1.0f, 1.0f,
-        -1.0f, -1.0f, 0.0f, 1.0f,
-        -1.0f, 1.0f, 0.0f, 0.0f,
-
-    };
-    static const unsigned int indices[] = {
-        0, 1, 3,
-        1, 2, 3,
+        { 1.0f, 1.0f, 1.0f, 0.0f },
+        { -1.0f, 1.0f, 0.0f, 0.0f },
+        { -1.0f, -1.0f, 0.0f, 1.0f },
+        { -1.0f, -1.0f, 0.0f, 1.0f },
+        { 1.0f, -1.0f, 1.0f, 1.0f },
+        { 1.0f, 1.0f, 1.0f, 0.0f },
     };
 
-    glUseProgram(m_ShaderProgram);
-
-    unsigned int VBO, EBO;
-    m_glGenVertexArraysOES(1, &m_VAO);
+    // Setup the VAO and VBO
+    unsigned int VBO;
+    m_glGenVertexArraysOES(1, &m_VideoVAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
 
-    m_glBindVertexArrayOES(m_VAO);
+    m_glBindVertexArrayOES(m_VideoVAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof (vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    // compileShader() ensures that aPosition and aTexCoord are indexes 0 and 1 respectively
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)offsetof(VERTEX, x));
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof (float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)offsetof(VERTEX, u));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     m_glBindVertexArrayOES(0);
 
     glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        EGL_LOG(Error, "OpenGL error: %d", err);
+    }
+
+    return err == GL_NO_ERROR;
+}
+
+bool EGLRenderer::setupOverlayRenderingState() {
+    // Create overlay textures, VBOs, and VAOs
+    glGenBuffers(Overlay::OverlayMax, m_OverlayVBOs);
+    glGenTextures(Overlay::OverlayMax, m_OverlayTextures);
+    m_glGenVertexArraysOES(Overlay::OverlayMax, m_OverlayVAOs);
+
+    for (size_t i = 0; i < Overlay::OverlayMax; ++i) {
+        // Set up the overlay texture
+        glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[i]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        // Create the VAO for the overlay
+        m_glBindVertexArrayOES(m_OverlayVAOs[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, m_OverlayVBOs[i]);
+
+        // compileShader() ensures that aPosition and aTexCoord are indexes 0 and 1 respectively
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)offsetof(VERTEX, x));
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)offsetof(VERTEX, u));
+        glEnableVertexAttribArray(1);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        m_glBindVertexArrayOES(0);
+    }
+
+    // Enable alpha blending
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
@@ -762,10 +777,11 @@ void EGLRenderer::renderFrame(AVFrame* frame)
 
         SDL_assert(m_EGLImagePixelFormat != AV_PIX_FMT_NONE);
 
-        if (!specialize()) {
+        // Now that we know the image format, we can compile the shaders
+        if (!compileShaders()) {
             m_EGLImagePixelFormat = AV_PIX_FMT_NONE;
 
-            // Failure to specialize is fatal. We must reset the renderer
+            // Failure to compile shaders is fatal. We must reset the renderer
             // to recover successfully.
             //
             // Note: This seems to be easy to trigger when transitioning from
@@ -789,7 +805,11 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         m_glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, imgs[i]);
     }
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    // We already called glClear() after last frame's SDL_GL_SwapWindow()
+    // to synchronize with our fence if swap buffers is blocking
+    if (!m_BlockingSwapBuffers) {
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
 
     int drawableWidth, drawableHeight;
     SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
@@ -805,7 +825,6 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     glViewport(dst.x, dst.y, dst.w, dst.h);
 
     glUseProgram(m_ShaderProgram);
-    m_glBindVertexArrayOES(m_VAO);
 
     // If the frame format has changed, we'll need to recompute the constants
     if (hasFrameFormatChanged(frame) && (m_EGLImagePixelFormat == AV_PIX_FMT_NV12 || m_EGLImagePixelFormat == AV_PIX_FMT_P010)) {
@@ -823,10 +842,12 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         glUniform2fv(m_ShaderProgramParams[NV12_PARAM_CHROMA_OFFSET], 1, chromaOffset.data());
     }
 
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
+    // Draw the video
+    m_glBindVertexArrayOES(m_VideoVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     m_glBindVertexArrayOES(0);
 
+    // Draw overlays on top
     for (int i = 0; i < Overlay::OverlayMax; i++) {
         renderOverlay((Overlay::OverlayType)i, drawableWidth, drawableHeight);
     }
@@ -859,7 +880,7 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         }
     }
 
-    m_Backend->freeEGLImages(m_EGLDisplay, imgs);
+    m_Backend->freeEGLImages();
 
     // Free the DMA-BUF backing the last frame now that it is definitely
     // no longer being used anymore. While the PRIME FD stays around until
@@ -884,6 +905,6 @@ bool EGLRenderer::testRenderFrame(AVFrame* frame)
         return false;
     }
 
-    m_Backend->freeEGLImages(m_EGLDisplay, imgs);
+    m_Backend->freeEGLImages();
     return true;
 }

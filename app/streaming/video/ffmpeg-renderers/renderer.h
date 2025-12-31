@@ -502,7 +502,7 @@ public:
     }
 
     // Free the resources allocated during the last `exportEGLImages` call
-    virtual void freeEGLImages(EGLDisplay, EGLImage[EGL_MAX_PLANES]) {}
+    virtual void freeEGLImages() {}
 #endif
 
 #ifdef HAVE_DRM

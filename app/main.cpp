@@ -550,9 +550,12 @@ int main(int argc, char *argv[])
 #endif
     }
 
-    if (WMUtils::isRunningNvidiaProprietaryDriverX11() ||
-        !WMUtils::supportsDesktopGLWithEGL() ||
-        qEnvironmentVariableIntValue("FORCE_QT_GLES")) {
+    bool forceGles;
+    if (!Utils::getEnvironmentVariableOverride("FORCE_QT_GLES", &forceGles)) {
+        forceGles = WMUtils::isRunningNvidiaProprietaryDriverX11() ||
+                    !WMUtils::supportsDesktopGLWithEGL();
+    }
+    if (forceGles) {
         // The Nvidia proprietary driver causes Qt to render a black window when using
         // the default Desktop GL profile with EGL. AS a workaround, we default to
         // OpenGL ES when running on Nvidia on X11.

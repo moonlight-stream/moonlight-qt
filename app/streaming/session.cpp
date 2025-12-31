@@ -533,28 +533,22 @@ bool Session::populateDecoderProperties(SDL_Window* window)
         m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
     }
 
-    {
-        bool ok;
+    if (Utils::getEnvironmentVariableOverride("COLOR_SPACE_OVERRIDE", &m_StreamConfig.colorSpace)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using colorspace override: %d",
+                    m_StreamConfig.colorSpace);
+    }
+    else {
+        m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
+    }
 
-        m_StreamConfig.colorSpace = qEnvironmentVariableIntValue("COLOR_SPACE_OVERRIDE", &ok);
-        if (ok) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using colorspace override: %d",
-                        m_StreamConfig.colorSpace);
-        }
-        else {
-            m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
-        }
-
-        m_StreamConfig.colorRange = qEnvironmentVariableIntValue("COLOR_RANGE_OVERRIDE", &ok);
-        if (ok) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using color range override: %d",
-                        m_StreamConfig.colorRange);
-        }
-        else {
-            m_StreamConfig.colorRange = decoder->getDecoderColorRange();
-        }
+    if (Utils::getEnvironmentVariableOverride("COLOR_RANGE_OVERRIDE", &m_StreamConfig.colorRange)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using color range override: %d",
+                    m_StreamConfig.colorRange);
+    }
+    else {
+        m_StreamConfig.colorRange = decoder->getDecoderColorRange();
     }
 
     if (decoder->isAlwaysFullScreen()) {
@@ -910,6 +904,14 @@ bool Session::initialize(QQuickWindow* qtWindow)
     switch (m_Preferences->windowMode)
     {
     default:
+        // Normally we'd default to fullscreen desktop when starting in windowed
+        // mode, but in the case of a slow GPU, we want to use real fullscreen
+        // to allow the display to assist with the video scaling work.
+        if (WMUtils::isGpuSlow()) {
+            m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
+            break;
+        }
+        // Fall-through
     case StreamingPreferences::WM_FULLSCREEN_DESKTOP:
         // Only use full-screen desktop mode if we're running a desktop environment
         if (WMUtils::isRunningDesktopEnvironment()) {
@@ -1308,13 +1310,13 @@ private:
             } catch (const QtNetworkReplyException&) {
             }
 
-            // Exit the entire program if requested
-            if (m_Session->m_ShouldExit) {
-                QCoreApplication::instance()->quit();
-            }
-
             // Session is finished now
             emit m_Session->sessionFinished(m_Session->m_PortTestResults);
+        }
+
+        // Exit the entire program if requested
+        if (m_Session->m_ShouldExit) {
+            QCoreApplication::instance()->quit();
         }
     }
 
@@ -1428,19 +1430,32 @@ void Session::updateOptimalWindowDisplayMode()
         return;
     }
 
-    // Start with the native desktop resolution and try to find
-    // the highest refresh rate that our stream FPS evenly divides.
+    // On devices with slow GPUs, we will try to match the display mode
+    // to the video stream to offload the scaling work to the display.
+    //
+    // We also try to match the video resolution if we're using KMSDRM,
+    // because scaling on the display is generally higher quality than
+    // scaling performed by drmModeSetPlane().
+    bool matchVideo;
+    if (!Utils::getEnvironmentVariableOverride("MATCH_DISPLAY_MODE_TO_VIDEO", &matchVideo)) {
+        matchVideo = WMUtils::isGpuSlow() || QString(SDL_GetCurrentVideoDriver()) == "KMSDRM";
+    }
+
     bestMode = desktopMode;
     bestMode.refresh_rate = 0;
-    for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
-        if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
-            if (mode.w == desktopMode.w && mode.h == desktopMode.h &&
+    if (!matchVideo) {
+        // Start with the native desktop resolution and try to find
+        // the highest refresh rate that our stream FPS evenly divides.
+        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+            if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
+                if (mode.w == desktopMode.w && mode.h == desktopMode.h &&
                     mode.refresh_rate % m_StreamConfig.fps == 0) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Found display mode with desktop resolution: %dx%dx%d",
-                            mode.w, mode.h, mode.refresh_rate);
-                if (mode.refresh_rate > bestMode.refresh_rate) {
-                    bestMode = mode;
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Found display mode with desktop resolution: %dx%dx%d",
+                                mode.w, mode.h, mode.refresh_rate);
+                    if (mode.refresh_rate > bestMode.refresh_rate) {
+                        bestMode = mode;
+                    }
                 }
             }
         }

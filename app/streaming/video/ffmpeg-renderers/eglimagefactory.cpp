@@ -1,5 +1,10 @@
 #include "eglimagefactory.h"
 
+#ifdef HAVE_LIBVA
+#include <libavutil/hwcontext_vaapi.h>
+#include <unistd.h>
+#endif
+
 #include <vector>
 
 // Don't take a dependency on libdrm just for these constants
@@ -62,11 +67,21 @@ bool EglImageFactory::initializeEGL(EGLDisplay,
     return true;
 }
 
+void EglImageFactory::resetCache()
+{
+    // Cannot reset cache while in the middle of rendering
+    SDL_assert(!m_LastImageCtx.has_value());
+}
+
 #ifdef HAVE_DRM
 
-ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, AVDRMFrameDescriptor* drmFrame, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES])
+ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES])
 {
-    memset(images, 0, sizeof(EGLImage) * EGL_MAX_PLANES);
+    // freeEGLImages() must be called before exporting again
+    SDL_assert(!m_LastImageCtx.has_value());
+
+    SDL_assert(frame->format == AV_PIX_FMT_DRM_PRIME);
+    AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
 
     // DRM requires composed layers rather than separate layers per plane
     SDL_assert(drmFrame->nb_layers == 1);
@@ -207,12 +222,14 @@ ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, AVDRMFrameDescriptor* d
     attribs[attribIndex++] = EGL_NONE;
     SDL_assert(attribIndex <= MAX_ATTRIB_COUNT);
 
+    EglImageContext imgCtx(dpy, m_eglDestroyImage, m_eglDestroyImageKHR);
+
     // Our EGLImages are non-planar, so we only populate the first entry
     if (m_eglCreateImage) {
-        images[0] = m_eglCreateImage(dpy, EGL_NO_CONTEXT,
-                                     EGL_LINUX_DMA_BUF_EXT,
-                                     nullptr, attribs);
-        if (!images[0]) {
+        imgCtx.images[0] = m_eglCreateImage(dpy, EGL_NO_CONTEXT,
+                                            EGL_LINUX_DMA_BUF_EXT,
+                                            nullptr, attribs);
+        if (!imgCtx.images[0]) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "eglCreateImage() Failed: %d", eglGetError());
             return -1;
@@ -225,15 +242,23 @@ ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, AVDRMFrameDescriptor* d
             intAttribs[i] = (EGLint)attribs[i];
         }
 
-        images[0] = m_eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
-                                        EGL_LINUX_DMA_BUF_EXT,
-                                        nullptr, intAttribs);
-        if (!images[0]) {
+        imgCtx.images[0] = m_eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
+                                               EGL_LINUX_DMA_BUF_EXT,
+                                               nullptr, intAttribs);
+        if (!imgCtx.images[0]) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "eglCreateImageKHR() Failed: %d", eglGetError());
             return -1;
         }
     }
+
+    imgCtx.count = 1;
+
+    // Copy the output from the image context before we move it
+    images[0] = imgCtx.images[0];
+
+    // Store this image context
+    m_LastImageCtx.emplace(std::move(imgCtx));
 
     return 1;
 }
@@ -242,16 +267,42 @@ ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, AVDRMFrameDescriptor* d
 
 #ifdef HAVE_LIBVA
 
-ssize_t EglImageFactory::exportVAImages(AVFrame *frame, VADRMPRIMESurfaceDescriptor *vaFrame, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES])
+ssize_t EglImageFactory::exportVAImages(AVFrame *frame, uint32_t exportFlags, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES])
 {
-    ssize_t count = 0;
+    // freeEGLImages() must be called before exporting again
+    SDL_assert(!m_LastImageCtx.has_value());
 
-    memset(images, 0, sizeof(EGLImage) * EGL_MAX_PLANES);
+    SDL_assert(frame->format == AV_PIX_FMT_VAAPI);
+    auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
+    AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)hwFrameCtx->device_ctx->hwctx;
+    VASurfaceID surface_id = (VASurfaceID)(uintptr_t)frame->data[3];
 
-    SDL_assert(vaFrame->num_layers <= EGL_MAX_PLANES);
+    // Sync the surface before doing anything. We need to do this even if we've got cached EGLImages.
+    VAStatus st = vaSyncSurface(vaDeviceContext->display, surface_id);
+    if (st != VA_STATUS_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "vaSyncSurface() failed: %d", st);
+        return -1;
+    }
 
-    for (size_t i = 0; i < vaFrame->num_layers; ++i) {
-        const auto &layer = vaFrame->layers[i];
+    EglImageContext imgCtx(dpy, m_eglDestroyImage, m_eglDestroyImageKHR);
+
+    VADRMPRIMESurfaceDescriptor vaFrame;
+    st = vaExportSurfaceHandle(vaDeviceContext->display,
+                               surface_id,
+                               VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
+                               exportFlags,
+                               &vaFrame);
+    if (st != VA_STATUS_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "vaExportSurfaceHandle failed: %d", st);
+        return -1;
+    }
+
+    SDL_assert(vaFrame.num_layers <= EGL_MAX_PLANES);
+
+    for (size_t i = 0; i < vaFrame.num_layers; ++i) {
+        const auto &layer = vaFrame.layers[i];
 
         // Max 33 attributes (1 key + 1 value for each)
         const int EGL_ATTRIB_COUNT = 33 * 2;
@@ -264,7 +315,7 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, VADRMPRIMESurfaceDescrip
 
         int attribIndex = 8;
         for (size_t j = 0; j < layer.num_planes; j++) {
-            const auto &object = vaFrame->objects[layer.object_index[j]];
+            const auto &object = vaFrame.objects[layer.object_index[j]];
 
             switch (j) {
             case 0:
@@ -333,7 +384,7 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, VADRMPRIMESurfaceDescrip
         }
 
         // For composed exports, add the YUV metadata
-        if (vaFrame->num_layers == 1) {
+        if (vaFrame.num_layers == 1) {
             // Add colorspace metadata
             switch (m_Renderer->getFrameColorspace(frame)) {
             case COLORSPACE_REC_601:
@@ -392,13 +443,13 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, VADRMPRIMESurfaceDescrip
         SDL_assert(attribIndex <= EGL_ATTRIB_COUNT);
 
         if (m_eglCreateImage) {
-            images[i] = m_eglCreateImage(dpy, EGL_NO_CONTEXT,
-                                         EGL_LINUX_DMA_BUF_EXT,
-                                         nullptr, attribs);
-            if (!images[i]) {
+            imgCtx.images[i] = m_eglCreateImage(dpy, EGL_NO_CONTEXT,
+                                                EGL_LINUX_DMA_BUF_EXT,
+                                                nullptr, attribs);
+            if (!imgCtx.images[i]) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "eglCreateImage() Failed: %d", eglGetError());
-                goto fail;
+                break;
             }
         }
         else {
@@ -408,24 +459,37 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, VADRMPRIMESurfaceDescrip
                 intAttribs[i] = (EGLint)attribs[i];
             }
 
-            images[i] = m_eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
-                                            EGL_LINUX_DMA_BUF_EXT,
-                                            nullptr, intAttribs);
-            if (!images[i]) {
+            imgCtx.images[i] = m_eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
+                                                   EGL_LINUX_DMA_BUF_EXT,
+                                                   nullptr, intAttribs);
+            if (!imgCtx.images[i]) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "eglCreateImageKHR() Failed: %d", eglGetError());
-                goto fail;
+                break;
             }
         }
 
-        ++count;
+        imgCtx.count++;
     }
 
-    return count;
+    // Always close the exported FDs
+    for (size_t i = 0; i < vaFrame.num_objects; ++i) {
+        close(vaFrame.objects[i].fd);
+    }
 
-fail:
-    freeEGLImages(dpy, images);
-    return -1;
+    // Check for failure
+    if (vaFrame.num_layers != imgCtx.count) {
+        return -1;
+    }
+
+    // Copy the output from the image context before we move it
+    ssize_t count = imgCtx.count;
+    memcpy(images, imgCtx.images, sizeof(EGLImage) * imgCtx.count);
+
+    // Store this image context
+    m_LastImageCtx.emplace(std::move(imgCtx));
+
+    return count;
 }
 
 bool EglImageFactory::supportsImportingFormat(EGLDisplay dpy, EGLint format)
@@ -511,16 +575,7 @@ bool EglImageFactory::supportsImportingModifier(EGLDisplay dpy, EGLint format, E
 
 #endif
 
-void EglImageFactory::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
-    for (size_t i = 0; i < EGL_MAX_PLANES; ++i) {
-        if (images[i] != nullptr) {
-            if (m_eglDestroyImage) {
-                m_eglDestroyImage(dpy, images[i]);
-            }
-            else {
-                m_eglDestroyImageKHR(dpy, images[i]);
-            }
-        }
-    }
-    memset(images, 0, sizeof(EGLImage) * EGL_MAX_PLANES);
+void EglImageFactory::freeEGLImages() {
+    SDL_assert(m_LastImageCtx.has_value());
+    m_LastImageCtx.reset();
 }

@@ -60,6 +60,7 @@ public:
     virtual ~VAAPIRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
+    virtual bool prepareDecoderContextInGetFormat(AVCodecContext*, AVPixelFormat) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool isDirectRenderingSupported() override;
     virtual int getDecoderColorspace() override;
@@ -72,7 +73,7 @@ public:
     virtual AVPixelFormat getEGLImagePixelFormat() override;
     virtual bool initializeEGL(EGLDisplay dpy, const EGLExtensions &ext) override;
     virtual ssize_t exportEGLImages(AVFrame *frame, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) override;
-    virtual void freeEGLImages(EGLDisplay dpy, EGLImage[EGL_MAX_PLANES]) override;
+    virtual void freeEGLImages() override;
 #endif
 
 #ifdef HAVE_DRM
@@ -122,7 +123,6 @@ private:
         Separate,
         Composed
     } m_EglExportType;
-    VADRMPRIMESurfaceDescriptor m_PrimeDescriptor;
     EglImageFactory m_EglImageFactory;
 #endif
 };

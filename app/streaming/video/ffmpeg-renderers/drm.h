@@ -54,6 +54,7 @@ public:
     virtual ~DrmRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
+    virtual bool prepareDecoderContextInGetFormat(AVCodecContext*, AVPixelFormat) override;
     virtual void prepareToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
@@ -68,7 +69,7 @@ public:
     virtual AVPixelFormat getEGLImagePixelFormat() override;
     virtual bool initializeEGL(EGLDisplay dpy, const EGLExtensions &ext) override;
     virtual ssize_t exportEGLImages(AVFrame *frame, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) override;
-    virtual void freeEGLImages(EGLDisplay dpy, EGLImage[EGL_MAX_PLANES]) override;
+    virtual void freeEGLImages() override;
 #endif
 
 private:
