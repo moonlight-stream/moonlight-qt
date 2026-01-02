@@ -96,8 +96,13 @@ class DrmRenderer : public IFFmpegRenderer {
             return m_Values.find(name) != m_Values.end();
         }
 
-        uint64_t value(const std::string &name) const {
-            return m_Values.find(name)->second;
+        std::optional<uint64_t> value(const std::string &name) const {
+            if (auto it = m_Values.find(name); it != m_Values.end()) {
+                return it->second;
+            }
+            else {
+                return std::nullopt;
+            }
         }
 
         uint32_t objectId() const {
@@ -267,7 +272,16 @@ class DrmRenderer : public IFFmpegRenderer {
         }
 
         bool set(const DrmProperty& prop, const std::string &value) {
-            if (set(prop, prop.value(value), false)) {
+            std::optional<uint64_t> propValue = prop.value(value);
+            if (!propValue) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Property '%s' has no supported enum value '%s'",
+                             prop.name(),
+                             value.c_str());
+                return false;
+            }
+
+            if (set(prop, *propValue, false)) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Set property '%s': %s",
                             prop.name(),

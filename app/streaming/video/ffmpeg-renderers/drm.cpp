@@ -53,14 +53,6 @@ extern "C" {
 #define DRM_FORMAT_XYUV8888 fourcc_code('X', 'Y', 'U', 'V')
 #endif
 
-// Values for "Colorspace" connector property
-#ifndef DRM_MODE_COLORIMETRY_DEFAULT
-#define DRM_MODE_COLORIMETRY_DEFAULT     0
-#endif
-#ifndef DRM_MODE_COLORIMETRY_BT2020_RGB
-#define DRM_MODE_COLORIMETRY_BT2020_RGB  9
-#endif
-
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
@@ -785,7 +777,8 @@ void DrmRenderer::setHdrMode(bool enabled)
     }
 
     if (auto prop = m_Connector.property("max bpc")) {
-        m_PropSetter.set(*prop, enabled ? 10 : 8);
+        auto range = prop->range();
+        m_PropSetter.set(*prop, std::clamp<uint64_t>(enabled ? 10 : 8, range.first, range.second));
     }
 
     if (auto prop = m_Connector.property("HDR_OUTPUT_METADATA")) {
