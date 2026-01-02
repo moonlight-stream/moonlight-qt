@@ -1261,15 +1261,15 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
 
         if (!formatMatch) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Selected DRM plane doesn't support chosen decoding format: %08x",
-                         drmFrame->layers[0].format);
+                         "Selected DRM plane doesn't support chosen decoding format: " FOURCC_FMT,
+                         FOURCC_FMT_ARGS(drmFrame->layers[0].format));
             drmModeRmFB(m_DrmFd, *newFbId);
             return false;
         }
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Selected DRM plane supports chosen decoding format: %08x",
-                    drmFrame->layers[0].format);
+                    "Selected DRM plane supports chosen decoding format: " FOURCC_FMT,
+                    FOURCC_FMT_ARGS(drmFrame->layers[0].format));
 
         // TODO: We can also check the modifier support using the IN_FORMATS property,
         // but checking format alone is probably enough for real world cases since we're
