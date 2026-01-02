@@ -12,23 +12,6 @@ extern "C" {
 }
 
 #include <libdrm/drm_fourcc.h>
-#ifdef __linux__
-#include <linux/dma-buf.h>
-#else //bundle on BSDs
-typedef uint64_t __u64;
-struct dma_buf_sync {
-    __u64 flags;
-};
-#define DMA_BUF_SYNC_READ      (1 << 0)
-#define DMA_BUF_SYNC_WRITE     (2 << 0)
-#define DMA_BUF_SYNC_RW        (DMA_BUF_SYNC_READ | DMA_BUF_SYNC_WRITE)
-#define DMA_BUF_SYNC_START     (0 << 2)
-#define DMA_BUF_SYNC_END       (1 << 2)
-#define DMA_BUF_SYNC_VALID_FLAGS_MASK \
-    (DMA_BUF_SYNC_RW | DMA_BUF_SYNC_END)
-#define DMA_BUF_BASE		'b'
-#define DMA_BUF_IOCTL_SYNC	_IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
-#endif
 
 // Special Rockchip type
 #ifndef DRM_FORMAT_NA12
@@ -973,11 +956,6 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         auto &layer = mappedFrame->layers[0];
         layer.format = drmFormatTuple->second;
 
-        // Prepare to write to the dumb buffer from the CPU
-        struct dma_buf_sync sync;
-        sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_WRITE;
-        drmIoctl(drmFrame->primeFd, DMA_BUF_IOCTL_SYNC, &sync);
-
         int lastPlaneSize = 0;
         for (int i = 0; i < 4; i++) {
             if (frame->data[i] != nullptr) {
@@ -1025,10 +1003,6 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                 lastPlaneSize = plane.pitch * planeHeight;
             }
         }
-
-        // End the CPU write to the dumb buffer
-        sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_WRITE;
-        drmIoctl(drmFrame->primeFd, DMA_BUF_IOCTL_SYNC, &sync);
     }
 
     ret = true;
