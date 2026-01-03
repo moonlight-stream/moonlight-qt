@@ -135,6 +135,7 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_DrmFd(-1),
       m_DrmIsMaster(false),
       m_DrmStateModified(false),
+      m_DrmSupportsModifiers(false),
       m_MustCloseDrmFd(false),
       m_SupportsDirectRendering(false),
       m_VideoFormat(0),
@@ -671,6 +672,17 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     Overlay::OverlayMax);
     }
 
+    {
+        uint64_t val;
+        if (drmGetCap(m_DrmFd, DRM_CAP_ADDFB2_MODIFIERS, &val) == 0 && val) {
+            m_DrmSupportsModifiers = true;
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "FB modifiers are unsupported. Video or overlays may display incorrectly!");
+        }
+    }
+
     // If we got this far, we can do direct rendering via the DRM FD.
     m_SupportsDirectRendering = true;
 
@@ -941,8 +953,12 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         // drivers (i915, at least) don't support multi-buffer FBs.
         mappedFrame->nb_objects = 1;
         mappedFrame->objects[0].fd = drmFrame->primeFd;
-        mappedFrame->objects[0].format_modifier = DRM_FORMAT_MOD_LINEAR;
         mappedFrame->objects[0].size = drmFrame->size;
+
+        // We use DRM_FORMAT_MOD_INVALID because we don't want modifiers to be passed
+        // in drmModeAddFB2WithModifiers() when creating an FB for a dumb buffer.
+        // Dumb buffers are already implicitly linear and don't require modifiers.
+        mappedFrame->objects[0].format_modifier = DRM_FORMAT_MOD_INVALID;
 
         mappedFrame->nb_layers = 1;
 
@@ -1206,7 +1222,8 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
         modifiers[i] = object.format_modifier;
 
         // Pass along the modifiers to DRM if there are some in the descriptor
-        if (modifiers[i] != DRM_FORMAT_MOD_INVALID) {
+        // and the driver supports receiving modifiers on FBs
+        if (modifiers[i] != DRM_FORMAT_MOD_INVALID && m_DrmSupportsModifiers) {
             flags |= DRM_MODE_FB_MODIFIERS;
         }
     }

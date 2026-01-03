@@ -14,6 +14,11 @@
 #include <unordered_map>
 #include <mutex>
 
+// This is only defined in Linux 6.8+ headers
+#ifndef DRM_CAP_ATOMIC_ASYNC_PAGE_FLIP
+#define DRM_CAP_ATOMIC_ASYNC_PAGE_FLIP	0x15
+#endif
+
 // Newer libdrm headers have these HDR structs, but some older ones don't.
 namespace DrmDefs
 {
@@ -195,6 +200,9 @@ class DrmRenderer : public IFFmpegRenderer {
             uint32_t crtcId;
             int32_t crtcX, crtcY;
             uint32_t crtcW, crtcH, srcX, srcY, srcW, srcH;
+
+            bool isPrimaryPlane;
+            bool needsSetPlane;
         };
 
         struct PlaneBuffer {
@@ -235,7 +243,18 @@ class DrmRenderer : public IFFmpegRenderer {
         void initialize(int drmFd, bool wantsAtomic, bool wantsAsyncFlip) {
             m_Fd = drmFd;
             m_Atomic = wantsAtomic && drmSetClientCap(drmFd, DRM_CLIENT_CAP_ATOMIC, 1) == 0;
+
             m_AsyncFlip = wantsAsyncFlip;
+            if (wantsAsyncFlip) {
+                uint64_t val;
+                if (drmGetCap(m_Fd,
+                              m_Atomic ? DRM_CAP_ATOMIC_ASYNC_PAGE_FLIP : DRM_CAP_ASYNC_PAGE_FLIP,
+                              &val) < 0 || !val) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "V-sync cannot be disabled due to lack of async page flip support");
+                    m_AsyncFlip = false;
+                }
+            }
         }
 
         bool set(const DrmProperty& prop, uint64_t value, bool verbose = true) {
@@ -316,14 +335,39 @@ class DrmRenderer : public IFFmpegRenderer {
                     // Latch the plane configuration and release the lock
                     std::lock_guard lg { m_Lock };
                     planeConfig = m_PlaneConfigs.at(plane.objectId());
+                    m_PlaneConfigs[plane.objectId()].needsSetPlane = false;
                 }
 
-                ret = drmModeSetPlane(m_Fd, plane.objectId(),
-                                      planeConfig.crtcId, fbId, 0,
-                                      planeConfig.crtcX, planeConfig.crtcY,
-                                      planeConfig.crtcW, planeConfig.crtcH,
-                                      planeConfig.srcX, planeConfig.srcY,
-                                      planeConfig.srcW, planeConfig.srcH) == 0;
+                // If we're flipping onto the primary plane, we can use drmModePageFlip()
+                // which allows support for async flips for legacy drivers
+                if (planeConfig.isPrimaryPlane && fbId && !planeConfig.needsSetPlane) {
+                    ret = drmModePageFlip(m_Fd, planeConfig.crtcId, fbId,
+                                          m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : 0,
+                                          nullptr) == 0;
+                    if (!ret && m_AsyncFlip) {
+                        // Async page flips may be unavailable, so try a regular page flip
+                        ret = drmModePageFlip(m_Fd, planeConfig.crtcId, fbId,
+                                              0, nullptr) == 0;
+                    }
+                    if (!ret) {
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                     "drmModePageFlip() failed: %d",
+                                     errno);
+                    }
+                }
+                else {
+                    ret = drmModeSetPlane(m_Fd, plane.objectId(),
+                                          planeConfig.crtcId, fbId, 0,
+                                          planeConfig.crtcX, planeConfig.crtcY,
+                                          planeConfig.crtcW, planeConfig.crtcH,
+                                          planeConfig.srcX, planeConfig.srcY,
+                                          planeConfig.srcW, planeConfig.srcH) == 0;
+                    if (!ret) {
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                     "drmModeSetPlane() failed: %d",
+                                     errno);
+                    }
+                }
 
                 // If we succeeded updating the plane, free the old FB state
                 // Otherwise, we'll free the new data which was never used.
@@ -332,11 +376,6 @@ class DrmRenderer : public IFFmpegRenderer {
 
                     std::swap(fbId, m_PlaneBuffers[plane.objectId()].fbId);
                     std::swap(dumbBufferHandle, m_PlaneBuffers[plane.objectId()].dumbBufferHandle);
-                }
-                else {
-                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                 "drmModeSetPlane() failed: %d",
-                                 errno);
                 }
             }
 
@@ -384,6 +423,9 @@ class DrmRenderer : public IFFmpegRenderer {
                 planeConfig.srcY = srcY;
                 planeConfig.srcW = srcW;
                 planeConfig.srcH = srcH;
+
+                planeConfig.isPrimaryPlane = (plane.property("type")->initialValue() == DRM_PLANE_TYPE_PRIMARY);
+                planeConfig.needsSetPlane = true; // We must call drmModeSetPlane() once
             }
 
             return ret;
@@ -418,12 +460,16 @@ class DrmRenderer : public IFFmpegRenderer {
             }
 
             // Try an async flip if requested
-            bool ret = drmModeAtomicCommit(m_Fd, req, m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : 0, nullptr) == 0;
+            bool ret = drmModeAtomicCommit(m_Fd, req,
+                                           m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : DRM_MODE_ATOMIC_ALLOW_MODESET,
+                                           nullptr) == 0;
 
             // The driver may not support async flips (especially if we changed a non-FB_ID property),
             // so try again with a regular flip if we get an error from the async flip attempt.
+            //
+            // We pass DRM_MODE_ATOMIC_ALLOW_MODESET because changing HDR state may require a modeset.
             if (!ret && m_AsyncFlip) {
-                ret = drmModeAtomicCommit(m_Fd, req, 0, nullptr) == 0;
+                ret = drmModeAtomicCommit(m_Fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr) == 0;
             }
 
             // If we flipped to a new buffer, free the old one
@@ -527,6 +573,7 @@ private:
     int m_DrmFd;
     bool m_DrmIsMaster;
     bool m_DrmStateModified;
+    bool m_DrmSupportsModifiers;
     bool m_MustCloseDrmFd;
     bool m_SupportsDirectRendering;
     int m_VideoFormat;
