@@ -1192,6 +1192,89 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
         drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
     }
 
+    if (testMode) {
+        // Check if plane can actually be imported
+        bool formatMatch = false;
+
+        // If we have an IN_FORMATS property, use that since it supports modifiers too
+        if (auto prop = m_VideoPlane.property("IN_FORMATS")) {
+            drmModePropertyBlobPtr blob = drmModeGetPropertyBlob(m_DrmFd, prop->initialValue());
+            if (blob) {
+                auto *header = (struct drm_format_modifier_blob *)blob->data;
+                auto *modifiers = (struct drm_format_modifier *)((char *)header + header->modifiers_offset);
+                uint32_t *formats = (uint32_t *)((char *)header + header->formats_offset);
+
+                for (uint32_t i = 0; i < header->count_modifiers; i++) {
+                    if (modifiers[i].modifier == drmFrame->objects[0].format_modifier) {
+                        for (uint32_t j = 0; j < header->count_formats && j < sizeof(modifiers[i].formats) * 8; j++) {
+                            if (modifiers[i].formats & (1ULL << j)) {
+                                if (formats[modifiers[i].offset + j] == drmFrame->layers[0].format) {
+                                    formatMatch = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (formatMatch) {
+                            break;
+                        }
+                        else {
+                            // Do not break for this case even though we got a modifier
+                            // match that did not appear to have our format in it.
+                            // To handle greater than 64 formats, the same modifier may
+                            // appear in the list more than once.
+                        }
+                    }
+                }
+
+                drmModeFreePropertyBlob(blob);
+            }
+            else {
+                // This should never happen since IN_FORMATS is an immutable property
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "drmModeGetPropertyBlob(IN_FORMATS) failed: %d",
+                             errno);
+            }
+        }
+        else {
+            drmModePlanePtr videoPlane = drmModeGetPlane(m_DrmFd, m_VideoPlane.objectId());
+            if (videoPlane) {
+                for (uint32_t i = 0; i < videoPlane->count_formats; i++) {
+                    if (drmFrame->layers[0].format == videoPlane->formats[i]) {
+                        formatMatch = true;
+                        break;
+                    }
+                }
+
+                drmModeFreePlane(videoPlane);
+            }
+            else {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "drmModeGetPlane() failed: %d",
+                             errno);
+            }
+        }
+
+        if (formatMatch) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Selected DRM plane supports chosen decoding format and modifier: " FOURCC_FMT " %016" PRIx64,
+                        FOURCC_FMT_ARGS(drmFrame->layers[0].format),
+                        drmFrame->objects[0].format_modifier);
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Selected DRM plane doesn't support chosen decoding format and modifier: " FOURCC_FMT " %016" PRIx64,
+                         FOURCC_FMT_ARGS(drmFrame->layers[0].format),
+                         drmFrame->objects[0].format_modifier);
+
+            if (m_DrmPrimeBackend) {
+                SDL_assert(drmFrame == &mappedFrame);
+                m_BackendRenderer->unmapDrmPrimeFrame(drmFrame);
+            }
+            return false;
+        }
+    }
+
     uint32_t handles[4] = {};
     uint32_t pitches[4] = {};
     uint32_t offsets[4] = {};
@@ -1243,53 +1326,9 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
 
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "drmModeAddFB2[WithModifiers]() failed: %d (format: " FOURCC_FMT ")",
-                     errno,
-                     FOURCC_FMT_ARGS(drmFrame->layers[0].format));
+                     "drmModeAddFB2[WithModifiers]() failed: %d",
+                     errno);
         return false;
-    }
-
-    if (testMode) {
-        drmModePlanePtr videoPlane = drmModeGetPlane(m_DrmFd, m_VideoPlane.objectId());
-        if (!videoPlane) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "drmModeGetPlane() failed: %d",
-                         errno);
-            drmModeRmFB(m_DrmFd, *newFbId);
-            return false;
-        }
-
-        // Check if plane can actually be imported
-        bool formatMatch = false;
-        for (uint32_t i = 0; i < videoPlane->count_formats; i++) {
-            if (drmFrame->layers[0].format == videoPlane->formats[i]) {
-                formatMatch = true;
-                break;
-            }
-        }
-
-        drmModeFreePlane(videoPlane);
-
-        if (!formatMatch) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Selected DRM plane doesn't support chosen decoding format: " FOURCC_FMT,
-                         FOURCC_FMT_ARGS(drmFrame->layers[0].format));
-            drmModeRmFB(m_DrmFd, *newFbId);
-            return false;
-        }
-
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Selected DRM plane supports chosen decoding format: " FOURCC_FMT,
-                    FOURCC_FMT_ARGS(drmFrame->layers[0].format));
-
-        // TODO: We can also check the modifier support using the IN_FORMATS property,
-        // but checking format alone is probably enough for real world cases since we're
-        // either getting linear buffers from software mapping or DMA-BUFs from the
-        // hardware decoder.
-        //
-        // Hopefully no actual hardware vendors are dumb enough to ship display hardware
-        // or drivers that lack support for the format modifiers required by their own
-        // video decoders.
     }
 
     return true;
