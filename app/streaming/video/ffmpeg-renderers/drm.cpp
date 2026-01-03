@@ -1196,8 +1196,8 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
         // Check if plane can actually be imported
         bool formatMatch = false;
 
-        // If we have an IN_FORMATS property, use that since it supports modifiers too
-        if (auto prop = m_VideoPlane.property("IN_FORMATS")) {
+        // If we have an IN_FORMATS property and the frame has DRM modifiers, use that since it supports modifiers too
+        if (auto prop = m_VideoPlane.property("IN_FORMATS"); prop && drmFrame->objects[0].format_modifier != DRM_FORMAT_MOD_INVALID) {
             drmModePropertyBlobPtr blob = drmModeGetPropertyBlob(m_DrmFd, prop->initialValue());
             if (blob) {
                 auto *header = (struct drm_format_modifier_blob *)blob->data;
