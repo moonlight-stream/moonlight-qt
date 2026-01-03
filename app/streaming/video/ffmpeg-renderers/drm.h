@@ -356,11 +356,11 @@ class DrmRenderer : public IFFmpegRenderer {
 
                     ret = drmModePageFlip(m_Fd, planeConfig.crtcId, fbId,
                                           flags | (m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : 0),
-                                          nullptr) == 0;
+                                          this) == 0;
                     if (!ret && m_AsyncFlip) {
                         // Async page flips may be unavailable, so try a regular page flip
                         ret = drmModePageFlip(m_Fd, planeConfig.crtcId, fbId,
-                                              flags, nullptr) == 0;
+                                              flags, this) == 0;
                     }
 
                     if (ret) {
@@ -515,15 +515,17 @@ class DrmRenderer : public IFFmpegRenderer {
                         // The current buffers can be freed after the flip completes
                         if (it->second.fbId) {
                             m_FbsToFreeAfterFlip.push_back(it->second.fbId);
+                            it->second.fbId = 0;
                         }
                         if (it->second.dumbBufferHandle) {
                             m_DumbBufsToFreeAfterFlip.push_back(it->second.dumbBufferHandle);
+                            it->second.dumbBufferHandle = 0;
                         }
 
                         // The pending buffers become the active buffers for this FB
-                        m_PlaneBuffers[it->first].fbId = it->second.pendingFbId;
-                        m_PlaneBuffers[it->first].dumbBufferHandle = it->second.pendingDumbBuffer;
-                        m_PlaneBuffers[it->first].modified = false;
+                        std::swap(it->second.fbId, it->second.pendingFbId);
+                        std::swap(it->second.dumbBufferHandle, it->second.pendingDumbBuffer);
+                        it->second.modified = false;
                     }
                 }
             }
