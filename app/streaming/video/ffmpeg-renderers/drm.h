@@ -10,6 +10,8 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+#include <poll.h>
+
 #include <set>
 #include <unordered_map>
 #include <mutex>
@@ -216,7 +218,12 @@ class DrmRenderer : public IFFmpegRenderer {
         };
 
     public:
-        DrmPropertySetter() {}
+        DrmPropertySetter() {
+            m_EventCtx = {};
+            m_EventCtx.version = 2;
+            m_EventCtx.page_flip_handler = pageFlipHandler;
+        }
+
         ~DrmPropertySetter() {
             for (auto it = m_PlaneBuffers.begin(); it != m_PlaneBuffers.end(); it++) {
                 SDL_assert(!it->second.fbId);
@@ -331,6 +338,9 @@ class DrmRenderer : public IFFmpegRenderer {
             else {
                 PlaneConfiguration planeConfig;
 
+                // Wait for any previous flips to complete
+                waitForFlipCompletion();
+
                 {
                     // Latch the plane configuration and release the lock
                     std::lock_guard lg { m_Lock };
@@ -341,15 +351,40 @@ class DrmRenderer : public IFFmpegRenderer {
                 // If we're flipping onto the primary plane, we can use drmModePageFlip()
                 // which allows support for async flips for legacy drivers
                 if (planeConfig.isPrimaryPlane && fbId && !planeConfig.needsSetPlane) {
+                    // We always want the flip event
+                    uint32_t flags = DRM_MODE_PAGE_FLIP_EVENT;
+
                     ret = drmModePageFlip(m_Fd, planeConfig.crtcId, fbId,
-                                          m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : 0,
+                                          flags | (m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : 0),
                                           nullptr) == 0;
                     if (!ret && m_AsyncFlip) {
                         // Async page flips may be unavailable, so try a regular page flip
                         ret = drmModePageFlip(m_Fd, planeConfig.crtcId, fbId,
-                                              0, nullptr) == 0;
+                                              flags, nullptr) == 0;
                     }
-                    if (!ret) {
+
+                    if (ret) {
+                        // We had a successful (async) flip, so we need to wait to free the
+                        // old buffers until the flip has fully completed
+                        std::lock_guard lg { m_Lock };
+
+                        // Queue the buffers to be freed and importantly also zero them
+                        // so the cleanup code at the bottom of this function doesn't
+                        // try to free them too early.
+                        if (m_PlaneBuffers[plane.objectId()].fbId) {
+                            m_FbsToFreeAfterFlip.push_back(m_PlaneBuffers[plane.objectId()].fbId);
+                            m_PlaneBuffers[plane.objectId()].fbId = 0;
+                        }
+                        if (m_PlaneBuffers[plane.objectId()].dumbBufferHandle) {
+                            m_DumbBufsToFreeAfterFlip.push_back(m_PlaneBuffers[plane.objectId()].dumbBufferHandle);
+                            m_PlaneBuffers[plane.objectId()].dumbBufferHandle = 0;
+                        }
+
+                        // Expect a page flip event
+                        SDL_assert(!m_FlipPending);
+                        m_FlipPending = true;
+                    }
+                    else {
                         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                      "drmModePageFlip() failed: %d",
                                      errno);
@@ -443,66 +478,53 @@ class DrmRenderer : public IFFmpegRenderer {
                 return 0;
             }
 
-            drmModeAtomicReqPtr req = nullptr;
-            std::unordered_map<uint32_t, PlaneBuffer> pendingBuffers;
+            // Wait for any previous flips to complete before acquiring the lock
+            waitForFlipCompletion();
 
-            {
-                // Take ownership of the current atomic request to commit it and
-                // allow other threads to queue up changes for the next one.
-                std::lock_guard lg { m_Lock };
-                std::swap(req, m_AtomicReq);
-                std::swap(pendingBuffers, m_PlaneBuffers);
-            }
+            std::lock_guard lg { m_Lock };
 
-            if (!req) {
+            if (!m_AtomicReq) {
                 // Nothing to apply
                 return true;
             }
 
+            // We always need these flags for completion notification
+            uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
+
             // Try an async flip if requested
-            bool ret = drmModeAtomicCommit(m_Fd, req,
-                                           m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : DRM_MODE_ATOMIC_ALLOW_MODESET,
-                                           nullptr) == 0;
+            bool ret = drmModeAtomicCommit(m_Fd, m_AtomicReq,
+                                           flags | (m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : DRM_MODE_ATOMIC_ALLOW_MODESET),
+                                           this) == 0;
 
             // The driver may not support async flips (especially if we changed a non-FB_ID property),
             // so try again with a regular flip if we get an error from the async flip attempt.
             //
             // We pass DRM_MODE_ATOMIC_ALLOW_MODESET because changing HDR state may require a modeset.
             if (!ret && m_AsyncFlip) {
-                ret = drmModeAtomicCommit(m_Fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr) == 0;
+                ret = drmModeAtomicCommit(m_Fd, m_AtomicReq, flags | DRM_MODE_ATOMIC_ALLOW_MODESET, this) == 0;
             }
 
-            // If we flipped to a new buffer, free the old one
             if (ret) {
-                std::lock_guard lg { m_Lock };
+                // Expect a page flip event
+                SDL_assert(!m_FlipPending);
+                m_FlipPending = true;
 
                 // Update the buffer state for any modified planes
-                for (auto it = pendingBuffers.begin(); it != pendingBuffers.end(); it++) {
+                for (auto it = m_PlaneBuffers.begin(); it != m_PlaneBuffers.end(); it++) {
                     if (it->second.modified) {
+                        // The current buffers can be freed after the flip completes
                         if (it->second.fbId) {
-                            drmModeRmFB(m_Fd, it->second.fbId);
-                            it->second.fbId = 0;
+                            m_FbsToFreeAfterFlip.push_back(it->second.fbId);
                         }
                         if (it->second.dumbBufferHandle) {
-                            struct drm_mode_destroy_dumb destroyBuf = {};
-                            destroyBuf.handle = it->second.dumbBufferHandle;
-                            drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
-                            it->second.dumbBufferHandle = 0;
+                            m_DumbBufsToFreeAfterFlip.push_back(it->second.dumbBufferHandle);
                         }
 
                         // The pending buffers become the active buffers for this FB
                         m_PlaneBuffers[it->first].fbId = it->second.pendingFbId;
                         m_PlaneBuffers[it->first].dumbBufferHandle = it->second.pendingDumbBuffer;
+                        m_PlaneBuffers[it->first].modified = false;
                     }
-                    else if (it->second.fbId || it->second.dumbBufferHandle) {
-                        // This FB wasn't modified in this commit, so the current buffers stay around
-                        m_PlaneBuffers[it->first].fbId = it->second.fbId;
-                        m_PlaneBuffers[it->first].dumbBufferHandle = it->second.dumbBufferHandle;
-                    }
-
-                    // NB: We swapped in a new plane buffers map which will clear the modified value.
-                    // It's important that we don't try to clear it here because we might stomp on
-                    // a flipPlane() performed by another thread that queued up another modification.
                 }
             }
             else {
@@ -511,7 +533,10 @@ class DrmRenderer : public IFFmpegRenderer {
                              errno);
             }
 
-            drmModeAtomicFree(req);
+            // Free the atomic request
+            drmModeAtomicFree(m_AtomicReq);
+            m_AtomicReq = nullptr;
+
             return ret;
         }
 
@@ -519,12 +544,65 @@ class DrmRenderer : public IFFmpegRenderer {
             return m_Atomic;
         }
 
+        void waitForFlipCompletion() {
+            while (m_FlipPending) {
+                struct pollfd pfd = { .fd = m_Fd, .events = POLLIN, .revents = 0 };
+
+                if (poll(&pfd, 1, -1) > 0) {
+                    drmHandleEvent(m_Fd, &m_EventCtx);
+                }
+                else {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                 "poll() failed: %d",
+                                 errno);
+                    break;
+                }
+            }
+        }
+
     private:
+        static void pageFlipHandler(int fd, unsigned int sequence,
+                                    unsigned int tv_sec, unsigned int tv_usec,
+                                    void *user_data) {
+            DrmPropertySetter* me = (DrmPropertySetter*)user_data;
+
+            Q_UNUSED(fd);
+            Q_UNUSED(sequence);
+            Q_UNUSED(tv_sec);
+            Q_UNUSED(tv_usec);
+
+            {
+                std::lock_guard lg { me->m_Lock };
+
+                // Free any FBs and dumb buffers that are marked to free on page flip
+                for (auto it = me->m_FbsToFreeAfterFlip.begin(); it != me->m_FbsToFreeAfterFlip.end(); it++) {
+                    drmModeRmFB(me->m_Fd, *it);
+                }
+                for (auto it = me->m_DumbBufsToFreeAfterFlip.begin(); it != me->m_DumbBufsToFreeAfterFlip.end(); it++) {
+                    struct drm_mode_destroy_dumb destroyBuf = {};
+                    destroyBuf.handle = *it;
+                    drmIoctl(me->m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+                }
+
+                me->m_FbsToFreeAfterFlip.clear();
+                me->m_DumbBufsToFreeAfterFlip.clear();
+            }
+
+            SDL_assert(me->m_FlipPending);
+            me->m_FlipPending = false;
+        }
+
         int m_Fd = -1;
         bool m_Atomic = false;
         bool m_AsyncFlip = false;
         std::recursive_mutex m_Lock;
         std::unordered_map<uint32_t, PlaneBuffer> m_PlaneBuffers;
+
+        // Flip event tracking
+        drmEventContext m_EventCtx;
+        bool m_FlipPending = false;
+        std::vector<uint32_t> m_FbsToFreeAfterFlip;
+        std::vector<uint32_t> m_DumbBufsToFreeAfterFlip;
 
         // Legacy context
         std::unordered_map<uint32_t, PlaneConfiguration> m_PlaneConfigs;

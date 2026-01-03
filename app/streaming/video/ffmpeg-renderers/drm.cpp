@@ -164,6 +164,7 @@ DrmRenderer::~DrmRenderer()
             m_PropSetter.disablePlane(m_OverlayPlanes[i]);
         }
         m_PropSetter.apply();
+        m_PropSetter.waitForFlipCompletion();
     }
 
     for (int i = 0; i < k_SwFrameCount; i++) {
@@ -1243,8 +1244,9 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
 
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "drmModeAddFB2[WithModifiers]() failed: %d",
-                     errno);
+                     "drmModeAddFB2[WithModifiers]() failed: %d (format: " FOURCC_FMT ")",
+                     errno,
+                     FOURCC_FMT_ARGS(drmFrame->layers[0].format));
         return false;
     }
 
