@@ -90,7 +90,6 @@ private slots:
 
     void handleResolvedAddress(const QHostAddress& address)
     {
-        qInfo() << "Resolved" << hostname() << "to" << address;
         m_Addresses.push_back(address);
     }
 
@@ -228,7 +227,7 @@ public:
 
     Q_INVOKABLE void addNewHostManually(QString address);
 
-    void addNewHost(NvAddress address, bool mdns, NvAddress mdnsIpv6Address = NvAddress());
+    void addNewHost(NvAddress address, bool mdns, QString name = QString(), NvAddress mdnsIpv6Address = NvAddress());
 
     QString generatePinString();
 

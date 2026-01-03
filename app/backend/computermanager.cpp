@@ -430,7 +430,9 @@ void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
             // address may not be reachable (if the user hasn't installed the IPv6 helper yet
             // or if this host lacks outbound IPv6 capability). We want to add IPv6 even if
             // it's not currently reachable.
-            addNewHost(NvAddress(address, computer->port()), true, NvAddress(v6Global, computer->port()));
+            addNewHost(NvAddress(address, computer->port()),
+                       true, computer->hostname(),
+                       NvAddress(v6Global, computer->port()));
             added = true;
             break;
         }
@@ -444,7 +446,9 @@ void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
                 if (address.isInSubnet(QHostAddress("fe80::"), 10) ||
                         address.isInSubnet(QHostAddress("fec0::"), 10) ||
                         address.isInSubnet(QHostAddress("fc00::"), 7)) {
-                    addNewHost(NvAddress(address, computer->port()), true, NvAddress(v6Global, computer->port()));
+                    addNewHost(NvAddress(address, computer->port()),
+                               true, computer->hostname(),
+                               NvAddress(v6Global, computer->port()));
                     break;
                 }
             }
@@ -743,8 +747,9 @@ class PendingAddTask : public QObject, public QRunnable
     Q_OBJECT
 
 public:
-    PendingAddTask(ComputerManager* computerManager, NvAddress address, NvAddress mdnsIpv6Address, bool mdns)
+    PendingAddTask(ComputerManager* computerManager, QString name, NvAddress address, NvAddress mdnsIpv6Address, bool mdns)
         : m_ComputerManager(computerManager),
+          m_Name(name),
           m_Address(address),
           m_MdnsIpv6Address(mdnsIpv6Address),
           m_Mdns(mdns),
@@ -822,7 +827,18 @@ private:
     {
         NvHTTP http(m_Address, 0, QSslCertificate());
 
-        qInfo() << "Processing new PC at" << m_Address.toString() << "from" << (m_Mdns ? "mDNS" : "user") << "with IPv6 address" << m_MdnsIpv6Address.toString();
+        if (m_Mdns) {
+            if (m_MdnsIpv6Address.isNull()) {
+                qInfo() << "Processing new PC" << m_Name << "from mDNS with local address" << m_Address.toString();
+            }
+            else {
+                qInfo() << "Processing new PC" << m_Name << "from mDNS with local address" << m_Address.toString()
+                        << "and IPv6 address" << m_MdnsIpv6Address.toString();
+            }
+        }
+        else {
+            qInfo() << "Processing new PC at" << m_Address.toString() << "from user";
+        }
 
         // Perform initial serverinfo fetch over HTTP since we don't know which cert to use
         QString serverInfo = fetchServerInfo(http);
@@ -970,17 +986,18 @@ private:
     }
 
     ComputerManager* m_ComputerManager;
+    QString m_Name;
     NvAddress m_Address;
     NvAddress m_MdnsIpv6Address;
     bool m_Mdns;
     bool m_AboutToQuit;
 };
 
-void ComputerManager::addNewHost(NvAddress address, bool mdns, NvAddress mdnsIpv6Address)
+void ComputerManager::addNewHost(NvAddress address, bool mdns, QString name, NvAddress mdnsIpv6Address)
 {
     // Punt to a worker thread to avoid stalling the
     // UI while waiting for serverinfo query to complete
-    PendingAddTask* addTask = new PendingAddTask(this, address, mdnsIpv6Address, mdns);
+    PendingAddTask* addTask = new PendingAddTask(this, name, address, mdnsIpv6Address, mdns);
     QThreadPool::globalInstance()->start(addTask);
 }
 
