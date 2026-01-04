@@ -242,6 +242,7 @@ Flickable {
                         id: resolutionComboBox
                         maximumWidth: parent.width / 2
                         textRole: "text"
+                        accessibleDescription: qsTr("Resolution")
                         model: ListModel {
                             id: resolutionListModel
                             // Other elements may be added at runtime
@@ -654,6 +655,7 @@ Flickable {
                         id: fpsComboBox
                         maximumWidth: parent.width / 2
                         textRole: "text"
+                        accessibleDescription: qsTr("Frame rate")
                         // ::onActivated must be used, as it only listens for when the index is changed by a human
                         onActivated : {
                             if (model.get(currentIndex).is_custom) {
@@ -697,6 +699,11 @@ Flickable {
 
                         snapMode: "SnapOnRelease"
                         width: Math.min(bitrateDesc.implicitWidth, parent.width - (resetBitrateButton.visible ? resetBitrateButton.width + parent.spacing : 0))
+
+                        // Accessibility support for screen readers
+                        Accessible.role: Accessible.Slider
+                        Accessible.name: qsTr("Video bitrate")
+                        Accessible.description: qsTr("%1 Megabits per second").arg(value / 1000.0)
 
                         onValueChanged: {
                             bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(value / 1000.0)
@@ -823,6 +830,12 @@ Flickable {
                         StreamingPreferences.enableVsync = checked
                     }
 
+                    // Accessibility support for screen readers
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -840,6 +853,13 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.framePacing = checked
                     }
+
+                    // Accessibility support for screen readers
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -885,6 +905,7 @@ Flickable {
 
                     id: audioComboBox
                     textRole: "text"
+                    accessibleDescription: qsTr("Audio configuration")
                     model: ListModel {
                         id: audioListModel
                         ListElement {
@@ -917,6 +938,12 @@ Flickable {
                         StreamingPreferences.playAudioOnHost = !checked
                     }
 
+                    // Accessibility support for screen readers
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -933,6 +960,12 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.muteOnFocusLoss = checked
                     }
+
+                    // Accessibility support for screen readers
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -962,6 +995,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.gameOptimizations = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -973,6 +1011,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.quitAppAfter = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1019,6 +1062,7 @@ Flickable {
 
                     id: languageComboBox
                     textRole: "text"
+                    accessibleDescription: qsTr("Language")
                     model: ListModel {
                         id: languageListModel
                         ListElement {
@@ -1234,6 +1278,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.connectionWarnings = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1245,6 +1294,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.configurationWarnings = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1257,6 +1311,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.richPresence = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1273,6 +1332,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.keepAwake = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1313,6 +1377,11 @@ Flickable {
                         StreamingPreferences.absoluteMouseMode = checked
                     }
 
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 10000
                     ToolTip.visible: hovered
@@ -1332,6 +1401,11 @@ Flickable {
                         font.pointSize: 12
                         enabled: SystemProperties.hasDesktopEnvironment
                         checked: StreamingPreferences.captureSysKeysMode !== StreamingPreferences.CSK_OFF || !SystemProperties.hasDesktopEnvironment
+
+                        Accessible.role: Accessible.CheckBox
+                        Accessible.name: text
+                        Accessible.checked: checked
+                        Accessible.onToggleAction: toggle()
 
                         ToolTip.delay: 1000
                         ToolTip.timeout: 10000
@@ -1407,6 +1481,11 @@ Flickable {
                         StreamingPreferences.absoluteTouchMode = !checked
                     }
 
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -1423,6 +1502,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.swapMouseButtons = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1435,6 +1519,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.reverseScrollDirection = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
             }
         }
@@ -1460,6 +1549,11 @@ Flickable {
                         StreamingPreferences.swapFaceButtons = checked
                     }
 
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -1475,6 +1569,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.multiController = !checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1493,6 +1592,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.gamepadMouse = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1505,6 +1609,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.backgroundGamepad = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1550,6 +1659,7 @@ Flickable {
 
                     id: decoderComboBox
                     textRole: "text"
+                    accessibleDescription: qsTr("Video decoder")
                     model: ListModel {
                         id: decoderListModel
                         ListElement {
@@ -1603,6 +1713,7 @@ Flickable {
 
                     id: codecComboBox
                     textRole: "text"
+                    accessibleDescription: qsTr("Video codec")
                     model: ListModel {
                         id: codecListModel
                         ListElement {
@@ -1642,6 +1753,11 @@ Flickable {
                         StreamingPreferences.enableHdr = checked
                     }
 
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     // Updating StreamingPreferences.videoCodecConfig is handled above
 
                     ToolTip.delay: 1000
@@ -1674,6 +1790,11 @@ Flickable {
                         }
                     }
 
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -1695,6 +1816,11 @@ Flickable {
                         StreamingPreferences.bitrateKbps = Math.min(StreamingPreferences.bitrateKbps, slider.to)
                         slider.value = StreamingPreferences.bitrateKbps
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1721,6 +1847,11 @@ Flickable {
                             }
                         }
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1732,6 +1863,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.detectNetworkBlocking = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1743,6 +1879,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.showPerformanceOverlay = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
