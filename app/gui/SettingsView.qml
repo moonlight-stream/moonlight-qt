@@ -106,6 +106,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Basic Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Basic Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -876,6 +880,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Audio Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Audio Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -982,6 +990,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Host Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Host Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -1031,6 +1043,10 @@ Flickable {
             padding: 12
             title: "<font color=\"skyblue\">" + qsTr("UI Settings") + "</font>"
             font.pointSize: 12
+
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("UI Settings")
 
             Column {
                 anchors.fill: parent
@@ -1362,6 +1378,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Input Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Input Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -1535,6 +1555,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Gamepad Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Gamepad Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -1629,6 +1653,10 @@ Flickable {
             padding: 12
             title: "<font color=\"skyblue\">" + qsTr("Advanced Settings") + "</font>"
             font.pointSize: 12
+
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Advanced Settings")
 
             Column {
                 anchors.fill: parent
