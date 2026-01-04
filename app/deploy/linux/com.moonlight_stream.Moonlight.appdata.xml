@@ -34,6 +34,11 @@
 	</provides>
 	<content_rating type="oars-1.1" />	
 
+	<branding>
+		<color type="primary" scheme_preference="light">#710085</color>
+		<color type="primary" scheme_preference="dark">#55285d</color>
+	</branding>
+
 	<screenshots>
 		<screenshot type="default">
 			<image>https://moonlight-stream.org/appstream_resources/moonlight_screenshot_1.png</image>
