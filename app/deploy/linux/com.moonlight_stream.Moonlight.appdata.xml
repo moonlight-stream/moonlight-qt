@@ -24,7 +24,9 @@
 	<url type="bugtracker">https://github.com/moonlight-stream/moonlight-qt/issues</url>
 	<url type="help">https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide</url>
 	<url type="vcs-browser">https://github.com/moonlight-stream/moonlight-qt</url>
-	<developer_name>Moonlight Game Streaming Team</developer_name>
+	<developer id="org.moonlight-stream">
+		<name>Moonlight Game Streaming Team</name>
+	</developer>
 	<update_contact>cameron@moonlight-stream.org</update_contact>
 	<launchable type="desktop-id">com.moonlight_stream.Moonlight.desktop</launchable>
 	<provides>
@@ -35,9 +37,11 @@
 	<screenshots>
 		<screenshot type="default">
 			<image>https://moonlight-stream.org/appstream_resources/moonlight_screenshot_1.png</image>
+			<caption>Host selection page showing local PCs</caption>
 		</screenshot>
 		<screenshot>
 			<image>https://moonlight-stream.org/appstream_resources/moonlight_screenshot_2.png</image>
+			<caption>Settings page displaying streaming options</caption>
 		</screenshot>
 	</screenshots>
 
