@@ -1221,7 +1221,8 @@ bool VAAPIRenderer::mapDrmPrimeFrame(AVFrame* frame, AVDRMFrameDescriptor* drmDe
 
     // Add a buffer reference to the frame to automatically close the
     // mapped FDs when the frame is no longer referenced.
-    frame->opaque_ref = av_buffer_create((uint8_t*)drmDescriptor, sizeof(*drmDescriptor),
+    frame->opaque_ref = av_buffer_create((uint8_t*)(new AVDRMFrameDescriptor(*drmDescriptor)),
+                                         sizeof(*drmDescriptor),
                                          freeDrmDescriptorBuffer,
                                          frame->opaque_ref, // Chain any existing buffer
                                          AV_BUFFER_FLAG_READONLY);
@@ -1236,6 +1237,7 @@ void VAAPIRenderer::freeDrmDescriptorBuffer(void* opaque, uint8_t* data)
     for (int i = 0; i < drmDescriptor->nb_objects; i++) {
         close(drmDescriptor->objects[i].fd);
     }
+    delete drmDescriptor;
 
     // Free any chained buffers
     av_buffer_unref((AVBufferRef**)&opaque);

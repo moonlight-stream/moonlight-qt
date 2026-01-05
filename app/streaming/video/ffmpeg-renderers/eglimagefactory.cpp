@@ -251,7 +251,7 @@ ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, EGLDisplay dpy, EGLImag
 
     // Add a buffer reference to the frame to automatically destroy the EGLImages
     // when the frame is no longer referenced.
-    frame->opaque_ref = av_buffer_create((uint8_t*)imgCtx, sizeof(imgCtx),
+    frame->opaque_ref = av_buffer_create((uint8_t*)imgCtx, sizeof(*imgCtx),
                                          freeEglImageContextBuffer,
                                          frame->opaque_ref, // Chain any existing buffer
                                          AV_BUFFER_FLAG_READONLY);
@@ -477,7 +477,7 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, uint32_t exportFlags, EG
 
     // Add a buffer reference to the frame to automatically destroy the EGLImages
     // when the frame is no longer referenced.
-    frame->opaque_ref = av_buffer_create((uint8_t*)imgCtx, sizeof(imgCtx),
+    frame->opaque_ref = av_buffer_create((uint8_t*)imgCtx, sizeof(*imgCtx),
                                          freeEglImageContextBuffer,
                                          frame->opaque_ref, // Chain any existing buffer
                                          AV_BUFFER_FLAG_READONLY);
