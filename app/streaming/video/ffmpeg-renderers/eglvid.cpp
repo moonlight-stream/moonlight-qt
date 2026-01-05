@@ -880,8 +880,6 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         }
     }
 
-    m_Backend->freeEGLImages();
-
     // Free the DMA-BUF backing the last frame now that it is definitely
     // no longer being used anymore. While the PRIME FD stays around until
     // EGL is done with it, the memory backing it may be reused by FFmpeg
@@ -905,6 +903,5 @@ bool EGLRenderer::testRenderFrame(AVFrame* frame)
         return false;
     }
 
-    m_Backend->freeEGLImages();
     return true;
 }

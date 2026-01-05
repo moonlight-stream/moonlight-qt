@@ -1162,11 +1162,6 @@ VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     return m_EglImageFactory.exportVAImages(frame, exportFlags, dpy, images);
 }
 
-void
-VAAPIRenderer::freeEGLImages() {
-    m_EglImageFactory.freeEGLImages();
-}
-
 #endif
 
 #ifdef HAVE_DRM
@@ -1224,14 +1219,26 @@ bool VAAPIRenderer::mapDrmPrimeFrame(AVFrame* frame, AVDRMFrameDescriptor* drmDe
         }
     }
 
+    // Add a buffer reference to the frame to automatically close the
+    // mapped FDs when the frame is no longer referenced.
+    frame->opaque_ref = av_buffer_create((uint8_t*)drmDescriptor, sizeof(*drmDescriptor),
+                                         freeDrmDescriptorBuffer,
+                                         frame->opaque_ref, // Chain any existing buffer
+                                         AV_BUFFER_FLAG_READONLY);
+
     return true;
 }
 
-void VAAPIRenderer::unmapDrmPrimeFrame(AVDRMFrameDescriptor* drmDescriptor)
+void VAAPIRenderer::freeDrmDescriptorBuffer(void* opaque, uint8_t* data)
 {
+    auto drmDescriptor = (AVDRMFrameDescriptor*)data;
+
     for (int i = 0; i < drmDescriptor->nb_objects; i++) {
         close(drmDescriptor->objects[i].fd);
     }
+
+    // Free any chained buffers
+    av_buffer_unref((AVBufferRef**)&opaque);
 }
 
 #endif

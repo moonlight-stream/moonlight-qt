@@ -512,9 +512,6 @@ public:
                                     EGLImage[EGL_MAX_PLANES]) {
         return -1;
     }
-
-    // Free the resources allocated during the last `exportEGLImages` call
-    virtual void freeEGLImages() {}
 #endif
 
 #ifdef HAVE_DRM
@@ -526,8 +523,6 @@ public:
     virtual bool mapDrmPrimeFrame(AVFrame*, AVDRMFrameDescriptor*) {
         return false;
     }
-
-    virtual void unmapDrmPrimeFrame(AVDRMFrameDescriptor*) {}
 #endif
 
 protected:

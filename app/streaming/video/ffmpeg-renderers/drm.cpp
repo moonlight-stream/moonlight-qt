@@ -1266,11 +1266,6 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
                          "Selected DRM plane doesn't support chosen decoding format and modifier: " FOURCC_FMT " %016" PRIx64,
                          FOURCC_FMT_ARGS(drmFrame->layers[0].format),
                          drmFrame->objects[0].format_modifier);
-
-            if (m_DrmPrimeBackend) {
-                SDL_assert(drmFrame == &mappedFrame);
-                m_BackendRenderer->unmapDrmPrimeFrame(drmFrame);
-            }
             return false;
         }
     }
@@ -1293,10 +1288,6 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "drmPrimeFDToHandle() failed: %d",
                          errno);
-            if (m_DrmPrimeBackend) {
-                SDL_assert(drmFrame == &mappedFrame);
-                m_BackendRenderer->unmapDrmPrimeFrame(drmFrame);
-            }
             return false;
         }
 
@@ -1318,12 +1309,6 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
                                      handles, pitches, offsets,
                                      (flags & DRM_MODE_FB_MODIFIERS) ? modifiers : NULL,
                                      newFbId, flags);
-
-    if (m_DrmPrimeBackend) {
-        SDL_assert(drmFrame == &mappedFrame);
-        m_BackendRenderer->unmapDrmPrimeFrame(drmFrame);
-    }
-
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "drmModeAddFB2[WithModifiers]() failed: %d",
@@ -1550,10 +1535,6 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     }
 
     return m_EglImageFactory.exportDRMImages(frame, dpy, images);
-}
-
-void DrmRenderer::freeEGLImages() {
-    m_EglImageFactory.freeEGLImages();
 }
 
 #endif
