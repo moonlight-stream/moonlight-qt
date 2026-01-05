@@ -785,7 +785,18 @@ int DrmRenderer::getRendererAttributes()
 void DrmRenderer::setHdrMode(bool enabled)
 {
     if (auto prop = m_Connector.property("Colorspace")) {
-        m_PropSetter.set(*prop, enabled ? "BT2020_RGB" : "Default");
+        if (enabled) {
+            // Prefer BT2020_YCC to allow chroma subsampling
+            if (prop->containsValue("BT2020_YCC")) {
+                m_PropSetter.set(*prop, "BT2020_YCC");
+            }
+            else {
+                m_PropSetter.set(*prop, "BT2020_RGB");
+            }
+        }
+        else {
+            m_PropSetter.set(*prop, "Default");
+        }
     }
 
     if (auto prop = m_Connector.property("max bpc")) {
