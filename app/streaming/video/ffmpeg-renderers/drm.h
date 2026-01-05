@@ -14,6 +14,11 @@
 #include <unordered_map>
 #include <mutex>
 
+// This is only defined in Linux 6.8+ headers
+#ifndef DRM_CAP_ATOMIC_ASYNC_PAGE_FLIP
+#define DRM_CAP_ATOMIC_ASYNC_PAGE_FLIP	0x15
+#endif
+
 // Newer libdrm headers have these HDR structs, but some older ones don't.
 namespace DrmDefs
 {
@@ -234,9 +239,26 @@ class DrmRenderer : public IFFmpegRenderer {
         DrmPropertySetter(const DrmPropertySetter &) = delete;
         DrmPropertySetter(DrmPropertySetter &&) = delete;
 
-        void initialize(int drmFd, bool wantsAtomic) {
+        void initialize(int drmFd, bool wantsAtomic, bool wantsAsyncFlip) {
             m_Fd = drmFd;
             m_Atomic = wantsAtomic && drmSetClientCap(drmFd, DRM_CLIENT_CAP_ATOMIC, 1) == 0;
+
+            if (wantsAsyncFlip) {
+                uint64_t val;
+                if (!m_Atomic) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "V-sync cannot be disabled due to lack of atomic support");
+                }
+                else if (drmGetCap(m_Fd, DRM_CAP_ATOMIC_ASYNC_PAGE_FLIP, &val) < 0 || !val) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "V-sync cannot be disabled due to lack of atomic async page flip support");
+                }
+                else {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Using atomic async page flips with V-sync disabled");
+                    m_AsyncFlip = true;
+                }
+            }
         }
 
         bool set(const DrmProperty& prop, uint64_t value, bool verbose = true) {
@@ -429,8 +451,18 @@ class DrmRenderer : public IFFmpegRenderer {
                 return true;
             }
 
-            // We pass DRM_MODE_ATOMIC_ALLOW_MODESET because changing HDR state may require a modeset
-            bool ret = drmModeAtomicCommit(m_Fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr) == 0;
+            // Try an async flip if requested
+            bool ret = drmModeAtomicCommit(m_Fd, m_AtomicReq,
+                                           m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : DRM_MODE_ATOMIC_ALLOW_MODESET,
+                                           nullptr) == 0;
+
+            // The driver may not support async flips (especially if we changed a non-FB_ID property),
+            // so try again with a regular flip if we get an error from the async flip attempt.
+            //
+            // We pass DRM_MODE_ATOMIC_ALLOW_MODESET because changing HDR state may require a modeset.
+            if (!ret && m_AsyncFlip) {
+                ret = drmModeAtomicCommit(m_Fd, m_AtomicReq, DRM_MODE_ATOMIC_ALLOW_MODESET, this) == 0;
+            }
             if (!ret) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "drmModeAtomicCommit() failed: %d",
@@ -496,6 +528,7 @@ class DrmRenderer : public IFFmpegRenderer {
     private:
         int m_Fd = -1;
         bool m_Atomic = false;
+        bool m_AsyncFlip = false;
         std::recursive_mutex m_Lock;
         std::unordered_map<uint32_t, PlaneBuffer> m_PlaneBuffers;
 

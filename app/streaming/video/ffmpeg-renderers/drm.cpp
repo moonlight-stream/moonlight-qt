@@ -494,7 +494,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         atomic = true;
     }
 
-    m_PropSetter.initialize(m_DrmFd, atomic);
+    m_PropSetter.initialize(m_DrmFd, atomic, !params->enableVsync);
 
     drmModePlaneRes* planeRes = drmModeGetPlaneResources(m_DrmFd);
     if (planeRes == nullptr) {
