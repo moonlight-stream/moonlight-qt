@@ -1158,7 +1158,7 @@ void DrmRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         // Queue the plane flip with the new FB
         //
         // NB: This takes ownership of the FB and dumb buffer, even on failure
-        m_PropSetter.flipPlane(m_OverlayPlanes[type], fbId, dumbBuffer);
+        m_PropSetter.flipPlane(m_OverlayPlanes[type], fbId, dumbBuffer, nullptr);
 
         SDL_FreeSurface(newSurface);
     }
@@ -1410,7 +1410,12 @@ void DrmRenderer::renderFrame(AVFrame* frame)
     // Update the video plane
     //
     // NB: This takes ownership of fbId, even on failure
-    m_PropSetter.flipPlane(m_VideoPlane, fbId, 0);
+    //
+    // NB2: We reference the AVFrame (which also references the AVBuffers backing the frame itself
+    // and the opaque_ref which may store our DRM-PRIME mapping) for frames backed by DMA-BUFs in
+    // order to keep those from being reused by the decoder while they're still being scanned out.
+    m_PropSetter.flipPlane(m_VideoPlane, fbId, 0,
+                           (m_DrmPrimeBackend || frame->format == AV_PIX_FMT_DRM_PRIME) ? frame : nullptr);
 
     // Apply pending atomic transaction (if in atomic mode)
     m_PropSetter.apply();

@@ -200,10 +200,12 @@ class DrmRenderer : public IFFmpegRenderer {
         struct PlaneBuffer {
             uint32_t fbId;
             uint32_t dumbBufferHandle;
+            AVFrame* frame;
 
             // Atomic only
             uint32_t pendingFbId;
             uint32_t pendingDumbBuffer;
+            AVFrame* pendingFrame;
             bool modified;
         };
 
@@ -293,8 +295,14 @@ class DrmRenderer : public IFFmpegRenderer {
         }
 
         // Unconditionally takes ownership of fbId and dumbBufferHandle (if present)
-        bool flipPlane(const DrmPropertyMap& plane, uint32_t fbId, uint32_t dumbBufferHandle) {
+        // If provided, frame is referenced to keep the FB's backing DMA-BUFs around
+        bool flipPlane(const DrmPropertyMap& plane, uint32_t fbId, uint32_t dumbBufferHandle, AVFrame* frame) {
             bool ret;
+
+            // If a frame was provided, clone a reference to it to hold until the next flip
+            if (frame) {
+                frame = av_frame_clone(frame);
+            }
 
             if (m_Atomic) {
                 std::lock_guard lg { m_Lock };
@@ -303,9 +311,11 @@ class DrmRenderer : public IFFmpegRenderer {
                 if (ret) {
                     // If we updated the FB_ID property, free the old pending buffer.
                     // Otherwise, we'll free the new buffer which was never used.
-                    std::swap(fbId, m_PlaneBuffers[plane.objectId()].pendingFbId);
-                    std::swap(dumbBufferHandle, m_PlaneBuffers[plane.objectId()].pendingDumbBuffer);
-                    m_PlaneBuffers[plane.objectId()].modified = true;
+                    auto &pb = m_PlaneBuffers[plane.objectId()];
+                    std::swap(fbId, pb.pendingFbId);
+                    std::swap(dumbBufferHandle, pb.pendingDumbBuffer);
+                    std::swap(frame, pb.pendingFrame);
+                    pb.modified = true;
                 }
             }
             else {
@@ -329,8 +339,10 @@ class DrmRenderer : public IFFmpegRenderer {
                 if (ret) {
                     std::lock_guard lg { m_Lock };
 
-                    std::swap(fbId, m_PlaneBuffers[plane.objectId()].fbId);
-                    std::swap(dumbBufferHandle, m_PlaneBuffers[plane.objectId()].dumbBufferHandle);
+                    auto &pb = m_PlaneBuffers[plane.objectId()];
+                    std::swap(fbId, pb.fbId);
+                    std::swap(dumbBufferHandle, pb.dumbBufferHandle);
+                    std::swap(frame, pb.frame);
                 }
                 else {
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -348,6 +360,7 @@ class DrmRenderer : public IFFmpegRenderer {
                 destroyBuf.handle = dumbBufferHandle;
                 drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
             }
+            av_frame_free(&frame);
 
             return ret;
         }
@@ -391,7 +404,7 @@ class DrmRenderer : public IFFmpegRenderer {
         void disablePlane(const DrmPropertyMap& plane) {
             if (plane.isValid()) {
                 configurePlane(plane, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-                flipPlane(plane, 0, 0);
+                flipPlane(plane, 0, 0, nullptr);
             }
         }
 
@@ -418,44 +431,58 @@ class DrmRenderer : public IFFmpegRenderer {
 
             // We pass DRM_MODE_ATOMIC_ALLOW_MODESET because changing HDR state may require a modeset
             bool ret = drmModeAtomicCommit(m_Fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr) == 0;
-
-            // If we flipped to a new buffer, free the old one
-            if (ret) {
-                std::lock_guard lg { m_Lock };
-
-                // Update the buffer state for any modified planes
-                for (auto it = pendingBuffers.begin(); it != pendingBuffers.end(); it++) {
-                    if (it->second.modified) {
-                        if (it->second.fbId) {
-                            drmModeRmFB(m_Fd, it->second.fbId);
-                            it->second.fbId = 0;
-                        }
-                        if (it->second.dumbBufferHandle) {
-                            struct drm_mode_destroy_dumb destroyBuf = {};
-                            destroyBuf.handle = it->second.dumbBufferHandle;
-                            drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
-                            it->second.dumbBufferHandle = 0;
-                        }
-
-                        // The pending buffers become the active buffers for this FB
-                        m_PlaneBuffers[it->first].fbId = it->second.pendingFbId;
-                        m_PlaneBuffers[it->first].dumbBufferHandle = it->second.pendingDumbBuffer;
-                    }
-                    else if (it->second.fbId || it->second.dumbBufferHandle) {
-                        // This FB wasn't modified in this commit, so the current buffers stay around
-                        m_PlaneBuffers[it->first].fbId = it->second.fbId;
-                        m_PlaneBuffers[it->first].dumbBufferHandle = it->second.dumbBufferHandle;
-                    }
-
-                    // NB: We swapped in a new plane buffers map which will clear the modified value.
-                    // It's important that we don't try to clear it here because we might stomp on
-                    // a flipPlane() performed by another thread that queued up another modification.
-                }
-            }
-            else {
+            if (!ret) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "drmModeAtomicCommit() failed: %d",
                              errno);
+            }
+
+            // Update the buffer state for any modified planes
+            std::lock_guard lg { m_Lock };
+            for (auto it = pendingBuffers.begin(); it != pendingBuffers.end(); it++) {
+                if (ret && it->second.modified) {
+                    if (it->second.fbId) {
+                        drmModeRmFB(m_Fd, it->second.fbId);
+                        it->second.fbId = 0;
+                    }
+                    if (it->second.dumbBufferHandle) {
+                        struct drm_mode_destroy_dumb destroyBuf = {};
+                        destroyBuf.handle = it->second.dumbBufferHandle;
+                        drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+                        it->second.dumbBufferHandle = 0;
+                    }
+                    av_frame_free(&it->second.frame);
+
+                    // The pending buffers become the active buffers for this FB
+                    auto &pb = m_PlaneBuffers[it->first];
+                    pb.fbId = it->second.pendingFbId;
+                    pb.dumbBufferHandle = it->second.pendingDumbBuffer;
+                    pb.frame = it->second.pendingFrame;
+                }
+                else if (!ret || it->second.fbId || it->second.dumbBufferHandle || it->second.frame) {
+                    // Free the old pending buffers on a failed commit
+                    if (it->second.pendingFbId) {
+                        SDL_assert(!ret);
+                        drmModeRmFB(m_Fd, it->second.pendingFbId);
+                    }
+                    if (it->second.pendingDumbBuffer) {
+                        SDL_assert(!ret);
+                        struct drm_mode_destroy_dumb destroyBuf = {};
+                        destroyBuf.handle = it->second.pendingDumbBuffer;
+                        drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+                    }
+                    av_frame_free(&it->second.pendingFrame);
+
+                    // This FB wasn't modified in this commit, so the current buffers stay around
+                    auto &pb = m_PlaneBuffers[it->first];
+                    pb.fbId = it->second.fbId;
+                    pb.dumbBufferHandle = it->second.dumbBufferHandle;
+                    pb.frame = it->second.frame;
+                }
+
+                // NB: We swapped in a new plane buffers map which will clear the modified value.
+                // It's important that we don't try to clear it here because we might stomp on
+                // a flipPlane() performed by another thread that queued up another modification.
             }
 
             drmModeAtomicFree(req);
