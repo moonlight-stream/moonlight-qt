@@ -827,7 +827,7 @@ void DrmRenderer::setHdrMode(bool enabled)
                 m_HdrOutputMetadataBlobId = 0;
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "drmModeCreatePropertyBlob() failed: %d",
-                             errno);
+                             err);
                 // Non-fatal
             }
         }
@@ -1083,7 +1083,7 @@ bool DrmRenderer::uploadSurfaceToFb(SDL_Surface *surface, uint32_t* handle, uint
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "drmModeAddFB2() failed: %d",
-                     errno);
+                     err);
         goto Fail;
     }
 
@@ -1312,7 +1312,7 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "drmModeAddFB2[WithModifiers]() failed: %d",
-                     errno);
+                     err);
         return false;
     }
 

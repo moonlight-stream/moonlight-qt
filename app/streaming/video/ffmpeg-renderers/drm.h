@@ -262,7 +262,7 @@ class DrmRenderer : public IFFmpegRenderer {
         }
 
         bool set(const DrmProperty& prop, uint64_t value, bool verbose = true) {
-            bool ret;
+            int err;
 
             if (m_Atomic) {
                 // Synchronize with other threads that might be committing or setting properties
@@ -272,26 +272,32 @@ class DrmRenderer : public IFFmpegRenderer {
                     m_AtomicReq = drmModeAtomicAlloc();
                 }
 
-                ret = drmModeAtomicAddProperty(m_AtomicReq, prop.objectId(), prop.id(), value) > 0;
+                err = drmModeAtomicAddProperty(m_AtomicReq, prop.objectId(), prop.id(), value);
+
+                // This returns the new count of properties on success,
+                // so normalize it to 0 like drmModeObjectSetProperty()
+                if (err > 0) {
+                    err = 0;
+                }
             }
             else {
-                ret = drmModeObjectSetProperty(m_Fd, prop.objectId(), prop.objectType(), prop.id(), value) == 0;
+                err = drmModeObjectSetProperty(m_Fd, prop.objectId(), prop.objectType(), prop.id(), value);
             }
 
-            if (verbose && ret) {
+            if (verbose && err == 0) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Set property '%s': %" PRIu64,
                             prop.name(),
                             value);
             }
-            else if (!ret) {
+            else if (err < 0) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "Failed to set property '%s': %d",
                              prop.name(),
-                             errno);
+                             err);
             }
 
-            return ret;
+            return err == 0;
         }
 
         bool set(const DrmProperty& prop, const std::string &value) {
@@ -349,27 +355,30 @@ class DrmRenderer : public IFFmpegRenderer {
                     planeConfig = m_PlaneConfigs.at(plane.objectId());
                 }
 
-                ret = drmModeSetPlane(m_Fd, plane.objectId(),
-                                      planeConfig.crtcId, fbId, 0,
-                                      planeConfig.crtcX, planeConfig.crtcY,
-                                      planeConfig.crtcW, planeConfig.crtcH,
-                                      planeConfig.srcX, planeConfig.srcY,
-                                      planeConfig.srcW, planeConfig.srcH) == 0;
+                int err = drmModeSetPlane(m_Fd, plane.objectId(),
+                                          planeConfig.crtcId, fbId, 0,
+                                          planeConfig.crtcX, planeConfig.crtcY,
+                                          planeConfig.crtcW, planeConfig.crtcH,
+                                          planeConfig.srcX, planeConfig.srcY,
+                                          planeConfig.srcW, planeConfig.srcH);
 
                 // If we succeeded updating the plane, free the old FB state
                 // Otherwise, we'll free the new data which was never used.
-                if (ret) {
+                if (err == 0) {
                     std::lock_guard lg { m_Lock };
 
                     auto &pb = m_PlaneBuffers[plane.objectId()];
                     std::swap(fbId, pb.fbId);
                     std::swap(dumbBufferHandle, pb.dumbBufferHandle);
                     std::swap(frame, pb.frame);
+
+                    ret = true;
                 }
                 else {
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                  "drmModeSetPlane() failed: %d",
-                                 errno);
+                                 err);
+                    ret = false;
                 }
             }
 
@@ -452,27 +461,27 @@ class DrmRenderer : public IFFmpegRenderer {
             }
 
             // Try an async flip if requested
-            bool ret = drmModeAtomicCommit(m_Fd, m_AtomicReq,
-                                           m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : DRM_MODE_ATOMIC_ALLOW_MODESET,
-                                           nullptr) == 0;
+            int err = drmModeAtomicCommit(m_Fd, m_AtomicReq,
+                                          m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : DRM_MODE_ATOMIC_ALLOW_MODESET,
+                                          nullptr);
 
             // The driver may not support async flips (especially if we changed a non-FB_ID property),
             // so try again with a regular flip if we get an error from the async flip attempt.
             //
             // We pass DRM_MODE_ATOMIC_ALLOW_MODESET because changing HDR state may require a modeset.
-            if (!ret && m_AsyncFlip) {
-                ret = drmModeAtomicCommit(m_Fd, m_AtomicReq, DRM_MODE_ATOMIC_ALLOW_MODESET, this) == 0;
+            if (err < 0 && m_AsyncFlip) {
+                err = drmModeAtomicCommit(m_Fd, m_AtomicReq, DRM_MODE_ATOMIC_ALLOW_MODESET, this);
             }
-            if (!ret) {
+            if (err < 0) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "drmModeAtomicCommit() failed: %d",
-                             errno);
+                             err);
             }
 
             // Update the buffer state for any modified planes
             std::lock_guard lg { m_Lock };
             for (auto it = pendingBuffers.begin(); it != pendingBuffers.end(); it++) {
-                if (ret && it->second.modified) {
+                if (err == 0 && it->second.modified) {
                     if (it->second.fbId) {
                         drmModeRmFB(m_Fd, it->second.fbId);
                         it->second.fbId = 0;
@@ -491,14 +500,14 @@ class DrmRenderer : public IFFmpegRenderer {
                     pb.dumbBufferHandle = it->second.pendingDumbBuffer;
                     pb.frame = it->second.pendingFrame;
                 }
-                else if (!ret || it->second.fbId || it->second.dumbBufferHandle || it->second.frame) {
+                else if (err < 0 || it->second.fbId || it->second.dumbBufferHandle || it->second.frame) {
                     // Free the old pending buffers on a failed commit
                     if (it->second.pendingFbId) {
-                        SDL_assert(!ret);
+                        SDL_assert(err < 0);
                         drmModeRmFB(m_Fd, it->second.pendingFbId);
                     }
                     if (it->second.pendingDumbBuffer) {
-                        SDL_assert(!ret);
+                        SDL_assert(err < 0);
                         struct drm_mode_destroy_dumb destroyBuf = {};
                         destroyBuf.handle = it->second.pendingDumbBuffer;
                         drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
@@ -518,7 +527,7 @@ class DrmRenderer : public IFFmpegRenderer {
             }
 
             drmModeAtomicFree(req);
-            return ret;
+            return err == 0;
         }
 
         bool isAtomic() {
