@@ -146,22 +146,22 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
         }
     }
 
-    SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, nullptr);
+    // Exchange the old surface with the new one
+    SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicSetPtr(
+        (void**)&m_Overlays[type].surface,
+        m_Overlays[type].enabled ?
+            // The _Wrapped variant is required for line breaks to work
+            TTF_RenderText_Blended_Wrapped(m_Overlays[type].font,
+                                           m_Overlays[type].text,
+                                           m_Overlays[type].color,
+                                           1024)
+            : nullptr);
+
+    // Notify the renderer
+    m_Renderer->notifyOverlayUpdated(type);
 
     // Free the old surface
     if (oldSurface != nullptr) {
         SDL_FreeSurface(oldSurface);
     }
-
-    if (m_Overlays[type].enabled) {
-        // The _Wrapped variant is required for line breaks to work
-        SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(m_Overlays[type].font,
-                                                              m_Overlays[type].text,
-                                                              m_Overlays[type].color,
-                                                              1024);
-        SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, surface);
-    }
-
-    // Notify the renderer
-    m_Renderer->notifyOverlayUpdated(type);
 }
