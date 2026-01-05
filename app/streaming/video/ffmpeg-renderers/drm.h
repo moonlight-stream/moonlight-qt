@@ -461,7 +461,7 @@ class DrmRenderer : public IFFmpegRenderer {
             }
 
             // Try an async flip if requested
-            int err = drmModeAtomicCommit(m_Fd, m_AtomicReq,
+            int err = drmModeAtomicCommit(m_Fd, req,
                                           m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : DRM_MODE_ATOMIC_ALLOW_MODESET,
                                           nullptr);
 
@@ -470,7 +470,7 @@ class DrmRenderer : public IFFmpegRenderer {
             //
             // We pass DRM_MODE_ATOMIC_ALLOW_MODESET because changing HDR state may require a modeset.
             if (err < 0 && m_AsyncFlip) {
-                err = drmModeAtomicCommit(m_Fd, m_AtomicReq, DRM_MODE_ATOMIC_ALLOW_MODESET, this);
+                err = drmModeAtomicCommit(m_Fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
             }
             if (err < 0) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
