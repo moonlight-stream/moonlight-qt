@@ -682,6 +682,10 @@ private:
     SwFrameMapper m_SwFrameMapper;
     int m_CurrentSwFrameIdx;
     struct {
+        int width;
+        int height;
+        uint32_t format;
+
         uint32_t handle;
         uint32_t pitch;
         uint64_t size;

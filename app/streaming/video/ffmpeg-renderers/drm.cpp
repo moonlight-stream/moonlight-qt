@@ -1056,6 +1056,29 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         goto Exit;
     }
 
+    // If the frame size or format changed, we need to recreate the buffer
+    if (frame->width != drmFrame->width ||
+        frame->height != drmFrame->height ||
+        drmFormatTuple->second != drmFrame->format) {
+
+        if (drmFrame->primeFd) {
+            close(drmFrame->primeFd);
+            drmFrame->primeFd = 0;
+        }
+
+        if (drmFrame->mapping) {
+            munmap(drmFrame->mapping, drmFrame->size);
+            drmFrame->mapping = nullptr;
+        }
+
+        if (drmFrame->handle) {
+            struct drm_mode_destroy_dumb destroyBuf = {};
+            destroyBuf.handle = drmFrame->handle;
+            drmIoctl(m_DrmFd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+            drmFrame->handle = 0;
+        }
+    }
+
     // Create a new dumb buffer if needed
     if (!drmFrame->handle) {
         struct drm_mode_create_dumb createBuf = {};
@@ -1081,6 +1104,9 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
             goto Exit;
         }
 
+        drmFrame->width = frame->width;
+        drmFrame->height = frame->height;
+        drmFrame->format = drmFormatTuple->second;
         drmFrame->handle = createBuf.handle;
         drmFrame->pitch = createBuf.pitch;
         drmFrame->size = createBuf.size;
@@ -1145,7 +1171,7 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         mappedFrame->nb_layers = 1;
 
         auto &layer = mappedFrame->layers[0];
-        layer.format = drmFormatTuple->second;
+        layer.format = drmFrame->format;
 
         int lastPlaneSize = 0;
         for (int i = 0; i < 4; i++) {
