@@ -651,6 +651,7 @@ private:
     DrmPropertyMap m_Connector;
     DrmPropertyMap m_Crtc;
     DrmPropertyMap m_VideoPlane;
+    uint64_t m_VideoPlaneZpos;
     DrmPropertyMap m_OverlayPlanes[Overlay::OverlayMax];
     DrmPropertySetter m_PropSetter;
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];

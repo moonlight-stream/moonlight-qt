@@ -174,6 +174,14 @@ DrmRenderer::~DrmRenderer()
         if (auto prop = m_Connector.property("max bpc")) {
             m_PropSetter.set(*prop, prop->initialValue());
         }
+        if (auto zpos = m_VideoPlane.property("zpos"); zpos && !zpos->isImmutable()) {
+            m_PropSetter.set(*zpos, zpos->initialValue());
+        }
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            if (auto zpos = m_OverlayPlanes[i].property("zpos"); zpos && !zpos->isImmutable()) {
+                m_PropSetter.set(*zpos, zpos->initialValue());
+            }
+        }
 
         m_PropSetter.apply();
     }
@@ -347,6 +355,31 @@ void DrmRenderer::prepareToRender()
         if (maxBpc > 0) {
             auto range = prop->range();
             m_PropSetter.set(*prop, std::clamp<uint64_t>(maxBpc, range.first, range.second));
+        }
+    }
+
+    // Adjust zpos values if needed
+    if (auto zpos = m_VideoPlane.property("zpos"); zpos && m_VideoPlaneZpos != zpos->initialValue()) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Moving video plane to zpos: %" PRIu64,
+                    m_VideoPlaneZpos);
+        m_PropSetter.set(*zpos, m_VideoPlaneZpos, false);
+    }
+    for (int i = 0; i < Overlay::OverlayMax; i++) {
+        if (auto zpos = m_OverlayPlanes[i].property("zpos")) {
+            // This may result in multiple overlays having the same zpos, which
+            // means undefined ordering between the planes, but that's fine.
+            // The planes should never overlap anyway.
+            if (!zpos->isImmutable() && zpos->initialValue() <= m_VideoPlaneZpos) {
+                auto zposRange = zpos->range();
+                uint64_t newZpos = std::clamp(m_VideoPlaneZpos + 1, zposRange.first, zposRange.second);
+
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Moving overlay plane %u to zpos: %" PRIu64,
+                            i,
+                            newZpos);
+                m_PropSetter.set(*zpos, newZpos, false);
+            }
         }
     }
 
@@ -557,24 +590,22 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
     // Find the active plane (if any) on this CRTC with the highest zpos.
     // We'll need to use a plane with a equal or greater zpos to be visible.
-    uint64_t maxActiveZpos = qEnvironmentVariableIntValue("DRM_MIN_PLANE_ZPOS");
+    std::set<uint64_t> activePlanesZpos;
     for (uint32_t i = 0; i < planeRes->count_planes; i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
         if (plane != nullptr) {
             if (plane->crtc_id == m_Crtc.objectId()) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Plane %u is active on CRTC %u",
-                            plane->plane_id,
-                            plane->crtc_id);
-
                 // Don't consider cursor planes when searching for the highest active zpos
                 DrmPropertyMap props { m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE };
                 if (props.property("type")->initialValue() == DRM_PLANE_TYPE_PRIMARY ||
                     props.property("type")->initialValue() == DRM_PLANE_TYPE_OVERLAY) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Plane %u is active on CRTC %u",
+                                plane->plane_id,
+                                plane->crtc_id);
+
                     if (auto zpos = props.property("zpos")) {
-                        if (zpos->initialValue() > maxActiveZpos) {
-                            maxActiveZpos = zpos->initialValue();
-                        }
+                        activePlanesZpos.emplace(zpos->initialValue());
                     }
                 }
             }
@@ -614,7 +645,6 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // FIXME: We should check the actual DRM format in a real AVFrame rather
     // than just assuming it will be a certain hardcoded type like NV12 based
     // on the chosen video format.
-    uint64_t videoPlaneZpos = 0;
     for (uint32_t i = 0; i < planeRes->count_planes && !m_VideoPlane.isValid(); i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
         if (plane != nullptr) {
@@ -652,19 +682,58 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             }
 
             // If this plane has a zpos property and it's lower (further from user) than
-            // the highest active plane we found, avoid this plane. It won't be visible.
+            // the highest active plane we found, avoid this plane unless we can adjust
+            // the zpos property to an acceptable value.
             //
             // Note: zpos is not a required property, but if any plane has it, all planes must.
             auto zpos = props.property("zpos");
-            if (zpos && zpos->initialValue() < maxActiveZpos) {
-                drmModeFreePlane(plane);
-                continue;
+            if (zpos) {
+                // If the zpos property is immutable, then we're stuck with whatever it is
+                if (zpos->isImmutable()) {
+                    if (!activePlanesZpos.empty() && zpos->initialValue() < *activePlanesZpos.crbegin()) {
+                        // This plane is too low to be visible
+                        drmModeFreePlane(plane);
+                        continue;
+                    }
+                    else {
+                        m_VideoPlaneZpos = zpos->initialValue();
+                    }
+                }
+                else {
+                    auto zposRange = zpos->range();
+
+                    uint64_t lowestAcceptableZpos;
+
+                    // No active planes, so we can use the minimum zpos
+                    auto zposIt = activePlanesZpos.crbegin();
+                    if (zposIt == activePlanesZpos.crend()) {
+                        lowestAcceptableZpos = zposRange.first;
+                    }
+                    else if (*zposIt == zpos->initialValue()) {
+                        // The highest active zpos is our current plane, so try the next one
+                        if (++zposIt == activePlanesZpos.crend()) {
+                            // Our plane is the only active, so we can use the minimum zpos
+                            lowestAcceptableZpos = zposRange.first;
+                        }
+                        else {
+                            lowestAcceptableZpos = *zposIt + 1;
+                        }
+                    }
+                    else {
+                        // The highest active zpos is some other plane that isn't ours
+                        lowestAcceptableZpos = *zposIt + 1;
+                    }
+
+                    m_VideoPlaneZpos = std::clamp(lowestAcceptableZpos, zposRange.first, zposRange.second);
+                }
+            }
+            else {
+                m_VideoPlaneZpos = 0;
             }
 
             SDL_assert(!m_VideoPlane.isValid());
             m_VideoPlane.load(m_DrmFd, plane->plane_id, DRM_MODE_OBJECT_PLANE);
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Selected plane %u for video", plane->plane_id);
-            videoPlaneZpos = zpos ? zpos->initialValue() : 0;
             drmModeFreePlane(plane);
         }
     }
@@ -693,14 +762,6 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 drmModeFreePlane(plane);
                 continue;
             }
-            // If this overlay plane has a zpos property and it's lower (further from user) than
-            // the video plane we selected, avoid this plane. It won't be visible on top.
-            //
-            // Note: zpos is not a required property, but if any plane has it, all planes must.
-            else if (auto zpos = props.property("zpos"); !zpos || zpos->initialValue() <= videoPlaneZpos) {
-                drmModeFreePlane(plane);
-                continue;
-            }
 
             // The overlay plane must support ARGB8888
             bool foundFormat = false;
@@ -713,6 +774,28 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             if (!foundFormat) {
                 drmModeFreePlane(plane);
                 continue;
+            }
+
+            // If this plane has a zpos property and it's lower (further from user) than
+            // the highest active plane we found, avoid this plane unless we can adjust
+            // the zpos property to an acceptable value.
+            //
+            // Note: zpos is not a required property, but if any plane has it, all planes must.
+            auto zpos = props.property("zpos");
+            if (zpos) {
+                // If the zpos property is immutable, then we're stuck with whatever it is
+                if (zpos->isImmutable()) {
+                    if (zpos->initialValue() <= m_VideoPlaneZpos) {
+                        // This plane is too low to be visible
+                        drmModeFreePlane(plane);
+                        continue;
+                    }
+                }
+                else if (zpos->range().second <= m_VideoPlaneZpos) {
+                    // This plane cannot be raised high enough to be visible
+                    drmModeFreePlane(plane);
+                    continue;
+                }
             }
 
             // Allocate this overlay plane to the next unused overlay slot
