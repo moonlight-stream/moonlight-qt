@@ -1093,7 +1093,9 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         // value of the Y component will also include the space for chroma
         // since it's all packed into a single plane.
         if (planes > 1) {
-            createBuf.height += (2 * AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h));
+            createBuf.height += (2 * AV_CEIL_RSHIFT(frame->height,
+                                                    formatDesc->log2_chroma_w +
+                                                    formatDesc->log2_chroma_h));
         }
 
         int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_CREATE_DUMB, &createBuf);
