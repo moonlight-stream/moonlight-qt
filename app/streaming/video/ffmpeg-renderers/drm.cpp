@@ -163,6 +163,18 @@ DrmRenderer::~DrmRenderer()
         for (int i = 0; i < Overlay::OverlayMax; i++) {
             m_PropSetter.disablePlane(m_OverlayPlanes[i]);
         }
+
+        // Revert our changes from prepareToRender()
+        if (auto prop = m_Connector.property("content type")) {
+            m_PropSetter.set(*prop, prop->initialValue());
+        }
+        if (auto prop = m_Crtc.property("VRR_ENABLED")) {
+            m_PropSetter.set(*prop, prop->initialValue());
+        }
+        if (auto prop = m_Connector.property("max bpc")) {
+            m_PropSetter.set(*prop, prop->initialValue());
+        }
+
         m_PropSetter.apply();
     }
 
@@ -302,6 +314,44 @@ void DrmRenderer::prepareToRender()
                     m_OutputRect.h);
     }
 
+    // Set HDMI content type to hopefully enable ALLM
+    if (auto prop = m_Connector.property("content type")) {
+        QString contentType = qgetenv("DRM_CONTENT_TYPE");
+        if (contentType.isEmpty()) {
+            contentType = "Game";
+        }
+        m_PropSetter.set(*prop, contentType.toStdString());
+    }
+
+    // Enable VRR if V-sync is off by default
+    if (auto prop = m_Crtc.property("VRR_ENABLED")) {
+        bool enableVrr;
+        if (!Utils::getEnvironmentVariableOverride("DRM_ENABLE_VRR", &enableVrr)) {
+            enableVrr = !m_Vsync;
+        }
+
+        auto range = prop->range();
+        m_PropSetter.set(*prop, std::clamp<uint64_t>(enableVrr ? 1 : 0, range.first, range.second));
+    }
+
+    if (auto prop = m_Connector.property("max bpc")) {
+        int maxBpc;
+
+        // By default, set max bpc to 10 if we're streaming 10-bit content and it's currently
+        // less than that value. If it's higher than 10 or we're not streaming 10-bit content,
+        // we leave it alone.
+        if (!Utils::getEnvironmentVariableOverride("DRM_MAX_BPC", &maxBpc)) {
+            maxBpc = (prop->initialValue() < 10 && (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT)) ? 10 : 0;
+        }
+
+        if (maxBpc > 0) {
+            auto range = prop->range();
+            m_PropSetter.set(*prop, std::clamp<uint64_t>(maxBpc, range.first, range.second));
+        }
+    }
+
+    m_PropSetter.apply();
+
     // We've now changed state that must be restored
     m_DrmStateModified = true;
 }
@@ -312,6 +362,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
     m_Window = params->window;
     m_VideoFormat = params->videoFormat;
+    m_Vsync = params->enableVsync;
     m_SwFrameMapper.setVideoFormat(params->videoFormat);
 
     // Try to get the FD that we're sharing with SDL
@@ -797,11 +848,6 @@ void DrmRenderer::setHdrMode(bool enabled)
         else {
             m_PropSetter.set(*prop, "Default");
         }
-    }
-
-    if (auto prop = m_Connector.property("max bpc")) {
-        auto range = prop->range();
-        m_PropSetter.set(*prop, std::clamp<uint64_t>(enabled ? 10 : 8, range.first, range.second));
     }
 
     if (auto prop = m_Connector.property("HDR_OUTPUT_METADATA")) {

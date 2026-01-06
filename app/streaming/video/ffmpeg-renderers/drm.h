@@ -644,6 +644,7 @@ private:
     bool m_MustCloseDrmFd;
     bool m_SupportsDirectRendering;
     int m_VideoFormat;
+    bool m_Vsync;
     DrmPropertyMap m_Encoder;
     DrmPropertyMap m_Connector;
     DrmPropertyMap m_Crtc;
