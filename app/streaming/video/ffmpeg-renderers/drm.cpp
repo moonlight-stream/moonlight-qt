@@ -53,6 +53,15 @@ extern "C" {
 #define DRM_FORMAT_XYUV8888 fourcc_code('X', 'Y', 'U', 'V')
 #endif
 
+// Upstreamed modifier macros (5.16+)
+#ifndef fourcc_mod_get_vendor
+#define fourcc_mod_get_vendor(modifier) (((modifier) >> 56) & 0xff)
+#endif
+#ifndef fourcc_mod_is_vendor
+#define fourcc_mod_is_vendor(modifier, vendor) \
+    (fourcc_mod_get_vendor(modifier) == DRM_FORMAT_MOD_VENDOR_## vendor)
+#endif
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
