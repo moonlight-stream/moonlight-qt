@@ -240,8 +240,8 @@ class DrmRenderer : public IFFmpegRenderer {
             if (m_TotalCommits != 0) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Flip stats: %.2f%% async | %.2f%% sync",
-                            (float)m_AsyncCommits / (float)m_TotalCommits,
-                            (float)(m_TotalCommits - m_AsyncCommits) / (float)m_TotalCommits);
+                            (100.f * m_AsyncCommits) / m_TotalCommits,
+                            (100.f * (m_TotalCommits - m_AsyncCommits)) / m_TotalCommits);
             }
         }
 
