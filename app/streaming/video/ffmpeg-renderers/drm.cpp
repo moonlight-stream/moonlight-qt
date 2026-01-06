@@ -1203,12 +1203,20 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
         drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
     }
 
-    if (testMode) {
-        // Check if plane can actually be imported
+    // For non-atomic drivers, check the IN_FORMATS property or legacy plane formats
+    if (testMode && !m_PropSetter.isAtomic()) {
         bool formatMatch = false;
 
+        uint64_t maskedModifier = drmFrame->objects[0].format_modifier;
+        if (fourcc_mod_is_vendor(maskedModifier, BROADCOM)) {
+            // Broadcom has modifiers that contain variable data, so we need to mask
+            // off the variable data because the IN_FORMATS blob contains the just
+            // the base modifier alone
+            maskedModifier = fourcc_mod_broadcom_mod(maskedModifier);
+        }
+
         // If we have an IN_FORMATS property and the frame has DRM modifiers, use that since it supports modifiers too
-        if (auto prop = m_VideoPlane.property("IN_FORMATS"); prop && drmFrame->objects[0].format_modifier != DRM_FORMAT_MOD_INVALID) {
+        if (auto prop = m_VideoPlane.property("IN_FORMATS"); prop && maskedModifier != DRM_FORMAT_MOD_INVALID) {
             drmModePropertyBlobPtr blob = drmModeGetPropertyBlob(m_DrmFd, prop->initialValue());
             if (blob) {
                 auto *header = (struct drm_format_modifier_blob *)blob->data;
@@ -1216,7 +1224,7 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
                 uint32_t *formats = (uint32_t *)((char *)header + header->formats_offset);
 
                 for (uint32_t i = 0; i < header->count_modifiers; i++) {
-                    if (modifiers[i].modifier == drmFrame->objects[0].format_modifier) {
+                    if (modifiers[i].modifier == maskedModifier) {
                         for (uint32_t j = 0; j < header->count_formats && j < sizeof(modifiers[i].formats) * 8; j++) {
                             if (modifiers[i].formats & (1ULL << j)) {
                                 if (formats[modifiers[i].offset + j] == drmFrame->layers[0].format) {
@@ -1325,6 +1333,69 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
                      "drmModeAddFB2[WithModifiers]() failed: %d",
                      err);
         return false;
+    }
+
+    // For atomic drivers, we'll use a test-only commit to confirm this plane+FB works
+    if (testMode && m_PropSetter.isAtomic()) {
+        SDL_Rect src, dst;
+        src.x = src.y = 0;
+        src.w = frame->width;
+        src.h = frame->height;
+
+        // This isn't a completely accurate test since SDL hasn't modeset to the new
+        // display resolution that we'll actually be using for streaming (since we're
+        // still not committed to even using DrmRenderer for rendering yet). Hopefully,
+        // it will be good enough though.
+        dst.x = dst.y = 0;
+        drmModeCrtc* crtc = drmModeGetCrtc(m_DrmFd, m_Crtc.objectId());
+        if (crtc != nullptr) {
+            dst.w = crtc->width;
+            dst.h = crtc->height;
+            drmModeFreeCrtc(crtc);
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "drmModeGetCrtc() failed: %d",
+                         errno);
+
+            // We'll just hope for the best here
+            dst.w = frame->width;
+            dst.h = frame->height;
+        }
+
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        // Temporarily take DRM master if we dropped it after initialization
+        if (!m_DrmStateModified) {
+            drmSetMaster(m_DrmFd);
+        }
+        bool testResult = m_PropSetter.testPlane(m_VideoPlane,
+                                                 m_Crtc.objectId(),
+                                                 *newFbId,
+                                                 dst.x, dst.y,
+                                                 dst.w, dst.h,
+                                                 0, 0,
+                                                 frame->width << 16,
+                                                 frame->height << 16);
+        if (!m_DrmStateModified) {
+            drmDropMaster(m_DrmFd);
+        }
+
+        if (testResult) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Selected DRM plane supports chosen decoding format and modifier: " FOURCC_FMT " %016" PRIx64,
+                        FOURCC_FMT_ARGS(drmFrame->layers[0].format),
+                        drmFrame->objects[0].format_modifier);
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Selected DRM plane doesn't support chosen decoding format and modifier: " FOURCC_FMT " %016" PRIx64,
+                         FOURCC_FMT_ARGS(drmFrame->layers[0].format),
+                         drmFrame->objects[0].format_modifier);
+            drmModeRmFB(m_DrmFd, *newFbId);
+            *newFbId = 0;
+            return false;
+        }
     }
 
     return true;

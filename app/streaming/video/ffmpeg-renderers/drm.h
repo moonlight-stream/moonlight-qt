@@ -439,6 +439,59 @@ class DrmRenderer : public IFFmpegRenderer {
             }
         }
 
+        bool testPlane(const DrmPropertyMap& plane,
+                       uint32_t crtcId, uint32_t fbId,
+                       int32_t crtcX, int32_t crtcY,
+                       uint32_t crtcW, uint32_t crtcH,
+                       uint32_t srcX, uint32_t srcY,
+                       uint32_t srcW, uint32_t srcH)
+        {
+            // Normally we wouldn't want to hold this lock across a blocking atomic commit,
+            // but we do in this case because this operation is infrequent and it significantly
+            // simplifies our state management to avoid racing atomic commits or modifications
+            // to our atomic request object. It's also only a test commit, so it should be fast.
+            std::lock_guard lg { m_Lock };
+
+            SDL_assert(m_Atomic);
+
+            // Store the old atomic request to restore after testing
+            drmModeAtomicReqPtr oldReq = nullptr;
+            std::swap(oldReq, m_AtomicReq);
+
+            bool ret = true;
+            ret = ret && set(*plane.property("CRTC_ID"), crtcId, false);
+            ret = ret && set(*plane.property("FB_ID"), fbId, false);
+            ret = ret && set(*plane.property("CRTC_X"), crtcX, false);
+            ret = ret && set(*plane.property("CRTC_Y"), crtcY, false);
+            ret = ret && set(*plane.property("CRTC_W"), crtcW, false);
+            ret = ret && set(*plane.property("CRTC_H"), crtcH, false);
+            ret = ret && set(*plane.property("SRC_X"), srcX, false);
+            ret = ret && set(*plane.property("SRC_Y"), srcY, false);
+            ret = ret && set(*plane.property("SRC_W"), srcW, false);
+            ret = ret && set(*plane.property("SRC_H"), srcH, false);
+
+            if (ret) {
+                SDL_assert(m_AtomicReq);
+                int err = drmModeAtomicCommit(m_Fd, m_AtomicReq,
+                                              DRM_MODE_ATOMIC_TEST_ONLY | DRM_MODE_ATOMIC_ALLOW_MODESET,
+                                              nullptr);
+                if (err < 0) {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                 "drmModeAtomicCommit(DRM_MODE_ATOMIC_TEST_ONLY) failed: %d",
+                                 err);
+                    ret = false;
+                }
+            }
+
+            // Swap the old atomic request back and free the test one
+            std::swap(oldReq, m_AtomicReq);
+            if (oldReq) {
+                drmModeAtomicFree(oldReq);
+            }
+
+            return ret;
+        }
+
         bool apply() {
             if (!m_Atomic) {
                 return 0;
