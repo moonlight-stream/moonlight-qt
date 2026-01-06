@@ -596,6 +596,19 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         allowPrimaryPlane = strcmp(m_Version->name, "spacemit") != 0;
     }
 
+    // Some Rockchip have a device tree that defines their only overlay plane
+    // as a cursor plane, so we provide an override to allow rendering to a
+    // cursor plane if requested.
+    // https://github.com/moonlight-stream/moonlight-embedded/pull/882
+    bool allowCursorPlane;
+    if (Utils::getEnvironmentVariableOverride("DRM_ALLOW_CURSOR_PLANE", &allowCursorPlane)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using DRM_ALLOW_CURSOR_PLANE to override default plane selection logic");
+    }
+    else {
+        allowCursorPlane = false;
+    }
+
     // Find a video plane with the required format to render on
     //
     // FIXME: We should check the actual DRM format in a real AVFrame rather
@@ -628,11 +641,12 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 continue;
             }
 
-            // Only consider overlay and primary (if allowed) planes as valid render targets
+            // Check if the plane is one that we're allowed to use
             DrmPropertyMap props { m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE };
             if (auto type = props.property("type");
                 type->initialValue() != DRM_PLANE_TYPE_OVERLAY &&
-                (type->initialValue() != DRM_PLANE_TYPE_PRIMARY || !allowPrimaryPlane)) {
+                (type->initialValue() != DRM_PLANE_TYPE_PRIMARY || !allowPrimaryPlane) &&
+                (type->initialValue() != DRM_PLANE_TYPE_CURSOR || !allowCursorPlane)) {
                 drmModeFreePlane(plane);
                 continue;
             }
