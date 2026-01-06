@@ -806,10 +806,16 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             }
 
             DrmPropertyMap props { m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE };
-            // Only consider overlay planes as valid targets
-            if (auto type = props.property("type"); type->initialValue() != DRM_PLANE_TYPE_OVERLAY) {
-                drmModeFreePlane(plane);
-                continue;
+            // Only consider overlay or primary planes as valid targets
+            // The latter might seem strange, but some DRM devices use
+            // underlays where the YUV-compatible overlay plane resides
+            // underneath the primary plane. In this case, we will use
+            // the primary plane as an overlay plane on top of the video.
+            if (auto type = props.property("type"))
+                if (type->initialValue() != DRM_PLANE_TYPE_OVERLAY && type->initialValue() != DRM_PLANE_TYPE_PRIMARY) {
+                    drmModeFreePlane(plane);
+                    continue;
+                }
             }
 
             // The overlay plane must support ARGB8888
