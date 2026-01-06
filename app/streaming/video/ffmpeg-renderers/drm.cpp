@@ -191,6 +191,12 @@ DrmRenderer::~DrmRenderer()
                 m_PropSetter.set(*zpos, zpos->initialValue());
             }
         }
+        for (auto &plane : m_UnusedActivePlanes) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Restoring previously active plane: %u",
+                        plane.second.objectId());
+            m_PropSetter.restoreToInitial(plane.second);
+        }
 
         m_PropSetter.apply();
     }
@@ -390,6 +396,14 @@ void DrmRenderer::prepareToRender()
                 m_PropSetter.set(*zpos, newZpos, false);
             }
         }
+    }
+
+    // Disable all other active planes in atomic mode
+    for (auto &plane : m_UnusedActivePlanes) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Disabling unused plane: %u",
+                    plane.second.objectId());
+        m_PropSetter.disablePlane(plane.second);
     }
 
     m_PropSetter.apply();
@@ -598,22 +612,28 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // Find the active plane (if any) on this CRTC with the highest zpos.
-    // We'll need to use a plane with a equal or greater zpos to be visible.
+    // We'll need to use a plane with a equal or greater zpos to be visible,
+    // or we'll disable the active planes if we're in atomic mode.
     std::set<uint64_t> activePlanesZpos;
     for (uint32_t i = 0; i < planeRes->count_planes; i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
         if (plane != nullptr) {
+            DrmPropertyMap props { m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE };
+
             if (plane->crtc_id == m_Crtc.objectId()) {
                 // Don't consider cursor planes when searching for the highest active zpos
-                DrmPropertyMap props { m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE };
-                if (props.property("type")->initialValue() == DRM_PLANE_TYPE_PRIMARY ||
-                    props.property("type")->initialValue() == DRM_PLANE_TYPE_OVERLAY) {
+                uint64_t type = props.property("type")->initialValue();
+                if (type == DRM_PLANE_TYPE_PRIMARY || type == DRM_PLANE_TYPE_OVERLAY) {
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Plane %u is active on CRTC %u",
                                 plane->plane_id,
                                 plane->crtc_id);
 
-                    if (auto zpos = props.property("zpos")) {
+                    // We can only restore state of planes on atomic
+                    if (m_PropSetter.isAtomic()) {
+                        m_UnusedActivePlanes.try_emplace(planeRes->planes[i], m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
+                    }
+                    else if (auto zpos = props.property("zpos")) {
                         activePlanesZpos.emplace(zpos->initialValue());
                     }
                 }
@@ -752,6 +772,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             SDL_assert(!m_VideoPlane.isValid());
             m_VideoPlane.load(m_DrmFd, plane->plane_id, DRM_MODE_OBJECT_PLANE);
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Selected plane %u for video", plane->plane_id);
+            m_UnusedActivePlanes.erase(plane->plane_id);
             drmModeFreePlane(plane);
         }
     }
@@ -831,6 +852,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             m_OverlayPlanes[overlayIndex++].load(m_DrmFd, plane->plane_id, DRM_MODE_OBJECT_PLANE);
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Selected plane %u for overlay %d",
                         plane->plane_id, overlayIndex);
+            m_UnusedActivePlanes.erase(plane->plane_id);
             drmModeFreePlane(plane);
         }
     }

@@ -189,6 +189,10 @@ class DrmRenderer : public IFFmpegRenderer {
             return m_ObjectType;
         }
 
+        const std::unordered_map<std::string, DrmProperty>& properties() const {
+            return m_Props;
+        }
+
     private:
         uint32_t m_ObjectId = 0;
         uint32_t m_ObjectType = 0;
@@ -605,6 +609,17 @@ class DrmRenderer : public IFFmpegRenderer {
             return m_Atomic;
         }
 
+        void restoreToInitial(const DrmPropertyMap& object) {
+            SDL_assert(m_Atomic);
+
+            // Set all mutable properties back to their initial values
+            for (auto& prop : object.properties()) {
+                if (!prop.second.isImmutable()) {
+                    set(prop.second, prop.second.initialValue());
+                }
+            }
+        }
+
     private:
         int m_Fd = -1;
         bool m_Atomic = false;
@@ -668,6 +683,7 @@ private:
     DrmPropertyMap m_Encoder;
     DrmPropertyMap m_Connector;
     DrmPropertyMap m_Crtc;
+    std::unordered_map<uint32_t, DrmPropertyMap> m_UnusedActivePlanes;
     DrmPropertyMap m_VideoPlane;
     uint64_t m_VideoPlaneZpos;
     DrmPropertyMap m_OverlayPlanes[Overlay::OverlayMax];
