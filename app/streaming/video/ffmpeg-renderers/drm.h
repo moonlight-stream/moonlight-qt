@@ -220,6 +220,7 @@ class DrmRenderer : public IFFmpegRenderer {
             for (auto it = m_PlaneBuffers.begin(); it != m_PlaneBuffers.end(); it++) {
                 SDL_assert(!it->second.fbId);
                 SDL_assert(!it->second.dumbBufferHandle);
+                SDL_assert(!it->second.pendingFrame);
 
                 if (it->second.pendingFbId) {
                     drmModeRmFB(m_Fd, it->second.pendingFbId);
@@ -229,6 +230,7 @@ class DrmRenderer : public IFFmpegRenderer {
                     destroyBuf.handle = it->second.pendingDumbBuffer;
                     drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
                 }
+                av_frame_free(&it->second.pendingFrame);
             }
 
             if (m_AtomicReq) {
