@@ -654,6 +654,15 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 continue;
             }
 
+            {
+                // Allow the user to override the plane selection logic
+                uint32_t userPlane;
+                if (Utils::getEnvironmentVariableOverride("DRM_VIDEO_PLANE", &userPlane) && userPlane != planeRes->planes[i]) {
+                    drmModeFreePlane(plane);
+                    continue;
+                }
+            }
+
             // We don't check plane->crtc_id here because we want to be able to reuse the primary plane
             // that may owned by Qt and in use on a CRTC prior to us taking over DRM master. When we give
             // control back to Qt, it will repopulate the plane with the FB it owns and render as normal.
@@ -754,6 +763,16 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             if (!(plane->possible_crtcs & (1 << crtcIndex))) {
                 drmModeFreePlane(plane);
                 continue;
+            }
+
+            {
+                // Allow the user to override the plane selection logic
+                uint32_t userPlane;
+                QString optionVarName = QString("DRM_OVERLAY_PLANE%1").arg(overlayIndex);
+                if (Utils::getEnvironmentVariableOverride(optionVarName.toUtf8(), &userPlane) && userPlane != planeRes->planes[i]) {
+                    drmModeFreePlane(plane);
+                    continue;
+                }
             }
 
             DrmPropertyMap props { m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE };
