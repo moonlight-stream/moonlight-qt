@@ -236,6 +236,13 @@ class DrmRenderer : public IFFmpegRenderer {
             if (m_AtomicReq) {
                 drmModeAtomicFree(m_AtomicReq);
             }
+
+            if (m_TotalCommits != 0) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Flip stats: %.2f%% async | %.2f%% sync",
+                            (float)m_AsyncCommits / (float)m_TotalCommits,
+                            (float)(m_TotalCommits - m_AsyncCommits) / (float)m_TotalCommits);
+            }
         }
 
         DrmPropertySetter(const DrmPropertySetter &) = delete;
@@ -520,14 +527,23 @@ class DrmRenderer : public IFFmpegRenderer {
                                           m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : DRM_MODE_ATOMIC_ALLOW_MODESET,
                                           nullptr);
 
-            // The driver may not support async flips (especially if we changed a non-FB_ID property),
-            // so try again with a regular flip if we get an error from the async flip attempt.
-            //
-            // We pass DRM_MODE_ATOMIC_ALLOW_MODESET because changing HDR state may require a modeset.
-            if (err < 0 && m_AsyncFlip) {
-                err = drmModeAtomicCommit(m_Fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+            if (m_AsyncFlip) {
+                if (err == 0) {
+                    m_AsyncCommits++;
+                }
+                else {
+                    // The driver may not support async flips (especially if we changed a non-FB_ID property),
+                    // so try again with a regular flip if we get an error from the async flip attempt.
+                    //
+                    // We pass DRM_MODE_ATOMIC_ALLOW_MODESET because changing HDR state may require a modeset.
+                    err = drmModeAtomicCommit(m_Fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+                }
             }
-            if (err < 0) {
+
+            if (err == 0) {
+                m_TotalCommits++;
+            }
+            else {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "drmModeAtomicCommit() failed: %d",
                              err);
@@ -601,6 +617,8 @@ class DrmRenderer : public IFFmpegRenderer {
 
         // Atomic context
         drmModeAtomicReqPtr m_AtomicReq = nullptr;
+        std::atomic<uint32_t> m_AsyncCommits {0};
+        std::atomic<uint32_t> m_TotalCommits {0};
     };
 
 public:
