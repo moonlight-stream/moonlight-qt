@@ -811,7 +811,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             // underlays where the YUV-compatible overlay plane resides
             // underneath the primary plane. In this case, we will use
             // the primary plane as an overlay plane on top of the video.
-            if (auto type = props.property("type"))
+            if (auto type = props.property("type")) {
                 if (type->initialValue() != DRM_PLANE_TYPE_OVERLAY && type->initialValue() != DRM_PLANE_TYPE_PRIMARY) {
                     drmModeFreePlane(plane);
                     continue;
