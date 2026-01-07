@@ -304,7 +304,8 @@ ApplicationWindow {
 
             AutoResizingComboBox {
                 id: quickProfileComboBox
-                visible: stackView.currentItem instanceof PcView
+                visible: stackView.currentItem instanceof PcView ||
+                         stackView.currentItem instanceof AppView
                 model: StreamingPreferences.profileNames
 
                 function syncFromPreferences() {
