@@ -60,6 +60,7 @@ private:
     QWaitCondition m_VsyncSignalled;
     SDL_Thread* m_RenderThread;
     SDL_Thread* m_VsyncThread;
+    AVFrame* m_DeferredFreeFrame;
     bool m_Stopping;
 
     IVsyncSource* m_VsyncSource;

@@ -209,12 +209,10 @@ class DrmRenderer : public IFFmpegRenderer {
         struct PlaneBuffer {
             uint32_t fbId;
             uint32_t dumbBufferHandle;
-            AVFrame* frame;
 
             // Atomic only
             uint32_t pendingFbId;
             uint32_t pendingDumbBuffer;
-            AVFrame* pendingFrame;
             bool modified;
         };
 
@@ -224,7 +222,6 @@ class DrmRenderer : public IFFmpegRenderer {
             for (auto it = m_PlaneBuffers.begin(); it != m_PlaneBuffers.end(); it++) {
                 SDL_assert(!it->second.fbId);
                 SDL_assert(!it->second.dumbBufferHandle);
-                SDL_assert(!it->second.pendingFrame);
 
                 if (it->second.pendingFbId) {
                     drmModeRmFB(m_Fd, it->second.pendingFbId);
@@ -234,7 +231,6 @@ class DrmRenderer : public IFFmpegRenderer {
                     destroyBuf.handle = it->second.pendingDumbBuffer;
                     drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
                 }
-                av_frame_free(&it->second.pendingFrame);
             }
 
             if (m_AtomicReq) {
@@ -337,13 +333,8 @@ class DrmRenderer : public IFFmpegRenderer {
 
         // Unconditionally takes ownership of fbId and dumbBufferHandle (if present)
         // If provided, frame is referenced to keep the FB's backing DMA-BUFs around
-        bool flipPlane(const DrmPropertyMap& plane, uint32_t fbId, uint32_t dumbBufferHandle, AVFrame* frame) {
+        bool flipPlane(const DrmPropertyMap& plane, uint32_t fbId, uint32_t dumbBufferHandle) {
             bool ret;
-
-            // If a frame was provided, clone a reference to it to hold until the next flip
-            if (frame) {
-                frame = av_frame_clone(frame);
-            }
 
             if (m_Atomic) {
                 std::lock_guard lg { m_Lock };
@@ -355,7 +346,6 @@ class DrmRenderer : public IFFmpegRenderer {
                     auto &pb = m_PlaneBuffers[plane.objectId()];
                     std::swap(fbId, pb.pendingFbId);
                     std::swap(dumbBufferHandle, pb.pendingDumbBuffer);
-                    std::swap(frame, pb.pendingFrame);
                     pb.modified = true;
                 }
             }
@@ -383,7 +373,6 @@ class DrmRenderer : public IFFmpegRenderer {
                     auto &pb = m_PlaneBuffers[plane.objectId()];
                     std::swap(fbId, pb.fbId);
                     std::swap(dumbBufferHandle, pb.dumbBufferHandle);
-                    std::swap(frame, pb.frame);
 
                     ret = true;
                 }
@@ -404,7 +393,6 @@ class DrmRenderer : public IFFmpegRenderer {
                 destroyBuf.handle = dumbBufferHandle;
                 drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
             }
-            av_frame_free(&frame);
 
             return ret;
         }
@@ -448,7 +436,7 @@ class DrmRenderer : public IFFmpegRenderer {
         void disablePlane(const DrmPropertyMap& plane) {
             if (plane.isValid()) {
                 configurePlane(plane, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-                flipPlane(plane, 0, 0, nullptr);
+                flipPlane(plane, 0, 0);
             }
         }
 
@@ -567,15 +555,13 @@ class DrmRenderer : public IFFmpegRenderer {
                         drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
                         it->second.dumbBufferHandle = 0;
                     }
-                    av_frame_free(&it->second.frame);
 
                     // The pending buffers become the active buffers for this FB
                     auto &pb = m_PlaneBuffers[it->first];
                     pb.fbId = it->second.pendingFbId;
                     pb.dumbBufferHandle = it->second.pendingDumbBuffer;
-                    pb.frame = it->second.pendingFrame;
                 }
-                else if (err < 0 || it->second.fbId || it->second.dumbBufferHandle || it->second.frame) {
+                else if (err < 0 || it->second.fbId || it->second.dumbBufferHandle) {
                     // Free the old pending buffers on a failed commit
                     if (it->second.pendingFbId) {
                         SDL_assert(err < 0);
@@ -587,13 +573,11 @@ class DrmRenderer : public IFFmpegRenderer {
                         destroyBuf.handle = it->second.pendingDumbBuffer;
                         drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
                     }
-                    av_frame_free(&it->second.pendingFrame);
 
                     // This FB wasn't modified in this commit, so the current buffers stay around
                     auto &pb = m_PlaneBuffers[it->first];
                     pb.fbId = it->second.fbId;
                     pb.dumbBufferHandle = it->second.dumbBufferHandle;
-                    pb.frame = it->second.frame;
                 }
 
                 // NB: We swapped in a new plane buffers map which will clear the modified value.

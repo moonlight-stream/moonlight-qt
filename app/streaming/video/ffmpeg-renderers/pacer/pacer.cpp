@@ -31,6 +31,7 @@
 Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats) :
     m_RenderThread(nullptr),
     m_VsyncThread(nullptr),
+    m_DeferredFreeFrame(nullptr),
     m_Stopping(false),
     m_VsyncSource(nullptr),
     m_VsyncRenderer(renderer),
@@ -76,6 +77,7 @@ Pacer::~Pacer()
         AVFrame* frame = m_PacingQueue.dequeue();
         av_frame_free(&frame);
     }
+    av_frame_free(&m_DeferredFreeFrame);
 }
 
 void Pacer::renderOnMainThread()
@@ -342,6 +344,11 @@ void Pacer::renderFrame(AVFrame* frame)
 
     m_VideoStats->totalRenderTimeUs += (afterRender - beforeRender);
     m_VideoStats->renderedFrames++;
+
+    // Wait until after next frame to free this one to ensure the GPU
+    // doesn't stall or read garbage if the backing buffer gets returned
+    // to the pool and the decoder tries to write a new frame into it
+    std::swap(frame, m_DeferredFreeFrame);
     av_frame_free(&frame);
 
     // Drop frames if we have too many queued up for a while
