@@ -224,24 +224,10 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086;
     }
 
-    if (Utils::getEnvironmentVariableOverride("D3D11VA_FORCE_FENCE", &m_UseFenceHack)) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using D3D11VA_FORCE_FENCE to override default fence workaround logic");
-    }
-    else {
-        // Old Intel GPUs (HD 4000) require a fence to properly synchronize
-        // the video engine with the 3D engine for texture sampling.
-        m_UseFenceHack = adapterDesc.VendorId == 0x8086 && featureLevel < D3D_FEATURE_LEVEL_11_1;
-    }
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Decoder texture access: %s (fence: %s)",
-                m_BindDecoderOutputTextures ? "bind" : "copy",
-                (m_BindDecoderOutputTextures && m_UseFenceHack) ? "yes" : "no");
-
     // Check which fence types are supported by this GPU
     {
         m_FenceType = SupportedFenceType::None;
+        m_NextFenceValue = 0;
 
         ComPtr<IDXGIAdapter4> adapter4;
         if (SUCCEEDED(adapter.As(&adapter4))) {
@@ -257,7 +243,37 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                 }
             }
         }
+
+        if (m_FenceType != SupportedFenceType::None) {
+            ComPtr<ID3D11Device5> device5;
+            ComPtr<ID3D11DeviceContext4> deviceContext4;
+            if (SUCCEEDED(m_Device.As(&device5)) && SUCCEEDED(m_DeviceContext.As(&deviceContext4))) {
+                hr = device5->CreateFence(m_NextFenceValue,
+                                          m_FenceType == SupportedFenceType::Monitored ?
+                                                D3D11_FENCE_FLAG_NONE : D3D11_FENCE_FLAG_NON_MONITORED,
+                                          IID_PPV_ARGS(&m_Fence));
+                if (FAILED(hr)) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "ID3D11Device5::CreateFence() failed: %x",
+                                hr);
+                    // Non-fatal
+                }
+
+                m_NextFenceValue++;
+            }
+        }
+
+        if (m_FenceType == SupportedFenceType::Monitored) {
+            // Create an auto-reset event for our fence to signal
+            m_FenceEvent.Attach(CreateEvent(NULL, FALSE, TRUE, NULL));
+        }
     }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Decoder texture access: %s (fence: %s)",
+                m_BindDecoderOutputTextures ? "bind" : "copy",
+                 m_FenceType == SupportedFenceType::Monitored ? "monitored" :
+                    (m_FenceType == SupportedFenceType::NonMonitored ? "non-monitored" : "unsupported"));
 
     if (!checkDecoderSupport(adapter.Get())) {
         m_DeviceContext.Reset();
@@ -795,27 +811,6 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
                          srvIndex);
             return;
         }
-
-
-        // Ensure decoding operations have completed using a dummy fence.
-        // This is not necessary on modern GPU drivers, but it is required
-        // on some older Intel GPU drivers that don't properly synchronize
-        // the video engine with 3D operations.
-        if (m_UseFenceHack && m_FenceType != SupportedFenceType::None) {
-            ComPtr<ID3D11Device5> device5;
-            ComPtr<ID3D11DeviceContext4> deviceContext4;
-            if (SUCCEEDED(m_Device.As(&device5)) && SUCCEEDED(m_DeviceContext.As(&deviceContext4))) {
-                ComPtr<ID3D11Fence> fence;
-                if (SUCCEEDED(device5->CreateFence(0,
-                                                   m_FenceType == SupportedFenceType::Monitored ?
-                                                       D3D11_FENCE_FLAG_NONE : D3D11_FENCE_FLAG_NON_MONITORED,
-                                                   IID_PPV_ARGS(&fence)))) {
-                    if (SUCCEEDED(deviceContext4->Signal(fence.Get(), 1))) {
-                        deviceContext4->Wait(fence.Get(), 1);
-                    }
-                }
-            }
-        }
     }
     else {
         // Copy this frame into our video texture
@@ -840,6 +835,15 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
     // Unbind SRVs for this frame
     ID3D11ShaderResourceView* nullSrvs[2] = {};
     m_DeviceContext->PSSetShaderResources(0, 2, nullSrvs);
+
+    // Trigger our fence to signal after this video frame has been rendered
+    if (m_Fence) {
+        ComPtr<ID3D11DeviceContext4> deviceContext4;
+        if (SUCCEEDED(m_DeviceContext.As(&deviceContext4))) {
+            deviceContext4->Signal(m_Fence.Get(), m_NextFenceValue);
+            m_NextFenceValue++;
+        }
+    }
 }
 
 // This function must NOT use any DXGI or ID3D11DeviceContext methods
@@ -964,6 +968,32 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     m_OverlayTextures[type] = std::move(newTexture);
     m_OverlayTextureResourceViews[type] = std::move(newTextureResourceView);
     SDL_AtomicUnlock(&m_OverlayLock);
+}
+
+void D3D11VARenderer::waitToRender()
+{
+    if (m_Fence && m_FenceEvent.IsValid()) {
+        SDL_assert(m_FenceType == SupportedFenceType::Monitored);
+
+        // Check if the GPU is already finished
+        if (m_Fence->GetCompletedValue() < m_NextFenceValue - 1) {
+            HRESULT hr;
+
+            hr = m_Fence->SetEventOnCompletion(m_NextFenceValue - 1, m_FenceEvent.Get());
+            if (SUCCEEDED(hr)) {
+                // If we don't wake within 2 seconds, something is probably wrong
+                if (WaitForSingleObject(m_FenceEvent.Get(), 2000) != WAIT_OBJECT_0) {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                 "Failed to wait on fence event!");
+                }
+            }
+            else {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "ID3D11Fence::SetEventOnCompletion() failed: %x",
+                             hr);
+            }
+        }
+    }
 }
 
 bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
