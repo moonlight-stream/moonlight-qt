@@ -313,6 +313,13 @@ void DrmRenderer::prepareToRender()
                      SDL_GetError());
     }
 
+    // Set our DRM client caps again. SDL 3.4+ will disable these
+    // when dropping master if it's using atomic itself.
+    drmSetClientCap(m_DrmFd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
+    if (m_PropSetter.isAtomic()) {
+        drmSetClientCap(m_DrmFd, DRM_CLIENT_CAP_ATOMIC, 1);
+    }
+
     // Set the output rect to match the new CRTC size after modesetting
     m_OutputRect.x = m_OutputRect.y = 0;
     drmModeCrtc* crtc = drmModeGetCrtc(m_DrmFd, m_Crtc.objectId());
