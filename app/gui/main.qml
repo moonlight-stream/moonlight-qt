@@ -51,17 +51,19 @@ ApplicationWindow {
         }
 
         // Display any modal dialogs for configuration warnings
-        if (SystemProperties.isWow64) {
-            wow64Dialog.open()
-        }
+        if (runConfigChecks) {
+            if (SystemProperties.isWow64) {
+                wow64Dialog.open()
+            }
 
-        if (SystemProperties.unmappedGamepads) {
-            unmappedGamepadDialog.unmappedGamepads = SystemProperties.unmappedGamepads
-            unmappedGamepadDialog.open()
-        }
+            if (SystemProperties.unmappedGamepads) {
+                unmappedGamepadDialog.unmappedGamepads = SystemProperties.unmappedGamepads
+                unmappedGamepadDialog.open()
+            }
 
-        // Hardware acceleration is checked asynchronously
-        SystemProperties.hasHardwareAccelerationChanged.connect(hasHardwareAccelerationChanged)
+            // Hardware acceleration is checked asynchronously
+            SystemProperties.hasHardwareAccelerationChanged.connect(hasHardwareAccelerationChanged)
+        }
     }
 
     function hasHardwareAccelerationChanged() {
