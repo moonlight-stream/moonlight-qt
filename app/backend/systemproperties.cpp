@@ -12,6 +12,69 @@
 #include <Windows.h>
 #endif
 
+class SystemPropertyQueryThread : public QThread
+{
+public:
+    SystemPropertyQueryThread(SystemProperties* properties)
+        : QThread(properties), m_Properties(properties)
+    {
+        setObjectName("System Properties Async Query Thread");
+    }
+
+private:
+    void run() override
+    {
+        bool hasHardwareAcceleration;
+        bool rendererAlwaysFullScreen;
+        bool supportsHdr;
+        QSize maximumResolution;
+
+        if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                         SDL_GetError());
+            return;
+        }
+
+        // Update display related attributes (max FPS, native resolution, etc).
+        m_Properties->refreshDisplays();
+
+        SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+                                                  SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
+        if (!testWindow) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to create test window with platform flags: %s",
+                        SDL_GetError());
+
+            testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+            if (!testWindow) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to create window for hardware decode test: %s",
+                             SDL_GetError());
+                SDL_QuitSubSystem(SDL_INIT_VIDEO);
+                return;
+            }
+        }
+
+        Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, supportsHdr, maximumResolution);
+
+        SDL_DestroyWindow(testWindow);
+
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+        // Propagate the decoder properties to the SystemProperties singleton and emit any change signals on the main thread
+        QMetaObject::invokeMethod(m_Properties, "updateDecoderProperties",
+                                  Qt::QueuedConnection,
+                                  Q_ARG(bool, hasHardwareAcceleration),
+                                  Q_ARG(bool, rendererAlwaysFullScreen),
+                                  Q_ARG(QSize, maximumResolution),
+                                  Q_ARG(bool, supportsHdr));
+    }
+
+private:
+    SystemProperties* m_Properties;
+};
+
 SystemProperties::SystemProperties()
 {
     versionString = QString(VERSION_STR);
@@ -68,69 +131,61 @@ SystemProperties::SystemProperties()
 
     unmappedGamepads = SdlInputHandler::getUnmappedGamepads();
 
-    // Populate data that requires talking to SDL. We do it all in one shot
-    // and cache the results to speed up future queries on this data.
-    querySdlVideoInfo();
+    // These will be queried asynchronously to avoid blocking the UI
+    hasHardwareAcceleration = true;
+    rendererAlwaysFullScreen = false;
+    supportsHdr = true;
+    maximumResolution = QSize(0, 0);
 
-    Q_ASSERT(!monitorRefreshRates.isEmpty());
-    Q_ASSERT(!monitorNativeResolutions.isEmpty());
-    Q_ASSERT(!monitorSafeAreaResolutions.isEmpty());
+    systemPropertyQueryThread = new SystemPropertyQueryThread(this);
+    systemPropertyQueryThread->start();
+}
+
+void SystemProperties::updateDecoderProperties(bool hasHardwareAcceleration, bool rendererAlwaysFullScreen, QSize maximumResolution, bool supportsHdr)
+{
+    if (hasHardwareAcceleration != this->hasHardwareAcceleration) {
+        this->hasHardwareAcceleration = hasHardwareAcceleration;
+        emit hasHardwareAccelerationChanged();
+    }
+
+    if (rendererAlwaysFullScreen != this->rendererAlwaysFullScreen) {
+        this->rendererAlwaysFullScreen = rendererAlwaysFullScreen;
+        emit rendererAlwaysFullScreenChanged();
+    }
+
+    if (maximumResolution != this->maximumResolution) {
+        this->maximumResolution = maximumResolution;
+        emit maximumResolutionChanged();
+    }
+
+    if (supportsHdr != this->supportsHdr) {
+        this->supportsHdr = supportsHdr;
+        emit supportsHdrChanged();
+    }
 }
 
 QRect SystemProperties::getNativeResolution(int displayIndex)
 {
     // Returns default constructed QRect if out of bounds
+    systemPropertyQueryThread->wait();
+    Q_ASSERT(!monitorNativeResolutions.isEmpty());
     return monitorNativeResolutions.value(displayIndex);
 }
 
 QRect SystemProperties::getSafeAreaResolution(int displayIndex)
 {
     // Returns default constructed QRect if out of bounds
+    systemPropertyQueryThread->wait();
+    Q_ASSERT(!monitorSafeAreaResolutions.isEmpty());
     return monitorSafeAreaResolutions.value(displayIndex);
 }
 
 int SystemProperties::getRefreshRate(int displayIndex)
 {
     // Returns 0 if out of bounds
+    systemPropertyQueryThread->wait();
+    Q_ASSERT(!monitorRefreshRates.isEmpty());
     return monitorRefreshRates.value(displayIndex);
-}
-
-void SystemProperties::querySdlVideoInfo()
-{
-    hasHardwareAcceleration = false;
-
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
-                     SDL_GetError());
-        return;
-    }
-
-    // Update display related attributes (max FPS, native resolution, etc).
-    refreshDisplays();
-
-    SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
-                                              SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
-    if (!testWindow) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to create test window with platform flags: %s",
-                    SDL_GetError());
-
-        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
-        if (!testWindow) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to create window for hardware decode test: %s",
-                         SDL_GetError());
-            SDL_QuitSubSystem(SDL_INIT_VIDEO);
-            return;
-        }
-    }
-
-    Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, supportsHdr, maximumResolution);
-
-    SDL_DestroyWindow(testWindow);
-
-    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
 void SystemProperties::refreshDisplays()
