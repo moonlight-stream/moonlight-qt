@@ -22,6 +22,7 @@ public:
     virtual bool prepareDecoderContextInGetFormat(AVCodecContext* context, AVPixelFormat pixelFormat) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
+    virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo) override;
     virtual void waitToRender() override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
@@ -41,10 +42,13 @@ private:
     bool setupRenderingResources();
     std::vector<DXGI_FORMAT> getVideoTextureSRVFormats();
     bool setupFrameRenderingResources(AVHWFramesContext* framesContext);
+    bool setupSwapchainDependentResources();
     bool setupVideoTexture(AVHWFramesContext* framesContext); // for !m_BindDecoderOutputTextures
     bool setupTexturePoolViews(AVHWFramesContext* framesContext); // for m_BindDecoderOutputTextures
     void renderOverlay(Overlay::OverlayType type);
-    void bindColorConversion(AVFrame* frame);
+    bool createOverlayVertexBuffer(Overlay::OverlayType type, int width, int height, Microsoft::WRL::ComPtr<ID3D11Buffer>& newVertexBuffer);
+    void bindColorConversion(bool frameChanged, AVFrame* frame);
+    void bindVideoVertexBuffer(bool frameChanged, AVFrame* frame);
     void renderVideo(AVFrame* frame);
     bool checkDecoderSupport(IDXGIAdapter* adapter);
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
@@ -60,6 +64,7 @@ private:
     };
 
     Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
+    int m_AdapterIndex;
     Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
     Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext1> m_DeviceContext;

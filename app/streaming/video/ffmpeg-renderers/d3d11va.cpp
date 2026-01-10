@@ -319,7 +319,7 @@ Exit:
 
 bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 {
-    int adapterIndex, outputIndex;
+    int outputIndex;
     HRESULT hr;
 
     m_DecoderParams = *params;
@@ -338,7 +338,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     if (!SDL_DXGIGetOutputInfo(SDL_GetWindowDisplayIndex(params->window),
-                               &adapterIndex, &outputIndex)) {
+                               &m_AdapterIndex, &outputIndex)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_DXGIGetOutputInfo() failed: %s",
                      SDL_GetError());
@@ -362,12 +362,12 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
     // First try the adapter corresponding to the display where our window resides.
     // This will let us avoid a copy if the display GPU has the required decoder.
-    if (!createDeviceByAdapterIndex(adapterIndex)) {
+    if (!createDeviceByAdapterIndex(m_AdapterIndex)) {
         // If that didn't work, we'll try all GPUs in order until we find one
         // or run out of GPUs (DXGI_ERROR_NOT_FOUND from EnumAdapters())
         bool adapterNotFound = false;
         for (int i = 0; !adapterNotFound; i++) {
-            if (i == adapterIndex) {
+            if (i == m_AdapterIndex) {
                 // Don't try the same GPU again
                 continue;
             }
@@ -708,7 +708,63 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
     m_DeviceContext->OMSetBlendState(m_VideoBlendState.Get(), nullptr, 0xffffffff);
 }
 
-void D3D11VARenderer::bindColorConversion(AVFrame* frame)
+void D3D11VARenderer::bindVideoVertexBuffer(bool frameChanged, AVFrame* frame)
+{
+    if (frameChanged || !m_VideoVertexBuffer) {
+        // Scale video to the window size while preserving aspect ratio
+        SDL_Rect src, dst;
+        src.x = src.y = 0;
+        src.w = frame->width;
+        src.h = frame->height;
+        dst.x = dst.y = 0;
+        dst.w = m_DisplayWidth;
+        dst.h = m_DisplayHeight;
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        // Convert screen space to normalized device coordinates
+        SDL_FRect renderRect;
+        StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, m_DisplayWidth, m_DisplayHeight);
+
+        // Don't sample from the alignment padding area
+        auto framesContext = (AVHWFramesContext*)frame->hw_frames_ctx->data;
+        float uMax = (float)frame->width / framesContext->width;
+        float vMax = (float)frame->height / framesContext->height;
+
+        VERTEX verts[] =
+        {
+            {renderRect.x, renderRect.y, 0, vMax},
+            {renderRect.x, renderRect.y+renderRect.h, 0, 0},
+            {renderRect.x+renderRect.w, renderRect.y, uMax, vMax},
+            {renderRect.x+renderRect.w, renderRect.y+renderRect.h, uMax, 0},
+        };
+
+        D3D11_BUFFER_DESC vbDesc = {};
+        vbDesc.ByteWidth = sizeof(verts);
+        vbDesc.Usage = D3D11_USAGE_IMMUTABLE;
+        vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        vbDesc.CPUAccessFlags = 0;
+        vbDesc.MiscFlags = 0;
+        vbDesc.StructureByteStride = sizeof(VERTEX);
+
+        D3D11_SUBRESOURCE_DATA vbData = {};
+        vbData.pSysMem = verts;
+
+        HRESULT hr = m_Device->CreateBuffer(&vbDesc, &vbData, &m_VideoVertexBuffer);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateBuffer() failed: %x",
+                         hr);
+            return;
+        }
+    }
+
+    // Bind video rendering vertex buffer
+    UINT stride = sizeof(VERTEX);
+    UINT offset = 0;
+    m_DeviceContext->IASetVertexBuffers(0, 1, m_VideoVertexBuffer.GetAddressOf(), &stride, &offset);
+}
+
+void D3D11VARenderer::bindColorConversion(bool frameChanged, AVFrame* frame)
 {
     bool yuv444 = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_YUV444);
     auto framesContext = (AVHWFramesContext*)frame->hw_frames_ctx->data;
@@ -733,7 +789,7 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
     }
 
     // If nothing has changed since last frame, we're done
-    if (!hasFrameFormatChanged(frame)) {
+    if (!frameChanged) {
         return;
     }
 
@@ -788,11 +844,6 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
 
 void D3D11VARenderer::renderVideo(AVFrame* frame)
 {
-    // Bind video rendering vertex buffer
-    UINT stride = sizeof(VERTEX);
-    UINT offset = 0;
-    m_DeviceContext->IASetVertexBuffers(0, 1, m_VideoVertexBuffer.GetAddressOf(), &stride, &offset);
-
     UINT srvIndex;
     if (m_BindDecoderOutputTextures) {
         // Our indexing logic depends on a direct mapping into m_VideoTextureResourceViews
@@ -829,8 +880,13 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
         srvIndex = 0;
     }
 
+    bool frameChanged = hasFrameFormatChanged(frame);
+
+    // Bind our vertex buffer
+    bindVideoVertexBuffer(frameChanged, frame);
+
     // Bind our CSC shader (and constant buffer, if required)
-    bindColorConversion(frame);
+    bindColorConversion(frameChanged, frame);
 
     // Bind SRVs for this frame
     ID3D11ShaderResourceView* frameSrvs[] = { m_VideoTextureResourceViews[srvIndex][0].Get(), m_VideoTextureResourceViews[srvIndex][1].Get() };
@@ -920,6 +976,25 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
+    ComPtr<ID3D11Buffer> newVertexBuffer;
+    if (!createOverlayVertexBuffer(type, newSurface->w, newSurface->h, newVertexBuffer)) {
+        SDL_FreeSurface(newSurface);
+        return;
+    }
+
+    // The surface is no longer required
+    SDL_FreeSurface(newSurface);
+    newSurface = nullptr;
+
+    SDL_AtomicLock(&m_OverlayLock);
+    m_OverlayVertexBuffers[type] = std::move(newVertexBuffer);
+    m_OverlayTextures[type] = std::move(newTexture);
+    m_OverlayTextureResourceViews[type] = std::move(newTextureResourceView);
+    SDL_AtomicUnlock(&m_OverlayLock);
+}
+
+bool D3D11VARenderer::createOverlayVertexBuffer(Overlay::OverlayType type, int width, int height, ComPtr<ID3D11Buffer>& newVertexBuffer)
+{
     SDL_FRect renderRect = {};
 
     if (type == Overlay::OverlayStatusUpdate) {
@@ -930,18 +1005,14 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     else if (type == Overlay::OverlayDebug) {
         // Top left
         renderRect.x = 0;
-        renderRect.y = m_DisplayHeight - newSurface->h;
+        renderRect.y = m_DisplayHeight - height;
     }
 
-    renderRect.w = newSurface->w;
-    renderRect.h = newSurface->h;
+    renderRect.w = width;
+    renderRect.h = height;
 
     // Convert screen space to normalized device coordinates
     StreamUtils::screenSpaceToNormalizedDeviceCoords(&renderRect, m_DisplayWidth, m_DisplayHeight);
-
-    // The surface is no longer required
-    SDL_FreeSurface(newSurface);
-    newSurface = nullptr;
 
     VERTEX verts[] =
     {
@@ -962,20 +1033,100 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     D3D11_SUBRESOURCE_DATA vbData = {};
     vbData.pSysMem = verts;
 
-    ComPtr<ID3D11Buffer> newVertexBuffer;
-    hr = m_Device->CreateBuffer(&vbDesc, &vbData, &newVertexBuffer);
+    HRESULT hr = m_Device->CreateBuffer(&vbDesc, &vbData, &newVertexBuffer);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateBuffer() failed: %x",
                      hr);
-        return;
+        return false;
     }
 
-    SDL_AtomicLock(&m_OverlayLock);
-    m_OverlayVertexBuffers[type] = std::move(newVertexBuffer);
-    m_OverlayTextures[type] = std::move(newTexture);
-    m_OverlayTextureResourceViews[type] = std::move(newTextureResourceView);
-    SDL_AtomicUnlock(&m_OverlayLock);
+    return true;
+}
+
+bool D3D11VARenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo)
+{
+    if (stateInfo->stateChangeFlags & WINDOW_STATE_CHANGE_DISPLAY) {
+        int adapterIndex, outputIndex;
+        if (!SDL_DXGIGetOutputInfo(stateInfo->displayIndex,
+                                   &adapterIndex, &outputIndex)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_DXGIGetOutputInfo() failed: %s",
+                         SDL_GetError());
+            return false;
+        }
+
+        // If the window moved to a different GPU, recreate the renderer
+        // to see if we can use that new GPU for decoding
+        if (adapterIndex != m_AdapterIndex) {
+            return false;
+        }
+
+        // If an adapter was added or removed, we can't trust that our
+        // old indexes are still valid for comparison.
+        if (!m_Factory->IsCurrent()) {
+            return false;
+        }
+
+        // We've handled this state change
+        stateInfo->stateChangeFlags &= ~WINDOW_STATE_CHANGE_DISPLAY;
+    }
+
+    if (stateInfo->stateChangeFlags & WINDOW_STATE_CHANGE_SIZE) {
+        // Resize our swapchain and reconstruct size-dependent resources
+
+        DXGI_SWAP_CHAIN_DESC1 swapchainDesc;
+        m_SwapChain->GetDesc1(&swapchainDesc);
+
+        // Lock the context to avoid concurrent rendering
+        lockContext(this);
+
+        m_DisplayWidth = stateInfo->width;
+        m_DisplayHeight = stateInfo->height;
+
+        // Release the video vertex buffer so we will upload a new one after resize
+        m_VideoVertexBuffer.Reset();
+
+        // Create new vertex buffers for active overlays
+        SDL_AtomicLock(&m_OverlayLock);
+        for (size_t i = 0; i < m_OverlayVertexBuffers.size(); i++) {
+            if (!m_OverlayTextures[i]) {
+                continue;
+            }
+
+            D3D11_TEXTURE2D_DESC textureDesc;
+            m_OverlayTextures[i]->GetDesc(&textureDesc);
+            createOverlayVertexBuffer((Overlay::OverlayType)i, textureDesc.Width, textureDesc.Height, m_OverlayVertexBuffers[i]);
+        }
+        SDL_AtomicUnlock(&m_OverlayLock);
+
+        // We must release all references to the back buffer
+        m_RenderTargetView.Reset();
+        m_DeviceContext->Flush();
+
+        HRESULT hr = m_SwapChain->ResizeBuffers(0, stateInfo->width, stateInfo->height, DXGI_FORMAT_UNKNOWN, swapchainDesc.Flags);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "IDXGISwapChain::ResizeBuffers() failed: %x",
+                         hr);
+            unlockContext(this);
+            return false;
+        }
+
+        // Reset swapchain-dependent resources (RTV, viewport, etc)
+        if (!setupSwapchainDependentResources()) {
+            unlockContext(this);
+            return false;
+        }
+
+        unlockContext(this);
+
+        // We've handled this state change
+        stateInfo->stateChangeFlags &= ~WINDOW_STATE_CHANGE_SIZE;
+    }
+
+    // Check if we've handled all state changes
+    return stateInfo->stateChangeFlags == 0;
 }
 
 void D3D11VARenderer::waitToRender()
@@ -1325,26 +1476,6 @@ bool D3D11VARenderer::setupRenderingResources()
         }
     }
 
-    // Create our render target view
-    {
-        ComPtr<ID3D11Resource> backBufferResource;
-        hr = m_SwapChain->GetBuffer(0, __uuidof(ID3D11Resource), (void**)&backBufferResource);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "IDXGISwapChain::GetBuffer() failed: %x",
-                         hr);
-            return false;
-        }
-
-        hr = m_Device->CreateRenderTargetView(backBufferResource.Get(), nullptr, &m_RenderTargetView);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "ID3D11Device::CreateRenderTargetView() failed: %x",
-                         hr);
-            return false;
-        }
-    }
-
     // We use a common index buffer for all geometry
     {
         const int indexes[] = {0, 1, 2, 3, 2, 1};
@@ -1416,6 +1547,37 @@ bool D3D11VARenderer::setupRenderingResources()
         }
     }
 
+    if (!setupSwapchainDependentResources()) {
+        return false;
+    }
+
+    return true;
+}
+
+bool D3D11VARenderer::setupSwapchainDependentResources()
+{
+    HRESULT hr;
+
+    // Create our render target view
+    {
+        ComPtr<ID3D11Resource> backBufferResource;
+        hr = m_SwapChain->GetBuffer(0, __uuidof(ID3D11Resource), (void**)&backBufferResource);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "IDXGISwapChain::GetBuffer() failed: %x",
+                         hr);
+            return false;
+        }
+
+        hr = m_Device->CreateRenderTargetView(backBufferResource.Get(), nullptr, &m_RenderTargetView);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateRenderTargetView() failed: %x",
+                         hr);
+            return false;
+        }
+    }
+
     // Set a viewport that fills the window
     {
         D3D11_VIEWPORT viewport;
@@ -1442,54 +1604,6 @@ bool D3D11VARenderer::setupFrameRenderingResources(AVHWFramesContext* framesCont
     D3D11_TEXTURE2D_DESC textureDesc;
     d3d11vaFramesContext->texture_infos->texture->GetDesc(&textureDesc);
     m_TextureFormat = textureDesc.Format;
-
-    // Create our fixed vertex buffer for video rendering
-    {
-        // Scale video to the window size while preserving aspect ratio
-        SDL_Rect src, dst;
-        src.x = src.y = 0;
-        src.w = m_DecoderParams.width;
-        src.h = m_DecoderParams.height;
-        dst.x = dst.y = 0;
-        dst.w = m_DisplayWidth;
-        dst.h = m_DisplayHeight;
-        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-        // Convert screen space to normalized device coordinates
-        SDL_FRect renderRect;
-        StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, m_DisplayWidth, m_DisplayHeight);
-
-        // Don't sample from the alignment padding area
-        float uMax = (float)m_DecoderParams.width / framesContext->width;
-        float vMax = (float)m_DecoderParams.height / framesContext->height;
-
-        VERTEX verts[] =
-        {
-            {renderRect.x, renderRect.y, 0, vMax},
-            {renderRect.x, renderRect.y+renderRect.h, 0, 0},
-            {renderRect.x+renderRect.w, renderRect.y, uMax, vMax},
-            {renderRect.x+renderRect.w, renderRect.y+renderRect.h, uMax, 0},
-        };
-
-        D3D11_BUFFER_DESC vbDesc = {};
-        vbDesc.ByteWidth = sizeof(verts);
-        vbDesc.Usage = D3D11_USAGE_IMMUTABLE;
-        vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        vbDesc.CPUAccessFlags = 0;
-        vbDesc.MiscFlags = 0;
-        vbDesc.StructureByteStride = sizeof(VERTEX);
-
-        D3D11_SUBRESOURCE_DATA vbData = {};
-        vbData.pSysMem = verts;
-
-        HRESULT hr = m_Device->CreateBuffer(&vbDesc, &vbData, &m_VideoVertexBuffer);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "ID3D11Device::CreateBuffer() failed: %x",
-                         hr);
-            return false;
-        }
-    }
 
     if (m_BindDecoderOutputTextures) {
         // Create SRVs for all textures in the decoder pool
