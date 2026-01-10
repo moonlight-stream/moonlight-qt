@@ -67,9 +67,11 @@ private:
     Microsoft::WRL::ComPtr<ID3D11BlendState> m_OverlayBlendState;
 
     SupportedFenceType m_FenceType;
-    Microsoft::WRL::ComPtr<ID3D11Fence> m_Fence;
-    Microsoft::WRL::Wrappers::Event m_FenceEvent;
-    UINT64 m_NextFenceValue;
+    Microsoft::WRL::ComPtr<ID3D11Fence> m_PreviousFrameRenderedFence;
+    Microsoft::WRL::Wrappers::Event m_PreviousFrameRenderedEvent;
+    UINT64 m_PreviousFrameRenderedFenceValue;
+    Microsoft::WRL::ComPtr<ID3D11Fence> m_DecoderShaderBindFence;
+    UINT64 m_DecoderShaderBindFenceValue;
     SDL_mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;
 
