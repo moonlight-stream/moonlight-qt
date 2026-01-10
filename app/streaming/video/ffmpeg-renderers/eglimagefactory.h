@@ -18,18 +18,7 @@ class EglImageFactory
             m_eglDestroyImageKHR(fn_eglDestroyImageKHR) {}
 
         EglImageContext(const EglImageContext& other) = delete;
-
-        EglImageContext(EglImageContext&& other) {
-            // Copy the basic EGL state
-            m_Display = other.m_Display;
-            m_eglDestroyImage = other.m_eglDestroyImage;
-            m_eglDestroyImageKHR = other.m_eglDestroyImageKHR;
-
-            // Transfer ownership of the EGLImages
-            memcpy(images, other.images, other.count * sizeof(EGLImage));
-            count = other.count;
-            other.count = 0;
-        }
+        EglImageContext(EglImageContext&& other) = delete;
 
         ~EglImageContext() {
             for (ssize_t i = 0; i < count; ++i) {
@@ -64,14 +53,13 @@ public:
     ssize_t exportVAImages(AVFrame* frame, uint32_t exportFlags, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]);
 #endif
 
-    void freeEGLImages();
-
     bool supportsImportingFormat(EGLDisplay dpy, EGLint format);
     bool supportsImportingModifier(EGLDisplay dpy, EGLint format, EGLuint64KHR modifier);
 
 private:
+    static void freeEglImageContextBuffer(void* opaque, uint8_t* data);
+
     IFFmpegRenderer* m_Renderer;
-    std::optional<EglImageContext> m_LastImageCtx;
     bool m_EGLExtDmaBuf;
     PFNEGLCREATEIMAGEPROC m_eglCreateImage;
     PFNEGLDESTROYIMAGEPROC m_eglDestroyImage;

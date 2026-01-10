@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component type="desktop">
+<component type="desktop-application">
 	<id>com.moonlight_stream.Moonlight</id>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-3.0+</project_license>
@@ -23,13 +23,30 @@
 	<url type="homepage">https://moonlight-stream.org</url>
 	<url type="bugtracker">https://github.com/moonlight-stream/moonlight-qt/issues</url>
 	<url type="help">https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide</url>
+	<url type="vcs-browser">https://github.com/moonlight-stream/moonlight-qt</url>
+	<developer id="org.moonlight-stream">
+		<name>Moonlight Game Streaming Team</name>
+	</developer>
+	<update_contact>cameron@moonlight-stream.org</update_contact>
+	<launchable type="desktop-id">com.moonlight_stream.Moonlight.desktop</launchable>
+	<provides>
+		<binary>moonlight</binary>
+	</provides>
+	<content_rating type="oars-1.1" />	
+
+	<branding>
+		<color type="primary" scheme_preference="light">#710085</color>
+		<color type="primary" scheme_preference="dark">#55285d</color>
+	</branding>
 
 	<screenshots>
 		<screenshot type="default">
 			<image>https://moonlight-stream.org/appstream_resources/moonlight_screenshot_1.png</image>
+			<caption>Host selection page showing local PCs</caption>
 		</screenshot>
 		<screenshot>
 			<image>https://moonlight-stream.org/appstream_resources/moonlight_screenshot_2.png</image>
+			<caption>Settings page displaying streaming options</caption>
 		</screenshot>
 	</screenshots>
 
@@ -816,19 +833,4 @@
 		</release>
 	</releases>
 
-	<categories>
-		<category>Game</category>
-		<category>Qt</category>
-	</categories>
-
-	<developer_name>Moonlight Game Streaming Team</developer_name>
-	<update_contact>cameron@moonlight-stream.org</update_contact>
-
-	<launchable type="desktop-id">com.moonlight_stream.Moonlight.desktop</launchable>
-
-	<provides>
-		<binary>moonlight</binary>
-	</provides>
-
-	<content_rating type="oars-1.0" />
 </component>

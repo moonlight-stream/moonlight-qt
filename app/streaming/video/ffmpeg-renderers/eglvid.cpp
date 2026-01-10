@@ -65,7 +65,6 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_VideoVAO(0),
         m_BlockingSwapBuffers(false),
         m_LastRenderSync(EGL_NO_SYNC),
-        m_LastFrame(av_frame_alloc()),
         m_glEGLImageTargetTexture2DOES(nullptr),
         m_glGenVertexArraysOES(nullptr),
         m_glBindVertexArrayOES(nullptr),
@@ -116,8 +115,6 @@ EGLRenderer::~EGLRenderer()
     if (m_DummyRenderer) {
         SDL_DestroyRenderer(m_DummyRenderer);
     }
-
-    av_frame_free(&m_LastFrame);
 }
 
 bool EGLRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
@@ -733,18 +730,17 @@ void EGLRenderer::waitToRender()
     // See comment in renderFrame() for more details.
     SDL_GL_MakeCurrent(m_Window, m_Context);
 
-    // Wait for the previous buffer swap to finish before picking the next frame to render.
-    // This way we'll get the latest available frame and render it without blocking.
-    if (m_BlockingSwapBuffers) {
-        // Try to use eglClientWaitSync() if the driver supports it
-        if (m_LastRenderSync != EGL_NO_SYNC) {
-            SDL_assert(m_eglClientWaitSync != nullptr);
-            m_eglClientWaitSync(m_EGLDisplay, m_LastRenderSync, EGL_SYNC_FLUSH_COMMANDS_BIT, EGL_FOREVER);
-        }
-        else {
-            // Use glFinish() if fences aren't available
-            glFinish();
-        }
+    // Our fence will wait until the previous frame is drawn (non-blocking swapbuffers case)
+    // or until the new back buffer is available (blocking swapbuffers case)
+    if (m_LastRenderSync != EGL_NO_SYNC) {
+        SDL_assert(m_eglClientWaitSync != nullptr);
+        m_eglClientWaitSync(m_EGLDisplay, m_LastRenderSync, EGL_SYNC_FLUSH_COMMANDS_BIT, EGL_FOREVER);
+        m_eglDestroySync(m_EGLDisplay, m_LastRenderSync);
+        m_LastRenderSync = EGL_NO_SYNC;
+    }
+    else {
+        // Use glFinish() if fences aren't available
+        glFinish();
     }
 }
 
@@ -847,6 +843,22 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     glDrawArrays(GL_TRIANGLES, 0, 6);
     m_glBindVertexArrayOES(0);
 
+    if (!m_BlockingSwapBuffers) {
+        // If we aren't going to wait on the full swap buffers operation,
+        // insert a fence now to let us know when the memory backing our
+        // video frame is safe for Pacer to free
+        if (m_eglClientWaitSync != nullptr) {
+            SDL_assert(m_LastRenderSync == EGL_NO_SYNC);
+            if (m_eglCreateSync != nullptr) {
+                m_LastRenderSync = m_eglCreateSync(m_EGLDisplay, EGL_SYNC_FENCE, nullptr);
+            }
+            else {
+                SDL_assert(m_eglCreateSyncKHR != nullptr);
+                m_LastRenderSync = m_eglCreateSyncKHR(m_EGLDisplay, EGL_SYNC_FENCE, nullptr);
+            }
+        }
+    }
+
     // Draw overlays on top
     for (int i = 0; i < Overlay::OverlayMax; i++) {
         renderOverlay((Overlay::OverlayType)i, drawableWidth, drawableHeight);
@@ -859,17 +871,8 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         // our eglClientWaitSync() or glFinish() call in waitToRender() will not
         // return before the new buffer is actually ready for rendering.
         glClear(GL_COLOR_BUFFER_BIT);
-
-        // If we this EGL implementation supports fences, use those to delay
-        // rendering the next frame until this one is completed. If not, we'll
-        // have to just use glFinish().
         if (m_eglClientWaitSync != nullptr) {
-            // Delete the sync object from last render
-            if (m_LastRenderSync != EGL_NO_SYNC) {
-                m_eglDestroySync(m_EGLDisplay, m_LastRenderSync);
-            }
-
-            // Create a new sync object that will be signalled when the buffer swap is completed
+            SDL_assert(m_LastRenderSync == EGL_NO_SYNC);
             if (m_eglCreateSync != nullptr) {
                 m_LastRenderSync = m_eglCreateSync(m_EGLDisplay, EGL_SYNC_FENCE, nullptr);
             }
@@ -879,16 +882,6 @@ void EGLRenderer::renderFrame(AVFrame* frame)
             }
         }
     }
-
-    m_Backend->freeEGLImages();
-
-    // Free the DMA-BUF backing the last frame now that it is definitely
-    // no longer being used anymore. While the PRIME FD stays around until
-    // EGL is done with it, the memory backing it may be reused by FFmpeg
-    // before the GPU has read it. This is particularly noticeable on the
-    // RK3288-based TinkerBoard when V-Sync is disabled.
-    av_frame_unref(m_LastFrame);
-    av_frame_move_ref(m_LastFrame, frame);
 }
 
 bool EGLRenderer::testRenderFrame(AVFrame* frame)
@@ -905,6 +898,5 @@ bool EGLRenderer::testRenderFrame(AVFrame* frame)
         return false;
     }
 
-    m_Backend->freeEGLImages();
     return true;
 }

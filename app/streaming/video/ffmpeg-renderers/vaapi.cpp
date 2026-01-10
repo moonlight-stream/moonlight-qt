@@ -1102,15 +1102,15 @@ VAAPIRenderer::initializeEGL(EGLDisplay dpy,
     }
     else if (!m_EglImageFactory.supportsImportingModifier(dpy, descriptor.layers[0].drm_format, descriptor.objects[0].drm_format_modifier)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Exporting separate layers due to lack of support for importing format and modifier: %08x %016" PRIx64,
-                    descriptor.layers[0].drm_format,
+                    "Exporting separate layers due to lack of support for importing format and modifier: " FOURCC_FMT " %016" PRIx64,
+                    FOURCC_FMT_ARGS(descriptor.layers[0].drm_format),
                     descriptor.objects[0].drm_format_modifier);
         m_EglExportType = EglExportType::Separate;
     }
     else {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Exporting composed layers with format and modifier: %08x %016" PRIx64,
-                    descriptor.layers[0].drm_format,
+                    "Exporting composed layers with format and modifier: " FOURCC_FMT " %016" PRIx64,
+                    FOURCC_FMT_ARGS(descriptor.layers[0].drm_format),
                     descriptor.objects[0].drm_format_modifier);
         m_EglExportType = EglExportType::Composed;
     }
@@ -1126,13 +1126,14 @@ VAAPIRenderer::initializeEGL(EGLDisplay dpy,
         for (uint32_t i = 0; i < descriptor.num_layers; i++) {
             if (!m_EglImageFactory.supportsImportingFormat(dpy, descriptor.layers[i].drm_format)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "EGL implementation lacks support for importing format: %08x", descriptor.layers[0].drm_format);
+                            "EGL implementation lacks support for importing format: " FOURCC_FMT,
+                            FOURCC_FMT_ARGS(descriptor.layers[i].drm_format));
             }
             else if (!m_EglImageFactory.supportsImportingModifier(dpy, descriptor.layers[i].drm_format,
                                                                   descriptor.objects[descriptor.layers[i].object_index[0]].drm_format_modifier)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "EGL implementation lacks support for importing format and modifier: %08x %016" PRIx64,
-                            descriptor.layers[i].drm_format,
+                            "EGL implementation lacks support for importing format and modifier: " FOURCC_FMT " %016" PRIx64,
+                            FOURCC_FMT_ARGS(descriptor.layers[i].drm_format),
                             descriptor.objects[descriptor.layers[i].object_index[0]].drm_format_modifier);
             }
         }
@@ -1159,11 +1160,6 @@ VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     }
 
     return m_EglImageFactory.exportVAImages(frame, exportFlags, dpy, images);
-}
-
-void
-VAAPIRenderer::freeEGLImages() {
-    m_EglImageFactory.freeEGLImages();
 }
 
 #endif
@@ -1223,14 +1219,28 @@ bool VAAPIRenderer::mapDrmPrimeFrame(AVFrame* frame, AVDRMFrameDescriptor* drmDe
         }
     }
 
+    // Add a buffer reference to the frame to automatically close the
+    // mapped FDs when the frame is no longer referenced.
+    frame->opaque_ref = av_buffer_create((uint8_t*)(new AVDRMFrameDescriptor(*drmDescriptor)),
+                                         sizeof(*drmDescriptor),
+                                         freeDrmDescriptorBuffer,
+                                         frame->opaque_ref, // Chain any existing buffer
+                                         AV_BUFFER_FLAG_READONLY);
+
     return true;
 }
 
-void VAAPIRenderer::unmapDrmPrimeFrame(AVDRMFrameDescriptor* drmDescriptor)
+void VAAPIRenderer::freeDrmDescriptorBuffer(void* opaque, uint8_t* data)
 {
+    auto drmDescriptor = (AVDRMFrameDescriptor*)data;
+
     for (int i = 0; i < drmDescriptor->nb_objects; i++) {
         close(drmDescriptor->objects[i].fd);
     }
+    delete drmDescriptor;
+
+    // Free any chained buffers
+    av_buffer_unref((AVBufferRef**)&opaque);
 }
 
 #endif

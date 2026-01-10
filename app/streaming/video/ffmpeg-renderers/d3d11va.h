@@ -10,6 +10,7 @@ extern "C" {
 }
 
 #include <wrl/client.h>
+#include <wrl/wrappers/corewrappers.h>
 
 class D3D11VARenderer : public IFFmpegRenderer
 {
@@ -21,6 +22,7 @@ public:
     virtual bool prepareDecoderContextInGetFormat(AVCodecContext* context, AVPixelFormat pixelFormat) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
+    virtual void waitToRender() override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
     virtual InitFailureReason getInitFailureReason() override;
@@ -65,9 +67,11 @@ private:
     Microsoft::WRL::ComPtr<ID3D11BlendState> m_OverlayBlendState;
 
     SupportedFenceType m_FenceType;
+    Microsoft::WRL::ComPtr<ID3D11Fence> m_Fence;
+    Microsoft::WRL::Wrappers::Event m_FenceEvent;
+    UINT64 m_NextFenceValue;
     SDL_mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;
-    bool m_UseFenceHack;
 
     DECODER_PARAMETERS m_DecoderParams;
     int m_TextureAlignment;

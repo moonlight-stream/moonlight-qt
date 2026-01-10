@@ -7,14 +7,12 @@ class SystemProperties : public QObject
 {
     Q_OBJECT
 
-    friend class QuerySdlVideoThread;
-    friend class RefreshDisplaysThread;
+    friend class SystemPropertyQueryThread;
 
 public:
     SystemProperties();
 
-    Q_PROPERTY(bool hasHardwareAcceleration MEMBER hasHardwareAcceleration CONSTANT)
-    Q_PROPERTY(bool rendererAlwaysFullScreen MEMBER rendererAlwaysFullScreen CONSTANT)
+    // Static properties queried synchronously during the constructor
     Q_PROPERTY(bool isRunningWayland MEMBER isRunningWayland CONSTANT)
     Q_PROPERTY(bool isRunningXWayland MEMBER isRunningXWayland CONSTANT)
     Q_PROPERTY(bool isWow64 MEMBER isWow64 CONSTANT)
@@ -22,11 +20,15 @@ public:
     Q_PROPERTY(bool hasDesktopEnvironment MEMBER hasDesktopEnvironment CONSTANT)
     Q_PROPERTY(bool hasBrowser MEMBER hasBrowser CONSTANT)
     Q_PROPERTY(bool hasDiscordIntegration MEMBER hasDiscordIntegration CONSTANT)
-    Q_PROPERTY(QString unmappedGamepads MEMBER unmappedGamepads NOTIFY unmappedGamepadsChanged)
-    Q_PROPERTY(QSize maximumResolution MEMBER maximumResolution CONSTANT)
-    Q_PROPERTY(QString versionString MEMBER versionString CONSTANT)
-    Q_PROPERTY(bool supportsHdr MEMBER supportsHdr CONSTANT)
     Q_PROPERTY(bool usesMaterial3Theme MEMBER usesMaterial3Theme CONSTANT)
+    Q_PROPERTY(QString versionString MEMBER versionString CONSTANT)
+
+    // Properties queried asynchronously
+    Q_PROPERTY(bool hasHardwareAcceleration MEMBER hasHardwareAcceleration NOTIFY hasHardwareAccelerationChanged)
+    Q_PROPERTY(bool rendererAlwaysFullScreen MEMBER rendererAlwaysFullScreen NOTIFY rendererAlwaysFullScreenChanged)
+    Q_PROPERTY(QString unmappedGamepads MEMBER unmappedGamepads NOTIFY unmappedGamepadsChanged)
+    Q_PROPERTY(QSize maximumResolution MEMBER maximumResolution NOTIFY maximumResolutionChanged)
+    Q_PROPERTY(bool supportsHdr MEMBER supportsHdr NOTIFY supportsHdrChanged)
 
     Q_INVOKABLE void refreshDisplays();
     Q_INVOKABLE QRect getNativeResolution(int displayIndex);
@@ -35,12 +37,18 @@ public:
 
 signals:
     void unmappedGamepadsChanged();
+    void hasHardwareAccelerationChanged();
+    void rendererAlwaysFullScreenChanged();
+    void maximumResolutionChanged();
+    void supportsHdrChanged();
+
+private slots:
+    void updateDecoderProperties(bool hasHardwareAcceleration, bool rendererAlwaysFullScreen, QSize maximumResolution, bool supportsHdr);
 
 private:
-    void querySdlVideoInfo();
+    QThread* systemPropertyQueryThread;
 
-    bool hasHardwareAcceleration;
-    bool rendererAlwaysFullScreen;
+    // Properties set by the constructor
     bool isRunningWayland;
     bool isRunningXWayland;
     bool isWow64;
@@ -49,12 +57,18 @@ private:
     bool hasBrowser;
     bool hasDiscordIntegration;
     QString unmappedGamepads;
+    QString versionString;
+    bool usesMaterial3Theme;
+
+    // Properties set by updateDecoderProperties()
+    bool hasHardwareAcceleration;
+    bool rendererAlwaysFullScreen;
     QSize maximumResolution;
+    bool supportsHdr;
+
+    // Properties set by refreshDisplays()
     QList<QRect> monitorNativeResolutions;
     QList<QRect> monitorSafeAreaResolutions;
     QList<int> monitorRefreshRates;
-    QString versionString;
-    bool supportsHdr;
-    bool usesMaterial3Theme;
 };
 

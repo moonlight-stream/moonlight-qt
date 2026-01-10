@@ -12,23 +12,6 @@ extern "C" {
 }
 
 #include <libdrm/drm_fourcc.h>
-#ifdef __linux__
-#include <linux/dma-buf.h>
-#else //bundle on BSDs
-typedef uint64_t __u64;
-struct dma_buf_sync {
-    __u64 flags;
-};
-#define DMA_BUF_SYNC_READ      (1 << 0)
-#define DMA_BUF_SYNC_WRITE     (2 << 0)
-#define DMA_BUF_SYNC_RW        (DMA_BUF_SYNC_READ | DMA_BUF_SYNC_WRITE)
-#define DMA_BUF_SYNC_START     (0 << 2)
-#define DMA_BUF_SYNC_END       (1 << 2)
-#define DMA_BUF_SYNC_VALID_FLAGS_MASK \
-    (DMA_BUF_SYNC_RW | DMA_BUF_SYNC_END)
-#define DMA_BUF_BASE		'b'
-#define DMA_BUF_IOCTL_SYNC	_IOW(DMA_BUF_BASE, 0, struct dma_buf_sync)
-#endif
 
 // Special Rockchip type
 #ifndef DRM_FORMAT_NA12
@@ -70,12 +53,13 @@ struct dma_buf_sync {
 #define DRM_FORMAT_XYUV8888 fourcc_code('X', 'Y', 'U', 'V')
 #endif
 
-// Values for "Colorspace" connector property
-#ifndef DRM_MODE_COLORIMETRY_DEFAULT
-#define DRM_MODE_COLORIMETRY_DEFAULT     0
+// Upstreamed modifier macros (5.16+)
+#ifndef fourcc_mod_get_vendor
+#define fourcc_mod_get_vendor(modifier) (((modifier) >> 56) & 0xff)
 #endif
-#ifndef DRM_MODE_COLORIMETRY_BT2020_RGB
-#define DRM_MODE_COLORIMETRY_BT2020_RGB  9
+#ifndef fourcc_mod_is_vendor
+#define fourcc_mod_is_vendor(modifier, vendor) \
+    (fourcc_mod_get_vendor(modifier) == DRM_FORMAT_MOD_VENDOR_## vendor)
 #endif
 
 #include <unistd.h>
@@ -159,19 +143,12 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_HwContext(nullptr),
       m_DrmFd(-1),
       m_DrmIsMaster(false),
+      m_DrmStateModified(false),
+      m_DrmSupportsModifiers(false),
       m_MustCloseDrmFd(false),
       m_SupportsDirectRendering(false),
       m_VideoFormat(0),
-      m_ConnectorId(0),
-      m_EncoderId(0),
-      m_CrtcId(0),
-      m_PlaneId(0),
-      m_CurrentFbId(0),
-      m_Plane(nullptr),
-      m_ColorEncodingProp(nullptr),
-      m_ColorRangeProp(nullptr),
-      m_HdrOutputMetadataProp(nullptr),
-      m_ColorspaceProp(nullptr),
+      m_OverlayRects{},
       m_Version(nullptr),
       m_HdrOutputMetadataBlobId(0),
       m_OutputRect{},
@@ -186,8 +163,43 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
 
 DrmRenderer::~DrmRenderer()
 {
-    // Ensure we're out of HDR mode
-    setHdrMode(false);
+    if (m_DrmStateModified) {
+        // Ensure we're out of HDR mode
+        setHdrMode(false);
+
+        // Deactivate all planes
+        m_PropSetter.disablePlane(m_VideoPlane);
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            m_PropSetter.disablePlane(m_OverlayPlanes[i]);
+        }
+
+        // Revert our changes from prepareToRender()
+        if (auto prop = m_Connector.property("content type")) {
+            m_PropSetter.set(*prop, prop->initialValue());
+        }
+        if (auto prop = m_Crtc.property("VRR_ENABLED")) {
+            m_PropSetter.set(*prop, prop->initialValue());
+        }
+        if (auto prop = m_Connector.property("max bpc")) {
+            m_PropSetter.set(*prop, prop->initialValue());
+        }
+        if (auto zpos = m_VideoPlane.property("zpos"); zpos && !zpos->isImmutable()) {
+            m_PropSetter.set(*zpos, zpos->initialValue());
+        }
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            if (auto zpos = m_OverlayPlanes[i].property("zpos"); zpos && !zpos->isImmutable()) {
+                m_PropSetter.set(*zpos, zpos->initialValue());
+            }
+        }
+        for (auto &plane : m_UnusedActivePlanes) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Restoring previously active plane: %u",
+                        plane.second.objectId());
+            m_PropSetter.restoreToInitial(plane.second);
+        }
+
+        m_PropSetter.apply();
+    }
 
     for (int i = 0; i < k_SwFrameCount; i++) {
         if (m_SwFrame[i].primeFd) {
@@ -205,32 +217,8 @@ DrmRenderer::~DrmRenderer()
         }
     }
 
-    if (m_CurrentFbId != 0) {
-        drmModeRmFB(m_DrmFd, m_CurrentFbId);
-    }
-
     if (m_HdrOutputMetadataBlobId != 0) {
         drmModeDestroyPropertyBlob(m_DrmFd, m_HdrOutputMetadataBlobId);
-    }
-
-    if (m_ColorEncodingProp != nullptr) {
-        drmModeFreeProperty(m_ColorEncodingProp);
-    }
-
-    if (m_ColorRangeProp != nullptr) {
-        drmModeFreeProperty(m_ColorRangeProp);
-    }
-
-    if (m_HdrOutputMetadataProp != nullptr) {
-        drmModeFreeProperty(m_HdrOutputMetadataProp);
-    }
-
-    if (m_ColorspaceProp != nullptr) {
-        drmModeFreeProperty(m_ColorspaceProp);
-    }
-
-    if (m_Plane != nullptr) {
-        drmModeFreePlane(m_Plane);
     }
 
     if (m_Version != nullptr) {
@@ -325,9 +313,16 @@ void DrmRenderer::prepareToRender()
                      SDL_GetError());
     }
 
+    // Set our DRM client caps again. SDL 3.4+ will disable these
+    // when dropping master if it's using atomic itself.
+    drmSetClientCap(m_DrmFd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
+    if (m_PropSetter.isAtomic()) {
+        drmSetClientCap(m_DrmFd, DRM_CLIENT_CAP_ATOMIC, 1);
+    }
+
     // Set the output rect to match the new CRTC size after modesetting
     m_OutputRect.x = m_OutputRect.y = 0;
-    drmModeCrtc* crtc = drmModeGetCrtc(m_DrmFd, m_CrtcId);
+    drmModeCrtc* crtc = drmModeGetCrtc(m_DrmFd, m_Crtc.objectId());
     if (crtc != nullptr) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "CRTC size after modesetting: %ux%u",
@@ -348,24 +343,80 @@ void DrmRenderer::prepareToRender()
                     m_OutputRect.w,
                     m_OutputRect.h);
     }
-}
 
-bool DrmRenderer::getPropertyByName(drmModeObjectPropertiesPtr props, const char* name, uint64_t *value) {
-    for (uint32_t j = 0; j < props->count_props; j++) {
-        drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
-        if (prop != nullptr) {
-            if (!strcmp(prop->name, name)) {
-                *value = props->prop_values[j];
-                drmModeFreeProperty(prop);
-                return true;
-            }
-            else {
-                drmModeFreeProperty(prop);
+    // Set HDMI content type to hopefully enable ALLM
+    if (auto prop = m_Connector.property("content type")) {
+        QString contentType = qgetenv("DRM_CONTENT_TYPE");
+        if (contentType.isEmpty()) {
+            contentType = "Game";
+        }
+        m_PropSetter.set(*prop, contentType.toStdString());
+    }
+
+    // Enable VRR if V-sync is off by default
+    if (auto prop = m_Crtc.property("VRR_ENABLED")) {
+        bool enableVrr;
+        if (!Utils::getEnvironmentVariableOverride("DRM_ENABLE_VRR", &enableVrr)) {
+            enableVrr = !m_Vsync;
+        }
+
+        auto range = prop->range();
+        m_PropSetter.set(*prop, std::clamp<uint64_t>(enableVrr ? 1 : 0, range.first, range.second));
+    }
+
+    if (auto prop = m_Connector.property("max bpc")) {
+        int maxBpc;
+
+        // By default, set max bpc to 10 if we're streaming 10-bit content and it's currently
+        // less than that value. If it's higher than 10 or we're not streaming 10-bit content,
+        // we leave it alone.
+        if (!Utils::getEnvironmentVariableOverride("DRM_MAX_BPC", &maxBpc)) {
+            maxBpc = (prop->initialValue() < 10 && (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT)) ? 10 : 0;
+        }
+
+        if (maxBpc > 0) {
+            auto range = prop->range();
+            m_PropSetter.set(*prop, std::clamp<uint64_t>(maxBpc, range.first, range.second));
+        }
+    }
+
+    // Adjust zpos values if needed
+    if (auto zpos = m_VideoPlane.property("zpos"); zpos && m_VideoPlaneZpos != zpos->initialValue()) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Moving video plane to zpos: %" PRIu64,
+                    m_VideoPlaneZpos);
+        m_PropSetter.set(*zpos, m_VideoPlaneZpos, false);
+    }
+    for (int i = 0; i < Overlay::OverlayMax; i++) {
+        if (auto zpos = m_OverlayPlanes[i].property("zpos")) {
+            // This may result in multiple overlays having the same zpos, which
+            // means undefined ordering between the planes, but that's fine.
+            // The planes should never overlap anyway.
+            if (!zpos->isImmutable() && zpos->initialValue() <= m_VideoPlaneZpos) {
+                auto zposRange = zpos->range();
+                uint64_t newZpos = std::clamp(m_VideoPlaneZpos + 1, zposRange.first, zposRange.second);
+
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Moving overlay plane %u to zpos: %" PRIu64,
+                            i,
+                            newZpos);
+                m_PropSetter.set(*zpos, newZpos, false);
             }
         }
     }
 
-    return false;
+    // Disable all other active planes in atomic mode
+    for (auto &plane : m_UnusedActivePlanes) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Disabling unused plane: %u",
+                    plane.second.objectId());
+        m_PropSetter.disablePlane(plane.second);
+    }
+
+    m_PropSetter.apply();
+
+    // We've now changed state that must be restored
+    m_DrmStateModified = true;
 }
 
 bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
@@ -374,6 +425,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
     m_Window = params->window;
     m_VideoFormat = params->videoFormat;
+    m_Vsync = params->enableVsync;
     m_SwFrameMapper.setVideoFormat(params->videoFormat);
 
     // Try to get the FD that we're sharing with SDL
@@ -490,21 +542,19 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // Look for a connected connector and get the associated encoder
-    m_ConnectorId = 0;
-    m_EncoderId = 0;
-    for (i = 0; i < resources->count_connectors && m_EncoderId == 0; i++) {
+    for (i = 0; i < resources->count_connectors && !m_Encoder.isValid(); i++) {
         drmModeConnector* connector = drmModeGetConnector(m_DrmFd, resources->connectors[i]);
         if (connector != nullptr) {
             if (connector->connection == DRM_MODE_CONNECTED && connector->count_modes > 0) {
-                m_ConnectorId = resources->connectors[i];
-                m_EncoderId = connector->encoder_id;
+                m_Connector.load(m_DrmFd, resources->connectors[i], DRM_MODE_OBJECT_CONNECTOR);
+                m_Encoder.load(m_DrmFd, connector->encoder_id, DRM_MODE_OBJECT_ENCODER);
             }
 
             drmModeFreeConnector(connector);
         }
     }
 
-    if (m_EncoderId == 0) {
+    if (!m_Encoder.isValid()) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "No connected displays found!");
         drmModeFreeResources(resources);
@@ -512,19 +562,18 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // Now find the CRTC from the encoder
-    m_CrtcId = 0;
-    for (i = 0; i < resources->count_encoders && m_CrtcId == 0; i++) {
+    for (i = 0; i < resources->count_encoders && !m_Crtc.isValid(); i++) {
         drmModeEncoder* encoder = drmModeGetEncoder(m_DrmFd, resources->encoders[i]);
         if (encoder != nullptr) {
-            if (encoder->encoder_id == m_EncoderId) {
-                m_CrtcId = encoder->crtc_id;
+            if (encoder->encoder_id == m_Encoder.objectId()) {
+                m_Crtc.load(m_DrmFd, encoder->crtc_id, DRM_MODE_OBJECT_CRTC);
             }
 
             drmModeFreeEncoder(encoder);
         }
     }
 
-    if (m_CrtcId == 0) {
+    if (!m_Crtc.isValid()) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "DRM encoder not found!");
         drmModeFreeResources(resources);
@@ -533,7 +582,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
     int crtcIndex = -1;
     for (int i = 0; i < resources->count_crtcs; i++) {
-        if (resources->crtcs[i] == m_CrtcId) {
+        if (resources->crtcs[i] == m_Crtc.objectId()) {
             crtcIndex = i;
             break;
         }
@@ -547,7 +596,19 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         return DIRECT_RENDERING_INIT_FAILED;
     }
 
-    drmSetClientCap(m_DrmFd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
+    if (drmSetClientCap(m_DrmFd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Universal planes are not supported!");
+        return DIRECT_RENDERING_INIT_FAILED;
+    }
+
+    bool atomic;
+    if (!Utils::getEnvironmentVariableOverride("DRM_ATOMIC", &atomic)) {
+        // Use atomic by default if available
+        atomic = true;
+    }
+
+    m_PropSetter.initialize(m_DrmFd, atomic, !params->enableVsync);
 
     drmModePlaneRes* planeRes = drmModeGetPlaneResources(m_DrmFd);
     if (planeRes == nullptr) {
@@ -558,29 +619,30 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // Find the active plane (if any) on this CRTC with the highest zpos.
-    // We'll need to use a plane with a equal or greater zpos to be visible.
-    uint64_t maxActiveZpos = qEnvironmentVariableIntValue("DRM_MIN_PLANE_ZPOS");
+    // We'll need to use a plane with a equal or greater zpos to be visible,
+    // or we'll disable the active planes if we're in atomic mode.
+    std::set<uint64_t> activePlanesZpos;
     for (uint32_t i = 0; i < planeRes->count_planes; i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
         if (plane != nullptr) {
-            if (plane->crtc_id == m_CrtcId) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Plane %u is active on CRTC %u",
-                            plane->plane_id,
-                            m_CrtcId);
+            DrmPropertyMap props { m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE };
 
-                drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
-                if (props != nullptr) {
-                    // Don't consider cursor planes when searching for the highest active zpos
-                    uint64_t type;
-                    if (getPropertyByName(props, "type", &type) && (type == DRM_PLANE_TYPE_PRIMARY || type == DRM_PLANE_TYPE_OVERLAY)) {
-                        uint64_t zPos;
-                        if (getPropertyByName(props, "zpos", &zPos) && zPos > maxActiveZpos) {
-                            maxActiveZpos = zPos;
-                        }
+            if (plane->crtc_id == m_Crtc.objectId()) {
+                // Don't consider cursor planes when searching for the highest active zpos
+                uint64_t type = props.property("type")->initialValue();
+                if (type == DRM_PLANE_TYPE_PRIMARY || type == DRM_PLANE_TYPE_OVERLAY) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Plane %u is active on CRTC %u",
+                                plane->plane_id,
+                                plane->crtc_id);
+
+                    // We can only restore state of planes on atomic
+                    if (m_PropSetter.isAtomic()) {
+                        m_UnusedActivePlanes.try_emplace(planeRes->planes[i], m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
                     }
-
-                    drmModeFreeObjectProperties(props);
+                    else if (auto zpos = props.property("zpos")) {
+                        activePlanesZpos.emplace(zpos->initialValue());
+                    }
                 }
             }
 
@@ -601,12 +663,25 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         allowPrimaryPlane = strcmp(m_Version->name, "spacemit") != 0;
     }
 
-    // Find a plane with the required format to render on
+    // Some Rockchip have a device tree that defines their only overlay plane
+    // as a cursor plane, so we provide an override to allow rendering to a
+    // cursor plane if requested.
+    // https://github.com/moonlight-stream/moonlight-embedded/pull/882
+    bool allowCursorPlane;
+    if (Utils::getEnvironmentVariableOverride("DRM_ALLOW_CURSOR_PLANE", &allowCursorPlane)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using DRM_ALLOW_CURSOR_PLANE to override default plane selection logic");
+    }
+    else {
+        allowCursorPlane = false;
+    }
+
+    // Find a video plane with the required format to render on
     //
     // FIXME: We should check the actual DRM format in a real AVFrame rather
     // than just assuming it will be a certain hardcoded type like NV12 based
     // on the chosen video format.
-    for (uint32_t i = 0; i < planeRes->count_planes && !m_PlaneId; i++) {
+    for (uint32_t i = 0; i < planeRes->count_planes && !m_VideoPlane.isValid(); i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
         if (plane != nullptr) {
             // If the plane can't be used on our CRTC, don't consider it further
@@ -615,127 +690,207 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 continue;
             }
 
+            {
+                // Allow the user to override the plane selection logic
+                uint32_t userPlane;
+                if (Utils::getEnvironmentVariableOverride("DRM_VIDEO_PLANE", &userPlane) && userPlane != planeRes->planes[i]) {
+                    drmModeFreePlane(plane);
+                    continue;
+                }
+            }
+
             // We don't check plane->crtc_id here because we want to be able to reuse the primary plane
             // that may owned by Qt and in use on a CRTC prior to us taking over DRM master. When we give
             // control back to Qt, it will repopulate the plane with the FB it owns and render as normal.
 
             // Validate that the candidate plane supports our pixel format
-            m_SupportedPlaneFormats.clear();
+            m_SupportedVideoPlaneFormats.clear();
             for (uint32_t j = 0; j < plane->count_formats; j++) {
                 if (drmFormatMatchesVideoFormat(plane->formats[j], m_VideoFormat)) {
-                    m_SupportedPlaneFormats.emplace(plane->formats[j]);
+                    m_SupportedVideoPlaneFormats.emplace(plane->formats[j]);
                 }
             }
 
-            if (m_SupportedPlaneFormats.empty()) {
+            if (m_SupportedVideoPlaneFormats.empty()) {
                 drmModeFreePlane(plane);
                 continue;
             }
 
-            drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
-            if (props != nullptr) {
-                uint64_t type;
-                uint64_t zPos;
+            // Check if the plane is one that we're allowed to use
+            DrmPropertyMap props { m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE };
+            if (auto type = props.property("type");
+                type->initialValue() != DRM_PLANE_TYPE_OVERLAY &&
+                (type->initialValue() != DRM_PLANE_TYPE_PRIMARY || !allowPrimaryPlane) &&
+                (type->initialValue() != DRM_PLANE_TYPE_CURSOR || !allowCursorPlane)) {
+                drmModeFreePlane(plane);
+                continue;
+            }
 
-                // Only consider overlay and primary (if allowed) planes as valid render targets
-                if (!getPropertyByName(props, "type", &type) ||
-                        (type != DRM_PLANE_TYPE_OVERLAY && (type != DRM_PLANE_TYPE_PRIMARY || !allowPrimaryPlane))) {
-                    drmModeFreePlane(plane);
-                }
-                // If this plane has a zpos property and it's lower (further from user) than
-                // the highest active plane we found, avoid this plane. It won't be visible.
-                //
-                // Note: zpos is not a required property, but if any plane has it, all planes must.
-                else if (getPropertyByName(props, "zpos", &zPos) && zPos < maxActiveZpos) {
-                    drmModeFreePlane(plane);
+            // If this plane has a zpos property and it's lower (further from user) than
+            // the highest active plane we found, avoid this plane unless we can adjust
+            // the zpos property to an acceptable value.
+            //
+            // Note: zpos is not a required property, but if any plane has it, all planes must.
+            auto zpos = props.property("zpos");
+            if (zpos) {
+                // If the zpos property is immutable, then we're stuck with whatever it is
+                if (zpos->isImmutable()) {
+                    if (!activePlanesZpos.empty() && zpos->initialValue() < *activePlanesZpos.crbegin()) {
+                        // This plane is too low to be visible
+                        drmModeFreePlane(plane);
+                        continue;
+                    }
+                    else {
+                        m_VideoPlaneZpos = zpos->initialValue();
+                    }
                 }
                 else {
-                    SDL_assert(!m_PlaneId);
-                    SDL_assert(!m_Plane);
+                    auto zposRange = zpos->range();
 
-                    m_PlaneId = plane->plane_id;
-                    m_Plane = plane;
+                    uint64_t lowestAcceptableZpos;
+
+                    // No active planes, so we can use the minimum zpos
+                    auto zposIt = activePlanesZpos.crbegin();
+                    if (zposIt == activePlanesZpos.crend()) {
+                        lowestAcceptableZpos = zposRange.first;
+                    }
+                    else if (*zposIt == zpos->initialValue()) {
+                        // The highest active zpos is our current plane, so try the next one
+                        if (++zposIt == activePlanesZpos.crend()) {
+                            // Our plane is the only active, so we can use the minimum zpos
+                            lowestAcceptableZpos = zposRange.first;
+                        }
+                        else {
+                            lowestAcceptableZpos = *zposIt + 1;
+                        }
+                    }
+                    else {
+                        // The highest active zpos is some other plane that isn't ours
+                        lowestAcceptableZpos = *zposIt + 1;
+                    }
+
+                    m_VideoPlaneZpos = std::clamp(lowestAcceptableZpos, zposRange.first, zposRange.second);
                 }
-
-                drmModeFreeObjectProperties(props);
             }
+            else {
+                m_VideoPlaneZpos = 0;
+            }
+
+            SDL_assert(!m_VideoPlane.isValid());
+            m_VideoPlane.load(m_DrmFd, plane->plane_id, DRM_MODE_OBJECT_PLANE);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Selected plane %u for video", plane->plane_id);
+            m_UnusedActivePlanes.erase(plane->plane_id);
+            drmModeFreePlane(plane);
+        }
+    }
+
+    if (!m_VideoPlane.isValid()) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to find suitable video plane!");
+        drmModeFreePlaneResources(planeRes);
+        return DIRECT_RENDERING_INIT_FAILED;
+    }
+
+    // Find overlay planes when using the atomic API
+    int overlayIndex = 0;
+    for (uint32_t i = 0; i < planeRes->count_planes && overlayIndex < Overlay::OverlayMax && m_PropSetter.isAtomic(); i++) {
+        drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
+        if (plane != nullptr) {
+            // If the plane can't be used on our CRTC, don't consider it further
+            if (!(plane->possible_crtcs & (1 << crtcIndex))) {
+                drmModeFreePlane(plane);
+                continue;
+            }
+
+            {
+                // Allow the user to override the plane selection logic
+                uint32_t userPlane;
+                QString optionVarName = QString("DRM_OVERLAY_PLANE%1").arg(overlayIndex);
+                if (Utils::getEnvironmentVariableOverride(optionVarName.toUtf8(), &userPlane) && userPlane != planeRes->planes[i]) {
+                    drmModeFreePlane(plane);
+                    continue;
+                }
+            }
+
+            DrmPropertyMap props { m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE };
+            // Only consider overlay or primary planes as valid targets
+            // The latter might seem strange, but some DRM devices use
+            // underlays where the YUV-compatible overlay plane resides
+            // underneath the primary plane. In this case, we will use
+            // the primary plane as an overlay plane on top of the video.
+            if (auto type = props.property("type")) {
+                if (type->initialValue() != DRM_PLANE_TYPE_OVERLAY && type->initialValue() != DRM_PLANE_TYPE_PRIMARY) {
+                    drmModeFreePlane(plane);
+                    continue;
+                }
+            }
+
+            // The overlay plane must support ARGB8888
+            bool foundFormat = false;
+            for (uint32_t j = 0; j < plane->count_formats; j++) {
+                if (plane->formats[j] == DRM_FORMAT_ARGB8888) {
+                    foundFormat = true;
+                    break;
+                }
+            }
+            if (!foundFormat) {
+                drmModeFreePlane(plane);
+                continue;
+            }
+
+            // If this plane has a zpos property and it's lower (further from user) than
+            // the highest active plane we found, avoid this plane unless we can adjust
+            // the zpos property to an acceptable value.
+            //
+            // Note: zpos is not a required property, but if any plane has it, all planes must.
+            auto zpos = props.property("zpos");
+            if (zpos) {
+                // If the zpos property is immutable, then we're stuck with whatever it is
+                if (zpos->isImmutable()) {
+                    if (zpos->initialValue() <= m_VideoPlaneZpos) {
+                        // This plane is too low to be visible
+                        drmModeFreePlane(plane);
+                        continue;
+                    }
+                }
+                else if (zpos->range().second <= m_VideoPlaneZpos) {
+                    // This plane cannot be raised high enough to be visible
+                    drmModeFreePlane(plane);
+                    continue;
+                }
+            }
+
+            // Allocate this overlay plane to the next unused overlay slot
+            SDL_assert(!m_OverlayPlanes[overlayIndex].isValid());
+            m_OverlayPlanes[overlayIndex++].load(m_DrmFd, plane->plane_id, DRM_MODE_OBJECT_PLANE);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Selected plane %u for overlay %d",
+                        plane->plane_id, overlayIndex);
+            m_UnusedActivePlanes.erase(plane->plane_id);
+            drmModeFreePlane(plane);
         }
     }
 
     drmModeFreePlaneResources(planeRes);
 
-    if (m_PlaneId == 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to find suitable primary/overlay plane!");
-        return DIRECT_RENDERING_INIT_FAILED;
+    if (!m_PropSetter.isAtomic()) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Overlays require DRM atomic support");
+    }
+    else if (overlayIndex < Overlay::OverlayMax) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Unable to find suitable overlay planes (%d of %d found)",
+                    overlayIndex,
+                    Overlay::OverlayMax);
     }
 
-    // Populate plane properties
     {
-        drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, m_PlaneId, DRM_MODE_OBJECT_PLANE);
-        if (props != nullptr) {
-            for (uint32_t j = 0; j < props->count_props; j++) {
-                drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
-                if (prop != nullptr) {
-                    if (!strcmp(prop->name, "COLOR_ENCODING")) {
-                        m_ColorEncodingProp = prop;
-                    }
-                    else if (!strcmp(prop->name, "COLOR_RANGE")) {
-                        m_ColorRangeProp = prop;
-                    }
-                    else {
-                        drmModeFreeProperty(prop);
-                    }
-                }
-            }
-
-            drmModeFreeObjectProperties(props);
+        uint64_t val;
+        if (drmGetCap(m_DrmFd, DRM_CAP_ADDFB2_MODIFIERS, &val) == 0 && val) {
+            m_DrmSupportsModifiers = true;
         }
-    }
-
-    // Populate connector properties
-    {
-        drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR);
-        if (props != nullptr) {
-            for (uint32_t j = 0; j < props->count_props; j++) {
-                drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
-                if (prop != nullptr) {
-                    if (!strcmp(prop->name, "HDR_OUTPUT_METADATA")) {
-                        m_HdrOutputMetadataProp = prop;
-                    }
-                    else if (!strcmp(prop->name, "Colorspace")) {
-                        m_ColorspaceProp = prop;
-                    }
-                    else if (!strcmp(prop->name, "max bpc") && (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT)) {
-                        if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 16) == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Enabled 48-bit HDMI Deep Color");
-                        }
-                        else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 12) == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Enabled 36-bit HDMI Deep Color");
-                        }
-                        else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 10) == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Enabled 30-bit HDMI Deep Color");
-                        }
-                        else {
-                            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                         "drmModeObjectSetProperty(%s) failed: %d",
-                                         prop->name,
-                                         errno);
-                            // Non-fatal
-                        }
-
-                        drmModeFreeProperty(prop);
-                    }
-                    else {
-                        drmModeFreeProperty(prop);
-                    }
-                }
-            }
-
-            drmModeFreeObjectProperties(props);
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "FB modifiers are unsupported. Video or overlays may display incorrectly!");
         }
     }
 
@@ -782,8 +937,8 @@ bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
             }
 
             // If we've been called after initialize(), use the actual supported plane formats
-            if (!m_SupportedPlaneFormats.empty()) {
-                return m_SupportedPlaneFormats.find(avToDrmTuple->second) != m_SupportedPlaneFormats.end();
+            if (!m_SupportedVideoPlaneFormats.empty()) {
+                return m_SupportedVideoPlaneFormats.find(avToDrmTuple->second) != m_SupportedVideoPlaneFormats.end();
             }
             else {
                 // If we've been called before initialize(), use any valid plane format for our video formats
@@ -840,25 +995,22 @@ int DrmRenderer::getRendererAttributes()
 
 void DrmRenderer::setHdrMode(bool enabled)
 {
-    if (m_ColorspaceProp != nullptr) {
-        int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
-                                           m_ColorspaceProp->prop_id,
-                                           enabled ? DRM_MODE_COLORIMETRY_BT2020_RGB : DRM_MODE_COLORIMETRY_DEFAULT);
-        if (err == 0) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Set HDMI Colorspace: %s",
-                        enabled ? "BT.2020 RGB" : "Default");
+    if (auto prop = m_Connector.property("Colorspace")) {
+        if (enabled) {
+            // Prefer BT2020_YCC to allow chroma subsampling
+            if (prop->containsValue("BT2020_YCC")) {
+                m_PropSetter.set(*prop, "BT2020_YCC");
+            }
+            else {
+                m_PropSetter.set(*prop, "BT2020_RGB");
+            }
         }
         else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "drmModeObjectSetProperty(%s) failed: %d",
-                         m_ColorspaceProp->name,
-                         errno);
-            // Non-fatal
+            m_PropSetter.set(*prop, "Default");
         }
     }
 
-    if (m_HdrOutputMetadataProp != nullptr) {
+    if (auto prop = m_Connector.property("HDR_OUTPUT_METADATA")) {
         if (m_HdrOutputMetadataBlobId != 0) {
             drmModeDestroyPropertyBlob(m_DrmFd, m_HdrOutputMetadataBlobId);
             m_HdrOutputMetadataBlobId = 0;
@@ -892,25 +1044,12 @@ void DrmRenderer::setHdrMode(bool enabled)
                 m_HdrOutputMetadataBlobId = 0;
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "drmModeCreatePropertyBlob() failed: %d",
-                             errno);
+                             err);
                 // Non-fatal
             }
         }
 
-        int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
-                                           m_HdrOutputMetadataProp->prop_id,
-                                           enabled ? m_HdrOutputMetadataBlobId : 0);
-        if (err == 0) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Set display HDR mode: %s", enabled ? "enabled" : "disabled");
-        }
-        else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "drmModeObjectSetProperty(%s) failed: %d",
-                         m_HdrOutputMetadataProp->name,
-                         errno);
-            // Non-fatal
-        }
+        m_PropSetter.set(*prop, enabled ? m_HdrOutputMetadataBlobId : 0);
     }
     else if (enabled) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -952,6 +1091,29 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         goto Exit;
     }
 
+    // If the frame size or format changed, we need to recreate the buffer
+    if (frame->width != drmFrame->width ||
+        frame->height != drmFrame->height ||
+        drmFormatTuple->second != drmFrame->format) {
+
+        if (drmFrame->primeFd) {
+            close(drmFrame->primeFd);
+            drmFrame->primeFd = 0;
+        }
+
+        if (drmFrame->mapping) {
+            munmap(drmFrame->mapping, drmFrame->size);
+            drmFrame->mapping = nullptr;
+        }
+
+        if (drmFrame->handle) {
+            struct drm_mode_destroy_dumb destroyBuf = {};
+            destroyBuf.handle = drmFrame->handle;
+            drmIoctl(m_DrmFd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+            drmFrame->handle = 0;
+        }
+    }
+
     // Create a new dumb buffer if needed
     if (!drmFrame->handle) {
         struct drm_mode_create_dumb createBuf = {};
@@ -966,7 +1128,9 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         // value of the Y component will also include the space for chroma
         // since it's all packed into a single plane.
         if (planes > 1) {
-            createBuf.height += (2 * AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h));
+            createBuf.height += (2 * AV_CEIL_RSHIFT(frame->height,
+                                                    formatDesc->log2_chroma_w +
+                                                    formatDesc->log2_chroma_h));
         }
 
         int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_CREATE_DUMB, &createBuf);
@@ -977,6 +1141,9 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
             goto Exit;
         }
 
+        drmFrame->width = frame->width;
+        drmFrame->height = frame->height;
+        drmFrame->format = drmFormatTuple->second;
         drmFrame->handle = createBuf.handle;
         drmFrame->pitch = createBuf.pitch;
         drmFrame->size = createBuf.size;
@@ -1031,18 +1198,17 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         // drivers (i915, at least) don't support multi-buffer FBs.
         mappedFrame->nb_objects = 1;
         mappedFrame->objects[0].fd = drmFrame->primeFd;
-        mappedFrame->objects[0].format_modifier = DRM_FORMAT_MOD_LINEAR;
         mappedFrame->objects[0].size = drmFrame->size;
+
+        // We use DRM_FORMAT_MOD_INVALID because we don't want modifiers to be passed
+        // in drmModeAddFB2WithModifiers() when creating an FB for a dumb buffer.
+        // Dumb buffers are already implicitly linear and don't require modifiers.
+        mappedFrame->objects[0].format_modifier = DRM_FORMAT_MOD_INVALID;
 
         mappedFrame->nb_layers = 1;
 
         auto &layer = mappedFrame->layers[0];
-        layer.format = drmFormatTuple->second;
-
-        // Prepare to write to the dumb buffer from the CPU
-        struct dma_buf_sync sync;
-        sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_WRITE;
-        drmIoctl(drmFrame->primeFd, DMA_BUF_IOCTL_SYNC, &sync);
+        layer.format = drmFrame->format;
 
         int lastPlaneSize = 0;
         for (int i = 0; i < 4; i++) {
@@ -1091,10 +1257,6 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                 lastPlaneSize = plane.pitch * planeHeight;
             }
         }
-
-        // End the CPU write to the dumb buffer
-        sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_WRITE;
-        drmIoctl(drmFrame->primeFd, DMA_BUF_IOCTL_SYNC, &sync);
     }
 
     ret = true;
@@ -1106,6 +1268,145 @@ Exit:
     }
 
     return ret;
+}
+
+bool DrmRenderer::uploadSurfaceToFb(SDL_Surface *surface, uint32_t* handle, uint32_t* fbId)
+{
+    struct drm_mode_create_dumb createBuf = {};
+    void* mapping;
+    uint32_t handles[4] = {0}, pitches[4] = {0}, offsets[4] = {0};
+
+    createBuf.width = surface->w;
+    createBuf.height = surface->h;
+    createBuf.bpp = 32;
+    int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_CREATE_DUMB, &createBuf);
+    if (err < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DRM_IOCTL_MODE_CREATE_DUMB failed: %d",
+                     errno);
+        return false;
+    }
+
+    struct drm_mode_map_dumb mapBuf = {};
+    mapBuf.handle = createBuf.handle;
+    err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_MAP_DUMB, &mapBuf);
+    if (err < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DRM_IOCTL_MODE_MAP_DUMB failed: %d",
+                     errno);
+        goto Fail;
+    }
+
+    // Raspberry Pi on kernel 6.1 defaults to an aarch64 kernel with a 32-bit userspace (and off_t).
+    // This leads to issues when DRM_IOCTL_MODE_MAP_DUMB returns a > 4GB offset. The high bits are
+    // chopped off when passed via the normal mmap() call using 32-bit off_t. We avoid this issue
+    // by explicitly calling mmap64() to ensure the 64-bit offset is never truncated.
+#if defined(__GLIBC__) && QT_POINTER_SIZE == 4
+    mapping = mmap64(nullptr, createBuf.size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
+#else
+    mapping = mmap(nullptr, createBuf.size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
+#endif
+    if (mapping == MAP_FAILED) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "mmap() failed for dumb buffer: %d",
+                     errno);
+        goto Fail;
+    }
+
+    // Convert and copy the surface pixels into the dumb buffer with premultiplied alpha
+    SDL_PremultiplyAlpha(surface->w, surface->h, surface->format->format, surface->pixels, surface->pitch,
+                         SDL_PIXELFORMAT_ARGB8888, mapping, createBuf.pitch);
+
+    munmap(mapping, createBuf.size);
+
+    // Create a FB backed by the dumb buffer
+    handles[0] = createBuf.handle;
+    pitches[0] = createBuf.pitch;
+    err = drmModeAddFB2(m_DrmFd, createBuf.width, createBuf.height,
+                        DRM_FORMAT_ARGB8888,
+                        handles, pitches, offsets, fbId, 0);
+    if (err < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "drmModeAddFB2() failed: %d",
+                     err);
+        goto Fail;
+    }
+
+    *handle = createBuf.handle;
+    return true;
+
+Fail:
+    struct drm_mode_destroy_dumb destroyBuf = {};
+    destroyBuf.handle = createBuf.handle;
+    drmIoctl(m_DrmFd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+    return false;
+}
+
+void DrmRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
+{
+    // If we are not using atomic KMS, we can't support overlays
+    if (!m_PropSetter.isAtomic()) {
+        return;
+    }
+
+    // If we don't have a plane for this overlay, we can't draw it
+    if (!m_OverlayPlanes[type].isValid()) {
+        return;
+    }
+
+    // Don't upload if the overlay is disabled
+    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        // Turn the overlay plane off when transitioning from enabled to disabled
+        if (m_OverlayRects[type].w || m_OverlayRects[type].h) {
+            m_PropSetter.disablePlane(m_OverlayPlanes[type]);
+            memset(&m_OverlayRects[type], 0, sizeof(m_OverlayRects[type]));
+        }
+
+        return;
+    }
+
+    // Upload a new overlay surface if needed
+    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+    if (newSurface != nullptr) {
+        uint32_t dumbBuffer, fbId;
+        if (!uploadSurfaceToFb(newSurface, &dumbBuffer, &fbId)) {
+            SDL_FreeSurface(newSurface);
+            return;
+        }
+
+        SDL_Rect overlayRect = {};
+
+        if (type == Overlay::OverlayStatusUpdate) {
+            // Bottom Left
+            overlayRect.x = 0;
+            overlayRect.y = m_OutputRect.h - newSurface->h;
+        }
+        else if (type == Overlay::OverlayDebug) {
+            // Top left
+            overlayRect.x = 0;
+            overlayRect.y = 0;
+        }
+
+        overlayRect.w = newSurface->w;
+        overlayRect.h = newSurface->h;
+
+        // If we changed our overlay rect, we need to reconfigure the plane
+        if (memcmp(&m_OverlayRects[type], &overlayRect, sizeof(overlayRect)) != 0) {
+            m_PropSetter.configurePlane(m_OverlayPlanes[type], m_Crtc.objectId(),
+                                        overlayRect.x, overlayRect.y, overlayRect.w, overlayRect.h,
+                                        0, 0,
+                                        newSurface->w << 16,
+                                        newSurface->h << 16);
+            memcpy(&m_OverlayRects[type], &overlayRect, sizeof(overlayRect));
+        }
+
+        // Queue the plane flip with the new FB
+        //
+        // NB: This takes ownership of the FB and dumb buffer, even on failure
+        m_PropSetter.flipPlane(m_OverlayPlanes[type], fbId, dumbBuffer);
+
+        SDL_FreeSurface(newSurface);
+    }
 }
 
 bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode)
@@ -1136,6 +1437,92 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
         drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
     }
 
+    // If we're testing, check the IN_FORMATS property or legacy plane formats
+    if (testMode) {
+        bool formatMatch = false;
+
+        uint64_t maskedModifier = drmFrame->objects[0].format_modifier;
+        if (fourcc_mod_is_vendor(maskedModifier, BROADCOM)) {
+            // Broadcom has modifiers that contain variable data, so we need to mask
+            // off the variable data because the IN_FORMATS blob contains the just
+            // the base modifier alone
+            maskedModifier = fourcc_mod_broadcom_mod(maskedModifier);
+        }
+
+        // If we have an IN_FORMATS property and the frame has DRM modifiers, use that since it supports modifiers too
+        if (auto prop = m_VideoPlane.property("IN_FORMATS"); prop && maskedModifier != DRM_FORMAT_MOD_INVALID) {
+            drmModePropertyBlobPtr blob = drmModeGetPropertyBlob(m_DrmFd, prop->initialValue());
+            if (blob) {
+                auto *header = (struct drm_format_modifier_blob *)blob->data;
+                auto *modifiers = (struct drm_format_modifier *)((char *)header + header->modifiers_offset);
+                uint32_t *formats = (uint32_t *)((char *)header + header->formats_offset);
+
+                for (uint32_t i = 0; i < header->count_modifiers; i++) {
+                    if (modifiers[i].modifier == maskedModifier) {
+                        for (uint32_t j = 0; j < header->count_formats && j < sizeof(modifiers[i].formats) * 8; j++) {
+                            if (modifiers[i].formats & (1ULL << j)) {
+                                if (formats[modifiers[i].offset + j] == drmFrame->layers[0].format) {
+                                    formatMatch = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (formatMatch) {
+                            break;
+                        }
+                        else {
+                            // Do not break for this case even though we got a modifier
+                            // match that did not appear to have our format in it.
+                            // To handle greater than 64 formats, the same modifier may
+                            // appear in the list more than once.
+                        }
+                    }
+                }
+
+                drmModeFreePropertyBlob(blob);
+            }
+            else {
+                // This should never happen since IN_FORMATS is an immutable property
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "drmModeGetPropertyBlob(IN_FORMATS) failed: %d",
+                             errno);
+            }
+        }
+        else {
+            drmModePlanePtr videoPlane = drmModeGetPlane(m_DrmFd, m_VideoPlane.objectId());
+            if (videoPlane) {
+                for (uint32_t i = 0; i < videoPlane->count_formats; i++) {
+                    if (drmFrame->layers[0].format == videoPlane->formats[i]) {
+                        formatMatch = true;
+                        break;
+                    }
+                }
+
+                drmModeFreePlane(videoPlane);
+            }
+            else {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "drmModeGetPlane() failed: %d",
+                             errno);
+            }
+        }
+
+        if (formatMatch) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Selected DRM plane supports chosen decoding format and modifier: " FOURCC_FMT " %016" PRIx64,
+                        FOURCC_FMT_ARGS(drmFrame->layers[0].format),
+                        drmFrame->objects[0].format_modifier);
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Selected DRM plane doesn't support chosen decoding format and modifier: " FOURCC_FMT " %016" PRIx64,
+                         FOURCC_FMT_ARGS(drmFrame->layers[0].format),
+                         drmFrame->objects[0].format_modifier);
+            return false;
+        }
+    }
+
     uint32_t handles[4] = {};
     uint32_t pitches[4] = {};
     uint32_t offsets[4] = {};
@@ -1154,10 +1541,6 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "drmPrimeFDToHandle() failed: %d",
                          errno);
-            if (m_DrmPrimeBackend) {
-                SDL_assert(drmFrame == &mappedFrame);
-                m_BackendRenderer->unmapDrmPrimeFrame(drmFrame);
-            }
             return false;
         }
 
@@ -1166,7 +1549,8 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
         modifiers[i] = object.format_modifier;
 
         // Pass along the modifiers to DRM if there are some in the descriptor
-        if (modifiers[i] != DRM_FORMAT_MOD_INVALID) {
+        // and the driver supports receiving modifiers on FBs
+        if (modifiers[i] != DRM_FORMAT_MOD_INVALID && m_DrmSupportsModifiers) {
             flags |= DRM_MODE_FB_MODIFIERS;
         }
     }
@@ -1178,48 +1562,14 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
                                      handles, pitches, offsets,
                                      (flags & DRM_MODE_FB_MODIFIERS) ? modifiers : NULL,
                                      newFbId, flags);
-
-    if (m_DrmPrimeBackend) {
-        SDL_assert(drmFrame == &mappedFrame);
-        m_BackendRenderer->unmapDrmPrimeFrame(drmFrame);
-    }
-
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "drmModeAddFB2[WithModifiers]() failed: %d",
-                     errno);
+                     err);
         return false;
     }
 
-    if (testMode) {
-        // Check if plane can actually be imported
-        for (uint32_t i = 0; i < m_Plane->count_formats; i++) {
-            if (drmFrame->layers[0].format == m_Plane->formats[i]) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Selected DRM plane supports chosen decoding format: %08x",
-                            drmFrame->layers[0].format);
-                return true;
-            }
-        }
-
-        // TODO: We can also check the modifier support using the IN_FORMATS property,
-        // but checking format alone is probably enough for real world cases since we're
-        // either getting linear buffers from software mapping or DMA-BUFs from the
-        // hardware decoder.
-        //
-        // Hopefully no actual hardware vendors are dumb enough to ship display hardware
-        // or drivers that lack support for the format modifiers required by their own
-        // video decoders.
-
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Selected DRM plane doesn't support chosen decoding format: %08x",
-                     drmFrame->layers[0].format);
-        drmModeRmFB(m_DrmFd, *newFbId);
-        return false;
-    }
-    else {
-        return true;
-    }
+    return true;
 }
 
 bool DrmRenderer::drmFormatMatchesVideoFormat(uint32_t drmFormat, int videoFormat)
@@ -1247,137 +1597,87 @@ bool DrmRenderer::drmFormatMatchesVideoFormat(uint32_t drmFormat, int videoForma
 
 void DrmRenderer::renderFrame(AVFrame* frame)
 {
-    int err;
-    SDL_Rect src, dst;
-
     SDL_assert(m_OutputRect.w > 0 && m_OutputRect.h > 0);
 
-    src.x = src.y = 0;
-    src.w = frame->width;
-    src.h = frame->height;
-    dst = m_OutputRect;
-
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-    // Remember the last FB object we created so we can free it
-    // when we are finished rendering this one (if successful).
-    uint32_t lastFbId = m_CurrentFbId;
-
     // Register a frame buffer object for this frame
-    if (!addFbForFrame(frame, &m_CurrentFbId, false)) {
-        m_CurrentFbId = lastFbId;
+    uint32_t fbId;
+    if (!addFbForFrame(frame, &fbId, false)) {
         return;
     }
 
     if (hasFrameFormatChanged(frame)) {
+        SDL_Rect src, dst;
+        src.x = src.y = 0;
+        src.w = frame->width;
+        src.h = frame->height;
+        dst = m_OutputRect;
+
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        // Set the video plane size and location
+        m_PropSetter.configurePlane(m_VideoPlane, m_Crtc.objectId(),
+                                    dst.x, dst.y,
+                                    dst.w, dst.h,
+                                    0, 0,
+                                    frame->width << 16,
+                                    frame->height << 16);
+
         // Set COLOR_RANGE property for the plane
-        {
+        if (auto prop = m_VideoPlane.property("COLOR_RANGE")) {
             const char* desiredValue = getDrmColorRangeValue(frame);
 
-            if (m_ColorRangeProp != nullptr && desiredValue != nullptr) {
-                int i;
-
-                for (i = 0; i < m_ColorRangeProp->count_enums; i++) {
-                    if (!strcmp(desiredValue, m_ColorRangeProp->enums[i].name)) {
-                        err = drmModeObjectSetProperty(m_DrmFd, m_PlaneId, DRM_MODE_OBJECT_PLANE,
-                                                       m_ColorRangeProp->prop_id, m_ColorRangeProp->enums[i].value);
-                        if (err == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "%s: %s",
-                                        m_ColorRangeProp->name,
-                                        desiredValue);
-                        }
-                        else {
-                            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                         "drmModeObjectSetProperty(%s) failed: %d",
-                                         m_ColorRangeProp->name,
-                                         errno);
-                            // Non-fatal
-                        }
-
-                        break;
-                    }
-                }
-
-                if (i == m_ColorRangeProp->count_enums) {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "Unable to find matching COLOR_RANGE value for '%s'. Colors may be inaccurate!",
-                                desiredValue);
-                }
+            if (prop->containsValue(desiredValue)) {
+                m_PropSetter.set(*prop, desiredValue);
             }
-            else if (desiredValue != nullptr) {
+            else {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "COLOR_RANGE property does not exist on output plane. Colors may be inaccurate!");
+                            "Unable to find matching COLOR_RANGE value for '%s'. Colors may be inaccurate!",
+                            desiredValue);
             }
         }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "COLOR_RANGE property does not exist on video plane. Colors may be inaccurate!");
+        }
+
 
         // Set COLOR_ENCODING property for the plane
-        {
+        if (auto prop = m_VideoPlane.property("COLOR_ENCODING")) {
             const char* desiredValue = getDrmColorEncodingValue(frame);
 
-            if (m_ColorEncodingProp != nullptr && desiredValue != nullptr) {
-                int i;
-
-                for (i = 0; i < m_ColorEncodingProp->count_enums; i++) {
-                    if (!strcmp(desiredValue, m_ColorEncodingProp->enums[i].name)) {
-                        err = drmModeObjectSetProperty(m_DrmFd, m_PlaneId, DRM_MODE_OBJECT_PLANE,
-                                                       m_ColorEncodingProp->prop_id, m_ColorEncodingProp->enums[i].value);
-                        if (err == 0) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "%s: %s",
-                                        m_ColorEncodingProp->name,
-                                        desiredValue);
-                        }
-                        else {
-                            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                         "drmModeObjectSetProperty(%s) failed: %d",
-                                         m_ColorEncodingProp->name,
-                                         errno);
-                            // Non-fatal
-                        }
-
-                        break;
-                    }
-                }
-
-                if (i == m_ColorEncodingProp->count_enums) {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "Unable to find matching COLOR_ENCODING value for '%s'. Colors may be inaccurate!",
-                                desiredValue);
-                }
+            if (prop->containsValue(desiredValue)) {
+                m_PropSetter.set(*prop, desiredValue);
             }
-            else if (desiredValue != nullptr) {
+            else {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "COLOR_ENCODING property does not exist on output plane. Colors may be inaccurate!");
+                            "Unable to find matching COLOR_ENCODING value for '%s'. Colors may be inaccurate!",
+                            desiredValue);
             }
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "COLOR_ENCODING property does not exist on video plane. Colors may be inaccurate!");
         }
     }
 
-    // Update the overlay
-    err = drmModeSetPlane(m_DrmFd, m_PlaneId, m_CrtcId, m_CurrentFbId, 0,
-                          dst.x, dst.y,
-                          dst.w, dst.h,
-                          0, 0,
-                          frame->width << 16,
-                          frame->height << 16);
-    if (err < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "drmModeSetPlane() failed: %d",
-                     errno);
-        drmModeRmFB(m_DrmFd, m_CurrentFbId);
-        m_CurrentFbId = lastFbId;
-        return;
-    }
+    // Update the video plane
+    //
+    // NB: This takes ownership of fbId, even on failure
+    //
+    // NB2: Pacer references the AVFrame (which also references the AVBuffers backing the frame
+    // and the opaque_ref which may store our DRM-PRIME mapping) for frames backed by DMA-BUFs in
+    // order to keep those from being reused by the decoder while they're still being scanned out.
+    m_PropSetter.flipPlane(m_VideoPlane, fbId, 0);
 
-    // Free the previous FB object which has now been superseded
-    drmModeRmFB(m_DrmFd, lastFbId);
+    // Apply pending atomic transaction (if in atomic mode)
+    m_PropSetter.apply();
 }
 
 bool DrmRenderer::testRenderFrame(AVFrame* frame) {
     uint32_t fbId;
 
     // If we don't even have a plane, we certainly can't render
-    if (!m_Plane) {
+    if (!m_VideoPlane.isValid()) {
         return false;
     }
 
@@ -1400,15 +1700,12 @@ bool DrmRenderer::isDirectRenderingSupported()
 
 int DrmRenderer::getDecoderColorspace()
 {
-    if (m_ColorEncodingProp != nullptr) {
-        // Search for a COLOR_ENCODING property that fits a value we support
-        for (int i = 0; i < m_ColorEncodingProp->count_enums; i++) {
-            if (!strcmp(m_ColorEncodingProp->enums[i].name, "ITU-R BT.601 YCbCr")) {
-                return COLORSPACE_REC_601;
-            }
-            else if (!strcmp(m_ColorEncodingProp->enums[i].name, "ITU-R BT.709 YCbCr")) {
-                return COLORSPACE_REC_709;
-            }
+    if (auto prop = m_VideoPlane.property("COLOR_ENCODING")) {
+        if (prop->containsValue("ITU-R BT.601 YCbCr")) {
+            return COLORSPACE_REC_601;
+        }
+        else if (prop->containsValue("ITU-R BT.709 YCbCr")) {
+            return COLORSPACE_REC_709;
         }
     }
 
@@ -1495,10 +1792,6 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     }
 
     return m_EglImageFactory.exportDRMImages(frame, dpy, images);
-}
-
-void DrmRenderer::freeEGLImages() {
-    m_EglImageFactory.freeEGLImages();
 }
 
 #endif

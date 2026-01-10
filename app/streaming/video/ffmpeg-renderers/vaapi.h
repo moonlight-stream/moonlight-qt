@@ -73,13 +73,11 @@ public:
     virtual AVPixelFormat getEGLImagePixelFormat() override;
     virtual bool initializeEGL(EGLDisplay dpy, const EGLExtensions &ext) override;
     virtual ssize_t exportEGLImages(AVFrame *frame, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) override;
-    virtual void freeEGLImages() override;
 #endif
 
 #ifdef HAVE_DRM
     virtual bool canExportDrmPrime() override;
     virtual bool mapDrmPrimeFrame(AVFrame* frame, AVDRMFrameDescriptor* drmDescriptor) override;
-    virtual void unmapDrmPrimeFrame(AVDRMFrameDescriptor* drmDescriptor) override;
 #endif
 
 private:
@@ -89,6 +87,10 @@ private:
 
 #if defined(HAVE_EGL) || defined(HAVE_DRM)
     bool canExportSurfaceHandle(int layerTypeFlag, VADRMPRIMESurfaceDescriptor* descriptor);
+#endif
+
+#ifdef HAVE_DRM
+    static void freeDrmDescriptorBuffer(void* opaque, uint8_t* data);
 #endif
 
     int m_DecoderSelectionPass;

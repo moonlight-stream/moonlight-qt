@@ -46,7 +46,6 @@ private:
     unsigned int m_VideoVAO;
     bool m_BlockingSwapBuffers;
     EGLSync m_LastRenderSync;
-    AVFrame* m_LastFrame;
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC m_glEGLImageTargetTexture2DOES;
     PFNGLGENVERTEXARRAYSOESPROC m_glGenVertexArraysOES;
     PFNGLBINDVERTEXARRAYOESPROC m_glBindVertexArrayOES;

@@ -16,6 +16,18 @@ extern "C" {
 #endif
 }
 
+#ifndef FOURCC_FMT
+#define FOURCC_FMT "%c%c%c%c"
+#endif
+
+#ifndef FOURCC_FMT_ARGS
+#define FOURCC_FMT_ARGS(f)      \
+    (char)((f) & 0xFF),         \
+    (char)(((f) >> 8) & 0xFF),  \
+    (char)(((f) >> 16) & 0xFF), \
+    (char)(((f) >> 24) & 0xFF)
+#endif
+
 #ifdef HAVE_EGL
 #define MESA_EGL_NO_X11_HEADERS
 #define EGL_NO_X11
@@ -500,9 +512,6 @@ public:
                                     EGLImage[EGL_MAX_PLANES]) {
         return -1;
     }
-
-    // Free the resources allocated during the last `exportEGLImages` call
-    virtual void freeEGLImages() {}
 #endif
 
 #ifdef HAVE_DRM
@@ -514,8 +523,6 @@ public:
     virtual bool mapDrmPrimeFrame(AVFrame*, AVDRMFrameDescriptor*) {
         return false;
     }
-
-    virtual void unmapDrmPrimeFrame(AVDRMFrameDescriptor*) {}
 #endif
 
 protected:
