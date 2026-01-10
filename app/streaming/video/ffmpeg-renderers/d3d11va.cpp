@@ -347,7 +347,14 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    hr = CreateDXGIFactory(__uuidof(IDXGIFactory5), (void**)&m_Factory);
+    hr = CreateDXGIFactory2(
+#ifdef QT_DEBUG
+        DXGI_CREATE_FACTORY_DEBUG,
+#else
+        0,
+#endif
+        __uuidof(IDXGIFactory5),
+        (void**)&m_Factory);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "CreateDXGIFactory() failed: %x",
