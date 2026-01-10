@@ -40,8 +40,9 @@ private:
 
     bool setupRenderingResources();
     std::vector<DXGI_FORMAT> getVideoTextureSRVFormats();
-    bool setupVideoTexture(); // for !m_BindDecoderOutputTextures
-    bool setupTexturePoolViews(AVD3D11VAFramesContext* frameContext); // for m_BindDecoderOutputTextures
+    bool setupFrameRenderingResources(AVHWFramesContext* framesContext);
+    bool setupVideoTexture(AVHWFramesContext* framesContext); // for !m_BindDecoderOutputTextures
+    bool setupTexturePoolViews(AVHWFramesContext* framesContext); // for m_BindDecoderOutputTextures
     void renderOverlay(Overlay::OverlayType type);
     void bindColorConversion(AVFrame* frame);
     void renderVideo(AVFrame* frame);
@@ -76,10 +77,7 @@ private:
     bool m_BindDecoderOutputTextures;
 
     DECODER_PARAMETERS m_DecoderParams;
-    int m_TextureAlignment;
     DXGI_FORMAT m_TextureFormat;
-    UINT m_TextureWidth;
-    UINT m_TextureHeight;
     int m_DisplayWidth;
     int m_DisplayHeight;
     AVColorTransferCharacteristic m_LastColorTrc;
@@ -93,8 +91,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Texture2D> m_VideoTexture;
 
     // Only index 0 is valid if !m_BindDecoderOutputTextures
-#define DECODER_BUFFER_POOL_SIZE 17
-    std::array<std::array<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>, 2>, DECODER_BUFFER_POOL_SIZE> m_VideoTextureResourceViews;
+    std::vector<std::array<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>, 2>> m_VideoTextureResourceViews;
 
     SDL_SpinLock m_OverlayLock;
     std::array<Microsoft::WRL::ComPtr<ID3D11Buffer>, Overlay::OverlayMax> m_OverlayVertexBuffers;
@@ -103,6 +100,5 @@ private:
     Microsoft::WRL::ComPtr<ID3D11PixelShader> m_OverlayPixelShader;
 
     AVBufferRef* m_HwDeviceContext;
-    AVBufferRef* m_HwFramesContext;
 };
 
