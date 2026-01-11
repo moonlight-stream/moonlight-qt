@@ -1668,6 +1668,9 @@ bool D3D11VARenderer::setupVideoTexture(AVHWFramesContext* framesContext)
         return false;
     }
 
+    // We will only have one set of SRVs
+    m_VideoTextureResourceViews.resize(1);
+
     // Create SRVs for the texture
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
