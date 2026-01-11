@@ -1433,6 +1433,9 @@ void DrmRenderer::blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL
     SDL_assert(m_OverlayCompositionSurface);
 
     if (newSurface && overlayRect) {
+        // Disable blending of the source surface when blitting
+        SDL_SetSurfaceBlendMode(newSurface, SDL_BLENDMODE_NONE);
+
         // Premultiply alpha in place, so we can blit directly into the composition surface
         // without having to read anything (which may be very costly due to UC/WC memory)
         SDL_PremultiplyAlpha(newSurface->w, newSurface->h,
@@ -1449,6 +1452,8 @@ void DrmRenderer::blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL
             SDL_BlitSurface(newSurface, nullptr, m_OverlayCompositionSurface, overlayRect);
         }
         else {
+            SDL_assert(newSurface->format->format == m_OverlayCompositionSurface->format->format);
+
             // Draw the surface row-by-row to ensure we clear the dirty area from the previous surface
             // without causing flickering, which would be noticeable if we cleared the whole area first.
             for (int y = overlayUnionRect.y; y < overlayUnionRect.y + overlayUnionRect.h; y++) {
