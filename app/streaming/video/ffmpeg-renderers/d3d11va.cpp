@@ -568,6 +568,11 @@ bool D3D11VARenderer::prepareDecoderContextInGetFormat(AVCodecContext *context, 
         d3d11vaFramesContext->BindFlags |= D3D11_BIND_SHADER_RESOURCE;
     }
 
+    // Mimic the logic in ff_decode_get_hw_frames_ctx() which adds an extra 3 frames
+    if (framesContext->initial_pool_size) {
+        framesContext->initial_pool_size += 3;
+    }
+
     err = av_hwframe_ctx_init(context->hw_frames_ctx);
     if (err < 0) {
         av_buffer_unref(&context->hw_frames_ctx);

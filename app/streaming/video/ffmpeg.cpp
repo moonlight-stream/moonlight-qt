@@ -542,6 +542,12 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     m_VideoDecoderCtx->pkt_timebase.num = 1;
     m_VideoDecoderCtx->pkt_timebase.den = 90000;
 
+    // Allocate enough extra frames for Pacer to avoid stalling the decoder
+    //
+    // NB: Subtract 4 because FFmpeg always allocates 4 working surfaces when
+    // constructing a hwframes context (see ff_decode_get_hw_frames_ctx()).
+    m_VideoDecoderCtx->extra_hw_frames = std::max<int>(0, PACER_MAX_OUTSTANDING_FRAMES - 4);
+
     // For non-hwaccel decoders, set the pix_fmt to hint to the decoder which
     // format should be used. This is necessary for certain decoders like the
     // out-of-tree nvv4l2dec decoders for L4T platforms. We do not do this

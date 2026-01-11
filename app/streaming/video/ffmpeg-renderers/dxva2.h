@@ -57,8 +57,11 @@ private:
     int m_DisplayHeight;
 
     struct dxva_context m_DXVAContext;
-    std::array<Microsoft::WRL::ComPtr<IDirect3DSurface9>, 19> m_DecSurfaces;
-    std::array<IDirect3DSurface9*, 19> m_DecSurfacesRaw; // Referenced by m_DecSurfaces
+
+    // H.264 uses a maximum of 16 reference frames
+    std::array<Microsoft::WRL::ComPtr<IDirect3DSurface9>, 16 + PACER_MAX_OUTSTANDING_FRAMES> m_DecSurfaces;
+    std::array<IDirect3DSurface9*, 16 + PACER_MAX_OUTSTANDING_FRAMES> m_DecSurfacesRaw; // Referenced by m_DecSurfaces
+
     DXVA2_ConfigPictureDecode m_Config;
     Microsoft::WRL::ComPtr<IDirectXVideoDecoderService> m_DecService;
     Microsoft::WRL::ComPtr<IDirectXVideoDecoder> m_Decoder;
