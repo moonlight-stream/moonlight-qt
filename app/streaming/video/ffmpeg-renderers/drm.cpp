@@ -1370,7 +1370,6 @@ void DrmRenderer::enterOverlayCompositionMode()
 
     struct drm_mode_create_dumb createBuf = {};
     void* mapping = nullptr;
-    uint32_t fbId;
 
     createBuf.width = m_OutputRect.w;
     createBuf.height = m_OutputRect.h;
@@ -1387,7 +1386,7 @@ void DrmRenderer::enterOverlayCompositionMode()
         goto Fail;
     }
 
-    if (!createFbForDumbBuffer(&createBuf, &fbId)) {
+    if (!createFbForDumbBuffer(&createBuf, &m_OverlayCompositionSurfaceFbId)) {
         goto Fail;
     }
 
@@ -1399,7 +1398,13 @@ void DrmRenderer::enterOverlayCompositionMode()
                                 m_OutputRect.h << 16);
 
     // Flip the surface onto the overlay
-    m_PropSetter.flipPlane(m_OverlayPlanes[0], fbId, createBuf.handle);
+    //
+    // NB: This will take ownership of both the FB and the dumb buffer,
+    // but it won't free them until we stop streaming since we don't
+    // flip this plane anymore after this.
+    m_PropSetter.flipPlane(m_OverlayPlanes[0],
+                           m_OverlayCompositionSurfaceFbId,
+                           createBuf.handle);
 
     // Create an SDL surface that wraps our dumb buffer mapping
     m_OverlayCompositionSurface = SDL_CreateRGBSurfaceWithFormatFrom(mapping,
@@ -1474,10 +1479,26 @@ void DrmRenderer::blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL
                        (overlayUnionRect.w - overlayRect->w) * bpp);
             }
         }
+
+        // Dirty the modified portion of the FB
+        drmModeClip clip;
+        clip.x1 = overlayUnionRect.x;
+        clip.x2 = overlayUnionRect.x + overlayUnionRect.w;
+        clip.y1 = overlayUnionRect.y;
+        clip.y2 = overlayUnionRect.y + overlayUnionRect.h;
+        drmModeDirtyFB(m_DrmFd, m_OverlayCompositionSurfaceFbId, &clip, 1);
     }
     else {
         // Clear the pixels where this overlay was drawn before
         SDL_FillRect(m_OverlayCompositionSurface, &m_OverlayRects[type], 0);
+
+        // Dirty the modified portion of the FB
+        drmModeClip clip;
+        clip.x1 = m_OverlayRects[type].x;
+        clip.x2 = m_OverlayRects[type].x + m_OverlayRects[type].w;
+        clip.y1 = m_OverlayRects[type].y;
+        clip.y2 = m_OverlayRects[type].y + m_OverlayRects[type].h;
+        drmModeDirtyFB(m_DrmFd, m_OverlayCompositionSurfaceFbId, &clip, 1);
     }
 }
 
