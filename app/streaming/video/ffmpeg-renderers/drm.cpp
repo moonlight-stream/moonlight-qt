@@ -1369,6 +1369,7 @@ void DrmRenderer::enterOverlayCompositionMode()
     }
 
     struct drm_mode_create_dumb createBuf = {};
+    uint32_t fbId;
     void* mapping = nullptr;
 
     createBuf.width = m_OutputRect.w;
@@ -1386,7 +1387,7 @@ void DrmRenderer::enterOverlayCompositionMode()
         goto Fail;
     }
 
-    if (!createFbForDumbBuffer(&createBuf, &m_OverlayCompositionSurfaceFbId)) {
+    if (!createFbForDumbBuffer(&createBuf, &fbId)) {
         goto Fail;
     }
 
@@ -1402,9 +1403,7 @@ void DrmRenderer::enterOverlayCompositionMode()
     // NB: This will take ownership of both the FB and the dumb buffer,
     // but it won't free them until we stop streaming since we don't
     // flip this plane anymore after this.
-    m_PropSetter.flipPlane(m_OverlayPlanes[0],
-                           m_OverlayCompositionSurfaceFbId,
-                           createBuf.handle);
+    m_PropSetter.flipPlane(m_OverlayPlanes[0], fbId, createBuf.handle);
 
     // Create an SDL surface that wraps our dumb buffer mapping
     m_OverlayCompositionSurface = SDL_CreateRGBSurfaceWithFormatFrom(mapping,

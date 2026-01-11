@@ -739,7 +739,6 @@ private:
     DrmPropertyMap m_OverlayPlanes[Overlay::OverlayMax];
     DrmPropertySetter m_PropSetter;
     SDL_Surface* m_OverlayCompositionSurface;
-    uint32_t m_OverlayCompositionSurfaceFbId;
     std::mutex m_OverlayLock;
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];
     drmVersionPtr m_Version;
