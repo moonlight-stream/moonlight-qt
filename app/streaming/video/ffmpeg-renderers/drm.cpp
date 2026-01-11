@@ -1480,25 +1480,15 @@ void DrmRenderer::blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL
             }
         }
 
-        // Dirty the modified portion of the FB
-        drmModeClip clip;
-        clip.x1 = overlayUnionRect.x;
-        clip.x2 = overlayUnionRect.x + overlayUnionRect.w;
-        clip.y1 = overlayUnionRect.y;
-        clip.y2 = overlayUnionRect.y + overlayUnionRect.h;
-        drmModeDirtyFB(m_DrmFd, m_OverlayCompositionSurfaceFbId, &clip, 1);
+        // Dirty the modified portion of the plane
+        m_PropSetter.damagePlane(m_OverlayPlanes[0], overlayUnionRect);
     }
     else {
         // Clear the pixels where this overlay was drawn before
         SDL_FillRect(m_OverlayCompositionSurface, &m_OverlayRects[type], 0);
 
-        // Dirty the modified portion of the FB
-        drmModeClip clip;
-        clip.x1 = m_OverlayRects[type].x;
-        clip.x2 = m_OverlayRects[type].x + m_OverlayRects[type].w;
-        clip.y1 = m_OverlayRects[type].y;
-        clip.y2 = m_OverlayRects[type].y + m_OverlayRects[type].h;
-        drmModeDirtyFB(m_DrmFd, m_OverlayCompositionSurfaceFbId, &clip, 1);
+        // Dirty the modified portion of the plane
+        m_PropSetter.damagePlane(m_OverlayPlanes[0], m_OverlayRects[type]);
     }
 }
 
