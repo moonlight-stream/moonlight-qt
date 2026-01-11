@@ -545,10 +545,7 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     m_VideoDecoderCtx->pkt_timebase.den = 90000;
 
     // Allocate enough extra frames for Pacer to avoid stalling the decoder
-    //
-    // NB: Subtract 4 because FFmpeg always allocates 4 working surfaces when
-    // constructing a hwframes context (see ff_decode_get_hw_frames_ctx()).
-    m_VideoDecoderCtx->extra_hw_frames = std::max<int>(0, PACER_MAX_OUTSTANDING_FRAMES - 4);
+    m_VideoDecoderCtx->extra_hw_frames = PACER_MAX_OUTSTANDING_FRAMES;
 
     // For non-hwaccel decoders, set the pix_fmt to hint to the decoder which
     // format should be used. This is necessary for certain decoders like the
@@ -566,6 +563,23 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     // Allow the backend renderer to attach data to this decoder
     if (!m_BackendRenderer->prepareDecoderContext(m_VideoDecoderCtx, &options)) {
         return false;
+    }
+
+    // The V4L2M2M decoders are one of the rare non-hwaccel decoders that allocates
+    // hardware frames under the hood. We need to adjust the number of buffers it
+    // allocates to ensure it allocates enough for our use case, but not too many.
+    // Normal hwaccel decoders will examine the codec/bitstream and the value we
+    // set in extra_hw_frames to determine how many buffers are required.
+    if (QString::fromUtf8(decoder->name).endsWith("_v4l2m2m", Qt::CaseInsensitive)) {
+        // 2 buffers for incoming compressed video data
+        av_dict_set_int(&options, "num_output_buffers", 2, 0);
+
+        // 4 ref frames + what pacer holds + a working surface for each output
+        //
+        // NB: The reason we allocate 4 ref frames and not 16 (H.264 maximum)
+        // is because V4L2M2M decoders have reference frame invalidation disabled
+        // for compatibility, so we will never actually need 16 reference frames.
+        av_dict_set_int(&options, "num_capture_buffers", 4 + PACER_MAX_OUTSTANDING_FRAMES + 2, 0);
     }
 
     QString optionVarName = QString("%1_AVOPTIONS").arg(decoder->name).toUpper();
