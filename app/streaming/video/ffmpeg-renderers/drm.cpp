@@ -1444,38 +1444,45 @@ void DrmRenderer::blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL
         SDL_Rect overlayUnionRect;
         SDL_UnionRect(overlayRect, &m_OverlayRects[type], &overlayUnionRect);
 
-        // Draw the surface row-by-row to ensure we clear the dirty area from the previous surface
-        for (int y = overlayUnionRect.y; y < overlayUnionRect.y + overlayUnionRect.h; y++) {
-            auto dstPixelRow =
-                (uint8_t*)m_OverlayCompositionSurface->pixels +
-                (y * m_OverlayCompositionSurface->pitch);
-            auto bpp = m_OverlayCompositionSurface->format->BytesPerPixel;
+        // If the new overlay completely covers the old overlay, blit it all at once
+        if (SDL_RectEquals(&overlayUnionRect, overlayRect)) {
+            SDL_BlitSurface(newSurface, nullptr, m_OverlayCompositionSurface, overlayRect);
+        }
+        else {
+            // Draw the surface row-by-row to ensure we clear the dirty area from the previous surface
+            // without causing flickering, which would be noticeable if we cleared the whole area first.
+            for (int y = overlayUnionRect.y; y < overlayUnionRect.y + overlayUnionRect.h; y++) {
+                auto dstPixelRow =
+                    (uint8_t*)m_OverlayCompositionSurface->pixels +
+                    (y * m_OverlayCompositionSurface->pitch);
+                auto bpp = m_OverlayCompositionSurface->format->BytesPerPixel;
 
-            if (y < overlayRect->y || y > overlayRect->y + overlayRect->h) {
-                // Clear the whole row if the overlay doesn't intersect this row
-                memset(dstPixelRow + (overlayUnionRect.x * bpp),
-                       0,
-                       overlayUnionRect.w * bpp);
-            }
-            else {
-                auto srcPixelRow = (uint8_t*)newSurface->pixels + ((y - overlayRect->y) * newSurface->pitch);
+                if (y < overlayRect->y || y > overlayRect->y + overlayRect->h) {
+                    // Clear the whole row if the overlay doesn't intersect this row
+                    memset(dstPixelRow + (overlayUnionRect.x * bpp),
+                           0,
+                           overlayUnionRect.w * bpp);
+                }
+                else {
+                    auto srcPixelRow = (uint8_t*)newSurface->pixels + ((y - overlayRect->y) * newSurface->pitch);
 
-                // Clear columns prior to the intersection
-                SDL_assert(overlayRect->x >= overlayUnionRect.x);
-                memset(dstPixelRow + (overlayUnionRect.x * bpp),
-                       0,
-                       (overlayRect->x - overlayUnionRect.x) * bpp);
+                    // Clear columns prior to the intersection
+                    SDL_assert(overlayRect->x >= overlayUnionRect.x);
+                    memset(dstPixelRow + (overlayUnionRect.x * bpp),
+                           0,
+                           (overlayRect->x - overlayUnionRect.x) * bpp);
 
-                // Copy the overlay into the intersection
-                memcpy(dstPixelRow + (overlayRect->x * bpp),
-                       srcPixelRow,
-                       overlayRect->w * bpp);
+                    // Copy the overlay into the intersection
+                    memcpy(dstPixelRow + (overlayRect->x * bpp),
+                           srcPixelRow,
+                           overlayRect->w * bpp);
 
-                // Clear columns after the intersection
-                SDL_assert(overlayUnionRect.w >= overlayRect->w);
-                memset(dstPixelRow + ((overlayRect->x + overlayRect->w) * bpp),
-                       0,
-                       (overlayUnionRect.w - overlayRect->w) * bpp);
+                    // Clear columns after the intersection
+                    SDL_assert(overlayUnionRect.w >= overlayRect->w);
+                    memset(dstPixelRow + ((overlayRect->x + overlayRect->w) * bpp),
+                           0,
+                           (overlayUnionRect.w - overlayRect->w) * bpp);
+                }
             }
         }
 
