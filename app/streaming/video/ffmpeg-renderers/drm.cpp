@@ -1469,7 +1469,7 @@ void DrmRenderer::blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL
 
                 // Copy the overlay into the intersection
                 memcpy(dstPixelRow + (overlayRect->x * bpp),
-                       srcPixelRow + (overlayRect->x * bpp),
+                       srcPixelRow,
                        overlayRect->w * bpp);
 
                 // Clear columns after the intersection
