@@ -235,6 +235,7 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_VideoFormat(0),
       m_NeedsSpsFixup(false),
       m_TestOnly(testOnly),
+      m_CurrentTestMode(TestMode::TestFrameOnly),
       m_DecoderThread(nullptr)
 {
     SDL_zero(m_ActiveWndVideoStats);
@@ -290,7 +291,7 @@ void FFmpegVideoDecoder::reset()
     // need to delete in the renderer destructor.
     avcodec_free_context(&m_VideoDecoderCtx);
 
-    if (!m_TestOnly) {
+    if (m_CurrentTestMode != TestMode::TestFrameOnly) {
         Session::get()->getOverlayManager().setOverlayRenderer(nullptr);
     }
 
@@ -303,7 +304,7 @@ void FFmpegVideoDecoder::reset()
 
     m_FrontendRenderer = m_BackendRenderer = nullptr;
 
-    if (!m_TestOnly) {
+    if (m_CurrentTestMode != TestMode::TestFrameOnly) {
         logVideoStats(m_GlobalVideoStats, "Global video stats");
     }
     else {
@@ -479,10 +480,10 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
     return true;
 }
 
-bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVPixelFormat requiredFormat, PDECODER_PARAMETERS params, bool testFrame, bool useAlternateFrontend)
+bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVPixelFormat requiredFormat, PDECODER_PARAMETERS params, TestMode testMode, bool useAlternateFrontend)
 {
     // In test-only mode, we should only see test frames
-    SDL_assert(!m_TestOnly || testFrame);
+    SDL_assert(!m_TestOnly || testMode != TestMode::NoTesting);
 
     // Create the frontend renderer based on the capabilities of the backend renderer
     if (!createFrontendRenderer(params, useAlternateFrontend)) {
@@ -492,9 +493,10 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     m_RequiredPixelFormat = requiredFormat;
     m_StreamFps = params->frameRate;
     m_VideoFormat = params->videoFormat;
+    m_CurrentTestMode = testMode;
 
     // Don't bother initializing Pacer if we're not actually going to render
-    if (!m_TestOnly) {
+    if (testMode != TestMode::TestFrameOnly) {
         m_Pacer = new Pacer(m_FrontendRenderer, &m_ActiveWndVideoStats);
         if (!m_Pacer->initialize(params->window, params->frameRate,
                                  params->enableFramePacing || (params->enableVsync && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FORCE_PACING)))) {
@@ -597,7 +599,7 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     // our minds on the selected video codec, so we'll do a trial run
     // now to see if things will actually work when the video stream
     // comes in.
-    if (testFrame) {
+    if (testMode != TestMode::NoTesting) {
         switch (params->videoFormat) {
         case VIDEO_FORMAT_H264:
             m_Pkt->data = (uint8_t*)k_H264TestFrame;
@@ -700,16 +702,16 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
 
         av_frame_free(&frame);
 
-        if (!m_TestOnly) {
+        // Flush the codec to prepare for the real stream if we're
+        // going to use this decoder instance for streaming later
+        if (testMode == TestMode::TestFrame) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Test decode successful");
-
-            // Flush the codec to prepare for the real stream
             avcodec_flush_buffers(m_VideoDecoderCtx);
         }
     }
 
-    if (!m_TestOnly) {
+    if (testMode != TestMode::TestFrameOnly) {
         if ((params->videoFormat & VIDEO_FORMAT_MASK_H264) &&
                 !(m_BackendRenderer->getDecoderCapabilities() & CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC)) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1182,7 +1184,8 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
         // Initialize the backend renderer for testing
         if (initializeRendererInternal(m_BackendRenderer, &testFrameDecoderParams)) {
             if (completeInitialization(decoder, requiredFormat, &testFrameDecoderParams,
-                                       true, i == 0 /* EGL/DRM */)) {
+                                       (m_TestOnly || separateTestDecoder) ? TestMode::TestFrameOnly : TestMode::TestFrame,
+                                        i == 0 /* EGL/DRM */)) {
                 if (m_TestOnly) {
                     // This decoder is only for testing capabilities, so don't bother
                     // creating a usable renderer
@@ -1203,7 +1206,7 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                     }
 
                     if (initializeRendererInternal(m_BackendRenderer, params) &&
-                        completeInitialization(decoder, requiredFormat, params, false, i == 0 /* EGL/DRM */)) {
+                        completeInitialization(decoder, requiredFormat, params, TestMode::NoTesting, i == 0 /* EGL/DRM */)) {
                         return true;
                     }
                     else {
@@ -1959,7 +1962,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     PLENTRY entry = du->bufferList;
     int err;
 
-    SDL_assert(!m_TestOnly);
+    SDL_assert(m_CurrentTestMode != TestMode::TestFrameOnly);
 
     // If this is the first frame, reject anything that's not an IDR frame
     if (m_FramesIn == 0 && du->frameType != FRAME_TYPE_IDR) {
