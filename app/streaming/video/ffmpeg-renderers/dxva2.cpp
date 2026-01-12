@@ -271,14 +271,18 @@ bool DXVA2Renderer::initializeQuirksForAdapter(IDirect3D9Ex* d3d9ex, int adapter
 
         hr = d3d9ex->GetAdapterIdentifier(adapterIndex, 0, &id);
         if (SUCCEEDED(hr)) {
-            if (id.VendorId == 0x8086) {
+            if (id.VendorId == 0x8086 && !(m_VideoFormat & VIDEO_FORMAT_MASK_YUV444)) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Avoiding IDirectXVideoProcessor API on Intel GPU");
+                            "Avoiding IDirectXVideoProcessor API for YUV 4:2:0 on Intel GPU");
 
                 // On Intel GPUs, we can get unwanted video "enhancements" due to post-processing
                 // effects that the GPU driver forces on us. In many cases, this makes the video
                 // actually look worse. We can avoid these by using StretchRect() instead on these
                 // platforms.
+                //
+                // We don't do this for YUV 4:4:4 because Intel GPUs falsely claim to support AYUV
+                // format conversion with StretchRect() via CheckDeviceFormatConversion() but the
+                // output has completely incorrect colors. VideoProcessBlt() works fine though.
                 m_DeviceQuirks |= DXVA2_QUIRK_NO_VP;
             }
             else if (id.VendorId == 0x4d4f4351) { // QCOM in ASCII
@@ -570,11 +574,6 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
     else if ((params->videoFormat & VIDEO_FORMAT_MASK_10BIT) && m_DecoderSelectionPass == 0) {
         // Avoid using DXVA2 for HDR10. While it can render 10-bit color, it doesn't support
         // the HDR colorspace and HDR display metadata required to enable HDR mode properly.
-        return false;
-    }
-    else if (params->videoFormat & VIDEO_FORMAT_MASK_YUV444) {
-        // It's theoretically possible to use YUV444 with D3D9, but probably not worth actually
-        // implementing because any YUV444-capable hardware supports D3D11 or Vulkan.
         return false;
     }
 #ifndef Q_PROCESSOR_X86
