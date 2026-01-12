@@ -491,6 +491,8 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     }
 
     m_RequiredPixelFormat = requiredFormat;
+    m_OriginalVideoWidth = params->width;
+    m_OriginalVideoHeight = params->height;
     m_StreamFps = params->frameRate;
     m_VideoFormat = params->videoFormat;
     m_CurrentTestMode = testMode;
@@ -1889,6 +1891,32 @@ void FFmpegVideoDecoder::decoderThreadProc()
 
                             clm->MaxCLL = hdrMetadata.maxContentLightLevel;
                             clm->MaxFALL = hdrMetadata.maxFrameAverageLightLevel;
+                        }
+                    }
+
+                    // Some encoders (like RDNA3's AV1 encoder) include excess padding and expect us
+                    // to crop it off. If we find our received frame looks close to our requested
+                    // size (where "close" is arbitrarily defined as "within 64 pixels") then just
+                    // crop the video to our requested size instead.
+                    if (frame->width != m_OriginalVideoWidth || frame->height != m_OriginalVideoHeight) {
+                        int cropWidth = frame->width - m_OriginalVideoWidth;
+                        int cropHeight = frame->height - m_OriginalVideoHeight;
+
+                        if (cropWidth >= 0 && cropWidth < 64 && cropHeight >= 0 && cropHeight < 64) {
+                            if (m_FramesOut == 1) {
+                                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                            "Cropping incoming frames from (%d, %d) to (%d, %d)",
+                                            frame->width,
+                                            frame->height,
+                                            m_OriginalVideoWidth,
+                                            m_OriginalVideoHeight);
+                            }
+
+                            // We assume that all padding is added to the right and bottom.
+                            // This is true for the known affected encoders.
+                            frame->crop_right = cropWidth;
+                            frame->crop_bottom = cropHeight;
+                            av_frame_apply_cropping(frame, 0);
                         }
                     }
 

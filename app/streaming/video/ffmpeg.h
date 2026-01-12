@@ -124,6 +124,8 @@ private:
 
     int m_LastFrameNumber;
     int m_StreamFps;
+    int m_OriginalVideoWidth;
+    int m_OriginalVideoHeight;
     int m_VideoFormat;
     bool m_NeedsSpsFixup;
     bool m_TestOnly;
