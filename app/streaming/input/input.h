@@ -223,6 +223,7 @@ private:
     QStringList m_IgnoreDeviceGuids;
     StreamingPreferences::CaptureSysKeysMode m_CaptureSystemKeysMode;
     int m_MouseCursorCapturedVisibilityState;
+    bool m_ClientSideCursor;
 
     struct {
         KeyCombo keyCombo;

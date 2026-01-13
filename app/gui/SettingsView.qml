@@ -1321,6 +1321,25 @@ Flickable {
                                   qsTr("NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.")
                 }
 
+                CheckBox {
+                    id: clientSideCursorCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Client-side cursor (reduces mouse lag)")
+                    font.pointSize:  12
+                    checked: StreamingPreferences.clientSideCursor
+                    onCheckedChanged: {
+                        StreamingPreferences.clientSideCursor = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 10000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Renders the mouse cursor locally on the client for instant response, while making the host cursor invisible.") + "\n\n" +
+                                  qsTr("This dramatically reduces perceived mouse input lag over high-latency connections (e.g., 100ms+).") + "\n\n" +
+                                  qsTr("NOTE: Requires Apollo/Sunshine as the host. Some applications that render their own cursors may show a duplicate cursor.")
+                }
+
                 Row {
                     spacing: 5
                     width: parent.width

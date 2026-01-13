@@ -21,11 +21,12 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_PointerRegionLockToggledByUser(false),
       m_FakeCaptureActive(false),
       m_CaptureSystemKeysMode(prefs.captureSysKeysMode),
-      m_MouseCursorCapturedVisibilityState(SDL_DISABLE),
+      m_MouseCursorCapturedVisibilityState(prefs.clientSideCursor ? SDL_ENABLE : SDL_DISABLE),
+      m_ClientSideCursor(prefs.clientSideCursor),
       m_LongPressTimer(0),
       m_StreamWidth(streamWidth),
       m_StreamHeight(streamHeight),
-      m_AbsoluteMouseMode(prefs.absoluteMouseMode),
+      m_AbsoluteMouseMode(prefs.absoluteMouseMode || prefs.clientSideCursor),  // Force absolute mode for client-side cursor
       m_AbsoluteTouchMode(prefs.absoluteTouchMode),
       m_DisabledTouchFeedback(false),
       m_LeftButtonReleaseTimer(0),
@@ -385,8 +386,15 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
 void SdlInputHandler::setCaptureActive(bool active)
 {
     if (active) {
+        // If client-side cursor is enabled, we never use SDL relative mouse mode
+        // because it hides the cursor. We want the local cursor visible.
+        if (m_ClientSideCursor) {
+            // Keep cursor visible, use fake capture for input
+            SDL_ShowCursor(SDL_ENABLE);
+            m_FakeCaptureActive = true;
+        }
         // If we're in relative mode, try to activate SDL's relative mouse mode
-        if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
+        else if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
             // Relative mouse mode didn't work or was disabled, so we'll just hide the cursor
             SDL_ShowCursor(m_MouseCursorCapturedVisibilityState);
             m_FakeCaptureActive = true;
@@ -420,12 +428,16 @@ void SdlInputHandler::setCaptureActive(bool active)
     }
     else {
         if (m_FakeCaptureActive) {
-            // Display the cursor again
+            // Display the cursor again (always visible for client-side cursor)
             SDL_ShowCursor(SDL_ENABLE);
             m_FakeCaptureActive = false;
         }
         else {
             SDL_SetRelativeMouseMode(SDL_FALSE);
+            // Ensure cursor is visible when client-side cursor is enabled
+            if (m_ClientSideCursor) {
+                SDL_ShowCursor(SDL_ENABLE);
+            }
         }
     }
 

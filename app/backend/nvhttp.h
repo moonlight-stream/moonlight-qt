@@ -170,6 +170,7 @@ public:
              bool localAudio,
              int gamepadMask,
              bool persistGameControllersOnDisconnect,
+             bool clientSideCursor,
              QString& rtspSessionUrl);
 
     QVector<NvApp>
