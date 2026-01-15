@@ -86,14 +86,22 @@ class DrmRenderer : public IFFmpegRenderer {
             return m_Prop->prop_id;
         }
 
-        std::pair<uint64_t, uint64_t> range() const {
+        std::optional<std::pair<uint64_t, uint64_t>> range() const {
             if ((m_Prop->flags & (DRM_MODE_PROP_RANGE | DRM_MODE_PROP_SIGNED_RANGE)) &&
                 m_Prop->count_values == 2) {
                 return std::make_pair(m_Prop->values[0], m_Prop->values[1]);
             }
             else {
-                SDL_assert(false);
-                return std::make_pair(0, 0);
+                return std::nullopt;
+            }
+        }
+
+        uint64_t clamp(uint64_t value) const {
+            if (auto range = this->range()) {
+                return std::clamp(value, range->first, range->second);
+            }
+            else {
+                return value;
             }
         }
 
@@ -659,10 +667,17 @@ class DrmRenderer : public IFFmpegRenderer {
             SDL_assert(m_Atomic);
 
             // Set all mutable properties back to their initial values
-            for (auto& prop : object.properties()) {
-                if (!prop.second.isImmutable()) {
-                    set(prop.second, prop.second.initialValue());
-                }
+            for (auto&[id, prop] : object.properties()) {
+                restorePropertyToInitial(prop);
+            }
+        }
+
+        void restorePropertyToInitial(const DrmProperty& prop) {
+            if (!prop.isImmutable()) {
+                // We clamp() here because some DRM drivers actually initialize certain
+                // properties (max bpc) to values outside the legal range. Obviously,
+                // the kernel rejects these values when we later restore them back.
+                set(prop, prop.clamp(prop.initialValue()));
             }
         }
 

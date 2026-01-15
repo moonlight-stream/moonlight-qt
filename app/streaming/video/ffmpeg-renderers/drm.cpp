@@ -182,20 +182,20 @@ DrmRenderer::~DrmRenderer()
 
         // Revert our changes from prepareToRender()
         if (auto prop = m_Connector.property("content type")) {
-            m_PropSetter.set(*prop, prop->initialValue());
+            m_PropSetter.restorePropertyToInitial(*prop);
         }
         if (auto prop = m_Crtc.property("VRR_ENABLED")) {
-            m_PropSetter.set(*prop, prop->initialValue());
+            m_PropSetter.restorePropertyToInitial(*prop);
         }
         if (auto prop = m_Connector.property("max bpc")) {
-            m_PropSetter.set(*prop, prop->initialValue());
+            m_PropSetter.restorePropertyToInitial(*prop);
         }
         if (auto zpos = m_VideoPlane.property("zpos"); zpos && !zpos->isImmutable()) {
-            m_PropSetter.set(*zpos, zpos->initialValue());
+            m_PropSetter.restorePropertyToInitial(*zpos);
         }
         for (int i = 0; i < Overlay::OverlayMax; i++) {
             if (auto zpos = m_OverlayPlanes[i].property("zpos"); zpos && !zpos->isImmutable()) {
-                m_PropSetter.set(*zpos, zpos->initialValue());
+                m_PropSetter.restorePropertyToInitial(*zpos);
             }
         }
         for (auto &plane : m_UnusedActivePlanes) {
@@ -367,8 +367,7 @@ void DrmRenderer::prepareToRender()
             enableVrr = !m_Vsync;
         }
 
-        auto range = prop->range();
-        m_PropSetter.set(*prop, std::clamp<uint64_t>(enableVrr ? 1 : 0, range.first, range.second));
+        m_PropSetter.set(*prop, prop->clamp(enableVrr ? 1 : 0));
     }
 
     if (auto prop = m_Connector.property("max bpc")) {
@@ -382,8 +381,7 @@ void DrmRenderer::prepareToRender()
         }
 
         if (maxBpc > 0) {
-            auto range = prop->range();
-            m_PropSetter.set(*prop, std::clamp<uint64_t>(maxBpc, range.first, range.second));
+            m_PropSetter.set(*prop, prop->clamp(maxBpc));
         }
     }
 
@@ -400,8 +398,7 @@ void DrmRenderer::prepareToRender()
             // means undefined ordering between the planes, but that's fine.
             // The planes should never overlap anyway.
             if (!zpos->isImmutable() && zpos->initialValue() <= m_VideoPlaneZpos) {
-                auto zposRange = zpos->range();
-                uint64_t newZpos = std::clamp(m_VideoPlaneZpos + 1, zposRange.first, zposRange.second);
+                uint64_t newZpos = zpos->clamp(m_VideoPlaneZpos + 1);
 
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Moving overlay plane %u to zpos: %" PRIu64,
@@ -758,7 +755,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     }
                 }
                 else {
-                    auto zposRange = zpos->range();
+                    auto zposRange = *zpos->range();
 
                     uint64_t lowestAcceptableZpos;
 
@@ -782,7 +779,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                         lowestAcceptableZpos = *zposIt + 1;
                     }
 
-                    m_VideoPlaneZpos = std::clamp(lowestAcceptableZpos, zposRange.first, zposRange.second);
+                    m_VideoPlaneZpos = zpos->clamp(lowestAcceptableZpos);
                 }
             }
             else {
@@ -866,7 +863,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                         continue;
                     }
                 }
-                else if (zpos->range().second <= m_VideoPlaneZpos) {
+                else if ((*zpos->range()).second <= m_VideoPlaneZpos) {
                     // This plane cannot be raised high enough to be visible
                     drmModeFreePlane(plane);
                     continue;
