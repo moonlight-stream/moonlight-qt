@@ -13,6 +13,9 @@ NavigableDialog {
     property string helpUrl : "https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"
     property string helpTextSeparator : " "
 
+    // Set accessible name from the dialog text
+    accessibleName: text
+
     onOpened: {
         // Force keyboard focus on the label so keyboard navigation works
         dialogLabel.forceActiveFocus()
@@ -52,6 +55,10 @@ NavigableDialog {
             // will cause word wrap to kick in.
             Layout.maximumWidth: 400
             Layout.maximumHeight: 400
+
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.StaticText
+            Accessible.name: text
 
             Keys.onReturnPressed: {
                 accept()

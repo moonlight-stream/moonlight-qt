@@ -221,6 +221,11 @@ Item {
             verticalAlignment: Text.AlignVCenter
 
             wrapMode: Text.Wrap
+
+            // Accessibility support for screen readers
+            // This announces status updates as the connection progresses
+            Accessible.role: Accessible.StatusBar
+            Accessible.name: text
         }
     }
 
@@ -233,5 +238,9 @@ Item {
         verticalAlignment: Text.AlignVCenter
 
         wrapMode: Text.Wrap
+
+        // Accessibility support for screen readers
+        Accessible.role: Accessible.StaticText
+        Accessible.name: text
     }
 }

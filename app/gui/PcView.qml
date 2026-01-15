@@ -20,6 +20,15 @@ CenteredGridView {
     cellWidth: 310; cellHeight: 330;
     objectName: qsTr("Computers")
 
+    // Accessibility support for screen readers
+    Accessible.role: Accessible.List
+    Accessible.name: qsTr("Computers")
+    Accessible.description: count === 0 ?
+        (StreamingPreferences.enableMdns ?
+            qsTr("Searching for compatible hosts on your local network...") :
+            qsTr("Automatic PC discovery is disabled. Add your PC manually."))
+        : qsTr("%1 computers found").arg(count)
+
     Component.onCompleted: {
         // Don't show any highlighted item until interacting with them.
         // We do this here instead of onActivated to avoid losing the user's
@@ -101,6 +110,10 @@ CenteredGridView {
             font.pointSize: 20
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.Wrap
+
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.StatusBar
+            Accessible.name: text
         }
     }
 
@@ -111,6 +124,17 @@ CenteredGridView {
         grid: pcGrid
 
         property alias pcContextMenu : pcContextMenuLoader.item
+
+        // Accessibility support for screen readers
+        accessibleName: model.name
+        accessibleDescription: {
+            if (model.statusUnknown) return qsTr("Status unknown")
+            var desc = model.online ? qsTr("Online") : qsTr("Offline")
+            if (model.online && !model.paired) desc += ", " + qsTr("Not paired")
+            else if (model.paired) desc += ", " + qsTr("Paired")
+            if (!model.online && model.wakeable) desc += ", " + qsTr("Can be woken")
+            return desc
+        }
 
         Image {
             id: pcIcon

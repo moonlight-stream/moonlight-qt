@@ -20,6 +20,11 @@ CenteredGridView {
     bottomMargin: 5
     cellWidth: 230; cellHeight: 297;
 
+    // Accessibility support for screen readers
+    Accessible.role: Accessible.List
+    Accessible.name: qsTr("Applications on %1").arg(objectName)
+    Accessible.description: count > 0 ? qsTr("%1 applications found").arg(count) : qsTr("No applications found")
+
     function computerLost()
     {
         // Go back to the PC view on PC loss
@@ -80,6 +85,14 @@ CenteredGridView {
         // Dim the app if it's hidden
         opacity: model.hidden ? 0.4 : 1.0
 
+        // Accessibility support for screen readers
+        accessibleName: model.name
+        accessibleDescription: {
+            var desc = model.running ? qsTr("Running") : qsTr("Not running")
+            if (model.hidden) desc += ", " + qsTr("Hidden")
+            return desc
+        }
+
         Image {
             property bool isPlaceholder: false
 
@@ -133,6 +146,11 @@ CenteredGridView {
                     icon.width: 75
                     icon.height: 75
 
+                    // Accessibility support for screen readers
+                    Accessible.role: Accessible.Button
+                    Accessible.name: qsTr("Resume %1").arg(model.name)
+                    Accessible.onPressAction: clicked()
+
                     onClicked: {
                         launchOrResumeSelectedApp(true)
                     }
@@ -155,6 +173,11 @@ CenteredGridView {
                     icon.source: "qrc:/res/stop_FILL1_wght700_GRAD200_opsz48.svg"
                     icon.width: 75
                     icon.height: 75
+
+                    // Accessibility support for screen readers
+                    Accessible.role: Accessible.Button
+                    Accessible.name: qsTr("Quit %1").arg(model.name)
+                    Accessible.onPressAction: clicked()
 
                     onClicked: {
                         doQuitGame()
