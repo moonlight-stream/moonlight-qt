@@ -235,6 +235,7 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_VideoFormat(0),
       m_NeedsSpsFixup(false),
       m_TestOnly(testOnly),
+      m_CurrentTestMode(TestMode::TestFrameOnly),
       m_DecoderThread(nullptr)
 {
     SDL_zero(m_ActiveWndVideoStats);
@@ -290,7 +291,7 @@ void FFmpegVideoDecoder::reset()
     // need to delete in the renderer destructor.
     avcodec_free_context(&m_VideoDecoderCtx);
 
-    if (!m_TestOnly) {
+    if (m_CurrentTestMode != TestMode::TestFrameOnly) {
         Session::get()->getOverlayManager().setOverlayRenderer(nullptr);
     }
 
@@ -303,7 +304,7 @@ void FFmpegVideoDecoder::reset()
 
     m_FrontendRenderer = m_BackendRenderer = nullptr;
 
-    if (!m_TestOnly) {
+    if (m_CurrentTestMode != TestMode::TestFrameOnly) {
         logVideoStats(m_GlobalVideoStats, "Global video stats");
     }
     else {
@@ -479,10 +480,10 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
     return true;
 }
 
-bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVPixelFormat requiredFormat, PDECODER_PARAMETERS params, bool testFrame, bool useAlternateFrontend)
+bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVPixelFormat requiredFormat, PDECODER_PARAMETERS params, TestMode testMode, bool useAlternateFrontend)
 {
     // In test-only mode, we should only see test frames
-    SDL_assert(!m_TestOnly || testFrame);
+    SDL_assert(!m_TestOnly || testMode != TestMode::NoTesting);
 
     // Create the frontend renderer based on the capabilities of the backend renderer
     if (!createFrontendRenderer(params, useAlternateFrontend)) {
@@ -490,11 +491,14 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     }
 
     m_RequiredPixelFormat = requiredFormat;
+    m_OriginalVideoWidth = params->width;
+    m_OriginalVideoHeight = params->height;
     m_StreamFps = params->frameRate;
     m_VideoFormat = params->videoFormat;
+    m_CurrentTestMode = testMode;
 
     // Don't bother initializing Pacer if we're not actually going to render
-    if (!m_TestOnly) {
+    if (testMode != TestMode::TestFrameOnly) {
         m_Pacer = new Pacer(m_FrontendRenderer, &m_ActiveWndVideoStats);
         if (!m_Pacer->initialize(params->window, params->frameRate,
                                  params->enableFramePacing || (params->enableVsync && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FORCE_PACING)))) {
@@ -542,6 +546,9 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     m_VideoDecoderCtx->pkt_timebase.num = 1;
     m_VideoDecoderCtx->pkt_timebase.den = 90000;
 
+    // Allocate enough extra frames for Pacer to avoid stalling the decoder
+    m_VideoDecoderCtx->extra_hw_frames = PACER_MAX_OUTSTANDING_FRAMES;
+
     // For non-hwaccel decoders, set the pix_fmt to hint to the decoder which
     // format should be used. This is necessary for certain decoders like the
     // out-of-tree nvv4l2dec decoders for L4T platforms. We do not do this
@@ -558,6 +565,23 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     // Allow the backend renderer to attach data to this decoder
     if (!m_BackendRenderer->prepareDecoderContext(m_VideoDecoderCtx, &options)) {
         return false;
+    }
+
+    // The V4L2M2M decoders are one of the rare non-hwaccel decoders that allocates
+    // hardware frames under the hood. We need to adjust the number of buffers it
+    // allocates to ensure it allocates enough for our use case, but not too many.
+    // Normal hwaccel decoders will examine the codec/bitstream and the value we
+    // set in extra_hw_frames to determine how many buffers are required.
+    if (QString::fromUtf8(decoder->name).endsWith("_v4l2m2m", Qt::CaseInsensitive)) {
+        // 2 buffers for incoming compressed video data
+        av_dict_set_int(&options, "num_output_buffers", 2, 0);
+
+        // 4 ref frames + what pacer holds + a working surface for each output
+        //
+        // NB: The reason we allocate 4 ref frames and not 16 (H.264 maximum)
+        // is because V4L2M2M decoders have reference frame invalidation disabled
+        // for compatibility, so we will never actually need 16 reference frames.
+        av_dict_set_int(&options, "num_capture_buffers", 4 + PACER_MAX_OUTSTANDING_FRAMES + 2, 0);
     }
 
     QString optionVarName = QString("%1_AVOPTIONS").arg(decoder->name).toUpper();
@@ -591,7 +615,7 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     // our minds on the selected video codec, so we'll do a trial run
     // now to see if things will actually work when the video stream
     // comes in.
-    if (testFrame) {
+    if (testMode != TestMode::NoTesting) {
         switch (params->videoFormat) {
         case VIDEO_FORMAT_H264:
             m_Pkt->data = (uint8_t*)k_H264TestFrame;
@@ -694,16 +718,16 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
 
         av_frame_free(&frame);
 
-        if (!m_TestOnly) {
+        // Flush the codec to prepare for the real stream if we're
+        // going to use this decoder instance for streaming later
+        if (testMode == TestMode::TestFrame) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Test decode successful");
-
-            // Flush the codec to prepare for the real stream
             avcodec_flush_buffers(m_VideoDecoderCtx);
         }
     }
 
-    if (!m_TestOnly) {
+    if (testMode != TestMode::TestFrameOnly) {
         if ((params->videoFormat & VIDEO_FORMAT_MASK_H264) &&
                 !(m_BackendRenderer->getDecoderCapabilities() & CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC)) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1176,7 +1200,8 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
         // Initialize the backend renderer for testing
         if (initializeRendererInternal(m_BackendRenderer, &testFrameDecoderParams)) {
             if (completeInitialization(decoder, requiredFormat, &testFrameDecoderParams,
-                                       true, i == 0 /* EGL/DRM */)) {
+                                       (m_TestOnly || separateTestDecoder) ? TestMode::TestFrameOnly : TestMode::TestFrame,
+                                        i == 0 /* EGL/DRM */)) {
                 if (m_TestOnly) {
                     // This decoder is only for testing capabilities, so don't bother
                     // creating a usable renderer
@@ -1197,7 +1222,7 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                     }
 
                     if (initializeRendererInternal(m_BackendRenderer, params) &&
-                        completeInitialization(decoder, requiredFormat, params, false, i == 0 /* EGL/DRM */)) {
+                        completeInitialization(decoder, requiredFormat, params, TestMode::NoTesting, i == 0 /* EGL/DRM */)) {
                         return true;
                     }
                     else {
@@ -1869,6 +1894,32 @@ void FFmpegVideoDecoder::decoderThreadProc()
                         }
                     }
 
+                    // Some encoders (like RDNA3's AV1 encoder) include excess padding and expect us
+                    // to crop it off. If we find our received frame looks close to our requested
+                    // size (where "close" is arbitrarily defined as "within 64 pixels") then just
+                    // crop the video to our requested size instead.
+                    if (frame->width != m_OriginalVideoWidth || frame->height != m_OriginalVideoHeight) {
+                        int cropWidth = frame->width - m_OriginalVideoWidth;
+                        int cropHeight = frame->height - m_OriginalVideoHeight;
+
+                        if (cropWidth >= 0 && cropWidth < 64 && cropHeight >= 0 && cropHeight < 64) {
+                            if (m_FramesOut == 1) {
+                                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                            "Cropping incoming frames from (%d, %d) to (%d, %d)",
+                                            frame->width,
+                                            frame->height,
+                                            m_OriginalVideoWidth,
+                                            m_OriginalVideoHeight);
+                            }
+
+                            // We assume that all padding is added to the right and bottom.
+                            // This is true for the known affected encoders.
+                            frame->crop_right = cropWidth;
+                            frame->crop_bottom = cropHeight;
+                            av_frame_apply_cropping(frame, 0);
+                        }
+                    }
+
                     // Reset failed decodes count if we reached this far
                     m_ConsecutiveFailedDecodes = 0;
 
@@ -1953,7 +2004,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     PLENTRY entry = du->bufferList;
     int err;
 
-    SDL_assert(!m_TestOnly);
+    SDL_assert(m_CurrentTestMode != TestMode::TestFrameOnly);
 
     // If this is the first frame, reject anything that's not an IDR frame
     if (m_FramesIn == 0 && du->frameType != FRAME_TYPE_IDR) {

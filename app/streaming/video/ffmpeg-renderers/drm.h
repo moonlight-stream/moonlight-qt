@@ -86,14 +86,22 @@ class DrmRenderer : public IFFmpegRenderer {
             return m_Prop->prop_id;
         }
 
-        std::pair<uint64_t, uint64_t> range() const {
+        std::optional<std::pair<uint64_t, uint64_t>> range() const {
             if ((m_Prop->flags & (DRM_MODE_PROP_RANGE | DRM_MODE_PROP_SIGNED_RANGE)) &&
                 m_Prop->count_values == 2) {
                 return std::make_pair(m_Prop->values[0], m_Prop->values[1]);
             }
             else {
-                SDL_assert(false);
-                return std::make_pair(0, 0);
+                return std::nullopt;
+            }
+        }
+
+        uint64_t clamp(uint64_t value) const {
+            if (auto range = this->range()) {
+                return std::clamp(value, range->first, range->second);
+            }
+            else {
+                return value;
             }
         }
 
@@ -213,6 +221,8 @@ class DrmRenderer : public IFFmpegRenderer {
             // Atomic only
             uint32_t pendingFbId;
             uint32_t pendingDumbBuffer;
+            uint32_t fbDamageClipsPropId;
+            std::vector<drm_mode_rect> pendingFbDamageRects;
             bool modified;
         };
 
@@ -270,7 +280,7 @@ class DrmRenderer : public IFFmpegRenderer {
             }
         }
 
-        bool set(const DrmProperty& prop, uint64_t value, bool verbose = true) {
+        int set(uint32_t objectId, uint32_t objectType, uint32_t propId, uint64_t value) {
             int err;
 
             if (m_Atomic) {
@@ -281,7 +291,7 @@ class DrmRenderer : public IFFmpegRenderer {
                     m_AtomicReq = drmModeAtomicAlloc();
                 }
 
-                err = drmModeAtomicAddProperty(m_AtomicReq, prop.objectId(), prop.id(), value);
+                err = drmModeAtomicAddProperty(m_AtomicReq, objectId, propId, value);
 
                 // This returns the new count of properties on success,
                 // so normalize it to 0 like drmModeObjectSetProperty()
@@ -290,9 +300,14 @@ class DrmRenderer : public IFFmpegRenderer {
                 }
             }
             else {
-                err = drmModeObjectSetProperty(m_Fd, prop.objectId(), prop.objectType(), prop.id(), value);
+                err = drmModeObjectSetProperty(m_Fd, objectId, objectType, propId, value);
             }
 
+            return err;
+        }
+
+        bool set(const DrmProperty& prop, uint64_t value, bool verbose = true) {
+            int err = set(prop.objectId(), prop.objectType(), prop.id(), value);
             if (verbose && err == 0) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Set property '%s': %" PRIu64,
@@ -440,6 +455,26 @@ class DrmRenderer : public IFFmpegRenderer {
             }
         }
 
+        // The damage rect is relative to the FB
+        void damagePlane(const DrmPropertyMap& plane, const SDL_Rect& rect) {
+            SDL_assert(m_Atomic);
+
+            if (auto prop = plane.property("FB_DAMAGE_CLIPS")) {
+                std::lock_guard lg { m_Lock };
+                auto& pb = m_PlaneBuffers[plane.objectId()];
+
+                // Append this new damage rect to our existing list
+                drm_mode_rect drmRect;
+                drmRect.x1 = rect.x;
+                drmRect.x2 = rect.x + rect.w;
+                drmRect.y1 = rect.y;
+                drmRect.y2 = rect.y + rect.h;
+                pb.pendingFbDamageRects.emplace_back(std::move(drmRect));
+
+                pb.fbDamageClipsPropId = prop->id();
+            }
+        }
+
         bool testPlane(const DrmPropertyMap& plane,
                        uint32_t crtcId, uint32_t fbId,
                        int32_t crtcX, int32_t crtcY,
@@ -500,11 +535,41 @@ class DrmRenderer : public IFFmpegRenderer {
 
             drmModeAtomicReqPtr req = nullptr;
             std::unordered_map<uint32_t, PlaneBuffer> pendingBuffers;
+            std::vector<uint32_t> damageBlobIds;
 
             {
+                std::lock_guard lg { m_Lock };
+
+                // Create property blobs for any pending FB damage clip rects
+                for (auto &[planeId, pb] : m_PlaneBuffers) {
+                    uint32_t damageBlob;
+
+                    if (!pb.pendingFbDamageRects.empty()) {
+                        int err = drmModeCreatePropertyBlob(m_Fd,
+                                                            pb.pendingFbDamageRects.data(),
+                                                            pb.pendingFbDamageRects.size() * sizeof(drm_mode_rect),
+                                                            &damageBlob);
+                        if (err < 0) {
+                            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                         "drmModeCreatePropertyBlob(FB_DAMAGE_CLIPS) failed: %d",
+                                         err);
+                            continue;
+                        }
+
+                        err = set(planeId, DRM_MODE_OBJECT_PLANE, pb.fbDamageClipsPropId, damageBlob);
+                        if (err < 0) {
+                            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                         "Failed to set property 'FB_DAMAGE_CLIPS': %d",
+                                         err);
+                            // Fall-through
+                        }
+
+                        damageBlobIds.emplace_back(damageBlob);
+                    }
+                }
+
                 // Take ownership of the current atomic request to commit it and
                 // allow other threads to queue up changes for the next one.
-                std::lock_guard lg { m_Lock };
                 std::swap(req, m_AtomicReq);
                 std::swap(pendingBuffers, m_PlaneBuffers);
             }
@@ -539,6 +604,11 @@ class DrmRenderer : public IFFmpegRenderer {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "drmModeAtomicCommit() failed: %d",
                              err);
+            }
+
+            // Free the damage clip blobs
+            for (auto blobId : damageBlobIds) {
+                drmModeDestroyPropertyBlob(m_Fd, blobId);
             }
 
             // Update the buffer state for any modified planes
@@ -597,10 +667,17 @@ class DrmRenderer : public IFFmpegRenderer {
             SDL_assert(m_Atomic);
 
             // Set all mutable properties back to their initial values
-            for (auto& prop : object.properties()) {
-                if (!prop.second.isImmutable()) {
-                    set(prop.second, prop.second.initialValue());
-                }
+            for (auto&[id, prop] : object.properties()) {
+                restorePropertyToInitial(prop);
+            }
+        }
+
+        void restorePropertyToInitial(const DrmProperty& prop) {
+            if (!prop.isImmutable()) {
+                // We clamp() here because some DRM drivers actually initialize certain
+                // properties (max bpc) to values outside the legal range. Obviously,
+                // the kernel rejects these values when we later restore them back.
+                set(prop, prop.clamp(prop.initialValue()));
             }
         }
 
@@ -649,6 +726,10 @@ private:
     bool mapSoftwareFrame(AVFrame* frame, AVDRMFrameDescriptor* mappedFrame);
     bool addFbForFrame(AVFrame* frame, uint32_t* newFbId, bool testMode);
     bool uploadSurfaceToFb(SDL_Surface *surface, uint32_t* handle, uint32_t* fbId);
+    bool mapDumbBuffer(uint32_t handle, size_t size, void** mapping);
+    bool createFbForDumbBuffer(struct drm_mode_create_dumb* createBuf, uint32_t* fbId);
+    void enterOverlayCompositionMode();
+    void blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL_Surface* newSurface, SDL_Rect* overlayRect);
     static bool drmFormatMatchesVideoFormat(uint32_t drmFormat, int videoFormat);
 
     IFFmpegRenderer* m_BackendRenderer;
@@ -672,6 +753,8 @@ private:
     uint64_t m_VideoPlaneZpos;
     DrmPropertyMap m_OverlayPlanes[Overlay::OverlayMax];
     DrmPropertySetter m_PropSetter;
+    SDL_Surface* m_OverlayCompositionSurface;
+    std::mutex m_OverlayLock;
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];
     drmVersionPtr m_Version;
     uint32_t m_HdrOutputMetadataBlobId;

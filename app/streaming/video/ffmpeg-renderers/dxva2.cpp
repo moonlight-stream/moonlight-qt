@@ -10,6 +10,10 @@
 #include <streaming/streamutils.h>
 #include <streaming/session.h>
 
+extern "C" {
+#include <libavutil/hwcontext_dxva2.h>
+}
+
 #include <SDL_syswm.h>
 
 #define WIN32_LEAN_AND_MEAN
@@ -18,15 +22,6 @@
 #include <dwmapi.h>
 
 #include <Limelight.h>
-
-DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0xD2,0x5C,0x15,0xB3,0xD6);
-DEFINE_GUID(DXVA2_ModeAV1_VLD_Profile0,0xb8be4ccb,0xcf53,0x46ba,0x8d,0x59,0xd6,0xb8,0xa6,0xda,0x5d,0x2a);
-DEFINE_GUID(DXVA2_ModeAV1_VLD_Profile1,0x6936ff0f,0x45b1,0x4163,0x9c,0xc1,0x64,0x6e,0xf6,0x94,0x61,0x08);
-
-// This was incorrectly removed from public headers in FFmpeg 7.0
-#ifndef FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO
-#define FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO 2
-#endif
 
 using Microsoft::WRL::ComPtr;
 
@@ -39,15 +34,12 @@ typedef struct _VERTEX
 DXVA2Renderer::DXVA2Renderer(int decoderSelectionPass) :
     IFFmpegRenderer(RendererType::DXVA2),
     m_DecoderSelectionPass(decoderSelectionPass),
-    m_SurfacesUsed(0),
-    m_Pool(nullptr),
+    m_HwDeviceContext(nullptr),
     m_OverlayLock(0),
     m_FrameIndex(0),
     m_BlockingPresent(false),
     m_DeviceQuirks(0)
 {
-    RtlZeroMemory(&m_DXVAContext, sizeof(m_DXVAContext));
-
     // Use MMCSS scheduling for lower scheduling latency while we're streaming
     DwmEnableMMCSS(TRUE);
 }
@@ -56,8 +48,6 @@ DXVA2Renderer::~DXVA2Renderer()
 {
     DwmEnableMMCSS(FALSE);
 
-    m_DecService.Reset();
-    m_Decoder.Reset();
     m_Device.Reset();
     m_RenderTarget.Reset();
     m_ProcService.Reset();
@@ -71,80 +61,18 @@ DXVA2Renderer::~DXVA2Renderer()
         texture.Reset();
     }
 
-    for (auto& surface : m_DecSurfaces) {
-        surface.Reset();
-    }
-
-    if (m_Pool != nullptr) {
-        av_buffer_pool_uninit(&m_Pool);
-    }
-}
-
-void DXVA2Renderer::ffPoolDummyDelete(void*, uint8_t*)
-{
-    /* Do nothing */
-}
-
-AVBufferRef* DXVA2Renderer::ffPoolAlloc(void* opaque, FF_POOL_SIZE_TYPE)
-{
-    DXVA2Renderer* me = reinterpret_cast<DXVA2Renderer*>(opaque);
-
-    if (me->m_SurfacesUsed < me->m_DecSurfaces.size()) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "DXVA2 decoder surface high-water mark: %d",
-                    me->m_SurfacesUsed);
-        return av_buffer_create((uint8_t*)me->m_DecSurfacesRaw[me->m_SurfacesUsed++],
-                                sizeof(me->m_DecSurfacesRaw[0]), ffPoolDummyDelete, 0, 0);
-    }
-
-    return NULL;
+    av_buffer_unref(&m_HwDeviceContext);
+    m_DeviceManager.Reset();
 }
 
 bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
 {
-    // m_DXVAContext.workaround and report_id already initialized elsewhere
-    m_DXVAContext.decoder = m_Decoder.Get();
-    m_DXVAContext.cfg = &m_Config;
-    m_DXVAContext.surface = m_DecSurfacesRaw.data();
-    m_DXVAContext.surface_count = (unsigned int)m_DecSurfacesRaw.size();
-
-    context->hwaccel_context = &m_DXVAContext;
-
-    context->get_buffer2 = ffGetBuffer2;
-#if LIBAVCODEC_VERSION_MAJOR < 60
-    AV_NOWARN_DEPRECATED(
-        context->thread_safe_callbacks = 1;
-    )
-#endif
-
-    m_Pool = av_buffer_pool_init2(m_DecSurfaces.size(), this, ffPoolAlloc, nullptr);
-    if (!m_Pool) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed create buffer pool");
-        return false;
-    }
+    context->hw_device_ctx = av_buffer_ref(m_HwDeviceContext);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using DXVA2 accelerated renderer");
 
     return true;
-}
-
-int DXVA2Renderer::ffGetBuffer2(AVCodecContext* context, AVFrame* frame, int)
-{
-    DXVA2Renderer* me = (DXVA2Renderer*)((FFmpegVideoDecoder*)context->opaque)->getBackendRenderer();
-
-    frame->buf[0] = av_buffer_pool_get(me->m_Pool);
-    if (!frame->buf[0]) {
-        return AVERROR(ENOMEM);
-    }
-
-    frame->data[3] = frame->buf[0]->data;
-    frame->format = AV_PIX_FMT_DXVA2_VLD;
-    frame->width = me->m_VideoWidth;
-    frame->height = me->m_VideoHeight;
-
-    return 0;
 }
 
 bool DXVA2Renderer::initializeDecoder()
@@ -155,131 +83,42 @@ bool DXVA2Renderer::initializeDecoder()
         return false;
     }
 
-    hr = DXVA2CreateVideoService(m_Device.Get(), IID_IDirectXVideoDecoderService, &m_DecService);
+    UINT resetToken;
+    hr = DXVA2CreateDirect3DDeviceManager9(&resetToken, &m_DeviceManager);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "DXVA2CreateVideoService(IID_IDirectXVideoDecoderService) failed: %x",
+                     "DXVA2CreateDirect3DDeviceManager9() failed: %x",
                      hr);
         return false;
     }
 
-    GUID* guids;
-    GUID chosenDeviceGuid;
-    UINT guidCount;
-    hr = m_DecService->GetDecoderDeviceGuids(&guidCount, &guids);
+    hr = m_DeviceManager->ResetDevice(m_Device.Get(), resetToken);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "GetDecoderDeviceGuids() failed: %x",
+                     "IDirect3DDeviceManager9::ResetDevice() failed: %x",
                      hr);
         return false;
     }
 
-    UINT i;
-    for (i = 0; i < guidCount; i++) {
-        if (m_VideoFormat == VIDEO_FORMAT_H264) {
-            if (IsEqualGUID(guids[i], DXVA2_ModeH264_E) ||
-                    IsEqualGUID(guids[i], DXVA2_ModeH264_F)) {
-                chosenDeviceGuid = guids[i];
-                break;
-            }
-            else if (IsEqualGUID(guids[i], DXVADDI_Intel_ModeH264_E)) {
-                chosenDeviceGuid = guids[i];
-                m_DXVAContext.workaround |= FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO;
-                break;
-            }
-        }
-        else if (m_VideoFormat == VIDEO_FORMAT_H265) {
-            if (IsEqualGUID(guids[i], DXVA2_ModeHEVC_VLD_Main)) {
-                chosenDeviceGuid = guids[i];
-                break;
-            }
-        }
-        else if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
-            if (IsEqualGUID(guids[i], DXVA2_ModeHEVC_VLD_Main10)) {
-                chosenDeviceGuid = guids[i];
-                break;
-            }
-        }
-        else if (m_VideoFormat == VIDEO_FORMAT_AV1_MAIN8 || m_VideoFormat == VIDEO_FORMAT_AV1_MAIN10) {
-            if (IsEqualGUID(guids[i], DXVA2_ModeAV1_VLD_Profile0)) {
-                chosenDeviceGuid = guids[i];
-                break;
-            }
-        }
-        else if (m_VideoFormat == VIDEO_FORMAT_AV1_HIGH8_444 || m_VideoFormat == VIDEO_FORMAT_AV1_HIGH10_444) {
-            if (IsEqualGUID(guids[i], DXVA2_ModeAV1_VLD_Profile1)) {
-                chosenDeviceGuid = guids[i];
-                break;
-            }
-        }
-    }
-
-    CoTaskMemFree(guids);
-
-    if (i == guidCount) {
+    m_HwDeviceContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_DXVA2);
+    if (!m_HwDeviceContext) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "No matching decoder device GUIDs");
+                     "Failed to allocate DXVA2 device context");
         return false;
     }
 
-    DXVA2_ConfigPictureDecode* configs;
-    UINT configCount;
-    hr = m_DecService->GetDecoderConfigurations(chosenDeviceGuid, &m_Desc, nullptr, &configCount, &configs);
-    if (FAILED(hr)) {
+    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwDeviceContext->data;
+    AVDXVA2DeviceContext* dxva2DeviceContext = (AVDXVA2DeviceContext*)deviceContext->hwctx;
+
+    // FFmpeg assumes the lifetime of this object will be managed externally.
+    // Unlike D3D11VA, it does not release a reference to this object.
+    dxva2DeviceContext->devmgr = m_DeviceManager.Get();
+
+    int err = av_hwdevice_ctx_init(m_HwDeviceContext);
+    if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "GetDecoderConfigurations() failed: %x",
-                     hr);
-        return false;
-    }
-
-    for (i = 0; i < configCount; i++) {
-        if ((configs[i].ConfigBitstreamRaw == 1 || configs[i].ConfigBitstreamRaw == 2) &&
-                IsEqualGUID(configs[i].guidConfigBitstreamEncryption, DXVA2_NoEncrypt)) {
-            m_Config = configs[i];
-            break;
-        }
-    }
-
-    CoTaskMemFree(configs);
-
-    if (i == configCount) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "No matching decoder configurations");
-        return false;
-    }
-
-    // Alignment was already taken care of
-    SDL_assert(m_Desc.SampleWidth % 16 == 0);
-    SDL_assert(m_Desc.SampleHeight % 16 == 0);
-    hr = m_DecService->CreateSurface(m_Desc.SampleWidth,
-                                     m_Desc.SampleHeight,
-                                     (UINT)m_DecSurfacesRaw.size() - 1,
-                                     m_Desc.Format,
-                                     D3DPOOL_DEFAULT,
-                                     0,
-                                     DXVA2_VideoDecoderRenderTarget,
-                                     m_DecSurfacesRaw.data(),
-                                     nullptr);
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "CreateSurface() failed: %x",
-                     hr);
-        return false;
-    }
-
-    // Transfer ownership into ComPtrs
-    for (int i = 0; i < m_DecSurfaces.size(); i++) {
-        m_DecSurfaces[i].Attach(m_DecSurfacesRaw[i]);
-    }
-
-    hr = m_DecService->CreateVideoDecoder(chosenDeviceGuid, &m_Desc, &m_Config,
-                                          m_DecSurfacesRaw.data(),
-                                          (UINT)m_DecSurfacesRaw.size(),
-                                          &m_Decoder);
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "CreateVideoDecoder() failed: %x",
-                     hr);
+                     "Failed to initialize D3D11VA device context: %d",
+                     err);
         return false;
     }
 
@@ -288,9 +127,7 @@ bool DXVA2Renderer::initializeDecoder()
 
 bool DXVA2Renderer::initializeRenderer()
 {
-    HRESULT hr;
-
-    hr = m_Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &m_RenderTarget);
+    HRESULT hr = m_Device->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &m_RenderTarget);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "GetBackBuffer() failed: %x",
@@ -303,66 +140,6 @@ bool DXVA2Renderer::initializeRenderer()
 
     m_DisplayWidth = renderTargetDesc.Width;
     m_DisplayHeight = renderTargetDesc.Height;
-
-    if (!(m_DeviceQuirks & DXVA2_QUIRK_NO_VP)) {
-        hr = DXVA2CreateVideoService(m_Device.Get(), IID_IDirectXVideoProcessorService, &m_ProcService);
-
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DXVA2CreateVideoService(IID_IDirectXVideoProcessorService) failed: %x",
-                         hr);
-            return false;
-        }
-
-        DXVA2_VideoProcessorCaps caps;
-        hr = m_ProcService->GetVideoProcessorCaps(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, &caps);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "GetVideoProcessorCaps() failed for DXVA2_VideoProcProgressiveDevice: %x",
-                         hr);
-            return false;
-        }
-
-        if (!(caps.DeviceCaps & DXVA2_VPDev_HardwareDevice)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DXVA2_VideoProcProgressiveDevice is not hardware: %x",
-                         caps.DeviceCaps);
-            return false;
-        }
-        else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGB) &&
-                 !(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGBExtended)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DXVA2_VideoProcProgressiveDevice can't convert YUV2RGB: %x",
-                         caps.VideoProcessorOperations);
-            return false;
-        }
-        else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchX) ||
-                 !(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchY)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DXVA2_VideoProcProgressiveDevice can't stretch video: %x",
-                         caps.VideoProcessorOperations);
-            return false;
-        }
-
-        if (caps.DeviceCaps & DXVA2_VPDev_EmulatedDXVA1) {
-            // DXVA2 over DXVA1 may have bad performance
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "DXVA2_VideoProcProgressiveDevice is DXVA1");
-        }
-
-        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Brightness, &m_BrightnessRange);
-        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Contrast, &m_ContrastRange);
-        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Hue, &m_HueRange);
-        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Saturation, &m_SaturationRange);
-
-        hr = m_ProcService->CreateVideoProcessor(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, 0, &m_Processor);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "CreateVideoProcessor() failed for DXVA2_VideoProcProgressiveDevice: %x",
-                         hr);
-            return false;
-        }
-    }
 
     m_Device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
     m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
@@ -379,6 +156,88 @@ bool DXVA2Renderer::initializeRenderer()
     m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 
     m_Device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
+
+    return true;
+}
+
+// This may be called multiple times during a stream
+bool DXVA2Renderer::initializeVideoProcessor()
+{
+    // Check if we should use a video processor
+    if (m_DeviceQuirks & DXVA2_QUIRK_NO_VP) {
+        return true;
+    }
+
+    // Open a handle to our device that we share with FFmpeg
+    HANDLE deviceHandle;
+    HRESULT hr = m_DeviceManager->OpenDeviceHandle(&deviceHandle);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "IDirect3DDeviceManager9::OpenDeviceHandle() failed: %x",
+                     hr);
+        return false;
+    }
+
+    // Derive our video processor from the shared device
+    hr = m_DeviceManager->GetVideoService(deviceHandle, IID_IDirectXVideoProcessorService, &m_ProcService);
+    m_DeviceManager->CloseDeviceHandle(deviceHandle);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "IDirect3DDeviceManager9::GetVideoService() failed: %x",
+                     hr);
+        return false;
+    }
+
+    DXVA2_VideoProcessorCaps caps;
+    D3DSURFACE_DESC renderTargetDesc;
+    m_RenderTarget->GetDesc(&renderTargetDesc);
+    hr = m_ProcService->GetVideoProcessorCaps(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, &caps);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "GetVideoProcessorCaps() failed for DXVA2_VideoProcProgressiveDevice: %x",
+                     hr);
+        return false;
+    }
+
+    if (!(caps.DeviceCaps & DXVA2_VPDev_HardwareDevice)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DXVA2_VideoProcProgressiveDevice is not hardware: %x",
+                     caps.DeviceCaps);
+        return false;
+    }
+    else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGB) &&
+             !(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGBExtended)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DXVA2_VideoProcProgressiveDevice can't convert YUV2RGB: %x",
+                     caps.VideoProcessorOperations);
+        return false;
+    }
+    else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchX) ||
+             !(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchY)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DXVA2_VideoProcProgressiveDevice can't stretch video: %x",
+                     caps.VideoProcessorOperations);
+        return false;
+    }
+
+    if (caps.DeviceCaps & DXVA2_VPDev_EmulatedDXVA1) {
+        // DXVA2 over DXVA1 may have bad performance
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "DXVA2_VideoProcProgressiveDevice is DXVA1");
+    }
+
+    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Brightness, &m_BrightnessRange);
+    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Contrast, &m_ContrastRange);
+    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Hue, &m_HueRange);
+    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Saturation, &m_SaturationRange);
+
+    hr = m_ProcService->CreateVideoProcessor(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, 0, &m_Processor);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "CreateVideoProcessor() failed for DXVA2_VideoProcProgressiveDevice: %x",
+                     hr);
+        return false;
+    }
 
     return true;
 }
@@ -412,14 +271,18 @@ bool DXVA2Renderer::initializeQuirksForAdapter(IDirect3D9Ex* d3d9ex, int adapter
 
         hr = d3d9ex->GetAdapterIdentifier(adapterIndex, 0, &id);
         if (SUCCEEDED(hr)) {
-            if (id.VendorId == 0x8086) {
+            if (id.VendorId == 0x8086 && !(m_VideoFormat & VIDEO_FORMAT_MASK_YUV444)) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Avoiding IDirectXVideoProcessor API on Intel GPU");
+                            "Avoiding IDirectXVideoProcessor API for YUV 4:2:0 on Intel GPU");
 
                 // On Intel GPUs, we can get unwanted video "enhancements" due to post-processing
                 // effects that the GPU driver forces on us. In many cases, this makes the video
                 // actually look worse. We can avoid these by using StretchRect() instead on these
                 // platforms.
+                //
+                // We don't do this for YUV 4:4:4 because Intel GPUs falsely claim to support AYUV
+                // format conversion with StretchRect() via CheckDeviceFormatConversion() but the
+                // output has completely incorrect colors. VideoProcessBlt() works fine though.
                 m_DeviceQuirks |= DXVA2_QUIRK_NO_VP;
             }
             else if (id.VendorId == 0x4d4f4351) { // QCOM in ASCII
@@ -713,11 +576,6 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
         // the HDR colorspace and HDR display metadata required to enable HDR mode properly.
         return false;
     }
-    else if (params->videoFormat & VIDEO_FORMAT_MASK_YUV444) {
-        // It's theoretically possible to use YUV444 with D3D9, but probably not worth actually
-        // implementing because any YUV444-capable hardware supports D3D11 or Vulkan.
-        return false;
-    }
 #ifndef Q_PROCESSOR_X86
     else if (qgetenv("DXVA2_ENABLED") != "1" && m_DecoderSelectionPass == 0) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -727,49 +585,6 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
 #endif
 
     m_VideoFormat = params->videoFormat;
-    m_VideoWidth = params->width;
-    m_VideoHeight = params->height;
-
-    RtlZeroMemory(&m_Desc, sizeof(m_Desc));
-
-    int alignment;
-
-    // HEVC and AV1 using DXVA requires 128 pixel alignment, however this causes Intel GPUs
-    // using StretchRect() and HEVC to render draw a translucent green line at the top of
-    // the screen in full-screen mode at 720p/1080p unless we use 32 pixel alignment.
-    // This appears to work without issues on AMD and Nvidia GPUs too, so we will
-    // do it unconditionally for now.
-    // https://github.com/FFmpeg/FFmpeg/blob/a234e5cd80224c95a205c1f3e297d8c04a1374c3/libavcodec/dxva2.c#L609-L616
-    if (m_VideoFormat & VIDEO_FORMAT_MASK_H265) {
-        alignment = 32;
-    }
-    else if (m_VideoFormat & VIDEO_FORMAT_MASK_H264) {
-        alignment = 16;
-    }
-    else {
-        alignment = 128;
-    }
-
-    m_Desc.SampleWidth = FFALIGN(m_VideoWidth, alignment);
-    m_Desc.SampleHeight = FFALIGN(m_VideoHeight, alignment);
-    m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Unknown;
-    m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_Unknown;
-    m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_Unknown;
-    m_Desc.SampleFormat.VideoLighting = DXVA2_VideoLighting_Unknown;
-    m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_Unknown;
-    m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_Unknown;
-    m_Desc.SampleFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
-
-    if (m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) {
-        m_Desc.Format = (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
-            (D3DFORMAT)MAKEFOURCC('Y','4','1','0') :
-            (D3DFORMAT)MAKEFOURCC('A','Y','U','V');
-    }
-    else {
-        m_Desc.Format = (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
-            (D3DFORMAT)MAKEFOURCC('P','0','1','0') :
-            (D3DFORMAT)MAKEFOURCC('N','V','1','2');
-    }
 
     if (!initializeDevice(params->window, params->enableVsync)) {
         return false;
@@ -988,100 +803,117 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);
     HRESULT hr;
 
-    m_Desc.SampleFormat.NominalRange = isFrameFullRange(frame) ? DXVA2_NominalRange_0_255 : DXVA2_NominalRange_16_235;
+    if (hasFrameFormatChanged(frame)) {
+        D3DSURFACE_DESC desc;
+        surface->GetDesc(&desc);
 
-    switch (frame->color_primaries) {
-    case AVCOL_PRI_BT709:
-        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_BT709;
-        break;
-    case AVCOL_PRI_BT470M:
-        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_BT470_2_SysM;
-        break;
-    case AVCOL_PRI_BT470BG:
-        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_BT470_2_SysBG;
-        break;
-    case AVCOL_PRI_SMPTE170M:
-        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_SMPTE170M;
-        break;
-    case AVCOL_PRI_SMPTE240M:
-        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_SMPTE240M;
-        break;
-    default:
-        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_Unknown;
-        break;
-    }
+        RtlZeroMemory(&m_Desc, sizeof(m_Desc));
+        m_Desc.SampleWidth = frame->width;
+        m_Desc.SampleHeight = frame->height;
+        m_Desc.Format = desc.Format;
 
-    switch (frame->color_trc) {
-    case AVCOL_TRC_SMPTE170M:
-    case AVCOL_TRC_BT709:
-        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_709;
-        break;
-    case AVCOL_TRC_LINEAR:
-        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_10;
-        break;
-    case AVCOL_TRC_GAMMA22:
-        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_22;
-        break;
-    case AVCOL_TRC_GAMMA28:
-        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_28;
-        break;
-    case AVCOL_TRC_SMPTE240M:
-        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_240M;
-        break;
-    case AVCOL_TRC_IEC61966_2_1:
-        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_sRGB;
-        break;
-    default:
-        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_Unknown;
-        break;
-    }
+        m_Desc.SampleFormat.NominalRange = isFrameFullRange(frame) ? DXVA2_NominalRange_0_255 : DXVA2_NominalRange_16_235;
+        m_Desc.SampleFormat.VideoLighting = DXVA2_VideoLighting_Unknown;
+        m_Desc.SampleFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
 
-    switch (getFrameColorspace(frame)) {
-    case COLORSPACE_REC_709:
-        m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709;
-        break;
-    case COLORSPACE_REC_601:
-        m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT601;
-        break;
-    default:
-        m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_Unknown;
-        break;
-    }
+        switch (frame->color_primaries) {
+        case AVCOL_PRI_BT709:
+            m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_BT709;
+            break;
+        case AVCOL_PRI_BT470M:
+            m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_BT470_2_SysM;
+            break;
+        case AVCOL_PRI_BT470BG:
+            m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_BT470_2_SysBG;
+            break;
+        case AVCOL_PRI_SMPTE170M:
+            m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_SMPTE170M;
+            break;
+        case AVCOL_PRI_SMPTE240M:
+            m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_SMPTE240M;
+            break;
+        default:
+            m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_Unknown;
+            break;
+        }
 
-    switch (frame->chroma_location) {
-    case AVCHROMA_LOC_LEFT:
-        m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Horizontally_Cosited |
-                                                     DXVA2_VideoChromaSubsampling_Vertically_AlignedChromaPlanes |
-                                                     DXVA2_VideoChromaSubsampling_ProgressiveChroma;
-        break;
-    case AVCHROMA_LOC_CENTER:
-        m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Vertically_AlignedChromaPlanes |
-                                                     DXVA2_VideoChromaSubsampling_ProgressiveChroma;
-        break;
-    case AVCHROMA_LOC_TOPLEFT:
-        m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Horizontally_Cosited |
-                                                     DXVA2_VideoChromaSubsampling_Vertically_Cosited |
-                                                     DXVA2_VideoChromaSubsampling_ProgressiveChroma;
-        break;
-    default:
-        m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Unknown;
-        break;
+        switch (frame->color_trc) {
+        case AVCOL_TRC_SMPTE170M:
+        case AVCOL_TRC_BT709:
+            m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_709;
+            break;
+        case AVCOL_TRC_LINEAR:
+            m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_10;
+            break;
+        case AVCOL_TRC_GAMMA22:
+            m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_22;
+            break;
+        case AVCOL_TRC_GAMMA28:
+            m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_28;
+            break;
+        case AVCOL_TRC_SMPTE240M:
+            m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_240M;
+            break;
+        case AVCOL_TRC_IEC61966_2_1:
+            m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_sRGB;
+            break;
+        default:
+            m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_Unknown;
+            break;
+        }
+
+        switch (getFrameColorspace(frame)) {
+        case COLORSPACE_REC_709:
+            m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709;
+            break;
+        case COLORSPACE_REC_601:
+            m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT601;
+            break;
+        default:
+            m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_Unknown;
+            break;
+        }
+
+        switch (frame->chroma_location) {
+        case AVCHROMA_LOC_LEFT:
+            m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Horizontally_Cosited |
+                                                         DXVA2_VideoChromaSubsampling_Vertically_AlignedChromaPlanes |
+                                                         DXVA2_VideoChromaSubsampling_ProgressiveChroma;
+            break;
+        case AVCHROMA_LOC_CENTER:
+            m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Vertically_AlignedChromaPlanes |
+                                                         DXVA2_VideoChromaSubsampling_ProgressiveChroma;
+            break;
+        case AVCHROMA_LOC_TOPLEFT:
+            m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Horizontally_Cosited |
+                                                         DXVA2_VideoChromaSubsampling_Vertically_Cosited |
+                                                         DXVA2_VideoChromaSubsampling_ProgressiveChroma;
+            break;
+        default:
+            m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Unknown;
+            break;
+        }
+
+        // Reinitialize the video processor for this new sample format
+        if (!initializeVideoProcessor()) {
+            m_Processor.Reset();
+        }
     }
 
     DXVA2_VideoSample sample = {};
     sample.Start = m_FrameIndex;
     sample.End = m_FrameIndex + 1;
     sample.SrcSurface = surface;
-    sample.SrcRect.right = m_VideoWidth;
-    sample.SrcRect.bottom = m_VideoHeight;
+    sample.SrcRect.right = frame->width;
+    sample.SrcRect.bottom = frame->height;
     sample.SampleFormat = m_Desc.SampleFormat;
     sample.PlanarAlpha = DXVA2_Fixed32OpaqueAlpha();
 
     // Center in frame and preserve aspect ratio
     SDL_Rect src, dst;
     src.x = src.y = 0;
-    src.w = m_VideoWidth;
-    src.h = m_VideoHeight;
+    src.w = frame->width;
+    src.h = frame->height;
     dst.x = dst.y = 0;
     dst.w = m_DisplayWidth;
     dst.h = m_DisplayHeight;

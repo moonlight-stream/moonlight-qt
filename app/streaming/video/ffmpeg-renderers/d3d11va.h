@@ -22,6 +22,7 @@ public:
     virtual bool prepareDecoderContextInGetFormat(AVCodecContext* context, AVPixelFormat pixelFormat) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
+    virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo) override;
     virtual void waitToRender() override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
@@ -40,10 +41,14 @@ private:
 
     bool setupRenderingResources();
     std::vector<DXGI_FORMAT> getVideoTextureSRVFormats();
-    bool setupVideoTexture(); // for !m_BindDecoderOutputTextures
-    bool setupTexturePoolViews(AVD3D11VAFramesContext* frameContext); // for m_BindDecoderOutputTextures
+    bool setupFrameRenderingResources(AVHWFramesContext* framesContext);
+    bool setupSwapchainDependentResources();
+    bool setupVideoTexture(AVHWFramesContext* framesContext); // for !m_BindDecoderOutputTextures
+    bool setupTexturePoolViews(AVHWFramesContext* framesContext); // for m_BindDecoderOutputTextures
     void renderOverlay(Overlay::OverlayType type);
-    void bindColorConversion(AVFrame* frame);
+    bool createOverlayVertexBuffer(Overlay::OverlayType type, int width, int height, Microsoft::WRL::ComPtr<ID3D11Buffer>& newVertexBuffer);
+    void bindColorConversion(bool frameChanged, AVFrame* frame);
+    void bindVideoVertexBuffer(bool frameChanged, AVFrame* frame);
     void renderVideo(AVFrame* frame);
     bool checkDecoderSupport(IDXGIAdapter* adapter);
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
@@ -59,6 +64,7 @@ private:
     };
 
     Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
+    int m_AdapterIndex;
     Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
     Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext1> m_DeviceContext;
@@ -67,17 +73,16 @@ private:
     Microsoft::WRL::ComPtr<ID3D11BlendState> m_OverlayBlendState;
 
     SupportedFenceType m_FenceType;
-    Microsoft::WRL::ComPtr<ID3D11Fence> m_Fence;
-    Microsoft::WRL::Wrappers::Event m_FenceEvent;
-    UINT64 m_NextFenceValue;
+    Microsoft::WRL::ComPtr<ID3D11Fence> m_PreviousFrameRenderedFence;
+    Microsoft::WRL::Wrappers::Event m_PreviousFrameRenderedEvent;
+    UINT64 m_PreviousFrameRenderedFenceValue;
+    Microsoft::WRL::ComPtr<ID3D11Fence> m_DecoderShaderBindFence;
+    UINT64 m_DecoderShaderBindFenceValue;
     SDL_mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;
 
     DECODER_PARAMETERS m_DecoderParams;
-    int m_TextureAlignment;
     DXGI_FORMAT m_TextureFormat;
-    UINT m_TextureWidth;
-    UINT m_TextureHeight;
     int m_DisplayWidth;
     int m_DisplayHeight;
     AVColorTransferCharacteristic m_LastColorTrc;
@@ -91,8 +96,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Texture2D> m_VideoTexture;
 
     // Only index 0 is valid if !m_BindDecoderOutputTextures
-#define DECODER_BUFFER_POOL_SIZE 17
-    std::array<std::array<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>, 2>, DECODER_BUFFER_POOL_SIZE> m_VideoTextureResourceViews;
+    std::vector<std::array<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>, 2>> m_VideoTextureResourceViews;
 
     SDL_SpinLock m_OverlayLock;
     std::array<Microsoft::WRL::ComPtr<ID3D11Buffer>, Overlay::OverlayMax> m_OverlayVertexBuffers;
@@ -101,6 +105,5 @@ private:
     Microsoft::WRL::ComPtr<ID3D11PixelShader> m_OverlayPixelShader;
 
     AVBufferRef* m_HwDeviceContext;
-    AVBufferRef* m_HwFramesContext;
 };
 

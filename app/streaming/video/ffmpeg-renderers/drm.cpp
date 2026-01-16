@@ -148,6 +148,7 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_MustCloseDrmFd(false),
       m_SupportsDirectRendering(false),
       m_VideoFormat(0),
+      m_OverlayCompositionSurface(nullptr),
       m_OverlayRects{},
       m_Version(nullptr),
       m_HdrOutputMetadataBlobId(0),
@@ -163,6 +164,12 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
 
 DrmRenderer::~DrmRenderer()
 {
+    // If we have a composition surface, unmap it before disabling planes
+    if (m_OverlayCompositionSurface) {
+        munmap(m_OverlayCompositionSurface->pixels, (uintptr_t)m_OverlayCompositionSurface->userdata);
+        SDL_FreeSurface(m_OverlayCompositionSurface);
+    }
+
     if (m_DrmStateModified) {
         // Ensure we're out of HDR mode
         setHdrMode(false);
@@ -175,20 +182,20 @@ DrmRenderer::~DrmRenderer()
 
         // Revert our changes from prepareToRender()
         if (auto prop = m_Connector.property("content type")) {
-            m_PropSetter.set(*prop, prop->initialValue());
+            m_PropSetter.restorePropertyToInitial(*prop);
         }
         if (auto prop = m_Crtc.property("VRR_ENABLED")) {
-            m_PropSetter.set(*prop, prop->initialValue());
+            m_PropSetter.restorePropertyToInitial(*prop);
         }
         if (auto prop = m_Connector.property("max bpc")) {
-            m_PropSetter.set(*prop, prop->initialValue());
+            m_PropSetter.restorePropertyToInitial(*prop);
         }
         if (auto zpos = m_VideoPlane.property("zpos"); zpos && !zpos->isImmutable()) {
-            m_PropSetter.set(*zpos, zpos->initialValue());
+            m_PropSetter.restorePropertyToInitial(*zpos);
         }
         for (int i = 0; i < Overlay::OverlayMax; i++) {
             if (auto zpos = m_OverlayPlanes[i].property("zpos"); zpos && !zpos->isImmutable()) {
-                m_PropSetter.set(*zpos, zpos->initialValue());
+                m_PropSetter.restorePropertyToInitial(*zpos);
             }
         }
         for (auto &plane : m_UnusedActivePlanes) {
@@ -360,8 +367,7 @@ void DrmRenderer::prepareToRender()
             enableVrr = !m_Vsync;
         }
 
-        auto range = prop->range();
-        m_PropSetter.set(*prop, std::clamp<uint64_t>(enableVrr ? 1 : 0, range.first, range.second));
+        m_PropSetter.set(*prop, prop->clamp(enableVrr ? 1 : 0));
     }
 
     if (auto prop = m_Connector.property("max bpc")) {
@@ -375,8 +381,7 @@ void DrmRenderer::prepareToRender()
         }
 
         if (maxBpc > 0) {
-            auto range = prop->range();
-            m_PropSetter.set(*prop, std::clamp<uint64_t>(maxBpc, range.first, range.second));
+            m_PropSetter.set(*prop, prop->clamp(maxBpc));
         }
     }
 
@@ -393,8 +398,7 @@ void DrmRenderer::prepareToRender()
             // means undefined ordering between the planes, but that's fine.
             // The planes should never overlap anyway.
             if (!zpos->isImmutable() && zpos->initialValue() <= m_VideoPlaneZpos) {
-                auto zposRange = zpos->range();
-                uint64_t newZpos = std::clamp(m_VideoPlaneZpos + 1, zposRange.first, zposRange.second);
+                uint64_t newZpos = zpos->clamp(m_VideoPlaneZpos + 1);
 
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Moving overlay plane %u to zpos: %" PRIu64,
@@ -411,6 +415,12 @@ void DrmRenderer::prepareToRender()
                     "Disabling unused plane: %u",
                     plane.second.objectId());
         m_PropSetter.disablePlane(plane.second);
+    }
+
+    // Enter overlay composition mode if we don't have enough planes to display all the
+    // possible overlays we might need, but we have at least one available
+    if (m_OverlayPlanes[0].isValid() && !m_OverlayPlanes[Overlay::OverlayMax - 1].isValid()) {
+        enterOverlayCompositionMode();
     }
 
     m_PropSetter.apply();
@@ -745,7 +755,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     }
                 }
                 else {
-                    auto zposRange = zpos->range();
+                    auto zposRange = *zpos->range();
 
                     uint64_t lowestAcceptableZpos;
 
@@ -769,7 +779,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                         lowestAcceptableZpos = *zposIt + 1;
                     }
 
-                    m_VideoPlaneZpos = std::clamp(lowestAcceptableZpos, zposRange.first, zposRange.second);
+                    m_VideoPlaneZpos = zpos->clamp(lowestAcceptableZpos);
                 }
             }
             else {
@@ -853,7 +863,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                         continue;
                     }
                 }
-                else if (zpos->range().second <= m_VideoPlaneZpos) {
+                else if ((*zpos->range()).second <= m_VideoPlaneZpos) {
                     // This plane cannot be raised high enough to be visible
                     drmModeFreePlane(plane);
                     continue;
@@ -876,9 +886,13 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Overlays require DRM atomic support");
     }
+    else if (overlayIndex == 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Unable to find any suitable overlay planes");
+    }
     else if (overlayIndex < Overlay::OverlayMax) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Unable to find suitable overlay planes (%d of %d found)",
+                    "Using overlay composition (%d of %d found)",
                     overlayIndex,
                     Overlay::OverlayMax);
     }
@@ -1150,33 +1164,8 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
     }
 
     // Map the dumb buffer if needed
-    if (!drmFrame->mapping) {
-        struct drm_mode_map_dumb mapBuf = {};
-        mapBuf.handle = drmFrame->handle;
-
-        int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_MAP_DUMB, &mapBuf);
-        if (err < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DRM_IOCTL_MODE_MAP_DUMB failed: %d",
-                         errno);
-            goto Exit;
-        }
-
-        // Raspberry Pi on kernel 6.1 defaults to an aarch64 kernel with a 32-bit userspace (and off_t).
-        // This leads to issues when DRM_IOCTL_MODE_MAP_DUMB returns a > 4GB offset. The high bits are
-        // chopped off when passed via the normal mmap() call using 32-bit off_t. We avoid this issue
-        // by explicitly calling mmap64() to ensure the 64-bit offset is never truncated.
-#if defined(__GLIBC__) && QT_POINTER_SIZE == 4
-        drmFrame->mapping = (uint8_t*)mmap64(nullptr, drmFrame->size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
-#else
-        drmFrame->mapping = (uint8_t*)mmap(nullptr, drmFrame->size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
-#endif
-        if (drmFrame->mapping == MAP_FAILED) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "mmap() failed for dumb buffer: %d",
-                         errno);
-            goto Exit;
-        }
+    if (!drmFrame->mapping && !mapDumbBuffer(drmFrame->handle, drmFrame->size, (void**)&drmFrame->mapping)) {
+        goto Exit;
     }
 
     // Convert this buffer handle to a FD if needed
@@ -1270,11 +1259,62 @@ Exit:
     return ret;
 }
 
+bool DrmRenderer::mapDumbBuffer(uint32_t handle, size_t size, void** mapping)
+{
+    struct drm_mode_map_dumb mapBuf = {};
+    mapBuf.handle = handle;
+    int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_MAP_DUMB, &mapBuf);
+    if (err < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DRM_IOCTL_MODE_MAP_DUMB failed: %d",
+                     errno);
+        return false;
+    }
+
+    // Raspberry Pi on kernel 6.1 defaults to an aarch64 kernel with a 32-bit userspace (and off_t).
+    // This leads to issues when DRM_IOCTL_MODE_MAP_DUMB returns a > 4GB offset. The high bits are
+    // chopped off when passed via the normal mmap() call using 32-bit off_t. We avoid this issue
+    // by explicitly calling mmap64() to ensure the 64-bit offset is never truncated.
+#if defined(__GLIBC__) && QT_POINTER_SIZE == 4
+    *mapping = mmap64(nullptr, size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
+#else
+    *mapping = mmap(nullptr, size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
+#endif
+    if (mapping == MAP_FAILED) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "mmap() failed for dumb buffer: %d",
+                     errno);
+        *mapping = nullptr;
+        return false;
+    }
+
+    return true;
+}
+
+bool DrmRenderer::createFbForDumbBuffer(struct drm_mode_create_dumb* createBuf, uint32_t* fbId)
+{
+    uint32_t handles[4] = {0}, pitches[4] = {0}, offsets[4] = {0};
+
+    // Create a FB backed by the dumb buffer
+    handles[0] = createBuf->handle;
+    pitches[0] = createBuf->pitch;
+    int err = drmModeAddFB2(m_DrmFd, createBuf->width, createBuf->height,
+                            DRM_FORMAT_ARGB8888,
+                            handles, pitches, offsets, fbId, 0);
+    if (err < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "drmModeAddFB2() failed: %d",
+                     err);
+        return false;
+    }
+
+    return true;
+}
+
 bool DrmRenderer::uploadSurfaceToFb(SDL_Surface *surface, uint32_t* handle, uint32_t* fbId)
 {
     struct drm_mode_create_dumb createBuf = {};
     void* mapping;
-    uint32_t handles[4] = {0}, pitches[4] = {0}, offsets[4] = {0};
 
     createBuf.width = surface->w;
     createBuf.height = surface->h;
@@ -1287,29 +1327,8 @@ bool DrmRenderer::uploadSurfaceToFb(SDL_Surface *surface, uint32_t* handle, uint
         return false;
     }
 
-    struct drm_mode_map_dumb mapBuf = {};
-    mapBuf.handle = createBuf.handle;
-    err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_MAP_DUMB, &mapBuf);
-    if (err < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "DRM_IOCTL_MODE_MAP_DUMB failed: %d",
-                     errno);
-        goto Fail;
-    }
-
-    // Raspberry Pi on kernel 6.1 defaults to an aarch64 kernel with a 32-bit userspace (and off_t).
-    // This leads to issues when DRM_IOCTL_MODE_MAP_DUMB returns a > 4GB offset. The high bits are
-    // chopped off when passed via the normal mmap() call using 32-bit off_t. We avoid this issue
-    // by explicitly calling mmap64() to ensure the 64-bit offset is never truncated.
-#if defined(__GLIBC__) && QT_POINTER_SIZE == 4
-    mapping = mmap64(nullptr, createBuf.size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
-#else
-    mapping = mmap(nullptr, createBuf.size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
-#endif
-    if (mapping == MAP_FAILED) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "mmap() failed for dumb buffer: %d",
-                     errno);
+    // Map the buffer, so we can copy our data into it
+    if (!mapDumbBuffer(createBuf.handle, createBuf.size, &mapping)) {
         goto Fail;
     }
 
@@ -1319,16 +1338,7 @@ bool DrmRenderer::uploadSurfaceToFb(SDL_Surface *surface, uint32_t* handle, uint
 
     munmap(mapping, createBuf.size);
 
-    // Create a FB backed by the dumb buffer
-    handles[0] = createBuf.handle;
-    pitches[0] = createBuf.pitch;
-    err = drmModeAddFB2(m_DrmFd, createBuf.width, createBuf.height,
-                        DRM_FORMAT_ARGB8888,
-                        handles, pitches, offsets, fbId, 0);
-    if (err < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "drmModeAddFB2() failed: %d",
-                     err);
+    if (!createFbForDumbBuffer(&createBuf, fbId)) {
         goto Fail;
     }
 
@@ -1342,15 +1352,165 @@ Fail:
     return false;
 }
 
+void DrmRenderer::enterOverlayCompositionMode()
+{
+    if (m_OverlayCompositionSurface) {
+        return;
+    }
+
+    // Turn off all existing overlay planes
+    for (auto &overlay : m_OverlayPlanes) {
+        if (overlay.isValid()) {
+            m_PropSetter.disablePlane(overlay);
+        }
+    }
+
+    struct drm_mode_create_dumb createBuf = {};
+    uint32_t fbId;
+    void* mapping = nullptr;
+
+    createBuf.width = m_OutputRect.w;
+    createBuf.height = m_OutputRect.h;
+    createBuf.bpp = 32;
+    int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_CREATE_DUMB, &createBuf);
+    if (err < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DRM_IOCTL_MODE_CREATE_DUMB failed: %d",
+                     errno);
+        return;
+    }
+
+    if (!mapDumbBuffer(createBuf.handle, createBuf.size, &mapping)) {
+        goto Fail;
+    }
+
+    if (!createFbForDumbBuffer(&createBuf, &fbId)) {
+        goto Fail;
+    }
+
+    // Configure the overlay plane to cover the entire display
+    m_PropSetter.configurePlane(m_OverlayPlanes[0], m_Crtc.objectId(),
+                                0, 0, m_OutputRect.w, m_OutputRect.h,
+                                0, 0,
+                                m_OutputRect.w << 16,
+                                m_OutputRect.h << 16);
+
+    // Flip the surface onto the overlay
+    //
+    // NB: This will take ownership of both the FB and the dumb buffer,
+    // but it won't free them until we stop streaming since we don't
+    // flip this plane anymore after this.
+    m_PropSetter.flipPlane(m_OverlayPlanes[0], fbId, createBuf.handle);
+
+    // Create an SDL surface that wraps our dumb buffer mapping
+    m_OverlayCompositionSurface = SDL_CreateRGBSurfaceWithFormatFrom(mapping,
+                                                                     m_OutputRect.w,
+                                                                     m_OutputRect.h,
+                                                                     32,
+                                                                     createBuf.pitch,
+                                                                     SDL_PIXELFORMAT_ARGB8888);
+    m_OverlayCompositionSurface->userdata = (void*)createBuf.size;
+
+    // Disable blending to avoid costly reads of possibly WC/UC data
+    SDL_SetSurfaceBlendMode(m_OverlayCompositionSurface, SDL_BLENDMODE_NONE);
+    return;
+
+Fail:
+    if (mapping) {
+        munmap(mapping, createBuf.size);
+    }
+
+    struct drm_mode_destroy_dumb destroyBuf = {};
+    destroyBuf.handle = createBuf.handle;
+    drmIoctl(m_DrmFd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+}
+
+void DrmRenderer::blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL_Surface* newSurface, SDL_Rect* overlayRect)
+{
+    SDL_assert(m_OverlayCompositionSurface);
+
+    if (newSurface && overlayRect) {
+        // Disable blending of the source surface when blitting
+        SDL_SetSurfaceBlendMode(newSurface, SDL_BLENDMODE_NONE);
+
+        // Premultiply alpha in place, so we can blit directly into the composition surface
+        // without having to read anything (which may be very costly due to UC/WC memory)
+        SDL_PremultiplyAlpha(newSurface->w, newSurface->h,
+                             newSurface->format->format, newSurface->pixels, newSurface->pitch,
+                             newSurface->format->format, newSurface->pixels, newSurface->pitch);
+
+        // Compute the union of the current and previous overlay rects. Our draw operation
+        // will need to cover this entire area to ensure the old dirty area is covered.
+        SDL_Rect overlayUnionRect;
+        SDL_UnionRect(overlayRect, &m_OverlayRects[type], &overlayUnionRect);
+
+        // If the new overlay completely covers the old overlay, blit it all at once
+        if (SDL_RectEquals(&overlayUnionRect, overlayRect)) {
+            SDL_BlitSurface(newSurface, nullptr, m_OverlayCompositionSurface, overlayRect);
+        }
+        else {
+            SDL_assert(newSurface->format->format == m_OverlayCompositionSurface->format->format);
+
+            // Draw the surface row-by-row to ensure we clear the dirty area from the previous surface
+            // without causing flickering, which would be noticeable if we cleared the whole area first.
+            for (int y = overlayUnionRect.y; y < overlayUnionRect.y + overlayUnionRect.h; y++) {
+                auto dstPixelRow =
+                    (uint8_t*)m_OverlayCompositionSurface->pixels +
+                    (y * m_OverlayCompositionSurface->pitch);
+                auto bpp = m_OverlayCompositionSurface->format->BytesPerPixel;
+
+                if (y < overlayRect->y || y > overlayRect->y + overlayRect->h) {
+                    // Clear the whole row if the overlay doesn't intersect this row
+                    memset(dstPixelRow + (overlayUnionRect.x * bpp),
+                           0,
+                           overlayUnionRect.w * bpp);
+                }
+                else {
+                    auto srcPixelRow = (uint8_t*)newSurface->pixels + ((y - overlayRect->y) * newSurface->pitch);
+
+                    // Clear columns prior to the intersection
+                    SDL_assert(overlayRect->x >= overlayUnionRect.x);
+                    memset(dstPixelRow + (overlayUnionRect.x * bpp),
+                           0,
+                           (overlayRect->x - overlayUnionRect.x) * bpp);
+
+                    // Copy the overlay into the intersection
+                    memcpy(dstPixelRow + (overlayRect->x * bpp),
+                           srcPixelRow,
+                           overlayRect->w * bpp);
+
+                    // Clear columns after the intersection
+                    SDL_assert(overlayUnionRect.w >= overlayRect->w);
+                    memset(dstPixelRow + ((overlayRect->x + overlayRect->w) * bpp),
+                           0,
+                           (overlayUnionRect.w - overlayRect->w) * bpp);
+                }
+            }
+        }
+
+        // Dirty the modified portion of the plane
+        m_PropSetter.damagePlane(m_OverlayPlanes[0], overlayUnionRect);
+    }
+    else {
+        // Clear the pixels where this overlay was drawn before
+        SDL_FillRect(m_OverlayCompositionSurface, &m_OverlayRects[type], 0);
+
+        // Dirty the modified portion of the plane
+        m_PropSetter.damagePlane(m_OverlayPlanes[0], m_OverlayRects[type]);
+    }
+}
+
 void DrmRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
+    std::lock_guard lg { m_OverlayLock };
+
     // If we are not using atomic KMS, we can't support overlays
     if (!m_PropSetter.isAtomic()) {
         return;
     }
 
-    // If we don't have a plane for this overlay, we can't draw it
-    if (!m_OverlayPlanes[type].isValid()) {
+    // If we don't have any overlays, we can't do anything
+    if (!m_OverlayPlanes[0].isValid()) {
         return;
     }
 
@@ -1358,7 +1518,12 @@ void DrmRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
         // Turn the overlay plane off when transitioning from enabled to disabled
         if (m_OverlayRects[type].w || m_OverlayRects[type].h) {
-            m_PropSetter.disablePlane(m_OverlayPlanes[type]);
+            if (m_OverlayCompositionSurface) {
+                blitOverlayToCompositionSurface(type, nullptr, nullptr);
+            }
+            else if (m_OverlayPlanes[type].isValid()) {
+                m_PropSetter.disablePlane(m_OverlayPlanes[type]);
+            }
             memset(&m_OverlayRects[type], 0, sizeof(m_OverlayRects[type]));
         }
 
@@ -1369,12 +1534,7 @@ void DrmRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
     if (newSurface != nullptr) {
         uint32_t dumbBuffer, fbId;
-        if (!uploadSurfaceToFb(newSurface, &dumbBuffer, &fbId)) {
-            SDL_FreeSurface(newSurface);
-            return;
-        }
-
-        SDL_Rect overlayRect = {};
+        SDL_Rect overlayRect;
 
         if (type == Overlay::OverlayStatusUpdate) {
             // Bottom Left
@@ -1390,20 +1550,53 @@ void DrmRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         overlayRect.w = newSurface->w;
         overlayRect.h = newSurface->h;
 
-        // If we changed our overlay rect, we need to reconfigure the plane
-        if (memcmp(&m_OverlayRects[type], &overlayRect, sizeof(overlayRect)) != 0) {
-            m_PropSetter.configurePlane(m_OverlayPlanes[type], m_Crtc.objectId(),
-                                        overlayRect.x, overlayRect.y, overlayRect.w, overlayRect.h,
-                                        0, 0,
-                                        newSurface->w << 16,
-                                        newSurface->h << 16);
-            memcpy(&m_OverlayRects[type], &overlayRect, sizeof(overlayRect));
+        // Try to let the display controller composite for us
+        if (!m_OverlayCompositionSurface) {
+            if (!uploadSurfaceToFb(newSurface, &dumbBuffer, &fbId)) {
+                SDL_FreeSurface(newSurface);
+                return;
+            }
+
+            // If we changed our overlay rect, we need to reconfigure the plane
+            if (memcmp(&m_OverlayRects[type], &overlayRect, sizeof(overlayRect)) != 0) {
+                if (m_PropSetter.testPlane(m_OverlayPlanes[type], m_Crtc.objectId(), fbId,
+                                           overlayRect.x, overlayRect.y, overlayRect.w, overlayRect.h,
+                                           0, 0,
+                                           newSurface->w << 16,
+                                           newSurface->h << 16)) {
+                    m_PropSetter.configurePlane(m_OverlayPlanes[type], m_Crtc.objectId(),
+                                                overlayRect.x, overlayRect.y, overlayRect.w, overlayRect.h,
+                                                0, 0,
+                                                newSurface->w << 16,
+                                                newSurface->h << 16);
+                }
+                else {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Switching to overlay composition mode after commit failure");
+                    enterOverlayCompositionMode();
+
+                    // Free the original uploaded FB and dumb buffer
+                    drmModeRmFB(m_DrmFd, fbId);
+                    struct drm_mode_destroy_dumb destroyBuf = {};
+                    destroyBuf.handle = dumbBuffer;
+                    drmIoctl(m_DrmFd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+                }
+            }
         }
 
-        // Queue the plane flip with the new FB
-        //
-        // NB: This takes ownership of the FB and dumb buffer, even on failure
-        m_PropSetter.flipPlane(m_OverlayPlanes[type], fbId, dumbBuffer);
+        // If we're in overlay composition mode, blit this overlay into the composition surface
+        if (m_OverlayCompositionSurface) {
+            blitOverlayToCompositionSurface(type, newSurface, &overlayRect);
+        }
+        else {
+            // Otherwise queue the plane flip with the new FB
+            //
+            // NB: This takes ownership of the FB and dumb buffer, even on failure
+            m_PropSetter.flipPlane(m_OverlayCompositionSurface ? m_OverlayPlanes[0] : m_OverlayPlanes[type],
+                                   fbId, dumbBuffer);
+        }
+
+        memcpy(&m_OverlayRects[type], &overlayRect, sizeof(overlayRect));
 
         SDL_FreeSurface(newSurface);
     }
