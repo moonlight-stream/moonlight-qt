@@ -1,0 +1,5 @@
+[wrap-git]
+url = https://git.videolan.org/git/ffmpeg/nv-codec-headers.git
+revision = HEAD
+depth = 1
+patch_directory = ffnvcodec
