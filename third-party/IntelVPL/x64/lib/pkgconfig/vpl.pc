@@ -1,0 +1,12 @@
+prefix=${pcfiledir}/../../
+libdir=${pcfiledir}/../
+includedir=${pcfiledir}/../../include
+
+Name: Intel(R) Video Processing Library
+Description: Accelerated video decode, encode, and frame processing capabilities on Intel(R) GPUs
+Version: 2.16
+URL: https://github.com/intel/libvpl
+
+Libs: -L${libdir} -lvpl    
+Libs.private: 
+Cflags: -I${includedir} -I${includedir}/vpl
