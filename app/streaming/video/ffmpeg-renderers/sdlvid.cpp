@@ -417,6 +417,9 @@ ReadbackRetry:
             goto Exit;
         }
 
+        // Never alpha blend this texture when rendering
+        SDL_SetTextureBlendMode(m_Texture, SDL_BLENDMODE_NONE);
+
 #ifdef HAVE_CUDA
         if (frame->format == AV_PIX_FMT_CUDA) {
             SDL_assert(m_CudaGLHelper == nullptr);
@@ -566,6 +569,11 @@ ReadbackRetry:
 
     // Ensure the viewport is set to the desired video region
     SDL_RenderSetViewport(m_Renderer, &dst);
+
+    // Use nearest pixel sampling if the video region size is a multiple of the frame size
+    SDL_SetTextureScaleMode(m_Texture,
+                            dst.w % frame->width == 0 && dst.h % frame->height == 0 ?
+                                SDL_ScaleModeNearest : SDL_ScaleModeLinear);
 
     // Draw the video content itself
     SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);
