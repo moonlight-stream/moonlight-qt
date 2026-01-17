@@ -75,8 +75,7 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_eglClientWaitSync(nullptr),
         m_GlesMajorVersion(0),
         m_GlesMinorVersion(0),
-        m_HasExtUnpackSubimage(false),
-        m_DummyRenderer(nullptr)
+        m_HasExtUnpackSubimage(false)
 {
     SDL_assert(backendRenderer);
     SDL_assert(backendRenderer->canExportEGL());
@@ -110,10 +109,6 @@ EGLRenderer::~EGLRenderer()
         }
 
         SDL_GL_DeleteContext(m_Context);
-    }
-
-    if (m_DummyRenderer) {
-        SDL_DestroyRenderer(m_DummyRenderer);
     }
 }
 
@@ -446,8 +441,13 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    m_DummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED);
-    if (!m_DummyRenderer) {
+    // This will load OpenGL ES and convert our window to SDL_WINDOW_OPENGL if necessary
+    SDL_Renderer* dummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED);
+    if (dummyRenderer) {
+        SDL_DestroyRenderer(dummyRenderer);
+        dummyRenderer = nullptr;
+    }
+    else {
         // Print the error here (before it gets clobbered), but ensure that we flush window
         // events just in case SDL re-created the window before eventually failing.
         EGL_LOG(Error, "SDL_CreateRenderer() failed: %s", SDL_GetError());
@@ -468,12 +468,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
         SDL_FlushEvent(SDL_WINDOWEVENT);
-    }
-
-    // Now we finally bail if we failed during SDL_CreateRenderer() above.
-    if (!m_DummyRenderer) {
-        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
-        return false;
     }
 
     SDL_SysWMinfo info;
