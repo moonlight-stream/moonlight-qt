@@ -243,9 +243,6 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
     SDL_zero(m_GlobalVideoStats);
 
     SDL_AtomicSet(&m_DecoderThreadShouldQuit, 0);
-
-    // Use linear filtering when renderer scaling is required
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 }
 
 FFmpegVideoDecoder::~FFmpegVideoDecoder()

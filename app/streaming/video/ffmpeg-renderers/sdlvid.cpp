@@ -251,6 +251,11 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
 
             m_OverlayTextures[type] = SDL_CreateTextureFromSurface(m_Renderer, newSurface);
             SDL_FreeSurface(newSurface);
+
+            if (m_OverlayTextures[type]) {
+                // Overlays are always drawn at exact size
+                SDL_SetTextureScaleMode(m_OverlayTextures[type], SDL_ScaleModeNearest);
+            }
         }
 
         // If we have an overlay texture, render it too
