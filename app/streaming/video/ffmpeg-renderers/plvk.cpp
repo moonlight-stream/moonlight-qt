@@ -101,7 +101,8 @@ void PlVkRenderer::overlayUploadComplete(void* opaque)
 PlVkRenderer::PlVkRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer) :
     IFFmpegRenderer(RendererType::Vulkan),
     m_Backend(backendRenderer),
-    m_HwAccelBackend(hwaccel)
+    m_HwAccelBackend(hwaccel),
+    m_VideoEnhancement(&VideoEnhancement::getInstance())
 {
     bool ok;
 
@@ -152,6 +153,15 @@ PlVkRenderer::~PlVkRenderer()
 
     // m_Log must always be the last object destroyed
     pl_log_destroy(&m_Log);
+
+    if (m_FsrHook) {
+        pl_mpv_user_shader_destroy(&m_FsrHook);
+        m_FsrHook = nullptr;
+    }
+    if (m_FsrHookHDR) {
+        pl_mpv_user_shader_destroy(&m_FsrHookHDR);
+        m_FsrHookHDR = nullptr;
+    }
 }
 
 bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params, bool hdrOutputRequired)
@@ -522,7 +532,62 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
+    // Video Super Resolution via the Shader FSR1
+    // https://gist.github.com/agyild/82219c545228d70c5604f865ce0b0ce5
+    if (m_VideoEnhancement->isVideoEnhancementEnabled()) {
+
+        // FSR1 (SDR)
+        // The shader has been customized to set the sharpening at 0.75
+        std::string FsrShader = loadGLSL(":/enhancer/FSR1.glsl");
+        m_FsrHook = pl_mpv_user_shader_parse(m_Vulkan->gpu, FsrShader.c_str(), FsrShader.size());
+        m_RenderParams.hooks     = &m_FsrHook;
+        m_RenderParams.num_hooks = m_FsrHook ? 1 : 0;
+
+        // FSR1 (HDR)
+        // The shader has been customized to set the sharpening at 0.75 and PQ at true for HDR
+        std::string FsrShaderHDR;
+        // Check if HDR is enabled by the user in the UI settings.
+        if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+            FsrShaderHDR = loadGLSL(":/enhancer/FSR1_HDR.glsl");
+        } else {
+            FsrShaderHDR = loadGLSL(":/enhancer/FSR1.glsl");
+        }
+        m_FsrHookHDR = pl_mpv_user_shader_parse(m_Vulkan->gpu, FsrShaderHDR.c_str(), FsrShaderHDR.size());
+        m_RenderParamsHDR.hooks     = &m_FsrHookHDR;
+        m_RenderParamsHDR.num_hooks = m_FsrHookHDR ? 1 : 0;
+
+        int drawableWidth, drawableHeight;
+        SDL_Metal_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+        m_VideoEnhancement->setRatio(static_cast<float>(drawableHeight) / static_cast<float>(params->height));
+
+        m_VideoEnhancement->setAlgo("Shader FSR1");
+    }
+
     return true;
+}
+
+/**
+ * \brief Load a GLSL shader file from the given path.
+ *
+ * Reads the file content and returns it as a string. Logs an error if the file cannot be opened.
+ *
+ * \param const QString& path Path to the GLSL shader file
+ * \return std::string File content as a string, or an empty string on failure
+ */
+std::string PlVkRenderer::loadGLSL(const QString& path)
+{
+    QFile file(path);
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Cannot open GLSL file: %s", path.toUtf8().constData());
+        return {};
+    }
+
+    QByteArray data = file.readAll();
+    file.close();
+
+    return std::string(data.constData(), data.size());
 }
 
 bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary **)
@@ -858,7 +923,14 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     // Render the video image and overlays into the swapchain buffer
     targetFrame.num_overlays = (int)overlays.size();
     targetFrame.overlays = overlays.data();
-    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &pl_render_fast_params)) {
+
+    pl_render_params renderParams = pl_render_fast_params;
+    if (m_VideoEnhancement->isVideoEnhancementEnabled()) {
+        // If the frame is HDR, load the Shader with HDR enabled
+        renderParams = (frame->color_trc == AVCOL_TRC_SMPTE2084) ? m_RenderParamsHDR : m_RenderParams;
+    }
+
+    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &renderParams)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_render_image() failed");
         // NB: We must fallthrough to call pl_swapchain_submit_frame()
@@ -993,6 +1065,10 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
 bool PlVkRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 {
+    // We force the reinitialization of FFX API when the Window change
+    if (m_VideoEnhancement->isVideoEnhancementEnabled()) {
+        return !(info->stateChangeFlags & (WINDOW_STATE_CHANGE_DISPLAY | WINDOW_STATE_CHANGE_SIZE));
+    }
     // We can transparently handle size and display changes
     return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_SIZE | WINDOW_STATE_CHANGE_DISPLAY));
 }
