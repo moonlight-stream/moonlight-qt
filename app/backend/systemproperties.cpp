@@ -271,3 +271,19 @@ void SystemProperties::refreshDisplays()
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
+
+/**
+ * \brief Inform if the menu is selectable (DEBUG mode)
+ *
+ * For Debugging purpose only, we allow the dropdown menu visible to test other algorithms
+ *
+ * \return bool Returns true if in debug mode
+ */
+bool SystemProperties::isVideoEnhancementSwitchable()
+{
+#if defined(QT_DEBUG) && defined(Q_OS_WIN)
+    return true;
+#else
+    return false;
+#endif
+}

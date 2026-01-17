@@ -40,9 +40,12 @@ typedef struct _DECODER_PARAMETERS {
     int videoFormat;
     int width;
     int height;
+    int textureWidth;
+    int textureHeight;
     int frameRate;
     bool enableVsync;
     bool enableFramePacing;
+    bool enableVideoEnhancement;
     bool testOnly;
 } DECODER_PARAMETERS, *PDECODER_PARAMETERS;
 

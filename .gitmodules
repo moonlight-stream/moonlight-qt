@@ -1,16 +1,41 @@
 [submodule "moonlight-common-c/moonlight-common-c"]
 	path = moonlight-common-c/moonlight-common-c
 	url = https://github.com/moonlight-stream/moonlight-common-c.git
+	ignore = all
 [submodule "qmdnsengine/qmdnsengine"]
 	path = qmdnsengine/qmdnsengine
 	url = https://github.com/cgutman/qmdnsengine.git
+	ignore = all
 [submodule "app/SDL_GameControllerDB"]
 	path = app/SDL_GameControllerDB
 	url = https://github.com/gabomdq/SDL_GameControllerDB.git
+	ignore = all
 [submodule "h264bitstream/h264bitstream"]
 	path = h264bitstream/h264bitstream
 	url = https://github.com/aizvorski/h264bitstream.git
+	ignore = all
 [submodule "libs"]
 	path = libs
 	url = https://github.com/cgutman/moonlight-qt-prebuilts.git
+	ignore = all
 	shallow = true
+[submodule "third-party/AMF"]
+	path = third-party/AMF
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/AMF.git
+	ignore = all
+[submodule "third-party/FidelityFX-FSR"]
+	path = third-party/FidelityFX-FSR
+	url = https://github.com/GPUOpen-Effects/FidelityFX-FSR.git
+	ignore = all
+[submodule "third-party/NVIDIAImageScaling"]
+	path = third-party/NVIDIAImageScaling
+	url = https://github.com/NVIDIAGameWorks/NVIDIAImageScaling.git
+	ignore = all
+[submodule "third-party/DirectX-Headers"]
+	path = third-party/DirectX-Headers
+	url = https://github.com/microsoft/DirectX-Headers.git
+	ignore = all
+[submodule "third-party/libvpl"]
+	path = third-party/libvpl
+	url = https://github.com/intel/libvpl.git
+	ignore = all
