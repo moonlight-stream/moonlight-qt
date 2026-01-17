@@ -11,6 +11,8 @@
 #include <QtDebug>
 
 #define SER_STREAMSETTINGS "streamsettings"
+#define SER_PROFILE_GROUP "profiles"
+#define SER_PROFILE_ACTIVE "activeprofile"
 #define SER_WIDTH "width"
 #define SER_HEIGHT "height"
 #define SER_FPS "fps"
@@ -53,6 +55,8 @@
 #define SER_LANGUAGE "language"
 
 #define CURRENT_DEFAULT_VER 2
+
+static const char kDefaultProfileName[] = "Default";
 
 static StreamingPreferences* s_GlobalPrefs;
 static QReadWriteLock s_GlobalPrefsLock;
@@ -100,11 +104,100 @@ StreamingPreferences* StreamingPreferences::get(QQmlEngine *qmlEngine)
     }
 }
 
+QString StreamingPreferences::normalizeProfileName(const QString& name) const
+{
+    return name.trimmed();
+}
+
+bool StreamingPreferences::isProfileNameValid(const QString& name) const
+{
+    if (name.isEmpty()) {
+        return false;
+    }
+
+    if (name.contains('/') || name.contains('\\')) {
+        return false;
+    }
+
+    return true;
+}
+
+QStringList StreamingPreferences::loadProfileNames(QSettings& settings)
+{
+    settings.beginGroup(SER_PROFILE_GROUP);
+    QStringList names = settings.childGroups();
+    settings.endGroup();
+
+    if (names.isEmpty()) {
+        names << kDefaultProfileName;
+    }
+
+    names.sort(Qt::CaseInsensitive);
+
+    for (int i = 0; i < names.count(); ++i) {
+        if (names[i].compare(kDefaultProfileName, Qt::CaseInsensitive) == 0) {
+            if (i != 0) {
+                names.move(i, 0);
+            }
+            break;
+        }
+    }
+
+    return names;
+}
+
+QString StreamingPreferences::resolveProfileName(const QString& name, const QStringList& profiles) const
+{
+    for (const QString& profileName : profiles) {
+        if (profileName.compare(name, Qt::CaseInsensitive) == 0) {
+            return profileName;
+        }
+    }
+
+    return QString();
+}
+
+QString StreamingPreferences::profileKey(const QString& key) const
+{
+    return QString("%1/%2/%3").arg(SER_PROFILE_GROUP, m_CurrentProfile, key);
+}
+
 void StreamingPreferences::reload()
 {
     QSettings settings;
 
-    int defaultVer = settings.value(SER_DEFAULTVER, 0).toInt();
+    QStringList profiles = loadProfileNames(settings);
+    QString activeProfile = settings.value(SER_PROFILE_ACTIVE).toString();
+    QString resolvedProfile = resolveProfileName(activeProfile, profiles);
+
+    if (resolvedProfile.isEmpty()) {
+        resolvedProfile = profiles.first();
+        settings.setValue(SER_PROFILE_ACTIVE, resolvedProfile);
+    }
+
+    if (m_ProfileNames != profiles) {
+        m_ProfileNames = profiles;
+        emit profileListChanged();
+    }
+
+    if (m_CurrentProfile != resolvedProfile) {
+        m_CurrentProfile = resolvedProfile;
+        emit currentProfileChanged();
+    }
+
+    loadFromSettings(settings, m_CurrentProfile);
+    emitAllChangedSignals();
+}
+
+void StreamingPreferences::loadFromSettings(QSettings& settings, const QString& profileName)
+{
+    m_CurrentProfile = profileName;
+
+    auto readValue = [&](const QString& key, const QVariant& defaultValue) {
+        return settings.value(profileKey(key), settings.value(key, defaultValue));
+    };
+
+    int defaultVer = readValue(SER_DEFAULTVER, 0).toInt();
 
 #ifdef Q_OS_DARWIN
     recommendedFullScreenMode = WindowMode::WM_FULLSCREEN_DESKTOP;
@@ -120,52 +213,52 @@ void StreamingPreferences::reload()
     }
 #endif
 
-    width = settings.value(SER_WIDTH, 1280).toInt();
-    height = settings.value(SER_HEIGHT, 720).toInt();
-    fps = settings.value(SER_FPS, 60).toInt();
-    enableYUV444 = settings.value(SER_YUV444, false).toBool();
-    bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps, enableYUV444)).toInt();
-    unlockBitrate = settings.value(SER_UNLOCK_BITRATE, false).toBool();
-    autoAdjustBitrate = settings.value(SER_AUTOADJUSTBITRATE, true).toBool();
-    enableVsync = settings.value(SER_VSYNC, true).toBool();
-    gameOptimizations = settings.value(SER_GAMEOPTS, true).toBool();
-    playAudioOnHost = settings.value(SER_HOSTAUDIO, false).toBool();
-    multiController = settings.value(SER_MULTICONT, true).toBool();
-    enableMdns = settings.value(SER_MDNS, true).toBool();
-    quitAppAfter = settings.value(SER_QUITAPPAFTER, false).toBool();
-    absoluteMouseMode = settings.value(SER_ABSMOUSEMODE, false).toBool();
-    absoluteTouchMode = settings.value(SER_ABSTOUCHMODE, true).toBool();
-    framePacing = settings.value(SER_FRAMEPACING, false).toBool();
-    connectionWarnings = settings.value(SER_CONNWARNINGS, true).toBool();
-    configurationWarnings = settings.value(SER_CONFWARNINGS, true).toBool();
-    richPresence = settings.value(SER_RICHPRESENCE, true).toBool();
-    gamepadMouse = settings.value(SER_GAMEPADMOUSE, true).toBool();
-    detectNetworkBlocking = settings.value(SER_DETECTNETBLOCKING, true).toBool();
-    showPerformanceOverlay = settings.value(SER_SHOWPERFOVERLAY, false).toBool();
-    packetSize = settings.value(SER_PACKETSIZE, 0).toInt();
-    swapMouseButtons = settings.value(SER_SWAPMOUSEBUTTONS, false).toBool();
-    muteOnFocusLoss = settings.value(SER_MUTEONFOCUSLOSS, false).toBool();
-    backgroundGamepad = settings.value(SER_BACKGROUNDGAMEPAD, false).toBool();
-    reverseScrollDirection = settings.value(SER_REVERSESCROLL, false).toBool();
-    swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
-    keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
-    enableHdr = settings.value(SER_HDR, false).toBool();
-    captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
+    width = readValue(SER_WIDTH, 1280).toInt();
+    height = readValue(SER_HEIGHT, 720).toInt();
+    fps = readValue(SER_FPS, 60).toInt();
+    enableYUV444 = readValue(SER_YUV444, false).toBool();
+    bitrateKbps = readValue(SER_BITRATE, getDefaultBitrate(width, height, fps, enableYUV444)).toInt();
+    unlockBitrate = readValue(SER_UNLOCK_BITRATE, false).toBool();
+    autoAdjustBitrate = readValue(SER_AUTOADJUSTBITRATE, true).toBool();
+    enableVsync = readValue(SER_VSYNC, true).toBool();
+    gameOptimizations = readValue(SER_GAMEOPTS, true).toBool();
+    playAudioOnHost = readValue(SER_HOSTAUDIO, false).toBool();
+    multiController = readValue(SER_MULTICONT, true).toBool();
+    enableMdns = readValue(SER_MDNS, true).toBool();
+    quitAppAfter = readValue(SER_QUITAPPAFTER, false).toBool();
+    absoluteMouseMode = readValue(SER_ABSMOUSEMODE, false).toBool();
+    absoluteTouchMode = readValue(SER_ABSTOUCHMODE, true).toBool();
+    framePacing = readValue(SER_FRAMEPACING, false).toBool();
+    connectionWarnings = readValue(SER_CONNWARNINGS, true).toBool();
+    configurationWarnings = readValue(SER_CONFWARNINGS, true).toBool();
+    richPresence = readValue(SER_RICHPRESENCE, true).toBool();
+    gamepadMouse = readValue(SER_GAMEPADMOUSE, true).toBool();
+    detectNetworkBlocking = readValue(SER_DETECTNETBLOCKING, true).toBool();
+    showPerformanceOverlay = readValue(SER_SHOWPERFOVERLAY, false).toBool();
+    packetSize = readValue(SER_PACKETSIZE, 0).toInt();
+    swapMouseButtons = readValue(SER_SWAPMOUSEBUTTONS, false).toBool();
+    muteOnFocusLoss = readValue(SER_MUTEONFOCUSLOSS, false).toBool();
+    backgroundGamepad = readValue(SER_BACKGROUNDGAMEPAD, false).toBool();
+    reverseScrollDirection = readValue(SER_REVERSESCROLL, false).toBool();
+    swapFaceButtons = readValue(SER_SWAPFACEBUTTONS, false).toBool();
+    keepAwake = readValue(SER_KEEPAWAKE, true).toBool();
+    enableHdr = readValue(SER_HDR, false).toBool();
+    captureSysKeysMode = static_cast<CaptureSysKeysMode>(readValue(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
-    audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
+    audioConfig = static_cast<AudioConfig>(readValue(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_STEREO)).toInt());
-    videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
+    videoCodecConfig = static_cast<VideoCodecConfig>(readValue(SER_VIDEOCFG,
                                                   static_cast<int>(VideoCodecConfig::VCC_AUTO)).toInt());
-    videoDecoderSelection = static_cast<VideoDecoderSelection>(settings.value(SER_VIDEODEC,
+    videoDecoderSelection = static_cast<VideoDecoderSelection>(readValue(SER_VIDEODEC,
                                                   static_cast<int>(VideoDecoderSelection::VDS_AUTO)).toInt());
-    windowMode = static_cast<WindowMode>(settings.value(SER_WINDOWMODE,
+    windowMode = static_cast<WindowMode>(readValue(SER_WINDOWMODE,
                                                         // Try to load from the old preference value too
                                                         static_cast<int>(settings.value(SER_FULLSCREEN, true).toBool() ?
                                                                              recommendedFullScreenMode : WindowMode::WM_WINDOWED)).toInt());
-    uiDisplayMode = static_cast<UIDisplayMode>(settings.value(SER_UIDISPLAYMODE,
+    uiDisplayMode = static_cast<UIDisplayMode>(readValue(SER_UIDISPLAYMODE,
                                                static_cast<int>(settings.value(SER_STARTWINDOWED, true).toBool() ? UIDisplayMode::UI_WINDOWED
                                                                                                                  : UIDisplayMode::UI_MAXIMIZED)).toInt());
-    language = static_cast<Language>(settings.value(SER_LANGUAGE,
+    language = static_cast<Language>(readValue(SER_LANGUAGE,
                                                     static_cast<int>(Language::LANG_AUTO)).toInt());
 
 
@@ -189,6 +282,103 @@ void StreamingPreferences::reload()
         videoCodecConfig = VCC_AUTO;
         enableHdr = true;
     }
+}
+
+QString StreamingPreferences::currentProfile() const
+{
+    return m_CurrentProfile;
+}
+
+QStringList StreamingPreferences::profileNames() const
+{
+    return m_ProfileNames;
+}
+
+void StreamingPreferences::setCurrentProfile(const QString& name)
+{
+    QString normalizedName = normalizeProfileName(name);
+    if (!isProfileNameValid(normalizedName)) {
+        return;
+    }
+
+    QSettings settings;
+    QStringList profiles = loadProfileNames(settings);
+    QString resolvedProfile = resolveProfileName(normalizedName, profiles);
+
+    if (resolvedProfile.isEmpty() || resolvedProfile == m_CurrentProfile) {
+        return;
+    }
+
+    save();
+
+    m_CurrentProfile = resolvedProfile;
+    settings.setValue(SER_PROFILE_ACTIVE, m_CurrentProfile);
+
+    loadFromSettings(settings, m_CurrentProfile);
+    emitAllChangedSignals();
+
+    if (m_ProfileNames != profiles) {
+        m_ProfileNames = profiles;
+        emit profileListChanged();
+    }
+
+    emit currentProfileChanged();
+}
+
+bool StreamingPreferences::createProfile(const QString& name)
+{
+    QString normalizedName = normalizeProfileName(name);
+    if (!isProfileNameValid(normalizedName)) {
+        return false;
+    }
+
+    QSettings settings;
+    QStringList profiles = loadProfileNames(settings);
+    if (!resolveProfileName(normalizedName, profiles).isEmpty()) {
+        return false;
+    }
+
+    save();
+    saveToSettings(settings, normalizedName);
+    settings.setValue(SER_PROFILE_ACTIVE, normalizedName);
+
+    setCurrentProfile(normalizedName);
+    return true;
+}
+
+bool StreamingPreferences::deleteProfile(const QString& name)
+{
+    QString normalizedName = normalizeProfileName(name);
+    if (!isProfileNameValid(normalizedName)) {
+        return false;
+    }
+
+    QSettings settings;
+    QStringList profiles = loadProfileNames(settings);
+    QString resolvedProfile = resolveProfileName(normalizedName, profiles);
+
+    if (resolvedProfile.isEmpty() || profiles.count() <= 1) {
+        return false;
+    }
+
+    settings.remove(QString("%1/%2").arg(SER_PROFILE_GROUP, resolvedProfile));
+
+    profiles = loadProfileNames(settings);
+
+    if (m_ProfileNames != profiles) {
+        m_ProfileNames = profiles;
+        emit profileListChanged();
+    }
+
+    if (m_CurrentProfile == resolvedProfile) {
+        m_CurrentProfile = profiles.first();
+        settings.setValue(SER_PROFILE_ACTIVE, m_CurrentProfile);
+        loadFromSettings(settings, m_CurrentProfile);
+        emitAllChangedSignals();
+        emit currentProfileChanged();
+    }
+
+    return true;
 }
 
 bool StreamingPreferences::retranslate()
@@ -315,48 +505,101 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
     }
 }
 
+void StreamingPreferences::saveToSettings(QSettings& settings, const QString& profileName)
+{
+    auto key = [&](const QString& keyName) {
+        return QString("%1/%2/%3").arg(SER_PROFILE_GROUP, profileName, keyName);
+    };
+
+    settings.setValue(key(SER_WIDTH), width);
+    settings.setValue(key(SER_HEIGHT), height);
+    settings.setValue(key(SER_FPS), fps);
+    settings.setValue(key(SER_BITRATE), bitrateKbps);
+    settings.setValue(key(SER_UNLOCK_BITRATE), unlockBitrate);
+    settings.setValue(key(SER_AUTOADJUSTBITRATE), autoAdjustBitrate);
+    settings.setValue(key(SER_VSYNC), enableVsync);
+    settings.setValue(key(SER_GAMEOPTS), gameOptimizations);
+    settings.setValue(key(SER_HOSTAUDIO), playAudioOnHost);
+    settings.setValue(key(SER_MULTICONT), multiController);
+    settings.setValue(key(SER_MDNS), enableMdns);
+    settings.setValue(key(SER_QUITAPPAFTER), quitAppAfter);
+    settings.setValue(key(SER_ABSMOUSEMODE), absoluteMouseMode);
+    settings.setValue(key(SER_ABSTOUCHMODE), absoluteTouchMode);
+    settings.setValue(key(SER_FRAMEPACING), framePacing);
+    settings.setValue(key(SER_CONNWARNINGS), connectionWarnings);
+    settings.setValue(key(SER_CONFWARNINGS), configurationWarnings);
+    settings.setValue(key(SER_RICHPRESENCE), richPresence);
+    settings.setValue(key(SER_GAMEPADMOUSE), gamepadMouse);
+    settings.setValue(key(SER_PACKETSIZE), packetSize);
+    settings.setValue(key(SER_DETECTNETBLOCKING), detectNetworkBlocking);
+    settings.setValue(key(SER_SHOWPERFOVERLAY), showPerformanceOverlay);
+    settings.setValue(key(SER_AUDIOCFG), static_cast<int>(audioConfig));
+    settings.setValue(key(SER_HDR), enableHdr);
+    settings.setValue(key(SER_YUV444), enableYUV444);
+    settings.setValue(key(SER_VIDEOCFG), static_cast<int>(videoCodecConfig));
+    settings.setValue(key(SER_VIDEODEC), static_cast<int>(videoDecoderSelection));
+    settings.setValue(key(SER_WINDOWMODE), static_cast<int>(windowMode));
+    settings.setValue(key(SER_UIDISPLAYMODE), static_cast<int>(uiDisplayMode));
+    settings.setValue(key(SER_LANGUAGE), static_cast<int>(language));
+    settings.setValue(key(SER_DEFAULTVER), CURRENT_DEFAULT_VER);
+    settings.setValue(key(SER_SWAPMOUSEBUTTONS), swapMouseButtons);
+    settings.setValue(key(SER_MUTEONFOCUSLOSS), muteOnFocusLoss);
+    settings.setValue(key(SER_BACKGROUNDGAMEPAD), backgroundGamepad);
+    settings.setValue(key(SER_REVERSESCROLL), reverseScrollDirection);
+    settings.setValue(key(SER_SWAPFACEBUTTONS), swapFaceButtons);
+    settings.setValue(key(SER_CAPTURESYSKEYS), captureSysKeysMode);
+    settings.setValue(key(SER_KEEPAWAKE), keepAwake);
+}
+
 void StreamingPreferences::save()
 {
     QSettings settings;
 
-    settings.setValue(SER_WIDTH, width);
-    settings.setValue(SER_HEIGHT, height);
-    settings.setValue(SER_FPS, fps);
-    settings.setValue(SER_BITRATE, bitrateKbps);
-    settings.setValue(SER_UNLOCK_BITRATE, unlockBitrate);
-    settings.setValue(SER_AUTOADJUSTBITRATE, autoAdjustBitrate);
-    settings.setValue(SER_VSYNC, enableVsync);
-    settings.setValue(SER_GAMEOPTS, gameOptimizations);
-    settings.setValue(SER_HOSTAUDIO, playAudioOnHost);
-    settings.setValue(SER_MULTICONT, multiController);
-    settings.setValue(SER_MDNS, enableMdns);
-    settings.setValue(SER_QUITAPPAFTER, quitAppAfter);
-    settings.setValue(SER_ABSMOUSEMODE, absoluteMouseMode);
-    settings.setValue(SER_ABSTOUCHMODE, absoluteTouchMode);
-    settings.setValue(SER_FRAMEPACING, framePacing);
-    settings.setValue(SER_CONNWARNINGS, connectionWarnings);
-    settings.setValue(SER_CONFWARNINGS, configurationWarnings);
-    settings.setValue(SER_RICHPRESENCE, richPresence);
-    settings.setValue(SER_GAMEPADMOUSE, gamepadMouse);
-    settings.setValue(SER_PACKETSIZE, packetSize);
-    settings.setValue(SER_DETECTNETBLOCKING, detectNetworkBlocking);
-    settings.setValue(SER_SHOWPERFOVERLAY, showPerformanceOverlay);
-    settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
-    settings.setValue(SER_HDR, enableHdr);
-    settings.setValue(SER_YUV444, enableYUV444);
-    settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
-    settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
-    settings.setValue(SER_WINDOWMODE, static_cast<int>(windowMode));
-    settings.setValue(SER_UIDISPLAYMODE, static_cast<int>(uiDisplayMode));
-    settings.setValue(SER_LANGUAGE, static_cast<int>(language));
-    settings.setValue(SER_DEFAULTVER, CURRENT_DEFAULT_VER);
-    settings.setValue(SER_SWAPMOUSEBUTTONS, swapMouseButtons);
-    settings.setValue(SER_MUTEONFOCUSLOSS, muteOnFocusLoss);
-    settings.setValue(SER_BACKGROUNDGAMEPAD, backgroundGamepad);
-    settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
-    settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
-    settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
-    settings.setValue(SER_KEEPAWAKE, keepAwake);
+    if (m_CurrentProfile.isEmpty()) {
+        m_CurrentProfile = kDefaultProfileName;
+    }
+
+    settings.setValue(SER_PROFILE_ACTIVE, m_CurrentProfile);
+    saveToSettings(settings, m_CurrentProfile);
+}
+
+void StreamingPreferences::emitAllChangedSignals()
+{
+    emit displayModeChanged();
+    emit bitrateChanged();
+    emit unlockBitrateChanged();
+    emit autoAdjustBitrateChanged();
+    emit enableVsyncChanged();
+    emit gameOptimizationsChanged();
+    emit playAudioOnHostChanged();
+    emit multiControllerChanged();
+    emit unsupportedFpsChanged();
+    emit enableMdnsChanged();
+    emit quitAppAfterChanged();
+    emit absoluteMouseModeChanged();
+    emit absoluteTouchModeChanged();
+    emit audioConfigChanged();
+    emit videoCodecConfigChanged();
+    emit enableHdrChanged();
+    emit enableYUV444Changed();
+    emit videoDecoderSelectionChanged();
+    emit uiDisplayModeChanged();
+    emit windowModeChanged();
+    emit framePacingChanged();
+    emit connectionWarningsChanged();
+    emit configurationWarningsChanged();
+    emit richPresenceChanged();
+    emit gamepadMouseChanged();
+    emit detectNetworkBlockingChanged();
+    emit showPerformanceOverlayChanged();
+    emit mouseButtonsChanged();
+    emit muteOnFocusLossChanged();
+    emit backgroundGamepadChanged();
+    emit reverseScrollDirectionChanged();
+    emit swapFaceButtonsChanged();
+    emit captureSysKeysModeChanged();
+    emit keepAwakeChanged();
+    emit languageChanged();
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps, bool yuv444)
