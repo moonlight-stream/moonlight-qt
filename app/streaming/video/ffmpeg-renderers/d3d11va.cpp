@@ -226,8 +226,8 @@ bool D3D11VARenderer::setupSharedDevice(IDXGIAdapter1* adapter)
     }
 
     // Create our decode->render fence
-    m_DecodeRenderSyncFenceValue = 0;
-    if (!createSharedFencePair(1, m_DecodeDevice.Get(), m_RenderDevice.Get(), m_DecodeD2RFence, m_RenderD2RFence)) {
+    m_DecodeRenderSyncFenceValue = 1;
+    if (!createSharedFencePair(0, m_DecodeDevice.Get(), m_RenderDevice.Get(), m_DecodeD2RFence, m_RenderD2RFence)) {
         goto Exit;
     }
 
