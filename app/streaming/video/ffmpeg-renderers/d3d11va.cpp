@@ -136,8 +136,14 @@ D3D11VARenderer::~D3D11VARenderer()
 bool D3D11VARenderer::createSharedFencePair(UINT64 initialValue, ID3D11Device5* dev1, ID3D11Device5* dev2, ComPtr<ID3D11Fence>& dev1Fence, ComPtr<ID3D11Fence>& dev2Fence)
 {
     HRESULT hr;
+    D3D11_FENCE_FLAG flags;
 
-    hr = dev1->CreateFence(initialValue, D3D11_FENCE_FLAG_SHARED, IID_PPV_ARGS(&dev1Fence));
+    flags = D3D11_FENCE_FLAG_SHARED;
+    if (m_FenceType == SupportedFenceType::NonMonitored) {
+        flags |= D3D11_FENCE_FLAG_NON_MONITORED;
+    }
+
+    hr = dev1->CreateFence(initialValue, flags, IID_PPV_ARGS(&dev1Fence));
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device5::CreateFence() failed: %x",
@@ -238,9 +244,7 @@ Exit:
         m_RenderD2RFence.Reset();
         m_DecodeR2DFence.Reset();
         m_RenderR2DFence.Reset();
-
         m_DecodeDevice.Reset();
-        m_RenderDevice.Reset();
     }
 
     return success;

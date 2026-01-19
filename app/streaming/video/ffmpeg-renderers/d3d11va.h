@@ -53,11 +53,10 @@ private:
     bool checkDecoderSupport(IDXGIAdapter* adapter);
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
     bool setupSharedDevice(IDXGIAdapter1* adapter);
-
-    static bool createSharedFencePair(UINT64 initialValue,
-                                      ID3D11Device5* dev1, ID3D11Device5* dev2,
-                                      Microsoft::WRL::ComPtr<ID3D11Fence>& dev1Fence,
-                                      Microsoft::WRL::ComPtr<ID3D11Fence>& dev2Fence);
+    bool createSharedFencePair(UINT64 initialValue,
+                               ID3D11Device5* dev1, ID3D11Device5* dev2,
+                               Microsoft::WRL::ComPtr<ID3D11Fence>& dev1Fence,
+                               Microsoft::WRL::ComPtr<ID3D11Fence>& dev2Fence);
 
     int m_DecoderSelectionPass;
     int m_DevicesWithFL11Support;
