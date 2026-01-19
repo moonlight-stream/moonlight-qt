@@ -364,17 +364,6 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         }
     }
 
-    if (Utils::getEnvironmentVariableOverride("D3D11VA_FORCE_BIND", &m_BindDecoderOutputTextures)) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using D3D11VA_FORCE_BIND to override default bind/copy logic");
-    }
-    else {
-        // Skip copying to our own internal texture on Intel GPUs due to
-        // significant performance impact of the extra copy. See:
-        // https://github.com/moonlight-stream/moonlight-qt/issues/1304
-        m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086;
-    }
-
     bool separateDevices;
     if (Utils::getEnvironmentVariableOverride("D3D11VA_FORCE_SEPARATE_DEVICES", &separateDevices)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -404,6 +393,23 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         m_DecodeDevice = m_RenderDevice;
         m_DecodeDeviceContext = m_RenderDeviceContext;
         separateDevices = false;
+    }
+
+    if (Utils::getEnvironmentVariableOverride("D3D11VA_FORCE_BIND", &m_BindDecoderOutputTextures)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using D3D11VA_FORCE_BIND to override default bind/copy logic");
+    }
+    else {
+        // Skip copying to our own internal texture on Intel GPUs due to
+        // significant performance impact of the extra copy. See:
+        // https://github.com/moonlight-stream/moonlight-qt/issues/1304
+        //
+        // Also bind SRVs when using separate decoding and rendering
+        // devices as this improves render times by about 2x on my
+        // Ryzen 3300U system. The fences we use between decoding
+        // and rendering contexts should hopefully avoid any of the
+        // synchronization issues we've seen between decoder and SRVs.
+        m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086 || separateDevices;
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
