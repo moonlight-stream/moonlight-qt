@@ -23,7 +23,6 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo) override;
-    virtual void waitToRender() override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
     virtual InitFailureReason getInitFailureReason() override;
@@ -79,9 +78,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D11BlendState> m_OverlayBlendState;
 
     SupportedFenceType m_FenceType;
-    Microsoft::WRL::ComPtr<ID3D11Fence> m_PreviousFrameRenderedFence;
-    Microsoft::WRL::Wrappers::Event m_PreviousFrameRenderedEvent;
-    UINT64 m_PreviousFrameRenderedFenceValue;
     Microsoft::WRL::ComPtr<ID3D11Fence> m_DecodeD2RFence, m_RenderD2RFence;
     Microsoft::WRL::ComPtr<ID3D11Fence> m_DecodeR2DFence, m_RenderR2DFence;
     UINT64 m_DecodeRenderSyncFenceValue;

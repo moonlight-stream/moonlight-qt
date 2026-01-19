@@ -107,7 +107,6 @@ D3D11VARenderer::~D3D11VARenderer()
     m_OverlayBlendState.Reset();
     m_VideoBlendState.Reset();
 
-    m_PreviousFrameRenderedFence.Reset();
     m_DecodeD2RFence.Reset();
     m_DecodeR2DFence.Reset();
     m_RenderD2RFence.Reset();
@@ -361,30 +360,6 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                     // Non-monitored fences must only be used when monitored fences are unsupported
                     m_FenceType = SupportedFenceType::NonMonitored;
                 }
-            }
-        }
-
-        if (m_FenceType != SupportedFenceType::None) {
-            // If this GPU supports monitored fences, use one to wait until the previous frame
-            // has finished rendering before starting on the next one. This reduces latency by
-            // avoiding stalling during rendering after we've already grabbed the next frame
-            // to render, and also avoids stalling the decoder by releasing a surface back to
-            // the pool before we've finished reading from it (causing a stall if the decoder
-            // tries to write again).
-            if (m_FenceType == SupportedFenceType::Monitored) {
-                m_PreviousFrameRenderedFenceValue = 0;
-                hr = m_RenderDevice->CreateFence(m_PreviousFrameRenderedFenceValue,
-                                                 D3D11_FENCE_FLAG_NONE,
-                                                 IID_PPV_ARGS(&m_PreviousFrameRenderedFence));
-                if (FAILED(hr)) {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "ID3D11Device5::CreateFence() failed: %x",
-                                hr);
-                    // Non-fatal
-                }
-
-                // Create an auto-reset event for our fence to signal
-                m_PreviousFrameRenderedEvent.Attach(CreateEvent(NULL, FALSE, TRUE, NULL));
             }
         }
     }
@@ -1071,16 +1046,6 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
             unlockContext(this);
         }
     }
-
-    // Trigger our fence to signal after this video frame has been rendered
-    if (m_PreviousFrameRenderedFence) {
-        ComPtr<ID3D11DeviceContext4> deviceContext4;
-        if (SUCCEEDED(m_RenderDeviceContext.As(&deviceContext4))) {
-            if (SUCCEEDED(deviceContext4->Signal(m_PreviousFrameRenderedFence.Get(), m_PreviousFrameRenderedFenceValue + 1))) {
-                m_PreviousFrameRenderedFenceValue++;
-            }
-        }
-    }
 }
 
 // This function must NOT use any DXGI or ID3D11DeviceContext methods
@@ -1300,32 +1265,6 @@ bool D3D11VARenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo)
 
     // Check if we've handled all state changes
     return stateInfo->stateChangeFlags == 0;
-}
-
-void D3D11VARenderer::waitToRender()
-{
-    if (m_PreviousFrameRenderedFence && m_PreviousFrameRenderedEvent.IsValid()) {
-        SDL_assert(m_FenceType == SupportedFenceType::Monitored);
-
-        // Check if the GPU is already finished
-        if (m_PreviousFrameRenderedFence->GetCompletedValue() < m_PreviousFrameRenderedFenceValue) {
-            HRESULT hr;
-
-            hr = m_PreviousFrameRenderedFence->SetEventOnCompletion(m_PreviousFrameRenderedFenceValue, m_PreviousFrameRenderedEvent.Get());
-            if (SUCCEEDED(hr)) {
-                // If we don't wake within 2 seconds, something is probably wrong
-                if (WaitForSingleObject(m_PreviousFrameRenderedEvent.Get(), 2000) != WAIT_OBJECT_0) {
-                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                 "Failed to wait on fence event!");
-                }
-            }
-            else {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "ID3D11Fence::SetEventOnCompletion() failed: %x",
-                             hr);
-            }
-        }
-    }
 }
 
 bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
