@@ -79,8 +79,9 @@ private:
 
     SupportedFenceType m_FenceType;
     Microsoft::WRL::ComPtr<ID3D11Fence> m_DecodeD2RFence, m_RenderD2RFence;
+    UINT64 m_D2RFenceValue;
     Microsoft::WRL::ComPtr<ID3D11Fence> m_DecodeR2DFence, m_RenderR2DFence;
-    UINT64 m_DecodeRenderSyncFenceValue;
+    UINT64 m_R2DFenceValue;
     SDL_mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;
 

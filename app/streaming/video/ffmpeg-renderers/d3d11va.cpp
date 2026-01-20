@@ -226,12 +226,13 @@ bool D3D11VARenderer::setupSharedDevice(IDXGIAdapter1* adapter)
     }
 
     // Create our decode->render fence
-    m_DecodeRenderSyncFenceValue = 1;
+    m_D2RFenceValue = 1;
     if (!createSharedFencePair(0, m_DecodeDevice.Get(), m_RenderDevice.Get(), m_DecodeD2RFence, m_RenderD2RFence)) {
         goto Exit;
     }
 
     // Create our render->decode fence
+    m_R2DFenceValue = 1;
     if (!createSharedFencePair(0, m_DecodeDevice.Get(), m_RenderDevice.Get(), m_DecodeR2DFence, m_RenderR2DFence)) {
         goto Exit;
     }
@@ -992,8 +993,8 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
         SDL_assert(m_RenderD2RFence);
 
         lockContext(this);
-        if (SUCCEEDED(m_DecodeDeviceContext->Signal(m_DecodeD2RFence.Get(), m_DecodeRenderSyncFenceValue))) {
-            m_RenderDeviceContext->Wait(m_RenderD2RFence.Get(), m_DecodeRenderSyncFenceValue++);
+        if (SUCCEEDED(m_DecodeDeviceContext->Signal(m_DecodeD2RFence.Get(), m_D2RFenceValue))) {
+            m_RenderDeviceContext->Wait(m_RenderD2RFence.Get(), m_D2RFenceValue++);
         }
         unlockContext(this);
     }
@@ -1046,10 +1047,16 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
         SDL_assert(m_DecodeR2DFence);
         SDL_assert(m_RenderR2DFence);
 
-        if (SUCCEEDED(m_RenderDeviceContext->Signal(m_RenderR2DFence.Get(), m_DecodeRenderSyncFenceValue))) {
+        // Because Pacer keeps a reference to the current frame until the next frame is rendered,
+        // we insert a wait for the previous frame's fence value rather than the current one.
+        // This means the fence should generally not cause a pipeline bubble for the decoder
+        // unless rendering is taking much longer than expected.
+        if (SUCCEEDED(m_RenderDeviceContext->Signal(m_RenderR2DFence.Get(), m_R2DFenceValue))) {
             lockContext(this);
-            m_DecodeDeviceContext->Wait(m_DecodeR2DFence.Get(), m_DecodeRenderSyncFenceValue++);
+            SDL_assert(m_R2DFenceValue > 0);
+            m_DecodeDeviceContext->Wait(m_DecodeR2DFence.Get(), m_R2DFenceValue - 1);
             unlockContext(this);
+            m_R2DFenceValue++;
         }
     }
 }
