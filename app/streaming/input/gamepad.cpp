@@ -5,6 +5,7 @@
 #include "settings/mappingmanager.h"
 
 #include <QtMath>
+#include <QRegularExpression>
 
 // How long the Start button must be pressed to toggle mouse emulation
 #define MOUSE_EMULATION_LONG_PRESS_TIME 750
@@ -957,7 +958,21 @@ QString SdlInputHandler::getUnmappedGamepads()
                         ret += ", ";
                     }
 
-                    ret += name;
+                    // Sanitize controller name to prevent Qt text rendering crashes
+                    QString safeName = name ? QString::fromUtf8(name) : QString("<UNKNOWN>");
+                    // Remove any null bytes or control characters that could cause issues
+                    safeName.replace(QChar('\0'), "");
+                    safeName.remove(QRegularExpression("[\\x00-\\x1F\\x7F]"));
+                    // Limit length to prevent excessive memory usage
+                    if (safeName.length() > 128) {
+                        safeName = safeName.left(125) + "...";
+                    }
+                    // Fallback if sanitization resulted in empty string
+                    if (safeName.isEmpty()) {
+                        safeName = "<INVALID_NAME>";
+                    }
+
+                    ret += safeName;
                 }
 
                 SDL_JoystickClose(joy);
