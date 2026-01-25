@@ -8,6 +8,10 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
 {
     int button;
 
+    if (shouldSuppressMouseEvent(event->x, event->y, event->timestamp)) {
+        return;
+    }
+
     if (event->which == SDL_TOUCH_MOUSEID) {
         // Ignore synthetic mouse events
         return;
@@ -70,6 +74,10 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
 
 void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 {
+    if (shouldSuppressMouseEvent(event->x, event->y, event->timestamp)) {
+        return;
+    }
+
     if (!isCaptureActive()) {
         // Not capturing
         return;
@@ -101,19 +109,11 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         int windowWidth, windowHeight;
         SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
 
-        SDL_Rect src, dst;
+        SDL_Rect dst;
         bool mouseInVideoRegion;
 
-        src.x = src.y = 0;
-        src.w = m_StreamWidth;
-        src.h = m_StreamHeight;
-
-        dst.x = dst.y = 0;
-        dst.w = windowWidth;
-        dst.h = windowHeight;
-
         // Use the stream and window sizes to determine the video region
-        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+        StreamUtils::getVideoRegionInWindow(m_StreamWidth, m_StreamHeight, windowWidth, windowHeight, &dst);
 
         mouseInVideoRegion = isMouseInVideoRegion(x, y, windowWidth, windowHeight);
 
@@ -156,6 +156,13 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 
 void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
 {
+    int mouseX = 0;
+    int mouseY = 0;
+    SDL_GetMouseState(&mouseX, &mouseY);
+    if (shouldSuppressMouseEvent(mouseX, mouseY, event->timestamp)) {
+        return;
+    }
+
     if (!isCaptureActive()) {
         // Not capturing
         return;
@@ -237,22 +244,14 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
 
 bool SdlInputHandler::isMouseInVideoRegion(int mouseX, int mouseY, int windowWidth, int windowHeight)
 {
-    SDL_Rect src, dst;
+    SDL_Rect dst;
 
     if (windowWidth < 0 || windowHeight < 0) {
         SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
     }
 
-    src.x = src.y = 0;
-    src.w = m_StreamWidth;
-    src.h = m_StreamHeight;
-
-    dst.x = dst.y = 0;
-    dst.w = windowWidth;
-    dst.h = windowHeight;
-
     // Use the stream and window sizes to determine the video region
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+    StreamUtils::getVideoRegionInWindow(m_StreamWidth, m_StreamHeight, windowWidth, windowHeight, &dst);
 
     return (mouseX >= dst.x && mouseX <= dst.x + dst.w) &&
            (mouseY >= dst.y && mouseY <= dst.y + dst.h);
@@ -278,17 +277,11 @@ void SdlInputHandler::updatePointerRegionLock()
     // If region lock is enabled, grab the cursor so it can't accidentally leave our window.
     if (isCaptureActive() && m_PointerRegionLockActive) {
 #if SDL_VERSION_ATLEAST(2, 0, 18)
-        SDL_Rect src, dst;
-
-        src.x = src.y = 0;
-        src.w = m_StreamWidth;
-        src.h = m_StreamHeight;
+        SDL_Rect dst;
 
         dst.x = dst.y = 0;
         SDL_GetWindowSize(m_Window, &dst.w, &dst.h);
-
-        // Use the stream and window sizes to determine the video region
-        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+        StreamUtils::getVideoRegionInWindow(m_StreamWidth, m_StreamHeight, dst.w, dst.h, &dst);
 
         // SDL 2.0.18 lets us lock the cursor to a specific region
         SDL_SetWindowMouseRect(m_Window, &dst);

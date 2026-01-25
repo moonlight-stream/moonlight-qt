@@ -1,6 +1,7 @@
 #include <Limelight.h>
 #include "SDL_compat.h"
 #include "streaming/session.h"
+#include "streaming/streamutils.h"
 #include "settings/mappingmanager.h"
 #include "path.h"
 #include "utils.h"
@@ -8,6 +9,17 @@
 #include <QtGlobal>
 #include <QDir>
 #include <QGuiApplication>
+
+#ifdef Q_OS_WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0602
+#elif _WIN32_WINNT < 0x0602
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0602
+#endif
+#include <Windows.h>
+#include <windowsx.h>
+#endif
 
 SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight)
     : m_MultiController(prefs.multiController),
@@ -28,6 +40,13 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_AbsoluteMouseMode(prefs.absoluteMouseMode),
       m_AbsoluteTouchMode(prefs.absoluteTouchMode),
       m_DisabledTouchFeedback(false),
+      m_StylusPassthroughEnabled(prefs.stylusPassthrough),
+      m_LastStylusEventTicks(0),
+      m_StylusActive(false),
+      m_LastStylusNormX(0.0f),
+      m_LastStylusNormY(0.0f),
+      m_PenDebugEnabled(SDL_getenv("MOONLIGHT_PEN_DEBUG") != nullptr),
+      m_LoggedFirstPenPacket(false),
       m_LeftButtonReleaseTimer(0),
       m_RightButtonReleaseTimer(0),
       m_DragTimer(0),
@@ -197,8 +216,58 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     SDL_zero(m_TouchDownEvent);
 }
 
+#ifdef Q_OS_WIN32
+namespace {
+struct WinPenApi {
+    decltype(&GetPointerType) getPointerType = nullptr;
+    decltype(&GetPointerPenInfo) getPointerPenInfo = nullptr;
+    decltype(&GetPointerInfo) getPointerInfo = nullptr;
+    bool initialized = false;
+    bool available = false;
+
+    void init() {
+        if (initialized) {
+            return;
+        }
+        initialized = true;
+
+        HMODULE user32 = GetModuleHandleW(L"user32.dll");
+        if (!user32) {
+            return;
+        }
+
+        getPointerType = reinterpret_cast<decltype(getPointerType)>(
+            GetProcAddress(user32, "GetPointerType"));
+        getPointerPenInfo = reinterpret_cast<decltype(getPointerPenInfo)>(
+            GetProcAddress(user32, "GetPointerPenInfo"));
+        getPointerInfo = reinterpret_cast<decltype(getPointerInfo)>(
+            GetProcAddress(user32, "GetPointerInfo"));
+
+        available = getPointerType && getPointerPenInfo && getPointerInfo;
+    }
+};
+
+WinPenApi g_WinPenApi;
+
+float normalizePressure(UINT32 pressure) {
+    // Windows pen pressure is typically 0..1024
+    const float maxPressure = 1024.0f;
+    float value = pressure / maxPressure;
+    if (value < 0.0f) {
+        return 0.0f;
+    }
+    if (value > 1.0f) {
+        return 1.0f;
+    }
+    return value;
+}
+} // namespace
+#endif
+
 SdlInputHandler::~SdlInputHandler()
 {
+    m_X11Tablet.shutdown();
+
     for (int i = 0; i < MAX_GAMEPADS; i++) {
         if (m_GamepadState[i].mouseEmulationTimer != 0) {
             Session::get()->notifyMouseEmulationMode(false);
@@ -249,6 +318,10 @@ SdlInputHandler::~SdlInputHandler()
 void SdlInputHandler::setWindow(SDL_Window *window)
 {
     m_Window = window;
+
+    if (m_StylusPassthroughEnabled && (LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS)) {
+        m_X11Tablet.initialize(m_Window, m_StreamWidth, m_StreamHeight);
+    }
 }
 
 void SdlInputHandler::raiseAllKeys()
@@ -459,4 +532,290 @@ void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
     else {
         handleRelativeFingerEvent(event);
     }
+}
+
+void SdlInputHandler::handleSysWmEvent(SDL_SysWMEvent* event)
+{
+#ifdef Q_OS_WIN32
+    if (!m_StylusPassthroughEnabled) {
+        return;
+    }
+
+    if (!(LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS)) {
+        return;
+    }
+
+    if (!event || !event->msg) {
+        return;
+    }
+
+    if (event->msg->subsystem != SDL_SYSWM_WINDOWS) {
+        return;
+    }
+
+    UINT msg = event->msg->msg.win.msg;
+    if (msg != WM_POINTERDOWN &&
+        msg != WM_POINTERUP &&
+        msg != WM_POINTERUPDATE &&
+        msg != WM_POINTERLEAVE &&
+        msg != WM_POINTERCAPTURECHANGED) {
+        return;
+    }
+
+    g_WinPenApi.init();
+    if (!g_WinPenApi.available) {
+        return;
+    }
+
+    UINT32 pointerId = GET_POINTERID_WPARAM(event->msg->msg.win.wParam);
+    POINTER_INPUT_TYPE pointerType = PT_POINTER;
+    if (!g_WinPenApi.getPointerType(pointerId, &pointerType) || pointerType != PT_PEN) {
+        return;
+    }
+
+    POINTER_PEN_INFO penInfo = {};
+    if (!g_WinPenApi.getPointerPenInfo(pointerId, &penInfo)) {
+        return;
+    }
+
+    const POINTER_INFO& pinfo = penInfo.pointerInfo;
+    bool inContact = (pinfo.pointerFlags & POINTER_FLAG_INCONTACT) != 0;
+    bool inRange = (pinfo.pointerFlags & POINTER_FLAG_INRANGE) != 0;
+
+    uint8_t eventType = LI_TOUCH_EVENT_HOVER;
+    switch (msg) {
+    case WM_POINTERDOWN:
+        eventType = LI_TOUCH_EVENT_DOWN;
+        break;
+    case WM_POINTERUP:
+        eventType = LI_TOUCH_EVENT_UP;
+        break;
+    case WM_POINTERUPDATE:
+        if (inContact) {
+            eventType = LI_TOUCH_EVENT_MOVE;
+        } else if (inRange) {
+            eventType = LI_TOUCH_EVENT_HOVER;
+        } else {
+            eventType = LI_TOUCH_EVENT_HOVER_LEAVE;
+        }
+        break;
+    case WM_POINTERLEAVE:
+        eventType = LI_TOUCH_EVENT_HOVER_LEAVE;
+        break;
+    case WM_POINTERCAPTURECHANGED:
+        eventType = LI_TOUCH_EVENT_CANCEL;
+        break;
+    default:
+        return;
+    }
+
+    POINT pt = pinfo.ptPixelLocation;
+    HWND hwnd = event->msg->msg.win.hwnd;
+    if (hwnd != nullptr) {
+        ScreenToClient(hwnd, &pt);
+    }
+    // NOTE: ScreenToClient() returns window coordinates in the Win32 client space.
+    // SDL_GetWindowSize() is expected to use the same coordinate space on Windows.
+    // If per-monitor DPI scaling causes a mismatch, revisit this mapping.
+
+    float normX = 0.0f;
+    float normY = 0.0f;
+    int windowWidth = 0;
+    int windowHeight = 0;
+    SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+    if (!StreamUtils::windowPointToNormalizedVideo(m_StreamWidth, m_StreamHeight,
+                                                   windowWidth, windowHeight,
+                                                   (float)pt.x, (float)pt.y,
+                                                   &normX, &normY)) {
+        return;
+    }
+
+    float pressure = 0.0f;
+    if (penInfo.penMask & PEN_MASK_PRESSURE) {
+        pressure = normalizePressure(penInfo.pressure);
+    } else if (inContact) {
+        pressure = 1.0f;
+    }
+    if (eventType == LI_TOUCH_EVENT_UP) {
+        pressure = 0.0f;
+    }
+
+    uint8_t tilt = LI_TILT_UNKNOWN;
+    if ((penInfo.penMask & PEN_MASK_TILT_X) || (penInfo.penMask & PEN_MASK_TILT_Y)) {
+        float tiltX = (penInfo.penMask & PEN_MASK_TILT_X) ? (float)penInfo.tiltX : 0.0f;
+        float tiltY = (penInfo.penMask & PEN_MASK_TILT_Y) ? (float)penInfo.tiltY : 0.0f;
+        float magnitude = SDL_sqrtf(tiltX * tiltX + tiltY * tiltY);
+        if (magnitude < 0.0f) {
+            magnitude = 0.0f;
+        }
+        if (magnitude > 90.0f) {
+            magnitude = 90.0f;
+        }
+        tilt = (uint8_t)magnitude;
+    }
+
+    uint16_t rotation = LI_ROT_UNKNOWN;
+    if (penInfo.penMask & PEN_MASK_ROTATION) {
+        rotation = (uint16_t)penInfo.rotation;
+    }
+
+    uint8_t toolType = LI_TOOL_TYPE_PEN;
+    if (penInfo.penFlags & (PEN_FLAG_ERASER | PEN_FLAG_INVERTED)) {
+        toolType = LI_TOOL_TYPE_ERASER;
+    }
+
+    uint8_t penButtons = 0;
+    if (penInfo.penFlags & PEN_FLAG_BARREL) {
+        penButtons |= LI_PEN_BUTTON_SECONDARY;
+    }
+
+    StylusEvent stylusEvent = {};
+    stylusEvent.eventType = eventType;
+    stylusEvent.toolType = toolType;
+    stylusEvent.penButtons = penButtons;
+    stylusEvent.x = normX;
+    stylusEvent.y = normY;
+    stylusEvent.pressure = pressure;
+    stylusEvent.contactMajor = 0.0f;
+    stylusEvent.contactMinor = 0.0f;
+    stylusEvent.rotation = rotation;
+    stylusEvent.tilt = tilt;
+    handleStylusEvent(stylusEvent);
+#else
+    (void)event;
+#endif
+}
+
+void SdlInputHandler::pumpStylusEvents()
+{
+    if (!m_StylusPassthroughEnabled) {
+        return;
+    }
+
+    if (!(LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS)) {
+        return;
+    }
+
+    if (!m_X11Tablet.isActive()) {
+        return;
+    }
+
+    m_X11Tablet.pumpEvents([this](const StylusEvent& event) {
+        handleStylusEvent(event);
+    });
+}
+
+bool SdlInputHandler::wantsX11TabletPolling() const
+{
+    if (!m_StylusPassthroughEnabled) {
+        return false;
+    }
+
+    if (!(LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS)) {
+        return false;
+    }
+
+    return m_X11Tablet.wantsPolling();
+}
+
+void SdlInputHandler::handleStylusEvent(const StylusEvent& event)
+{
+    if (!(LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS)) {
+        return;
+    }
+
+    LiSendPenEvent(event.eventType,
+                   event.toolType,
+                   event.penButtons,
+                   event.x,
+                   event.y,
+                   event.pressure,
+                   event.contactMajor,
+                   event.contactMinor,
+                   event.rotation,
+                   event.tilt);
+
+    m_LastStylusEventTicks = SDL_GetTicks();
+    m_LastStylusNormX = event.x;
+    m_LastStylusNormY = event.y;
+
+    switch (event.eventType) {
+    case LI_TOUCH_EVENT_DOWN:
+    case LI_TOUCH_EVENT_HOVER:
+    case LI_TOUCH_EVENT_MOVE:
+        m_StylusActive = true;
+        break;
+    case LI_TOUCH_EVENT_UP:
+    case LI_TOUCH_EVENT_HOVER_LEAVE:
+    case LI_TOUCH_EVENT_CANCEL:
+    case LI_TOUCH_EVENT_CANCEL_ALL:
+        m_StylusActive = false;
+        break;
+    default:
+        break;
+    }
+
+    if (m_PenDebugEnabled && !m_LoggedFirstPenPacket) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Pen packets active");
+        m_LoggedFirstPenPacket = true;
+    }
+
+    if (m_PenDebugEnabled &&
+        (event.eventType == LI_TOUCH_EVENT_DOWN || event.eventType == LI_TOUCH_EVENT_UP)) {
+        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+                     "Pen event sent: type=%u tool=%u buttons=0x%02x",
+                     event.eventType, event.toolType, event.penButtons);
+    }
+}
+
+bool SdlInputHandler::shouldSuppressMouseEvent(int mouseX, int mouseY, uint32_t eventTicks) const
+{
+    if (!m_StylusPassthroughEnabled) {
+        return false;
+    }
+
+    if (!(LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS)) {
+        return false;
+    }
+
+    if (!m_StylusActive) {
+        return false;
+    }
+
+    uint32_t now = SDL_GetTicks();
+    if (m_LastStylusEventTicks == 0) {
+        return false;
+    }
+
+    // If the stylus went idle without an explicit leave event, stop suppressing.
+    if (now - m_LastStylusEventTicks > 250) {
+        return false;
+    }
+
+    int windowWidth = 0;
+    int windowHeight = 0;
+    SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+
+    float normX = 0.0f;
+    float normY = 0.0f;
+    if (!StreamUtils::windowPointToNormalizedVideo(m_StreamWidth, m_StreamHeight,
+                                                   windowWidth, windowHeight,
+                                                   (float)mouseX, (float)mouseY,
+                                                   &normX, &normY)) {
+        return false;
+    }
+
+    const float epsilon = 0.002f;
+    if (SDL_fabs(normX - m_LastStylusNormX) > epsilon ||
+        SDL_fabs(normY - m_LastStylusNormY) > epsilon) {
+        return false;
+    }
+
+    if (eventTicks != 0 && m_LastStylusEventTicks != 0) {
+        if (eventTicks + 50 < m_LastStylusEventTicks || eventTicks > m_LastStylusEventTicks + 50) {
+            return false;
+        }
+    }
+
+    return true;
 }

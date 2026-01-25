@@ -4,6 +4,8 @@
 #include "backend/computermanager.h"
 
 #include "SDL_compat.h"
+#include "streaming/input/x11tablet.h"
+#include <SDL_syswm.h>
 
 struct GamepadState {
     SDL_GameController* controller;
@@ -98,6 +100,8 @@ public:
 
     void handleMouseWheelEvent(SDL_MouseWheelEvent* event);
 
+    void handleSysWmEvent(SDL_SysWMEvent* event);
+
     void handleControllerAxisEvent(SDL_ControllerAxisEvent* event);
 
     void handleControllerButtonEvent(SDL_ControllerButtonEvent* event);
@@ -129,6 +133,10 @@ public:
     void setAdaptiveTriggers(uint16_t controllerNumber, DualSenseOutputReport *report);
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
+
+    void pumpStylusEvents();
+
+    bool wantsX11TabletPolling() const;
 
     int getAttachedGamepadMask();
 
@@ -185,6 +193,10 @@ private:
 
     void handleRelativeFingerEvent(SDL_TouchFingerEvent* event);
 
+    void handleStylusEvent(const StylusEvent& event);
+
+    bool shouldSuppressMouseEvent(int mouseX, int mouseY, uint32_t eventTicks) const;
+
     void performSpecialKeyCombo(KeyCombo combo);
 
     static
@@ -239,6 +251,13 @@ private:
     bool m_AbsoluteMouseMode;
     bool m_AbsoluteTouchMode;
     bool m_DisabledTouchFeedback;
+    bool m_StylusPassthroughEnabled;
+    uint32_t m_LastStylusEventTicks;
+    bool m_StylusActive;
+    float m_LastStylusNormX;
+    float m_LastStylusNormY;
+    bool m_PenDebugEnabled;
+    bool m_LoggedFirstPenPacket;
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
     SDL_TimerID m_LeftButtonReleaseTimer;
@@ -246,6 +265,8 @@ private:
     SDL_TimerID m_DragTimer;
     char m_DragButton;
     int m_NumFingersDown;
+
+    X11TabletManager m_X11Tablet;
 
     static const int k_ButtonMap[];
 };

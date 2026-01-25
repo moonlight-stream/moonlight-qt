@@ -1794,6 +1794,8 @@ void Session::exec()
         return;
     }
 
+    m_Preferences->setPenTouchSupported((LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS) != 0);
+
     // Pump the Qt event loop one last time before we create our SDL window
     // This is sometimes necessary for the QML code to process any signals
     // we've emitted from the async connection thread.
@@ -1968,6 +1970,14 @@ void Session::exec()
     // on macOS.
     SDL_StopTextInput();
 
+#ifdef Q_OS_WIN32
+    // Enable WM_POINTER delivery via SDL_SYSWMEVENT for pen passthrough
+    if (m_Preferences->stylusPassthrough &&
+        (LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS)) {
+        SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
+    }
+#endif
+
     // Disable the screen saver if requested
     if (m_Preferences->keepAwake) {
         SDL_DisableScreenSaver();
@@ -2002,6 +2012,7 @@ void Session::exec()
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
     for (;;) {
+        bool forcePollingForStylus = m_InputHandler->wantsX11TabletPolling();
 #if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)
         // SDL 2.0.18 has a proper wait event implementation that uses platform
         // support to block on events rather than polling on Windows, macOS, X11,
@@ -2012,9 +2023,20 @@ void Session::exec()
         // NB: This behavior was introduced in SDL 2.0.16, but had a few critical
         // issues that could cause indefinite timeouts, delayed joystick detection,
         // and other problems.
-        if (!SDL_WaitEventTimeout(&event, 1000)) {
-            presence.runCallbacks();
-            continue;
+        if (!forcePollingForStylus) {
+            if (!SDL_WaitEventTimeout(&event, 1000)) {
+                m_InputHandler->pumpStylusEvents();
+                presence.runCallbacks();
+                continue;
+            }
+        }
+        else {
+            if (!SDL_PollEvent(&event)) {
+                SDL_Delay(1);
+                m_InputHandler->pumpStylusEvents();
+                presence.runCallbacks();
+                continue;
+            }
         }
 #else
         // We explicitly use SDL_PollEvent() and SDL_Delay() because
@@ -2029,6 +2051,7 @@ void Session::exec()
             // ARM core in the Steam Link, so we will wait 10 ms instead.
             SDL_Delay(10);
 #endif
+            m_InputHandler->pumpStylusEvents();
             presence.runCallbacks();
             continue;
         }
@@ -2335,6 +2358,9 @@ void Session::exec()
         case SDL_FINGERUP:
             m_InputHandler->handleTouchFingerEvent(&event.tfinger);
             break;
+        case SDL_SYSWMEVENT:
+            m_InputHandler->handleSysWmEvent(&event.syswm);
+            break;
         case SDL_DISPLAYEVENT:
             switch (event.display.event) {
             case SDL_DISPLAYEVENT_CONNECTED:
@@ -2344,6 +2370,8 @@ void Session::exec()
             }
             break;
         }
+
+        m_InputHandler->pumpStylusEvents();
     }
 
 DispatchDeferredCleanup:

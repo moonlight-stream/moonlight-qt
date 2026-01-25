@@ -64,23 +64,20 @@ void SdlInputHandler::disableTouchFeedback()
 
 void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
 {
-    SDL_Rect src, dst;
     int windowWidth, windowHeight;
 
     SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
 
-    src.x = src.y = 0;
-    src.w = m_StreamWidth;
-    src.h = m_StreamHeight;
+    float windowX = event->x * windowWidth;
+    float windowY = event->y * windowHeight;
 
-    dst.x = dst.y = 0;
-    dst.w = windowWidth;
-    dst.h = windowHeight;
-
-    // Scale window-relative events to be video-relative and clamp to video region
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-    float vidrelx = qMin(qMax((int)(event->x * windowWidth), dst.x), dst.x + dst.w) - dst.x;
-    float vidrely = qMin(qMax((int)(event->y * windowHeight), dst.y), dst.y + dst.h) - dst.y;
+    float normX = 0.0f;
+    float normY = 0.0f;
+    if (!StreamUtils::windowPointToNormalizedVideo(m_StreamWidth, m_StreamHeight,
+                                                   windowWidth, windowHeight,
+                                                   windowX, windowY, &normX, &normY)) {
+        return;
+    }
 
     uint8_t eventType;
     switch (event->type) {
@@ -130,13 +127,13 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
         }
 
         if (isPen) {
-            LiSendPenEvent(eventType, LI_TOOL_TYPE_PEN, 0, vidrelx / dst.w, vidrely / dst.h, event->pressure,
+            LiSendPenEvent(eventType, LI_TOOL_TYPE_PEN, 0, normX, normY, event->pressure,
                            0.0f, 0.0f, LI_ROT_UNKNOWN, LI_TILT_UNKNOWN);
         }
         else
 #endif
         {
-            LiSendTouchEvent(eventType, pointerId, vidrelx / dst.w, vidrely / dst.h, event->pressure,
+            LiSendTouchEvent(eventType, pointerId, normX, normY, event->pressure,
                              0.0f, 0.0f, LI_ROT_UNKNOWN);
         }
 
@@ -169,21 +166,13 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
         return;
     }
 
-    SDL_Rect src, dst;
+    SDL_Rect dst;
     int windowWidth, windowHeight;
 
     SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
 
-    src.x = src.y = 0;
-    src.w = m_StreamWidth;
-    src.h = m_StreamHeight;
-
-    dst.x = dst.y = 0;
-    dst.w = windowWidth;
-    dst.h = windowHeight;
-
     // Use the stream and window sizes to determine the video region
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+    StreamUtils::getVideoRegionInWindow(m_StreamWidth, m_StreamHeight, windowWidth, windowHeight, &dst);
 
     if (qSqrt(qPow(event->x - m_LastTouchDownEvent.x, 2) + qPow(event->y - m_LastTouchDownEvent.y, 2)) > LONG_PRESS_ACTIVATION_DELTA) {
         // Moved too far since touch down. Cancel the long press timer.

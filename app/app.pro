@@ -150,6 +150,12 @@ unix:if(!macx|disable-prebuilts) {
             packagesExist(x11) {
                 DEFINES += HAS_X11
                 PKGCONFIG += x11
+                linux {
+                    packagesExist(xi) {
+                        DEFINES += HAVE_XI
+                        PKGCONFIG += xi
+                    }
+                }
             }
         }
     }
@@ -197,6 +203,7 @@ SOURCES += \
     streaming/input/keyboard.cpp \
     streaming/input/mouse.cpp \
     streaming/input/reltouch.cpp \
+    streaming/input/x11tablet.cpp \
     streaming/session.cpp \
     streaming/audio/audio.cpp \
     streaming/audio/renderers/sdlaud.cpp \
@@ -234,6 +241,7 @@ HEADERS += \
     cli/startstream.h \
     settings/streamingpreferences.h \
     streaming/input/input.h \
+    streaming/input/x11tablet.h \
     streaming/session.h \
     streaming/audio/renderers/renderer.h \
     streaming/audio/renderers/sdl.h \

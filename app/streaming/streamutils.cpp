@@ -2,6 +2,7 @@
 
 #include <Qt>
 #include <QDir>
+#include <algorithm>
 
 #ifdef Q_OS_DARWIN
 #include <ApplicationServices/ApplicationServices.h>
@@ -113,6 +114,45 @@ void StreamUtils::screenSpaceToNormalizedDeviceCoords(SDL_Rect* src, SDL_FRect* 
     dst->y = ((float)src->y / (viewportHeight / 2.0f)) - 1.0f;
     dst->w = (float)src->w / (viewportWidth / 2.0f);
     dst->h = (float)src->h / (viewportHeight / 2.0f);
+}
+
+void StreamUtils::getVideoRegionInWindow(int streamWidth, int streamHeight, int windowWidth, int windowHeight, SDL_Rect* dst)
+{
+    SDL_Rect src;
+
+    src.x = src.y = 0;
+    src.w = streamWidth;
+    src.h = streamHeight;
+
+    dst->x = dst->y = 0;
+    dst->w = windowWidth;
+    dst->h = windowHeight;
+
+    scaleSourceToDestinationSurface(&src, dst);
+}
+
+bool StreamUtils::windowPointToNormalizedVideo(int streamWidth, int streamHeight, int windowWidth, int windowHeight,
+                                               float windowX, float windowY, float* outX, float* outY)
+{
+    if (streamWidth <= 0 || streamHeight <= 0 || windowWidth <= 0 || windowHeight <= 0) {
+        return false;
+    }
+
+    // Map window coordinates into the letterboxed video region:
+    // normalizedX = (clamp(windowX, dst.x..dst.x+dst.w) - dst.x) / dst.w
+    // normalizedY = (clamp(windowY, dst.y..dst.y+dst.h) - dst.y) / dst.h
+    SDL_Rect dst;
+    getVideoRegionInWindow(streamWidth, streamHeight, windowWidth, windowHeight, &dst);
+
+    float clampedX = qBound((float)dst.x, windowX, (float)(dst.x + dst.w));
+    float clampedY = qBound((float)dst.y, windowY, (float)(dst.y + dst.h));
+
+    float relX = clampedX - dst.x;
+    float relY = clampedY - dst.y;
+
+    *outX = dst.w > 0 ? relX / dst.w : 0.0f;
+    *outY = dst.h > 0 ? relY / dst.h : 0.0f;
+    return true;
 }
 
 int StreamUtils::getDisplayRefreshRate(SDL_Window* window)

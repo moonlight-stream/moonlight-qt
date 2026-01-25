@@ -18,6 +18,13 @@ public:
     void screenSpaceToNormalizedDeviceCoords(SDL_Rect* src, SDL_FRect* dst, int viewportWidth, int viewportHeight);
 
     static
+    void getVideoRegionInWindow(int streamWidth, int streamHeight, int windowWidth, int windowHeight, SDL_Rect* dst);
+
+    static
+    bool windowPointToNormalizedVideo(int streamWidth, int streamHeight, int windowWidth, int windowHeight,
+                                      float windowX, float windowY, float* outX, float* outY);
+
+    static
     bool getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, SDL_Rect* safeArea);
 
     static

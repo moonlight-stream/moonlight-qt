@@ -1414,6 +1414,28 @@ Flickable {
                 }
 
                 CheckBox {
+                    id: stylusPassthroughCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    visible: (Qt.platform.os === "linux" &&
+                              (!SystemProperties.isRunningWayland || SystemProperties.isRunningXWayland)) ||
+                             (Qt.platform.os === "windows")
+                    enabled: visible && StreamingPreferences.penTouchSupported
+                    text: qsTr("Stylus/Tablet passthrough")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.stylusPassthrough
+                    onCheckedChanged: {
+                        StreamingPreferences.stylusPassthrough = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 7000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Send stylus input as pen packets to the host. Requires Sunshine pen support and a Windows or X11-backed window. Stylus input will no longer behave like a mouse when enabled.") + "\n\n" +
+                                  (StreamingPreferences.penTouchSupported ? "" : qsTr("Start a stream to a Sunshine host that advertises pen support to enable this option."))
+                }
+
+                CheckBox {
                     id: swapMouseButtonsCheck
                     hoverEnabled: true
                     width: parent.width
