@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QRect>
 
+#include "SDL_compat.h"
+
 class SystemProperties : public QObject
 {
     Q_OBJECT
@@ -11,6 +13,7 @@ class SystemProperties : public QObject
 
 public:
     SystemProperties();
+    ~SystemProperties();
 
     // Static properties queried synchronously during the constructor
     Q_PROPERTY(bool isRunningWayland MEMBER isRunningWayland CONSTANT)
@@ -47,6 +50,7 @@ private slots:
 
 private:
     QThread* systemPropertyQueryThread;
+    SDL_Window* testWindow;
 
     // Properties set by the constructor
     bool isRunningWayland;

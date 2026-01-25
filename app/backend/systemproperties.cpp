@@ -29,38 +29,7 @@ private:
         bool supportsHdr;
         QSize maximumResolution;
 
-        if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
-                         SDL_GetError());
-            return;
-        }
-
-        // Update display related attributes (max FPS, native resolution, etc).
-        m_Properties->refreshDisplays();
-
-        SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
-                                                  SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
-        if (!testWindow) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Failed to create test window with platform flags: %s",
-                        SDL_GetError());
-
-            testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
-            if (!testWindow) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Failed to create window for hardware decode test: %s",
-                             SDL_GetError());
-                SDL_QuitSubSystem(SDL_INIT_VIDEO);
-                return;
-            }
-        }
-
-        Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, supportsHdr, maximumResolution);
-
-        SDL_DestroyWindow(testWindow);
-
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        Session::getDecoderInfo(m_Properties->testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, supportsHdr, maximumResolution);
 
         // Propagate the decoder properties to the SystemProperties singleton and emit any change signals on the main thread
         QMetaObject::invokeMethod(m_Properties, "updateDecoderProperties",
@@ -137,12 +106,49 @@ SystemProperties::SystemProperties()
     supportsHdr = true;
     maximumResolution = QSize(0, 0);
 
+    // We initialize the video subsystem and test window on the main thread
+    // because some platforms (macOS) do not support window creation on
+    // non-main threads.
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return;
+    }
+
+    // Update display related attributes (max FPS, native resolution, etc).
+    refreshDisplays();
+
+    testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+                                    SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
+    if (!testWindow) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to create test window with platform flags: %s",
+                    SDL_GetError());
+
+        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+        if (!testWindow) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to create window for hardware decode test: %s",
+                         SDL_GetError());
+            SDL_QuitSubSystem(SDL_INIT_VIDEO);
+            return;
+        }
+    }
+
     systemPropertyQueryThread = new SystemPropertyQueryThread(this);
     systemPropertyQueryThread->start();
 }
 
+SystemProperties::~SystemProperties()
+{
+    systemPropertyQueryThread->wait();
+}
+
 void SystemProperties::updateDecoderProperties(bool hasHardwareAcceleration, bool rendererAlwaysFullScreen, QSize maximumResolution, bool supportsHdr)
 {
+    SDL_assert(testWindow);
+
     if (hasHardwareAcceleration != this->hasHardwareAcceleration) {
         this->hasHardwareAcceleration = hasHardwareAcceleration;
         emit hasHardwareAccelerationChanged();
@@ -162,6 +168,10 @@ void SystemProperties::updateDecoderProperties(bool hasHardwareAcceleration, boo
         this->supportsHdr = supportsHdr;
         emit supportsHdrChanged();
     }
+
+    SDL_DestroyWindow(testWindow);
+    testWindow = nullptr;
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
 QRect SystemProperties::getNativeResolution(int displayIndex)

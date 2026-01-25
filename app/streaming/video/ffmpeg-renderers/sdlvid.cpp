@@ -140,6 +140,14 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    // Don't create a renderer or pump events for test-only
+    // renderers. Test-only renderers might be created on
+    // a non-main thread where interaction with the SDL
+    // render API is unsafe.
+    if (params->testOnly) {
+        return true;
+    }
+
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
     if (!SDL_GetWindowWMInfo(params->window, &info)) {

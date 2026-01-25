@@ -464,7 +464,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         // to ensure we don't drop any important events.
         session->flushWindowEvents();
     }
-    else {
+    else if (!params->testOnly) {
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
         SDL_FlushEvent(SDL_WINDOWEVENT);
