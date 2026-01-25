@@ -939,7 +939,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1752"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation>A teljesítményátfedés nem támogatott Steam Linken vagy Raspberry PI-n.</translation>
+        <translation>A teljesítményátfedés nem támogatott Steam Linken vagy Raspberry Pi-n.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1340"/>
