@@ -1635,7 +1635,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
     {
         QString h264DecoderHint = qgetenv("H264_DECODER_HINT");
         if (!h264DecoderHint.isEmpty() && (params->videoFormat & VIDEO_FORMAT_MASK_H264)) {
-            QByteArray decoderString = h264DecoderHint.toLocal8Bit();
+            QByteArray decoderString = h264DecoderHint.toUtf8();
             if (tryInitializeRendererForUnknownDecoder(avcodec_find_decoder_by_name(decoderString.constData()), params, true)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Using custom H.264 decoder (H264_DECODER_HINT): %s",
@@ -1652,7 +1652,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
     {
         QString hevcDecoderHint = qgetenv("HEVC_DECODER_HINT");
         if (!hevcDecoderHint.isEmpty() && (params->videoFormat & VIDEO_FORMAT_MASK_H265)) {
-            QByteArray decoderString = hevcDecoderHint.toLocal8Bit();
+            QByteArray decoderString = hevcDecoderHint.toUtf8();
             if (tryInitializeRendererForUnknownDecoder(avcodec_find_decoder_by_name(decoderString.constData()), params, true)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Using custom HEVC decoder (HEVC_DECODER_HINT): %s",
@@ -1669,7 +1669,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
     {
         QString av1DecoderHint = qgetenv("AV1_DECODER_HINT");
         if (!av1DecoderHint.isEmpty() && (params->videoFormat & VIDEO_FORMAT_MASK_AV1)) {
-            QByteArray decoderString = av1DecoderHint.toLocal8Bit();
+            QByteArray decoderString = av1DecoderHint.toUtf8();
             if (tryInitializeRendererForUnknownDecoder(avcodec_find_decoder_by_name(decoderString.constData()), params, true)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Using custom AV1 decoder (AV1_DECODER_HINT): %s",
