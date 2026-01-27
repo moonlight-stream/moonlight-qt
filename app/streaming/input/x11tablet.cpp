@@ -63,7 +63,9 @@ struct X11TabletState {
     Atom absRotation = None;
     std::unordered_map<int, X11TabletManager::DeviceState> devices;
 };
-
+} // namespace
+#endif
+namespace {
 bool penDebugEnabled() {
     static int cached = -1;
     if (cached == -1) {
@@ -72,7 +74,7 @@ bool penDebugEnabled() {
     }
     return cached == 1;
 }
-
+#if defined(HAS_X11) && defined(HAVE_XI)
 bool nameContains(const char* name, const char* needle) {
     if (!name || !needle) {
         return false;
