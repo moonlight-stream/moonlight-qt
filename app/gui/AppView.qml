@@ -288,6 +288,7 @@ CenteredGridView {
             asynchronous: true
             sourceComponent: NavigableMenu {
                 id: appContextMenu
+                initiator: appContextMenuLoader.parent
                 NavigableMenuItem {
                     text: model.running ? qsTr("Resume Game") : qsTr("Launch Game")
                     onTriggered: launchOrResumeSelectedApp(true)
