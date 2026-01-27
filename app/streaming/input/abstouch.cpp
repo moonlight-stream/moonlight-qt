@@ -126,11 +126,20 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
             }
         }
 
-        if (isPen) {
-            LiSendPenEvent(eventType, LI_TOOL_TYPE_PEN, 0, normX, normY, event->pressure,
-                           0.0f, 0.0f, LI_ROT_UNKNOWN, LI_TILT_UNKNOWN);
-        }
-        else
+        if (isPen && m_StylusPassthroughEnabled) {
+            StylusEvent stylusEvent = {};
+            stylusEvent.eventType = eventType;
+            stylusEvent.toolType = LI_TOOL_TYPE_PEN;
+            stylusEvent.penButtons = 0;
+            stylusEvent.x = normX;
+            stylusEvent.y = normY;
+            stylusEvent.pressure = event->pressure;
+            stylusEvent.contactMajor = 0.0f;
+            stylusEvent.contactMinor = 0.0f;
+            stylusEvent.rotation = LI_ROT_UNKNOWN;
+            stylusEvent.tilt = LI_TILT_UNKNOWN;
+            handleStylusEvent(stylusEvent);
+        } else
 #endif
         {
             LiSendTouchEvent(eventType, pointerId, normX, normY, event->pressure,

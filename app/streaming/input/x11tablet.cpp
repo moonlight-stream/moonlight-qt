@@ -262,13 +262,25 @@ bool X11TabletManager::setupXInput2()
     }
 
     int major = 2;
-    int minor = 2;
+    int minor = 0;
     if (XIQueryVersion(state->display, &major, &minor) != Success) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "XInput2 query failed");
         return false;
     }
+    if (major < 2) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "XInput2 version %d.%d is too old",
+                    major, minor);
+        return false;
+    }
 
     state->xiReady = true;
+
+    if (penDebugEnabled()) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "XInput2 version negotiated: %d.%d",
+                    major, minor);
+    }
 
     state->absX = XInternAtom(state->display, "Abs X", False);
     state->absY = XInternAtom(state->display, "Abs Y", False);
@@ -418,15 +430,41 @@ bool X11TabletManager::normalizeWindowCoords(double x, double y, float* outX, fl
 
     int windowWidth = 0;
     int windowHeight = 0;
-    SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+    const char* sizeBasis = nullptr;
+#if SDL_VERSION_ATLEAST(2, 26, 0)
+    SDL_GetWindowSizeInPixels(m_Window, &windowWidth, &windowHeight);
+    if (windowWidth > 0 && windowHeight > 0) {
+        sizeBasis = "SDL_GetWindowSizeInPixels";
+    }
+#endif
+    if (windowWidth <= 0 || windowHeight <= 0) {
+        SDL_GL_GetDrawableSize(m_Window, &windowWidth, &windowHeight);
+        if (windowWidth > 0 && windowHeight > 0) {
+            sizeBasis = "SDL_GL_GetDrawableSize";
+        }
+    }
+    if (windowWidth <= 0 || windowHeight <= 0) {
+        SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+        if (windowWidth > 0 && windowHeight > 0) {
+            sizeBasis = "SDL_GetWindowSize";
+        }
+    }
     if (windowWidth <= 0 || windowHeight <= 0) {
         return false;
     }
 
     // XInput2 event coordinates are in window space for the target window on X11.
-    // SDL_GetWindowSize() is expected to match that coordinate space on X11/XWayland.
-    // If a compositor applies HiDPI scaling to the X11 surface, revisit this mapping
-    // and consider scaling from drawable size to logical size.
+    // Prefer pixel-sized window dimensions when available to match XI2 coordinate space.
+    if (penDebugEnabled()) {
+        static bool logged = false;
+        if (!logged) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "X11 tablet window size basis: %s (%dx%d)",
+                        sizeBasis ? sizeBasis : "unknown",
+                        windowWidth, windowHeight);
+            logged = true;
+        }
+    }
     return StreamUtils::windowPointToNormalizedVideo(m_StreamWidth, m_StreamHeight,
                                                      windowWidth, windowHeight,
                                                      static_cast<float>(x), static_cast<float>(y),
@@ -493,12 +531,14 @@ void X11TabletManager::handleDeviceEvent(void* eventData, int eventType, const s
     bool isButtonPress = eventType == XI_ButtonPress;
     bool isButtonRelease = eventType == XI_ButtonRelease;
     bool isMotion = eventType == XI_Motion;
+    bool contactEnded = false;
 
     uint32_t detail = ev->detail;
 
     if (isButtonPress || isButtonRelease) {
         if (detail == 1) {
             dev.inContact = isButtonPress;
+            contactEnded = isButtonRelease;
         } else {
             dev.penButtons = mapPenButtons(dev.penButtons, detail, isButtonPress);
         }
@@ -522,15 +562,25 @@ void X11TabletManager::handleDeviceEvent(void* eventData, int eventType, const s
     float pressure = 0.0f;
     if (dev.pressureIndex >= 0) {
         double val = 0.0;
-        if (readValuator(eventData, dev.pressureIndex, &val)) {
-            dev.lastPressure = normalizeValuator(val, dev.pressureMin, dev.pressureMax);
+        bool hasSample = readValuator(eventData, dev.pressureIndex, &val);
+        if (dev.inContact) {
+            if (hasSample) {
+                dev.lastPressure = normalizeValuator(val, dev.pressureMin, dev.pressureMax);
+                pressure = dev.lastPressure;
+            } else if (liEvent == LI_TOUCH_EVENT_MOVE) {
+                pressure = dev.lastPressure;
+            }
+        } else {
+            pressure = 0.0f;
         }
-        pressure = dev.lastPressure;
     } else {
         pressure = dev.inContact ? 1.0f : 0.0f;
     }
-    if (liEvent == LI_TOUCH_EVENT_UP) {
+    if (liEvent == LI_TOUCH_EVENT_UP || liEvent == LI_TOUCH_EVENT_HOVER) {
         pressure = 0.0f;
+    }
+    if (!dev.inContact || contactEnded) {
+        dev.lastPressure = 0.0f;
     }
 
     uint8_t tilt = LI_TILT_UNKNOWN;
