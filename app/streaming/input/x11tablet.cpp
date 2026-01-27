@@ -48,8 +48,16 @@ struct X11TabletManager::DeviceState {
     bool rotationSeen = false;
 };
 
-#if defined(HAS_X11) && defined(HAVE_XI)
 namespace {
+bool penDebugEnabled() {
+    static int cached = -1;
+    if (cached == -1) {
+        const char* env = SDL_getenv("MOONLIGHT_PEN_DEBUG");
+        cached = (env && *env) ? 1 : 0;
+    }
+    return cached == 1;
+}
+#if defined(HAS_X11) && defined(HAVE_XI)
 struct X11TabletState {
     Display* display = nullptr;
     Window window = 0;
@@ -63,18 +71,7 @@ struct X11TabletState {
     Atom absRotation = None;
     std::unordered_map<int, X11TabletManager::DeviceState> devices;
 };
-} // namespace
-#endif
-namespace {
-bool penDebugEnabled() {
-    static int cached = -1;
-    if (cached == -1) {
-        const char* env = SDL_getenv("MOONLIGHT_PEN_DEBUG");
-        cached = (env && *env) ? 1 : 0;
-    }
-    return cached == 1;
-}
-#if defined(HAS_X11) && defined(HAVE_XI)
+
 bool nameContains(const char* name, const char* needle) {
     if (!name || !needle) {
         return false;
@@ -140,8 +137,8 @@ uint8_t mapPenButtons(uint8_t current, uint32_t detail, bool pressed) {
     }
     return current & ~mask;
 }
-} // namespace
 #endif
+} // namespace
 
 X11TabletManager::X11TabletManager()
     : m_Initialized(false),
