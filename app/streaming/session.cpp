@@ -1596,7 +1596,7 @@ bool Session::startConnectionAsync()
         // the chosen resolution. Avoid that by disabling SOPS when it
         // is not streaming a supported resolution.
         enableGameOptimizations = false;
-        for (const NvDisplayMode &mode : m_Computer->displayModes) {
+        for (const NvDisplayMode &mode : std::as_const(m_Computer->displayModes)) {
             if (mode.width == m_StreamConfig.width &&
                     mode.height == m_StreamConfig.height) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,

@@ -261,7 +261,7 @@ void SdlInputHandler::raiseAllKeys()
                 "Raising %d keys",
                 (int)m_KeysDown.count());
 
-    for (auto keyDown : m_KeysDown) {
+    for (auto keyDown : std::as_const(m_KeysDown)) {
         LiSendKeyboardEvent(keyDown, KEY_ACTION_UP, 0);
     }
 

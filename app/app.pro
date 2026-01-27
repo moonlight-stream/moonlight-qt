@@ -1,5 +1,5 @@
 QT += core quick network quickcontrols2 svg
-CONFIG += c++11
+CONFIG += c++17
 
 unix:!macx {
     TARGET = moonlight

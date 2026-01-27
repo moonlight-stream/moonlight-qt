@@ -231,17 +231,17 @@ ComputerManager::~ComputerManager()
     m_MdnsBrowser = nullptr;
 
     // Interrupt polling
-    for (ComputerPollingEntry* entry : m_PollEntries) {
+    for (ComputerPollingEntry* entry : std::as_const(m_PollEntries)) {
         entry->interrupt();
     }
 
     // Delete all polling entries (and associated threads)
-    for (ComputerPollingEntry* entry : m_PollEntries) {
+    for (ComputerPollingEntry* entry : std::as_const(m_PollEntries)) {
         delete entry;
     }
 
     // Destroy all NvComputer objects now that polling is halted
-    for (NvComputer* computer : m_KnownHosts) {
+    for (NvComputer* computer : std::as_const(m_KnownHosts)) {
         delete computer;
     }
 }
@@ -268,7 +268,7 @@ void DelayedFlushThread::run() {
 
             // Update the last serialized hosts map under the delayed flush mutex
             m_ComputerManager->m_LastSerializedHosts.clear();
-            for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
+            for (const NvComputer* computer : std::as_const(m_ComputerManager->m_KnownHosts)) {
                 // Copy the current state of the NvComputer to allow us to check later if we need
                 // to serialize it again when attribute updates occur.
                 QReadLocker computerLock(&computer->lock);
@@ -285,7 +285,7 @@ void DelayedFlushThread::run() {
             {
                 QReadLocker lock(&m_ComputerManager->m_Lock);
                 int i = 0;
-                for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
+                for (const NvComputer* computer : std::as_const(m_ComputerManager->m_KnownHosts)) {
                     settings.setArrayIndex(i++);
                     computer->serialize(settings, false);
                 }
@@ -298,7 +298,7 @@ void DelayedFlushThread::run() {
             {
                 QReadLocker lock(&m_ComputerManager->m_Lock);
                 int i = 0;
-                for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
+                for (const NvComputer* computer : std::as_const(m_ComputerManager->m_KnownHosts)) {
                     settings.setArrayIndex(i++);
                     computer->serialize(settings, true);
                 }
@@ -424,7 +424,7 @@ void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
     bool added = false;
 
     // Add the host using the IPv4 address
-    for (const QHostAddress& address : addresses) {
+    for (const QHostAddress& address : std::as_const(addresses)) {
         if (address.protocol() == QAbstractSocket::IPv4Protocol) {
             // NB: We don't just call addNewHost() here with v6Global because the IPv6
             // address may not be reachable (if the user hasn't installed the IPv6 helper yet
@@ -440,7 +440,7 @@ void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
 
     if (!added) {
         // If we get here, there wasn't an IPv4 address so we'll do it v6-only
-        for (const QHostAddress& address : addresses) {
+        for (const QHostAddress& address : std::as_const(addresses)) {
             if (address.protocol() == QAbstractSocket::IPv6Protocol) {
                 // Use a link-local or site-local address for the "local address"
                 if (address.isInSubnet(QHostAddress("fe80::"), 10) ||
@@ -569,7 +569,7 @@ void ComputerManager::handleAboutToQuit()
 
     // Interrupt polling threads immediately, so they
     // avoid making additional requests while quitting
-    for (ComputerPollingEntry* entry : m_PollEntries) {
+    for (ComputerPollingEntry* entry : std::as_const(m_PollEntries)) {
         entry->interrupt();
     }
 }
@@ -721,7 +721,7 @@ void ComputerManager::stopPollingAsync()
     m_MdnsServer.reset();
 
     // Interrupt all threads, but don't wait for them to terminate
-    for (ComputerPollingEntry* entry : m_PollEntries) {
+    for (ComputerPollingEntry* entry : std::as_const(m_PollEntries)) {
         entry->interrupt();
     }
 }

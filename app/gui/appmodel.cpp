@@ -120,7 +120,7 @@ void AppModel::quitRunningApp()
 
 bool AppModel::isAppCurrentlyVisible(const NvApp& app)
 {
-    for (const NvApp& visibleApp : m_VisibleApps) {
+    for (const NvApp& visibleApp : std::as_const(m_VisibleApps)) {
         if (app.id == visibleApp.id) {
             return true;
         }
@@ -156,7 +156,7 @@ void AppModel::updateAppList(QVector<NvApp> newList)
         const NvApp& existingApp = m_VisibleApps.at(i);
 
         bool found = false;
-        for (const NvApp& newApp : newVisibleList) {
+        for (const NvApp& newApp : std::as_const(newVisibleList)) {
             if (existingApp.id == newApp.id) {
                 // If the data changed, update it in our list
                 if (existingApp != newApp) {
@@ -178,7 +178,7 @@ void AppModel::updateAppList(QVector<NvApp> newList)
     }
 
     // Process additions now
-    for (const NvApp& newApp : newVisibleList) {
+    for (const NvApp& newApp : std::as_const(newVisibleList)) {
         int insertionIndex = m_VisibleApps.size();
         bool found = false;
 

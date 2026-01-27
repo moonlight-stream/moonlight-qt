@@ -213,7 +213,7 @@ void Pacer::handleVsync(int timeUntilNextVsyncMillis)
     // frame history to drop frames only if consistently above the
     // one queued frame mark.
     if (m_MaxVideoFps >= m_DisplayFps) {
-        for (int queueHistoryEntry : m_PacingQueueHistory) {
+        for (int queueHistoryEntry : std::as_const(m_PacingQueueHistory)) {
             if (queueHistoryEntry <= 1) {
                 // Be lenient as long as the queue length
                 // resolves before the end of frame history
@@ -360,7 +360,7 @@ void Pacer::renderFrame(AVFrame* frame)
     }
     else {
         frameDropTarget = 0;
-        for (int queueHistoryEntry : m_RenderQueueHistory) {
+        for (int queueHistoryEntry : std::as_const(m_RenderQueueHistory)) {
             if (queueHistoryEntry == 0) {
                 // Be lenient as long as the queue length
                 // resolves before the end of frame history

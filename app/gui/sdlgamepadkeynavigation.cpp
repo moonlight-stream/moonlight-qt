@@ -218,7 +218,7 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
     }
 
     // Handle analog sticks by polling
-    for (auto gc : m_Gamepads) {
+    for (auto gc : std::as_const(m_Gamepads)) {
         short leftX = SDL_GameControllerGetAxis(gc, SDL_CONTROLLER_AXIS_LEFTX);
         short leftY = SDL_GameControllerGetAxis(gc, SDL_CONTROLLER_AXIS_LEFTY);
         if (SDL_GetTicks() - m_LastAxisNavigationEventTime < AXIS_NAVIGATION_REPEAT_DELAY) {

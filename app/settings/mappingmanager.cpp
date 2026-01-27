@@ -41,7 +41,7 @@ MappingManager::MappingManager()
         #else
             .split('\n', QString::SkipEmptyParts);
         #endif
-    for (const QString& sdlMapping : sdlMappings) {
+    for (const QString& sdlMapping : std::as_const(sdlMappings)) {
         SdlGamepadMapping mapping(sdlMapping);
         addMapping(mapping);
     }
@@ -99,7 +99,7 @@ void MappingManager::applyMappings()
     }
 
     QList<SdlGamepadMapping> mappings = m_Mappings.values();
-    for (const SdlGamepadMapping& mapping : mappings) {
+    for (const SdlGamepadMapping& mapping : std::as_const(mappings)) {
         QString sdlMappingString = mapping.getSdlMappingString();
         int ret = SDL_GameControllerAddMapping(qPrintable(sdlMappingString));
         if (ret < 0) {
