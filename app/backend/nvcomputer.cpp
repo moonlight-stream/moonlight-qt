@@ -99,7 +99,7 @@ void NvComputer::serialize(QSettings& settings, bool serializeApps) const
         settings.beginWriteArray(SER_APPLIST);
         for (int i = 0; i < appList.count(); i++) {
             settings.setArrayIndex(i);
-            appList[i].serialize(settings);
+            appList.at(i).serialize(settings);
         }
         settings.endArray();
     }
