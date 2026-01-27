@@ -26,17 +26,21 @@ public:
     Q_PROPERTY(bool usesMaterial3Theme MEMBER usesMaterial3Theme CONSTANT)
     Q_PROPERTY(QString versionString MEMBER versionString CONSTANT)
 
-    // Properties queried asynchronously
+    // Properties queried asynchronously (startAsyncLoad() must be called!)
     Q_PROPERTY(bool hasHardwareAcceleration MEMBER hasHardwareAcceleration NOTIFY hasHardwareAccelerationChanged)
     Q_PROPERTY(bool rendererAlwaysFullScreen MEMBER rendererAlwaysFullScreen NOTIFY rendererAlwaysFullScreenChanged)
     Q_PROPERTY(QString unmappedGamepads MEMBER unmappedGamepads NOTIFY unmappedGamepadsChanged)
     Q_PROPERTY(QSize maximumResolution MEMBER maximumResolution NOTIFY maximumResolutionChanged)
     Q_PROPERTY(bool supportsHdr MEMBER supportsHdr NOTIFY supportsHdrChanged)
 
-    Q_INVOKABLE void refreshDisplays();
+    // Either startAsyncLoad()+waitForAsyncLoad() or refreshDisplays() must be invoked first
     Q_INVOKABLE QRect getNativeResolution(int displayIndex);
     Q_INVOKABLE QRect getSafeAreaResolution(int displayIndex);
     Q_INVOKABLE int getRefreshRate(int displayIndex);
+
+    Q_INVOKABLE void startAsyncLoad();
+    Q_INVOKABLE void waitForAsyncLoad();
+    Q_INVOKABLE void refreshDisplays();
 
 signals:
     void unmappedGamepadsChanged();
@@ -49,8 +53,8 @@ private slots:
     void updateDecoderProperties(bool hasHardwareAcceleration, bool rendererAlwaysFullScreen, QSize maximumResolution, bool supportsHdr);
 
 private:
-    QThread* systemPropertyQueryThread;
-    SDL_Window* testWindow;
+    QThread* systemPropertyQueryThread = nullptr;
+    SDL_Window* testWindow = nullptr;
 
     // Properties set by the constructor
     bool isRunningWayland;
@@ -60,15 +64,15 @@ private:
     bool hasDesktopEnvironment;
     bool hasBrowser;
     bool hasDiscordIntegration;
-    QString unmappedGamepads;
     QString versionString;
     bool usesMaterial3Theme;
 
-    // Properties set by updateDecoderProperties()
+    // Properties only set if startAsyncLoad() is called
     bool hasHardwareAcceleration;
     bool rendererAlwaysFullScreen;
     QSize maximumResolution;
     bool supportsHdr;
+    QString unmappedGamepads;
 
     // Properties set by refreshDisplays()
     QList<QRect> monitorNativeResolutions;

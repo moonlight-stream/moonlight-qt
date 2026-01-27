@@ -4,6 +4,7 @@ import QtQuick.Window 2.2
 
 import SdlGamepadKeyNavigation 1.0
 import Session 1.0
+import SystemProperties 1.0
 
 Item {
     property Session session
@@ -119,6 +120,10 @@ Item {
         session.quitStarting.connect(quitStarting)
         session.sessionFinished.connect(sessionFinished)
         session.readyForDeletion.connect(sessionReadyForDeletion)
+
+        // Ensure the SystemProperties async thread is finished,
+        // since it may currently be using the SDL video subsystem
+        SystemProperties.waitForAsyncLoad()
 
         // Kick off the stream
         spinnerTimer.start()
