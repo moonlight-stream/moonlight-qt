@@ -123,6 +123,9 @@ CenteredGridView {
 
             sourceComponent: Item {
                 RoundButton {
+                    // Don't steal focus from the toolbar buttons
+                    focusPolicy: Qt.NoFocus
+
                     anchors.horizontalCenterOffset: appIcon.isPlaceholder ? -47 : 0
                     anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : -60
                     anchors.centerIn: parent
@@ -146,6 +149,9 @@ CenteredGridView {
                 }
 
                 RoundButton {
+                    // Don't steal focus from the toolbar buttons
+                    focusPolicy: Qt.NoFocus
+
                     anchors.horizontalCenterOffset: appIcon.isPlaceholder ? 47 : 0
                     anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : 60
                     anchors.centerIn: parent
