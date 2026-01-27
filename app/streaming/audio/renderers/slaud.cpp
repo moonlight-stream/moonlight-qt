@@ -114,6 +114,11 @@ bool SLAudioRenderer::submitAudio(int bytesWritten)
     return true;
 }
 
+int SLAudioRenderer::getCapabilities()
+{
+    return CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
+}
+
 IAudioRenderer::AudioFormat SLAudioRenderer::getAudioBufferFormat()
 {
     return AudioFormat::Sint16NE;

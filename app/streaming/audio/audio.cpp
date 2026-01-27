@@ -5,6 +5,10 @@
 #include "renderers/slaud.h"
 #endif
 
+#ifdef HAVE_COREAUDIO
+#include "renderers/coreaudio/coreaudio.h"
+#endif
+
 #include "renderers/sdl.h"
 
 #include <Limelight.h>
@@ -25,6 +29,12 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
         TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
         return nullptr;
     }
+#ifdef HAVE_COREAUDIO
+    else if (mlAudio == "coreaudio") {
+        TRY_INIT_RENDERER(CoreAudioRenderer, opusConfig)
+        return nullptr;
+    }
+#endif
 #if defined(HAVE_SLAUDIO)
     else if (mlAudio == "slaudio") {
         TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
@@ -43,6 +53,11 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
 #if defined(HAVE_SLAUDIO)
     // Steam Link should always have SLAudio
     TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
+#endif
+
+#ifdef HAVE_COREAUDIO
+    // Native renderer for macOS/iOS/tvOS, supports spatial audio
+    TRY_INIT_RENDERER(CoreAudioRenderer, opusConfig)
 #endif
 
     // Default to SDL
@@ -95,12 +110,21 @@ bool Session::initializeAudioRenderer()
 
 int Session::getAudioRendererCapabilities(int audioConfiguration)
 {
-    int caps = 0;
+    // Build a fake OPUS_MULTISTREAM_CONFIGURATION to give
+    // the renderer the channel count and sample rate.
+    OPUS_MULTISTREAM_CONFIGURATION opusConfig = {};
+    opusConfig.sampleRate = 48000;
+    opusConfig.samplesPerFrame = 240;
+    opusConfig.channelCount = CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(audioConfiguration);
 
-    Q_UNUSED(audioConfiguration);
+    IAudioRenderer* audioRenderer = createAudioRenderer(&opusConfig);
+    if (audioRenderer == nullptr) {
+        return 0;
+    }
 
-    // All audio renderers support arbitrary audio duration
-    caps |= CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
+    int caps = audioRenderer->getCapabilities();
+
+    delete audioRenderer;
 
 #ifdef STEAM_LINK
     // Steam Link devices have slow Opus decoders

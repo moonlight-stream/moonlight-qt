@@ -132,6 +132,11 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
     return true;
 }
 
+int SdlAudioRenderer::getCapabilities()
+{
+    return CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
+}
+
 IAudioRenderer::AudioFormat SdlAudioRenderer::getAudioBufferFormat()
 {
     return AudioFormat::Float32NE;

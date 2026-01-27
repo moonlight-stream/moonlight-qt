@@ -27,3 +27,17 @@ CONFIG(release, debug|release) {
 #QMAKE_CFLAGS += -fsanitize=address
 #QMAKE_CXXFLAGS += -fsanitize=address
 #QMAKE_LFLAGS += -incremental:no -wholearchive:clang_rt.asan_dynamic-x86_64.lib -wholearchive:clang_rt.asan_dynamic_runtime_thunk-x86_64.lib
+
+# Fix for macOS Command Line Tools - add C++ headers from SDK to include path
+macx {
+    SDK_PATH = $$system(xcrun --show-sdk-path 2>/dev/null || echo "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk")
+    isEmpty(SDK_PATH) {
+        SDK_PATH = "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+    }
+
+    CXX_HEADERS_PATH = $$SDK_PATH/usr/include/c++/v1
+    exists($$CXX_HEADERS_PATH) {
+        QMAKE_CXXFLAGS += -I$$CXX_HEADERS_PATH
+        QMAKE_CFLAGS += -I$$CXX_HEADERS_PATH
+    }
+}

@@ -1,0 +1,64 @@
+CoreAudioRenderer TODO
+----------------------
+Test the lower-quality surround modes that have coupled streams, is that broken on headphones or when spatialized?
+From https://people.xiph.org/~xiphmont/demo/opus/demo3.shtml
+
+    Surround masking takes advantage of cross-channel masking between free-field loudspeakers. Obviously, we can't do that for stereo, as stereo is often listened to on headphones or nearfield monitors, but for surround encodings played on typical surround placements with listeners placed well within the soundfield, there's considerable savings to be had by assuming freefield masking. We only need to make slight modifications to ensure that the encode still sounds good when downmixed to stereo for playback on non-surround systems.
+
+Refactor into more logical/cleaner C++ classes.
+Refactor audio stats code and implement for other backends.
+
+New options for audio:
+Packet size: 2.5/5/10/20
+Surround channel mode (coupled/mono)
+Bitrate: 96/128/256/510 (256k max per channel for multichannel)
+VBR: yes/no
+RTP FEC (audio)
+
+2-line overlay stats version:
+
+Line 1: 1280x800 @ 60 FPS, HEVC 10-bit HDR, 15.0 Mbps (+20% FEC)
+Line 2: Latency: 1ms ± 1ms, Decode: 6.67ms, Render: 3.78ms, Host: 1.00ms, Loss: 0%
+
+Line 1: 7.1 Opus @ 48 kHz, 512 kbps (+33% FEC), spatial audio (AirPods)
+Line 2: Latency: 12.9ms, Decode: 0.06ms, Packet Loss: 0%
+
+Understand Game Mode
+--------------------
+Watch for game mode in/out events, currently seems to be undocumented but there is plenty of activity when it happens:
+
+macOS log enabling Game Mode:
+
+02:47:39.879865-0400	Policy	default	com.apple.gamepolicyd	gamepolicyd	Game mode enabled.
+02:47:39.883277-0400	Server.Core	default	com.apple.bluetooth	bluetoothd	SystemSettingsModel::systemMonitor game console mode changed:1
+02:47:39.883805-0400	Server.HID	default	com.apple.bluetooth	bluetoothd	adjustHIDSniffInterval: numAudioDevices(2), isStereoSCO(0), isStreaming(1), numGameControllers(0), numOfLEADevices(0)
+02:47:39.884598-0400	Server.Audio	default	com.apple.bluetooth	bluetoothd	Low Latency Game console mode update, new mode: enabled, fConsoleGameModeOn: enabled, fGameModeOn: disabled, fCombinedGameOn: disabled->enabled
+02:47:39.885883-0400	General	default	com.apple.modelmanager	gamepolicyd	Acquiring assertion: DaemonRep(policy: "StandardGameMode", description: "com.apple.gamepolicyd", timestamp: 749371659.885592, id: 54C06E74-1D53-4569-B723-D9111CCC60C2, acquirerPID: 665)
+02:47:39.884661-0400	Server.Audio	default	com.apple.bluetooth	bluetoothd	Dynamic Latency Trigger fKeyboardOn =0, fVoiceOverOn=0, fGameModeOn=0, fGarageBandOn=0, fSpatialVideoOn=0, fSpatialMusicOn=0, aggregated = 0, fScreenOn =1, fExpanseOn =0, fAudioInputAggregateOn =0, fConsoleGameModeOn=1
+02:47:39.892354-0400	ttl	default	com.apple.runningboard	runningboardd	Acquiring assertion targeting [anon<Moonlight>(501):94115] from originator [osservice<com.apple.coreservices.launchservicesd>:160] with description <RBSAssertionDescriptor| "frontmost:94115" ID:194-160-32376 target:94115 attributes:[
+	<RBSDomainAttribute| domain:"com.apple.launchservicesd.gameconsole" name:"RoleUserInteractiveFocal" sourceEnvironment:"(null)">
+	]>
+02:47:39.899548-0400	Server.Audio	default	com.apple.bluetooth	bluetoothd	Dynamic Latency Trigger fKeyboardOn =0, fVoiceOverOn=0, fGameModeOn=0, fGarageBandOn=0, fSpatialVideoOn=0, fSpatialMusicOn=0, fScreenOn =1, fExpanseOn =0, fAudioInputAggregateOn=0, fConsoleGameModeOn=1
+02:47:39.899576-0400	Server.Audio	default	com.apple.bluetooth	bluetoothd	Low Latency Game console mode change, notify BTHAL low Latency Game: 1, HID: 1
+02:47:39.899650-0400	Server.Audio	default	com.apple.bluetooth	bluetoothd	Dynamic Latency Trigger fKeyboardOn =0, fVoiceOverOn=0, fGameModeOn=0, fGarageBandOn=0, fSpatialVideoOn=0, fSpatialMusicOn=0, fScreenOn =1, fExpanseOn =0, fAudioInputAggregateOn=0, fConsoleGameModeOn=1
+02:47:39.900522-0400	Server.Audio	default	com.apple.bluetooth	bluetoothd	Low Latency Game console mode change, notify BTHAL low Latency Game: 1, HID: 1
+02:47:39.921763-0400	ttl	default	com.apple.runningboard	runningboardd	Acquiring assertion targeting [osservice<com.apple.OSDUIHelper(501)>:1490] from originator [osservice<com.apple.gamepolicyd>:665] with description <RBSAssertionDescriptor| "Game Mode Critical Service" ID:194-665-32377 target:1490 attributes:[
+	<RBSDomainAttribute| domain:"com.apple.launchservicesd.gameconsole" name:"RoleUserInteractiveCriticalService" sourceEnvironment:"(null)">
+	]>
+02:47:39.928395-0400	gamemode	default	com.apple.powerlog	PerfPowerServices	Sent game mode notification to submodules: 1
+
+
+macOS log when coming out of Game Mode:
+
+Policy          default    com.apple.gamepolicyd  gamepolicyd           Game mode disabled.
+Server.Core     default    com.apple.bluetooth    bluetoothd            SystemSettingsModel::systemMonitor game console mode changed:0
+Server.HID      default    com.apple.bluetooth    bluetoothd            adjustHIDSniffInterval: numAudioDevices(2), isStereoSCO(0), isStreaming(1), numGameControllers(0), numOfLEADevices(0)
+Server.Audio    default    com.apple.bluetooth    bluetoothd            Low Latency Game console mode update, new mode: disabled, fConsoleGameModeOn: disabled, fGameModeOn: disabled, fCombinedGameOn: enabled->disabled
+Server.Audio    default    com.apple.bluetooth    bluetoothd            Dynamic Latency Trigger fKeyboardOn =0, fVoiceOverOn=0, fGameModeOn=0, fGarageBandOn=0, fSpatialVideoOn=0, fSpatialMusicOn=0, aggregated = 0, fScreenOn =1, fExpanseOn =0, fAudioInputAggregateOn =0, fConsoleGameModeOn=0
+Server.Audio    default    com.apple.bluetooth    bluetoothd            Dynamic Latency Trigger fKeyboardOn =0, fVoiceOverOn=0, fGameModeOn=0, fGarageBandOn=0, fSpatialVideoOn=0, fSpatialMusicOn=0, fScreenOn =1, fExpanseOn =0, fAudioInputAggregateOn=0, fConsoleGameModeOn=0
+Server.Audio    default    com.apple.bluetooth    bluetoothd            Low Latency Game console mode change, notify BTHAL low Latency Game: 0, HID: 1
+Server.Audio    default    com.apple.bluetooth    bluetoothd            Dynamic Latency Trigger fKeyboardOn =0, fVoiceOverOn=0, fGameModeOn=0, fGarageBandOn=0, fSpatialVideoOn=0, fSpatialMusicOn=0, fScreenOn =1, fExpanseOn =0, fAudioInputAggregateOn=0, fConsoleGameModeOn=0
+Server.Audio    default    com.apple.bluetooth    bluetoothd            Low Latency Game console mode change, notify BTHAL low Latency Game: 0, HID: 1
+gamemode        default    com.apple.powerlog     PerfPowerServices     Sent game mode notification to submodules: 0
+monitor         default    com.apple.runningboard gamepolicyd           Received state update for 181 (osservice<com.apple.bluetoothd>, running-NotVisible
+Server.Audio    default    com.apple.bluetooth    bluetoothd            Low Latency Game a2dpDynamicLatencyTransitionCompleted new latencymode: 6

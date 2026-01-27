@@ -16,7 +16,11 @@ public:
 
     virtual bool submitAudio(int bytesWritten);
 
+    virtual int getCapabilities();
+
     virtual AudioFormat getAudioBufferFormat();
+
+    virtual const char * getRendererName() { return "SLAudio"; }
 
     virtual void remapChannels(POPUS_MULTISTREAM_CONFIGURATION opusConfig);
 
