@@ -59,29 +59,6 @@ extern "C" {
 
 #define FAILED_DECODES_RESET_THRESHOLD 20
 
-// Note: This is NOT an exhaustive list of all decoders
-// that Moonlight could pick. It will pick any working
-// decoder that matches the codec ID and outputs one of
-// the pixel formats that we have a renderer for.
-static const QMap<QString, int> k_NonHwaccelCodecInfo = {
-    // H.264
-    {"h264_mmal", 0},
-    {"h264_rkmpp", 0},
-    {"h264_nvv4l2", 0},
-    {"h264_nvmpi", 0},
-    {"h264_v4l2m2m", 0},
-    {"h264_omx", 0},
-
-    // HEVC
-    {"hevc_rkmpp", 0},
-    {"hevc_nvv4l2", CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC},
-    {"hevc_nvmpi", 0},
-    {"hevc_v4l2m2m", 0},
-    {"hevc_omx", 0},
-
-    // AV1
-};
-
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
     return m_HwDecodeCfg != nullptr ||
@@ -136,10 +113,33 @@ int FFmpegVideoDecoder::getDecoderCapabilities()
             capabilities |= CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
         }
         else if (m_HwDecodeCfg == nullptr) {
+            // Note: This is NOT an exhaustive list of all decoders
+            // that Moonlight could pick. It will pick any working
+            // decoder that matches the codec ID and outputs one of
+            // the pixel formats that we have a renderer for.
+            static const QMap<QString, int> nonHwaccelCodecInfo = {
+                // H.264
+                {"h264_mmal", 0},
+                {"h264_rkmpp", 0},
+                {"h264_nvv4l2", 0},
+                {"h264_nvmpi", 0},
+                {"h264_v4l2m2m", 0},
+                {"h264_omx", 0},
+
+                // HEVC
+                {"hevc_rkmpp", 0},
+                {"hevc_nvv4l2", CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC},
+                {"hevc_nvmpi", 0},
+                {"hevc_v4l2m2m", 0},
+                {"hevc_omx", 0},
+
+                // AV1
+            };
+
             // We have a non-hwaccel hardware decoder. This will always
             // be using SDLRenderer/DrmRenderer/PlVkRenderer so we will
             // pick decoder capabilities based on the decoder name.
-            capabilities = k_NonHwaccelCodecInfo.value(m_VideoDecoderCtx->codec->name, 0);
+            capabilities = nonHwaccelCodecInfo.value(m_VideoDecoderCtx->codec->name, 0);
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Using capabilities table for decoder: %s -> %d",
                         m_VideoDecoderCtx->codec->name,
