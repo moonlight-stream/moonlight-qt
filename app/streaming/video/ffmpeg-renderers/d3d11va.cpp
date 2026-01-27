@@ -377,15 +377,22 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         hr = m_RenderDevice->CheckFeatureSupport(D3D11_FEATURE_D3D11_OPTIONS, &d3d11Options, sizeof(d3d11Options));
         separateDevices = SUCCEEDED(hr) && d3d11Options.ExtendedResourceSharing && m_FenceType != SupportedFenceType::None;
 
-        // The Radon HD 5570 GPU drivers deadlock when decoding into shared texture arrays, so let's
-        // limit usage of separate devices to FL 11.1+ GPUs to try to exclude old GPU drivers. We'll
-        // exempt Intel GPUs because those have been confirmed to work properly (and the extra fence
-        // that this device separation uses acts as a workaround for a bug in their old drivers where
-        // they don't properly synchronize between decoder output usage and SRV usage).
-        if (separateDevices && featureLevel < D3D_FEATURE_LEVEL_11_1 && adapterDesc.VendorId != 0x8086) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Avoiding texture sharing for old pre-FL11.1 GPU");
-            separateDevices = false;
+        if (separateDevices) {
+            // The Radon HD 5570 GPU drivers deadlock when decoding into shared texture arrays, so let's
+            // limit usage of separate devices to FL 11.1+ GPUs to try to exclude old GPU drivers. We'll
+            // exempt Intel GPUs because those have been confirmed to work properly (and the extra fence
+            // that this device separation uses acts as a workaround for a bug in their old drivers where
+            // they don't properly synchronize between decoder output usage and SRV usage).
+            if (featureLevel < D3D_FEATURE_LEVEL_11_1 && adapterDesc.VendorId != 0x8086) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Avoiding texture sharing for old pre-FL11.1 GPU");
+                separateDevices = false;
+            }
+            else if (adapterDesc.VendorId == 0x1ED5) { // Moore Threads (texture is all zero/green)
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Avoiding texture sharing on known broken GPU vendor");
+                separateDevices = false;
+            }
         }
     }
 
