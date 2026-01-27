@@ -4,7 +4,6 @@
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <VersionHelpers.h>
 #include "dxvsyncsource.h"
 #endif
 
@@ -283,11 +282,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
         switch (info.subsystem) {
     #ifdef Q_OS_WIN32
         case SDL_SYSWM_WINDOWS:
-            // Don't use D3DKMTWaitForVerticalBlankEvent() on Windows 7, because
-            // it blocks during other concurrent DX operations (like actually rendering).
-            if (IsWindows8OrGreater()) {
-                m_VsyncSource = new DxVsyncSource(this);
-            }
+            m_VsyncSource = new DxVsyncSource(this);
             break;
     #endif
 

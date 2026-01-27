@@ -18,7 +18,6 @@ extern "C" {
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <VersionHelpers.h>
 #include <dwmapi.h>
 
 #include <Limelight.h>
