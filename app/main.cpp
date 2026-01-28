@@ -484,7 +484,7 @@ int main(int argc, char *argv[])
     // Force AntiHooking.dll to be statically imported and loaded
     // by ntdll on Win32 platforms by calling a dummy function.
     AntiHookingDummyImport();
-#elif defined(Q_OS_LINUX)
+#elif defined(APP_IMAGE)
     // Force libssl.so to be directly linked to our binary, so
     // linuxdeployqt can find it and include it in our AppImage.
     // QtNetwork will pull it in via dlopen().
