@@ -101,14 +101,13 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: haasn/libplacebo
-          ref: bc90ef94944a3dcaab324b86d3e3769ad1d8698b
+          ref: 1dcaea8b601aa969ffd5bfa70088957ce3eaa273
           path: deps/libplacebo
           submodules: 'recursive'
 
       - name: Build libplacebo
         working-directory: deps/libplacebo
         run: |
-          git apply ../../app/deploy/linux/appimage/*.patch
           meson setup build -Dvulkan=enabled -Dopengl=disabled -Ddemos=false
           ninja -C build
           sudo ninja install -C build
