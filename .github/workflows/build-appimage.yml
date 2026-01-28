@@ -32,26 +32,39 @@ jobs:
             qml6-module-qtqml-workerscript qml6-module-qtquick-window qml6-module-qtquick python3-pip nasm libgbm-dev libdrm-dev libfreetype-dev libasound2-dev \
             libdbus-1-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libglu1-mesa-dev libibus-1.0-dev libpulse-dev libudev-dev libx11-dev libxcursor-dev \
             libxext-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxss-dev libxt-dev libxv-dev libxxf86vm-dev libxcb-dri3-dev libx11-xcb-dev \
-            wayland-protocols libopus-dev libvdpau-dev libgl-dev libpipewire-0.3-dev vulkan-sdk
+            libxfixes-dev libxtst-dev wayland-protocols libopus-dev libvdpau-dev libgl-dev libpipewire-0.3-dev liburing-dev vulkan-sdk cmake
           sudo pip3 install meson
           mkdir -p dep_root/{bin,include,lib}
           echo "DEP_ROOT=$PWD/dep_root" >> "${GITHUB_ENV}"
           echo "$PWD/dep_root/bin" >> "${GITHUB_PATH}"
 
-      - name: Checkout SDL
+      - name: Checkout SDL3
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL
-          ref: 3eba0b6f8a21392f47b1b53a476e7633048de9b1
+          ref: 3bde3e24069db59133bc1e8dbe3c693008821a93
           path: deps/SDL
 
-      - name: Build SDL
+      - name: Build SDL3
         working-directory: deps/SDL
         run: |
-          ./autogen.sh
-          ./configure
-          make -j$(nproc)
-          sudo make install
+          cmake -DSDL_KMSDRM=OFF -DSDL_TEST_LIBRARY=OFF -DSDL_INSTALL_DOCS=OFF -S . -B build
+          cmake --build build -j
+          sudo cmake --install build
+
+      - name: Checkout sdl2-compat
+        uses: actions/checkout@v5
+        with:
+          repository: libsdl-org/sdl2-compat
+          ref: 1c8ece4de9db96d01f99296c26a87a4cabb72f54
+          path: deps/sdl2-compat
+
+      - name: Build sdl2-compat
+        working-directory: deps/sdl2-compat
+        run: |
+          cmake -DSDL2COMPAT_TESTS=OFF -S . -B build
+          cmake --build build -j
+          sudo cmake --install build
 
       - name: Checkout SDL_ttf
         uses: actions/checkout@v5
