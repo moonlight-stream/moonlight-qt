@@ -711,63 +711,70 @@ Flickable {
                     }
                 }
 
-                Row {
-                    spacing: 10
+                Item {
                     width: parent.width
+                    height: maxResRow.height + 5
                     visible: resolutionComboBox.currentIndex >= 0 &&
                              resolutionListModel.get(resolutionComboBox.currentIndex).is_native
 
-                    Label {
-                        text: qsTr("Max resolution:")
-                        font.pointSize: 9
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+                    Row {
+                        id: maxResRow
+                        y: 5
+                        spacing: 10
+                        width: parent.width
 
-                    TextField {
-                        id: maxWidthField
-                        width: 70
-                        placeholderText: qsTr("Width")
-                        text: StreamingPreferences.maxResolutionWidth > 0 ? StreamingPreferences.maxResolutionWidth : ""
-                        inputMethodHints: Qt.ImhDigitsOnly
-                        validator: IntValidator { bottom: 0; top: 8192 }
+                        Label {
+                            text: qsTr("Max resolution:")
+                            font.pointSize: 9
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
 
-                        onTextChanged: {
-                            var newValue = text ? parseInt(text) : 0
-                            if (StreamingPreferences.maxResolutionWidth !== newValue) {
-                                StreamingPreferences.maxResolutionWidth = newValue
-                                resolutionComboBox.updateBitrateForSelection()
+                        TextField {
+                            id: maxWidthField
+                            width: 85
+                            placeholderText: qsTr("Width")
+                            text: StreamingPreferences.maxResolutionWidth > 0 ? StreamingPreferences.maxResolutionWidth : ""
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            validator: IntValidator { bottom: 0; top: 8192 }
+
+                            onTextChanged: {
+                                var newValue = text ? parseInt(text) : 0
+                                if (StreamingPreferences.maxResolutionWidth !== newValue) {
+                                    StreamingPreferences.maxResolutionWidth = newValue
+                                    resolutionComboBox.updateBitrateForSelection()
+                                }
                             }
                         }
-                    }
 
-                    Label {
-                        text: "x"
-                        font.pointSize: 9
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+                        Label {
+                            text: "×"
+                            font.pointSize: 9
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
 
-                    TextField {
-                        id: maxHeightField
-                        width: 70
-                        placeholderText: qsTr("Height")
-                        text: StreamingPreferences.maxResolutionHeight > 0 ? StreamingPreferences.maxResolutionHeight : ""
-                        inputMethodHints: Qt.ImhDigitsOnly
-                        validator: IntValidator { bottom: 0; top: 8192 }
+                        TextField {
+                            id: maxHeightField
+                            width: 85
+                            placeholderText: qsTr("Height")
+                            text: StreamingPreferences.maxResolutionHeight > 0 ? StreamingPreferences.maxResolutionHeight : ""
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            validator: IntValidator { bottom: 0; top: 8192 }
 
-                        onTextChanged: {
-                            var newValue = text ? parseInt(text) : 0
-                            if (StreamingPreferences.maxResolutionHeight !== newValue) {
-                                StreamingPreferences.maxResolutionHeight = newValue
-                                resolutionComboBox.updateBitrateForSelection()
+                            onTextChanged: {
+                                var newValue = text ? parseInt(text) : 0
+                                if (StreamingPreferences.maxResolutionHeight !== newValue) {
+                                    StreamingPreferences.maxResolutionHeight = newValue
+                                    resolutionComboBox.updateBitrateForSelection()
+                                }
                             }
                         }
-                    }
 
-                    Label {
-                        text: qsTr("(0 or empty = unlimited)")
-                        font.pointSize: 8
-                        opacity: 0.7
-                        anchors.verticalCenter: parent.verticalCenter
+                        Label {
+                            text: qsTr("(0 or empty = unlimited)")
+                            font.pointSize: 8
+                            opacity: 0.7
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
                 }
 
