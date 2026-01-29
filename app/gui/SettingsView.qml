@@ -203,14 +203,29 @@ Flickable {
                             var saved_width = StreamingPreferences.width
                             var saved_height = StreamingPreferences.height
                             var index_set = false
-                            for (var i = 0; i < resolutionListModel.count; i++) {
-                                var el_width = parseInt(resolutionListModel.get(i).video_width);
-                                var el_height = parseInt(resolutionListModel.get(i).video_height);
 
-                                if (saved_width === el_width && saved_height === el_height) {
-                                    currentIndex = i
-                                    index_set = true
-                                    break
+                            // If native resolution was previously selected, find the first native entry
+                            if (StreamingPreferences.nativeResolution) {
+                                for (var i = 0; i < resolutionListModel.count; i++) {
+                                    if (resolutionListModel.get(i).is_native) {
+                                        currentIndex = i
+                                        index_set = true
+                                        break
+                                    }
+                                }
+                            }
+
+                            // Otherwise, search by width/height
+                            if (!index_set) {
+                                for (var i = 0; i < resolutionListModel.count; i++) {
+                                    var el_width = parseInt(resolutionListModel.get(i).video_width);
+                                    var el_height = parseInt(resolutionListModel.get(i).video_height);
+
+                                    if (saved_width === el_width && saved_height === el_height) {
+                                        currentIndex = i
+                                        index_set = true
+                                        break
+                                    }
                                 }
                             }
 
@@ -283,6 +298,9 @@ Flickable {
                             var selectedWidth = parseInt(resolutionListModel.get(currentIndex).video_width)
                             var selectedHeight = parseInt(resolutionListModel.get(currentIndex).video_height)
                             var isNative = resolutionListModel.get(currentIndex).is_native
+
+                            // Track whether a native resolution is selected
+                            StreamingPreferences.nativeResolution = isNative
 
                             // Apply max resolution limits for native resolutions
                             if (isNative) {
