@@ -140,8 +140,13 @@ Flickable {
                                 var existing_height = parseInt(resolutionListModel.get(j).video_height);
 
                                 if (rect.width === existing_width && rect.height === existing_height) {
-                                    // Duplicate entry, skip
-                                    indexToAdd = -1
+                                    // Skip if this exact native resolution was already added
+                                    if (resolutionListModel.get(j).is_native) {
+                                        indexToAdd = -1
+                                        break
+                                    }
+                                    // Otherwise insert after the matching preset
+                                    indexToAdd = j + 1
                                     break
                                 }
                                 else if (rect.width * rect.height > existing_width * existing_height) {
@@ -181,7 +186,11 @@ Flickable {
                                 }
 
                                 addDetectedResolution(qsTr("Native"), screenRect)
-                                addDetectedResolution(qsTr("Native (Excluding Notch)"), safeAreaRect)
+
+                                // Only add safe area option if it differs from native (e.g., notched displays)
+                                if (safeAreaRect.width !== screenRect.width || safeAreaRect.height !== screenRect.height) {
+                                    addDetectedResolution(qsTr("Native (Excluding Notch)"), safeAreaRect)
+                                }
                             }
 
                             // Prune resolutions that are over the decoder's maximum
