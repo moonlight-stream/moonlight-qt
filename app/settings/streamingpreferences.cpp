@@ -51,6 +51,8 @@
 #define SER_CAPTURESYSKEYS "capturesyskeys"
 #define SER_KEEPAWAKE "keepawake"
 #define SER_LANGUAGE "language"
+#define SER_MAXRESWIDTH "maxreswidth"
+#define SER_MAXRESHEIGHT "maxresheight"
 
 #define CURRENT_DEFAULT_VER 2
 
@@ -168,6 +170,8 @@ void StreamingPreferences::reload()
                                                                                                                  : UIDisplayMode::UI_MAXIMIZED)).toInt());
     language = static_cast<Language>(settings.value(SER_LANGUAGE,
                                                     static_cast<int>(Language::LANG_AUTO)).toInt());
+    maxResolutionWidth = settings.value(SER_MAXRESWIDTH, 0).toInt();
+    maxResolutionHeight = settings.value(SER_MAXRESHEIGHT, 0).toInt();
 
 
     // Perform default settings updates as required based on last default version
@@ -358,6 +362,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
+    settings.setValue(SER_MAXRESWIDTH, maxResolutionWidth);
+    settings.setValue(SER_MAXRESHEIGHT, maxResolutionHeight);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps, bool yuv444)
