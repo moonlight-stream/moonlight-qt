@@ -157,6 +157,8 @@ public:
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
+    Q_PROPERTY(int maxResolutionWidth MEMBER maxResolutionWidth NOTIFY maxResolutionChanged)
+    Q_PROPERTY(int maxResolutionHeight MEMBER maxResolutionHeight NOTIFY maxResolutionChanged)
 
     Q_INVOKABLE bool retranslate();
 
@@ -200,6 +202,8 @@ public:
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
     RendererSelection rendererSelection;
+    int maxResolutionWidth;
+    int maxResolutionHeight;
 
 signals:
     void displayModeChanged();
@@ -238,6 +242,7 @@ signals:
     void keepAwakeChanged();
     void languageChanged();
     void rendererSelectionChanged();
+    void maxResolutionChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);
