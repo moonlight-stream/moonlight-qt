@@ -582,8 +582,9 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_AudioSampleCount(0),
       m_DropAudioEndTime(0),
       m_LastInputTime(0),
-      m_InactivityTimeoutMs(30 * 60 * 1000), // 30 minutes
-      m_InactivityTimeoutEnabled(false)
+      m_InactivityTimeoutMs((m_Preferences->inactivityTimeoutMinutes > 0 ?
+                             m_Preferences->inactivityTimeoutMinutes : 30) * 60 * 1000),
+      m_InactivityTimeoutEnabled(m_Preferences->inactivityTimeoutEnabled)
 {
 }
 

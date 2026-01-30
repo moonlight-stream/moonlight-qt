@@ -1279,6 +1279,58 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Prevents the screensaver from starting or the display from going to sleep while streaming.")
                 }
+
+                CheckBox {
+                    id: inactivityTimeoutCheck
+                    width: parent.width
+                    text: qsTr("Disconnect after inactivity")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.inactivityTimeoutEnabled
+                    onCheckedChanged: {
+                        StreamingPreferences.inactivityTimeoutEnabled = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Automatically disconnects if no input is received for the selected duration.")
+                }
+
+                Column {
+                    width: parent.width
+                    spacing: 4
+                    opacity: inactivityTimeoutCheck.checked ? 1.0 : 0.6
+
+                    Label {
+                        width: parent.width
+                        text: qsTr("Inactivity timeout duration")
+                        font.pointSize: 11
+                        wrapMode: Text.Wrap
+                    }
+
+                    Row {
+                        width: parent.width
+                        spacing: 8
+
+                        SpinBox {
+                            id: inactivityTimeoutMinutes
+                            enabled: inactivityTimeoutCheck.checked
+                            from: 5
+                            to: 240
+                            stepSize: 5
+                            value: StreamingPreferences.inactivityTimeoutMinutes
+                            onValueModified: {
+                                StreamingPreferences.inactivityTimeoutMinutes = value
+                            }
+                        }
+
+                        Label {
+                            text: qsTr("minutes")
+                            font.pointSize: 11
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                }
             }
         }
     }
