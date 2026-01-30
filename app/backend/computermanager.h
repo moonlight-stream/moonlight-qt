@@ -150,7 +150,7 @@ public:
         // interrupt() should have taken care of this
         Q_ASSERT(m_ActiveThread == nullptr);
 
-        for (QThread* thread : m_InactiveList) {
+        for (QThread* thread : std::as_const(m_InactiveList)) {
             thread->wait();
             delete thread;
         }

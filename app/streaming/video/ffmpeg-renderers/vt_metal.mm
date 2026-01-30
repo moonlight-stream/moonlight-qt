@@ -658,30 +658,11 @@ public:
             return false;
         }
 
-        m_MetalView = SDL_Metal_CreateView(m_Window);
-        if (!m_MetalView) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_Metal_CreateView() failed: %s",
-                         SDL_GetError());
-            return false;
-        }
-
-        m_MetalLayer = (CAMetalLayer*)SDL_Metal_GetLayer(m_MetalView);
-
-        // Choose a device
-        m_MetalLayer.device = device;
-
-        // Allow EDR content if we're streaming in a 10-bit format
-        m_MetalLayer.wantsExtendedDynamicRangeContent = !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
-
-        // Allow tearing if V-Sync is off (also requires direct display path)
-        m_MetalLayer.displaySyncEnabled = params->enableVsync;
-
         // Create the Metal texture cache for our CVPixelBuffers
         CFStringRef keys[1] = { kCVMetalTextureUsage };
         NSUInteger values[1] = { MTLTextureUsageShaderRead };
         auto cacheAttributes = CFDictionaryCreate(kCFAllocatorDefault, (const void**)keys, (const void**)values, 1, nullptr, nullptr);
-        err = CVMetalTextureCacheCreate(kCFAllocatorDefault, cacheAttributes, m_MetalLayer.device, nullptr, &m_TextureCache);
+        err = CVMetalTextureCacheCreate(kCFAllocatorDefault, cacheAttributes, device, nullptr, &m_TextureCache);
         CFRelease(cacheAttributes);
 
         if (err != kCVReturnSuccess) {
@@ -693,7 +674,7 @@ public:
 
         // Compile our shaders
         QString shaderSource = QString::fromUtf8(Path::readDataFile("vt_renderer.metal"));
-        m_ShaderLibrary = [m_MetalLayer.device newLibraryWithSource:shaderSource.toNSString() options:nullptr error:nullptr];
+        m_ShaderLibrary = [device newLibraryWithSource:shaderSource.toNSString() options:nullptr error:nullptr];
         if (!m_ShaderLibrary) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to compile shaders");
@@ -701,7 +682,33 @@ public:
         }
 
         // Create a command queue for submission
-        m_CommandQueue = [m_MetalLayer.device newCommandQueue];
+        m_CommandQueue = [device newCommandQueue];
+
+        // Add the Metal view to the window if we're not in test-only mode
+        //
+        // NB: Test-only renderers may be created on a non-main thread, so
+        // we don't want to touch the view hierarchy in that context.
+        if (!params->testOnly) {
+            m_MetalView = SDL_Metal_CreateView(m_Window);
+            if (!m_MetalView) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "SDL_Metal_CreateView() failed: %s",
+                             SDL_GetError());
+                return false;
+            }
+
+            m_MetalLayer = (CAMetalLayer*)SDL_Metal_GetLayer(m_MetalView);
+
+            // Choose a device
+            m_MetalLayer.device = device;
+
+            // Allow EDR content if we're streaming in a 10-bit format
+            m_MetalLayer.wantsExtendedDynamicRangeContent = !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
+
+            // Allow tearing if V-Sync is off (also requires direct display path)
+            m_MetalLayer.displaySyncEnabled = params->enableVsync;
+        }
+
         return true;
     }}
 

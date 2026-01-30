@@ -18,7 +18,7 @@ public:
     {
         int value = 0;
 
-        for (const int & v : *this) {
+        for (const int v : *this) {
             value |= v;
         }
 

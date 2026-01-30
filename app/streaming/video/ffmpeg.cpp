@@ -59,29 +59,6 @@ extern "C" {
 
 #define FAILED_DECODES_RESET_THRESHOLD 20
 
-// Note: This is NOT an exhaustive list of all decoders
-// that Moonlight could pick. It will pick any working
-// decoder that matches the codec ID and outputs one of
-// the pixel formats that we have a renderer for.
-static const QMap<QString, int> k_NonHwaccelCodecInfo = {
-    // H.264
-    {"h264_mmal", 0},
-    {"h264_rkmpp", 0},
-    {"h264_nvv4l2", 0},
-    {"h264_nvmpi", 0},
-    {"h264_v4l2m2m", 0},
-    {"h264_omx", 0},
-
-    // HEVC
-    {"hevc_rkmpp", 0},
-    {"hevc_nvv4l2", CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC},
-    {"hevc_nvmpi", 0},
-    {"hevc_v4l2m2m", 0},
-    {"hevc_omx", 0},
-
-    // AV1
-};
-
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
     return m_HwDecodeCfg != nullptr ||
@@ -136,10 +113,33 @@ int FFmpegVideoDecoder::getDecoderCapabilities()
             capabilities |= CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
         }
         else if (m_HwDecodeCfg == nullptr) {
+            // Note: This is NOT an exhaustive list of all decoders
+            // that Moonlight could pick. It will pick any working
+            // decoder that matches the codec ID and outputs one of
+            // the pixel formats that we have a renderer for.
+            static const QMap<QString, int> nonHwaccelCodecInfo = {
+                // H.264
+                {"h264_mmal", 0},
+                {"h264_rkmpp", 0},
+                {"h264_nvv4l2", 0},
+                {"h264_nvmpi", 0},
+                {"h264_v4l2m2m", 0},
+                {"h264_omx", 0},
+
+                // HEVC
+                {"hevc_rkmpp", 0},
+                {"hevc_nvv4l2", CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC},
+                {"hevc_nvmpi", 0},
+                {"hevc_v4l2m2m", 0},
+                {"hevc_omx", 0},
+
+                // AV1
+            };
+
             // We have a non-hwaccel hardware decoder. This will always
             // be using SDLRenderer/DrmRenderer/PlVkRenderer so we will
             // pick decoder capabilities based on the decoder name.
-            capabilities = k_NonHwaccelCodecInfo.value(m_VideoDecoderCtx->codec->name, 0);
+            capabilities = nonHwaccelCodecInfo.value(m_VideoDecoderCtx->codec->name, 0);
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Using capabilities table for decoder: %s -> %d",
                         m_VideoDecoderCtx->codec->name,
@@ -243,9 +243,6 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
     SDL_zero(m_GlobalVideoStats);
 
     SDL_AtomicSet(&m_DecoderThreadShouldQuit, 0);
-
-    // Use linear filtering when renderer scaling is required
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 }
 
 FFmpegVideoDecoder::~FFmpegVideoDecoder()
@@ -664,6 +661,27 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
             return false;
         }
 
+        // Most FFmpeg decoders process input using a "push" model.
+        // We'll see those fail here if the format is not supported.
+        err = avcodec_send_packet(m_VideoDecoderCtx, m_Pkt);
+        if (err < 0) {
+            char errorstring[512];
+            av_strerror(err, errorstring, sizeof(errorstring));
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Test decode failed (avcodec_send_packet): %s", errorstring);
+            return false;
+        }
+
+        // Signal EOS to force the decoder to immediately output the frame
+        err = avcodec_send_packet(m_VideoDecoderCtx, nullptr);
+        if (err < 0) {
+            char errorstring[512];
+            av_strerror(err, errorstring, sizeof(errorstring));
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Test flush failed (avcodec_send_packet): %s", errorstring);
+            return false;
+        }
+
         AVFrame* frame = av_frame_alloc();
         if (!frame) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -671,47 +689,21 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
             return false;
         }
 
-        // Some decoders won't output on the first frame, so we'll submit
-        // a few test frames if we get an EAGAIN error.
-        for (int retries = 0; retries < 5; retries++) {
-            // Most FFmpeg decoders process input using a "push" model.
-            // We'll see those fail here if the format is not supported.
-            err = avcodec_send_packet(m_VideoDecoderCtx, m_Pkt);
-            if (err < 0) {
-                av_frame_free(&frame);
-                char errorstring[512];
-                av_strerror(err, errorstring, sizeof(errorstring));
+        err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
+        if (err == 0) {
+            // Allow the renderer to do any validation it wants on this frame
+            if (!m_FrontendRenderer->testRenderFrame(frame)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Test decode failed (avcodec_send_packet): %s", errorstring);
+                            "Test decode failed (testRenderFrame)");
+                av_frame_free(&frame);
                 return false;
             }
-
-            // A few FFmpeg decoders (h264_mmal) process here using a "pull" model.
-            // Those decoders will fail here if the format is not supported.
-            err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
-            if (err == AVERROR(EAGAIN)) {
-                // Wait a little while to let the hardware work
-                SDL_Delay(100);
-            }
-            else {
-                // Done!
-                break;
-            }
         }
-
-        if (err < 0) {
+        else if (err < 0) {
             char errorstring[512];
             av_strerror(err, errorstring, sizeof(errorstring));
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Test decode failed (avcodec_receive_frame): %s", errorstring);
-            av_frame_free(&frame);
-            return false;
-        }
-
-        // Allow the renderer to do any validation it wants on this frame
-        if (!m_FrontendRenderer->testRenderFrame(frame)) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Test decode failed (testRenderFrame)");
             av_frame_free(&frame);
             return false;
         }
@@ -1643,7 +1635,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
     {
         QString h264DecoderHint = qgetenv("H264_DECODER_HINT");
         if (!h264DecoderHint.isEmpty() && (params->videoFormat & VIDEO_FORMAT_MASK_H264)) {
-            QByteArray decoderString = h264DecoderHint.toLocal8Bit();
+            QByteArray decoderString = h264DecoderHint.toUtf8();
             if (tryInitializeRendererForUnknownDecoder(avcodec_find_decoder_by_name(decoderString.constData()), params, true)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Using custom H.264 decoder (H264_DECODER_HINT): %s",
@@ -1660,7 +1652,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
     {
         QString hevcDecoderHint = qgetenv("HEVC_DECODER_HINT");
         if (!hevcDecoderHint.isEmpty() && (params->videoFormat & VIDEO_FORMAT_MASK_H265)) {
-            QByteArray decoderString = hevcDecoderHint.toLocal8Bit();
+            QByteArray decoderString = hevcDecoderHint.toUtf8();
             if (tryInitializeRendererForUnknownDecoder(avcodec_find_decoder_by_name(decoderString.constData()), params, true)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Using custom HEVC decoder (HEVC_DECODER_HINT): %s",
@@ -1677,7 +1669,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
     {
         QString av1DecoderHint = qgetenv("AV1_DECODER_HINT");
         if (!av1DecoderHint.isEmpty() && (params->videoFormat & VIDEO_FORMAT_MASK_AV1)) {
-            QByteArray decoderString = av1DecoderHint.toLocal8Bit();
+            QByteArray decoderString = av1DecoderHint.toUtf8();
             if (tryInitializeRendererForUnknownDecoder(avcodec_find_decoder_by_name(decoderString.constData()), params, true)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Using custom AV1 decoder (AV1_DECODER_HINT): %s",

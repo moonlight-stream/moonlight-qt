@@ -56,13 +56,10 @@ ApplicationWindow {
                 wow64Dialog.open()
             }
 
-            if (SystemProperties.unmappedGamepads) {
-                unmappedGamepadDialog.unmappedGamepads = SystemProperties.unmappedGamepads
-                unmappedGamepadDialog.open()
-            }
-
-            // Hardware acceleration is checked asynchronously
+            // Hardware acceleration and unmapped gamepads are checked asynchronously
             SystemProperties.hasHardwareAccelerationChanged.connect(hasHardwareAccelerationChanged)
+            SystemProperties.unmappedGamepadsChanged.connect(hasUnmappedGamepadsChanged)
+            SystemProperties.startAsyncLoad()
         }
     }
 
@@ -74,6 +71,13 @@ ApplicationWindow {
             else {
                 noHwDecoderDialog.open()
             }
+        }
+    }
+
+    function hasUnmappedGamepadsChanged() {
+        if (SystemProperties.unmappedGamepads) {
+            unmappedGamepadDialog.unmappedGamepads = SystemProperties.unmappedGamepads
+            unmappedGamepadDialog.open()
         }
     }
 

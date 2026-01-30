@@ -7,9 +7,10 @@ ComputerSeeker::ComputerSeeker(ComputerManager *manager, QString computerName, Q
     : QObject(parent), m_ComputerManager(manager), m_ComputerName(computerName),
       m_TimeoutTimer(new QTimer(this))
 {
-    // If we know this computer, send a wake request in case it is asleep.
+    // If we know this computer, send a WOL packet to wake it up in case it is asleep.
     // Run on thread pool since HTTP wake may block for up to 10 seconds.
-    for (NvComputer * computer: m_ComputerManager->getComputers()) {
+    const auto computers = m_ComputerManager->getComputers();
+    for (NvComputer* computer : computers) {
         if (this->matchComputer(computer)) {
             QThreadPool::globalInstance()->start(QRunnable::create([computer]() {
                 computer->wake();
@@ -55,7 +56,8 @@ bool ComputerSeeker::matchComputer(NvComputer *computer) const
         return true;
     }
 
-    for (const NvAddress& addr : computer->uniqueAddresses()) {
+    const auto uniqueAddresses = computer->uniqueAddresses();
+    for (const NvAddress& addr : uniqueAddresses) {
         if (addr.address().toLower() == value || addr.toString().toLower() == value) {
             return true;
         }

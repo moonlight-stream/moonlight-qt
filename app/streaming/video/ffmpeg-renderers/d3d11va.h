@@ -23,7 +23,6 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo) override;
-    virtual void waitToRender() override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
     virtual InitFailureReason getInitFailureReason() override;
@@ -52,6 +51,11 @@ private:
     void renderVideo(AVFrame* frame);
     bool checkDecoderSupport(IDXGIAdapter* adapter);
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
+    bool setupSharedDevice(IDXGIAdapter1* adapter);
+    bool createSharedFencePair(UINT64 initialValue,
+                               ID3D11Device5* dev1, ID3D11Device5* dev2,
+                               Microsoft::WRL::ComPtr<ID3D11Fence>& dev1Fence,
+                               Microsoft::WRL::ComPtr<ID3D11Fence>& dev2Fence);
 
     int m_DecoderSelectionPass;
     int m_DevicesWithFL11Support;
@@ -65,19 +69,19 @@ private:
 
     Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
     int m_AdapterIndex;
-    Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
+    Microsoft::WRL::ComPtr<ID3D11Device5> m_RenderDevice, m_DecodeDevice;
+    Microsoft::WRL::ComPtr<ID3D11DeviceContext4> m_RenderDeviceContext, m_DecodeDeviceContext;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_RenderSharedTextureArray;
     Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext1> m_DeviceContext;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
     Microsoft::WRL::ComPtr<ID3D11BlendState> m_VideoBlendState;
     Microsoft::WRL::ComPtr<ID3D11BlendState> m_OverlayBlendState;
 
     SupportedFenceType m_FenceType;
-    Microsoft::WRL::ComPtr<ID3D11Fence> m_PreviousFrameRenderedFence;
-    Microsoft::WRL::Wrappers::Event m_PreviousFrameRenderedEvent;
-    UINT64 m_PreviousFrameRenderedFenceValue;
-    Microsoft::WRL::ComPtr<ID3D11Fence> m_DecoderShaderBindFence;
-    UINT64 m_DecoderShaderBindFenceValue;
+    Microsoft::WRL::ComPtr<ID3D11Fence> m_DecodeD2RFence, m_RenderD2RFence;
+    UINT64 m_D2RFenceValue;
+    Microsoft::WRL::ComPtr<ID3D11Fence> m_DecodeR2DFence, m_RenderR2DFence;
+    UINT64 m_R2DFenceValue;
     SDL_mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;
 

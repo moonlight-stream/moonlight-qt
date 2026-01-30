@@ -162,7 +162,7 @@ public:
 
     QString getCurrentAppName() const
     {
-        for (const NvApp& app : m_Computer->appList) {
+        for (const NvApp& app : std::as_const(m_Computer->appList)) {
             if (m_Computer->currentGameId == app.id) {
                 return app.name;
             }

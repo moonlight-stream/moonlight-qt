@@ -4,7 +4,6 @@
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <VersionHelpers.h>
 #include "dxvsyncsource.h"
 #endif
 
@@ -214,7 +213,7 @@ void Pacer::handleVsync(int timeUntilNextVsyncMillis)
     // frame history to drop frames only if consistently above the
     // one queued frame mark.
     if (m_MaxVideoFps >= m_DisplayFps) {
-        for (int queueHistoryEntry : m_PacingQueueHistory) {
+        for (int queueHistoryEntry : std::as_const(m_PacingQueueHistory)) {
             if (queueHistoryEntry <= 1) {
                 // Be lenient as long as the queue length
                 // resolves before the end of frame history
@@ -283,11 +282,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
         switch (info.subsystem) {
     #ifdef Q_OS_WIN32
         case SDL_SYSWM_WINDOWS:
-            // Don't use D3DKMTWaitForVerticalBlankEvent() on Windows 7, because
-            // it blocks during other concurrent DX operations (like actually rendering).
-            if (IsWindows8OrGreater()) {
-                m_VsyncSource = new DxVsyncSource(this);
-            }
+            m_VsyncSource = new DxVsyncSource(this);
             break;
     #endif
 
@@ -365,7 +360,7 @@ void Pacer::renderFrame(AVFrame* frame)
     }
     else {
         frameDropTarget = 0;
-        for (int queueHistoryEntry : m_RenderQueueHistory) {
+        for (int queueHistoryEntry : std::as_const(m_RenderQueueHistory)) {
             if (queueHistoryEntry == 0) {
                 // Be lenient as long as the queue length
                 // resolves before the end of frame history

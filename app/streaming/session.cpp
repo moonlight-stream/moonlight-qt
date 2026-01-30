@@ -1596,7 +1596,7 @@ bool Session::startConnectionAsync()
         // the chosen resolution. Avoid that by disabling SOPS when it
         // is not streaming a supported resolution.
         enableGameOptimizations = false;
-        for (const NvDisplayMode &mode : m_Computer->displayModes) {
+        for (const NvDisplayMode &mode : std::as_const(m_Computer->displayModes)) {
             if (mode.width == m_StreamConfig.width &&
                     mode.height == m_StreamConfig.height) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1633,8 +1633,8 @@ bool Session::startConnectionAsync()
         return false;
     }
 
-    QByteArray hostnameStr = m_Computer->activeAddress.address().toLatin1();
-    QByteArray siAppVersion = m_Computer->appVersion.toLatin1();
+    QByteArray hostnameStr = m_Computer->activeAddress.address().toUtf8();
+    QByteArray siAppVersion = m_Computer->appVersion.toUtf8();
 
     SERVER_INFORMATION hostInfo;
     hostInfo.address = hostnameStr.data();
@@ -1644,7 +1644,7 @@ bool Session::startConnectionAsync()
     // Older GFE versions didn't have this field
     QByteArray siGfeVersion;
     if (!m_Computer->gfeVersion.isEmpty()) {
-        siGfeVersion = m_Computer->gfeVersion.toLatin1();
+        siGfeVersion = m_Computer->gfeVersion.toUtf8();
     }
     if (!siGfeVersion.isEmpty()) {
         hostInfo.serverInfoGfeVersion = siGfeVersion.data();
@@ -1653,7 +1653,7 @@ bool Session::startConnectionAsync()
     // Older GFE and Sunshine versions didn't have this field
     QByteArray rtspSessionUrlStr;
     if (!rtspSessionUrl.isEmpty()) {
-        rtspSessionUrlStr = rtspSessionUrl.toLatin1();
+        rtspSessionUrlStr = rtspSessionUrl.toUtf8();
         hostInfo.rtspSessionUrl = rtspSessionUrlStr.data();
     }
 

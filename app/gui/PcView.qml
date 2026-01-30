@@ -165,6 +165,7 @@ CenteredGridView {
             asynchronous: true
             sourceComponent: NavigableMenu {
                 id: pcContextMenu
+                initiator: pcContextMenuLoader.parent
                 MenuItem {
                     text: qsTr("PC Status: %1").arg(model.online ? qsTr("Online") : qsTr("Offline"))
                     font.bold: true
@@ -299,10 +300,6 @@ CenteredGridView {
 
     NavigableMessageDialog {
         id: pairDialog
-
-        // Pairing dialog must be modal to prevent double-clicks from triggering
-        // pairing twice
-        modal: true
         closePolicy: Popup.CloseOnEscape
 
         // don't allow edits to the rest of the window while open

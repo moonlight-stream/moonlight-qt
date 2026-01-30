@@ -75,8 +75,7 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_eglClientWaitSync(nullptr),
         m_GlesMajorVersion(0),
         m_GlesMinorVersion(0),
-        m_HasExtUnpackSubimage(false),
-        m_DummyRenderer(nullptr)
+        m_HasExtUnpackSubimage(false)
 {
     SDL_assert(backendRenderer);
     SDL_assert(backendRenderer->canExportEGL());
@@ -110,10 +109,6 @@ EGLRenderer::~EGLRenderer()
         }
 
         SDL_GL_DeleteContext(m_Context);
-    }
-
-    if (m_DummyRenderer) {
-        SDL_DestroyRenderer(m_DummyRenderer);
     }
 }
 
@@ -446,8 +441,13 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    m_DummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED);
-    if (!m_DummyRenderer) {
+    // This will load OpenGL ES and convert our window to SDL_WINDOW_OPENGL if necessary
+    SDL_Renderer* dummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED);
+    if (dummyRenderer) {
+        SDL_DestroyRenderer(dummyRenderer);
+        dummyRenderer = nullptr;
+    }
+    else {
         // Print the error here (before it gets clobbered), but ensure that we flush window
         // events just in case SDL re-created the window before eventually failing.
         EGL_LOG(Error, "SDL_CreateRenderer() failed: %s", SDL_GetError());
@@ -464,16 +464,10 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         // to ensure we don't drop any important events.
         session->flushWindowEvents();
     }
-    else {
+    else if (!params->testOnly) {
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
         SDL_FlushEvent(SDL_WINDOWEVENT);
-    }
-
-    // Now we finally bail if we failed during SDL_CreateRenderer() above.
-    if (!m_DummyRenderer) {
-        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
-        return false;
     }
 
     SDL_SysWMinfo info;
@@ -633,8 +627,6 @@ bool EGLRenderer::setupVideoRenderingState() {
     glGenTextures(EGL_MAX_PLANES, m_Textures);
     for (size_t i = 0; i < EGL_MAX_PLANES; ++i) {
         glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_Textures[i]);
-        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
@@ -688,8 +680,8 @@ bool EGLRenderer::setupOverlayRenderingState() {
     for (size_t i = 0; i < Overlay::OverlayMax; ++i) {
         // Set up the overlay texture
         glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[i]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -792,6 +784,16 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         }
     }
 
+    int drawableWidth, drawableHeight;
+    SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+    SDL_Rect src, dst;
+    src.x = src.y = dst.x = dst.y = 0;
+    src.w = frame->width;
+    src.h = frame->height;
+    dst.w = drawableWidth;
+    dst.h = drawableHeight;
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
     ssize_t plane_count = m_Backend->exportEGLImages(frame, m_EGLDisplay, imgs);
     if (plane_count < 0)
         return;
@@ -799,6 +801,16 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_Textures[i]);
         m_glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, imgs[i]);
+
+        // Use GL_NEAREST to reduce sampling if the video region is a multiple of the frame size
+        if (dst.w % frame->width == 0 && dst.h % frame->height == 0) {
+            glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        }
+        else {
+            glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
     }
 
     // We already called glClear() after last frame's SDL_GL_SwapWindow()
@@ -807,17 +819,7 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
-    int drawableWidth, drawableHeight;
-    SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
-
     // Set the viewport to the size of the aspect-ratio-scaled video
-    SDL_Rect src, dst;
-    src.x = src.y = dst.x = dst.y = 0;
-    src.w = frame->width;
-    src.h = frame->height;
-    dst.w = drawableWidth;
-    dst.h = drawableHeight;
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
     glViewport(dst.x, dst.y, dst.w, dst.h);
 
     glUseProgram(m_ShaderProgram);
