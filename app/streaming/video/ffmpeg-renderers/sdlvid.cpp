@@ -82,7 +82,9 @@ bool SdlRenderer::isRenderThreadSupported()
                 "SDL renderer backend: %s",
                 info.name);
 
-    if (info.name != QString("direct3d") && info.name != QString("metal")) {
+    if (info.name != QString("direct3d11") &&
+        info.name != QString("direct3d12") &&
+        info.name != QString("metal")) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "SDL renderer backend requires main thread rendering");
         return false;
@@ -647,11 +649,6 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
 
 bool SdlRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 {
-    // We can transparently handle size and display changes, except Windows where
-    // changing size appears to break the renderer (maybe due to the render thread?)
-#ifdef Q_OS_WIN32
-    return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_DISPLAY));
-#else
+    // We can transparently handle size and display changes
     return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_SIZE | WINDOW_STATE_CHANGE_DISPLAY));
-#endif
 }
