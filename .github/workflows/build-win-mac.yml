@@ -20,10 +20,10 @@ jobs:
         include:
           # Windows
           - os: windows-2025
-            qt_version: 6.10.1
+            qt_version: 6.10.2
           # macOS
           - os: macos-15
-            qt_version: 6.10.1
+            qt_version: 6.10.2
 
     runs-on: ${{ matrix.os }}
 
