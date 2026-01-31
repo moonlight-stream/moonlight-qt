@@ -144,9 +144,8 @@ bool DXVA2Renderer::initializeRenderer()
     m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
     m_Device->SetRenderState(D3DRS_LIGHTING, FALSE);
 
-    m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
     m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-    m_Device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
 
     m_Device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     m_Device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
@@ -677,12 +676,13 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     SDL_FreeSurface(newSurface);
     newSurface = nullptr;
 
+    // Compensate for D3D9's half pixel offset
     VERTEX verts[] =
     {
-        {renderRect.x, renderRect.y, 0, 1, 0, 0},
-        {renderRect.x, renderRect.y+renderRect.h, 0, 1, 0, 1},
-        {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 0, 1, 1, 1},
-        {renderRect.x+renderRect.w, renderRect.y, 0, 1, 1, 0}
+        {renderRect.x - 0.5f, renderRect.y - 0.5f, 0, 1, 0, 0},
+        {renderRect.x - 0.5f, renderRect.y + renderRect.h - 0.5f, 0, 1, 0, 1},
+        {renderRect.x + renderRect.w - 0.5f, renderRect.y + renderRect.h - 0.5f, 0, 1, 1, 1},
+        {renderRect.x + renderRect.w - 0.5f, renderRect.y - 0.5f, 0, 1, 1, 0}
     };
 
     ComPtr<IDirect3DVertexBuffer9> newVertexBuffer;
