@@ -974,7 +974,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
         SDL_assert(m_Desc.SampleFormat.VideoTransferMatrix == DXVA2_VideoTransferMatrix_BT601);
 
         // This function doesn't trigger any of Intel's garbage video "enhancements"
-        hr = m_Device->StretchRect(surface, &sample.SrcRect, m_RenderTarget.Get(), &sample.DstRect, D3DTEXF_NONE);
+        hr = m_Device->StretchRect(surface, &sample.SrcRect, m_RenderTarget.Get(), &sample.DstRect, D3DTEXF_LINEAR);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "StretchRect() failed: %x",
