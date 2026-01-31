@@ -22,19 +22,6 @@
 #define ICON_SIZE 64
 #endif
 
-// HACK: Remove once proper Dark Mode support lands in SDL
-#ifdef Q_OS_WIN32
-#include <SDL_syswm.h>
-#include <dwmapi.h>
-#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE_OLD
-#define DWMWA_USE_IMMERSIVE_DARK_MODE_OLD 19
-#endif
-#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
-#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
-#endif
-#endif
-
-
 #define SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER 100
 #define SDL_CODE_GAMECONTROLLER_RUMBLE 101
 #define SDL_CODE_GAMECONTROLLER_RUMBLE_TRIGGERS 102
@@ -1881,38 +1868,6 @@ void Session::exec()
             return;
         }
     }
-
-    // HACK: Remove once proper Dark Mode support lands in SDL
-#ifdef Q_OS_WIN32
-    if (m_QtWindow != nullptr) {
-        BOOL darkModeEnabled;
-
-        // Query whether dark mode is enabled for our Qt window (which tracks the OS dark mode state)
-        if (FAILED(DwmGetWindowAttribute((HWND)m_QtWindow->winId(), DWMWA_USE_IMMERSIVE_DARK_MODE, &darkModeEnabled, sizeof(darkModeEnabled))) &&
-            FAILED(DwmGetWindowAttribute((HWND)m_QtWindow->winId(), DWMWA_USE_IMMERSIVE_DARK_MODE_OLD, &darkModeEnabled, sizeof(darkModeEnabled)))) {
-            darkModeEnabled = FALSE;
-        }
-
-        SDL_SysWMinfo info;
-        SDL_VERSION(&info.version);
-
-        if (SDL_GetWindowWMInfo(m_Window, &info) && info.subsystem == SDL_SYSWM_WINDOWS) {
-            // If dark mode is enabled, propagate that to our SDL window
-            if (darkModeEnabled) {
-                if (FAILED(DwmSetWindowAttribute(info.info.win.window, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkModeEnabled, sizeof(darkModeEnabled)))) {
-                    DwmSetWindowAttribute(info.info.win.window, DWMWA_USE_IMMERSIVE_DARK_MODE_OLD, &darkModeEnabled, sizeof(darkModeEnabled));
-                }
-
-                // Toggle non-client rendering off and back on to ensure dark mode takes effect on Windows 10.
-                // DWM doesn't seem to correctly invalidate the non-client area after enabling dark mode.
-                DWMNCRENDERINGPOLICY ncPolicy = DWMNCRP_DISABLED;
-                DwmSetWindowAttribute(info.info.win.window, DWMWA_NCRENDERING_POLICY, &ncPolicy, sizeof(ncPolicy));
-                ncPolicy = DWMNCRP_ENABLED;
-                DwmSetWindowAttribute(info.info.win.window, DWMWA_NCRENDERING_POLICY, &ncPolicy, sizeof(ncPolicy));
-            }
-        }
-    }
-#endif
 
     m_InputHandler->setWindow(m_Window);
 
