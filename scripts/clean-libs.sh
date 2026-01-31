@@ -4,15 +4,31 @@ while [[ "$#" -gt 0 ]]; do
   echo $1
   case "$1" in
     --sdl2_win)
-      rm $LIB_PATH/windows/include/*/begin_code.h $LIB_PATH/windows/include/*/close_code.h $LIB_PATH/windows/include/*/SDL*.h $LIB_PATH/windows/lib/*/SDL2.* $LIB_PATH/windows/lib/*/SDL2main.*
+      rm -r $LIB_PATH/windows/include/*/SDL2
+      rm $LIB_PATH/windows/lib/*/SDL2.* $LIB_PATH/windows/lib/*/SDL2main.*
       shift
       ;;
     --sdl2_mac)
-      rm -r $LIB_PATH/mac/Frameworks/SDL2.framework
+      rm -r $LIB_PATH/mac/include/SDL2
+      rm $LIB_PATH/mac/lib/libSDL2.dylib
+      shift
+      ;;
+    --sdl3_win)
+      rm -r $LIB_PATH/windows/include/*/SDL3
+      rm $LIB_PATH/windows/lib/*/SDL3.* $LIB_PATH/windows/lib/*/SDL3main.*
+      shift
+      ;;
+    --sdl3_mac)
+      rm -r $LIB_PATH/mac/include/SDL3
+      rm $LIB_PATH/mac/lib/libSDL3.dylib
       shift
       ;;
     --sdl_ttf_win)
-      rm $LIB_PATH/windows/include/SDL_ttf.h $LIB_PATH/windows/lib/*/SDL2_ttf.*
+      rm $LIB_PATH/windows/include/*/SDL2/SDL_ttf.h $LIB_PATH/windows/lib/*/SDL2_ttf.*
+      shift
+      ;;
+    --sdl_ttf_mac)
+      rm $LIB_PATH/mac/include/SDL2/SDL_ttf.h $LIB_PATH/mac/lib/libSDL2_ttf.dylib
       shift
       ;;
     --detours_win)
