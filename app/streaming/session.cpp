@@ -2156,7 +2156,6 @@ void Session::exec()
 
             // Fall through
         case SDL_RENDER_DEVICE_RESET:
-        case SDL_RENDER_TARGETS_RESET:
 
             if (event.type != SDL_WINDOWEVENT) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -2181,6 +2180,12 @@ void Session::exec()
                 currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
                 updateOptimalWindowDisplayMode();
             }
+
+            // Now that the old decoder is dead, flush any events it may
+            // have queued to reset itself (if this reset was the result
+            // of device loss or an internal error).
+            SDL_PumpEvents();
+            SDL_FlushEvent(SDL_RENDER_DEVICE_RESET);
 
             {
                 // If the stream exceeds the display refresh rate (plus some slack),
@@ -2218,13 +2223,6 @@ void Session::exec()
                     needsPostDecoderCreationCapture = false;
                 }
             }
-
-            // Flush any events queued by the renderer to reset itself. These are
-            // usually from the old renderer, but they can also be queued by the
-            // new renderer in certain cases (like SDL3's direct3d9 renderer).
-            SDL_PumpEvents();
-            SDL_FlushEvent(SDL_RENDER_DEVICE_RESET);
-            SDL_FlushEvent(SDL_RENDER_TARGETS_RESET);
 
             // Request an IDR frame to complete the reset
             LiRequestIdrFrame();
