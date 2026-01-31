@@ -2182,13 +2182,6 @@ void Session::exec()
                 updateOptimalWindowDisplayMode();
             }
 
-            // Now that the old decoder is dead, flush any events it may
-            // have queued to reset itself (if this reset was the result
-            // of state loss).
-            SDL_PumpEvents();
-            SDL_FlushEvent(SDL_RENDER_DEVICE_RESET);
-            SDL_FlushEvent(SDL_RENDER_TARGETS_RESET);
-
             {
                 // If the stream exceeds the display refresh rate (plus some slack),
                 // forcefully disable V-sync to allow the stream to render faster
@@ -2225,6 +2218,13 @@ void Session::exec()
                     needsPostDecoderCreationCapture = false;
                 }
             }
+
+            // Flush any events queued by the renderer to reset itself. These are
+            // usually from the old renderer, but they can also be queued by the
+            // new renderer in certain cases (like SDL3's direct3d9 renderer).
+            SDL_PumpEvents();
+            SDL_FlushEvent(SDL_RENDER_DEVICE_RESET);
+            SDL_FlushEvent(SDL_RENDER_TARGETS_RESET);
 
             // Request an IDR frame to complete the reset
             LiRequestIdrFrame();
