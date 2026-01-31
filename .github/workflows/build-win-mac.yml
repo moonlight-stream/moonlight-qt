@@ -21,7 +21,6 @@ jobs:
           # Windows
           - os: windows-2025
             qt_version: 6.10.1
-            qt_version_arm64: 6.10.0
           # macOS
           - os: macos-15
             qt_version: 6.10.1
@@ -58,7 +57,7 @@ jobs:
           set-env: false
           add-tools-to-path: false
           arch: win64_msvc2022_arm64_cross_compiled
-          version: ${{ matrix.qt_version_arm64 }}
+          version: ${{ matrix.qt_version }}
 
       - name: Build x64 binaries (Windows)
         if: runner.os == 'Windows'
@@ -76,7 +75,7 @@ jobs:
           set "PATH=%QT_PATH%;%PATH%"
           scripts\build-arch.bat Release arm64
         env:
-          QT_PATH: ${{ runner.workspace }}\Qt\${{ matrix.qt_version_arm64 }}\msvc2022_arm64\bin
+          QT_PATH: ${{ runner.workspace }}\Qt\${{ matrix.qt_version }}\msvc2022_arm64\bin
 
       - name: Build Package
         shell: pwsh
