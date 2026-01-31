@@ -33,18 +33,23 @@ if /I "%BUILD_CONFIG%"=="debug" (
     )
 )
 
-rem Locate qmake and determine if we're using qmake.exe or qmake.bat
-rem qmake.bat is an ARM64 forwarder to the x64 version of qmake.exe
+rem Locate qmake and determine if we're using qmake.exe or (host-)qmake.bat
+rem (host-)qmake.bat is an ARM64 forwarder to the x64 version of qmake.exe
 where qmake.bat
 if !ERRORLEVEL! EQU 0 (
     set QMAKE_CMD=call qmake.bat
 ) else (
-    where qmake.exe
+    where host-qmake.bat
     if !ERRORLEVEL! EQU 0 (
-        set QMAKE_CMD=qmake.exe
+        set QMAKE_CMD=call host-qmake.bat
     ) else (
-        echo Unable to find QMake. Did you add Qt bins to your PATH?
-        goto Error
+        where qmake.exe
+        if !ERRORLEVEL! EQU 0 (
+            set QMAKE_CMD=qmake.exe
+        ) else (
+            echo Unable to find QMake. Did you add Qt bins to your PATH?
+            goto Error
+        )
     )
 )
 
@@ -64,12 +69,17 @@ if not x%QT_PATH:_arm64=%==x%QT_PATH% (
     set HOSTBIN_PATH=%QT_PATH:_arm64=_64%
     echo HOSTBIN_PATH=!HOSTBIN_PATH!
 
-    if exist %QT_PATH%\windeployqt.exe (
-        echo Using windeployqt.exe from QT_PATH
-        set WINDEPLOYQT_CMD=windeployqt.exe
-    ) else (
+    if exist %QT_PATH%\host-qtpaths.bat (
         echo Using windeployqt.exe from HOSTBIN_PATH
-        set WINDEPLOYQT_CMD=!HOSTBIN_PATH!\windeployqt.exe --qtpaths %QT_PATH%\qtpaths.bat
+        set WINDEPLOYQT_CMD=!HOSTBIN_PATH!\windeployqt.exe --qtpaths %QT_PATH%\host-qtpaths.bat
+    ) else (
+        if exist %QT_PATH%\windeployqt.exe (
+            echo Using windeployqt.exe from QT_PATH
+            set WINDEPLOYQT_CMD=windeployqt.exe
+        ) else (
+            echo Using windeployqt.exe from HOSTBIN_PATH
+            set WINDEPLOYQT_CMD=!HOSTBIN_PATH!\windeployqt.exe --qtpaths %QT_PATH%\qtpaths.bat
+        )
     )
 ) else (
     if not x%QT_PATH:_64=%==x%QT_PATH% (
