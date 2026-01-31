@@ -219,15 +219,6 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-#ifdef Q_OS_WIN32
-    // For some reason, using Direct3D9Ex breaks this with multi-monitor setups.
-    // When focus is lost, the window is minimized then immediately restored without
-    // input focus. This glitches out the renderer and a bunch of other stuff.
-    // Direct3D9Ex itself seems to have this minimize on focus loss behavior on its
-    // own, so just disable SDL's handling of the focus loss event.
-    SDL_SetHintWithPriority(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0", SDL_HINT_OVERRIDE);
-#endif
-
     return true;
 }
 
