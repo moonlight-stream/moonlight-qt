@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="334"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Esta máquina parece não ter nenhum aplicativo disponível</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="347"/>
@@ -323,7 +323,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="174"/>
         <source>View All Apps</source>
-        <translation type="unfinished">Ver Todos os Jogos</translation>
+        <translation>Ver Todas as Aplicações</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="300"/>
@@ -338,17 +338,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Tem certeza de que quer remover &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight está testando sua conexão para determinar se alguma das portas necessárias está bloqueada.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="354"/>
         <source>Enter the new name for this PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Digite o novo nome para este computador:</translation>
     </message>
 </context>
 <context>
@@ -356,7 +356,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="600"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>O PIN do computador não coincide. Por favor, tente novamente.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="604"/>
@@ -392,14 +392,14 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 já está pareado</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Falha ao se conectar à %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
