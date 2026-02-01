@@ -212,10 +212,10 @@ if not x%QT_PATH:\5.=%==x%QT_PATH% (
     rem Qt 5.15
     set WINDEPLOYQT_ARGS=--no-qmltooling --no-virtualkeyboard
 ) else (
-    rem Qt 6.8+
+    rem Qt 6.5+
     set WINDEPLOYQT_ARGS=--no-system-d3d-compiler --no-system-dxc-compiler --skip-plugin-types qmltooling,generic --no-ffmpeg
     set WINDEPLOYQT_ARGS=!WINDEPLOYQT_ARGS! --no-quickcontrols2fusion --no-quickcontrols2imagine --no-quickcontrols2universal
-    set WINDEPLOYQT_ARGS=!WINDEPLOYQT_ARGS! --no-quickcontrols2fusionstyleimpl --no-quickcontrols2imaginestyleimpl --no-quickcontrols2universalstyleimpl --no-quickcontrols2windowsstyleimpl --no-quickcontrols2fluentwinui3styleimpl
+    set WINDEPLOYQT_ARGS=!WINDEPLOYQT_ARGS! --no-quickcontrols2fusionstyleimpl --no-quickcontrols2imaginestyleimpl --no-quickcontrols2universalstyleimpl --no-quickcontrols2windowsstyleimpl
 )
 
 echo Deploying Qt dependencies
@@ -227,12 +227,11 @@ rem Qt 5.x directories
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Fusion
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Imagine
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Universal
-rem Qt 6.8+ directories
+rem Qt 6.5+ directories
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Fusion
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Imagine
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Universal
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Windows
-rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\FluentWinUI3
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\NativeStyle
 
 if "%SIGN%"=="1" (
