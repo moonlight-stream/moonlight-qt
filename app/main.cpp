@@ -691,6 +691,10 @@ int main(int argc, char *argv[])
     SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "0");
 #endif
 
+    // Enable fast parameter checks on SDL 3.4.0+. We don't abuse the API by passing
+    // incorrect objects, so we don't need additional expensive parameter checks.
+    SDL_SetHint("SDL_INVALID_PARAM_CHECKS", "1");
+
     QGuiApplication app(argc, argv);
 
 #ifdef Q_OS_UNIX
