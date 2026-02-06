@@ -317,6 +317,7 @@ libdrm {
     linux {
         !disable-masterhooks {
             message(Master hooks enabled)
+            DEFINES += HAVE_DRM_MASTER_HOOKS
             SOURCES += masterhook.c masterhook_internal.c
             LIBS += -ldl -pthread
         }

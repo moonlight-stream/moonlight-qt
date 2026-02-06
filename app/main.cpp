@@ -85,6 +85,10 @@ static QAtomicInteger<uint64_t> s_LogBytesWritten = 0;
 static QFile* s_LoggerFile;
 #endif
 
+#ifdef HAVE_DRM_MASTER_HOOKS
+extern "C" bool g_DisableDrmHooks;
+#endif
+
 class LoggerTask : public QRunnable
 {
 public:
@@ -787,6 +791,11 @@ int main(int argc, char *argv[])
     else if (QGuiApplication::platformName() == "eglfs" || QGuiApplication::platformName() == "linuxfb") {
         qputenv("SDL_VIDEODRIVER", "kmsdrm");
     }
+#endif
+
+#ifdef HAVE_DRM_MASTER_HOOKS
+    // Only use the Qt-SDL DRM master interoperability hooks if Qt is using KMS
+    g_DisableDrmHooks = QGuiApplication::platformName() != "eglfs";
 #endif
 
 #ifdef STEAM_LINK

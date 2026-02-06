@@ -31,6 +31,7 @@
 
 extern int g_QtDrmMasterFd;
 extern struct stat g_DrmMasterStat;
+extern bool g_DisableDrmHooks;
 
 #define MAX_SDL_FD_COUNT 8
 int g_SdlDrmMasterFds[MAX_SDL_FD_COUNT];
@@ -112,6 +113,10 @@ int openHook(typeof(open) *real_open, typeof(close) *real_close, const char *pat
     else {
         mode = 0;
         fd = real_open(pathname, flags);
+    }
+
+    if (g_DisableDrmHooks) {
+        return fd;
     }
 
     // If the file was successfully opened and we have a DRM master FD,
