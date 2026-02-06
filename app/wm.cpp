@@ -210,7 +210,8 @@ bool WMUtils::isGpuSlow()
     bool ret;
 
     if (!Utils::getEnvironmentVariableOverride("GL_IS_SLOW", &ret)) {
-#ifdef GL_IS_SLOW
+#if defined(GL_IS_SLOW) || !defined(Q_PROCESSOR_X86)
+        // We currently assume GPUs on non-x86 hardware are slow by default
         ret = true;
 #else
         ret = false;
