@@ -342,6 +342,9 @@ int SDLCALL signalHandlerThread(void* data)
 {
     Q_UNUSED(data);
 
+    Session* lastSession = nullptr;
+    bool requestedQuit = false;
+
     int sig;
     while (recv(signalFds[1], &sig, sizeof(sig), MSG_WAITALL) == sizeof(sig)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Received signal: %d", sig);
@@ -353,17 +356,32 @@ int SDLCALL signalHandlerThread(void* data)
             // Check if we have an active streaming session
             session = Session::get();
             if (session != nullptr) {
+                // Exit immediately if we haven't changed state since last attempt
+                if (session == lastSession || requestedQuit) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Exiting immediately on second signal");
+                    _exit(1);
+                }
+
                 if (sig == SIGTERM) {
                     // If this is a SIGTERM, set the flag to quit
                     session->setShouldExit();
+                    requestedQuit = true;
                 }
 
                 // Stop the streaming session
                 session->interrupt();
+                lastSession = session;
             }
             else {
+                // Exit immediately if we haven't changed state since last attempt
+                if (requestedQuit) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Exiting immediately on second signal");
+                    _exit(1);
+                }
+
                 // If we're not streaming, we'll close the whole app
                 QCoreApplication::instance()->quit();
+                requestedQuit = true;
             }
             break;
 
