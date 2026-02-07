@@ -268,9 +268,19 @@ rem This must be done after WiX harvesting and signing, since the VCRT dlls are 
 rem and should not be harvested for inclusion in the full installer
 copy "%VC_REDIST_DLL_PATH%\*.dll" %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
-rem This file tells Moonlight that it's a portable installation
-echo. > %DEPLOY_FOLDER%\portable.dat
-if !ERRORLEVEL! NEQ 0 goto Error
+
+rem Since we don't publish Windows installers for CI builds, let's use the user profile
+rem location of the regular non-portable version by default. We'll place a file in the
+rem the package to allow the user to rename if they want portable behavior.
+if defined CI_VERSION (
+    echo. > %DEPLOY_FOLDER%\portable.dat.inactive
+    if !ERRORLEVEL! NEQ 0 goto Error
+) else (
+    rem This file tells Moonlight that it's a portable installation
+    echo. > %DEPLOY_FOLDER%\portable.dat
+    if !ERRORLEVEL! NEQ 0 goto Error
+)
+
 7z a %INSTALLER_FOLDER%\MoonlightPortable-%ARCH%-%VERSION%.zip %DEPLOY_FOLDER%\*
 if !ERRORLEVEL! NEQ 0 goto Error
 
