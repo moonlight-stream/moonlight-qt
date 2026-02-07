@@ -144,9 +144,8 @@ bool DXVA2Renderer::initializeRenderer()
     m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
     m_Device->SetRenderState(D3DRS_LIGHTING, FALSE);
 
-    m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
     m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-    m_Device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
 
     m_Device->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     m_Device->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
@@ -597,13 +596,6 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // For some reason, using Direct3D9Ex breaks this with multi-monitor setups.
-    // When focus is lost, the window is minimized then immediately restored without
-    // input focus. This glitches out the renderer and a bunch of other stuff.
-    // Direct3D9Ex itself seems to have this minimize on focus loss behavior on its
-    // own, so just disable SDL's handling of the focus loss event.
-    SDL_SetHintWithPriority(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0", SDL_HINT_OVERRIDE);
-
     return true;
 }
 
@@ -684,12 +676,13 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     SDL_FreeSurface(newSurface);
     newSurface = nullptr;
 
+    // Compensate for D3D9's half pixel offset
     VERTEX verts[] =
     {
-        {renderRect.x, renderRect.y, 0, 1, 0, 0},
-        {renderRect.x, renderRect.y+renderRect.h, 0, 1, 0, 1},
-        {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 0, 1, 1, 1},
-        {renderRect.x+renderRect.w, renderRect.y, 0, 1, 1, 0}
+        {renderRect.x - 0.5f, renderRect.y - 0.5f, 0, 1, 0, 0},
+        {renderRect.x - 0.5f, renderRect.y + renderRect.h - 0.5f, 0, 1, 0, 1},
+        {renderRect.x + renderRect.w - 0.5f, renderRect.y + renderRect.h - 0.5f, 0, 1, 1, 1},
+        {renderRect.x + renderRect.w - 0.5f, renderRect.y - 0.5f, 0, 1, 1, 0}
     };
 
     ComPtr<IDirect3DVertexBuffer9> newVertexBuffer;
@@ -950,7 +943,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                      "Clear() failed: %x",
                      hr);
         SDL_Event event;
-        event.type = SDL_RENDER_TARGETS_RESET;
+        event.type = SDL_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         return;
     }
@@ -961,7 +954,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                      "BeginScene() failed: %x",
                      hr);
         SDL_Event event;
-        event.type = SDL_RENDER_TARGETS_RESET;
+        event.type = SDL_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         return;
     }
@@ -981,13 +974,13 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
         SDL_assert(m_Desc.SampleFormat.VideoTransferMatrix == DXVA2_VideoTransferMatrix_BT601);
 
         // This function doesn't trigger any of Intel's garbage video "enhancements"
-        hr = m_Device->StretchRect(surface, &sample.SrcRect, m_RenderTarget.Get(), &sample.DstRect, D3DTEXF_NONE);
+        hr = m_Device->StretchRect(surface, &sample.SrcRect, m_RenderTarget.Get(), &sample.DstRect, D3DTEXF_LINEAR);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "StretchRect() failed: %x",
                          hr);
             SDL_Event event;
-            event.type = SDL_RENDER_TARGETS_RESET;
+            event.type = SDL_RENDER_DEVICE_RESET;
             SDL_PushEvent(&event);
             return;
         }
@@ -1004,7 +997,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                      "EndScene() failed: %x",
                      hr);
         SDL_Event event;
-        event.type = SDL_RENDER_TARGETS_RESET;
+        event.type = SDL_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         return;
     }
@@ -1022,7 +1015,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                      "PresentEx() failed: %x",
                      hr);
         SDL_Event event;
-        event.type = SDL_RENDER_TARGETS_RESET;
+        event.type = SDL_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         return;
     }

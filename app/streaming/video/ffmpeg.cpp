@@ -344,7 +344,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
 #ifdef GL_IS_SLOW
         glIsSlow = true;
 #else
-        glIsSlow = false;
+        glIsSlow = WMUtils::isGpuSlow();
 #endif
     }
 
@@ -352,7 +352,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
 #ifdef VULKAN_IS_SLOW
         vulkanIsSlow = true;
 #else
-        vulkanIsSlow = false;
+        vulkanIsSlow = WMUtils::isGpuSlow();
 #endif
     }
 
@@ -1298,7 +1298,7 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
 #ifdef GL_IS_SLOW
         glIsSlow = true;
 #else
-        glIsSlow = false;
+        glIsSlow = WMUtils::isGpuSlow();
 #endif
     }
 
@@ -1306,7 +1306,7 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
 #ifdef VULKAN_IS_SLOW
         vulkanIsSlow = true;
 #else
-        vulkanIsSlow = false;
+        vulkanIsSlow = WMUtils::isGpuSlow();
 #endif
     }
 

@@ -33,18 +33,23 @@ if /I "%BUILD_CONFIG%"=="debug" (
     )
 )
 
-rem Locate qmake and determine if we're using qmake.exe or qmake.bat
-rem qmake.bat is an ARM64 forwarder to the x64 version of qmake.exe
+rem Locate qmake and determine if we're using qmake.exe or (host-)qmake.bat
+rem (host-)qmake.bat is an ARM64 forwarder to the x64 version of qmake.exe
 where qmake.bat
 if !ERRORLEVEL! EQU 0 (
     set QMAKE_CMD=call qmake.bat
 ) else (
-    where qmake.exe
+    where host-qmake.bat
     if !ERRORLEVEL! EQU 0 (
-        set QMAKE_CMD=qmake.exe
+        set QMAKE_CMD=call host-qmake.bat
     ) else (
-        echo Unable to find QMake. Did you add Qt bins to your PATH?
-        goto Error
+        where qmake.exe
+        if !ERRORLEVEL! EQU 0 (
+            set QMAKE_CMD=qmake.exe
+        ) else (
+            echo Unable to find QMake. Did you add Qt bins to your PATH?
+            goto Error
+        )
     )
 )
 
@@ -64,12 +69,17 @@ if not x%QT_PATH:_arm64=%==x%QT_PATH% (
     set HOSTBIN_PATH=%QT_PATH:_arm64=_64%
     echo HOSTBIN_PATH=!HOSTBIN_PATH!
 
-    if exist %QT_PATH%\windeployqt.exe (
-        echo Using windeployqt.exe from QT_PATH
-        set WINDEPLOYQT_CMD=windeployqt.exe
-    ) else (
+    if exist %QT_PATH%\host-qtpaths.bat (
         echo Using windeployqt.exe from HOSTBIN_PATH
-        set WINDEPLOYQT_CMD=!HOSTBIN_PATH!\windeployqt.exe --qtpaths %QT_PATH%\qtpaths.bat
+        set WINDEPLOYQT_CMD=!HOSTBIN_PATH!\windeployqt.exe --qtpaths %QT_PATH%\host-qtpaths.bat
+    ) else (
+        if exist %QT_PATH%\windeployqt.exe (
+            echo Using windeployqt.exe from QT_PATH
+            set WINDEPLOYQT_CMD=windeployqt.exe
+        ) else (
+            echo Using windeployqt.exe from HOSTBIN_PATH
+            set WINDEPLOYQT_CMD=!HOSTBIN_PATH!\windeployqt.exe --qtpaths %QT_PATH%\qtpaths.bat
+        )
     )
 ) else (
     if not x%QT_PATH:_64=%==x%QT_PATH% (
@@ -202,27 +212,30 @@ if not x%QT_PATH:\5.=%==x%QT_PATH% (
     rem Qt 5.15
     set WINDEPLOYQT_ARGS=--no-qmltooling --no-virtualkeyboard
 ) else (
-    rem Qt 6.5+
+    rem Qt 6.8+
     set WINDEPLOYQT_ARGS=--no-system-d3d-compiler --no-system-dxc-compiler --skip-plugin-types qmltooling,generic --no-ffmpeg
     set WINDEPLOYQT_ARGS=!WINDEPLOYQT_ARGS! --no-quickcontrols2fusion --no-quickcontrols2imagine --no-quickcontrols2universal
-    set WINDEPLOYQT_ARGS=!WINDEPLOYQT_ARGS! --no-quickcontrols2fusionstyleimpl --no-quickcontrols2imaginestyleimpl --no-quickcontrols2universalstyleimpl --no-quickcontrols2windowsstyleimpl
+    set WINDEPLOYQT_ARGS=!WINDEPLOYQT_ARGS! --no-quickcontrols2fusionstyleimpl --no-quickcontrols2imaginestyleimpl --no-quickcontrols2universalstyleimpl --no-quickcontrols2windowsstyleimpl --no-quickcontrols2fluentwinui3styleimpl
 )
 
 echo Deploying Qt dependencies
 %WINDEPLOYQT_CMD% --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\app\gui --no-opengl-sw --no-compiler-runtime --no-sql %WINDEPLOYQT_ARGS% %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
 if !ERRORLEVEL! NEQ 0 goto Error
 
-echo Deleting unused styles
+echo Deleting unused files
 rem Qt 5.x directories
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Fusion
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Imagine
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Universal
-rem Qt 6.5+ directories
+rem Qt 6.8+ directories
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Fusion
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Imagine
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Universal
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Windows
+rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\FluentWinUI3
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\NativeStyle
+rem icuuc.dll ships with all supported OSes (and Qt incorrectly deploys the x64 version on ARM64)
+del %DEPLOY_FOLDER%\icuuc.dll
 
 if "%SIGN%"=="1" (
     echo Signing deployed binaries
@@ -255,9 +268,19 @@ rem This must be done after WiX harvesting and signing, since the VCRT dlls are 
 rem and should not be harvested for inclusion in the full installer
 copy "%VC_REDIST_DLL_PATH%\*.dll" %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
-rem This file tells Moonlight that it's a portable installation
-echo. > %DEPLOY_FOLDER%\portable.dat
-if !ERRORLEVEL! NEQ 0 goto Error
+
+rem Since we don't publish Windows installers for CI builds, let's use the user profile
+rem location of the regular non-portable version by default. We'll place a file in the
+rem the package to allow the user to rename if they want portable behavior.
+if defined CI_VERSION (
+    echo. > %DEPLOY_FOLDER%\portable.dat.inactive
+    if !ERRORLEVEL! NEQ 0 goto Error
+) else (
+    rem This file tells Moonlight that it's a portable installation
+    echo. > %DEPLOY_FOLDER%\portable.dat
+    if !ERRORLEVEL! NEQ 0 goto Error
+)
+
 7z a %INSTALLER_FOLDER%\MoonlightPortable-%ARCH%-%VERSION%.zip %DEPLOY_FOLDER%\*
 if !ERRORLEVEL! NEQ 0 goto Error
 

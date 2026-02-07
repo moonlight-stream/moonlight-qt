@@ -806,6 +806,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         // If we have an overlay but it's been disabled, free the overlay texture
         if (m_Overlays[i].hasOverlay && !Session::get()->getOverlayManager().isOverlayEnabled((Overlay::OverlayType)i)) {
             texturesToDestroy.push_back(m_Overlays[i].overlay.tex);
+            SDL_zero(m_Overlays[i].overlay);
             m_Overlays[i].hasOverlay = false;
         }
 
@@ -871,7 +872,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
 
         // Recreate the renderer
         SDL_Event event;
-        event.type = SDL_RENDER_TARGETS_RESET;
+        event.type = SDL_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         goto UnmapExit;
     }
@@ -884,7 +885,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
 
 UnmapExit:
     // Delete any textures that need to be destroyed
-    for (pl_tex texture : texturesToDestroy) {
+    for (pl_tex& texture : texturesToDestroy) {
         pl_tex_destroy(m_Vulkan->gpu, &texture);
     }
 

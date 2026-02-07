@@ -82,7 +82,9 @@ bool SdlRenderer::isRenderThreadSupported()
                 "SDL renderer backend: %s",
                 info.name);
 
-    if (info.name != QString("direct3d") && info.name != QString("metal")) {
+    if (info.name != QString("direct3d11") &&
+        info.name != QString("direct3d12") &&
+        info.name != QString("metal")) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "SDL renderer backend requires main thread rendering");
         return false;
@@ -216,15 +218,6 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
-
-#ifdef Q_OS_WIN32
-    // For some reason, using Direct3D9Ex breaks this with multi-monitor setups.
-    // When focus is lost, the window is minimized then immediately restored without
-    // input focus. This glitches out the renderer and a bunch of other stuff.
-    // Direct3D9Ex itself seems to have this minimize on focus loss behavior on its
-    // own, so just disable SDL's handling of the focus loss event.
-    SDL_SetHintWithPriority(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0", SDL_HINT_OVERRIDE);
-#endif
 
     return true;
 }
@@ -647,11 +640,6 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
 
 bool SdlRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 {
-    // We can transparently handle size and display changes, except Windows where
-    // changing size appears to break the renderer (maybe due to the render thread?)
-#ifdef Q_OS_WIN32
-    return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_DISPLAY));
-#else
+    // We can transparently handle size and display changes
     return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_SIZE | WINDOW_STATE_CHANGE_DISPLAY));
-#endif
 }
