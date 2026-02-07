@@ -48,6 +48,7 @@ jobs:
           set-env: ${{ runner.os != 'Windows' }}
           add-tools-to-path: ${{ runner.os != 'Windows' }}
           version: ${{ matrix.qt_version }}
+          aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@9edeb24ae65361fd032a063a0b0148764eff09c5'
 
       - name: Install Qt ARM64 (Windows)
         if: runner.os == 'Windows'
