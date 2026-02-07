@@ -359,7 +359,7 @@ int SDLCALL signalHandlerThread(void* data)
                 // Exit immediately if we haven't changed state since last attempt
                 if (session == lastSession || requestedQuit) {
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Exiting immediately on second signal");
-                    _exit(1);
+                    _Exit(1);
                 }
 
                 if (sig == SIGTERM) {
@@ -376,7 +376,7 @@ int SDLCALL signalHandlerThread(void* data)
                 // Exit immediately if we haven't changed state since last attempt
                 if (requestedQuit) {
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Exiting immediately on second signal");
-                    _exit(1);
+                    _Exit(1);
                 }
 
                 // If we're not streaming, we'll close the whole app
