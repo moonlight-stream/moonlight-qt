@@ -1,3 +1,7 @@
+QMAKE_CFLAGS   *= $$(QMAKE_CFLAGS)
+QMAKE_CXXFLAGS *= $$(QMAKE_CXXFLAGS)
+QMAKE_LFLAGS   *= $$(QMAKE_LFLAGS)
+
 QT += core quick network quickcontrols2 svg
 CONFIG += c++17
 
