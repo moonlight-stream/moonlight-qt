@@ -1,11 +1,9 @@
 import QtQuick 2.0
-import QtQuick.Controls 2.3
+import QtQuick.Controls 2.5
 
 Dialog {
     modal: true
-
-    x: Math.round((parent.width - width) / 2)
-    y: Math.round((parent.height - height) / 2)
+    anchors.centerIn: Overlay.overlay
 
     onClosed: {
         // We must force focus back to the last item. If we don't,
