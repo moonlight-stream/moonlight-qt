@@ -1357,37 +1357,46 @@ void Session::getWindowDimensions(int& x, int& y,
             }
         }
     }
-
-    SDL_Rect usableBounds;
-    if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
-        // If the stream resolution fits within the usable display area, use it directly
-        if (m_StreamConfig.width <= usableBounds.w &&
-            m_StreamConfig.height <= usableBounds.h) {
-            width = m_StreamConfig.width;
-            height = m_StreamConfig.height;
-        } else {
-            // Otherwise, use 80% of usable bounds and preserve aspect ratio
-            SDL_Rect src, dst;
-            src.x = src.y = dst.x = dst.y = 0;
-            src.w = m_StreamConfig.width;
-            src.h = m_StreamConfig.height;
-
-            dst.w = ((int)(usableBounds.w * 0.80f)) & ~0x1;  // even width
-            dst.h = ((int)(usableBounds.h * 0.80f)) & ~0x1;  // even height
-
-            StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-            width = dst.w;
-            height = dst.h;
-        }
+  
+    // Use custom window size if specified
+    if (m_Preferences->enableCustomWindowSize &&
+            m_Preferences->windowMode == StreamingPreferences::WM_WINDOWED &&
+            m_Preferences->windowWidth > 0 && m_Preferences->windowHeight > 0) {
+        width = m_Preferences->windowWidth;
+        height = m_Preferences->windowHeight;
     }
     else {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetDisplayUsableBounds() failed: %s",
-                     SDL_GetError());
+        SDL_Rect usableBounds;
+        if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
+            // If the stream resolution fits within the usable display area, use it directly
+            if (m_StreamConfig.width <= usableBounds.w &&
+                m_StreamConfig.height <= usableBounds.h) {
+                width = m_StreamConfig.width;
+                height = m_StreamConfig.height;
+            } else {
+                // Otherwise, use 80% of usable bounds and preserve aspect ratio
+                SDL_Rect src, dst;
+                src.x = src.y = dst.x = dst.y = 0;
+                src.w = m_StreamConfig.width;
+                src.h = m_StreamConfig.height;
 
-        width = m_StreamConfig.width;
-        height = m_StreamConfig.height;
+                dst.w = ((int)(usableBounds.w * 0.80f)) & ~0x1;  // even width
+                dst.h = ((int)(usableBounds.h * 0.80f)) & ~0x1;  // even height
+
+                StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+                width = dst.w;
+                height = dst.h;
+            }
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetDisplayUsableBounds() failed: %s",
+                         SDL_GetError());
+
+            width = m_StreamConfig.width;
+            height = m_StreamConfig.height;
+        }
     }
 
     x = y = SDL_WINDOWPOS_CENTERED_DISPLAY(displayIndex);
