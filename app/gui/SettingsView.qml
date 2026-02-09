@@ -140,8 +140,13 @@ Flickable {
                                 var existing_height = parseInt(resolutionListModel.get(j).video_height);
 
                                 if (rect.width === existing_width && rect.height === existing_height) {
-                                    // Duplicate entry, skip
-                                    indexToAdd = -1
+                                    // Skip if this exact native resolution was already added
+                                    if (resolutionListModel.get(j).is_native) {
+                                        indexToAdd = -1
+                                        break
+                                    }
+                                    // Otherwise insert after the matching preset
+                                    indexToAdd = j + 1
                                     break
                                 }
                                 else if (rect.width * rect.height > existing_width * existing_height) {
@@ -157,7 +162,8 @@ Flickable {
                                                                "text": friendlyNamePrefix+" ("+rect.width+"x"+rect.height+")",
                                                                "video_width": ""+rect.width,
                                                                "video_height": ""+rect.height,
-                                                               "is_custom": false
+                                                               "is_custom": false,
+                                                               "is_native": true
                                                            })
                             }
                         }
@@ -180,7 +186,11 @@ Flickable {
                                 }
 
                                 addDetectedResolution(qsTr("Native"), screenRect)
-                                addDetectedResolution(qsTr("Native (Excluding Notch)"), safeAreaRect)
+
+                                // Only add safe area option if it differs from native (e.g., notched displays)
+                                if (safeAreaRect.width !== screenRect.width || safeAreaRect.height !== screenRect.height) {
+                                    addDetectedResolution(qsTr("Native (Excluding Notch)"), safeAreaRect)
+                                }
                             }
 
                             // Prune resolutions that are over the decoder's maximum
@@ -202,14 +212,29 @@ Flickable {
                             var saved_width = StreamingPreferences.width
                             var saved_height = StreamingPreferences.height
                             var index_set = false
-                            for (var i = 0; i < resolutionListModel.count; i++) {
-                                var el_width = parseInt(resolutionListModel.get(i).video_width);
-                                var el_height = parseInt(resolutionListModel.get(i).video_height);
 
-                                if (saved_width === el_width && saved_height === el_height) {
-                                    currentIndex = i
-                                    index_set = true
-                                    break
+                            // If native resolution was previously selected, find the first native entry
+                            if (StreamingPreferences.nativeResolution) {
+                                for (var i = 0; i < resolutionListModel.count; i++) {
+                                    if (resolutionListModel.get(i).is_native) {
+                                        currentIndex = i
+                                        index_set = true
+                                        break
+                                    }
+                                }
+                            }
+
+                            // Otherwise, search by width/height
+                            if (!index_set) {
+                                for (var i = 0; i < resolutionListModel.count; i++) {
+                                    var el_width = parseInt(resolutionListModel.get(i).video_width);
+                                    var el_height = parseInt(resolutionListModel.get(i).video_height);
+
+                                    if (saved_width === el_width && saved_height === el_height) {
+                                        currentIndex = i
+                                        index_set = true
+                                        break
+                                    }
                                 }
                             }
 
@@ -219,7 +244,8 @@ Flickable {
                                                                "text": qsTr("Custom")+" ("+StreamingPreferences.width+"x"+StreamingPreferences.height+")",
                                                                "video_width": ""+StreamingPreferences.width,
                                                                "video_height": ""+StreamingPreferences.height,
-                                                               "is_custom": true
+                                                               "is_custom": true,
+                                                               "is_native": false
                                                            })
                                 currentIndex = resolutionListModel.count - 1
                             }
@@ -228,7 +254,8 @@ Flickable {
                                                                "text": qsTr("Custom"),
                                                                "video_width": "",
                                                                "video_height": "",
-                                                               "is_custom": true
+                                                               "is_custom": true,
+                                                               "is_native": false
                                                            })
                             }
 
@@ -251,30 +278,48 @@ Flickable {
                                 video_width: "1280"
                                 video_height: "720"
                                 is_custom: false
+                                is_native: false
                             }
                             ListElement {
                                 text: qsTr("1080p")
                                 video_width: "1920"
                                 video_height: "1080"
                                 is_custom: false
+                                is_native: false
                             }
                             ListElement {
                                 text: qsTr("1440p")
                                 video_width: "2560"
                                 video_height: "1440"
                                 is_custom: false
+                                is_native: false
                             }
                             ListElement {
                                 text: qsTr("4K")
                                 video_width: "3840"
                                 video_height: "2160"
                                 is_custom: false
+                                is_native: false
                             }
                         }
 
                         function updateBitrateForSelection() {
                             var selectedWidth = parseInt(resolutionListModel.get(currentIndex).video_width)
                             var selectedHeight = parseInt(resolutionListModel.get(currentIndex).video_height)
+                            var isNative = resolutionListModel.get(currentIndex).is_native
+
+                            // Track whether a native resolution is selected
+                            StreamingPreferences.nativeResolution = isNative
+
+                            // Apply max resolution limits for native resolutions
+                            if (isNative) {
+                                if (StreamingPreferences.maxResolutionWidth > 0 && selectedWidth > StreamingPreferences.maxResolutionWidth) {
+                                    selectedWidth = StreamingPreferences.maxResolutionWidth
+                                }
+                                if (StreamingPreferences.maxResolutionHeight > 0 && selectedHeight > StreamingPreferences.maxResolutionHeight) {
+                                    selectedHeight = StreamingPreferences.maxResolutionHeight
+                                }
+                            }
 
                             // Only modify the bitrate if the values actually changed
                             if (StreamingPreferences.width !== selectedWidth || StreamingPreferences.height !== selectedHeight) {
@@ -662,6 +707,73 @@ Flickable {
                             else {
                                 updateBitrateForSelection()
                             }
+                        }
+                    }
+                }
+
+                Item {
+                    width: parent.width
+                    height: maxResRow.height + 5
+                    visible: resolutionComboBox.currentIndex >= 0 &&
+                             resolutionListModel.get(resolutionComboBox.currentIndex).is_native
+
+                    Row {
+                        id: maxResRow
+                        y: 5
+                        spacing: 10
+                        width: parent.width
+
+                        Label {
+                            text: qsTr("Max resolution:")
+                            font.pointSize: 9
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        TextField {
+                            id: maxWidthField
+                            width: 85
+                            placeholderText: qsTr("Width")
+                            text: StreamingPreferences.maxResolutionWidth > 0 ? StreamingPreferences.maxResolutionWidth : ""
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            validator: IntValidator { bottom: 0; top: 8192 }
+
+                            onTextChanged: {
+                                var newValue = text ? parseInt(text) : 0
+                                if (StreamingPreferences.maxResolutionWidth !== newValue) {
+                                    StreamingPreferences.maxResolutionWidth = newValue
+                                    resolutionComboBox.updateBitrateForSelection()
+                                }
+                            }
+                        }
+
+                        Label {
+                            text: "×"
+                            font.pointSize: 9
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        TextField {
+                            id: maxHeightField
+                            width: 85
+                            placeholderText: qsTr("Height")
+                            text: StreamingPreferences.maxResolutionHeight > 0 ? StreamingPreferences.maxResolutionHeight : ""
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            validator: IntValidator { bottom: 0; top: 8192 }
+
+                            onTextChanged: {
+                                var newValue = text ? parseInt(text) : 0
+                                if (StreamingPreferences.maxResolutionHeight !== newValue) {
+                                    StreamingPreferences.maxResolutionHeight = newValue
+                                    resolutionComboBox.updateBitrateForSelection()
+                                }
+                            }
+                        }
+
+                        Label {
+                            text: qsTr("(0 or empty = unlimited)")
+                            font.pointSize: 8
+                            opacity: 0.7
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                 }
