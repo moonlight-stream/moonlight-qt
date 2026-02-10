@@ -305,6 +305,15 @@ StreamCommandLineParser::StreamCommandLineParser()
         {"5.1-surround", StreamingPreferences::AC_51_SURROUND},
         {"7.1-surround", StreamingPreferences::AC_71_SURROUND},
     };
+    m_SuperResolutionModeMap = {
+        {"auto",                       StreamingPreferences::SRM_00},
+        {"driver",                     StreamingPreferences::SRM_01},
+        {"video-processor",            StreamingPreferences::SRM_02},
+        {"fsr1-upscaler",              StreamingPreferences::SRM_03},
+        {"nis-upscaler",               StreamingPreferences::SRM_04},
+        {"rcas-sharpener",             StreamingPreferences::SRM_05},
+        {"nis-sharpener",              StreamingPreferences::SRM_06},
+    };
     m_VideoCodecMap = {
         {"auto",  StreamingPreferences::VCC_AUTO},
         {"H.264", StreamingPreferences::VCC_FORCE_H264},
@@ -352,6 +361,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addValueOption("packet-size", "video packet size");
     parser.addChoiceOption("display-mode", "display mode", m_WindowModeMap.keys());
     parser.addChoiceOption("audio-config", "audio config", m_AudioConfigMap.keys());
+    parser.addChoiceOption("super-resolution-mode", "super resolution mode", m_SuperResolutionModeMap.keys());
     parser.addToggleOption("multi-controller", "multiple controller support");
     parser.addToggleOption("quit-after", "quit app after session");
     parser.addToggleOption("absolute-mouse", "remote desktop optimized mouse control");
@@ -360,6 +370,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("game-optimization", "game optimizations");
     parser.addToggleOption("audio-on-host", "audio on host PC");
     parser.addToggleOption("frame-pacing", "frame pacing");
+    parser.addToggleOption("video-enhancement", "Enhance video with AI");
     parser.addToggleOption("mute-on-focus-loss", "mute audio when Moonlight window loses focus");
     parser.addToggleOption("background-gamepad", "background gamepad input");
     parser.addToggleOption("reverse-scroll-direction", "inverted scroll direction");
@@ -443,6 +454,11 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
         preferences->audioConfig = mapValue(m_AudioConfigMap, parser.getChoiceOptionValue("audio-config"));
     }
 
+    // Resolve --super-resolution-config option
+        if (parser.isSet("super-resolution-mode")) {
+        preferences->superResolutionMode = mapValue(m_SuperResolutionModeMap, parser.getChoiceOptionValue("super-resolution-mode"));
+    }
+
     // Resolve --multi-controller and --no-multi-controller options
     preferences->multiController = parser.getToggleOptionValue("multi-controller", preferences->multiController);
 
@@ -466,6 +482,9 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
 
     // Resolve --frame-pacing and --no-frame-pacing options
     preferences->framePacing = parser.getToggleOptionValue("frame-pacing", preferences->framePacing);
+
+    // Resolve --video-enhancement and --no-video-enhancement options
+    preferences->videoEnhancing = parser.getToggleOptionValue("video-enhancement", preferences->videoEnhancing);
 
     // Resolve --mute-on-focus-loss and --no-mute-on-focus-loss options
     preferences->muteOnFocusLoss = parser.getToggleOptionValue("mute-on-focus-loss", preferences->muteOnFocusLoss);
