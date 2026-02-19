@@ -95,3 +95,8 @@ CONFIG(debug, debug|release) {
 *-g++|*-clang* {
     QMAKE_CFLAGS_WARN_ON += -Wno-unused-parameter
 }
+
+# Enable NEON optimizations on Steam Link
+config_SL {
+    DEFINES += OBLAS_NEON
+}
