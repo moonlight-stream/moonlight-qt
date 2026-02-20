@@ -393,6 +393,28 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             case SDL_SCANCODE_AC_HOME:
                 keyCode = 0xAC;
                 break;
+            case SDL_SCANCODE_MUTE:
+            case SDL_SCANCODE_AUDIOMUTE:
+                keyCode = 0xAD;
+                break;
+            case SDL_SCANCODE_VOLUMEDOWN:
+                keyCode = 0xAE;
+                break;
+            case SDL_SCANCODE_VOLUMEUP:
+                keyCode = 0xAF;
+                break;
+            case SDL_SCANCODE_AUDIONEXT:
+                keyCode = 0xB0;
+                break;
+            case SDL_SCANCODE_AUDIOPREV:
+                keyCode = 0xB1;
+                break;
+            case SDL_SCANCODE_AUDIOSTOP:
+                keyCode = 0xB2;
+                break;
+            case SDL_SCANCODE_AUDIOPLAY:
+                keyCode = 0xB3;
+                break;
             case SDL_SCANCODE_SEMICOLON:
                 keyCode = 0xBA;
                 break;
