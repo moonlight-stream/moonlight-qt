@@ -314,6 +314,57 @@ ApplicationWindow {
                 }
             }
 
+            AutoResizingComboBox {
+                id: quickProfileComboBox
+                visible: stackView.currentItem instanceof PcView ||
+                         stackView.currentItem instanceof AppView
+                model: StreamingPreferences.profileNames
+
+                function syncFromPreferences() {
+                    var idx = -1
+                    for (var i = 0; i < count; i++) {
+                        if (textAt(i) === StreamingPreferences.currentProfile) {
+                            idx = i
+                            break
+                        }
+                    }
+
+                    if (idx >= 0) {
+                        currentIndex = idx
+                    }
+                    else if (count > 0) {
+                        currentIndex = 0
+                    }
+
+                    recalculateWidth()
+                }
+
+                Component.onCompleted: {
+                    syncFromPreferences()
+                }
+
+                Connections {
+                    target: StreamingPreferences
+                    onCurrentProfileChanged: quickProfileComboBox.syncFromPreferences()
+                    onProfileListChanged: quickProfileComboBox.syncFromPreferences()
+                }
+
+                onActivated: {
+                    if (currentText && currentText !== StreamingPreferences.currentProfile) {
+                        StreamingPreferences.currentProfile = currentText
+                    }
+                }
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("Quick profile switcher")
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+            }
+
             NavigableToolButton {
                 id: addPcButton
                 visible: stackView.currentItem instanceof PcView
