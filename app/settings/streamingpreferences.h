@@ -145,6 +145,9 @@ public:
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
+    Q_PROPERTY(int maxResolutionWidth MEMBER maxResolutionWidth NOTIFY maxResolutionChanged)
+    Q_PROPERTY(int maxResolutionHeight MEMBER maxResolutionHeight NOTIFY maxResolutionChanged)
+    Q_PROPERTY(bool nativeResolution MEMBER nativeResolution NOTIFY nativeResolutionChanged)
 
     Q_INVOKABLE bool retranslate();
 
@@ -187,6 +190,9 @@ public:
     UIDisplayMode uiDisplayMode;
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
+    int maxResolutionWidth;
+    int maxResolutionHeight;
+    bool nativeResolution;
 
 signals:
     void displayModeChanged();
@@ -224,6 +230,8 @@ signals:
     void captureSysKeysModeChanged();
     void keepAwakeChanged();
     void languageChanged();
+    void maxResolutionChanged();
+    void nativeResolutionChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);
