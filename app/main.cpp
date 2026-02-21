@@ -33,6 +33,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <dxgi1_6.h>
 #elif defined(Q_OS_LINUX)
 #include <openssl/ssl.h>
 #endif
@@ -593,6 +594,18 @@ int main(int argc, char *argv[])
     // when trying to use EGL on the main thread after Qt uses GLX.
     SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
     qputenv("QT_XCB_GL_INTEGRATION", "xcb_egl");
+
+#ifdef Q_OS_WIN32
+    // Let us see the true VBlank rather than DWM's approximation. We do this here
+    // because this API must be called before the first swapchain (which Qt will
+    // create when the window is displayed). This is supported on Win11 22H2+.
+    auto fnDXGIDisableVBlankVirtualization =
+        (decltype(DXGIDisableVBlankVirtualization)*)GetProcAddress(GetModuleHandleW(L"dxgi.dll"),
+                                                                   "DXGIDisableVBlankVirtualization");
+    if (fnDXGIDisableVBlankVirtualization) {
+        fnDXGIDisableVBlankVirtualization();
+    }
+#endif
 
 #ifdef Q_OS_MACOS
     // This avoids using the default keychain for SSL, which may cause
