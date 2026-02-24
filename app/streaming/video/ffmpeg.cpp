@@ -16,6 +16,7 @@ extern "C" {
 #ifdef Q_OS_WIN32
 #include "ffmpeg-renderers/dxva2.h"
 #include "ffmpeg-renderers/d3d11va.h"
+#include "ffmpeg-renderers/d3d12va.h"
 #endif
 
 #ifdef Q_OS_DARWIN
@@ -236,7 +237,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_NeedsSpsFixup(false),
       m_TestOnly(testOnly),
       m_CurrentTestMode(TestMode::TestFrameOnly),
-      m_DecoderThread(nullptr)
+      m_DecoderThread(nullptr),
+      m_VideoEnhancement(&VideoEnhancement::getInstance())
 {
     SDL_zero(m_ActiveWndVideoStats);
     SDL_zero(m_LastWndVideoStats);
@@ -919,6 +921,21 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
             offset += ret;
         }
 
+        if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+            std::string videoEnhanced = "Video Enhancement: (x%.2f) %s\n";
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           videoEnhanced.c_str(),
+                           m_VideoEnhancement->getRatio(),
+                           m_VideoEnhancement->getAlgo().c_str());
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+
+            offset += ret;
+        }
+
         ret = snprintf(&output[offset],
                        length - offset,
                        "Incoming frame rate from network: %.2f FPS\n"
@@ -986,7 +1003,7 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
 {
     if (stats.renderedFps > 0 || stats.renderedFrames != 0) {
-        char videoStatsStr[512];
+        char videoStatsStr[800];
         stringifyVideoStats(stats, videoStatsStr, sizeof(videoStatsStr));
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -995,12 +1012,19 @@ void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
     }
 }
 
-IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass)
+IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass, PDECODER_PARAMETERS params)
 {
     if (!(hwDecodeCfg->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
         return nullptr;
     }
 
+    // Keep track of the Device Type selected
+    VideoEnhancement::getInstance().setDeviceType(hwDecodeCfg->device_type);
+    
+    // Reset Video enhancer enabler
+    VideoEnhancement::getInstance().enableVideoEnhancement(params->enableVideoEnhancement);
+
+    // return nullptr;
     // First pass using our top-tier hwaccel implementations
     if (pass == 0) {
         switch (hwDecodeCfg->device_type) {
@@ -1008,7 +1032,13 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
         // DXVA2 appears in the hwaccel list before D3D11VA, so we only check for D3D11VA
         // on the first pass to ensure we prefer D3D11VA over DXVA2.
         case AV_HWDEVICE_TYPE_D3D11VA:
-            return new D3D11VARenderer(pass);
+            if (!params->enableVideoEnhancement){
+                return new D3D11VARenderer(pass);
+            }
+            // Do not break here
+        case AV_HWDEVICE_TYPE_D3D12VA:
+            // D3D12VARenderer is also able to receive frame from AV_HWDEVICE_TYPE_D3D11VA via Interop
+            return new D3D12VARenderer(pass);
 #endif
 #ifdef Q_OS_DARWIN
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
@@ -1053,13 +1083,19 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
             return new CUDARenderer();
 #endif
 #ifdef Q_OS_WIN32
-        // This gives us another shot if D3D11VA failed in the first pass.
+        // This gives us another shot if D3D11VA/D3D12VA failed in the first pass.
         // Since DXVA2 is in the hwaccel list first, we'll first try to fall back
-        // to that before giving D3D11VA another try as a last resort.
+        // to that before giving D3D11VA/D3D12VA another try as a last resort.
         case AV_HWDEVICE_TYPE_DXVA2:
             return new DXVA2Renderer(pass);
         case AV_HWDEVICE_TYPE_D3D11VA:
-            return new D3D11VARenderer(pass);
+            if (!params->enableVideoEnhancement){
+                return new D3D11VARenderer(pass);
+            }
+            // Do not break here
+        case AV_HWDEVICE_TYPE_D3D12VA:
+            // D3D12VARenderer is also able to receive frame from AV_HWDEVICE_TYPE_D3D11VA via Interop
+            return new D3D12VARenderer(pass);
 #endif
 #ifdef Q_OS_DARWIN
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
@@ -1336,7 +1372,7 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
                 // Initialize the hardware codec and submit a test frame if the renderer needs it
                 IFFmpegRenderer::InitFailureReason failureReason;
                 if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config, &failureReason,
-                                          [config, pass]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, pass); })) {
+                                          [config, pass, params]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, pass, params); })) {
                     return true;
                 }
                 else if (failureReason == IFFmpegRenderer::InitFailureReason::NoHardwareSupport) {
@@ -1536,7 +1572,7 @@ bool FFmpegVideoDecoder::tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params,
             // Initialize the hardware codec and submit a test frame if the renderer needs it
             IFFmpegRenderer::InitFailureReason failureReason;
             if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config, &failureReason,
-                                      [config, pass]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, pass); })) {
+                                      [config, pass, params]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, pass, params); })) {
                 return true;
             }
             else if (failureReason == IFFmpegRenderer::InitFailureReason::NoHardwareSupport) {

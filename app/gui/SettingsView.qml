@@ -845,6 +845,116 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Frame pacing reduces micro-stutter by delaying frames that come in too early")
                 }
+
+                CheckBox {
+                    id: videoEnhancementCheck
+                    width: parent.width
+                    hoverEnabled: true
+                    text: qsTr("Video Super Resolution")
+                    font.pointSize:  12
+                    enabled: true
+                    checked: {
+                        return StreamingPreferences.videoEnhancing
+                    }
+                    property bool keepValue: checked;
+                    
+                    function changeCheck() {
+                        // We disable Software rendering
+                        if(decoderListModel.get(decoderComboBox.currentIndex).val === StreamingPreferences.VDS_FORCE_SOFTWARE){
+                            enabled = false;
+                            keepValue = checked;
+                            checked = false;
+                        } else {
+                            enabled = true;
+                            checked = keepValue;
+                        }
+                    }
+                    
+                    onCheckedChanged: {
+                        StreamingPreferences.videoEnhancing = checked
+                    }
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text:
+                        qsTr("Leverages hardware acceleration to improve picture clarity by upscaling when stream resolution is below your display resolution.")
+                }
+
+                // Note: Do not make the algorythm selector available to the final user
+                Label {
+                    visible: SystemProperties.isVideoEnhancementSwitchable()
+                    width: parent.width
+                    id: resSuperResolutionModeTitle
+                    text: qsTr("Video Super Resolution Mode<br><i>(Dropdown available only in Debug mode)</br></i>")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                // Note: Do not make the algorythm selector available to the final user
+                AutoResizingComboBox {
+
+                    visible: SystemProperties.isVideoEnhancementSwitchable()
+                    
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text:
+                        qsTr("This dropdown is available only in Debug mode for development and testing purposes.")
+                        + qsTr("\nIn Release mode, it defaults to \"Auto Selection\".")
+
+                    // Ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        var saved_super_resolution = StreamingPreferences.superResolutionMode
+                        currentIndex = 0
+                        for (var i = 0; i < superResolutionModeListModel.count; i++) {
+                            var el_super_resolution = superResolutionModeListModel.get(i).val;
+                            if (saved_super_resolution === el_super_resolution) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+                        activated(currentIndex)
+                    }
+
+                    id: superResolutionModeComboBox
+                    textRole: "text"
+                    model: ListModel {
+                        id: superResolutionModeListModel
+
+                        ListElement {
+                            text: qsTr("Auto Selection")
+                            val: StreamingPreferences.SRM_00
+                        }
+                        ListElement {
+                            text: qsTr("Vendor Driver Upscaler")
+                            val: StreamingPreferences.SRM_01
+                        }
+                        ListElement {
+                            text: qsTr("Video Processor Upscaler")
+                            val: StreamingPreferences.SRM_02
+                        }
+                        ListElement {
+                            text: qsTr("FSR1 Upscaler")
+                            val: StreamingPreferences.SRM_03
+                        }
+                        ListElement {
+                            text: qsTr("NIS Upscaler")
+                            val: StreamingPreferences.SRM_04
+                        }
+                        ListElement {
+                            text: qsTr("RCAS Sharpener")
+                            val: StreamingPreferences.SRM_05
+                        }
+                        ListElement {
+                            text: qsTr("NIS Sharpener")
+                            val: StreamingPreferences.SRM_06
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        StreamingPreferences.superResolutionMode = superResolutionModeListModel.get(currentIndex).val
+                    }
+                }
             }
         }
 
@@ -1570,6 +1680,9 @@ Flickable {
                         if (enabled) {
                             StreamingPreferences.videoDecoderSelection = decoderListModel.get(currentIndex).val
                         }
+                    }
+                    onCurrentIndexChanged: {
+                        videoEnhancementCheck.changeCheck()
                     }
                 }
 

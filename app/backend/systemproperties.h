@@ -37,6 +37,7 @@ public:
     Q_INVOKABLE QRect getNativeResolution(int displayIndex);
     Q_INVOKABLE QRect getSafeAreaResolution(int displayIndex);
     Q_INVOKABLE int getRefreshRate(int displayIndex);
+    Q_INVOKABLE bool isVideoEnhancementSwitchable();
 
     Q_INVOKABLE void startAsyncLoad();
     Q_INVOKABLE void waitForAsyncLoad();
