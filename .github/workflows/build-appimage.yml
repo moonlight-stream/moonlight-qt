@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL
-          ref: 3bde3e24069db59133bc1e8dbe3c693008821a93
+          ref: release-3.4.2
           path: deps/SDL
 
       - name: Build SDL3
@@ -56,7 +56,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/sdl2-compat
-          ref: 1c8ece4de9db96d01f99296c26a87a4cabb72f54
+          ref: release-2.32.64
           path: deps/sdl2-compat
 
       - name: Build sdl2-compat
@@ -101,7 +101,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: haasn/libplacebo
-          ref: 1dcaea8b601aa969ffd5bfa70088957ce3eaa273
+          ref: v7.360.0
           path: deps/libplacebo
           submodules: 'recursive'
 

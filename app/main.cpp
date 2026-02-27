@@ -730,6 +730,10 @@ int main(int argc, char *argv[])
     // incorrect objects, so we don't need additional expensive parameter checks.
     SDL_SetHint("SDL_INVALID_PARAM_CHECKS", "1");
 
+    // Disable hotplug detection for SDL_GetKeyboards() and SDL_GetMice(). We don't
+    // use this functionality and it can cause hangs when querying broken devices.
+    SDL_SetHint("SDL_WINDOWS_DETECT_DEVICE_HOTPLUG", "0");
+
     QGuiApplication app(argc, argv);
 
 #ifdef Q_OS_UNIX
