@@ -689,23 +689,33 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
             return false;
         }
 
-        err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
-        if (err == 0) {
-            // Allow the renderer to do any validation it wants on this frame
-            if (!m_FrontendRenderer->testRenderFrame(frame)) {
+        // Some decoders require some time to output the first frame, so we'll
+        // retry a few times if we get an EAGAIN error.
+        for (int retries = 0; retries < 5; retries++) {
+            err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
+            if (err == 0) {
+                // Allow the renderer to do any validation it wants on this frame
+                if (!m_FrontendRenderer->testRenderFrame(frame)) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Test decode failed (testRenderFrame)");
+                    av_frame_free(&frame);
+                    return false;
+                }
+                break;
+            }
+            else if (err == AVERROR(EAGAIN)) {
+                // Wait a little while to let the hardware work
+                SDL_Delay(100);
+                continue;
+            }
+            else if (err < 0) {
+                char errorstring[512];
+                av_strerror(err, errorstring, sizeof(errorstring));
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Test decode failed (testRenderFrame)");
+                            "Test decode failed (avcodec_receive_frame): %s", errorstring);
                 av_frame_free(&frame);
                 return false;
             }
-        }
-        else if (err < 0) {
-            char errorstring[512];
-            av_strerror(err, errorstring, sizeof(errorstring));
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Test decode failed (avcodec_receive_frame): %s", errorstring);
-            av_frame_free(&frame);
-            return false;
         }
 
         av_frame_free(&frame);
