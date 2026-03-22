@@ -133,65 +133,19 @@ Flickable {
                     AutoResizingComboBox {
                         property int lastIndexValue
 
-                        function addDetectedResolution(friendlyNamePrefix, rect) {
-                            var indexToAdd = 0
-                            for (var j = 0; j < resolutionComboBox.count; j++) {
-                                var existing_width = parseInt(resolutionListModel.get(j).video_width);
-                                var existing_height = parseInt(resolutionListModel.get(j).video_height);
-
-                                if (rect.width === existing_width && rect.height === existing_height) {
-                                    // Skip if this exact native resolution was already added
-                                    if (resolutionListModel.get(j).is_native) {
-                                        indexToAdd = -1
-                                        break
-                                    }
-                                    // Otherwise insert after the matching preset
-                                    indexToAdd = j + 1
-                                    break
-                                }
-                                else if (rect.width * rect.height > existing_width * existing_height) {
-                                    // Candidate entrypoint after this entry
-                                    indexToAdd = j + 1
-                                }
-                            }
-
-                            // Insert this display's resolution if it's not a duplicate
-                            if (indexToAdd >= 0) {
-                                resolutionListModel.insert(indexToAdd,
-                                                           {
-                                                               "text": friendlyNamePrefix+" ("+rect.width+"x"+rect.height+")",
-                                                               "video_width": ""+rect.width,
-                                                               "video_height": ""+rect.height,
-                                                               "is_custom": false,
-                                                               "is_native": true
-                                                           })
-                            }
-                        }
-
                         // ignore setting the index at first, and actually set it when the component is loaded
                         Component.onCompleted: {
                             // Refresh display data before using it to build the list
                             SystemProperties.refreshDisplays()
 
-                            // Add native and safe area resolutions for all attached displays
-                            var done = false
-                            for (var displayIndex = 0; !done; displayIndex++) {
-                                var screenRect = SystemProperties.getNativeResolution(displayIndex);
-                                var safeAreaRect = SystemProperties.getSafeAreaResolution(displayIndex);
-
-                                if (screenRect.width === 0) {
-                                    // Exceeded max count of displays
-                                    done = true
-                                    break
-                                }
-
-                                addDetectedResolution(qsTr("Native"), screenRect)
-
-                                // Only add safe area option if it differs from native (e.g., notched displays)
-                                if (safeAreaRect.width !== screenRect.width || safeAreaRect.height !== screenRect.height) {
-                                    addDetectedResolution(qsTr("Native (Excluding Notch)"), safeAreaRect)
-                                }
-                            }
+                            // Add a single "Native" entry at the end of the preset list
+                            resolutionListModel.append({
+                                                           "text": qsTr("Native"),
+                                                           "video_width": "0",
+                                                           "video_height": "0",
+                                                           "is_custom": false,
+                                                           "is_native": true
+                                                       })
 
                             // Prune resolutions that are over the decoder's maximum
                             var max_pixels = SystemProperties.maximumResolution.width * SystemProperties.maximumResolution.height;
@@ -200,32 +154,29 @@ Flickable {
                                     var existing_width = parseInt(resolutionListModel.get(j).video_width);
                                     var existing_height = parseInt(resolutionListModel.get(j).video_height);
 
-                                    if (existing_width * existing_height > max_pixels) {
+                                    // Don't prune the native entry (0x0)
+                                    if (existing_width > 0 && existing_height > 0 &&
+                                        existing_width * existing_height > max_pixels) {
                                         resolutionListModel.remove(j)
                                         j--
                                     }
                                 }
                             }
 
-                            // load the saved width/height, and iterate through the ComboBox until a match is found
-                            // and set it to that index.
-                            var saved_width = StreamingPreferences.width
-                            var saved_height = StreamingPreferences.height
-                            var index_set = false
-
-                            // If native resolution was previously selected, find the first native entry
-                            if (StreamingPreferences.nativeResolution) {
+                            if (StreamingPreferences.isNativeResolution) {
+                                // Select the Native entry
                                 for (var i = 0; i < resolutionListModel.count; i++) {
                                     if (resolutionListModel.get(i).is_native) {
                                         currentIndex = i
-                                        index_set = true
                                         break
                                     }
                                 }
                             }
-
-                            // Otherwise, search by width/height
-                            if (!index_set) {
+                            else {
+                                // load the saved width/height, and iterate through the ComboBox until a match is found
+                                var saved_width = StreamingPreferences.width
+                                var saved_height = StreamingPreferences.height
+                                var index_set = false
                                 for (var i = 0; i < resolutionListModel.count; i++) {
                                     var el_width = parseInt(resolutionListModel.get(i).video_width);
                                     var el_height = parseInt(resolutionListModel.get(i).video_height);
@@ -236,28 +187,28 @@ Flickable {
                                         break
                                     }
                                 }
+
+                                if (!index_set) {
+                                    // We did not find a match. This must be a custom resolution.
+                                    resolutionListModel.append({
+                                                                   "text": qsTr("Custom")+" ("+StreamingPreferences.width+"x"+StreamingPreferences.height+")",
+                                                                   "video_width": ""+StreamingPreferences.width,
+                                                                   "video_height": ""+StreamingPreferences.height,
+                                                                   "is_custom": true,
+                                                                   "is_native": false
+                                                               })
+                                    currentIndex = resolutionListModel.count - 1
+                                }
                             }
 
-                            if (!index_set) {
-                                // We did not find a match. This must be a custom resolution.
-                                resolutionListModel.append({
-                                                               "text": qsTr("Custom")+" ("+StreamingPreferences.width+"x"+StreamingPreferences.height+")",
-                                                               "video_width": ""+StreamingPreferences.width,
-                                                               "video_height": ""+StreamingPreferences.height,
-                                                               "is_custom": true,
-                                                               "is_native": false
-                                                           })
-                                currentIndex = resolutionListModel.count - 1
-                            }
-                            else {
-                                resolutionListModel.append({
-                                                               "text": qsTr("Custom"),
-                                                               "video_width": "",
-                                                               "video_height": "",
-                                                               "is_custom": true,
-                                                               "is_native": false
-                                                           })
-                            }
+                            // Add the Custom entry at the end
+                            resolutionListModel.append({
+                                                           "text": qsTr("Custom"),
+                                                           "video_width": "",
+                                                           "video_height": "",
+                                                           "is_custom": true,
+                                                           "is_native": false
+                                                       })
 
                             // Since we don't call activate() here, we need to trigger
                             // width calculation manually
@@ -304,34 +255,43 @@ Flickable {
                         }
 
                         function updateBitrateForSelection() {
-                            var selectedWidth = parseInt(resolutionListModel.get(currentIndex).video_width)
-                            var selectedHeight = parseInt(resolutionListModel.get(currentIndex).video_height)
                             var isNative = resolutionListModel.get(currentIndex).is_native
 
-                            // Track whether a native resolution is selected
-                            StreamingPreferences.nativeResolution = isNative
-
-                            // Apply max resolution limits for native resolutions
                             if (isNative) {
-                                if (StreamingPreferences.maxResolutionWidth > 0 && selectedWidth > StreamingPreferences.maxResolutionWidth) {
-                                    selectedWidth = StreamingPreferences.maxResolutionWidth
-                                }
-                                if (StreamingPreferences.maxResolutionHeight > 0 && selectedHeight > StreamingPreferences.maxResolutionHeight) {
-                                    selectedHeight = StreamingPreferences.maxResolutionHeight
-                                }
-                            }
+                                StreamingPreferences.isNativeResolution = true
 
-                            // Only modify the bitrate if the values actually changed
-                            if (StreamingPreferences.width !== selectedWidth || StreamingPreferences.height !== selectedHeight) {
-                                StreamingPreferences.width = selectedWidth
-                                StreamingPreferences.height = selectedHeight
+                                // Estimate resolution from current display for bitrate calculation
+                                var screenRect = SystemProperties.getNativeResolution(0)
+                                var num = StreamingPreferences.getNativeResScaleNumerator(StreamingPreferences.nativeResScale)
+                                var den = StreamingPreferences.getNativeResScaleDenominator(StreamingPreferences.nativeResScale)
+                                var estimatedWidth = Math.floor(screenRect.width * num / den)
+                                var estimatedHeight = Math.floor(screenRect.height * num / den)
 
                                 if (StreamingPreferences.autoAdjustBitrate) {
-                                    StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
-                                                                                                              StreamingPreferences.height,
+                                    StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(estimatedWidth,
+                                                                                                              estimatedHeight,
                                                                                                               StreamingPreferences.fps,
                                                                                                               StreamingPreferences.enableYUV444);
                                     slider.value = StreamingPreferences.bitrateKbps
+                                }
+                            }
+                            else {
+                                StreamingPreferences.isNativeResolution = false
+                                var selectedWidth = parseInt(resolutionListModel.get(currentIndex).video_width)
+                                var selectedHeight = parseInt(resolutionListModel.get(currentIndex).video_height)
+
+                                // Only modify the bitrate if the values actually changed
+                                if (StreamingPreferences.width !== selectedWidth || StreamingPreferences.height !== selectedHeight) {
+                                    StreamingPreferences.width = selectedWidth
+                                    StreamingPreferences.height = selectedHeight
+
+                                    if (StreamingPreferences.autoAdjustBitrate) {
+                                        StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
+                                                                                                                  StreamingPreferences.height,
+                                                                                                                  StreamingPreferences.fps,
+                                                                                                                  StreamingPreferences.enableYUV444);
+                                        slider.value = StreamingPreferences.bitrateKbps
+                                    }
                                 }
                             }
 
@@ -711,69 +671,40 @@ Flickable {
                     }
                 }
 
-                Item {
+                Row {
+                    spacing: 10
                     width: parent.width
-                    height: maxResRow.height + 5
                     visible: resolutionComboBox.currentIndex >= 0 &&
                              resolutionListModel.get(resolutionComboBox.currentIndex).is_native
 
-                    Row {
-                        id: maxResRow
-                        y: 5
-                        spacing: 10
-                        width: parent.width
+                    Label {
+                        text: qsTr("Resolution scale:")
+                        font.pointSize: 9
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
 
-                        Label {
-                            text: qsTr("Max resolution:")
-                            font.pointSize: 9
-                            anchors.verticalCenter: parent.verticalCenter
+                    AutoResizingComboBox {
+                        id: nativeResScaleComboBox
+                        textRole: "text"
+                        maximumWidth: 200
+
+                        model: ListModel {
+                            id: nativeResScaleListModel
+                            ListElement { text: "Full (1:1)"; value: 0 }
+                            ListElement { text: "3/4"; value: 1 }
+                            ListElement { text: "2/3"; value: 2 }
+                            ListElement { text: "1/2"; value: 3 }
+                            ListElement { text: "1/3"; value: 4 }
+                            ListElement { text: "1/4"; value: 5 }
                         }
 
-                        TextField {
-                            id: maxWidthField
-                            width: 85
-                            placeholderText: qsTr("Width")
-                            text: StreamingPreferences.maxResolutionWidth > 0 ? StreamingPreferences.maxResolutionWidth : ""
-                            inputMethodHints: Qt.ImhDigitsOnly
-                            validator: IntValidator { bottom: 0; top: 8192 }
-
-                            onTextChanged: {
-                                var newValue = text ? parseInt(text) : 0
-                                if (StreamingPreferences.maxResolutionWidth !== newValue) {
-                                    StreamingPreferences.maxResolutionWidth = newValue
-                                    resolutionComboBox.updateBitrateForSelection()
-                                }
-                            }
+                        Component.onCompleted: {
+                            currentIndex = StreamingPreferences.nativeResScale
                         }
 
-                        Label {
-                            text: "×"
-                            font.pointSize: 9
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-
-                        TextField {
-                            id: maxHeightField
-                            width: 85
-                            placeholderText: qsTr("Height")
-                            text: StreamingPreferences.maxResolutionHeight > 0 ? StreamingPreferences.maxResolutionHeight : ""
-                            inputMethodHints: Qt.ImhDigitsOnly
-                            validator: IntValidator { bottom: 0; top: 8192 }
-
-                            onTextChanged: {
-                                var newValue = text ? parseInt(text) : 0
-                                if (StreamingPreferences.maxResolutionHeight !== newValue) {
-                                    StreamingPreferences.maxResolutionHeight = newValue
-                                    resolutionComboBox.updateBitrateForSelection()
-                                }
-                            }
-                        }
-
-                        Label {
-                            text: qsTr("(0 or empty = unlimited)")
-                            font.pointSize: 8
-                            opacity: 0.7
-                            anchors.verticalCenter: parent.verticalCenter
+                        onActivated: {
+                            StreamingPreferences.nativeResScale = currentIndex
+                            resolutionComboBox.updateBitrateForSelection()
                         }
                     }
                 }
