@@ -6,13 +6,16 @@
 #include <QCoreApplication>
 #include <QLocale>
 #include <QReadWriteLock>
+#include <QSet>
 #include <QtMath>
+#include <QUuid>
 
 #include <QtDebug>
 
 #define SER_STREAMSETTINGS "streamsettings"
 #define SER_PROFILE_GROUP "profiles"
 #define SER_PROFILE_ACTIVE "activeprofile"
+#define SER_PROFILE_ID "id"
 #define SER_WIDTH "width"
 #define SER_HEIGHT "height"
 #define SER_FPS "fps"
@@ -146,7 +149,33 @@ QStringList StreamingPreferences::loadProfileNames(QSettings& settings)
     return names;
 }
 
-QString StreamingPreferences::resolveProfileName(const QString& name, const QStringList& profiles) const
+QVector<StreamingPreferenceProfile> StreamingPreferences::loadProfileInfos(QSettings& settings)
+{
+    const QStringList profiles = loadProfileNames(settings);
+    QSet<QString> assignedIds;
+    QVector<StreamingPreferenceProfile> infos;
+    infos.reserve(profiles.count());
+
+    for (const QString& profileName : profiles) {
+        QString profileId = settings.value(profileKey(profileName, SER_PROFILE_ID)).toString().trimmed();
+
+        if (profileId.isEmpty() || assignedIds.contains(profileId)) {
+            profileId = generateProfileId();
+            settings.setValue(profileKey(profileName, SER_PROFILE_ID), profileId);
+        }
+
+        assignedIds.insert(profileId);
+
+        StreamingPreferenceProfile info;
+        info.id = profileId;
+        info.name = profileName;
+        infos.append(info);
+    }
+
+    return infos;
+}
+
+QString StreamingPreferences::resolveProfileName(const QString& name, const QStringList& profiles)
 {
     for (const QString& profileName : profiles) {
         if (profileName.compare(name, Qt::CaseInsensitive) == 0) {
@@ -157,16 +186,31 @@ QString StreamingPreferences::resolveProfileName(const QString& name, const QStr
     return QString();
 }
 
+QString StreamingPreferences::generateProfileId()
+{
+    return QUuid::createUuid().toRfc4122().toHex();
+}
+
 QString StreamingPreferences::profileKey(const QString& key) const
 {
-    return QString("%1/%2/%3").arg(SER_PROFILE_GROUP, m_CurrentProfile, key);
+    return profileKey(m_CurrentProfile, key);
+}
+
+QString StreamingPreferences::profileKey(const QString& profileName, const QString& key)
+{
+    return QString("%1/%2/%3").arg(SER_PROFILE_GROUP, profileName, key);
 }
 
 void StreamingPreferences::reload()
 {
     QSettings settings;
 
-    QStringList profiles = loadProfileNames(settings);
+    const QVector<StreamingPreferenceProfile> profileInfos = loadProfileInfos(settings);
+    QStringList profiles;
+    for (const StreamingPreferenceProfile& profileInfo : profileInfos) {
+        profiles << profileInfo.name;
+    }
+
     QString activeProfile = settings.value(SER_PROFILE_ACTIVE).toString();
     QString resolvedProfile = resolveProfileName(activeProfile, profiles);
 
@@ -294,6 +338,32 @@ QStringList StreamingPreferences::profileNames() const
     return m_ProfileNames;
 }
 
+QString StreamingPreferences::currentProfileId()
+{
+    QSettings settings;
+    const QVector<StreamingPreferenceProfile> profiles = loadProfileInfos(settings);
+    const QString activeProfile = settings.value(SER_PROFILE_ACTIVE).toString();
+
+    for (const StreamingPreferenceProfile& profile : profiles) {
+        if (profile.name.compare(activeProfile, Qt::CaseInsensitive) == 0) {
+            return profile.id;
+        }
+    }
+
+    if (!profiles.isEmpty()) {
+        settings.setValue(SER_PROFILE_ACTIVE, profiles.first().name);
+        return profiles.first().id;
+    }
+
+    return QString();
+}
+
+QVector<StreamingPreferenceProfile> StreamingPreferences::profileInfos()
+{
+    QSettings settings;
+    return loadProfileInfos(settings);
+}
+
 void StreamingPreferences::setCurrentProfile(const QString& name)
 {
     QString normalizedName = normalizeProfileName(name);
@@ -340,6 +410,7 @@ bool StreamingPreferences::createProfile(const QString& name)
 
     save();
     saveToSettings(settings, normalizedName);
+    settings.setValue(profileKey(normalizedName, SER_PROFILE_ID), generateProfileId());
     settings.setValue(SER_PROFILE_ACTIVE, normalizedName);
 
     setCurrentProfile(normalizedName);
@@ -561,6 +632,10 @@ void StreamingPreferences::save()
 
     settings.setValue(SER_PROFILE_ACTIVE, m_CurrentProfile);
     saveToSettings(settings, m_CurrentProfile);
+
+    if (settings.value(profileKey(m_CurrentProfile, SER_PROFILE_ID)).toString().isEmpty()) {
+        settings.setValue(profileKey(m_CurrentProfile, SER_PROFILE_ID), generateProfileId());
+    }
 }
 
 void StreamingPreferences::emitAllChangedSignals()

@@ -4,8 +4,15 @@
 #include <QRect>
 #include <QQmlEngine>
 #include <QStringList>
+#include <QVector>
 
 class QSettings;
+
+struct StreamingPreferenceProfile
+{
+    QString id;
+    QString name;
+};
 
 class StreamingPreferences : public QObject
 {
@@ -157,6 +164,8 @@ public:
 
     QString currentProfile() const;
     QStringList profileNames() const;
+    static QString currentProfileId();
+    static QVector<StreamingPreferenceProfile> profileInfos();
     void setCurrentProfile(const QString& name);
 
     // Directly accessible members for preferences
@@ -242,9 +251,12 @@ private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);
 
     QString getSuffixFromLanguage(Language lang);
-    QStringList loadProfileNames(QSettings& settings);
-    QString resolveProfileName(const QString& name, const QStringList& profiles) const;
+    static QStringList loadProfileNames(QSettings& settings);
+    static QVector<StreamingPreferenceProfile> loadProfileInfos(QSettings& settings);
+    static QString resolveProfileName(const QString& name, const QStringList& profiles);
+    static QString generateProfileId();
     QString profileKey(const QString& key) const;
+    static QString profileKey(const QString& profileName, const QString& key);
     QString normalizeProfileName(const QString& name) const;
     bool isProfileNameValid(const QString& name) const;
     void loadFromSettings(QSettings& settings, const QString& profileName);
