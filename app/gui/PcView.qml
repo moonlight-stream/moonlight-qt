@@ -194,6 +194,9 @@ CenteredGridView {
                     text: qsTr("PC Status: %1").arg(model.online ? qsTr("Online") : qsTr("Offline"))
                     font.bold: true
                     enabled: false
+
+                    Accessible.role: Accessible.MenuItem
+                    Accessible.name: text
                 }
                 NavigableMenuItem {
                     text: qsTr("View All Apps")
@@ -397,6 +400,9 @@ CenteredGridView {
             Label {
                 text: renamePcDialog.label
                 font.bold: true
+
+                Accessible.role: Accessible.StaticText
+                Accessible.name: text
             }
 
             TextField {
@@ -404,6 +410,10 @@ CenteredGridView {
                 placeholderText: renamePcDialog.originalName
                 Layout.fillWidth: true
                 focus: true
+
+                Accessible.role: Accessible.EditableText
+                Accessible.name: qsTr("New PC name")
+                Accessible.description: text ? text : placeholderText
 
                 Keys.onReturnPressed: {
                     renamePcDialog.accept()

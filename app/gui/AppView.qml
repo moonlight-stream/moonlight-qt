@@ -365,6 +365,9 @@ CenteredGridView {
             font.pointSize: 20
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.Wrap
+
+            Accessible.role: Accessible.StaticText
+            Accessible.name: text
         }
     }
 

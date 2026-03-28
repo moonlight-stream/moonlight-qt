@@ -120,6 +120,9 @@ Flickable {
                     text: qsTr("Resolution and FPS")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Resolution and FPS")
                 }
 
                 Label {
@@ -128,6 +131,9 @@ Flickable {
                     text: qsTr("Setting values too high for your PC or network connection may cause lag, stuttering, or errors.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: text
                 }
 
                 Row {
@@ -397,6 +403,9 @@ Flickable {
                                         validator: IntValidator{bottom:256; top:8192}
                                         focus: true
 
+                                        Accessible.role: Accessible.EditableText
+                                        Accessible.name: qsTr("Width")
+
                                         onTextChanged: {
                                             // standardButton() was added in Qt 5.10, so we must check for it first
                                             if (customResolutionDialog.standardButton) {
@@ -424,6 +433,9 @@ Flickable {
                                         inputMethodHints: Qt.ImhDigitsOnly
                                         placeholderText: resolutionListModel.get(resolutionComboBox.currentIndex).video_height
                                         validator: IntValidator{bottom:256; top:8192}
+
+                                        Accessible.role: Accessible.EditableText
+                                        Accessible.name: qsTr("Height")
 
                                         onTextChanged: {
                                             // standardButton() was added in Qt 5.10, so we must check for it first
@@ -541,6 +553,9 @@ Flickable {
                                         placeholderText: fpsListModel.get(fpsComboBox.currentIndex).video_fps
                                         validator: IntValidator{bottom:10; top:9999}
                                         focus: true
+
+                                        Accessible.role: Accessible.EditableText
+                                        Accessible.name: qsTr("FPS")
 
                                         onTextChanged: {
                                             // standardButton() was added in Qt 5.10, so we must check for it first
@@ -678,6 +693,9 @@ Flickable {
                     text: qsTr("Video bitrate:")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Video bitrate")
                 }
 
                 Label {
@@ -686,6 +704,9 @@ Flickable {
                     text: qsTr("Lower the bitrate on slower connections. Raise the bitrate to increase image quality.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: text
                 }
 
                 Row {
@@ -728,6 +749,11 @@ Flickable {
                         id: resetBitrateButton
                         text: qsTr("Use Default (%1 Mbps)").arg(StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444) / 1000.0)
                         visible: StreamingPreferences.bitrateKbps !== StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
+
+                        Accessible.role: Accessible.Button
+                        Accessible.name: text
+                        Accessible.onPressAction: clicked()
+
                         onClicked: {
                             var defaultBitrate = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
                             StreamingPreferences.bitrateKbps = defaultBitrate
@@ -744,6 +770,9 @@ Flickable {
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                     visible: SystemProperties.hasDesktopEnvironment
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Display mode")
                 }
 
                 AutoResizingComboBox {
@@ -813,6 +842,7 @@ Flickable {
                     enabled: !SystemProperties.rendererAlwaysFullScreen
                     hoverEnabled: true
                     textRole: "text"
+                    accessibleDescription: qsTr("Display mode")
                     onActivated: {
                         StreamingPreferences.windowMode = model.get(currentIndex).val
                     }
@@ -894,6 +924,9 @@ Flickable {
                     text: qsTr("Audio configuration")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Audio configuration")
                 }
 
                 AutoResizingComboBox {
@@ -1058,6 +1091,9 @@ Flickable {
                     text: qsTr("Language")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Language")
                 }
 
                 AutoResizingComboBox {
@@ -1238,6 +1274,9 @@ Flickable {
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                     visible: SystemProperties.hasDesktopEnvironment
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("GUI display mode")
                 }
 
                 AutoResizingComboBox {
@@ -1264,6 +1303,7 @@ Flickable {
                     id: uiDisplayModeComboBox
                     visible: SystemProperties.hasDesktopEnvironment
                     textRole: "text"
+                    accessibleDescription: qsTr("GUI display mode")
                     model: ListModel {
                         id: uiDisplayModeListModel
                         ListElement {
@@ -1457,6 +1497,7 @@ Flickable {
 
                         enabled: captureSysKeysCheck.checked && captureSysKeysCheck.enabled
                         textRole: "text"
+                        accessibleDescription: qsTr("Capture system keyboard shortcuts mode")
                         model: ListModel {
                             id: captureSysKeysModeListModel
                             ListElement {
@@ -1668,6 +1709,9 @@ Flickable {
                     text: qsTr("Video decoder")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Video decoder")
                 }
 
                 AutoResizingComboBox {
@@ -1717,6 +1761,9 @@ Flickable {
                     text: qsTr("Video codec")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Video codec")
                 }
 
                 AutoResizingComboBox {

@@ -75,6 +75,10 @@ NavigableDialog {
             Keys.onEnterPressed: clicked()
             Keys.onRightPressed: nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
             Keys.onLeftPressed: nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocus)
+
+            Accessible.role: Accessible.Button
+            Accessible.name: text
+            Accessible.onPressAction: clicked()
         }
 
         onHelpRequested: {

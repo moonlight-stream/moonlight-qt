@@ -296,6 +296,9 @@ ApplicationWindow {
                 // the remaining space in the RowLayout. To "hide" it, we
                 // just set the text to empty string.
                 text: !titleLabel.visible ? stackView.currentItem.objectName : ""
+
+                Accessible.role: Accessible.Heading
+                Accessible.name: text
             }
 
             Label {
@@ -305,6 +308,9 @@ ApplicationWindow {
                 font.pointSize: 12
                 horizontalAlignment: Qt.AlignRight
                 verticalAlignment: Qt.AlignVCenter
+
+                Accessible.role: Accessible.StaticText
+                Accessible.name: text
             }
 
             NavigableToolButton {
@@ -423,6 +429,8 @@ ApplicationWindow {
             NavigableToolButton {
                 // TODO: Implement gamepad mapping then unhide this button
                 visible: false
+
+                accessibleName: qsTr("Gamepad Mapper")
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -555,12 +563,19 @@ ApplicationWindow {
             Label {
                 text: addPcDialog.label
                 font.bold: true
+
+                Accessible.role: Accessible.StaticText
+                Accessible.name: text
             }
 
             TextField {
                 id: editText
                 Layout.fillWidth: true
                 focus: true
+
+                Accessible.role: Accessible.EditableText
+                Accessible.name: qsTr("PC IP address or hostname")
+                Accessible.description: placeholderText
 
                 Keys.onReturnPressed: {
                     addPcDialog.accept()
