@@ -685,7 +685,12 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
 
             // A few FFmpeg decoders (h264_mmal) process here using a "pull" model.
             // Those decoders will fail here if the format is not supported.
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(62, 28, 100)
+            err = avcodec_receive_frame_flags(m_VideoDecoderCtx, frame,
+                                              AV_CODEC_RECEIVE_FRAME_FLAG_SYNCHRONOUS);
+#else
             err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
+#endif
             if (err == AVERROR(EAGAIN)) {
                 // Wait a little while to let the hardware work
                 SDL_Delay(100);
