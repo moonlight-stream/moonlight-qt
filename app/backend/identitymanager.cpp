@@ -31,6 +31,10 @@ void IdentityManager::createCredentials(QSettings& settings)
     X509* cert = X509_new();
     THROW_BAD_ALLOC_IF_NULL(cert);
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    EVP_PKEY* pk = EVP_RSA_gen(2048);
+    THROW_BAD_ALLOC_IF_NULL(pk);
+#else
     EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
     THROW_BAD_ALLOC_IF_NULL(ctx);
 
@@ -43,6 +47,7 @@ void IdentityManager::createCredentials(QSettings& settings)
 
     EVP_PKEY_CTX_free(ctx);
     THROW_BAD_ALLOC_IF_NULL(pk);
+#endif
 
     X509_set_version(cert, 2);
     ASN1_INTEGER_set(X509_get_serialNumber(cert), 0);
@@ -50,28 +55,20 @@ void IdentityManager::createCredentials(QSettings& settings)
     X509_gmtime_adj(X509_get_notBefore(cert), 0);
     X509_gmtime_adj(X509_get_notAfter(cert), 60 * 60 * 24 * 365 * 20); // 20 yrs
 #else
-    ASN1_TIME* before = ASN1_STRING_dup(X509_get0_notBefore(cert));
-    THROW_BAD_ALLOC_IF_NULL(before);
-    ASN1_TIME* after = ASN1_STRING_dup(X509_get0_notAfter(cert));
-    THROW_BAD_ALLOC_IF_NULL(after);
-
-    X509_gmtime_adj(before, 0);
-    X509_gmtime_adj(after, 60 * 60 * 24 * 365 * 20); // 20 yrs
-
-    X509_set1_notBefore(cert, before);
-    X509_set1_notAfter(cert, after);
-
-    ASN1_STRING_free(before);
-    ASN1_STRING_free(after);
+    X509_gmtime_adj(X509_getm_notBefore(cert), 0);
+    X509_gmtime_adj(X509_getm_notAfter(cert), 60 * 60 * 24 * 365 * 20); // 20 yrs
 #endif
 
     X509_set_pubkey(cert, pk);
 
-    X509_NAME* name = X509_get_subject_name(cert);
+    X509_NAME* name = X509_NAME_new();
+    THROW_BAD_ALLOC_IF_NULL(name);
     X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
                                reinterpret_cast<unsigned char *>(const_cast<char*>("NVIDIA GameStream Client")),
                                -1, -1, 0);
+    X509_set_subject_name(cert, name);
     X509_set_issuer_name(cert, name);
+    X509_NAME_free(name);
 
     X509_sign(cert, pk, EVP_sha256());
 
