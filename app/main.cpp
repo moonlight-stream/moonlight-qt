@@ -33,6 +33,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <dxgi1_6.h>
 #elif defined(Q_OS_LINUX)
 #include <openssl/ssl.h>
 #endif
@@ -83,6 +84,10 @@ static QRegularExpression k_RikeyIdRegex("&rikeyid=[\\d-]+");
 static const uint64_t k_MaxLogSizeBytes = 10 * 1024 * 1024;
 static QAtomicInteger<uint64_t> s_LogBytesWritten = 0;
 static QFile* s_LoggerFile;
+#endif
+
+#ifdef HAVE_DRM_MASTER_HOOKS
+extern "C" bool g_DisableDrmHooks;
 #endif
 
 class LoggerTask : public QRunnable
@@ -338,6 +343,9 @@ int SDLCALL signalHandlerThread(void* data)
 {
     Q_UNUSED(data);
 
+    Session* lastSession = nullptr;
+    bool requestedQuit = false;
+
     int sig;
     while (recv(signalFds[1], &sig, sizeof(sig), MSG_WAITALL) == sizeof(sig)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Received signal: %d", sig);
@@ -349,17 +357,32 @@ int SDLCALL signalHandlerThread(void* data)
             // Check if we have an active streaming session
             session = Session::get();
             if (session != nullptr) {
+                // Exit immediately if we haven't changed state since last attempt
+                if (session == lastSession || requestedQuit) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Exiting immediately on second signal");
+                    _Exit(1);
+                }
+
                 if (sig == SIGTERM) {
                     // If this is a SIGTERM, set the flag to quit
                     session->setShouldExit();
+                    requestedQuit = true;
                 }
 
                 // Stop the streaming session
                 session->interrupt();
+                lastSession = session;
             }
             else {
+                // Exit immediately if we haven't changed state since last attempt
+                if (requestedQuit) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Exiting immediately on second signal");
+                    _Exit(1);
+                }
+
                 // If we're not streaming, we'll close the whole app
                 QCoreApplication::instance()->quit();
+                requestedQuit = true;
             }
             break;
 
@@ -484,7 +507,7 @@ int main(int argc, char *argv[])
     // Force AntiHooking.dll to be statically imported and loaded
     // by ntdll on Win32 platforms by calling a dummy function.
     AntiHookingDummyImport();
-#elif defined(Q_OS_LINUX)
+#elif defined(APP_IMAGE)
     // Force libssl.so to be directly linked to our binary, so
     // linuxdeployqt can find it and include it in our AppImage.
     // QtNetwork will pull it in via dlopen().
@@ -571,6 +594,18 @@ int main(int argc, char *argv[])
     // when trying to use EGL on the main thread after Qt uses GLX.
     SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
     qputenv("QT_XCB_GL_INTEGRATION", "xcb_egl");
+
+#ifdef Q_OS_WIN32
+    // Let us see the true VBlank rather than DWM's approximation. We do this here
+    // because this API must be called before the first swapchain (which Qt will
+    // create when the window is displayed). This is supported on Win11 22H2+.
+    auto fnDXGIDisableVBlankVirtualization =
+        (decltype(DXGIDisableVBlankVirtualization)*)GetProcAddress(GetModuleHandleW(L"dxgi.dll"),
+                                                                   "DXGIDisableVBlankVirtualization");
+    if (fnDXGIDisableVBlankVirtualization) {
+        fnDXGIDisableVBlankVirtualization();
+    }
+#endif
 
 #ifdef Q_OS_MACOS
     // This avoids using the default keychain for SSL, which may cause
@@ -691,15 +726,15 @@ int main(int argc, char *argv[])
     SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "0");
 #endif
 
-    QGuiApplication app(argc, argv);
+    // Enable fast parameter checks on SDL 3.4.0+. We don't abuse the API by passing
+    // incorrect objects, so we don't need additional expensive parameter checks.
+    SDL_SetHint("SDL_INVALID_PARAM_CHECKS", "1");
 
-#ifndef STEAM_LINK
-    // Force use of the KMSDRM backend for SDL when using Qt platform plugins
-    // that directly draw to the display without a windowing system.
-    if (QGuiApplication::platformName() == "eglfs" || QGuiApplication::platformName() == "linuxfb") {
-        qputenv("SDL_VIDEODRIVER", "kmsdrm");
-    }
-#endif
+    // Disable hotplug detection for SDL_GetKeyboards() and SDL_GetMice(). We don't
+    // use this functionality and it can cause hangs when querying broken devices.
+    SDL_SetHint("SDL_WINDOWS_DETECT_DEVICE_HOTPLUG", "0");
+
+    QGuiApplication app(argc, argv);
 
 #ifdef Q_OS_UNIX
     // Register signal handlers to arbitrate between SDL and Qt.
@@ -774,15 +809,29 @@ int main(int argc, char *argv[])
 
     // After the QGuiApplication is created, the platform stuff will be initialized
     // and we can set the SDL video driver to match Qt.
-    if (WMUtils::isRunningWayland() && QGuiApplication::platformName() == "xcb") {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Detected XWayland. This will probably break hardware decoding! Try running with QT_QPA_PLATFORM=wayland or switch to X11.");
+    if (QGuiApplication::platformName() == "xcb") {
+        if (WMUtils::isRunningWayland()) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected XWayland. This will probably break hardware decoding! Try running with QT_QPA_PLATFORM=wayland or switch to X11.");
+        }
         qputenv("SDL_VIDEODRIVER", "x11");
     }
     else if (QGuiApplication::platformName().startsWith("wayland")) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Detected Wayland");
         qputenv("SDL_VIDEODRIVER", "wayland");
     }
+#ifndef STEAM_LINK
+    // Force use of the KMSDRM backend for SDL when using Qt platform plugins
+    // that directly draw to the display without a windowing system.
+    else if (QGuiApplication::platformName() == "eglfs" || QGuiApplication::platformName() == "linuxfb") {
+        qputenv("SDL_VIDEODRIVER", "kmsdrm");
+    }
+#endif
+
+#ifdef HAVE_DRM_MASTER_HOOKS
+    // Only use the Qt-SDL DRM master interoperability hooks if Qt is using KMS
+    g_DisableDrmHooks = QGuiApplication::platformName() != "eglfs";
+#endif
 
 #ifdef STEAM_LINK
     // Qt 5.9 from the Steam Link SDK is not able to load any fonts

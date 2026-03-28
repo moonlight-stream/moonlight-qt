@@ -52,9 +52,17 @@ pushd $BUILD_FOLDER
 make install || fail "Make install failed!"
 popd
 
+# We need to manually place SDL3 in our AppImage, since linuxdeployqt
+# cannot see the dependency via ldd when it looks at SDL2-compat.
+echo Staging SDL3 library
+mkdir -p $DEPLOY_FOLDER/usr/lib
+cp /usr/local/lib/libSDL3.so.0 $DEPLOY_FOLDER/usr/lib/
+
 echo Creating AppImage
 pushd $INSTALLER_FOLDER
-VERSION=$VERSION linuxdeployqt $DEPLOY_FOLDER/usr/share/applications/com.moonlight_stream.Moonlight.desktop -qmake=qmake6 -qmldir=$SOURCE_ROOT/app/gui -appimage -extra-plugins=tls || fail "linuxdeployqt failed!"
+VERSION=$VERSION linuxdeployqt $DEPLOY_FOLDER/usr/share/applications/com.moonlight_stream.Moonlight.desktop \
+  -qmake=qmake6 -qmldir=$SOURCE_ROOT/app/gui -appimage -extra-plugins=tls \
+  -executable=$DEPLOY_FOLDER/usr/lib/libSDL3.so.0 || fail "linuxdeployqt failed!"
 popd
 
 echo Build successful

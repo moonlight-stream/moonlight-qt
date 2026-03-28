@@ -29,38 +29,7 @@ private:
         bool supportsHdr;
         QSize maximumResolution;
 
-        if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
-                         SDL_GetError());
-            return;
-        }
-
-        // Update display related attributes (max FPS, native resolution, etc).
-        m_Properties->refreshDisplays();
-
-        SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
-                                                  SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
-        if (!testWindow) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Failed to create test window with platform flags: %s",
-                        SDL_GetError());
-
-            testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
-            if (!testWindow) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Failed to create window for hardware decode test: %s",
-                             SDL_GetError());
-                SDL_QuitSubSystem(SDL_INIT_VIDEO);
-                return;
-            }
-        }
-
-        Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, supportsHdr, maximumResolution);
-
-        SDL_DestroyWindow(testWindow);
-
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        Session::getDecoderInfo(m_Properties->testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, supportsHdr, maximumResolution);
 
         // Propagate the decoder properties to the SystemProperties singleton and emit any change signals on the main thread
         QMetaObject::invokeMethod(m_Properties, "updateDecoderProperties",
@@ -88,9 +57,8 @@ SystemProperties::SystemProperties()
     {
         USHORT processArch, machineArch;
 
-        // Use IsWow64Process2 on TH2 and later, because it supports ARM64
-        auto fnIsWow64Process2 = (decltype(IsWow64Process2)*)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsWow64Process2");
-        if (fnIsWow64Process2 != nullptr && fnIsWow64Process2(GetCurrentProcess(), &processArch, &machineArch)) {
+        // Use IsWow64Process2() because it doesn't lie on ARM64
+        if (IsWow64Process2(GetCurrentProcess(), &processArch, &machineArch)) {
             switch (machineArch) {
             case IMAGE_FILE_MACHINE_I386:
                 nativeArch = "i386";
@@ -129,20 +97,22 @@ SystemProperties::SystemProperties()
     hasDiscordIntegration = false;
 #endif
 
-    unmappedGamepads = SdlInputHandler::getUnmappedGamepads();
-
     // These will be queried asynchronously to avoid blocking the UI
     hasHardwareAcceleration = true;
     rendererAlwaysFullScreen = false;
     supportsHdr = true;
     maximumResolution = QSize(0, 0);
+}
 
-    systemPropertyQueryThread = new SystemPropertyQueryThread(this);
-    systemPropertyQueryThread->start();
+SystemProperties::~SystemProperties()
+{
+    waitForAsyncLoad();
 }
 
 void SystemProperties::updateDecoderProperties(bool hasHardwareAcceleration, bool rendererAlwaysFullScreen, QSize maximumResolution, bool supportsHdr)
 {
+    SDL_assert(testWindow);
+
     if (hasHardwareAcceleration != this->hasHardwareAcceleration) {
         this->hasHardwareAcceleration = hasHardwareAcceleration;
         emit hasHardwareAccelerationChanged();
@@ -162,12 +132,15 @@ void SystemProperties::updateDecoderProperties(bool hasHardwareAcceleration, boo
         this->supportsHdr = supportsHdr;
         emit supportsHdrChanged();
     }
+
+    SDL_DestroyWindow(testWindow);
+    testWindow = nullptr;
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
 QRect SystemProperties::getNativeResolution(int displayIndex)
 {
     // Returns default constructed QRect if out of bounds
-    systemPropertyQueryThread->wait();
     Q_ASSERT(!monitorNativeResolutions.isEmpty());
     return monitorNativeResolutions.value(displayIndex);
 }
@@ -175,7 +148,6 @@ QRect SystemProperties::getNativeResolution(int displayIndex)
 QRect SystemProperties::getSafeAreaResolution(int displayIndex)
 {
     // Returns default constructed QRect if out of bounds
-    systemPropertyQueryThread->wait();
     Q_ASSERT(!monitorSafeAreaResolutions.isEmpty());
     return monitorSafeAreaResolutions.value(displayIndex);
 }
@@ -183,9 +155,64 @@ QRect SystemProperties::getSafeAreaResolution(int displayIndex)
 int SystemProperties::getRefreshRate(int displayIndex)
 {
     // Returns 0 if out of bounds
-    systemPropertyQueryThread->wait();
     Q_ASSERT(!monitorRefreshRates.isEmpty());
     return monitorRefreshRates.value(displayIndex);
+}
+
+void SystemProperties::startAsyncLoad()
+{
+    if (systemPropertyQueryThread) {
+        // Already started/completed
+        return;
+    }
+
+    // This isn't actually asynchronous (due to the need to synchronize with
+    // SdlGamepadKeyNavigation), but we don't query it in the constructor
+    // because it's expensive.
+    unmappedGamepads = SdlInputHandler::getUnmappedGamepads();
+    if (!unmappedGamepads.isEmpty()) {
+        emit unmappedGamepadsChanged();
+    }
+
+    // We initialize the video subsystem and test window on the main thread
+    // because some platforms (macOS) do not support window creation on
+    // non-main threads.
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return;
+    }
+
+    // Update display related attributes (max FPS, native resolution, etc).
+    refreshDisplays();
+
+    testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+                                  SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
+    if (!testWindow) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to create test window with platform flags: %s",
+                    SDL_GetError());
+
+        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+        if (!testWindow) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to create window for hardware decode test: %s",
+                         SDL_GetError());
+            SDL_QuitSubSystem(SDL_INIT_VIDEO);
+            return;
+        }
+    }
+
+    systemPropertyQueryThread = new SystemPropertyQueryThread(this);
+    systemPropertyQueryThread->start();
+}
+
+void SystemProperties::waitForAsyncLoad()
+{
+    if (systemPropertyQueryThread) {
+        systemPropertyQueryThread->wait();
+    }
 }
 
 void SystemProperties::refreshDisplays()

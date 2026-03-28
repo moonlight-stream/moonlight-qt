@@ -184,7 +184,7 @@ NvPairingManager::signMessage(const QByteArray& message)
 QByteArray
 NvPairingManager::saltPin(const QByteArray& salt, QString pin)
 {
-    return QByteArray().append(salt).append(pin.toLatin1());
+    return QByteArray().append(salt).append(pin.toUtf8());
 }
 
 NvPairingManager::PairState

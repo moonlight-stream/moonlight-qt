@@ -17,8 +17,10 @@ NavigableDialog {
     accessibleName: text
 
     onOpened: {
-        // Force keyboard focus on the label so keyboard navigation works
-        dialogLabel.forceActiveFocus()
+        // Force keyboard focus on the last button so keyboard navigation works
+        if (dialogButtonBox.count > 0) {
+            dialogButtonBox.itemAt(dialogButtonBox.count - 1).forceActiveFocus(Qt.TabFocus)
+        }
     }
 
     RowLayout {
@@ -59,24 +61,21 @@ NavigableDialog {
             // Accessibility support for screen readers
             Accessible.role: Accessible.StaticText
             Accessible.name: text
-
-            Keys.onReturnPressed: {
-                accept()
-            }
-
-            Keys.onEnterPressed: {
-                accept()
-            }
-
-            Keys.onEscapePressed: {
-                reject()
-            }
         }
     }
 
     footer: DialogButtonBox {
         id: dialogButtonBox
         standardButtons: dialog.standardButtons
+
+        delegate: Button {
+            flat: true
+
+            Keys.onReturnPressed: clicked()
+            Keys.onEnterPressed: clicked()
+            Keys.onRightPressed: nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
+            Keys.onLeftPressed: nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocus)
+        }
 
         onHelpRequested: {
             Qt.openUrlExternally(helpUrl)

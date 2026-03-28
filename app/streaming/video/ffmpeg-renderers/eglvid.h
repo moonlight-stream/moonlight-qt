@@ -68,6 +68,4 @@ private:
 
 #define OVERLAY_PARAM_TEXTURE 0
     int m_OverlayShaderProgramParams[1];
-
-    SDL_Renderer *m_DummyRenderer;
 };

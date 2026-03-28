@@ -7,7 +7,8 @@ ComputerSeeker::ComputerSeeker(ComputerManager *manager, QString computerName, Q
       m_TimeoutTimer(new QTimer(this))
 {
     // If we know this computer, send a WOL packet to wake it up in case it is asleep.
-    for (NvComputer * computer: m_ComputerManager->getComputers()) {
+    const auto computers = m_ComputerManager->getComputers();
+    for (NvComputer* computer : computers) {
         if (this->matchComputer(computer)) {
             computer->wake();
         }
@@ -51,7 +52,8 @@ bool ComputerSeeker::matchComputer(NvComputer *computer) const
         return true;
     }
 
-    for (const NvAddress& addr : computer->uniqueAddresses()) {
+    const auto uniqueAddresses = computer->uniqueAddresses();
+    for (const NvAddress& addr : uniqueAddresses) {
         if (addr.address().toLower() == value || addr.toString().toLower() == value) {
             return true;
         }

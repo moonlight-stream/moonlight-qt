@@ -389,7 +389,7 @@ NvHTTP::getXmlStringFromHex(QString xml,
         return nullptr;
     }
 
-    return QByteArray::fromHex(str.toLatin1());
+    return QByteArray::fromHex(str.toUtf8());
 }
 
 QString
