@@ -9,7 +9,9 @@
 
 #include <SDL_vulkan.h>
 
+extern "C" {
 #include <libavutil/hwcontext_vulkan.h>
+}
 
 #include <vector>
 #include <set>
@@ -19,7 +21,7 @@
 #define VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR ((VkVideoCodecOperationFlagBitsKHR)0x00000004)
 #endif
 
-// Keep these in sync with hwcontext_vulkan.c
+#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(60, 26, 100)
 static const char *k_OptionalDeviceExtensions[] = {
     /* Misc or required by other extensions */
     //VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME,
@@ -52,6 +54,7 @@ static const char *k_OptionalDeviceExtensions[] = {
     "VK_MESA_video_decode_av1", // FFmpeg 6.1 uses the Mesa AV1 extension
 #endif
 };
+#endif
 
 static void pl_log_cb(void*, enum pl_log_level level, const char *msg)
 {
@@ -318,10 +321,17 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
     vkParams.get_proc_addr = m_PlVkInstance->get_proc_addr;
     vkParams.surface = m_VkSurface;
     vkParams.device = device;
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 26, 100)
+    vkParams.opt_extensions = av_vk_get_optional_device_extensions(&vkParams.num_opt_extensions);
+#else
     vkParams.opt_extensions = k_OptionalDeviceExtensions;
     vkParams.num_opt_extensions = SDL_arraysize(k_OptionalDeviceExtensions);
+#endif
     vkParams.extra_queues = m_HwAccelBackend ? VK_QUEUE_FLAG_BITS_MAX_ENUM : 0;
     m_Vulkan = pl_vulkan_create(m_Log, &vkParams);
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 26, 100)
+    av_free((void*)vkParams.opt_extensions);
+#endif
     if (m_Vulkan == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_vulkan_create() failed for '%s'",
