@@ -670,9 +670,13 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-#ifdef STEAM_LINK
+#if defined(STEAM_LINK) || defined(Q_OS_WIN32)
     // Steam Link requires that we initialize video before creating our
     // QGuiApplication in order to configure the framebuffer correctly.
+    //
+    // We keep the video subsystem initialized on Windows because it's
+    // much more costly to reinitialize than other platforms. It hurts
+    // the settings page transition performance significantly.
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
