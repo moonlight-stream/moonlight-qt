@@ -1423,7 +1423,8 @@ void Session::updateOptimalWindowDisplayMode()
     if (!matchVideo) {
         // Start with the native desktop resolution and try to find
         // the highest refresh rate that our stream FPS evenly divides.
-        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+        int numDisplayModes = SDL_GetNumDisplayModes(displayIndex);
+        for (int i = 0; i < numDisplayModes; i++) {
             if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
                 if (mode.w == desktopMode.w && mode.h == desktopMode.h &&
                     mode.refresh_rate % m_StreamConfig.fps == 0) {
@@ -1446,7 +1447,8 @@ void Session::updateOptimalWindowDisplayMode()
     if (bestMode.refresh_rate == 0) {
         float bestModeAspectRatio = 0;
         float videoAspectRatio = (float)m_ActiveVideoWidth / (float)m_ActiveVideoHeight;
-        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+        int numDisplayModes = SDL_GetNumDisplayModes(displayIndex);
+        for (int i = 0; i < numDisplayModes; i++) {
             if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
                 float modeAspectRatio = (float)mode.w / (float)mode.h;
                 if (mode.w >= m_ActiveVideoWidth && mode.h >= m_ActiveVideoHeight &&

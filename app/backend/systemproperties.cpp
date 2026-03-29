@@ -244,7 +244,8 @@ void SystemProperties::refreshDisplays()
 
             // Start at desktop mode and work our way up
             bestMode = desktopMode;
-            for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+            int numDisplayModes = SDL_GetNumDisplayModes(displayIndex);
+            for (int i = 0; i < numDisplayModes; i++) {
                 SDL_DisplayMode mode;
                 if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
                     if (mode.w == desktopMode.w && mode.h == desktopMode.h) {
