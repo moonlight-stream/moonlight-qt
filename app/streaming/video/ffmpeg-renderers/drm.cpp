@@ -644,6 +644,12 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     else if (auto zpos = props.property("zpos")) {
                         activePlanesZpos.emplace(zpos->initialValue());
                     }
+                    else {
+                        // If there's no zpos property (which if true for one plane, must be true for all),
+                        // Z-order is determined by enumeration order. Pretend that the plane index is the
+                        // (immutable) zpos value in this scenario.
+                        activePlanesZpos.emplace(i);
+                    }
                 }
             }
 
@@ -774,7 +780,15 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 }
             }
             else {
-                m_VideoPlaneZpos = 0;
+                // Use the plane index for DRM drivers without zpos support
+                if (!activePlanesZpos.empty() && i < *activePlanesZpos.crbegin()) {
+                    // This plane is too low to be visible
+                    drmModeFreePlane(plane);
+                    continue;
+                }
+                else {
+                    m_VideoPlaneZpos = i;
+                }
             }
 
             SDL_assert(!m_VideoPlane.isValid());
@@ -856,6 +870,14 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 }
                 else if ((*zpos->range()).second <= m_VideoPlaneZpos) {
                     // This plane cannot be raised high enough to be visible
+                    drmModeFreePlane(plane);
+                    continue;
+                }
+            }
+            else {
+                // Use the plane index for DRM drivers without zpos support
+                if (i <= m_VideoPlaneZpos) {
+                    // This plane is too low to be visible
                     drmModeFreePlane(plane);
                     continue;
                 }
