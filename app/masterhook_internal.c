@@ -42,12 +42,10 @@ pthread_mutex_t g_FdTableLock = PTHREAD_MUTEX_INITIALIZER;
 int getSdlFdEntryIndex(bool unused)
 {
     for (int i = 0; i < MAX_SDL_FD_COUNT; i++) {
-        // We slightly bend the FD rules here by treating 0
-        // as invalid since that's our global default value.
-        if (unused && g_SdlDrmMasterFds[i] <= 0) {
+        if (unused && g_SdlDrmMasterFds[i] < 0) {
             return i;
         }
-        else if (!unused && g_SdlDrmMasterFds[i] > 0) {
+        else if (!unused && g_SdlDrmMasterFds[i] >= 0) {
             return i;
         }
     }
