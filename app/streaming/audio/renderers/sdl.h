@@ -6,7 +6,7 @@
 class SdlAudioRenderer : public IAudioRenderer
 {
 public:
-    SdlAudioRenderer();
+    explicit SdlAudioRenderer(int audioQueueThresholdMs = 30);
 
     virtual ~SdlAudioRenderer();
 
@@ -22,4 +22,5 @@ private:
     SDL_AudioDeviceID m_AudioDevice;
     void* m_AudioBuffer;
     int m_FrameSize;
+    int m_AudioQueueThresholdMs;
 };
