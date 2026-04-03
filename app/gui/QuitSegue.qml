@@ -71,6 +71,11 @@ Item {
             verticalAlignment: Text.AlignVCenter
 
             wrapMode: Text.Wrap
+
+            // Accessibility support for screen readers
+            // Announces quit status to screen reader users
+            Accessible.role: Accessible.StatusBar
+            Accessible.name: text
         }
     }
 

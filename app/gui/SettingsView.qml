@@ -106,6 +106,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Basic Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Basic Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -116,6 +120,9 @@ Flickable {
                     text: qsTr("Resolution and FPS")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Resolution and FPS")
                 }
 
                 Label {
@@ -124,6 +131,9 @@ Flickable {
                     text: qsTr("Setting values too high for your PC or network connection may cause lag, stuttering, or errors.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: text
                 }
 
                 Row {
@@ -242,6 +252,7 @@ Flickable {
                         id: resolutionComboBox
                         maximumWidth: parent.width / 2
                         textRole: "text"
+                        accessibleDescription: qsTr("Resolution")
                         model: ListModel {
                             id: resolutionListModel
                             // Other elements may be added at runtime
@@ -392,6 +403,9 @@ Flickable {
                                         validator: IntValidator{bottom:256; top:8192}
                                         focus: true
 
+                                        Accessible.role: Accessible.EditableText
+                                        Accessible.name: qsTr("Width")
+
                                         onTextChanged: {
                                             // standardButton() was added in Qt 5.10, so we must check for it first
                                             if (customResolutionDialog.standardButton) {
@@ -419,6 +433,9 @@ Flickable {
                                         inputMethodHints: Qt.ImhDigitsOnly
                                         placeholderText: resolutionListModel.get(resolutionComboBox.currentIndex).video_height
                                         validator: IntValidator{bottom:256; top:8192}
+
+                                        Accessible.role: Accessible.EditableText
+                                        Accessible.name: qsTr("Height")
 
                                         onTextChanged: {
                                             // standardButton() was added in Qt 5.10, so we must check for it first
@@ -537,6 +554,9 @@ Flickable {
                                         validator: IntValidator{bottom:10; top:9999}
                                         focus: true
 
+                                        Accessible.role: Accessible.EditableText
+                                        Accessible.name: qsTr("FPS")
+
                                         onTextChanged: {
                                             // standardButton() was added in Qt 5.10, so we must check for it first
                                             if (customFpsDialog.standardButton) {
@@ -654,6 +674,7 @@ Flickable {
                         id: fpsComboBox
                         maximumWidth: parent.width / 2
                         textRole: "text"
+                        accessibleDescription: qsTr("Frame rate")
                         // ::onActivated must be used, as it only listens for when the index is changed by a human
                         onActivated : {
                             if (model.get(currentIndex).is_custom) {
@@ -672,6 +693,9 @@ Flickable {
                     text: qsTr("Video bitrate:")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Video bitrate")
                 }
 
                 Label {
@@ -680,6 +704,9 @@ Flickable {
                     text: qsTr("Lower the bitrate on slower connections. Raise the bitrate to increase image quality.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: text
                 }
 
                 Row {
@@ -697,6 +724,11 @@ Flickable {
 
                         snapMode: "SnapOnRelease"
                         width: Math.min(bitrateDesc.implicitWidth, parent.width - (resetBitrateButton.visible ? resetBitrateButton.width + parent.spacing : 0))
+
+                        // Accessibility support for screen readers
+                        Accessible.role: Accessible.Slider
+                        Accessible.name: qsTr("Video bitrate")
+                        Accessible.description: qsTr("%1 Megabits per second").arg(value / 1000.0)
 
                         onValueChanged: {
                             bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(value / 1000.0)
@@ -717,6 +749,11 @@ Flickable {
                         id: resetBitrateButton
                         text: qsTr("Use Default (%1 Mbps)").arg(StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444) / 1000.0)
                         visible: StreamingPreferences.bitrateKbps !== StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
+
+                        Accessible.role: Accessible.Button
+                        Accessible.name: text
+                        Accessible.onPressAction: clicked()
+
                         onClicked: {
                             var defaultBitrate = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
                             StreamingPreferences.bitrateKbps = defaultBitrate
@@ -733,6 +770,9 @@ Flickable {
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                     visible: SystemProperties.hasDesktopEnvironment
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Display mode")
                 }
 
                 AutoResizingComboBox {
@@ -802,6 +842,7 @@ Flickable {
                     enabled: !SystemProperties.rendererAlwaysFullScreen
                     hoverEnabled: true
                     textRole: "text"
+                    accessibleDescription: qsTr("Display mode")
                     onActivated: {
                         StreamingPreferences.windowMode = model.get(currentIndex).val
                     }
@@ -823,6 +864,12 @@ Flickable {
                         StreamingPreferences.enableVsync = checked
                     }
 
+                    // Accessibility support for screen readers
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -840,6 +887,13 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.framePacing = checked
                     }
+
+                    // Accessibility support for screen readers
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -856,6 +910,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Audio Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Audio Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -866,6 +924,9 @@ Flickable {
                     text: qsTr("Audio configuration")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Audio configuration")
                 }
 
                 AutoResizingComboBox {
@@ -885,6 +946,7 @@ Flickable {
 
                     id: audioComboBox
                     textRole: "text"
+                    accessibleDescription: qsTr("Audio configuration")
                     model: ListModel {
                         id: audioListModel
                         ListElement {
@@ -917,6 +979,12 @@ Flickable {
                         StreamingPreferences.playAudioOnHost = !checked
                     }
 
+                    // Accessibility support for screen readers
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -934,6 +1002,12 @@ Flickable {
                         StreamingPreferences.muteOnFocusLoss = checked
                     }
 
+                    // Accessibility support for screen readers
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -949,6 +1023,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Host Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Host Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -962,6 +1040,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.gameOptimizations = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -973,6 +1056,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.quitAppAfter = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -989,6 +1077,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("UI Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("UI Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -999,6 +1091,9 @@ Flickable {
                     text: qsTr("Language")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Language")
                 }
 
                 AutoResizingComboBox {
@@ -1019,6 +1114,7 @@ Flickable {
 
                     id: languageComboBox
                     textRole: "text"
+                    accessibleDescription: qsTr("Language")
                     model: ListModel {
                         id: languageListModel
                         ListElement {
@@ -1178,6 +1274,9 @@ Flickable {
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                     visible: SystemProperties.hasDesktopEnvironment
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("GUI display mode")
                 }
 
                 AutoResizingComboBox {
@@ -1204,6 +1303,7 @@ Flickable {
                     id: uiDisplayModeComboBox
                     visible: SystemProperties.hasDesktopEnvironment
                     textRole: "text"
+                    accessibleDescription: qsTr("GUI display mode")
                     model: ListModel {
                         id: uiDisplayModeListModel
                         ListElement {
@@ -1234,6 +1334,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.connectionWarnings = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1245,6 +1350,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.configurationWarnings = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1257,6 +1367,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.richPresence = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1273,6 +1388,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.keepAwake = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1298,6 +1418,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Input Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Input Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -1312,6 +1436,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.absoluteMouseMode = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 10000
@@ -1332,6 +1461,11 @@ Flickable {
                         font.pointSize: 12
                         enabled: SystemProperties.hasDesktopEnvironment
                         checked: StreamingPreferences.captureSysKeysMode !== StreamingPreferences.CSK_OFF || !SystemProperties.hasDesktopEnvironment
+
+                        Accessible.role: Accessible.CheckBox
+                        Accessible.name: text
+                        Accessible.checked: checked
+                        Accessible.onToggleAction: toggle()
 
                         ToolTip.delay: 1000
                         ToolTip.timeout: 10000
@@ -1363,6 +1497,7 @@ Flickable {
 
                         enabled: captureSysKeysCheck.checked && captureSysKeysCheck.enabled
                         textRole: "text"
+                        accessibleDescription: qsTr("Capture system keyboard shortcuts mode")
                         model: ListModel {
                             id: captureSysKeysModeListModel
                             ListElement {
@@ -1407,6 +1542,11 @@ Flickable {
                         StreamingPreferences.absoluteTouchMode = !checked
                     }
 
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -1423,6 +1563,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.swapMouseButtons = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1435,6 +1580,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.reverseScrollDirection = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
             }
         }
@@ -1445,6 +1595,10 @@ Flickable {
             padding: 12
             title: "<font color=\"skyblue\">" + qsTr("Gamepad Settings") + "</font>"
             font.pointSize: 12
+
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Gamepad Settings")
 
             Column {
                 anchors.fill: parent
@@ -1459,6 +1613,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.swapFaceButtons = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1475,6 +1634,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.multiController = !checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1493,6 +1657,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.gamepadMouse = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1505,6 +1674,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.backgroundGamepad = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1521,6 +1695,10 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Advanced Settings") + "</font>"
             font.pointSize: 12
 
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Grouping
+            Accessible.name: qsTr("Advanced Settings")
+
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -1531,6 +1709,9 @@ Flickable {
                     text: qsTr("Video decoder")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Video decoder")
                 }
 
                 AutoResizingComboBox {
@@ -1550,6 +1731,7 @@ Flickable {
 
                     id: decoderComboBox
                     textRole: "text"
+                    accessibleDescription: qsTr("Video decoder")
                     model: ListModel {
                         id: decoderListModel
                         ListElement {
@@ -1579,6 +1761,9 @@ Flickable {
                     text: qsTr("Video codec")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: qsTr("Video codec")
                 }
 
                 AutoResizingComboBox {
@@ -1603,6 +1788,7 @@ Flickable {
 
                     id: codecComboBox
                     textRole: "text"
+                    accessibleDescription: qsTr("Video codec")
                     model: ListModel {
                         id: codecListModel
                         ListElement {
@@ -1642,6 +1828,11 @@ Flickable {
                         StreamingPreferences.enableHdr = checked
                     }
 
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     // Updating StreamingPreferences.videoCodecConfig is handled above
 
                     ToolTip.delay: 1000
@@ -1674,6 +1865,11 @@ Flickable {
                         }
                     }
 
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
@@ -1695,6 +1891,11 @@ Flickable {
                         StreamingPreferences.bitrateKbps = Math.min(StreamingPreferences.bitrateKbps, slider.to)
                         slider.value = StreamingPreferences.bitrateKbps
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -1721,6 +1922,11 @@ Flickable {
                             }
                         }
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1732,6 +1938,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.detectNetworkBlocking = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
                 }
 
                 CheckBox {
@@ -1743,6 +1954,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.showPerformanceOverlay = checked
                     }
+
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: text
+                    Accessible.checked: checked
+                    Accessible.onToggleAction: toggle()
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
