@@ -1,4 +1,5 @@
 #include "nvcomputer.h"
+#include "settings/streamingpreferences.h"
 #include <Limelight.h>
 
 #include <QDebug>
@@ -11,12 +12,48 @@
 #include <QImageReader>
 #include <QtEndian>
 #include <QNetworkProxy>
+#include <QStringList>
 
 #define FAST_FAIL_TIMEOUT_MS 2000
 #define REQUEST_TIMEOUT_MS 5000
 #define LAUNCH_TIMEOUT_MS 120000
 #define RESUME_TIMEOUT_MS 30000
 #define QUIT_TIMEOUT_MS 30000
+
+namespace {
+
+QString encodeQueryValue(const QString& value)
+{
+    return QString::fromLatin1(QUrl::toPercentEncoding(value));
+}
+
+QString buildClientProfileQueryParameters(bool includeProfileList)
+{
+    QStringList queryParameters;
+
+    const QString activeProfileId = StreamingPreferences::currentProfileId();
+    if (!activeProfileId.isEmpty()) {
+        queryParameters << "clientProfileActiveId=" + encodeQueryValue(activeProfileId);
+    }
+
+    if (includeProfileList) {
+        const QVector<StreamingPreferenceProfile> profiles = StreamingPreferences::profileInfos();
+        queryParameters << "clientProfileCount=" + QString::number(profiles.count());
+
+        for (int i = 0; i < profiles.count(); ++i) {
+            queryParameters << QString("clientProfileId%1=%2")
+                                   .arg(i)
+                                   .arg(encodeQueryValue(profiles[i].id));
+            queryParameters << QString("clientProfileName%1=%2")
+                                   .arg(i)
+                                   .arg(encodeQueryValue(profiles[i].name));
+        }
+    }
+
+    return queryParameters.join("&");
+}
+
+}
 
 NvHTTP::NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert, QNetworkAccessManager* nam) :
     m_Nam(nam ? nam : new QNetworkAccessManager(this)),
@@ -123,6 +160,7 @@ QString
 NvHTTP::getServerInfo(NvLogLevel logLevel, bool fastFail)
 {
     QString serverInfo;
+    const QString profileQueryParameters = buildClientProfileQueryParameters(true);
 
     // Check if we have a pinned cert and HTTPS port for this host yet
     if (!m_ServerCert.isNull() && httpsPort() != 0)
@@ -133,7 +171,7 @@ NvHTTP::getServerInfo(NvLogLevel logLevel, bool fastFail)
             // pairing status (and a few other attributes).
             serverInfo = openConnectionToString(m_BaseUrlHttps,
                                                 "serverinfo",
-                                                nullptr,
+                                                profileQueryParameters,
                                                 fastFail ? FAST_FAIL_TIMEOUT_MS : REQUEST_TIMEOUT_MS,
                                                 logLevel);
             // Throws if the request failed
@@ -197,6 +235,7 @@ NvHTTP::startApp(QString verb,
                  QString& rtspSessionUrl)
 {
     int riKeyId;
+    const QString activeProfileQueryParameters = buildClientProfileQueryParameters(false);
 
     memcpy(&riKeyId, streamConfig->remoteInputAesIv, sizeof(riKeyId));
     riKeyId = qFromBigEndian(riKeyId);
@@ -223,6 +262,7 @@ NvHTTP::startApp(QString verb,
                                    "&remoteControllersBitmap="+QString::number(gamepadMask)+
                                    "&gcmap="+QString::number(gamepadMask)+
                                    "&gcpersist="+QString::number(persistGameControllersOnDisconnect ? 1 : 0)+
+                                   (activeProfileQueryParameters.isEmpty() ? "" : "&" + activeProfileQueryParameters)+
                                    LiGetLaunchUrlQueryParameters(),
                                    LAUNCH_TIMEOUT_MS);
 
@@ -479,7 +519,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     // manual intervention to solve).
     url.setQuery("uniqueid=0123456789ABCDEF&uuid=" +
                  QUuid::createUuid().toRfc4122().toHex() +
-                 ((arguments != nullptr) ? ("&" + arguments) : ""));
+                 (!arguments.isEmpty() ? ("&" + arguments) : ""));
 
     QNetworkRequest request(url);
 

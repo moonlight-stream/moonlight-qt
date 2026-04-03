@@ -3,6 +3,16 @@
 #include <QObject>
 #include <QRect>
 #include <QQmlEngine>
+#include <QStringList>
+#include <QVector>
+
+class QSettings;
+
+struct StreamingPreferenceProfile
+{
+    QString id;
+    QString name;
+};
 
 class StreamingPreferences : public QObject
 {
@@ -15,6 +25,8 @@ public:
     getDefaultBitrate(int width, int height, int fps, bool yuv444);
 
     Q_INVOKABLE void save();
+    Q_INVOKABLE bool createProfile(const QString& name);
+    Q_INVOKABLE bool deleteProfile(const QString& name);
 
     void reload();
 
@@ -145,8 +157,16 @@ public:
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
+    Q_PROPERTY(QString currentProfile READ currentProfile WRITE setCurrentProfile NOTIFY currentProfileChanged)
+    Q_PROPERTY(QStringList profileNames READ profileNames NOTIFY profileListChanged)
 
     Q_INVOKABLE bool retranslate();
+
+    QString currentProfile() const;
+    QStringList profileNames() const;
+    static QString currentProfileId();
+    static QVector<StreamingPreferenceProfile> profileInfos();
+    void setCurrentProfile(const QString& name);
 
     // Directly accessible members for preferences
     int width;
@@ -224,12 +244,26 @@ signals:
     void captureSysKeysModeChanged();
     void keepAwakeChanged();
     void languageChanged();
+    void currentProfileChanged();
+    void profileListChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);
 
     QString getSuffixFromLanguage(Language lang);
+    static QStringList loadProfileNames(QSettings& settings);
+    static QVector<StreamingPreferenceProfile> loadProfileInfos(QSettings& settings);
+    static QString resolveProfileName(const QString& name, const QStringList& profiles);
+    static QString generateProfileId();
+    QString profileKey(const QString& key) const;
+    static QString profileKey(const QString& profileName, const QString& key);
+    QString normalizeProfileName(const QString& name) const;
+    bool isProfileNameValid(const QString& name) const;
+    void loadFromSettings(QSettings& settings, const QString& profileName);
+    void saveToSettings(QSettings& settings, const QString& profileName);
+    void emitAllChangedSignals();
 
     QQmlEngine* m_QmlEngine;
+    QString m_CurrentProfile;
+    QStringList m_ProfileNames;
 };
-
