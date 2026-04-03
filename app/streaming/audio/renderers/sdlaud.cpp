@@ -2,9 +2,10 @@
 
 #include <Limelight.h>
 
-SdlAudioRenderer::SdlAudioRenderer()
+SdlAudioRenderer::SdlAudioRenderer(int audioQueueThresholdMs)
     : m_AudioDevice(0),
-      m_AudioBuffer(nullptr)
+      m_AudioBuffer(nullptr),
+      m_AudioQueueThresholdMs(SDL_max(1, audioQueueThresholdMs))
 {
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
 
@@ -99,9 +100,9 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
         return true;
     }
 
-    // Don't queue if there's already more than 30 ms of audio data waiting
+    // Don't queue if there's already more than the configured amount of audio
     // in Moonlight's audio queue.
-    if (LiGetPendingAudioDuration() > 30) {
+    if (LiGetPendingAudioDuration() > m_AudioQueueThresholdMs) {
         return true;
     }
 

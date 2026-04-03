@@ -906,6 +906,36 @@ Flickable {
                     }
                 }
 
+                Label {
+                    width: parent.width
+                    text: qsTr("Maximum queued audio in Moonlight's buffer (ms)")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                TextField {
+                    id: audioQueueThresholdField
+                    width: Math.min(parent.width, 120)
+                    text: StreamingPreferences.audioQueueThresholdMs.toString()
+                    maximumLength: 4
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    validator: IntValidator { bottom: 1; top: 1000 }
+
+                    onEditingFinished: {
+                        if (acceptableInput) {
+                            StreamingPreferences.audioQueueThresholdMs = parseInt(text)
+                            text = StreamingPreferences.audioQueueThresholdMs.toString()
+                        }
+                        else {
+                            text = StreamingPreferences.audioQueueThresholdMs.toString()
+                        }
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Default: 30 ms. Increase this if you want Moonlight to tolerate more queued audio before dropping new samples.")
+                }
 
                 CheckBox {
                     id: audioPcCheck
