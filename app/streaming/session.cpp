@@ -595,8 +595,15 @@ bool Session::initialize(QQuickWindow* qtWindow)
         for (int displayIndex = 0; StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea); displayIndex++) {
             // Check if this display has a notch (safeArea != desktopMode)
             if (desktopMode.h != safeArea.h || desktopMode.w != safeArea.w) {
+                if (m_Preferences->isNativeResolution) {
+                    // For native resolution, use fullscreen spaces to avoid the notch
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Overriding default fullscreen mode for dynamic native resolution (safe area)");
+                    shouldUseFullScreenSpaces = true;
+                    break;
+                }
                 // Check if we're trying to stream at the full native resolution (including notch)
-                if (m_Preferences->width == desktopMode.w && m_Preferences->height == desktopMode.h) {
+                else if (m_Preferences->width == desktopMode.w && m_Preferences->height == desktopMode.h) {
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Overriding default fullscreen mode for native fullscreen resolution");
                     shouldUseFullScreenSpaces = false;
@@ -633,8 +640,54 @@ bool Session::initialize(QQuickWindow* qtWindow)
     }
 
     LiInitializeStreamConfiguration(&m_StreamConfig);
-    m_StreamConfig.width = m_Preferences->width;
-    m_StreamConfig.height = m_Preferences->height;
+
+    if (m_Preferences->isNativeResolution) {
+        // Determine the display index from the Qt window's screen
+        int displayIndex = 0;
+        if (m_QtWindow != nullptr) {
+            QScreen* screen = m_QtWindow->screen();
+            if (screen != nullptr) {
+                QRect displayRect = screen->geometry();
+                for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
+                    SDL_Rect displayBounds;
+                    if (SDL_GetDisplayBounds(i, &displayBounds) == 0) {
+                        if (displayBounds.x == displayRect.x() &&
+                            displayBounds.y == displayRect.y()) {
+                            displayIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        SDL_DisplayMode desktopMode;
+        SDL_Rect safeArea;
+        if (StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea)) {
+            int num, den;
+            StreamingPreferences::getNativeResScaleFraction(m_Preferences->nativeResScale, num, den);
+
+            // Use safe area dimensions to avoid notch regions
+            m_StreamConfig.width = (safeArea.w * num / den) & ~1;
+            m_StreamConfig.height = (safeArea.h * num / den) & ~1;
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using dynamic native resolution: %dx%d (scale %d/%d of %dx%d safe area)",
+                        m_StreamConfig.width, m_StreamConfig.height,
+                        num, den, safeArea.w, safeArea.h);
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to get native desktop mode for display %d, falling back to saved resolution",
+                        displayIndex);
+            m_StreamConfig.width = m_Preferences->width;
+            m_StreamConfig.height = m_Preferences->height;
+        }
+    }
+    else {
+        m_StreamConfig.width = m_Preferences->width;
+        m_StreamConfig.height = m_Preferences->height;
+    }
 
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
