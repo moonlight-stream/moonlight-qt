@@ -34,7 +34,7 @@ extern struct stat g_DrmMasterStat;
 extern bool g_DisableDrmHooks;
 
 #define MAX_SDL_FD_COUNT 8
-int g_SdlDrmMasterFds[MAX_SDL_FD_COUNT];
+int g_SdlDrmMasterFds[MAX_SDL_FD_COUNT] = {-1, -1, -1, -1, -1, -1, -1, -1};
 int g_SdlDrmMasterFdCount = 0;
 pthread_mutex_t g_FdTableLock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -58,6 +58,13 @@ int getSdlFdEntryIndex(bool unused)
 // Returns true if the final SDL FD was removed
 bool removeSdlFd(int fd)
 {
+    // -1 will break our logic below that looks for matches
+    // in the entire array (which we must do because it may
+    // not be contiguously populated).
+    if (fd == -1) {
+        return false;
+    }
+
     pthread_mutex_lock(&g_FdTableLock);
     if (g_SdlDrmMasterFdCount != 0) {
         // Clear the entry for this fd from the table
