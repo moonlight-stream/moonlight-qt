@@ -38,6 +38,21 @@ int g_SdlDrmMasterFds[MAX_SDL_FD_COUNT] = {-1, -1, -1, -1, -1, -1, -1, -1};
 int g_SdlDrmMasterFdCount = 0;
 pthread_mutex_t g_FdTableLock = PTHREAD_MUTEX_INITIALIZER;
 
+// This lock protects sections of code that must run uninterrupted with DRM master
+pthread_mutex_t g_MasterLock = PTHREAD_MUTEX_INITIALIZER;
+
+// Lock order: g_MasterLock -> g_FdTableLock
+
+void lockDrmMaster()
+{
+    pthread_mutex_lock(&g_MasterLock);
+}
+
+void unlockDrmMaster()
+{
+    pthread_mutex_unlock(&g_MasterLock);
+}
+
 // Caller must hold g_FdTableLock
 int getSdlFdEntryIndex(bool unused)
 {
@@ -137,6 +152,9 @@ int openHook(typeof(open) *real_open, typeof(close) *real_close, const char *pat
                 int freeFdIndex;
                 int allocatedFdIndex;
 
+                // Prevent other threads from stealing DRM master for now
+                lockDrmMaster();
+
                 // It is our device. Time to do the magic!
                 pthread_mutex_lock(&g_FdTableLock);
 
@@ -144,6 +162,7 @@ int openHook(typeof(open) *real_open, typeof(close) *real_close, const char *pat
                 freeFdIndex = getSdlFdEntryIndex(true);
                 if (freeFdIndex < 0) {
                     pthread_mutex_unlock(&g_FdTableLock);
+                    unlockDrmMaster();
                     SDL_assert(freeFdIndex >= 0);
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                  "No unused SDL FD table entries!");
@@ -164,6 +183,7 @@ int openHook(typeof(open) *real_open, typeof(close) *real_close, const char *pat
                     // Drop master on Qt's FD so we can pick it up for SDL.
                     if (drmDropMaster(g_QtDrmMasterFd) < 0) {
                         pthread_mutex_unlock(&g_FdTableLock);
+                        unlockDrmMaster();
                         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                      "Failed to drop master on Qt DRM FD: %d",
                                      errno);
@@ -195,6 +215,8 @@ int openHook(typeof(open) *real_open, typeof(close) *real_close, const char *pat
                 }
 
                 pthread_mutex_unlock(&g_FdTableLock);
+
+                unlockDrmMaster();
             }
         }
     }
