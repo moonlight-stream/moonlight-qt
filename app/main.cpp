@@ -801,6 +801,34 @@ int main(int argc, char *argv[])
                 "Running with SDL %d.%d.%d",
                 runtimeVersion.major, runtimeVersion.minor, runtimeVersion.patch);
 
+    // If we're running under sdl2-compat, it may tell us the underlying SDL3 version
+    const char* sdl3Version = SDL_GetHint("SDL3_VERSION");
+    int sdl3VersionInt = 0;
+    if (sdl3Version) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "SDL3 version: %s",
+                    sdl3Version);
+
+        // Parse the version into integer form
+        QStringList list = QString(sdl3Version).split('.');
+        Q_ASSERT(list.size() == 3);
+        if (list.size() == 3) {
+            sdl3VersionInt = SDL_VERSIONNUM(list.at(0).toInt(), list.at(1).toInt(), list.at(2).toInt());
+        }
+    }
+
+    // SDL 3.4.0 and 3.4.2 have bugs in atomic KMSDRM support that break us,
+    // so disable atomic on the affected SDL3 versions. Since not all versions
+    // of sdl2-compat will set the SDL3_VERSION hint, we assume that versions
+    // prior to 2.32.66 are affected (since that was released at the same time
+    // as SDL 3.4.4 with the atomic fixes).
+    if ((sdl3VersionInt != 0 && sdl3VersionInt < SDL_VERSIONNUM(3, 4, 4)) ||
+            (runtimeVersion.patch >= 50 && runtimeVersion.patch < 66)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Setting SDL_KMSDRM_ATOMIC=0 for older sdl2-compat/SDL3 version");
+        SDL_SetHint("SDL_KMSDRM_ATOMIC", "0");
+    }
+
     // Apply the initial translation based on user preference
     StreamingPreferences::get()->retranslate();
 
