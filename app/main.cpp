@@ -817,6 +817,7 @@ int main(int argc, char *argv[])
         }
     }
 
+#if !defined(Q_OS_WIN32) && !defined(Q_OS_DARWIN)
     // SDL 3.4.0 and 3.4.2 have bugs in atomic KMSDRM support that break us,
     // so disable atomic on the affected SDL3 versions. Since not all versions
     // of sdl2-compat will set the SDL3_VERSION hint, we assume that versions
@@ -828,6 +829,7 @@ int main(int argc, char *argv[])
                     "Setting SDL_KMSDRM_ATOMIC=0 for older sdl2-compat/SDL3 version");
         SDL_SetHint("SDL_KMSDRM_ATOMIC", "0");
     }
+#endif
 
     // Apply the initial translation based on user preference
     StreamingPreferences::get()->retranslate();
