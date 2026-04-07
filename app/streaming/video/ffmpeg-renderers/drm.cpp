@@ -388,8 +388,10 @@ void DrmRenderer::prepareToRender()
 
 void DrmRenderer::cleanupRenderContext()
 {
-    // This must only be called after prepareToRender()
-    SDL_assert(m_DrmStateModified);
+    // We might be called without prepareToRender() if we fail during decoder testing
+    if (!m_DrmStateModified) {
+        return;
+    }
 
     // If we have a composition surface, unmap it before disabling planes
     if (m_OverlayCompositionSurface) {
