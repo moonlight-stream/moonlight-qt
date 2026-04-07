@@ -704,6 +704,7 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual bool prepareDecoderContextInGetFormat(AVCodecContext*, AVPixelFormat) override;
     virtual void prepareToRender() override;
+    virtual void cleanupRenderContext() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
     virtual bool isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) override;

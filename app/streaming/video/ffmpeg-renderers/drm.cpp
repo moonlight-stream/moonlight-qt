@@ -164,49 +164,8 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
 
 DrmRenderer::~DrmRenderer()
 {
-    // If we have a composition surface, unmap it before disabling planes
-    if (m_OverlayCompositionSurface) {
-        munmap(m_OverlayCompositionSurface->pixels, (uintptr_t)m_OverlayCompositionSurface->userdata);
-        SDL_FreeSurface(m_OverlayCompositionSurface);
-    }
-
-    if (m_DrmStateModified) {
-        // Ensure we're out of HDR mode
-        setHdrMode(false);
-
-        // Deactivate all planes
-        m_PropSetter.disablePlane(m_VideoPlane);
-        for (int i = 0; i < Overlay::OverlayMax; i++) {
-            m_PropSetter.disablePlane(m_OverlayPlanes[i]);
-        }
-
-        // Revert our changes from prepareToRender()
-        if (auto prop = m_Connector.property("content type")) {
-            m_PropSetter.restorePropertyToInitial(*prop);
-        }
-        if (auto prop = m_Crtc.property("VRR_ENABLED")) {
-            m_PropSetter.restorePropertyToInitial(*prop);
-        }
-        if (auto prop = m_Connector.property("max bpc")) {
-            m_PropSetter.restorePropertyToInitial(*prop);
-        }
-        if (auto zpos = m_VideoPlane.property("zpos"); zpos && !zpos->isImmutable()) {
-            m_PropSetter.restorePropertyToInitial(*zpos);
-        }
-        for (int i = 0; i < Overlay::OverlayMax; i++) {
-            if (auto zpos = m_OverlayPlanes[i].property("zpos"); zpos && !zpos->isImmutable()) {
-                m_PropSetter.restorePropertyToInitial(*zpos);
-            }
-        }
-        for (auto &plane : m_UnusedActivePlanes) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Restoring previously active plane: %u",
-                        plane.second.objectId());
-            m_PropSetter.restoreToInitial(plane.second);
-        }
-
-        m_PropSetter.apply();
-    }
+    // DRM state should be restored by the time we get here
+    SDL_assert(!m_DrmStateModified);
 
     for (int i = 0; i < k_SwFrameCount; i++) {
         if (m_SwFrame[i].primeFd) {
@@ -418,6 +377,57 @@ void DrmRenderer::prepareToRender()
 
     // We've now changed state that must be restored
     m_DrmStateModified = true;
+}
+
+void DrmRenderer::cleanupRenderContext()
+{
+    // This must only be called after prepareToRender()
+    SDL_assert(m_DrmStateModified);
+
+    // If we have a composition surface, unmap it before disabling planes
+    if (m_OverlayCompositionSurface) {
+        munmap(m_OverlayCompositionSurface->pixels, (uintptr_t)m_OverlayCompositionSurface->userdata);
+        SDL_FreeSurface(m_OverlayCompositionSurface);
+        m_OverlayCompositionSurface = nullptr;
+    }
+
+    // Ensure we're out of HDR mode
+    setHdrMode(false);
+
+    // Deactivate all planes
+    m_PropSetter.disablePlane(m_VideoPlane);
+    for (int i = 0; i < Overlay::OverlayMax; i++) {
+        m_PropSetter.disablePlane(m_OverlayPlanes[i]);
+    }
+
+    // Revert our changes from prepareToRender()
+    if (auto prop = m_Connector.property("content type")) {
+        m_PropSetter.restorePropertyToInitial(*prop);
+    }
+    if (auto prop = m_Crtc.property("VRR_ENABLED")) {
+        m_PropSetter.restorePropertyToInitial(*prop);
+    }
+    if (auto prop = m_Connector.property("max bpc")) {
+        m_PropSetter.restorePropertyToInitial(*prop);
+    }
+    if (auto zpos = m_VideoPlane.property("zpos"); zpos && !zpos->isImmutable()) {
+        m_PropSetter.restorePropertyToInitial(*zpos);
+    }
+    for (int i = 0; i < Overlay::OverlayMax; i++) {
+        if (auto zpos = m_OverlayPlanes[i].property("zpos"); zpos && !zpos->isImmutable()) {
+            m_PropSetter.restorePropertyToInitial(*zpos);
+        }
+    }
+    for (auto &plane : m_UnusedActivePlanes) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Restoring previously active plane: %u",
+                    plane.second.objectId());
+        m_PropSetter.restoreToInitial(plane.second);
+    }
+
+    m_PropSetter.apply();
+
+    m_DrmStateModified = false;
 }
 
 bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
