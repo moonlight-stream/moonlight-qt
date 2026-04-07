@@ -6,6 +6,13 @@
 
 #include <QtMath>
 
+#ifdef _WIN32
+#include <Windows.h>
+extern "C" {
+#include <hidsdi.h>
+}
+#endif
+
 // How long the Start button must be pressed to toggle mouse emulation
 #define MOUSE_EMULATION_LONG_PRESS_TIME 750
 
@@ -708,7 +715,47 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
 #endif
             type == LI_CTYPE_PS;
 
-        LiSendControllerArrivalEvent(state->index, m_GamepadMask, type, supportedButtonFlags, capabilities);
+        // Read firmware info from DualSense controllers for passthrough to the host
+        uint8_t metadataBuf[4 + 64] = {}; // TLV header + firmware report
+        uint16_t metadataLen = 0;
+
+#if SDL_VERSION_ATLEAST(2, 0, 18) && defined(_WIN32)
+        if (SDL_GameControllerGetType(state->controller) == SDL_CONTROLLER_TYPE_PS5) {
+            SDL_Joystick *joy = SDL_GameControllerGetJoystick(state->controller);
+            Uint16 vid = SDL_JoystickGetVendor(joy);
+            Uint16 pid = SDL_JoystickGetProduct(joy);
+
+            // SDL_hid_open fails when the game controller backend already holds the
+            // device. Use SDL_hid_enumerate to get the device path, then open via the
+            // Windows HID API with shared access to read the firmware feature report.
+            SDL_hid_init();
+            struct SDL_hid_device_info *devs = SDL_hid_enumerate(vid, pid);
+            for (struct SDL_hid_device_info *cur = devs; cur; cur = cur->next) {
+                HANDLE hid = CreateFileA(cur->path, GENERIC_READ | GENERIC_WRITE,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+                if (hid != INVALID_HANDLE_VALUE) {
+                    unsigned char report[65] = {};
+                    report[0] = 0x20;
+                    if (HidD_GetFeature(hid, report, sizeof(report))) {
+                        metadataBuf[0] = LI_CTRL_META_TAG_FIRMWARE_INFO;
+                        metadataBuf[1] = 0;
+                        metadataBuf[2] = 64;
+                        metadataBuf[3] = 0;
+                        memcpy(metadataBuf + 4, report, 64);
+                        metadataLen = 4 + 64;
+                        capabilities |= LI_CCAP_FIRMWARE_INFO;
+                    }
+                    CloseHandle(hid);
+                    break;
+                }
+            }
+            SDL_hid_free_enumeration(devs);
+            SDL_hid_exit();
+        }
+#endif
+
+        LiSendControllerArrivalEventWithMetadata(state->index, m_GamepadMask, type,
+            supportedButtonFlags, capabilities, metadataLen > 0 ? metadataBuf : NULL, metadataLen);
 #else
 
         // Send an empty event to tell the PC we've arrived
