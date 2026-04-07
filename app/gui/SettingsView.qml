@@ -42,6 +42,24 @@ Flickable {
         duration: 100
     }
 
+    function commitAudioThresholdSettings() {
+        if (audioPlaybackThresholdField.acceptableInput) {
+            StreamingPreferences.audioPlaybackThresholdMs = parseInt(audioPlaybackThresholdField.text)
+            audioPlaybackThresholdField.text = StreamingPreferences.audioPlaybackThresholdMs.toString()
+        }
+        else {
+            audioPlaybackThresholdField.text = StreamingPreferences.audioPlaybackThresholdMs.toString()
+        }
+
+        if (audioDropThresholdField.acceptableInput) {
+            StreamingPreferences.audioDropThresholdMs = parseInt(audioDropThresholdField.text)
+            audioDropThresholdField.text = StreamingPreferences.audioDropThresholdMs.toString()
+        }
+        else {
+            audioDropThresholdField.text = StreamingPreferences.audioDropThresholdMs.toString()
+        }
+    }
+
     Window.onActiveFocusItemChanged: {
         var item = Window.activeFocusItem
         if (item) {
@@ -84,12 +102,14 @@ Flickable {
         SdlGamepadKeyNavigation.setUiNavMode(false)
 
         // Save the prefs so the Session can observe the changes
+        commitAudioThresholdSettings()
         StreamingPreferences.save()
     }
 
     Component.onDestruction: {
         // Also save preferences on destruction, since we won't get a
         // deactivating callback if the user just closes Moonlight
+        commitAudioThresholdSettings()
         StreamingPreferences.save()
     }
 
@@ -908,33 +928,52 @@ Flickable {
 
                 Label {
                     width: parent.width
-                    text: qsTr("Maximum queued audio in Moonlight's buffer (ms)")
+                    text: qsTr("SDL audio: queued audio before playback starts or resumes (ms)")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
 
                 TextField {
-                    id: audioQueueThresholdField
+                    id: audioPlaybackThresholdField
                     width: Math.min(parent.width, 120)
-                    text: StreamingPreferences.audioQueueThresholdMs.toString()
+                    text: StreamingPreferences.audioPlaybackThresholdMs.toString()
                     maximumLength: 4
                     inputMethodHints: Qt.ImhDigitsOnly
-                    validator: IntValidator { bottom: 1; top: 1000 }
+                    validator: IntValidator { bottom: 0; top: 1000 }
 
                     onEditingFinished: {
-                        if (acceptableInput) {
-                            StreamingPreferences.audioQueueThresholdMs = parseInt(text)
-                            text = StreamingPreferences.audioQueueThresholdMs.toString()
-                        }
-                        else {
-                            text = StreamingPreferences.audioQueueThresholdMs.toString()
-                        }
+                        commitAudioThresholdSettings()
                     }
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Default: 30 ms. Increase this if you want Moonlight to tolerate more queued audio before dropping new samples.")
+                    ToolTip.text: qsTr("SDL audio only. Default: 0 ms. Set this above 0 if you want Moonlight to wait for buffered SDL audio before starting playback or resuming after an underrun.")
+                }
+
+                Label {
+                    width: parent.width
+                    text: qsTr("SDL audio: maximum queued audio in Moonlight's buffer (ms)")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                TextField {
+                    id: audioDropThresholdField
+                    width: Math.min(parent.width, 120)
+                    text: StreamingPreferences.audioDropThresholdMs.toString()
+                    maximumLength: 4
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    validator: IntValidator { bottom: 1; top: 1000 }
+
+                    onEditingFinished: {
+                        commitAudioThresholdSettings()
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("SDL audio only. Default: 30 ms. Increase this if you want Moonlight to tolerate more queued audio before dropping new samples.")
                 }
 
                 CheckBox {

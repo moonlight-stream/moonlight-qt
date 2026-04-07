@@ -2,10 +2,13 @@
 
 #include <Limelight.h>
 
-SdlAudioRenderer::SdlAudioRenderer(int audioQueueThresholdMs)
+SdlAudioRenderer::SdlAudioRenderer(int audioPlaybackThresholdMs, int audioDropThresholdMs)
     : m_AudioDevice(0),
       m_AudioBuffer(nullptr),
-      m_AudioQueueThresholdMs(SDL_max(1, audioQueueThresholdMs))
+      m_BytesPerMs(0),
+      m_AudioPlaybackThresholdMs(SDL_max(0, audioPlaybackThresholdMs)),
+      m_AudioDropThresholdMs(SDL_max(1, audioDropThresholdMs)),
+      m_WaitingForPlaybackThreshold(audioPlaybackThresholdMs > 0)
 {
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
 
@@ -33,10 +36,6 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
     // The buffering helps avoid audio underruns due to network jitter.
     want.samples = SDL_max(480, opusConfig->samplesPerFrame * 3);
 
-    m_FrameSize = opusConfig->samplesPerFrame *
-                  opusConfig->channelCount *
-                  getAudioBufferSampleSize();
-
     m_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
     if (m_AudioDevice == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -44,6 +43,11 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
                      SDL_GetError());
         return false;
     }
+
+    m_FrameSize = opusConfig->samplesPerFrame *
+                  have.channels *
+                  getAudioBufferSampleSize();
+    m_BytesPerMs = SDL_max(1, (have.freq * have.channels * getAudioBufferSampleSize()) / 1000);
 
     m_AudioBuffer = SDL_malloc(m_FrameSize);
     if (m_AudioBuffer == nullptr) {
@@ -66,8 +70,9 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
                 "SDL audio driver: %s",
                 SDL_GetCurrentAudioDriver());
 
-    // Start playback
-    SDL_PauseAudioDevice(m_AudioDevice, 0);
+    if (!m_WaitingForPlaybackThreshold) {
+        SDL_PauseAudioDevice(m_AudioDevice, 0);
+    }
 
     return true;
 }
@@ -102,7 +107,7 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
 
     // Don't queue if there's already more than the configured amount of audio
     // in Moonlight's audio queue.
-    if (LiGetPendingAudioDuration() > m_AudioQueueThresholdMs) {
+    if (LiGetPendingAudioDuration() > m_AudioDropThresholdMs) {
         return true;
     }
 
@@ -124,10 +129,25 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
         SDL_Delay(1);
     }
 
+    Uint32 queuedAudioSize = SDL_GetQueuedAudioSize(m_AudioDevice);
+    if (!m_WaitingForPlaybackThreshold && queuedAudioSize == 0) {
+        SDL_PauseAudioDevice(m_AudioDevice, 1);
+        m_WaitingForPlaybackThreshold = true;
+    }
+
     if (SDL_QueueAudio(m_AudioDevice, m_AudioBuffer, bytesWritten) < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to queue audio sample: %s",
                      SDL_GetError());
+        return true;
+    }
+
+    if (m_WaitingForPlaybackThreshold) {
+        queuedAudioSize = SDL_GetQueuedAudioSize(m_AudioDevice);
+        if (queuedAudioSize >= (Uint32)(m_AudioPlaybackThresholdMs * m_BytesPerMs)) {
+            SDL_PauseAudioDevice(m_AudioDevice, 0);
+            m_WaitingForPlaybackThreshold = false;
+        }
     }
 
     return true;

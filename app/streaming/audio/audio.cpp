@@ -30,7 +30,7 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
     // Handle explicit ML_AUDIO setting and fail if the requested backend fails
     QString mlAudio = qgetenv("ML_AUDIO").toLower();
     if (mlAudio == "sdl") {
-        TRY_INIT_RENDERER_ARGS(SdlAudioRenderer, opusConfig, m_Preferences->audioQueueThresholdMs)
+        TRY_INIT_RENDERER_ARGS(SdlAudioRenderer, opusConfig, m_Preferences->audioPlaybackThresholdMs, m_Preferences->audioDropThresholdMs)
         return nullptr;
     }
 #if defined(HAVE_SLAUDIO)
@@ -54,7 +54,7 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
 #endif
 
     // Default to SDL
-    TRY_INIT_RENDERER_ARGS(SdlAudioRenderer, opusConfig, m_Preferences->audioQueueThresholdMs)
+    TRY_INIT_RENDERER_ARGS(SdlAudioRenderer, opusConfig, m_Preferences->audioPlaybackThresholdMs, m_Preferences->audioDropThresholdMs)
 
     return nullptr;
 }
