@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="334"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>このコンピュータにはアプリケーションが一切ないか、あるいは一部のアプリケーションが非表示になっています</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="347"/>
@@ -784,7 +784,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation type="unfinished"></translation>
+        <translation>デフォルト設定を使用 (%1 Mbps)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -885,7 +885,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
         <source>Show configuration warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>設定に関する警告を表示する</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1298"/>
