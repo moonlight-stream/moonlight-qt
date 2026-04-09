@@ -202,10 +202,23 @@ bool D3D11VARenderer::setupSharedDevice(IDXGIAdapter1* adapter)
                            &featureLevel,
                            &deviceContext);
     if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "D3D11CreateDevice() failed: %x",
-                     hr);
-        return false;
+        // Debug mode may crash for Snapdragon GPU, try without
+        hr = D3D11CreateDevice(adapter,
+                               D3D_DRIVER_TYPE_UNKNOWN,
+                               nullptr,
+                               0,
+                               supportedFeatureLevels,
+                               ARRAYSIZE(supportedFeatureLevels),
+                               D3D11_SDK_VERSION,
+                               &device,
+                               &featureLevel,
+                               &deviceContext);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "D3D11CreateDevice() failed: %x",
+                         hr);
+            return false;
+        }
     }
 
     hr = device.As(&m_DecodeDevice);
@@ -312,10 +325,23 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                            &featureLevel,
                            &deviceContext);
     if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "D3D11CreateDevice() failed: %x",
-                     hr);
-        goto Exit;
+        // Debug mode may crash for Snapdragon GPU, try without
+        hr = D3D11CreateDevice(adapter.Get(),
+                               D3D_DRIVER_TYPE_UNKNOWN,
+                               nullptr,
+                               D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
+                               supportedFeatureLevels,
+                               ARRAYSIZE(supportedFeatureLevels),
+                               D3D11_SDK_VERSION,
+                               &device,
+                               &featureLevel,
+                               &deviceContext);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "D3D11CreateDevice() failed: %x",
+                         hr);
+            goto Exit;
+        }
     }
     else if (adapterDesc.VendorId == 0x8086 && featureLevel <= D3D_FEATURE_LEVEL_11_0 && !qEnvironmentVariableIntValue("D3D11VA_ENABLED")) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -387,6 +413,15 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                             "Avoiding texture sharing for old pre-FL11.1 GPU");
                 separateDevices = false;
             }
+#if defined(Q_PROCESSOR_ARM)
+            // For HEVC, on Windows ARM, Snapdragon GPU does not support shared texture
+            else if (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_H265
+                     && (adapterDesc.VendorId == 0x17CB || adapterDesc.VendorId == 0x4D4F4351)) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Avoiding texture sharing for Snapdragon GPU");
+                separateDevices = false;
+            }
+#endif
             else if (adapterDesc.VendorId == 0x1ED5) { // Moore Threads (texture is all zero/green)
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Avoiding texture sharing on known broken GPU vendor");
@@ -482,10 +517,17 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         __uuidof(IDXGIFactory5),
         (void**)&m_Factory);
     if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "CreateDXGIFactory() failed: %x",
-                     hr);
-        return false;
+        // Debug mode may crash for Snapdragon GPU, try without
+        hr = CreateDXGIFactory2(
+            0,
+            __uuidof(IDXGIFactory5),
+            (void**)&m_Factory);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "CreateDXGIFactory() failed: %x",
+                         hr);
+            return false;
+        }
     }
 
     // First try the adapter corresponding to the display where our window resides.
