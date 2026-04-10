@@ -21,6 +21,39 @@ extern "C" {
 #define VK_VIDEO_CODEC_OPERATION_DECODE_AV1_BIT_KHR ((VkVideoCodecOperationFlagBitsKHR)0x00000004)
 #endif
 
+#ifdef HAVE_DRM_MASTER_HOOKS
+extern "C" {
+void lockDrmMaster();
+void unlockDrmMaster();
+}
+#endif
+
+// Many operations like setting a display mode or creating a swapchain
+// may require the Vulkan implementation to have DRM master in a KMSDRM
+// environment. Since this will not necessarily be the case during decoder
+// probing (when the Qt UI is still rendering), we need to grab the DRM
+// master lock to prevent Qt from taking it out from under us.
+class DrmMasterLocker {
+public:
+    DrmMasterLocker() {
+#ifdef HAVE_DRM_MASTER_HOOKS
+        lockDrmMaster();
+#endif
+    }
+
+    ~DrmMasterLocker() {
+#ifdef HAVE_DRM_MASTER_HOOKS
+        unlockDrmMaster();
+#endif
+    }
+
+    // Disallow copies and moves
+    DrmMasterLocker(const DrmMasterLocker&) = delete;
+    DrmMasterLocker& operator=(const DrmMasterLocker&) = delete;
+    DrmMasterLocker(DrmMasterLocker&&) noexcept = delete;
+    DrmMasterLocker& operator=(DrmMasterLocker&&) noexcept = delete;
+};
+
 #if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(60, 26, 100)
 static const char *k_OptionalDeviceExtensions[] = {
     /* Misc or required by other extensions */
@@ -138,20 +171,25 @@ PlVkRenderer::~PlVkRenderer()
         }
     }
 
-    pl_renderer_destroy(&m_Renderer);
-    pl_swapchain_destroy(&m_Swapchain);
-    pl_vulkan_destroy(&m_Vulkan);
+    {
+        // Hold DRM master in case the Vulkan implmentation wants to restore DRM state
+        DrmMasterLocker locker;
 
-    // This surface was created by SDL, so there's no libplacebo API to destroy it
-    if (fn_vkDestroySurfaceKHR && m_VkSurface) {
-        fn_vkDestroySurfaceKHR(m_PlVkInstance->instance, m_VkSurface, nullptr);
+        pl_renderer_destroy(&m_Renderer);
+        pl_swapchain_destroy(&m_Swapchain);
+        pl_vulkan_destroy(&m_Vulkan);
+
+        // This surface was created by SDL, so there's no libplacebo API to destroy it
+        if (fn_vkDestroySurfaceKHR && m_VkSurface) {
+            fn_vkDestroySurfaceKHR(m_PlVkInstance->instance, m_VkSurface, nullptr);
+        }
+
+        if (m_HwDeviceCtx != nullptr) {
+            av_buffer_unref(&m_HwDeviceCtx);
+        }
+
+        pl_vk_inst_destroy(&m_PlVkInstance);
     }
-
-    if (m_HwDeviceCtx != nullptr) {
-        av_buffer_unref(&m_HwDeviceCtx);
-    }
-
-    pl_vk_inst_destroy(&m_PlVkInstance);
 
     // m_Log must always be the last object destroyed
     pl_log_destroy(&m_Log);
@@ -328,10 +366,18 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
     vkParams.num_opt_extensions = SDL_arraysize(k_OptionalDeviceExtensions);
 #endif
     vkParams.extra_queues = m_HwAccelBackend ? VK_QUEUE_FLAG_BITS_MAX_ENUM : 0;
-    m_Vulkan = pl_vulkan_create(m_Log, &vkParams);
+
+    {
+        // Don't let Qt take DRM master from us during pl_vulkan_create()
+        DrmMasterLocker locker;
+
+        m_Vulkan = pl_vulkan_create(m_Log, &vkParams);
+    }
+
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 26, 100)
     av_free((void*)vkParams.opt_extensions);
 #endif
+
     if (m_Vulkan == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_vulkan_create() failed for '%s'",
@@ -417,12 +463,17 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     POPULATE_FUNCTION(vkGetPhysicalDeviceSurfaceSupportKHR);
     POPULATE_FUNCTION(vkEnumerateDeviceExtensionProperties);
 
-    if (!SDL_Vulkan_CreateSurface(params->window, m_PlVkInstance->instance, &m_VkSurface)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_Vulkan_CreateSurface() failed: %s",
-                     SDL_GetError());
-        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
-        return false;
+    {
+        // Don't let Qt take DRM master from us during SDL_Vulkan_CreateSurface()
+        DrmMasterLocker locker;
+
+        if (!SDL_Vulkan_CreateSurface(params->window, m_PlVkInstance->instance, &m_VkSurface)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_Vulkan_CreateSurface() failed: %s",
+                         SDL_GetError());
+            m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
+            return false;
+        }
     }
 
     // Enumerate physical devices and choose one that is suitable for our needs.
@@ -479,11 +530,17 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 #if PL_API_VER >= 338
     vkSwapchainParams.disable_10bit_sdr = true; // Some drivers don't dither 10-bit SDR output correctly
 #endif
-    m_Swapchain = pl_vulkan_create_swapchain(m_Vulkan, &vkSwapchainParams);
-    if (m_Swapchain == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_vulkan_create_swapchain() failed");
-        return false;
+
+    {
+        // Don't let Qt take DRM master from us during pl_vulkan_create_swapchain()
+        DrmMasterLocker locker;
+
+        m_Swapchain = pl_vulkan_create_swapchain(m_Vulkan, &vkSwapchainParams);
+        if (m_Swapchain == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "pl_vulkan_create_swapchain() failed");
+            return false;
+        }
     }
 
     m_Renderer = pl_renderer_create(m_Log, m_Vulkan->gpu);
