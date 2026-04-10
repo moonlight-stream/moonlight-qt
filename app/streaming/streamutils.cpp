@@ -84,6 +84,26 @@ Uint32 StreamUtils::getPlatformWindowFlags()
 #endif
 }
 
+SDL_Window* StreamUtils::createTestWindow()
+{
+    SDL_Window* testWindow;
+
+    testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+                                  SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
+    if (!testWindow) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to create test window with platform flags: %s",
+                    SDL_GetError());
+
+        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+        if (!testWindow) {
+            return nullptr;
+        }
+    }
+
+    return testWindow;
+}
+
 void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst)
 {
     int dstH = SDL_ceilf((float)dst->w * src->h / src->w);

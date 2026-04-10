@@ -9,6 +9,9 @@ public:
     Uint32 getPlatformWindowFlags();
 
     static
+    SDL_Window* createTestWindow();
+
+    static
     void scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst);
 
     static
