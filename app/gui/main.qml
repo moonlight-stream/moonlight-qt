@@ -22,6 +22,10 @@ ApplicationWindow {
     width: 1280
     height: 600
 
+    // Accessibility support for screen readers
+    Accessible.role: Accessible.Window
+    Accessible.name: qsTr("Moonlight Game Streaming")
+
     // This function runs prior to creation of the initial StackView item
     function doEarlyInit() {
         // Override the background color to Material 2 colors for Qt 6.5+
@@ -239,6 +243,10 @@ ApplicationWindow {
         anchors.topMargin: 5
         anchors.bottomMargin: 5
 
+        // Accessibility support for screen readers
+        Accessible.role: Accessible.ToolBar
+        Accessible.name: qsTr("Main Toolbar")
+
         Label {
             id: titleLabel
             visible: toolBar.width > 700
@@ -248,6 +256,10 @@ ApplicationWindow {
             elide: Label.ElideRight
             horizontalAlignment: Qt.AlignHCenter
             verticalAlignment: Qt.AlignVCenter
+
+            // Accessibility support for screen readers
+            Accessible.role: Accessible.Heading
+            Accessible.name: text
         }
 
         RowLayout {
@@ -261,6 +273,7 @@ ApplicationWindow {
                 visible: stackView.depth > 1
 
                 iconSource: "qrc:/res/arrow_left.svg"
+                accessibleName: qsTr("Back")
 
                 onClicked: goBack()
 
@@ -283,6 +296,9 @@ ApplicationWindow {
                 // the remaining space in the RowLayout. To "hide" it, we
                 // just set the text to empty string.
                 text: !titleLabel.visible ? stackView.currentItem.objectName : ""
+
+                Accessible.role: Accessible.Heading
+                Accessible.name: text
             }
 
             Label {
@@ -292,6 +308,9 @@ ApplicationWindow {
                 font.pointSize: 12
                 horizontalAlignment: Qt.AlignRight
                 verticalAlignment: Qt.AlignVCenter
+
+                Accessible.role: Accessible.StaticText
+                Accessible.name: text
             }
 
             NavigableToolButton {
@@ -300,6 +319,7 @@ ApplicationWindow {
                          stackView.currentItem instanceof SettingsView
 
                 iconSource: "qrc:/res/discord.svg"
+                accessibleName: qsTr("Join our community on Discord")
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -319,6 +339,7 @@ ApplicationWindow {
                 visible: stackView.currentItem instanceof PcView
 
                 iconSource:  "qrc:/res/ic_add_to_queue_white_48px.svg"
+                accessibleName: qsTr("Add PC manually")
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -346,6 +367,7 @@ ApplicationWindow {
                 id: updateButton
 
                 iconSource: "qrc:/res/update.svg"
+                accessibleName: ToolTip.text
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -383,6 +405,7 @@ ApplicationWindow {
                 visible: SystemProperties.hasBrowser
 
                 iconSource: "qrc:/res/question_mark.svg"
+                accessibleName: qsTr("Help")
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -407,6 +430,8 @@ ApplicationWindow {
                 // TODO: Implement gamepad mapping then unhide this button
                 visible: false
 
+                accessibleName: qsTr("Gamepad Mapper")
+
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
@@ -425,6 +450,7 @@ ApplicationWindow {
                 id: settingsButton
 
                 iconSource:  "qrc:/res/settings.svg"
+                accessibleName: qsTr("Settings")
 
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", SettingsView)
 
@@ -537,12 +563,19 @@ ApplicationWindow {
             Label {
                 text: addPcDialog.label
                 font.bold: true
+
+                Accessible.role: Accessible.StaticText
+                Accessible.name: text
             }
 
             TextField {
                 id: editText
                 Layout.fillWidth: true
                 focus: true
+
+                Accessible.role: Accessible.EditableText
+                Accessible.name: qsTr("PC IP address or hostname")
+                Accessible.description: placeholderText
 
                 Keys.onReturnPressed: {
                     addPcDialog.accept()

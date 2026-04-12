@@ -4,6 +4,9 @@ import QtQuick.Controls 2.2
 Menu {
     property var initiator
 
+    Accessible.role: Accessible.PopupMenu
+    Accessible.name: title
+
     onOpened: {
         // If the initiating object currently has keyboard focus,
         // give focus to the first visible and enabled menu item

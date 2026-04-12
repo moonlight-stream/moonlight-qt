@@ -9,8 +9,14 @@ ComboBox {
     property int textWidth
     property int desiredWidth : leftPadding + textWidth + indicator.width + rightPadding
     property int maximumWidth : parent.width
+    property string accessibleDescription: ""
 
     implicitWidth: desiredWidth < maximumWidth ? desiredWidth : maximumWidth
+
+    // Accessibility support for screen readers
+    Accessible.role: Accessible.ComboBox
+    Accessible.name: accessibleDescription !== "" ? accessibleDescription : ""
+    Accessible.description: currentText ? qsTr("Current value: %1").arg(currentText) : ""
 
     TextMetrics {
         id: popupMetrics
