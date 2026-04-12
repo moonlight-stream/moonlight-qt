@@ -640,7 +640,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1187"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation>Не удалось открыть аудиоустройство на этом ПК. Звук будет отключён на этот раз.</translation>
+        <translation>Не удалось открыть аудиоустройство. Во время этого сеанса аудио будет недоступно.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1192"/>

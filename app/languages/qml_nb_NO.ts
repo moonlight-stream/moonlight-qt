@@ -470,7 +470,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="118"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished">Sjekk din brannmur og portvideresendingsregler for port(ene): %1</translation>
+        <translation>Kontroller at brannmuren tillater trafikk, og at portvideresending er riktig konfigurert for port(ene): %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="123"/>
@@ -784,7 +784,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation type="unfinished"></translation>
+        <translation>Bruk Standardinnstilling (%1 Mbps)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -885,7 +885,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
         <source>Show configuration warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>Vis konfigurasjonsadvarsler</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1298"/>
@@ -1218,7 +1218,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished">Sjekk din brannmur og portvideresendingsregler for port(ene): %1</translation>
+        <translation>Kontroller at brannmuren tillater trafikk, og at portvideresending er riktig konfigurert for port(ene): %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="64"/>

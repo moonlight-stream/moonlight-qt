@@ -898,7 +898,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1025"/>
         <source>Automatic</source>
-        <translation>自动化</translation>
+        <translation>自动</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1160"/>
@@ -923,7 +923,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
         <source>Show configuration warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>显示配置警告</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1254"/>
