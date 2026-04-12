@@ -684,44 +684,87 @@ Flickable {
 
                 Row {
                     width: parent.width
-                    spacing: 5
-
-                    Slider {
-                        id: slider
-
-                        value: StreamingPreferences.bitrateKbps
-
-                        stepSize: 500
-                        from : 500
-                        to: StreamingPreferences.unlockBitrate ? 500000 : 150000
-
-                        snapMode: "SnapOnRelease"
-                        width: Math.min(bitrateDesc.implicitWidth, parent.width - (resetBitrateButton.visible ? resetBitrateButton.width + parent.spacing : 0))
-
-                        onValueChanged: {
-                            bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(value / 1000.0)
-                            StreamingPreferences.bitrateKbps = value
+                    spacing: 10
+                
+                    CheckBox {
+                        id: unlockBitrate
+                        text: qsTr("Unlock bitrate limit (Experimental)")
+                        font.pointSize: 12
+                        hoverEnabled: true
+                        checked: StreamingPreferences.unlockBitrate
+                
+                        onCheckedChanged: {
+                            StreamingPreferences.unlockBitrate = checked
+                
+                            if (checked) {
+                                StreamingPreferences.bitrateMax = bitrateMax.currentValue
+                                slider.to = bitrateMax.currentValue
+                            } else {
+                                StreamingPreferences.bitrateMax = 150000
+                                slider.to = 150000
+                            }
+                
+                            StreamingPreferences.bitrateKbps =
+                                    Math.min(StreamingPreferences.bitrateKbps, slider.to)
+                            slider.value = StreamingPreferences.bitrateKbps
                         }
-
-                        onMoved: {
-                            StreamingPreferences.autoAdjustBitrate = false
-                        }
-
-                        Component.onCompleted: {
-                            // Refresh the text after translations change
-                            languageChanged.connect(valueChanged)
-                        }
+                
+                        ToolTip.delay: 1000
+                        ToolTip.timeout: 5000
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("This unlocks extremely high video bitrates for use with Sunshine hosts.\nIt should only be used when streaming over an Ethernet LAN connection.")
                     }
-
-                    Button {
-                        id: resetBitrateButton
-                        text: qsTr("Use Default (%1 Mbps)").arg(StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444) / 1000.0)
-                        visible: StreamingPreferences.bitrateKbps !== StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
-                        onClicked: {
-                            var defaultBitrate = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
-                            StreamingPreferences.bitrateKbps = defaultBitrate
-                            StreamingPreferences.autoAdjustBitrate = true
-                            slider.value = defaultBitrate
+                
+                    AutoResizingComboBox {
+                        id: bitrateMax
+                        maximumWidth: 200
+                        enabled: unlockBitrate.checked
+                        textRole: "text"
+                
+                        model: ListModel {
+                            ListElement { text: "500 Mbps"; value: 500000 }
+                            ListElement { text: "1 Gbps"; value: 1000000 }
+                            ListElement { text: "2.5 Gbps"; value: 2500000 }
+                            ListElement { text: "5 Gbps"; value: 5000000 }
+                            ListElement { text: "10 Gbps"; value: 10000000 }
+                            ListElement { text: "25 Gbps"; value: 25000000 }
+                        }
+                
+                        property int currentValue: {
+                            if (currentIndex < 0 || currentIndex >= count)
+                                return 150000
+                            return model.get(currentIndex).value
+                        }
+                
+                        Component.onCompleted: {
+                            var savedMax = StreamingPreferences.bitrateMax
+                            var found = false
+                
+                            for (var i = 0; i < model.count; i++) {
+                                if (model.get(i).value === savedMax) {
+                                    currentIndex = i
+                                    found = true
+                                    break
+                                }
+                            }
+                
+                            if (!found)
+                                currentIndex = 0
+                
+                            recalculateWidth()
+                
+                            if (StreamingPreferences.unlockBitrate)
+                                slider.to = currentValue
+                        }
+                
+                        onActivated: {
+                            if (unlockBitrate.checked) {
+                                StreamingPreferences.bitrateMax = currentValue
+                                slider.to = currentValue
+                                StreamingPreferences.bitrateKbps =
+                                        Math.min(StreamingPreferences.bitrateKbps, slider.to)
+                                slider.value = StreamingPreferences.bitrateKbps
+                            }
                         }
                     }
                 }
