@@ -1097,10 +1097,10 @@ Flickable {
                             text: "Português" // Portuguese
                             val: StreamingPreferences.LANG_PT
                         }
-                        /* ListElement {
+                        ListElement {
                             text: "Português do Brasil" // Brazilian Portuguese
                             val: StreamingPreferences.LANG_PT_BR
-                        } */
+                        }
                         ListElement {
                             text: "Ελληνικά" // Greek
                             val: StreamingPreferences.LANG_EL

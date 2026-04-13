@@ -84,6 +84,41 @@ Uint32 StreamUtils::getPlatformWindowFlags()
 #endif
 }
 
+SDL_Window* StreamUtils::createTestWindow()
+{
+    SDL_Window* testWindow;
+    Uint32 baseFlags = 0;
+
+    // Test windows are always hidden
+    baseFlags |= SDL_WINDOW_HIDDEN;
+
+    // Creating a Vulkan surface with KMSDRM requires finding a display mode
+    // that exactly matches the window size. This is not always possible,
+    // particularly with drivers (Nvidia) that only expose modes matching
+    // the current resolution (only differing by refresh rate). Fullscreen
+    // desktop mode ensures the window size exactly matches the display mode
+    // which prevents false Vulkan renderer failures during decoder probing.
+    if (QString(SDL_GetCurrentVideoDriver()) == "KMSDRM") {
+        baseFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    }
+
+    // Try to add the platform-specific flags first and fall back if that fails
+    testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+                                  baseFlags | StreamUtils::getPlatformWindowFlags());
+    if (!testWindow) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to create test window with platform flags: %s",
+                    SDL_GetError());
+
+        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, baseFlags);
+        if (!testWindow) {
+            return nullptr;
+        }
+    }
+
+    return testWindow;
+}
+
 void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst)
 {
     int dstH = SDL_ceilf((float)dst->w * src->h / src->w);

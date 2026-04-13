@@ -4,54 +4,54 @@
 <context>
     <name>AppView</name>
     <message>
-        <location filename="../gui/AppView.qml" line="140"/>
-        <location filename="../gui/AppView.qml" line="292"/>
+        <location filename="../gui/AppView.qml" line="143"/>
+        <location filename="../gui/AppView.qml" line="299"/>
         <source>Resume Game</source>
         <translation>Spel hervatten</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="163"/>
-        <location filename="../gui/AppView.qml" line="296"/>
+        <location filename="../gui/AppView.qml" line="169"/>
+        <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
         <translation>Spel afsluiten</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="292"/>
+        <location filename="../gui/AppView.qml" line="299"/>
         <source>Launch Game</source>
         <translation>Spel starten</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="303"/>
+        <location filename="../gui/AppView.qml" line="310"/>
         <source>Direct Launch</source>
         <translation>Direct starten</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="307"/>
+        <location filename="../gui/AppView.qml" line="314"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
         <translation>Start deze app onmiddellijk wanneer de host is geselecteerd, zonder het selectie scherm te gebruiken.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="315"/>
+        <location filename="../gui/AppView.qml" line="322"/>
         <source>Hide Game</source>
         <translation>Spel verbergen</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="319"/>
+        <location filename="../gui/AppView.qml" line="326"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
         <translation>Verberg dit spel van het overzicht. Om verborgen spellen te bekijken, klik met de rechter muisknop op de host en kies %1.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="319"/>
+        <location filename="../gui/AppView.qml" line="326"/>
         <source>View All Apps</source>
         <translation>Alle apps bekijken</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="334"/>
+        <location filename="../gui/AppView.qml" line="341"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
         <translation>Deze computer lijkt geen applicaties te hebben of sommige applicaties zijn verborgen</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="347"/>
+        <location filename="../gui/AppView.qml" line="354"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>Weet u zeker dat u %1 wilt afsluiten? Alle niet-opgeslagen voortgang gaat verloren.</translation>
     </message>
@@ -246,107 +246,107 @@
         <translation>Zoeken naar compatibele hosts op uw lokale netwerk...</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="183"/>
+        <location filename="../gui/PcView.qml" line="184"/>
         <source>Wake PC</source>
         <translation>PC ontwaken</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="188"/>
+        <location filename="../gui/PcView.qml" line="189"/>
         <source>Test Network</source>
         <translation>Netwerk testen</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="196"/>
+        <location filename="../gui/PcView.qml" line="197"/>
         <source>Rename PC</source>
         <translation>PC hernoemen</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="204"/>
+        <location filename="../gui/PcView.qml" line="205"/>
         <source>Delete PC</source>
         <translation>PC verwijderen</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="212"/>
+        <location filename="../gui/PcView.qml" line="213"/>
         <source>View Details</source>
         <translation>Details bekijken</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="224"/>
+        <location filename="../gui/PcView.qml" line="225"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>De versie van GeForce Experience op %1 wordt niet ondersteund door deze versie van Moonlight, Je moet Moonlight updaten om te streamen vanaf %1.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="327"/>
+        <location filename="../gui/PcView.qml" line="324"/>
         <source>This may take a few seconds…</source>
         <translation>Dit kan enkele seconden duren…</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="338"/>
+        <location filename="../gui/PcView.qml" line="335"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
         <translation>Dit netwerk lijkt Moonlight niet te blokkeren. Als u nog steeds problemen ondervindt met de verbinding, controleer dan de firewall-instellingen van uw PC.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="338"/>
+        <location filename="../gui/PcView.qml" line="335"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
         <translation>Als u via internet wilt streamen, installeert u de Moonlight Internet Hosting Tool op uw gaming-PC en voert u de meegeleverde Internet Streaming Tester uit om de internetverbinding van uw gaming-PC te controleren.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="342"/>
+        <location filename="../gui/PcView.qml" line="339"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>De huidige netwerkverbinding van uw PC lijkt Moonlight te blokkeren. Streamen via internet werkt mogelijk niet terwijl u verbonden bent met dit netwerk.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="342"/>
+        <location filename="../gui/PcView.qml" line="339"/>
         <source>The following network ports were blocked:</source>
         <translation>De volgende netwerk poorten zijn geblokkeerd:</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="334"/>
+        <location filename="../gui/PcView.qml" line="331"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>De netwerktest kon niet worden uitgevoerd omdat geen van de verbindingstestservers van Moonlight bereikbaar was vanaf deze PC. Controleer uw internetverbinding of probeer het later opnieuw.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="169"/>
+        <location filename="../gui/PcView.qml" line="170"/>
         <source>PC Status: %1</source>
         <translation>PC-status: %1</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="169"/>
+        <location filename="../gui/PcView.qml" line="170"/>
         <source>Online</source>
         <translation>Online</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="169"/>
+        <location filename="../gui/PcView.qml" line="170"/>
         <source>Offline</source>
         <translation>Offline</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="174"/>
+        <location filename="../gui/PcView.qml" line="175"/>
         <source>View All Apps</source>
         <translation>Alle apps bekijken</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="300"/>
+        <location filename="../gui/PcView.qml" line="297"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
         <translation>Voer %1 in op uw host-PC. Dit dialoogvenster sluit zodra de koppeling is voltooid.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="301"/>
+        <location filename="../gui/PcView.qml" line="298"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
         <translation>Als uw host-PC Sunshine draait, navigeert u naar de Sunshine-webinterface om de PIN in te voeren.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="313"/>
+        <location filename="../gui/PcView.qml" line="310"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
         <translation>Weet u zeker dat u &apos;%1&apos; wilt verwijderen?</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="327"/>
+        <location filename="../gui/PcView.qml" line="324"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
         <translation>Moonlight test uw netwerkverbinding om te bepalen of er vereiste poorten geblokkeerd zijn.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="354"/>
+        <location filename="../gui/PcView.qml" line="351"/>
         <source>Enter the new name for this PC:</source>
         <translation>Voer de nieuwe naam in voor deze PC:</translation>
     </message>
@@ -354,27 +354,27 @@
 <context>
     <name>PendingPairingTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="600"/>
+        <location filename="../backend/computermanager.cpp" line="604"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
         <translation>De PIN van de PC komt niet overeen. Probeer het opnieuw.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="604"/>
+        <location filename="../backend/computermanager.cpp" line="608"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
         <translation>U kunt niet koppelen terwijl er nog een eerdere sessie op de host-PC actief is. Sluit alle actieve spellen af of start de host-PC opnieuw op en probeer vervolgens opnieuw te koppelen.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="607"/>
+        <location filename="../backend/computermanager.cpp" line="611"/>
         <source>Pairing failed. Please try again.</source>
         <translation>Koppelen mislukt. Probeer opnieuw.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="611"/>
+        <location filename="../backend/computermanager.cpp" line="615"/>
         <source>Another pairing attempt is already in progress.</source>
         <translation>Een andere koppelpoging is al bezig.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="621"/>
+        <location filename="../backend/computermanager.cpp" line="625"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience gaf de volgende fout terug: %1</translation>
     </message>
@@ -382,7 +382,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="671"/>
+        <location filename="../backend/computermanager.cpp" line="675"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>De huidige game is niet gestart door deze PC. Je moet de game handmatig afsluiten op de host PC of op het apparaat dat de game heeft opgestart.</translation>
     </message>
@@ -427,27 +427,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="674"/>
+        <location filename="../main.cpp" line="838"/>
         <source>&amp;Yes</source>
         <translation>&amp;Ja</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="675"/>
+        <location filename="../main.cpp" line="839"/>
         <source>&amp;No</source>
         <translation>&amp;Nee</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="676"/>
+        <location filename="../main.cpp" line="840"/>
         <source>OK</source>
         <translation>Oké</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="677"/>
+        <location filename="../main.cpp" line="841"/>
         <source>Help</source>
         <translation>Hulp</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="678"/>
+        <location filename="../main.cpp" line="842"/>
         <source>Cancel</source>
         <translation>Annuleren</translation>
     </message>
@@ -463,57 +463,57 @@
 <context>
     <name>Session</name>
     <message>
-        <location filename="../streaming/session.cpp" line="117"/>
+        <location filename="../streaming/session.cpp" line="104"/>
         <source>No video received from host.</source>
         <translation>Geen video ontvangen van de host.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="118"/>
+        <location filename="../streaming/session.cpp" line="105"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>Controleer uw firewall en poortdoorstuurregels voor poort(en): %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="123"/>
+        <location filename="../streaming/session.cpp" line="110"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
         <translation>Uw netwerkverbinding presteert niet goed. Verlaag de bitsnelheid van uw video of probeer een snellere verbinding.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="129"/>
+        <location filename="../streaming/session.cpp" line="116"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>Er is iets mis gegaan op de host PC tijdens het starten van de stream.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="130"/>
+        <location filename="../streaming/session.cpp" line="117"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>Zorg ervoor dat er geen DRM-beveiligde content openstaat op uw host-PC. U kunt ook proberen uw host-PC opnieuw op te starten.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="135"/>
+        <location filename="../streaming/session.cpp" line="122"/>
         <source>The host PC reported a fatal video encoding error.</source>
         <translation>De host PC rapporteerde een fatale video codeerfout.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="136"/>
+        <location filename="../streaming/session.cpp" line="123"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
         <translation>Probeer HDR uit te zetten, de resolutie van de stream te veranderen, of de schermresolutie van de host-PC te veranderen.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="144"/>
+        <location filename="../streaming/session.cpp" line="131"/>
         <source>Connection terminated</source>
         <translation>Verbinding verbroken</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="145"/>
+        <location filename="../streaming/session.cpp" line="132"/>
         <source>Error code: %1</source>
         <translation>Fout­code: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="975"/>
+        <location filename="../streaming/session.cpp" line="952"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>De versie van Geforce Experience op %1 word niet ondersteund door deze versie van Moonlight. Je moet Moonlight updaten om te streamen vanaf %1.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="980"/>
+        <location filename="../streaming/session.cpp" line="957"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>Je keuze om remote desktop muis modus te gebruiken kan problemen veroorzaken in games.</translation>
     </message>
@@ -522,148 +522,148 @@
         <translation type="vanished">HDR wordt niet ondersteund door software decoding.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="984"/>
+        <location filename="../streaming/session.cpp" line="961"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Je instelling om software decoding te forceren kan slechte prestaties veroorzaken.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1014"/>
+        <location filename="../streaming/session.cpp" line="997"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
         <translation>Uw host-PC ondersteunt coderen met HEVC niet.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1031"/>
+        <location filename="../streaming/session.cpp" line="1015"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>Er wordt softwaredecodering gebruikt vanwege uw keuze om HEVC te forceren zonder GPU-ondersteuning. Dit kan leiden tot slechte streamingprestaties.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="990"/>
+        <location filename="../streaming/session.cpp" line="967"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
         <translation>De software of GPU van uw host ondersteunt het coderen van AV1 niet.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1007"/>
+        <location filename="../streaming/session.cpp" line="985"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
         <translation>Er wordt softwaredecodering gebruikt omdat u AV1 zonder GPU-ondersteuning hebt geforceerd. Dit kan leiden tot slechte streamingprestaties.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1073"/>
+        <location filename="../streaming/session.cpp" line="1062"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
         <translation>Uw host-PC ondersteunt geen HDR-streaming.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1065"/>
+        <location filename="../streaming/session.cpp" line="1054"/>
         <source>HDR is not supported using the H.264 codec.</source>
         <translation>HDR wordt niet ondersteund met de H.264-codec.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1088"/>
+        <location filename="../streaming/session.cpp" line="1077"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
         <translation>De GPU van deze PC ondersteunt geen AV1 Main10-decodering voor HDR-streaming.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1069"/>
+        <location filename="../streaming/session.cpp" line="1058"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
         <translation>De GPU van deze PC ondersteunt geen 10-bits HEVC- of AV1-decodering voor HDR-streaming.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1121"/>
+        <location filename="../streaming/session.cpp" line="1110"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
         <translation>Uw host-PC en client-PC ondersteunen niet dezelfde HDR-videocodecs.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1214"/>
+        <location filename="../streaming/session.cpp" line="1203"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
         <translation>Videoresoluties boven 4K worden niet ondersteund door de H.264-codec.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1601"/>
+        <location filename="../streaming/session.cpp" line="1600"/>
         <source>Host returned error: %1</source>
         <translation>Host gaf fout terug: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1045"/>
+        <location filename="../streaming/session.cpp" line="1034"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Gebruik maken van software decodering door selectie om H.264 te forceren zonder GPU ondersteuning. Dit kan slechte streamingkwaliteit veroorzaken.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1055"/>
+        <location filename="../streaming/session.cpp" line="1044"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>Uw server PC en cliënt PC ondersteunen niet dezelfde videocodering. Dit kan slechte streamingkwaliteit veroorzaken.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1058"/>
+        <location filename="../streaming/session.cpp" line="1047"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>Uw cliënt GPU ondersteund geen H.264 decodering. Dit kan slechte streamingkwaliteit veroorzaken.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1094"/>
-        <location filename="../streaming/session.cpp" line="1112"/>
+        <location filename="../streaming/session.cpp" line="1083"/>
+        <location filename="../streaming/session.cpp" line="1101"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
         <translation>Er wordt softwaredecodering gebruikt vanwege uw keuze om HDR te forceren zonder GPU-ondersteuning. Dit kan leiden tot slechte streamingprestaties.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1106"/>
+        <location filename="../streaming/session.cpp" line="1095"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>De videokaart van deze PC ondersteunt geen HEVC Main10 decodatie voor HDR streaming.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1128"/>
+        <location filename="../streaming/session.cpp" line="1117"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
         <translation>Uw host-PC ondersteunt geen YUV 4:4:4-streaming.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1136"/>
+        <location filename="../streaming/session.cpp" line="1125"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
         <translation>Uw host-PC ondersteunt geen YUV 4:4:4-streaming voor de geselecteerde videocodec.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1151"/>
+        <location filename="../streaming/session.cpp" line="1140"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
         <translation>Softwaredecodering wordt gebruikt vanwege uw keuze om YUV 4:4:4 te forceren zonder GPU-ondersteuning. Dit kan leiden tot slechte streamingprestaties.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1157"/>
+        <location filename="../streaming/session.cpp" line="1146"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
         <translation>De GPU van deze PC ondersteunt geen YUV 4:4:4-decodering voor geselecteerde videocodecs.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1166"/>
+        <location filename="../streaming/session.cpp" line="1155"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>GeForce Experience 3.0 of nieuwer is vereist voor 4K streaming.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1181"/>
+        <location filename="../streaming/session.cpp" line="1170"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>Je geselecteerde surround sound instelling wordt niet ondersteund door het huidige audio apparaat.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1187"/>
+        <location filename="../streaming/session.cpp" line="1176"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>Openen van audio apparaat mislukt. Audio is niet beschikbaar tijdens deze sessie.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1192"/>
+        <location filename="../streaming/session.cpp" line="1181"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>Een aangesloten gamepad heeft geen instellingen en is dus niet bruikbaar. Bezoek Moonlight hulp om dit op te lossen.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1210"/>
+        <location filename="../streaming/session.cpp" line="1199"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>De videokaart van de host PC ondersteund geen video resoluties hoger dan 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1228"/>
+        <location filename="../streaming/session.cpp" line="1217"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Je keuze om hardware decoding te forceren kon niet worden volbracht omdat de videokaart op deze PC geen ondersteuning bied voor hardware decoding.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1231"/>
+        <location filename="../streaming/session.cpp" line="1220"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Je codec keuze en de keuze voor het forceren van hardware decodatie zijn niet compatibel. De videokaart van deze PC ondersteund de gekozen codec niet.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2207"/>
+        <location filename="../streaming/session.cpp" line="2198"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Videodecoder kan niet worden geïnitialiseerd. Controleer uw streaminginstellingen en probeer het opnieuw.</translation>
     </message>
@@ -1204,48 +1204,48 @@
 <context>
     <name>StreamSegue</name>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="11"/>
+        <location filename="../gui/StreamSegue.qml" line="12"/>
         <source>Resuming %1...</source>
         <translation>%1 hervatten…</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="12"/>
-        <location filename="../gui/StreamSegue.qml" line="19"/>
+        <location filename="../gui/StreamSegue.qml" line="13"/>
+        <location filename="../gui/StreamSegue.qml" line="20"/>
         <source>Starting %1...</source>
         <translation>%1 Starten…</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="25"/>
+        <location filename="../gui/StreamSegue.qml" line="26"/>
         <source>Starting %1 failed: Error %2</source>
         <translation>Starten van %1 mislukt: Error %2</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="28"/>
+        <location filename="../gui/StreamSegue.qml" line="29"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>Controleer uw firewall en poortdoorstuurregels voor poort(en): %1</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="64"/>
+        <location filename="../gui/StreamSegue.qml" line="65"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>De internetverbinding van deze PC blokkeert Moonlight. Streamen via internet werkt mogelijk niet terwijl u verbonden bent met dit netwerk.</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="167"/>
+        <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Tip:</source>
         <translation>Tip:</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="167"/>
+        <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Press %1 to disconnect your session</source>
         <translation>Druk op %1 om de verbinding met de sessie te verbreken</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="168"/>
+        <location filename="../gui/StreamSegue.qml" line="169"/>
         <source>Start+Select+L1+R1</source>
         <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="168"/>
+        <location filename="../gui/StreamSegue.qml" line="169"/>
         <source>Ctrl+Alt+Shift+Q</source>
         <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
@@ -1253,82 +1253,82 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../gui/main.qml" line="432"/>
+        <location filename="../gui/main.qml" line="444"/>
         <source>Settings</source>
         <translation>Instellingen</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="279"/>
+        <location filename="../gui/main.qml" line="291"/>
         <source>Version %1</source>
         <translation>Versie %1</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="295"/>
+        <location filename="../gui/main.qml" line="307"/>
         <source>Join our community on Discord</source>
         <translation>Neem deel aan de community op Discord</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="314"/>
+        <location filename="../gui/main.qml" line="326"/>
         <source>Add PC manually</source>
         <translation>PC handmatig toe­voegen</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="354"/>
+        <location filename="../gui/main.qml" line="366"/>
         <source>Update available for Moonlight: Version %1</source>
         <translation>Update beschikbaar voor Moonlight: Versie %1</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="401"/>
+        <location filename="../gui/main.qml" line="413"/>
         <source>Gamepad Mapper</source>
         <translation>Gamepad-mapper</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="447"/>
+        <location filename="../gui/main.qml" line="459"/>
         <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
         <translation>Hardware acceleration werkt niet met XWayland. Doorgaan met XWayland kan slechte streaming prestaties veroorzaken. Probeer te spelen met QT_QPA_PLATFORM=wayland of verander naar X11.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="456"/>
+        <location filename="../gui/main.qml" line="468"/>
         <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
         <translation>Deze versie van Moonlight is niet geoptimaliseerd voor uw PC. Download de &apos;%1&apos;-versie van Moonlight voor de beste streamingprestaties.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="465"/>
+        <location filename="../gui/main.qml" line="477"/>
         <source>Moonlight detected gamepads without a mapping:</source>
         <translation>Moonlight heeft gamepads gedetecteerd zonder mapping:</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="378"/>
+        <location filename="../gui/main.qml" line="390"/>
         <source>Help</source>
         <translation>Hulp</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="439"/>
+        <location filename="../gui/main.qml" line="451"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
         <translation>Geen werkende hardware versnelde videodecoder gevonden door Moonlight. De streamingkwaliteit kan ernstig beïnvloed worden met deze configuratie.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="441"/>
+        <location filename="../gui/main.qml" line="453"/>
         <source>Click the Help button for more information on solving this problem.</source>
         <translation>Klik op de hulp-knop voor meer informatie over het oplossen van dit probleem.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="449"/>
+        <location filename="../gui/main.qml" line="461"/>
         <source>Click the Help button for more information.</source>
         <translation>Klik op de hulp-knop voor meer informatie.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="467"/>
+        <location filename="../gui/main.qml" line="479"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
         <translation>Klik op de Hulp-knop voor meer informatie over het toewijzen van uw gamepads.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="475"/>
+        <location filename="../gui/main.qml" line="487"/>
         <source>Are you sure you want to quit?</source>
         <translation>Weet u zeker dat u wilt stoppen?</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="505"/>
+        <location filename="../gui/main.qml" line="517"/>
         <source>Enter the IP address of your host PC:</source>
         <translation>Voer het IP-adres van uw host-PC in:</translation>
     </message>

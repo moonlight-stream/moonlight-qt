@@ -20,10 +20,10 @@ jobs:
         include:
           # Windows
           - os: windows-2025
-            qt_version: 6.10.2
+            qt_version: 6.11.0
           # macOS
           - os: macos-15
-            qt_version: 6.10.2
+            qt_version: 6.11.0
 
     runs-on: ${{ matrix.os }}
 
@@ -47,7 +47,7 @@ jobs:
           set-env: ${{ runner.os != 'Windows' }}
           add-tools-to-path: ${{ runner.os != 'Windows' }}
           version: ${{ matrix.qt_version }}
-          aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@9edeb24ae65361fd032a063a0b0148764eff09c5'
+          aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@073e34d7c2ab4ae6961ed7cca690b3abd5ba5a7e'
 
       - name: Install Qt ARM64 (Windows)
         if: runner.os == 'Windows'

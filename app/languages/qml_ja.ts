@@ -4,54 +4,54 @@
 <context>
     <name>AppView</name>
     <message>
-        <location filename="../gui/AppView.qml" line="140"/>
-        <location filename="../gui/AppView.qml" line="292"/>
+        <location filename="../gui/AppView.qml" line="143"/>
+        <location filename="../gui/AppView.qml" line="299"/>
         <source>Resume Game</source>
         <translation>ゲームを再開</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="163"/>
-        <location filename="../gui/AppView.qml" line="296"/>
+        <location filename="../gui/AppView.qml" line="169"/>
+        <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
         <translation>ゲームを終了</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="292"/>
+        <location filename="../gui/AppView.qml" line="299"/>
         <source>Launch Game</source>
         <translation>ゲームを起動</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="303"/>
+        <location filename="../gui/AppView.qml" line="310"/>
         <source>Direct Launch</source>
         <translation>ダイレクト起動</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="307"/>
+        <location filename="../gui/AppView.qml" line="314"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
         <translation>ホストが選択された際、アプリ選択画面をスキップして直接このアプリを起動する。</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="315"/>
+        <location filename="../gui/AppView.qml" line="322"/>
         <source>Hide Game</source>
         <translation>ゲームを非表示</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="319"/>
+        <location filename="../gui/AppView.qml" line="326"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
         <translation>アプリ画面からこのゲームを非表示にする。非表示のゲームにアクセスするには、ホストを右クリックして%1を選択してください。</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="319"/>
+        <location filename="../gui/AppView.qml" line="326"/>
         <source>View All Apps</source>
         <translation>すべてのアプリを表示</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="334"/>
+        <location filename="../gui/AppView.qml" line="341"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>このコンピュータにはアプリケーションが一切ないか、あるいは一部のアプリケーションが非表示になっています</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="347"/>
+        <location filename="../gui/AppView.qml" line="354"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>本当に%1を終了しますか？未セーブの進行状況はすべて失われます。</translation>
     </message>
@@ -246,107 +246,107 @@
         <translation>接続できるホストをローカルネットワーク上探しています...</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="183"/>
+        <location filename="../gui/PcView.qml" line="184"/>
         <source>Wake PC</source>
         <translation>PCを起動</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="188"/>
+        <location filename="../gui/PcView.qml" line="189"/>
         <source>Test Network</source>
         <translation>ネットワークをテスト</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="196"/>
+        <location filename="../gui/PcView.qml" line="197"/>
         <source>Rename PC</source>
         <translation>PCの名前を変更</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="204"/>
+        <location filename="../gui/PcView.qml" line="205"/>
         <source>Delete PC</source>
         <translation>PCを削除</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="212"/>
+        <location filename="../gui/PcView.qml" line="213"/>
         <source>View Details</source>
         <translation>詳細表示</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="224"/>
+        <location filename="../gui/PcView.qml" line="225"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>%1のGeForce Experienceのバージョンは、このビルドのMoonlightではサポートされていません。%1からストリーミングするには、Moonlightをアップデートする必要があります。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="327"/>
+        <location filename="../gui/PcView.qml" line="324"/>
         <source>This may take a few seconds…</source>
         <translation>これには数秒かかることがあります…</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="338"/>
+        <location filename="../gui/PcView.qml" line="335"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
         <translation>このネットワークはMoonlightをブロックしていないようです。それでも接続に問題がある場合は、PCのファイアウォール設定を確認してください。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="338"/>
+        <location filename="../gui/PcView.qml" line="335"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
         <translation>インターネット経由でストリーミングを行う場合は、ゲーミングPCにMoonlight Internet Hosting Toolをインストールし、付属のInternet Streaming Testerを実行してゲーミングPCのインターネット接続を確認してください。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="342"/>
+        <location filename="../gui/PcView.qml" line="339"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>PCの現在のネットワーク接続がMoonlightをブロックしているようです。このネットワークに接続している間はインターネットでのストリーミングができない場合があります。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="342"/>
+        <location filename="../gui/PcView.qml" line="339"/>
         <source>The following network ports were blocked:</source>
         <translation>次のネットワークポートがブロックされました:</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="334"/>
+        <location filename="../gui/PcView.qml" line="331"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>このPCからMoonlightの接続テスト用サーバーにアクセスできなかったため、ネットワークテストを実行できませんでした。インターネット接続を確認するか、後ほど再試行してください。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="169"/>
+        <location filename="../gui/PcView.qml" line="170"/>
         <source>PC Status: %1</source>
         <translation>PCステータス: %1</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="169"/>
+        <location filename="../gui/PcView.qml" line="170"/>
         <source>Online</source>
         <translation>オンライン</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="169"/>
+        <location filename="../gui/PcView.qml" line="170"/>
         <source>Offline</source>
         <translation>オフライン</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="174"/>
+        <location filename="../gui/PcView.qml" line="175"/>
         <source>View All Apps</source>
         <translation>すべてのアプリを表示</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="300"/>
+        <location filename="../gui/PcView.qml" line="297"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
         <translation>接続される側のコンピュータに %1 を入力してください。このダイアログはペアリング終了時に閉じます。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="301"/>
+        <location filename="../gui/PcView.qml" line="298"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
         <translation>コンピュータで Sunshine がはしっている場合、Sunshine のウエブUIにPINを入力してください。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="313"/>
+        <location filename="../gui/PcView.qml" line="310"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
         <translation>本当に &apos;%1&apos; を削除しますか？</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="327"/>
+        <location filename="../gui/PcView.qml" line="324"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
         <translation>Moonlight はブロックされているポートがないかを確かめるためネットワーク接続テストを実施しています。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="354"/>
+        <location filename="../gui/PcView.qml" line="351"/>
         <source>Enter the new name for this PC:</source>
         <translation>このPCの新しい名前を入力してください:</translation>
     </message>
@@ -354,27 +354,27 @@
 <context>
     <name>PendingPairingTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="600"/>
+        <location filename="../backend/computermanager.cpp" line="604"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
         <translation>PCからのPINが一致しませんでした。再度お試しください。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="604"/>
+        <location filename="../backend/computermanager.cpp" line="608"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
         <translation>ホストPCで前回のセッションが実行している間はペアリングできません。実行中のゲームを終了するか、ホストPCを再起動した後に再度ペアリングしてください。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="607"/>
+        <location filename="../backend/computermanager.cpp" line="611"/>
         <source>Pairing failed. Please try again.</source>
         <translation>ペアリングが失敗しました。再度お試しください。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="611"/>
+        <location filename="../backend/computermanager.cpp" line="615"/>
         <source>Another pairing attempt is already in progress.</source>
         <translation>別のペアリング試行がすでに試行中です。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="621"/>
+        <location filename="../backend/computermanager.cpp" line="625"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experienceがエラーを返しました: %1</translation>
     </message>
@@ -382,7 +382,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="671"/>
+        <location filename="../backend/computermanager.cpp" line="675"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>実行中のゲームはこのPCで開始されたものではありません。ホストPCでゲームを手動で終了するか、最初にゲームを開始したデバイスを使用する必要があります。</translation>
     </message>
@@ -427,27 +427,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="674"/>
+        <location filename="../main.cpp" line="838"/>
         <source>&amp;Yes</source>
         <translation>はい(&amp;Y)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="675"/>
+        <location filename="../main.cpp" line="839"/>
         <source>&amp;No</source>
         <translation>いいえ(&amp;N)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="676"/>
+        <location filename="../main.cpp" line="840"/>
         <source>OK</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="677"/>
+        <location filename="../main.cpp" line="841"/>
         <source>Help</source>
         <translation>ヘルプ</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="678"/>
+        <location filename="../main.cpp" line="842"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
@@ -463,57 +463,57 @@
 <context>
     <name>Session</name>
     <message>
-        <location filename="../streaming/session.cpp" line="117"/>
+        <location filename="../streaming/session.cpp" line="104"/>
         <source>No video received from host.</source>
         <translation>ホストから映像を受信していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="118"/>
+        <location filename="../streaming/session.cpp" line="105"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>ファイアウォールと次のポートのポートフォワーディングルールを確認してください: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="123"/>
+        <location filename="../streaming/session.cpp" line="110"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
         <translation>ネットワーク接続がうまくいっていません。ビデオビットレートの設定を下げるか、より高速な回線を使用してください。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="129"/>
+        <location filename="../streaming/session.cpp" line="116"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>ストリーミングを開始する際に、ホストPCで何か問題が発生しました。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="130"/>
+        <location filename="../streaming/session.cpp" line="117"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>ホストPCでDRM保護コンテンツを開いていないことを確認してください。また、ホストPCの再起動もお試しください。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="135"/>
+        <location filename="../streaming/session.cpp" line="122"/>
         <source>The host PC reported a fatal video encoding error.</source>
         <translation>ホーストのPCが再起不能なビデオエンコードエラーを起こしました。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="136"/>
+        <location filename="../streaming/session.cpp" line="123"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
         <translation>HDRモードを無効にしたり、ストリーミング解像度を変更したり、ホストPCのディスプレイ解像度を変更したりしてみてください。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="144"/>
+        <location filename="../streaming/session.cpp" line="131"/>
         <source>Connection terminated</source>
         <translation>接続が終了しました</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="145"/>
+        <location filename="../streaming/session.cpp" line="132"/>
         <source>Error code: %1</source>
         <translation>エラーコード: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="975"/>
+        <location filename="../streaming/session.cpp" line="952"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>%1のGeForce Experienceのバージョンは、このビルドのMoonlightではサポートされていません。%1からストリーミングするには、Moonlightをアップデートする必要があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="980"/>
+        <location filename="../streaming/session.cpp" line="957"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>リモートデスクトップマウスモードを有効にすると、ゲームで問題が発生する場合があります。</translation>
     </message>
@@ -522,148 +522,148 @@
         <translation type="vanished">ソフトウェアデコードではHDRに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="984"/>
+        <location filename="../streaming/session.cpp" line="961"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>ソフトウェアデコードを強制する設定になっていると、ストリーミングのパフォーマンスが低下する場合があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1014"/>
+        <location filename="../streaming/session.cpp" line="997"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
         <translation>ホストPCがHEVCエンコーディングをサポートしていません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1031"/>
+        <location filename="../streaming/session.cpp" line="1015"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>GPUをサポートしていないHEVCを強制する設定を選択したため、ソフトウェアデコーディングを使用しています。これによってストリーミングパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="990"/>
+        <location filename="../streaming/session.cpp" line="967"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
         <translation>ホストソフトウェアまたはGPUがAV1エンコーディングをサポートしていません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1007"/>
+        <location filename="../streaming/session.cpp" line="985"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
         <translation>GPUサポートなしでAV1を強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1073"/>
+        <location filename="../streaming/session.cpp" line="1062"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
         <translation>ホストPCがHDRストリーミングをサポートしていません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1065"/>
+        <location filename="../streaming/session.cpp" line="1054"/>
         <source>HDR is not supported using the H.264 codec.</source>
         <translation>HDRはH.264コーデックでは対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1088"/>
+        <location filename="../streaming/session.cpp" line="1077"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
         <translation>このPCのGPUはHDRストリーミング用のAV1 Main10デコーディングをサポートしていません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1069"/>
+        <location filename="../streaming/session.cpp" line="1058"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
         <translation>このPCのGPUはHDRストリーミング用の10ビットHEVCまたはAV1デコーディングをサポートしていません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1121"/>
+        <location filename="../streaming/session.cpp" line="1110"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
         <translation>ホストPCとクライアントPCが同じHDRビデオコーデックをサポートしていません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1214"/>
+        <location filename="../streaming/session.cpp" line="1203"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
         <translation>4Kを超えるビデオ解像度はH.264コーデックではサポートされていません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1601"/>
+        <location filename="../streaming/session.cpp" line="1600"/>
         <source>Host returned error: %1</source>
         <translation>ホストがエラーを返しました：%1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1045"/>
+        <location filename="../streaming/session.cpp" line="1034"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>GPUサポートなしでH.264を強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1055"/>
+        <location filename="../streaming/session.cpp" line="1044"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>ホストPCとクライアントPCが同じビデオコーデックをサポートしていません。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1058"/>
+        <location filename="../streaming/session.cpp" line="1047"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>クライアントのGPUがH.264デコーディングをサポートしていません。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1094"/>
-        <location filename="../streaming/session.cpp" line="1112"/>
+        <location filename="../streaming/session.cpp" line="1083"/>
+        <location filename="../streaming/session.cpp" line="1101"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
         <translation>GPUサポートなしでHDRを強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1106"/>
+        <location filename="../streaming/session.cpp" line="1095"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>このPCのGPUはHDRストリーミングのHEVC Main10デコーディングに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1128"/>
+        <location filename="../streaming/session.cpp" line="1117"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
         <translation>ホストPCがYUV 4:4:4ストリーミングをサポートしていません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1136"/>
+        <location filename="../streaming/session.cpp" line="1125"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
         <translation>ホストPCが選択されたビデオコーデックでのYUV 4:4:4ストリーミングをサポートしていません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1151"/>
+        <location filename="../streaming/session.cpp" line="1140"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
         <translation>GPUサポートなしでYUV 4:4:4を強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1157"/>
+        <location filename="../streaming/session.cpp" line="1146"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
         <translation>このPCのGPUは選択されたビデオコーデックでのYUV 4:4:4ストリーミングをサポートしていません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1166"/>
+        <location filename="../streaming/session.cpp" line="1155"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>4KストリーミングにはGeForce Experience 3.0以降が必要です。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1181"/>
+        <location filename="../streaming/session.cpp" line="1170"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>選択したサラウンド音声設定は現在のオーディオデバイスに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1187"/>
+        <location filename="../streaming/session.cpp" line="1176"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>オーディオデバイスのオープンに失敗しました。このセッションでは音声は利用できません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1192"/>
+        <location filename="../streaming/session.cpp" line="1181"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>接続されたゲームパッドはマッピングされていないため、使用できません。この問題を解決するには、Moonlightのヘルプをご覧ください。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1210"/>
+        <location filename="../streaming/session.cpp" line="1199"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>ホストPCのGPUは4Kを超えるビデオ解像度でのストリーミングに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1228"/>
+        <location filename="../streaming/session.cpp" line="1217"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>このPCのGPUはハードウェアデコードに対応していないため、ハードウェアデコードを強制するという選択を満たすことができません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1231"/>
+        <location filename="../streaming/session.cpp" line="1220"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>選択したコーデックとハードウェアデコードを強制する設定には互換性がありません。このPCのGPUは、選択したコーデックのデコードに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2207"/>
+        <location filename="../streaming/session.cpp" line="2198"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>ビデオデコーダを初期化できませんでした。ストリーミングの設定を確認して再度お試しください。</translation>
     </message>
@@ -784,7 +784,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation type="unfinished"></translation>
+        <translation>デフォルト設定を使用 (%1 Mbps)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -885,7 +885,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
         <source>Show configuration warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>設定に関する警告を表示する</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1298"/>
@@ -1204,48 +1204,48 @@
 <context>
     <name>StreamSegue</name>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="11"/>
+        <location filename="../gui/StreamSegue.qml" line="12"/>
         <source>Resuming %1...</source>
         <translation>%1を再開しています...</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="12"/>
-        <location filename="../gui/StreamSegue.qml" line="19"/>
+        <location filename="../gui/StreamSegue.qml" line="13"/>
+        <location filename="../gui/StreamSegue.qml" line="20"/>
         <source>Starting %1...</source>
         <translation>%1を起動しています...</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="25"/>
+        <location filename="../gui/StreamSegue.qml" line="26"/>
         <source>Starting %1 failed: Error %2</source>
         <translation>%1の起動に失敗しました: エラー %2</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="28"/>
+        <location filename="../gui/StreamSegue.qml" line="29"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>ファイアウォールと次のポートのポートフォワーディングルールを確認してください: %1</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="64"/>
+        <location filename="../gui/StreamSegue.qml" line="65"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>このPCのインターネット接続がMoonlightをブロックしています。このネットワークに接続している間はインターネットでのストリーミングができない場合があります。</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="167"/>
+        <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Tip:</source>
         <translation>ヒント:</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="167"/>
+        <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Press %1 to disconnect your session</source>
         <translation>%1を押してセッションを切断します</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="168"/>
+        <location filename="../gui/StreamSegue.qml" line="169"/>
         <source>Start+Select+L1+R1</source>
         <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="168"/>
+        <location filename="../gui/StreamSegue.qml" line="169"/>
         <source>Ctrl+Alt+Shift+Q</source>
         <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
@@ -1253,82 +1253,82 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../gui/main.qml" line="432"/>
+        <location filename="../gui/main.qml" line="444"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="279"/>
+        <location filename="../gui/main.qml" line="291"/>
         <source>Version %1</source>
         <translation>バージョン %1</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="295"/>
+        <location filename="../gui/main.qml" line="307"/>
         <source>Join our community on Discord</source>
         <translation>Discordコミュニティに参加する</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="314"/>
+        <location filename="../gui/main.qml" line="326"/>
         <source>Add PC manually</source>
         <translation>手動でPCを追加</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="354"/>
+        <location filename="../gui/main.qml" line="366"/>
         <source>Update available for Moonlight: Version %1</source>
         <translation>Moonlightで利用可能なアップデート: バージョン %1</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="401"/>
+        <location filename="../gui/main.qml" line="413"/>
         <source>Gamepad Mapper</source>
         <translation>ゲームパッドマッパー</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="447"/>
+        <location filename="../gui/main.qml" line="459"/>
         <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
         <translation>XWaylandではハードウェアアクセラレーションが動作しません。XWaylandで続行すると、ストリーミングのパフォーマンスが低下する可能性があります。QT_QPA_PLATFORM=waylandで実行するか、X11に切り替えてみてください。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="456"/>
+        <location filename="../gui/main.qml" line="468"/>
         <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
         <translation>このバージョンのMoonlightは、お使いのPCに最適化されていません。最高のストリーミングパフォーマンスを実現するには、Moonlightの&apos;%1&apos;バージョンをダウンロードしてください。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="465"/>
+        <location filename="../gui/main.qml" line="477"/>
         <source>Moonlight detected gamepads without a mapping:</source>
         <translation>Moonlightはマッピングのないゲームパッドを検出しました:</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="378"/>
+        <location filename="../gui/main.qml" line="390"/>
         <source>Help</source>
         <translation>ヘルプ</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="439"/>
+        <location filename="../gui/main.qml" line="451"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
         <translation>Moonlightはハードウェアアクセラレーションされたビデオデコーダーを検出できませんでした。この構成ではストリーミングのパフォーマンスが著しく低下する可能性があります。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="441"/>
+        <location filename="../gui/main.qml" line="453"/>
         <source>Click the Help button for more information on solving this problem.</source>
         <translation>この問題を解決するための詳細情報については、ヘルプボタンをクリックしてください。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="449"/>
+        <location filename="../gui/main.qml" line="461"/>
         <source>Click the Help button for more information.</source>
         <translation>詳細については、ヘルプボタンをクリックしてください。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="467"/>
+        <location filename="../gui/main.qml" line="479"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
         <translation>ゲームパッドをマップする方法については、ヘルプボタンをクリックしてください。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="475"/>
+        <location filename="../gui/main.qml" line="487"/>
         <source>Are you sure you want to quit?</source>
         <translation>本当に終了しますか？</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="505"/>
+        <location filename="../gui/main.qml" line="517"/>
         <source>Enter the IP address of your host PC:</source>
         <translation>ホストPCのIPアドレスを入力してください:</translation>
     </message>

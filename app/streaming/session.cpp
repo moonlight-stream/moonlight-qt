@@ -640,21 +640,13 @@ bool Session::initialize(QQuickWindow* qtWindow)
     getWindowDimensions(x, y, width, height);
 
     // Create a hidden window to use for decoder initialization tests
-    SDL_Window* testWindow = SDL_CreateWindow("", x, y, width, height,
-                                              SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
+    SDL_Window* testWindow = StreamUtils::createTestWindow();
     if (!testWindow) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to create test window with platform flags: %s",
-                    SDL_GetError());
-
-        testWindow = SDL_CreateWindow("", x, y, width, height, SDL_WINDOW_HIDDEN);
-        if (!testWindow) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to create window for hardware decode test: %s",
-                         SDL_GetError());
-            SDL_QuitSubSystem(SDL_INIT_VIDEO);
-            return false;
-        }
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create window for hardware decode test: %s",
+                     SDL_GetError());
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return false;
     }
 
     qInfo() << "Server GPU:" << m_Computer->gpuModel;
@@ -781,24 +773,6 @@ bool Session::initialize(QQuickWindow* qtWindow)
             }
         }
 
-#if 0
-        // TODO: Determine if AV1 is better depending on the decoder
-        if (getDecoderAvailability(testWindow,
-                                   m_Preferences->videoDecoderSelection,
-                                   m_Preferences->enableYUV444 ?
-                                        (m_Preferences->enableHdr ? VIDEO_FORMAT_AV1_HIGH10_444 : VIDEO_FORMAT_AV1_HIGH8_444) :
-                                        (m_Preferences->enableHdr ? VIDEO_FORMAT_AV1_MAIN10 : VIDEO_FORMAT_AV1_MAIN8),
-                                   m_StreamConfig.width,
-                                   m_StreamConfig.height,
-                                   m_StreamConfig.fps) != DecoderAvailability::Hardware) {
-            // Deprioritize AV1 unless we can't hardware decode HEVC and have HDR enabled.
-            // We want to keep AV1 at the top of the list for HDR with software decoding
-            // because dav1d is higher performance than FFmpeg's HEVC software decoder.
-            if (hevcDA == DecoderAvailability::Hardware || !m_Preferences->enableHdr) {
-                m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1);
-            }
-        }
-#else
         // Deprioritize AV1 unless we can't hardware decode HEVC, and have HDR enabled
         // or we're on Windows or a non-x86 Linux/BSD.
         //
@@ -826,7 +800,15 @@ bool Session::initialize(QQuickWindow* qtWindow)
             ) {
             m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1);
         }
-#endif
+        else if (!m_Preferences->enableHdr &&
+                   getDecoderAvailability(testWindow,
+                                          m_Preferences->videoDecoderSelection,
+                                          m_Preferences->enableYUV444 ? VIDEO_FORMAT_AV1_HIGH8_444 : VIDEO_FORMAT_AV1_MAIN8,
+                                          m_StreamConfig.width,
+                                          m_StreamConfig.height,
+                                          m_StreamConfig.fps) != DecoderAvailability::Hardware) {
+            m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1);
+        }
 
 #ifdef Q_OS_DARWIN
         {
@@ -1433,7 +1415,8 @@ void Session::updateOptimalWindowDisplayMode()
     if (!matchVideo) {
         // Start with the native desktop resolution and try to find
         // the highest refresh rate that our stream FPS evenly divides.
-        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+        int numDisplayModes = SDL_GetNumDisplayModes(displayIndex);
+        for (int i = 0; i < numDisplayModes; i++) {
             if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
                 if (mode.w == desktopMode.w && mode.h == desktopMode.h &&
                     mode.refresh_rate % m_StreamConfig.fps == 0) {
@@ -1456,7 +1439,8 @@ void Session::updateOptimalWindowDisplayMode()
     if (bestMode.refresh_rate == 0) {
         float bestModeAspectRatio = 0;
         float videoAspectRatio = (float)m_ActiveVideoWidth / (float)m_ActiveVideoHeight;
-        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+        int numDisplayModes = SDL_GetNumDisplayModes(displayIndex);
+        for (int i = 0; i < numDisplayModes; i++) {
             if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
                 float modeAspectRatio = (float)mode.w / (float)mode.h;
                 if (mode.w >= m_ActiveVideoWidth && mode.h >= m_ActiveVideoHeight &&

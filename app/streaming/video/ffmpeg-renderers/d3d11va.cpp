@@ -413,16 +413,8 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                             "Avoiding texture sharing for old pre-FL11.1 GPU");
                 separateDevices = false;
             }
-#if defined(Q_PROCESSOR_ARM)
-            // For HEVC, on Windows ARM, Snapdragon GPU does not support shared texture
-            else if (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_H265
-                     && (adapterDesc.VendorId == 0x17CB || adapterDesc.VendorId == 0x4D4F4351)) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Avoiding texture sharing for Snapdragon GPU");
-                separateDevices = false;
-            }
-#endif
-            else if (adapterDesc.VendorId == 0x1ED5) { // Moore Threads (texture is all zero/green)
+            else if (adapterDesc.VendorId == 0x1ED5 || // Moore Threads (texture is all zero/green)
+                     adapterDesc.VendorId == 0x4D4F4351) { // Qualcomm (decoding is unstable/slow on QC710)
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Avoiding texture sharing on known broken GPU vendor");
                 separateDevices = false;
