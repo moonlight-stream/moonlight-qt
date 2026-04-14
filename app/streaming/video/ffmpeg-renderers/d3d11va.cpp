@@ -191,10 +191,7 @@ bool D3D11VARenderer::setupSharedDevice(IDXGIAdapter1* adapter)
                            D3D_DRIVER_TYPE_UNKNOWN,
                            nullptr,
                            D3D11_CREATE_DEVICE_VIDEO_SUPPORT
-#ifdef QT_DEBUG
-                               | D3D11_CREATE_DEVICE_DEBUG
-#endif
-                           ,
+                               | (m_DebugLayer ? D3D11_CREATE_DEVICE_DEBUG : 0),
                            supportedFeatureLevels,
                            ARRAYSIZE(supportedFeatureLevels),
                            D3D11_SDK_VERSION,
@@ -301,10 +298,7 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                            D3D_DRIVER_TYPE_UNKNOWN,
                            nullptr,
                            D3D11_CREATE_DEVICE_VIDEO_SUPPORT
-                       #ifdef QT_DEBUG
-                               | D3D11_CREATE_DEVICE_DEBUG
-                       #endif
-                           ,
+                               | (m_DebugLayer ? D3D11_CREATE_DEVICE_DEBUG : 0),
                            supportedFeatureLevels,
                            ARRAYSIZE(supportedFeatureLevels),
                            D3D11_SDK_VERSION,
@@ -466,6 +460,31 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    if (Utils::getEnvironmentVariableOverride("D3D11VA_DEBUG_LAYER", &m_DebugLayer)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using D3D11VA_DEBUG_LAYER to override default debug layer behavior");
+    }
+    else {
+#ifdef QT_DEBUG
+        m_DebugLayer = true;
+#else
+        m_DebugLayer = false;
+#endif
+    }
+
+    // Check if Graphics Tools are installed
+    if (m_DebugLayer) {
+        HMODULE dxgiDebug = LoadLibraryExW(L"DXGIDebug.dll", 0, LOAD_LIBRARY_SEARCH_SYSTEM32);
+        if (dxgiDebug) {
+            FreeLibrary(dxgiDebug);
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "DXGI/D3D11 debug layer unavailable. Enable 'Graphics Tools' optional feature!");
+            m_DebugLayer = false;
+        }
+    }
+
     if (!SDL_DXGIGetOutputInfo(SDL_GetWindowDisplayIndex(params->window),
                                &m_AdapterIndex, &outputIndex)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -475,11 +494,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     hr = CreateDXGIFactory2(
-#ifdef QT_DEBUG
-        DXGI_CREATE_FACTORY_DEBUG,
-#else
-        0,
-#endif
+        m_DebugLayer ? DXGI_CREATE_FACTORY_DEBUG : 0,
         __uuidof(IDXGIFactory5),
         (void**)&m_Factory);
     if (FAILED(hr)) {
