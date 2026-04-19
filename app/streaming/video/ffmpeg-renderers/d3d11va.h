@@ -67,6 +67,7 @@ private:
         Monitored,
     };
 
+    bool m_DebugLayer;
     Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
     int m_AdapterIndex;
     Microsoft::WRL::ComPtr<ID3D11Device5> m_RenderDevice, m_DecodeDevice;

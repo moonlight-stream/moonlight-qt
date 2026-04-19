@@ -102,6 +102,29 @@ NvPairingManager::decrypt(const QByteArray& ciphertext, const QByteArray& key)
 }
 
 QByteArray
+NvPairingManager::getSignatureFromCert(X509* cert)
+{
+#if (OPENSSL_VERSION_NUMBER < 0x10002000L)
+    ASN1_BIT_STRING *asnSignature = cert->signature;
+#elif (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    ASN1_BIT_STRING *asnSignature;
+    X509_get0_signature(&asnSignature, NULL, cert);
+#else
+    const ASN1_BIT_STRING *asnSignature;
+    X509_get0_signature(&asnSignature, NULL, cert);
+#endif
+
+    return QByteArray(
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+        reinterpret_cast<const char*>(ASN1_STRING_data(asnSignature)),
+#else
+        reinterpret_cast<const char*>(ASN1_STRING_get0_data(asnSignature)),
+#endif
+        ASN1_STRING_length(asnSignature)
+    );
+}
+
+QByteArray
 NvPairingManager::getSignatureFromPemCert(const QByteArray& certificate)
 {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L)
@@ -114,18 +137,7 @@ NvPairingManager::getSignatureFromPemCert(const QByteArray& certificate)
     X509* cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
     BIO_free_all(bio);
 
-#if (OPENSSL_VERSION_NUMBER < 0x10002000L)
-    ASN1_BIT_STRING *asnSignature = cert->signature;
-#elif (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    ASN1_BIT_STRING *asnSignature;
-    X509_get0_signature(&asnSignature, NULL, cert);
-#else
-    const ASN1_BIT_STRING *asnSignature;
-    X509_get0_signature(&asnSignature, NULL, cert);
-#endif
-
-    QByteArray signature(reinterpret_cast<char*>(asnSignature->data), asnSignature->length);
-
+    QByteArray signature = getSignatureFromCert(cert);
     X509_free(cert);
 
     return signature;
@@ -267,18 +279,8 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     QByteArray challengeResponse;
     QByteArray serverResponse(challengeResponseData.data(), hashLength);
 
-#if (OPENSSL_VERSION_NUMBER < 0x10002000L)
-    ASN1_BIT_STRING *asnSignature = m_Cert->signature;
-#elif (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    ASN1_BIT_STRING *asnSignature;
-    X509_get0_signature(&asnSignature, NULL, m_Cert);
-#else
-    const ASN1_BIT_STRING *asnSignature;
-    X509_get0_signature(&asnSignature, NULL, m_Cert);
-#endif
-
     challengeResponse.append(challengeResponseData.data() + hashLength, 16);
-    challengeResponse.append(reinterpret_cast<char*>(asnSignature->data), asnSignature->length);
+    challengeResponse.append(getSignatureFromCert(m_Cert));
     challengeResponse.append(clientSecretData);
 
     QByteArray paddedHash = QCryptographicHash::hash(challengeResponse, hashAlgo);
