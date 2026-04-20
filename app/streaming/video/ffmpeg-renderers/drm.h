@@ -87,8 +87,7 @@ class DrmRenderer : public IFFmpegRenderer {
         }
 
         std::optional<std::pair<uint64_t, uint64_t>> range() const {
-            if ((m_Prop->flags & (DRM_MODE_PROP_RANGE | DRM_MODE_PROP_SIGNED_RANGE)) &&
-                m_Prop->count_values == 2) {
+            if ((m_Prop->flags & DRM_MODE_PROP_RANGE) && m_Prop->count_values == 2) {
                 return std::make_pair(m_Prop->values[0], m_Prop->values[1]);
             }
             else {
@@ -96,8 +95,20 @@ class DrmRenderer : public IFFmpegRenderer {
             }
         }
 
+        std::optional<std::pair<int64_t, int64_t>> srange() const {
+            if ((m_Prop->flags & DRM_MODE_PROP_SIGNED_RANGE) && m_Prop->count_values == 2) {
+                return std::make_pair((int64_t)m_Prop->values[0], (int64_t)m_Prop->values[1]);
+            }
+            else {
+                return std::nullopt;
+            }
+        }
+
         uint64_t clamp(uint64_t value) const {
-            if (auto range = this->range()) {
+            if (auto srange = this->srange()) {
+                return (uint64_t)std::clamp((int64_t)value, srange->first, srange->second);
+            }
+            else if (auto range = this->range()) {
                 return std::clamp(value, range->first, range->second);
             }
             else {
