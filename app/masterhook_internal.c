@@ -39,12 +39,28 @@ int g_SdlDrmMasterFdCount = 0;
 pthread_mutex_t g_FdTableLock = PTHREAD_MUTEX_INITIALIZER;
 
 // This lock protects sections of code that must run uninterrupted with DRM master
-pthread_mutex_t g_MasterLock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_MasterLock;
+pthread_once_t g_MasterLockInit;
 
 // Lock order: g_MasterLock -> g_FdTableLock
 
+static void initializeMasterLock(void)
+{
+    pthread_mutexattr_t attr;
+
+    // g_MasterLock must be a recursive mutex because we can't fully
+    // predict how SDL and Vulkan/GL driver code will behave. They may
+    // call functions that trigger reentrancy into our hooks again,
+    // which can deadlock if the caller already holds the master lock.
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&g_MasterLock, &attr);
+    pthread_mutexattr_destroy(&attr);
+}
+
 void lockDrmMaster()
 {
+    pthread_once(&g_MasterLockInit, initializeMasterLock);
     pthread_mutex_lock(&g_MasterLock);
 }
 
