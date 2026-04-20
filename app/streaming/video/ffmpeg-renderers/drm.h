@@ -466,6 +466,53 @@ class DrmRenderer : public IFFmpegRenderer {
             }
         }
 
+        void restorePlane(const DrmPropertyMap& plane) {
+            if (!plane.isValid()) {
+                return;
+            }
+
+            if (isAtomic() && plane.property("FB_ID")->initialValue() != 0) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Restoring previously active plane: %u",
+                            plane.objectId());
+
+                {
+                    std::lock_guard lg { m_Lock };
+                    auto &pb = m_PlaneBuffers[plane.objectId()];
+
+                    // Free any pending buffers first
+                    if (pb.pendingFbId) {
+                        drmModeRmFB(m_Fd, pb.pendingFbId);
+                        pb.pendingFbId = 0;
+                    }
+                    if (pb.pendingDumbBuffer) {
+                        struct drm_mode_destroy_dumb destroyBuf = {};
+                        destroyBuf.handle = pb.pendingDumbBuffer;
+                        drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+                        pb.pendingDumbBuffer = 0;
+                    }
+
+                    // Since we restore the FB_ID, remember that we need to swap
+                    // pending buffers to current after committing in apply().
+                    // This would normally be done in flipPlane(), but we can't
+                    // use that here as it takes ownership of the FB.
+                    //
+                    // Since we cleared our pending buffers, the result is that
+                    // apply() will free the current buffers and believe that no
+                    // buffers are currently set. This will ensure it doesn't
+                    // later free the restored FB_ID (which would happen if we
+                    // used flipPlane() normally).
+                    pb.modified = true;
+                }
+
+                // Restore the old plane properties and FB_ID
+                restoreToInitial(plane);
+            }
+            else {
+                disablePlane(plane);
+            }
+        }
+
         // The damage rect is relative to the FB
         void damagePlane(const DrmPropertyMap& plane, const SDL_Rect& rect) {
             SDL_assert(m_Atomic);
