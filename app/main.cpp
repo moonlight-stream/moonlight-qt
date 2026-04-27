@@ -738,6 +738,19 @@ int main(int argc, char *argv[])
     // use this functionality and it can cause hangs when querying broken devices.
     SDL_SetHint("SDL_WINDOWS_DETECT_DEVICE_HOTPLUG", "0");
 
+    // SDL3 supports offloading scaling to the Wayland compositor, which we take
+    // advantage of in the GL_IS_SLOW case to help fillrate-limited GPUs. To stay
+    // consistent with our own scaling logic, we need aspect ratio scaling which
+    // KDE doesn't currently handle properly. As a compromise, we'll just enable
+    // aspect ratio scaling in non-KDE environments.
+    //
+    // NB: We do not force SDL_VIDEO_WAYLAND_MODE_SCALING to "stretch" on KDE,
+    // because SDL 3.6 has a workaround for KDE and switches the default to
+    // "aspect" for all desktops.
+    if (qgetenv("XDG_CURRENT_DESKTOP") != "KDE") {
+        SDL_SetHint("SDL_VIDEO_WAYLAND_MODE_SCALING", "aspect");
+    }
+
     QGuiApplication app(argc, argv);
 
 #ifdef Q_OS_UNIX
