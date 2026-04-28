@@ -1321,6 +1321,25 @@ Flickable {
                                   qsTr("NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.")
                 }
 
+                CheckBox {
+                    id: fitWidthPanYCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Zoom portrait streams to fill window width (pan vertically with cursor)")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.fitWidthPanY
+                    onCheckedChanged: {
+                        StreamingPreferences.fitWidthPanY = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 10000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("When viewing a host with a portrait (vertical) display on a landscape monitor, scale the stream to fill the window width instead of leaving wide black bars. The view pans up and down to follow the cursor's vertical position.") + "\n\n" +
+                                  qsTr("This is purely client-side: the host's resolution and behavior are unchanged.") + " " +
+                                  qsTr("Has no effect when the stream already fits the window aspect ratio.")
+                }
+
                 Row {
                     spacing: 5
                     width: parent.width

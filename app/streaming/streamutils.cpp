@@ -1,6 +1,8 @@
 #include "streamutils.h"
+#include "settings/streamingpreferences.h"
 
 #include <Qt>
+#include <QAtomicInt>
 #include <QDir>
 
 #ifdef Q_OS_DARWIN
@@ -119,12 +121,57 @@ SDL_Window* StreamUtils::createTestWindow()
     return testWindow;
 }
 
+// Most recently computed fit-width pan Y offset, written by the mouse motion
+// handler and read each frame by every renderer through scaleSourceToDestinationSurface.
+// Atomic so renderer thread and event thread can access without locking.
+static QAtomicInt s_FitWidthPanYOffset = 0;
+
+int StreamUtils::getFitWidthPanYOffset()
+{
+    return s_FitWidthPanYOffset.loadAcquire();
+}
+
+void StreamUtils::setFitWidthPanYOffset(int offset)
+{
+    s_FitWidthPanYOffset.storeRelease(offset);
+}
+
+bool StreamUtils::isFitWidthPanYActive(const SDL_Rect* src, const SDL_Rect* dst)
+{
+    if (src->w <= 0 || src->h <= 0 || dst->w <= 0 || dst->h <= 0) {
+        return false;
+    }
+    if (!StreamingPreferences::get()->fitWidthPanY) {
+        return false;
+    }
+    // Fit-width only kicks in when the stream is "taller" than the window aspect
+    // ratio - i.e. when the default path would have letterboxed left/right.
+    int wouldBeLetterboxedH = SDL_ceilf((float)dst->w * src->h / src->w);
+    return wouldBeLetterboxedH > dst->h;
+}
+
 void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst)
 {
     int dstH = SDL_ceilf((float)dst->w * src->h / src->w);
     int dstW = SDL_ceilf((float)dst->h * src->w / src->h);
 
     if (dstH > dst->h) {
+        // Stream is "more vertical" than the window. Default behavior letterboxes
+        // by scaling to fit height (pillarboxing left/right). When fit-width-pan-Y
+        // is enabled in preferences, instead scale to fill width and pan vertically
+        // by the offset most recently computed from local cursor position.
+        if (StreamingPreferences::get()->fitWidthPanY && src->w > 0 && src->h > 0) {
+            int maxPan = dstH - dst->h;
+            int panOffset = qBound(0, getFitWidthPanYOffset(), maxPan);
+            // Leave dst->x and dst->w (full window width). Push origin up by
+            // panOffset and extend height past the window - the renderer's
+            // viewport / NDC math clips naturally, the input transform inverts
+            // through the same dst rect so coordinates stay consistent.
+            dst->y -= panOffset;
+            dst->h = dstH;
+            return;
+        }
+
         dst->x += (dst->w - dstW) / 2;
         dst->w = dstW;
     }

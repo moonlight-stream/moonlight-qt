@@ -112,6 +112,18 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         dst.w = windowWidth;
         dst.h = windowHeight;
 
+        // Update the fit-width pan offset from the cursor's window-relative Y
+        // before scaling, so this same event's inverse transform below and the
+        // next rendered frame both use the same offset.
+        if (StreamingPreferences::get()->fitWidthPanY && src.w > 0 && src.h > 0 && windowHeight > 0) {
+            int zoomedH = (int)SDL_ceilf((float)windowWidth * src.h / src.w);
+            if (zoomedH > windowHeight) {
+                int maxPan = zoomedH - windowHeight;
+                int newOffset = (int)((qint64)y * maxPan / windowHeight);
+                StreamUtils::setFitWidthPanYOffset(qBound(0, newOffset, maxPan));
+            }
+        }
+
         // Use the stream and window sizes to determine the video region
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
@@ -278,20 +290,29 @@ void SdlInputHandler::updatePointerRegionLock()
     // If region lock is enabled, grab the cursor so it can't accidentally leave our window.
     if (isCaptureActive() && m_PointerRegionLockActive) {
 #if SDL_VERSION_ATLEAST(2, 0, 18)
-        SDL_Rect src, dst;
+        SDL_Rect src, dst, windowRect;
 
         src.x = src.y = 0;
         src.w = m_StreamWidth;
         src.h = m_StreamHeight;
 
-        dst.x = dst.y = 0;
-        SDL_GetWindowSize(m_Window, &dst.w, &dst.h);
+        windowRect.x = windowRect.y = 0;
+        SDL_GetWindowSize(m_Window, &windowRect.w, &windowRect.h);
+        dst = windowRect;
 
         // Use the stream and window sizes to determine the video region
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
+        // In fit-width-pan-Y mode dst extends past the window vertically -
+        // clamp so SDL receives a rect that fits inside the window. The
+        // visible video region in that mode is the window itself.
+        SDL_Rect lockRect;
+        if (!SDL_IntersectRect(&dst, &windowRect, &lockRect)) {
+            lockRect = windowRect;
+        }
+
         // SDL 2.0.18 lets us lock the cursor to a specific region
-        SDL_SetWindowMouseRect(m_Window, &dst);
+        SDL_SetWindowMouseRect(m_Window, &lockRect);
 #elif SDL_VERSION_ATLEAST(2, 0, 15)
         // SDL 2.0.15 only lets us lock the cursor to the whole window
         SDL_SetWindowMouseGrab(m_Window, SDL_TRUE);
