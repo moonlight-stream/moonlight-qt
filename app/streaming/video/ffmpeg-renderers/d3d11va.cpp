@@ -61,6 +61,7 @@ D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
       m_DevicesWithFL11Support(0),
       m_DevicesWithCodecSupport(0),
       m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
+      m_LastVertexBufferPanY(-1),
       m_AllowTearing(false),
       m_OverlayLock(0),
       m_HwDeviceContext(nullptr)
@@ -868,7 +869,13 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
 
 void D3D11VARenderer::bindVideoVertexBuffer(bool frameChanged, AVFrame* frame)
 {
-    if (frameChanged || !m_VideoVertexBuffer) {
+    // The vertex buffer encodes the video's destination rect. In fit-width-pan-Y
+    // mode that rect's y origin tracks the cursor every frame, so rebuild whenever
+    // the pan offset changes - otherwise the cached buffer locks the view in place.
+    int currentPanY = StreamUtils::getFitWidthPanYOffset();
+    if (frameChanged || !m_VideoVertexBuffer || currentPanY != m_LastVertexBufferPanY) {
+        m_LastVertexBufferPanY = currentPanY;
+
         // Scale video to the window size while preserving aspect ratio
         SDL_Rect src, dst;
         src.x = src.y = 0;
