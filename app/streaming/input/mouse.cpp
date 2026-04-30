@@ -311,9 +311,11 @@ void SdlInputHandler::onFitWidthPanTick()
 
     // Edge zone is ~10% of the window height, clamped to a usable range.
     // Pan rate uses quadratic depth scaling so the user has fine control
-    // near the inner boundary (depth 0.3 -> ~1 px/tick = 60 px/sec) and
-    // can still pan quickly when pressed hard against the edge (depth 1.0
-    // -> 12 px/tick = 720 px/sec).
+    // near the inner boundary (depth 0.3 -> ~2.7 px/tick = 162 px/sec) and
+    // can pan rapidly when pressed hard against the edge (depth 1.0 -> 30
+    // px/tick = 1800 px/sec). Quadratic curve preserves the "gentle creep
+    // to fast scroll" feel while letting the user actually traverse the
+    // full pan range in roughly 1.3 seconds when they want distance.
     //
     // Direction follows pan-toward-cursor: cursor at the TOP edge scrolls
     // the view toward the TOP of the stream (panOffset decreases); cursor
@@ -321,7 +323,7 @@ void SdlInputHandler::onFitWidthPanTick()
     // (panOffset increases). The host cursor naturally tracks the
     // newly-exposed region because the inverse coordinate transform reads
     // the same panOffset.
-    const int kMaxPanRatePerTick = 12;
+    const int kMaxPanRatePerTick = 30;
     int edgeZone = qBound(25, windowHeight / 10, 80);
     int delta = 0;
     if (mouseY < edgeZone) {
