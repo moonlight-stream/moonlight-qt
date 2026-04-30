@@ -5,6 +5,8 @@
 
 #include "SDL_compat.h"
 
+#define SDL_CODE_FIT_WIDTH_PAN_TICK 101
+
 struct GamepadState {
     SDL_GameController* controller;
     SDL_JoystickID jsId;
@@ -152,6 +154,8 @@ public:
 
     void updatePointerRegionLock();
 
+    void onFitWidthPanTick();
+
     static
     QString getUnmappedGamepads();
 
@@ -202,6 +206,9 @@ private:
     static
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
+    static
+    Uint32 fitWidthPanTimerCallback(Uint32 interval, void* param);
+
     SDL_Window* m_Window;
     bool m_MultiController;
     bool m_GamepadMouse;
@@ -244,6 +251,7 @@ private:
     SDL_TimerID m_LeftButtonReleaseTimer;
     SDL_TimerID m_RightButtonReleaseTimer;
     SDL_TimerID m_DragTimer;
+    SDL_TimerID m_FitWidthPanTimer;
     char m_DragButton;
     int m_NumFingersDown;
 

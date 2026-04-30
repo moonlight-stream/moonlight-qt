@@ -112,19 +112,11 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         dst.w = windowWidth;
         dst.h = windowHeight;
 
-        // Update the fit-width pan offset from the cursor's window-relative Y
-        // before scaling, so this same event's inverse transform below and the
-        // next rendered frame both use the same offset.
-        if (StreamingPreferences::get()->fitWidthPanY && src.w > 0 && src.h > 0 && windowHeight > 0) {
-            int zoomedH = (int)SDL_ceilf((float)windowWidth * src.h / src.w);
-            if (zoomedH > windowHeight) {
-                int maxPan = zoomedH - windowHeight;
-                int newOffset = (int)((qint64)y * maxPan / windowHeight);
-                StreamUtils::setFitWidthPanYOffset(qBound(0, newOffset, maxPan));
-            }
-        }
-
-        // Use the stream and window sizes to determine the video region
+        // Use the stream and window sizes to determine the video region.
+        // In fit-width-pan-Y mode this picks up the current pan offset which
+        // is driven by the edge-pan timer callback, not by motion events -
+        // so the inverse transform below stays consistent with what the
+        // renderer is currently displaying.
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
         mouseInVideoRegion = isMouseInVideoRegion(x, y, windowWidth, windowHeight);
@@ -268,6 +260,69 @@ bool SdlInputHandler::isMouseInVideoRegion(int mouseX, int mouseY, int windowWid
 
     return (mouseX >= dst.x && mouseX <= dst.x + dst.w) &&
            (mouseY >= dst.y && mouseY <= dst.y + dst.h);
+}
+
+Uint32 SdlInputHandler::fitWidthPanTimerCallback(Uint32 interval, void* /*param*/)
+{
+    // Runs on SDL's timer thread - keep work to a minimum and just post a
+    // SDL_USEREVENT for the main event loop to handle (where we can safely
+    // call SDL_GetMouseState / SDL_GetWindowSize).
+    SDL_Event event;
+    SDL_zero(event);
+    event.type = SDL_USEREVENT;
+    event.user.code = SDL_CODE_FIT_WIDTH_PAN_TICK;
+    SDL_PushEvent(&event);
+    return interval;
+}
+
+void SdlInputHandler::onFitWidthPanTick()
+{
+    if (!StreamingPreferences::get()->fitWidthPanY) {
+        return;
+    }
+    if (m_Window == nullptr || m_StreamWidth <= 0 || m_StreamHeight <= 0) {
+        return;
+    }
+
+    int windowWidth, windowHeight;
+    SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+    if (windowHeight <= 0 || windowWidth <= 0) {
+        return;
+    }
+
+    int zoomedH = (int)SDL_ceilf((float)windowWidth * m_StreamHeight / m_StreamWidth);
+    if (zoomedH <= windowHeight) {
+        // Stream isn't taller than the window aspect - no panning needed.
+        return;
+    }
+    int maxPan = zoomedH - windowHeight;
+
+    int mouseY;
+    SDL_GetMouseState(nullptr, &mouseY);
+
+    // Edge zone is ~10% of the window height, clamped to a usable range.
+    // Closer to the edge = faster pan. ~20 px/tick at the very edge -> ~1250 px/sec at 60 Hz.
+    int edgeZone = qBound(25, windowHeight / 10, 80);
+    int delta = 0;
+    if (mouseY < edgeZone) {
+        float depth = (float)(edgeZone - mouseY) / edgeZone;
+        delta = -(int)(depth * 20);
+        if (delta == 0 && depth > 0.0f) {
+            delta = -1;
+        }
+    }
+    else if (mouseY > windowHeight - edgeZone) {
+        float depth = (float)(mouseY - (windowHeight - edgeZone)) / edgeZone;
+        delta = (int)(depth * 20);
+        if (delta == 0 && depth > 0.0f) {
+            delta = 1;
+        }
+    }
+
+    if (delta != 0) {
+        int current = StreamUtils::getFitWidthPanYOffset();
+        StreamUtils::setFitWidthPanYOffset(qBound(0, current + delta, maxPan));
+    }
 }
 
 void SdlInputHandler::updatePointerRegionLock()

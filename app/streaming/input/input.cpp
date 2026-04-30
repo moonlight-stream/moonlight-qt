@@ -31,6 +31,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_LeftButtonReleaseTimer(0),
       m_RightButtonReleaseTimer(0),
       m_DragTimer(0),
+      m_FitWidthPanTimer(0),
       m_DragButton(0),
       m_NumFingersDown(0)
 {
@@ -218,6 +219,7 @@ SdlInputHandler::~SdlInputHandler()
     SDL_RemoveTimer(m_LeftButtonReleaseTimer);
     SDL_RemoveTimer(m_RightButtonReleaseTimer);
     SDL_RemoveTimer(m_DragTimer);
+    SDL_RemoveTimer(m_FitWidthPanTimer);
 
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_QuitSubSystem(SDL_INIT_HAPTIC);
@@ -249,6 +251,13 @@ SdlInputHandler::~SdlInputHandler()
 void SdlInputHandler::setWindow(SDL_Window *window)
 {
     m_Window = window;
+
+    // Drive fit-width edge-pan from a periodic timer so the view keeps panning
+    // while the cursor sits at the edge (motion events alone would only fire
+    // while the user is actively wiggling the mouse).
+    if (m_FitWidthPanTimer == 0 && window != nullptr) {
+        m_FitWidthPanTimer = SDL_AddTimer(16, fitWidthPanTimerCallback, this);
+    }
 }
 
 void SdlInputHandler::raiseAllKeys()
