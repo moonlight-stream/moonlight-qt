@@ -297,8 +297,17 @@ void SdlInputHandler::onFitWidthPanTick()
     }
     int maxPan = zoomedH - windowHeight;
 
-    int mouseY;
-    SDL_GetMouseState(nullptr, &mouseY);
+    int mouseX, mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+
+    // Only pan while the cursor is inside the window. In windowed mode the
+    // cursor is free to leave; SDL_GetMouseState returns coords relative to
+    // the focused window which may be far outside [0, windowW] x [0, windowH].
+    // Without this guard, a cursor 1000px below the window produces depth ~40
+    // and pan blows past maxPan in a single tick.
+    if (mouseX < 0 || mouseX > windowWidth || mouseY < 0 || mouseY > windowHeight) {
+        return;
+    }
 
     // Edge zone is ~10% of the window height, clamped to a usable range.
     // Closer to the edge = faster pan. ~20 px/tick at the very edge -> ~1250 px/sec at 60 Hz.

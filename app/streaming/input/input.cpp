@@ -1,6 +1,7 @@
 #include <Limelight.h>
 #include "SDL_compat.h"
 #include "streaming/session.h"
+#include "streaming/streamutils.h"
 #include "settings/mappingmanager.h"
 #include "path.h"
 #include "utils.h"
@@ -256,6 +257,9 @@ void SdlInputHandler::setWindow(SDL_Window *window)
     // while the cursor sits at the edge (motion events alone would only fire
     // while the user is actively wiggling the mouse).
     if (m_FitWidthPanTimer == 0 && window != nullptr) {
+        // Reset any pan offset carried over from a previous stream so we
+        // start at the top of the new stream.
+        StreamUtils::setFitWidthPanYOffset(0);
         m_FitWidthPanTimer = SDL_AddTimer(16, fitWidthPanTimerCallback, this);
     }
 }
