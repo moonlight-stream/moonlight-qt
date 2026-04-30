@@ -1279,6 +1279,21 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Prevents the screensaver from starting or the display from going to sleep while streaming.")
                 }
+                CheckBox {
+                    id: mouseGrabCheck
+                    width: parent.width
+                    text: qsTr("Grab the mouse pointer in windowed mode")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.allowMouseGrabInWindowed
+                    onCheckedChanged: {
+                        StreamingPreferences.allowMouseGrabInWindowed = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Capture the mouse pointer even when not in full-screen, preventing it from leaving the application window.")
+                }
             }
         }
     }

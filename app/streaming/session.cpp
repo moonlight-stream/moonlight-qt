@@ -2202,7 +2202,9 @@ void Session::exec()
                 // As of SDL 2.0.12, SDL_RecreateWindow() doesn't carry over mouse capture
                 // or mouse hiding state to the new window. By capturing after the decoder
                 // is set up, this ensures the window re-creation is already done.
-                if (needsPostDecoderCreationCapture) {
+                if (needsPostDecoderCreationCapture &&
+                        (m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED ||
+                       m_Preferences->allowMouseGrabInWindowed)) {
                     m_InputHandler->setCaptureActive(true);
                     needsPostDecoderCreationCapture = false;
                 }
