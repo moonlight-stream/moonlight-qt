@@ -32,3 +32,10 @@ CONFIG(release, debug|release) {
 QMAKE_CFLAGS   += $$(CFLAGS)
 QMAKE_CXXFLAGS += $$(CXXFLAGS)
 QMAKE_LFLAGS   += $$(LDFLAGS)
+
+# Qt 6 qyieldcpu.h calls __yield() on AArch64 without including <arm_acle.h>.
+# Apple Clang then treats it as an implicit declaration; with -Werror (e.g. from
+# CXXFLAGS) the build fails. Force the ACLE header so the intrinsic is declared.
+macx:contains(QT_ARCH, arm64) {
+    QMAKE_CXXFLAGS += -include arm_acle.h
+}
