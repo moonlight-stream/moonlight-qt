@@ -302,20 +302,25 @@ void SdlInputHandler::onFitWidthPanTick()
 
     // Edge zone is ~10% of the window height, clamped to a usable range.
     // Closer to the edge = faster pan. ~20 px/tick at the very edge -> ~1250 px/sec at 60 Hz.
+    //
+    // Direction follows the touchscreen "drag" model: cursor at the BOTTOM edge
+    // pulls content downward (exposing rows above), cursor at the TOP edge pushes
+    // content upward (exposing rows below). So bottom edge -> panOffset decreases,
+    // top edge -> panOffset increases.
     int edgeZone = qBound(25, windowHeight / 10, 80);
     int delta = 0;
     if (mouseY < edgeZone) {
         float depth = (float)(edgeZone - mouseY) / edgeZone;
-        delta = -(int)(depth * 20);
+        delta = (int)(depth * 20);
         if (delta == 0 && depth > 0.0f) {
-            delta = -1;
+            delta = 1;
         }
     }
     else if (mouseY > windowHeight - edgeZone) {
         float depth = (float)(mouseY - (windowHeight - edgeZone)) / edgeZone;
-        delta = (int)(depth * 20);
+        delta = -(int)(depth * 20);
         if (delta == 0 && depth > 0.0f) {
-            delta = 1;
+            delta = -1;
         }
     }
 
