@@ -886,9 +886,20 @@ void D3D11VARenderer::bindVideoVertexBuffer(bool frameChanged, AVFrame* frame)
         dst.h = m_DisplayHeight;
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
+        // scaleSourceToDestinationSurface produces dst.y in screen-y convention
+        // (y=0 at top, growing down) - that's what SDL_RenderSetViewport wants.
+        // screenSpaceToNormalizedDeviceCoords expects math-y convention (y=0 at
+        // bottom, growing up). For symmetric letterbox rects the two coincide
+        // so this was never noticed, but for fit-width-pan-Y the rect extends
+        // past the window vertically and the conventions diverge: D3D11 ends
+        // up rendering the opposite half of the stream from what SDL renders.
+        // Flip y before NDC conversion so D3D11 sees the same rect SDL would.
+        SDL_Rect mathDst = dst;
+        mathDst.y = m_DisplayHeight - dst.y - dst.h;
+
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
-        StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, m_DisplayWidth, m_DisplayHeight);
+        StreamUtils::screenSpaceToNormalizedDeviceCoords(&mathDst, &renderRect, m_DisplayWidth, m_DisplayHeight);
 
         // Don't sample from the alignment padding area
         auto framesContext = (AVHWFramesContext*)frame->hw_frames_ctx->data;
