@@ -313,28 +313,29 @@ void SdlInputHandler::onFitWidthPanTick()
     // Pan rate uses quadratic depth scaling so the user has fine control
     // near the inner boundary (depth 0.3 -> ~1 px/tick = 60 px/sec) and
     // can still pan quickly when pressed hard against the edge (depth 1.0
-    // -> 12 px/tick = 720 px/sec). Linear scaling at 20 px/tick was too
-    // fast - users couldn't stop precisely.
+    // -> 12 px/tick = 720 px/sec).
     //
-    // Direction follows the touchscreen "drag" model: cursor at the BOTTOM
-    // edge pulls content downward (exposing rows above), cursor at the TOP
-    // edge pushes content upward (exposing rows below). So bottom edge ->
-    // panOffset decreases, top edge -> panOffset increases.
+    // Direction follows pan-toward-cursor: cursor at the TOP edge scrolls
+    // the view toward the TOP of the stream (panOffset decreases); cursor
+    // at the BOTTOM edge scrolls toward the BOTTOM of the stream
+    // (panOffset increases). The host cursor naturally tracks the
+    // newly-exposed region because the inverse coordinate transform reads
+    // the same panOffset.
     const int kMaxPanRatePerTick = 12;
     int edgeZone = qBound(25, windowHeight / 10, 80);
     int delta = 0;
     if (mouseY < edgeZone) {
         float depth = (float)(edgeZone - mouseY) / edgeZone;
-        delta = (int)(depth * depth * kMaxPanRatePerTick);
+        delta = -(int)(depth * depth * kMaxPanRatePerTick);
         if (delta == 0 && depth > 0.0f) {
-            delta = 1;
+            delta = -1;
         }
     }
     else if (mouseY > windowHeight - edgeZone) {
         float depth = (float)(mouseY - (windowHeight - edgeZone)) / edgeZone;
-        delta = -(int)(depth * depth * kMaxPanRatePerTick);
+        delta = (int)(depth * depth * kMaxPanRatePerTick);
         if (delta == 0 && depth > 0.0f) {
-            delta = -1;
+            delta = 1;
         }
     }
 
