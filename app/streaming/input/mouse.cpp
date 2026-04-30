@@ -310,24 +310,29 @@ void SdlInputHandler::onFitWidthPanTick()
     }
 
     // Edge zone is ~10% of the window height, clamped to a usable range.
-    // Closer to the edge = faster pan. ~20 px/tick at the very edge -> ~1250 px/sec at 60 Hz.
+    // Pan rate uses quadratic depth scaling so the user has fine control
+    // near the inner boundary (depth 0.3 -> ~1 px/tick = 60 px/sec) and
+    // can still pan quickly when pressed hard against the edge (depth 1.0
+    // -> 12 px/tick = 720 px/sec). Linear scaling at 20 px/tick was too
+    // fast - users couldn't stop precisely.
     //
-    // Direction follows the touchscreen "drag" model: cursor at the BOTTOM edge
-    // pulls content downward (exposing rows above), cursor at the TOP edge pushes
-    // content upward (exposing rows below). So bottom edge -> panOffset decreases,
-    // top edge -> panOffset increases.
+    // Direction follows the touchscreen "drag" model: cursor at the BOTTOM
+    // edge pulls content downward (exposing rows above), cursor at the TOP
+    // edge pushes content upward (exposing rows below). So bottom edge ->
+    // panOffset decreases, top edge -> panOffset increases.
+    const int kMaxPanRatePerTick = 12;
     int edgeZone = qBound(25, windowHeight / 10, 80);
     int delta = 0;
     if (mouseY < edgeZone) {
         float depth = (float)(edgeZone - mouseY) / edgeZone;
-        delta = (int)(depth * 20);
+        delta = (int)(depth * depth * kMaxPanRatePerTick);
         if (delta == 0 && depth > 0.0f) {
             delta = 1;
         }
     }
     else if (mouseY > windowHeight - edgeZone) {
         float depth = (float)(mouseY - (windowHeight - edgeZone)) / edgeZone;
-        delta = -(int)(depth * 20);
+        delta = -(int)(depth * depth * kMaxPanRatePerTick);
         if (delta == 0 && depth > 0.0f) {
             delta = -1;
         }
