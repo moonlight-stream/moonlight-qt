@@ -5,7 +5,7 @@
 
 #include "SDL_compat.h"
 
-#define SDL_CODE_FIT_WIDTH_PAN_TICK 101
+#define SDL_CODE_FIT_WIDTH_PAN_TICK 106
 
 struct GamepadState {
     SDL_GameController* controller;
