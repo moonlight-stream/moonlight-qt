@@ -34,7 +34,7 @@ jobs:
         run: STEAMLINK_SDK_PATH=$PWD/steamlink-sdk scripts/build-steamlink-app.sh
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Moonlight-SteamLink-${{ env.CI_VERSION }}
           path: build/deploy-release/*

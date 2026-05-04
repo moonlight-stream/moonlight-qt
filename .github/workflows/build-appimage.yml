@@ -155,7 +155,7 @@ jobs:
           scripts/build-appimage.sh
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Moonlight-LinuxAppImage-${{ env.CI_VERSION }}
           path: build/installer-release/Moonlight-${{ env.CI_VERSION }}-x86_64.AppImage
