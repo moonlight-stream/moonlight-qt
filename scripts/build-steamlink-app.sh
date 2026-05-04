@@ -23,6 +23,9 @@ else
   VERSION=`cat $SOURCE_ROOT/app/version.txt`
 fi
 
+echo Updating dependencies
+python3 $SOURCE_ROOT/setup-deps.py
+
 echo Cleaning output directories
 rm -rf $BUILD_FOLDER
 rm -rf $DEPLOY_FOLDER
