@@ -7,7 +7,7 @@
             </requestedPrivileges>
         </security>
     </trustInfo>
-    <description>Moonlight Game Streaming</description>
+    <description>PlayBase Game Streaming</description>
     <asmv3:application>
         <asmv3:windowsSettings>
             <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>

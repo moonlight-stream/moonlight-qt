@@ -1,10 +1,10 @@
-# Moonlight PC
+# Playbase PC
 
-[Moonlight PC](https://moonlight-stream.org) is an open source PC client for NVIDIA GameStream and [Sunshine](https://github.com/LizardByte/Sunshine).
+[PlayBase PC](https://moonlight-stream.org) is an open source PC client for NVIDIA GameStream and [Sunshine](https://github.com/LizardByte/Sunshine).
 
-Moonlight also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and [iOS](https://github.com/moonlight-stream/moonlight-ios).
+Playbase also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and [iOS](https://github.com/Playbase-stream/moonlight-ios).
 
-You can follow development on our [Discord server](https://moonlight-stream.org/discord) and help translate Moonlight into your language on [Weblate](https://hosted.weblate.org/projects/moonlight/moonlight-qt/).
+You can follow development on our [Discord server](https://moonlight-stream.org/discord) and help translate PlayBase into your language on [Weblate](https://hosted.weblate.org/projects/moonlight/moonlight-qt/).
 
  [![Build](https://img.shields.io/github/actions/workflow/status/moonlight-stream/moonlight-qt/build.yml?branch=master)](https://github.com/moonlight-stream/moonlight-qt/actions/workflows/build.yml?query=branch%3Amaster)
  [![Downloads](https://img.shields.io/github/downloads/moonlight-stream/moonlight-qt/total)](https://github.com/moonlight-stream/moonlight-qt/releases)
@@ -38,7 +38,7 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 
 [![Hosted By: Cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.com)
 
-Hosting for Moonlight's Debian and L4T package repositories is graciously provided for free by [Cloudsmith](https://cloudsmith.com).
+Hosting for PlayBase's Debian and L4T package repositories is graciously provided for free by [Cloudsmith](https://cloudsmith.com).
 
 ## Building
 
@@ -76,7 +76,7 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 * STEAMLINK_SDK_PATH environment variable set to the Steam Link SDK path
 
 **Steam Link Hardware Limitations**  
-Moonlight builds for Steam Link are subject to hardware limitations of the Steam Link device:
+Playbase builds for Steam Link are subject to hardware limitations of the Steam Link device:
 * Maximum resolution: **1080p (1920x1080)**
 * Maximum framerate: **60 FPS**
 * Maximum video bitrate: **40 Mbps**
@@ -88,7 +88,7 @@ for different architectures, which handle building deps and extra linking for yo
 
 ### Build Setup Steps
 1. Install the latest Qt SDK (and optionally, the Qt Creator IDE) from https://www.qt.io/download
-    * You can install Qt via Homebrew on macOS, but you will need to use `brew install qt --with-debug` to be able to create debug builds of Moonlight.
+    * You can install Qt via Homebrew on macOS, but you will need to use `brew install qt --with-debug` to be able to create debug builds of PlayBase.
     * You may also use your Linux distro's package manager for the Qt SDK as long as the packages are Qt 5.12 or later.
     * This step is not required for building on Steam Link, because the Steam Link SDK includes Qt 5.14.
 2. Run `git submodule update --init --recursive` from within `moonlight-qt/`
