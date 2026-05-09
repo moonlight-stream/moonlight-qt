@@ -1888,17 +1888,23 @@ void Session::exec()
     bool needsFirstEnterCapture = false;
     bool needsPostDecoderCreationCapture = false;
 
-    // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
-    // event where it seems to work consistently on GNOME. For other platforms,
-    // especially where SDL may call SDL_RecreateWindow(), we must only capture
-    // after the decoder is created.
-    if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
-        // Native Wayland: Capture on SDL_WINDOWEVENT_ENTER
-        needsFirstEnterCapture = true;
-    }
-    else {
-        // X11/XWayland: Capture after decoder creation
-        needsPostDecoderCreationCapture = true;
+    // Avoid capturing the mouse initially for windowed relative mode.
+    // We still capture in windowed absolute mode because it doesn't
+    // constrain the motion of the cursor. This allows the user to
+    // easily reposition or resize the window.
+    if (m_IsFullScreen || m_Preferences->absoluteMouseMode) {
+        // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
+        // event where it seems to work consistently on GNOME. For other platforms,
+        // especially where SDL may call SDL_RecreateWindow(), we must only capture
+        // after the decoder is created.
+        if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
+            // Native Wayland: Capture on SDL_WINDOWEVENT_ENTER
+            needsFirstEnterCapture = true;
+        }
+        else {
+            // X11/XWayland: Capture after decoder creation
+            needsPostDecoderCreationCapture = true;
+        }
     }
 
     // Stop text input. SDL enables it by default
