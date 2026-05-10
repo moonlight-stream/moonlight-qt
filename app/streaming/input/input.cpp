@@ -1,6 +1,7 @@
 #include <Limelight.h>
 #include "SDL_compat.h"
 #include "streaming/session.h"
+#include "streaming/streamutils.h"
 #include "settings/mappingmanager.h"
 #include "path.h"
 #include "utils.h"
@@ -31,6 +32,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_LeftButtonReleaseTimer(0),
       m_RightButtonReleaseTimer(0),
       m_DragTimer(0),
+      m_FitWidthPanTimer(0),
       m_DragButton(0),
       m_NumFingersDown(0)
 {
@@ -218,6 +220,7 @@ SdlInputHandler::~SdlInputHandler()
     SDL_RemoveTimer(m_LeftButtonReleaseTimer);
     SDL_RemoveTimer(m_RightButtonReleaseTimer);
     SDL_RemoveTimer(m_DragTimer);
+    SDL_RemoveTimer(m_FitWidthPanTimer);
 
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_QuitSubSystem(SDL_INIT_HAPTIC);
@@ -249,6 +252,16 @@ SdlInputHandler::~SdlInputHandler()
 void SdlInputHandler::setWindow(SDL_Window *window)
 {
     m_Window = window;
+
+    // Drive fit-width edge-pan from a periodic timer so the view keeps panning
+    // while the cursor sits at the edge (motion events alone would only fire
+    // while the user is actively wiggling the mouse).
+    if (m_FitWidthPanTimer == 0 && window != nullptr) {
+        // Reset any pan offset carried over from a previous stream so we
+        // start at the top of the new stream.
+        StreamUtils::setFitWidthPanYOffset(0);
+        m_FitWidthPanTimer = SDL_AddTimer(16, fitWidthPanTimerCallback, this);
+    }
 }
 
 void SdlInputHandler::raiseAllKeys()
