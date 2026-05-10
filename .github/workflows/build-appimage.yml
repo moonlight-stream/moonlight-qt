@@ -143,11 +143,12 @@ jobs:
           make -j$(nproc)
           sudo make install
 
-      - name: Install linuxdeployqt
+      - name: Install linuxdeploy
         working-directory: dep_root/bin
         run: |
-          wget -O linuxdeployqt https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
-          chmod a+x linuxdeployqt
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy*.AppImage
 
       - name: Build Binaries
         run: |

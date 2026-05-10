@@ -12,6 +12,8 @@ BUILD_FOLDER=$BUILD_ROOT/build-$BUILD_CONFIG
 DEPLOY_FOLDER=$BUILD_ROOT/deploy-$BUILD_CONFIG
 INSTALLER_FOLDER=$BUILD_ROOT/installer-$BUILD_CONFIG
 
+LINUXDEPLOY=linuxdeploy-$(uname -m).AppImage
+
 if [ -n "$CI_VERSION" ]; then
   VERSION=$CI_VERSION
 else
@@ -19,7 +21,7 @@ else
 fi
 
 command -v qmake6 >/dev/null 2>&1 || fail "Unable to find 'qmake6' in your PATH!"
-command -v linuxdeployqt >/dev/null 2>&1 || fail "Unable to find 'linuxdeployqt' in your PATH!"
+command -v $LINUXDEPLOY >/dev/null 2>&1 || fail "Unable to find '$LINUXDEPLOY' in your PATH!"
 
 echo Cleaning output directories
 rm -rf $BUILD_FOLDER
@@ -32,13 +34,13 @@ mkdir $INSTALLER_FOLDER
 
 echo Configuring the project
 pushd $BUILD_FOLDER
-# Building with Wayland support will cause linuxdeployqt to include libwayland-client.so in the AppImage.
+# Building with Wayland support will cause linuxdeploy to include libwayland-client.so in the AppImage.
 # Since we always use the host implementation of EGL, this can cause libEGL_mesa.so to fail to load due
 # to missing symbols from the host's version of libwayland-client.so that aren't present in the older
 # version of libwayland-client.so from our AppImage build environment. When this happens, EGL fails to
 # work even in X11. To avoid this, we will disable Wayland support for the AppImage.
 #
-# We disable DRM support because linuxdeployqt doesn't bundle the appropriate libraries for Qt EGLFS.
+# We disable DRM support because linuxdeploy doesn't bundle the appropriate libraries for Qt EGLFS.
 qmake6 $SOURCE_ROOT/moonlight-qt.pro CONFIG+=disable-wayland CONFIG+=disable-libdrm PREFIX=$DEPLOY_FOLDER/usr DEFINES+=APP_IMAGE || fail "Qmake failed!"
 popd
 
@@ -52,17 +54,14 @@ pushd $BUILD_FOLDER
 make install || fail "Make install failed!"
 popd
 
-# We need to manually place SDL3 in our AppImage, since linuxdeployqt
-# cannot see the dependency via ldd when it looks at SDL2-compat.
-echo Staging SDL3 library
-mkdir -p $DEPLOY_FOLDER/usr/lib
-cp /usr/local/lib/libSDL3.so.0 $DEPLOY_FOLDER/usr/lib/
+export QML_SOURCES_PATHS=$SOURCE_ROOT/app/gui
+export QMAKE=qmake6
 
 echo Creating AppImage
 pushd $INSTALLER_FOLDER
-VERSION=$VERSION linuxdeployqt $DEPLOY_FOLDER/usr/share/applications/com.moonlight_stream.Moonlight.desktop \
-  -qmake=qmake6 -qmldir=$SOURCE_ROOT/app/gui -appimage -extra-plugins=tls \
-  -executable=$DEPLOY_FOLDER/usr/lib/libSDL3.so.0 || fail "linuxdeployqt failed!"
+VERSION=$VERSION $LINUXDEPLOY --appdir $DEPLOY_FOLDER \
+  --library=/usr/local/lib/libSDL3.so.0 \
+  --plugin qt --output appimage || fail "linuxdeploy failed!"
 popd
 
 echo Build successful
