@@ -13,6 +13,36 @@ Flickable {
     objectName: qsTr("Settings")
 
     signal languageChanged()
+    property int lastLanguage: StreamingPreferences.language
+
+    function refreshProfileUi() {
+        resolutionComboBox.resetForProfile()
+        fpsComboBox.reinitialize()
+        windowModeComboBox.reinitialize()
+        audioComboBox.syncFromPreferences(false)
+        languageComboBox.syncFromPreferences(false)
+        uiDisplayModeComboBox.syncFromPreferences(false)
+        captureSysKeysModeComboBox.syncFromPreferences(false)
+        decoderComboBox.syncFromPreferences(false)
+        codecComboBox.syncFromPreferences(false)
+
+        if (lastLanguage !== StreamingPreferences.language) {
+            if (!StreamingPreferences.retranslate()) {
+                ToolTip.show(qsTr("You must restart Moonlight for this change to take effect"), 5000)
+            }
+            else {
+                window.clearOnBack = true
+                languageChanged()
+            }
+
+            lastLanguage = StreamingPreferences.language
+        }
+    }
+
+    Connections {
+        target: StreamingPreferences
+        onCurrentProfileChanged: refreshProfileUi()
+    }
 
     boundsBehavior: Flickable.OvershootBounds
 
@@ -76,7 +106,7 @@ Flickable {
 
         // Highlight the first item if a gamepad is connected
         if (SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
-            resolutionComboBox.forceActiveFocus(Qt.TabFocus)
+            profileComboBox.forceActiveFocus(Qt.TabFocus)
         }
     }
 
@@ -98,6 +128,166 @@ Flickable {
         id: settingsColumn1
         width: settingsPage.width / 2
         spacing: 15
+
+        GroupBox {
+            id: profileSettingsGroupBox
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
+            padding: 12
+            title: "<font color=\"skyblue\">" + qsTr("Profiles") + "</font>"
+            font.pointSize: 12
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                Label {
+                    width: parent.width
+                    text: qsTr("Active profile")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                RowLayout {
+                    width: parent.width
+                    spacing: 5
+
+                    AutoResizingComboBox {
+                        id: profileComboBox
+                        Layout.fillWidth: true
+                        model: StreamingPreferences.profileNames
+
+                        function syncFromPreferences() {
+                            var idx = -1
+                            for (var i = 0; i < count; i++) {
+                                if (textAt(i) === StreamingPreferences.currentProfile) {
+                                    idx = i
+                                    break
+                                }
+                            }
+
+                            if (idx >= 0) {
+                                currentIndex = idx
+                            }
+                            else if (count > 0) {
+                                currentIndex = 0
+                            }
+
+                            recalculateWidth()
+                        }
+
+                        Component.onCompleted: {
+                            syncFromPreferences()
+                        }
+
+                        Connections {
+                            target: StreamingPreferences
+                            onCurrentProfileChanged: profileComboBox.syncFromPreferences()
+                            onProfileListChanged: profileComboBox.syncFromPreferences()
+                        }
+
+                        onActivated: {
+                            if (currentText && currentText !== StreamingPreferences.currentProfile) {
+                                StreamingPreferences.currentProfile = currentText
+                            }
+                        }
+                    }
+
+                    Button {
+                        id: newProfileButton
+                        text: qsTr("New")
+                        onClicked: newProfileDialog.open()
+
+                        ToolTip.delay: 1000
+                        ToolTip.timeout: 5000
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Create a new profile from the current settings")
+                    }
+
+                    Button {
+                        id: deleteProfileButton
+                        text: qsTr("Delete")
+                        enabled: profileComboBox.count > 1
+                        onClicked: deleteProfileDialog.open()
+
+                        ToolTip.delay: 1000
+                        ToolTip.timeout: 5000
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Delete the selected profile")
+                    }
+                }
+
+                Label {
+                    width: parent.width
+                    text: qsTr("Profiles keep separate settings so you can switch quickly.")
+                    font.pointSize: 9
+                    wrapMode: Text.Wrap
+                }
+            }
+
+            NavigableDialog {
+                id: newProfileDialog
+                standardButtons: Dialog.Ok | Dialog.Cancel
+
+                onOpened: {
+                    profileNameField.forceActiveFocus()
+                }
+
+                onClosed: {
+                    profileNameField.clear()
+                }
+
+                onAccepted: {
+                    var name = profileNameField.text.trim()
+                    if (!name) {
+                        ToolTip.show(qsTr("Enter a profile name"), 5000)
+                        return
+                    }
+
+                    if (!StreamingPreferences.createProfile(name)) {
+                        ToolTip.show(qsTr("Profile name already exists or is invalid"), 5000)
+                    }
+                }
+
+                ColumnLayout {
+                    Label {
+                        text: qsTr("New profile name:")
+                        font.bold: true
+                    }
+
+                    TextField {
+                        id: profileNameField
+                        Layout.fillWidth: true
+                        focus: true
+
+                        Keys.onReturnPressed: {
+                            newProfileDialog.accept()
+                        }
+
+                        Keys.onEnterPressed: {
+                            newProfileDialog.accept()
+                        }
+                    }
+                }
+            }
+
+            NavigableMessageDialog {
+                id: deleteProfileDialog
+                standardButtons: Dialog.Yes | Dialog.No
+                property string profileName: ""
+
+                onOpened: {
+                    profileName = profileComboBox.currentText
+                }
+
+                onAccepted: {
+                    if (profileName) {
+                        StreamingPreferences.deleteProfile(profileName)
+                    }
+                }
+
+                text: qsTr("Delete profile \"%1\"?").arg(profileName)
+            }
+        }
 
         GroupBox {
             id: basicSettingsGroupBox
@@ -162,8 +352,33 @@ Flickable {
                             }
                         }
 
-                        // ignore setting the index at first, and actually set it when the component is loaded
-                        Component.onCompleted: {
+                        function resetForProfile() {
+                            resolutionListModel.clear()
+                            resolutionListModel.append({
+                                                           "text": qsTr("720p"),
+                                                           "video_width": "1280",
+                                                           "video_height": "720",
+                                                           "is_custom": false
+                                                       })
+                            resolutionListModel.append({
+                                                           "text": qsTr("1080p"),
+                                                           "video_width": "1920",
+                                                           "video_height": "1080",
+                                                           "is_custom": false
+                                                       })
+                            resolutionListModel.append({
+                                                           "text": qsTr("1440p"),
+                                                           "video_width": "2560",
+                                                           "video_height": "1440",
+                                                           "is_custom": false
+                                                       })
+                            resolutionListModel.append({
+                                                           "text": qsTr("4K"),
+                                                           "video_width": "3840",
+                                                           "video_height": "2160",
+                                                           "is_custom": false
+                                                       })
+
                             // Refresh display data before using it to build the list
                             SystemProperties.refreshDisplays()
 
@@ -239,37 +454,16 @@ Flickable {
                             lastIndexValue = currentIndex
                         }
 
+                        // ignore setting the index at first, and actually set it when the component is loaded
+                        Component.onCompleted: {
+                            resetForProfile()
+                        }
+
                         id: resolutionComboBox
                         maximumWidth: parent.width / 2
                         textRole: "text"
                         model: ListModel {
                             id: resolutionListModel
-                            // Other elements may be added at runtime
-                            // based on attached display resolution
-                            ListElement {
-                                text: qsTr("720p")
-                                video_width: "1280"
-                                video_height: "720"
-                                is_custom: false
-                            }
-                            ListElement {
-                                text: qsTr("1080p")
-                                video_width: "1920"
-                                video_height: "1080"
-                                is_custom: false
-                            }
-                            ListElement {
-                                text: qsTr("1440p")
-                                video_width: "2560"
-                                video_height: "1440"
-                                is_custom: false
-                            }
-                            ListElement {
-                                text: qsTr("4K")
-                                video_width: "3840"
-                                video_height: "2160"
-                                is_custom: false
-                            }
                         }
 
                         function updateBitrateForSelection() {
@@ -286,7 +480,6 @@ Flickable {
                                                                                                               StreamingPreferences.height,
                                                                                                               StreamingPreferences.fps,
                                                                                                               StreamingPreferences.enableYUV444);
-                                    slider.value = StreamingPreferences.bitrateKbps
                                 }
                             }
 
@@ -454,7 +647,6 @@ Flickable {
                                                                                                               StreamingPreferences.height,
                                                                                                               StreamingPreferences.fps,
                                                                                                               StreamingPreferences.enableYUV444);
-                                    slider.value = StreamingPreferences.bitrateKbps
                                 }
                             }
 
@@ -591,6 +783,18 @@ Flickable {
                         }
 
                         function reinitialize() {
+                            fpsListModel.clear()
+                            fpsListModel.append({
+                                                    "text": qsTr("30 FPS"),
+                                                    "video_fps": "30",
+                                                    "is_custom": false
+                                                })
+                            fpsListModel.append({
+                                                    "text": qsTr("60 FPS"),
+                                                    "video_fps": "60",
+                                                    "is_custom": false
+                                                })
+
                             // Add native refresh rate for all attached displays
                             var done = false
                             for (var displayIndex = 0; !done; displayIndex++) {
@@ -638,17 +842,6 @@ Flickable {
 
                         model: ListModel {
                             id: fpsListModel
-                            // Other elements may be added at runtime
-                            ListElement {
-                                text: qsTr("30 FPS")
-                                video_fps: "30"
-                                is_custom: false
-                            }
-                            ListElement {
-                                text: qsTr("60 FPS")
-                                video_fps: "60"
-                                is_custom: false
-                            }
                         }
 
                         id: fpsComboBox
@@ -721,7 +914,6 @@ Flickable {
                             var defaultBitrate = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
                             StreamingPreferences.bitrateKbps = defaultBitrate
                             StreamingPreferences.autoAdjustBitrate = true
-                            slider.value = defaultBitrate
                         }
                     }
                 }
@@ -869,8 +1061,7 @@ Flickable {
                 }
 
                 AutoResizingComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
+                    function syncFromPreferences(applySelection) {
                         var saved_audio = StreamingPreferences.audioConfig
                         currentIndex = 0
                         for (var i = 0; i < audioListModel.count; i++) {
@@ -880,7 +1071,15 @@ Flickable {
                                 break
                             }
                         }
-                        activated(currentIndex)
+
+                        if (applySelection) {
+                            activated(currentIndex)
+                        }
+                    }
+
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        syncFromPreferences(true)
                     }
 
                     id: audioComboBox
@@ -1002,8 +1201,7 @@ Flickable {
                 }
 
                 AutoResizingComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
+                    function syncFromPreferences(applySelection) {
                         var saved_language = StreamingPreferences.language
                         currentIndex = 0
                         for (var i = 0; i < languageListModel.count; i++) {
@@ -1014,7 +1212,14 @@ Flickable {
                             }
                         }
 
-                        activated(currentIndex)
+                        if (applySelection) {
+                            activated(currentIndex)
+                        }
+                    }
+
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        syncFromPreferences(true)
                     }
 
                     id: languageComboBox
@@ -1158,6 +1363,7 @@ Flickable {
                             StreamingPreferences.language = languageListModel.get(currentIndex).val
                             if (!StreamingPreferences.retranslate()) {
                                 ToolTip.show(qsTr("You must restart Moonlight for this change to take effect"), 5000)
+                                settingsPage.lastLanguage = StreamingPreferences.language
                             }
                             else {
                                 // Force the back operation to pop any AppView pages that exist.
@@ -1166,6 +1372,7 @@ Flickable {
 
                                 // Signal other controls to adjust their text
                                 languageChanged()
+                                settingsPage.lastLanguage = StreamingPreferences.language
                             }
                         }
                     }
@@ -1181,8 +1388,7 @@ Flickable {
                 }
 
                 AutoResizingComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
+                    function syncFromPreferences(applySelection) {
                         if (!visible) {
                             // Do nothing if the control won't even be visible
                             return
@@ -1198,7 +1404,14 @@ Flickable {
                             }
                         }
 
-                        activated(currentIndex)
+                        if (applySelection) {
+                            activated(currentIndex)
+                        }
+                    }
+
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        syncFromPreferences(true)
                     }
 
                     id: uiDisplayModeComboBox
@@ -1341,8 +1554,9 @@ Flickable {
                     }
 
                     AutoResizingComboBox {
-                        // ignore setting the index at first, and actually set it when the component is loaded
-                        Component.onCompleted: {
+                        id: captureSysKeysModeComboBox
+
+                        function syncFromPreferences(applySelection) {
                             if (!visible) {
                                 // Do nothing if the control won't even be visible
                                 return
@@ -1358,7 +1572,14 @@ Flickable {
                                 }
                             }
 
-                            activated(currentIndex)
+                            if (applySelection) {
+                                activated(currentIndex)
+                            }
+                        }
+
+                        // ignore setting the index at first, and actually set it when the component is loaded
+                        Component.onCompleted: {
+                            syncFromPreferences(true)
                         }
 
                         enabled: captureSysKeysCheck.checked && captureSysKeysCheck.enabled
@@ -1534,8 +1755,7 @@ Flickable {
                 }
 
                 AutoResizingComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
+                    function syncFromPreferences(applySelection) {
                         var saved_vds = StreamingPreferences.videoDecoderSelection
                         currentIndex = 0
                         for (var i = 0; i < decoderListModel.count; i++) {
@@ -1545,7 +1765,15 @@ Flickable {
                                 break
                             }
                         }
-                        activated(currentIndex)
+
+                        if (applySelection) {
+                            activated(currentIndex)
+                        }
+                    }
+
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        syncFromPreferences(true)
                     }
 
                     id: decoderComboBox
@@ -1582,8 +1810,7 @@ Flickable {
                 }
 
                 AutoResizingComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
+                    function syncFromPreferences(applySelection) {
                         var saved_vcc = StreamingPreferences.videoCodecConfig
 
                         // Default to Automatic (relevant if HDR is enabled,
@@ -1598,7 +1825,14 @@ Flickable {
                             }
                         }
 
-                        activated(currentIndex)
+                        if (applySelection) {
+                            activated(currentIndex)
+                        }
+                    }
+
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        syncFromPreferences(true)
                     }
 
                     id: codecComboBox
@@ -1669,7 +1903,6 @@ Flickable {
                                                                                                           StreamingPreferences.height,
                                                                                                           StreamingPreferences.fps,
                                                                                                           StreamingPreferences.enableYUV444);
-                                slider.value = StreamingPreferences.bitrateKbps
                             }
                         }
                     }
@@ -1693,7 +1926,6 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.unlockBitrate = checked
                         StreamingPreferences.bitrateKbps = Math.min(StreamingPreferences.bitrateKbps, slider.to)
-                        slider.value = StreamingPreferences.bitrateKbps
                     }
 
                     ToolTip.delay: 1000
