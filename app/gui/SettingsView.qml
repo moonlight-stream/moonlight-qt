@@ -1424,6 +1424,18 @@ Flickable {
                         StreamingPreferences.swapMouseButtons = checked
                     }
                 }
+                
+                CheckBox {
+                    id: swapWinAltKeysCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Swap Alt and Win keys")
+                    font.pointSize:  12
+                    checked: StreamingPreferences.swapWinAltKeys
+                    onCheckedChanged: {
+                        StreamingPreferences.swapWinAltKeys = checked
+                    }
+                }
 
                 CheckBox {
                     id: reverseScrollButtonsCheck
