@@ -34,14 +34,7 @@ mkdir $INSTALLER_FOLDER
 
 echo Configuring the project
 pushd $BUILD_FOLDER
-# Building with Wayland support will cause linuxdeploy to include libwayland-client.so in the AppImage.
-# Since we always use the host implementation of EGL, this can cause libEGL_mesa.so to fail to load due
-# to missing symbols from the host's version of libwayland-client.so that aren't present in the older
-# version of libwayland-client.so from our AppImage build environment. When this happens, EGL fails to
-# work even in X11. To avoid this, we will disable Wayland support for the AppImage.
-#
-# We disable DRM support because linuxdeploy doesn't bundle the appropriate libraries for Qt EGLFS.
-qmake6 $SOURCE_ROOT/moonlight-qt.pro CONFIG+=disable-wayland CONFIG+=disable-libdrm PREFIX=$DEPLOY_FOLDER/usr DEFINES+=APP_IMAGE || fail "Qmake failed!"
+qmake6 $SOURCE_ROOT/moonlight-qt.pro PREFIX=$DEPLOY_FOLDER/usr DEFINES+=APP_IMAGE || fail "Qmake failed!"
 popd
 
 echo Compiling Moonlight in $BUILD_CONFIG configuration
@@ -56,6 +49,8 @@ popd
 
 export QML_SOURCES_PATHS=$SOURCE_ROOT/app/gui
 export QMAKE=qmake6
+export EXTRA_QT_MODULES="waylandclient;eglfsdeviceintegration;eglfskmssupport"
+export EXTRA_PLATFORM_PLUGINS="libqwayland-egl.so;libqwayland-generic.so;libqeglfs.so;libqlinuxfb.so"
 
 echo Creating AppImage
 pushd $INSTALLER_FOLDER
