@@ -151,11 +151,15 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
         (void**)&m_Overlays[type].surface,
         m_Overlays[type].enabled ?
             // The _Wrapped variant is required for line breaks to work
-            TTF_RenderText_Blended_Wrapped(m_Overlays[type].font,
-                                           m_Overlays[type].text,
-                                           m_Overlays[type].color,
-                                           1024)
+	    RenderTextOutlinedWrapped(m_Overlays[type].font,
+		                      m_Overlays[type].text,
+				      m_Overlays[type].color,
+				      {0, 0, 0, 255},
+				      4,
+				      1024)
             : nullptr);
+
+        //newSurface);
 
     // Notify the renderer
     m_Renderer->notifyOverlayUpdated(type);
@@ -165,3 +169,22 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
         SDL_FreeSurface(oldSurface);
     }
 }
+
+SDL_Surface* OverlayManager::RenderTextOutlinedWrapped(TTF_Font* font, const char* text, SDL_Color textColor, SDL_Color outlineColor, int outlineWidth, int wrapWidth) {
+	// Draw text twice, but outline is a bit bigger
+	int oldOutline = TTF_GetFontOutline(font);
+	TTF_SetFontOutline(font, outlineWidth);
+	auto outlineSurface = TTF_RenderText_Blended_Wrapped(font, text, outlineColor, wrapWidth);
+	TTF_SetFontOutline(font, 0);
+	auto textSurface = TTF_RenderText_Blended_Wrapped(font, text, textColor, wrapWidth);
+	TTF_SetFontOutline(font, oldOutline);
+
+	// Merge the texts
+	SDL_Rect dst = { outlineWidth, outlineWidth, textSurface->w, textSurface->h };
+	SDL_BlitSurface(textSurface, nullptr, outlineSurface, &dst);
+
+	SDL_FreeSurface(textSurface);
+	return outlineSurface;
+}
+
+
