@@ -22,7 +22,7 @@ jobs:
           - os: windows-2025
             qt_version: 6.11.1
           # macOS
-          - os: macos-15
+          - os: macos-26-intel
             qt_version: 6.11.1
 
     runs-on: ${{ matrix.os }}
