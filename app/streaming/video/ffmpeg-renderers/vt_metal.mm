@@ -639,27 +639,22 @@ public:
             return nullptr;
         }
 
+        // First, try to find a low power (Intel) or unified memory (Apple Silicon) GPU
         for (id<MTLDevice> device in devices) {
             if (device.isLowPower || device.hasUnifiedMemory) {
                 return device;
             }
         }
 
-        if (!m_HwAccel) {
-            // Metal software decoding is always available
-            return [MTLCreateSystemDefaultDevice() autorelease];
-        }
-        else if (qgetenv("VT_FORCE_METAL") == "1") {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using Metal renderer due to VT_FORCE_METAL=1 override.");
-            return [MTLCreateSystemDefaultDevice() autorelease];
-        }
-        else {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Avoiding Metal renderer due to use of dGPU/eGPU. Use VT_FORCE_METAL=1 to override.");
+        // Next, we'll just try to pick something internal to the system
+        for (id<MTLDevice> device in devices) {
+            if (!device.isRemovable) {
+                return device;
+            }
         }
 
-        return nullptr;
+        // Use the system-default device
+        return [MTLCreateSystemDefaultDevice() autorelease];
     }
 
     virtual bool initialize(PDECODER_PARAMETERS params) override
