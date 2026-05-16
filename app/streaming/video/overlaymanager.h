@@ -41,6 +41,7 @@ public:
 
 private:
     void notifyOverlayUpdated(OverlayType type);
+    SDL_Surface* RenderTextOutlinedWrapped(TTF_Font* font, const char* text, SDL_Color textColor, SDL_Color outlineColor, int outlineWidth, int wrapWidth);
 
     struct {
         bool enabled;
