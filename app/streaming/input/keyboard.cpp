@@ -13,6 +13,11 @@
 #define VK_NUMPAD0 0x60
 #endif
 
+// Brazilian ABNT2 keyboard specific key
+#ifndef VK_ABNT_C1
+#define VK_ABNT_C1 0xC1
+#endif
+
 void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 {
     switch (combo) {
@@ -430,10 +435,14 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 keyCode = 0xDE;
                 break;
             case SDL_SCANCODE_INTERNATIONAL1:
+                // Brazilian ABNT2 keyboard: /? key
                 shouldNotConvertToScanCodeOnServer = true;
-                Q_FALLTHROUGH();
+                keyCode = VK_ABNT_C1;
+                break;
             case SDL_SCANCODE_NONUSBACKSLASH:
-                keyCode = 0xE2;
+                // ISO keyboard: extra key between left shift and Z
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0xE2; // VK_OEM_102
                 break;
             case SDL_SCANCODE_LANG1:
                 keyCode = 0x1C;
