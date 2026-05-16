@@ -4,7 +4,7 @@ $Organization = "moonlight-stream"
 $PrebuiltRepo = "moonlight-qt-deps"
 $TargetDir = Join-Path $PSScriptRoot "libs\windows"
 $Assets = @("windows-x64.zip", "windows-ARM64.zip")
-$Tag = "v2"
+$Tag = "v3"
 
 if (Test-Path $TargetDir) {
     Write-Host "Cleaning target directory..." -ForegroundColor Cyan
