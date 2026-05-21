@@ -171,6 +171,10 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
 }
 
 SDL_Surface* OverlayManager::RenderTextOutlinedWrapped(TTF_Font* font, const char* text, SDL_Color textColor, SDL_Color outlineColor, int outlineWidth, int wrapWidth) {
+	if (text == nullptr || text[0] == '\0') {
+		return nullptr;
+	}
+
 	// Draw text twice, but outline is a bit bigger
 	int oldOutline = TTF_GetFontOutline(font);
 	TTF_SetFontOutline(font, outlineWidth);
@@ -178,6 +182,12 @@ SDL_Surface* OverlayManager::RenderTextOutlinedWrapped(TTF_Font* font, const cha
 	TTF_SetFontOutline(font, 0);
 	auto textSurface = TTF_RenderText_Blended_Wrapped(font, text, textColor, wrapWidth);
 	TTF_SetFontOutline(font, oldOutline);
+
+	if (outlineSurface == nullptr || textSurface == nullptr) {
+		if (outlineSurface) SDL_FreeSurface(outlineSurface);
+		if (textSurface) SDL_FreeSurface(textSurface);
+		return nullptr;
+	}
 
 	// Merge the texts
 	SDL_Rect dst = { outlineWidth, outlineWidth, textSurface->w, textSurface->h };
