@@ -109,7 +109,7 @@ NvHTTP::getCurrentGame(QString serverInfo)
     // has the semantics that its name would indicate. To contain the effects of this change as much
     // as possible, we'll force the current game to zero if the server isn't in a streaming session.
     QString serverState = getXmlString(serverInfo, "state");
-    if (serverState != nullptr && serverState.endsWith("_SERVER_BUSY"))
+    if (serverState.endsWith("_SERVER_BUSY"))
     {
         return getXmlString(serverInfo, "currentgame").toInt();
     }
@@ -269,14 +269,16 @@ NvHTTP::getDisplayModeList(QString serverInfo)
             if (name == QString("DisplayMode")) {
                 modes.append(NvDisplayMode());
             }
-            else if (name == QString("Width")) {
-                modes.last().width = xmlReader.readElementText().toInt();
-            }
-            else if (name == QString("Height")) {
-                modes.last().height = xmlReader.readElementText().toInt();
-            }
-            else if (name == QString("RefreshRate")) {
-                modes.last().refreshRate = xmlReader.readElementText().toInt();
+            else if (!modes.isEmpty()) {
+                if (name == QString("Width")) {
+                    modes.last().width = xmlReader.readElementText().toInt();
+                }
+                else if (name == QString("Height")) {
+                    modes.last().height = xmlReader.readElementText().toInt();
+                }
+                else if (name == QString("RefreshRate")) {
+                    modes.last().refreshRate = xmlReader.readElementText().toInt();
+                }
             }
         }
     }
@@ -307,17 +309,19 @@ NvHTTP::getAppList()
                 }
                 apps.append(NvApp());
             }
-            else if (name == QString("AppTitle")) {
-                apps.last().name = xmlReader.readElementText();
-            }
-            else if (name == QString("ID")) {
-                apps.last().id = xmlReader.readElementText().toInt();
-            }
-            else if (name == QString("IsHdrSupported")) {
-                apps.last().hdrSupported = xmlReader.readElementText() == "1";
-            }
-            else if (name == QString("IsAppCollectorGame")) {
-                apps.last().isAppCollectorGame = xmlReader.readElementText() == "1";
+            else if (!apps.isEmpty()) {
+                if (name == QString("AppTitle")) {
+                    apps.last().name = xmlReader.readElementText();
+                }
+                else if (name == QString("ID")) {
+                    apps.last().id = xmlReader.readElementText().toInt();
+                }
+                else if (name == QString("IsHdrSupported")) {
+                    apps.last().hdrSupported = xmlReader.readElementText() == "1";
+                }
+                else if (name == QString("IsAppCollectorGame")) {
+                    apps.last().isAppCollectorGame = xmlReader.readElementText() == "1";
+                }
             }
         }
     }
@@ -383,13 +387,7 @@ QByteArray
 NvHTTP::getXmlStringFromHex(QString xml,
                             QString tagName)
 {
-    QString str = getXmlString(xml, tagName);
-    if (str == nullptr)
-    {
-        return nullptr;
-    }
-
-    return QByteArray::fromHex(str.toUtf8());
+    return QByteArray::fromHex(getXmlString(xml, tagName).toUtf8());
 }
 
 QString
@@ -411,7 +409,7 @@ NvHTTP::getXmlString(QString xml,
         }
     }
 
-    return nullptr;
+    return QString();
 }
 
 void NvHTTP::handleSslErrors(QNetworkReply* reply, const QList<QSslError>& errors)
