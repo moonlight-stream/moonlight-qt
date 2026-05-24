@@ -60,9 +60,7 @@ char* OverlayManager::getOverlayText(OverlayType type)
 
 void OverlayManager::updateOverlayText(OverlayType type, const char* text)
 {
-    strncpy(m_Overlays[type].text, text, sizeof(m_Overlays[0].text));
-    m_Overlays[type].text[getOverlayMaxTextLength() - 1] = '\0';
-
+    SDL_utf8strlcpy(m_Overlays[type].text, text, sizeof(m_Overlays[0].text));
     setOverlayTextUpdated(type);
 }
 
