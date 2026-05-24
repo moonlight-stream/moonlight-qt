@@ -116,6 +116,11 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     m_SpecialKeyCombos[KeyComboQuitAndExit].scanCode = SDL_SCANCODE_E;
     m_SpecialKeyCombos[KeyComboQuitAndExit].enabled = true;
 
+    m_SpecialKeyCombos[KeyComboToggleKeyboardGrab].keyCombo = KeyComboToggleKeyboardGrab;
+    m_SpecialKeyCombos[KeyComboToggleKeyboardGrab].keyCode = SDLK_k;
+    m_SpecialKeyCombos[KeyComboToggleKeyboardGrab].scanCode = SDL_SCANCODE_K;
+    m_SpecialKeyCombos[KeyComboToggleKeyboardGrab].enabled = QGuiApplication::platformName() != "eglfs";
+
     m_OldIgnoreDevices = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES);
     m_OldIgnoreDevicesExcept = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT);
 
@@ -319,16 +324,14 @@ bool SdlInputHandler::isCaptureActive()
 
 void SdlInputHandler::updateKeyboardGrabState()
 {
-    if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_OFF) {
-        return;
-    }
-
-    bool shouldGrab = isCaptureActive();
-    Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
-    if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN &&
+    bool shouldGrab = m_CaptureSystemKeysMode != StreamingPreferences::CSK_OFF && isCaptureActive();
+    if (shouldGrab) {
+        Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
+        if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN &&
             !(windowFlags & SDL_WINDOW_FULLSCREEN)) {
-        // Ungrab if it's fullscreen only and we left fullscreen
-        shouldGrab = false;
+            // Ungrab if it's fullscreen only and we left fullscreen
+            shouldGrab = false;
+        }
     }
 
     // Don't close the window on Alt+F4 when keyboard grab is enabled
