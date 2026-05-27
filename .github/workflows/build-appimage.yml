@@ -48,7 +48,7 @@ jobs:
       - name: Build SDL3
         working-directory: deps/SDL
         run: |
-          cmake -DSDL_KMSDRM=OFF -DSDL_TEST_LIBRARY=OFF -DSDL_INSTALL_DOCS=OFF -S . -B build
+          cmake -DSDL_KMSDRM=OFF -DSDL_TEST_LIBRARY=OFF -DSDL_INSTALL_DOCS=OFF -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -S . -B build
           cmake --build build -j
           sudo cmake --install build
 
@@ -62,7 +62,7 @@ jobs:
       - name: Build sdl2-compat
         working-directory: deps/sdl2-compat
         run: |
-          cmake -DSDL2COMPAT_TESTS=OFF -S . -B build
+          cmake -DSDL2COMPAT_TESTS=OFF -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -S . -B build
           cmake --build build -j
           sudo cmake --install build
 

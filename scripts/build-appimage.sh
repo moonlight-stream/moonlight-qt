@@ -32,6 +32,11 @@ mkdir $BUILD_FOLDER
 mkdir $DEPLOY_FOLDER
 mkdir $INSTALLER_FOLDER
 
+# Enable LTO for official builds
+export CFLAGS=-flto=auto
+export CXXFLAGS=-flto=auto
+export LDFLAGS=-flto=auto
+
 echo Configuring the project
 pushd $BUILD_FOLDER
 # Building with Wayland support will cause linuxdeploy to include libwayland-client.so in the AppImage.
