@@ -41,6 +41,11 @@ mkdir $BUILD_ROOT
 mkdir $BUILD_FOLDER
 mkdir $INSTALLER_FOLDER
 
+# Enable LTO for official builds
+export CFLAGS=-flto=thin
+export CXXFLAGS=-flto=thin
+export LDFLAGS=-flto=thin
+
 echo Configuring the project
 pushd $BUILD_FOLDER
 qmake $SOURCE_ROOT/moonlight-qt.pro QMAKE_APPLE_DEVICE_ARCHS="x86_64 arm64" || fail "Qmake failed!"

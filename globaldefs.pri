@@ -20,21 +20,6 @@ CONFIG(release, debug|release) {
     }
 }
 
-# Enable LTCG/LTO for release builds
-CONFIG(release, debug|release) {
-    *-msvc {
-        QMAKE_CFLAGS += /GL
-        QMAKE_CXXFLAGS += /GL
-        QMAKE_LFLAGS += /LTCG
-    }
-
-    macx {
-        QMAKE_CFLAGS += -flto=thin
-        QMAKE_CXXFLAGS += -flto=thin
-        QMAKE_LFLAGS += -flto=thin
-    }
-}
-
 # Enable ASan for Linux or macOS
 #CONFIG += sanitizer sanitize_address
 
