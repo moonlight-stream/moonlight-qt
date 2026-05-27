@@ -157,7 +157,7 @@ win32:!winrt {
 }
 macx {
     !disable-prebuilts {
-        LIBS += -lssl.3 -lcrypto.3 -lavcodec.62 -lavutil.60 -lswscale.9 -lopus -lSDL2 -lSDL2_ttf
+        LIBS += -lssl.3 -lcrypto.3 -lavcodec.62 -lavutil.60 -lswscale.9 -lopus.0 -lSDL2 -lSDL2_ttf
         CONFIG += discord-rpc
     }
 
