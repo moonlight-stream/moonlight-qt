@@ -134,7 +134,8 @@ jobs:
       - name: Build FFmpeg
         working-directory: deps/FFmpeg
         run: |
-          ./configure --enable-pic --disable-static --enable-shared --disable-all --disable-autodetect --enable-avcodec --enable-avformat --enable-swscale \
+          ./configure --enable-pic --enable-lto --disable-static --enable-shared --disable-all --disable-autodetect \
+            --enable-avcodec --enable-avformat --enable-swscale \
             --enable-decoder=h264 --enable-decoder=hevc --enable-decoder=av1 \
             --enable-vaapi --enable-hwaccel=h264_vaapi --enable-hwaccel=hevc_vaapi --enable-hwaccel=av1_vaapi \
             --enable-vdpau --enable-hwaccel=h264_vdpau  --enable-hwaccel=hevc_vdpau --enable-hwaccel=av1_vdpau \
