@@ -1,4 +1,5 @@
 #include <QGuiApplication>
+#include <QStyleHints>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QIcon>
@@ -752,6 +753,16 @@ int main(int argc, char *argv[])
     }
 
     QGuiApplication app(argc, argv);
+
+#ifdef Q_OS_DARWIN
+    // macOS defaults "Keyboard navigation" to text fields and lists only, which
+    // prevents Tab (and the gamepad navigation that synthesizes it) from moving
+    // focus between non-text controls on the settings page. Force Tab to reach
+    // all controls so keyboard and gamepad UI navigation work without requiring
+    // the user to enable a system accessibility setting. Other platforms already
+    // default to this behavior.
+    app.styleHints()->setTabFocusBehavior(Qt::TabFocusAllControls);
+#endif
 
 #ifdef Q_OS_UNIX
     // Register signal handlers to arbitrate between SDL and Qt.
