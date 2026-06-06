@@ -19,5 +19,9 @@
         <file>gui/NavigableDialog.qml</file>
         <file>gui/CenteredGridView.qml</file>
         <file>gui/CliPair.qml</file>
+        <file>gui/console/ConsoleHome.qml</file>
+        <file>gui/console/GameCarousel.qml</file>
+        <file>gui/console/StatusBar.qml</file>
+        <file>gui/console/ControllerLegend.qml</file>
     </qresource>
 </RCC>

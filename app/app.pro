@@ -421,6 +421,7 @@ embedded {
     message(Embedded build)
 
     DEFINES += EMBEDDED_BUILD
+    DEFINES += CONSOLE_UI
 }
 glslow {
     message(GL slow build)
