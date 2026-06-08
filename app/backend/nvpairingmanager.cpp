@@ -54,16 +54,18 @@ NvPairingManager::generateRandomBytes(int length)
 QByteArray
 NvPairingManager::encrypt(const QByteArray& plaintext, const QByteArray& key)
 {
-    QByteArray ciphertext(plaintext.size(), 0);
-    EVP_CIPHER_CTX* cipher;
-    int ciphertextLen;
+    if (plaintext.isEmpty()) {
+        return QByteArray();
+    }
 
-    cipher = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX* cipher = EVP_CIPHER_CTX_new();
     THROW_BAD_ALLOC_IF_NULL(cipher);
 
     EVP_EncryptInit(cipher, EVP_aes_128_ecb(), reinterpret_cast<const unsigned char*>(key.data()), NULL);
     EVP_CIPHER_CTX_set_padding(cipher, 0);
 
+    QByteArray ciphertext(plaintext.size(), 0);
+    int ciphertextLen;
     EVP_EncryptUpdate(cipher,
                       reinterpret_cast<unsigned char*>(ciphertext.data()),
                       &ciphertextLen,
@@ -79,16 +81,18 @@ NvPairingManager::encrypt(const QByteArray& plaintext, const QByteArray& key)
 QByteArray
 NvPairingManager::decrypt(const QByteArray& ciphertext, const QByteArray& key)
 {
-    QByteArray plaintext(ciphertext.size(), 0);
-    EVP_CIPHER_CTX* cipher;
-    int plaintextLen;
+    if (ciphertext.isEmpty()) {
+        return QByteArray();
+    }
 
-    cipher = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX* cipher = EVP_CIPHER_CTX_new();
     THROW_BAD_ALLOC_IF_NULL(cipher);
 
     EVP_DecryptInit(cipher, EVP_aes_128_ecb(), reinterpret_cast<const unsigned char*>(key.data()), NULL);
     EVP_CIPHER_CTX_set_padding(cipher, 0);
 
+    QByteArray plaintext(ciphertext.size(), 0);
+    int plaintextLen;
     EVP_DecryptUpdate(cipher,
                       reinterpret_cast<unsigned char*>(plaintext.data()),
                       &plaintextLen,
@@ -239,8 +243,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     }
 
     QByteArray serverCertStr = NvHTTP::getXmlStringFromHex(getCert, "plaincert");
-    if (serverCertStr == nullptr)
-    {
+    if (serverCertStr.isEmpty()) {
         qCritical() << "Server likely already pairing";
         m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::ALREADY_IN_PROGRESS;
@@ -275,6 +278,12 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     }
 
     QByteArray challengeResponseData = decrypt(m_Http.getXmlStringFromHex(challengeXml, "challengeresponse"), aesKey);
+    if (challengeResponseData.size() < hashLength) {
+        qCritical() << "Invalid challengeresponse at stage #2";
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
+        return PairState::FAILED;
+    }
+
     QByteArray clientSecretData = generateRandomBytes(16);
     QByteArray challengeResponse;
     QByteArray serverResponse(challengeResponseData.data(), hashLength);
@@ -300,6 +309,12 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     }
 
     QByteArray pairingSecret = NvHTTP::getXmlStringFromHex(respXml, "pairingsecret");
+    if (pairingSecret.size() <= 16) {
+        qCritical() << "Invalid pairingsecret at stage #3";
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
+        return PairState::FAILED;
+    }
+
     QByteArray serverSecret = pairingSecret.left(16);
     QByteArray serverSignature = pairingSecret.mid(16);
 

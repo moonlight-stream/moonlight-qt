@@ -89,6 +89,11 @@ SDL_Window* StreamUtils::createTestWindow()
     SDL_Window* testWindow;
     Uint32 baseFlags = 0;
 
+    // Stop text input before creating the test window to avoid sdl2-compat
+    // starting text input on the new window. This might trigger the IME to
+    // be displayed.
+    SDL_StopTextInput();
+
     // Test windows are always hidden
     baseFlags |= SDL_WINDOW_HIDDEN;
 

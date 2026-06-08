@@ -153,6 +153,21 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         SDL_PushEvent(&quitExitEvent);
         break;
 
+    case KeyComboToggleKeyboardGrab:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected keyboard grab toggle combo");
+
+        // Toggle the system key capture mode
+        if (isSystemKeyCaptureActive()) {
+            m_CaptureSystemKeysMode = StreamingPreferences::CSK_OFF;
+        }
+        else {
+            m_CaptureSystemKeysMode = StreamingPreferences::CSK_ALWAYS;
+        }
+
+        updateKeyboardGrabState();
+        break;
+
     default:
         Q_UNREACHABLE();
     }

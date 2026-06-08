@@ -1,4 +1,5 @@
 #include <QGuiApplication>
+#include <QStyleHints>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QIcon>
@@ -738,7 +739,30 @@ int main(int argc, char *argv[])
     // use this functionality and it can cause hangs when querying broken devices.
     SDL_SetHint("SDL_WINDOWS_DETECT_DEVICE_HOTPLUG", "0");
 
+    // SDL3 supports offloading scaling to the Wayland compositor, which we take
+    // advantage of in the GL_IS_SLOW case to help fillrate-limited GPUs. To stay
+    // consistent with our own scaling logic, we need aspect ratio scaling which
+    // KDE doesn't currently handle properly. As a compromise, we'll just enable
+    // aspect ratio scaling in non-KDE environments.
+    //
+    // NB: We do not force SDL_VIDEO_WAYLAND_MODE_SCALING to "stretch" on KDE,
+    // because SDL 3.6 has a workaround for KDE and switches the default to
+    // "aspect" for all desktops.
+    if (qgetenv("XDG_CURRENT_DESKTOP") != "KDE") {
+        SDL_SetHint("SDL_VIDEO_WAYLAND_MODE_SCALING", "aspect");
+    }
+
     QGuiApplication app(argc, argv);
+
+#ifdef Q_OS_DARWIN
+    // macOS defaults "Keyboard navigation" to text fields and lists only, which
+    // prevents Tab (and the gamepad navigation that synthesizes it) from moving
+    // focus between non-text controls on the settings page. Force Tab to reach
+    // all controls so keyboard and gamepad UI navigation work without requiring
+    // the user to enable a system accessibility setting. Other platforms already
+    // default to this behavior.
+    app.styleHints()->setTabFocusBehavior(Qt::TabFocusAllControls);
+#endif
 
 #ifdef Q_OS_UNIX
     // Register signal handlers to arbitrate between SDL and Qt.

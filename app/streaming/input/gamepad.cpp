@@ -460,7 +460,9 @@ void SdlInputHandler::handleControllerTouchpadEvent(SDL_ControllerTouchpadEvent*
         return;
     }
 
-    LiSendControllerTouchEvent((uint8_t)state->index, eventType, event->finger, event->x, event->y, event->pressure);
+    LiSendControllerTouchEvent2((uint8_t)state->index, eventType,
+                                (uint8_t)event->touchpad, event->finger,
+                                event->x, event->y, event->pressure);
 }
 
 #endif
@@ -662,6 +664,9 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         }
         if (SDL_GameControllerGetNumTouchpads(state->controller) > 0) {
             capabilities |= LI_CCAP_TOUCHPAD;
+            if (SDL_GameControllerGetNumTouchpads(state->controller) > 1) {
+                capabilities |= LI_CCAP_DUAL_TOUCHPAD;
+            }
         }
         if (SDL_GameControllerHasSensor(state->controller, SDL_SENSOR_ACCEL)) {
             capabilities |= LI_CCAP_ACCEL;

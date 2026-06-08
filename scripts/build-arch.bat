@@ -25,6 +25,12 @@ if /I "%BUILD_CONFIG%"=="debug" (
                 echo Signed release builds must not have unstaged changes!
                 exit /b 1
             )
+
+            echo Updating dependencies
+            powershell %cd%\setup-deps.ps1
+            if !ERRORLEVEL! NEQ 0 (
+                exit /b 1
+            )
         ) else (
             echo Invalid build configuration - expected 'debug' or 'release'
             echo Usage: scripts\build-arch.bat ^(release^|debug^)
@@ -147,6 +153,11 @@ mkdir %DEPLOY_FOLDER%
 mkdir %BUILD_FOLDER%
 mkdir %INSTALLER_FOLDER%
 mkdir %SYMBOLS_FOLDER%
+
+rem Enable LTCG for official builds
+set CFLAGS=/GL
+set CXXFLAGS=/GL
+set LDFLAGS=/LTCG
 
 echo Configuring the project
 pushd %BUILD_FOLDER%

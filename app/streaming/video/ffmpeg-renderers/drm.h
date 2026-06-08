@@ -87,8 +87,7 @@ class DrmRenderer : public IFFmpegRenderer {
         }
 
         std::optional<std::pair<uint64_t, uint64_t>> range() const {
-            if ((m_Prop->flags & (DRM_MODE_PROP_RANGE | DRM_MODE_PROP_SIGNED_RANGE)) &&
-                m_Prop->count_values == 2) {
+            if ((m_Prop->flags & DRM_MODE_PROP_RANGE) && m_Prop->count_values == 2) {
                 return std::make_pair(m_Prop->values[0], m_Prop->values[1]);
             }
             else {
@@ -96,8 +95,20 @@ class DrmRenderer : public IFFmpegRenderer {
             }
         }
 
+        std::optional<std::pair<int64_t, int64_t>> srange() const {
+            if ((m_Prop->flags & DRM_MODE_PROP_SIGNED_RANGE) && m_Prop->count_values == 2) {
+                return std::make_pair((int64_t)m_Prop->values[0], (int64_t)m_Prop->values[1]);
+            }
+            else {
+                return std::nullopt;
+            }
+        }
+
         uint64_t clamp(uint64_t value) const {
-            if (auto range = this->range()) {
+            if (auto srange = this->srange()) {
+                return (uint64_t)std::clamp((int64_t)value, srange->first, srange->second);
+            }
+            else if (auto range = this->range()) {
                 return std::clamp(value, range->first, range->second);
             }
             else {
@@ -455,6 +466,53 @@ class DrmRenderer : public IFFmpegRenderer {
             }
         }
 
+        void restorePlane(const DrmPropertyMap& plane) {
+            if (!plane.isValid()) {
+                return;
+            }
+
+            if (isAtomic() && plane.property("FB_ID")->initialValue() != 0) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Restoring previously active plane: %u",
+                            plane.objectId());
+
+                {
+                    std::lock_guard lg { m_Lock };
+                    auto &pb = m_PlaneBuffers[plane.objectId()];
+
+                    // Free any pending buffers first
+                    if (pb.pendingFbId) {
+                        drmModeRmFB(m_Fd, pb.pendingFbId);
+                        pb.pendingFbId = 0;
+                    }
+                    if (pb.pendingDumbBuffer) {
+                        struct drm_mode_destroy_dumb destroyBuf = {};
+                        destroyBuf.handle = pb.pendingDumbBuffer;
+                        drmIoctl(m_Fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+                        pb.pendingDumbBuffer = 0;
+                    }
+
+                    // Since we restore the FB_ID, remember that we need to swap
+                    // pending buffers to current after committing in apply().
+                    // This would normally be done in flipPlane(), but we can't
+                    // use that here as it takes ownership of the FB.
+                    //
+                    // Since we cleared our pending buffers, the result is that
+                    // apply() will free the current buffers and believe that no
+                    // buffers are currently set. This will ensure it doesn't
+                    // later free the restored FB_ID (which would happen if we
+                    // used flipPlane() normally).
+                    pb.modified = true;
+                }
+
+                // Restore the old plane properties and FB_ID
+                restoreToInitial(plane);
+            }
+            else {
+                disablePlane(plane);
+            }
+        }
+
         // The damage rect is relative to the FB
         void damagePlane(const DrmPropertyMap& plane, const SDL_Rect& rect) {
             SDL_assert(m_Atomic);
@@ -530,7 +588,7 @@ class DrmRenderer : public IFFmpegRenderer {
 
         bool apply() {
             if (!m_Atomic) {
-                return 0;
+                return true;
             }
 
             drmModeAtomicReqPtr req = nullptr;

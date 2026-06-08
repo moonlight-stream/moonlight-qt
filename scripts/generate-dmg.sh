@@ -31,12 +31,20 @@ fi
 
 [ "$SIGNING_IDENTITY" == "" ] || git diff-index --quiet HEAD -- || fail "Signed release builds must not have unstaged changes!"
 
+echo Updating dependencies
+python3 $SOURCE_ROOT/setup-deps.py
+
 echo Cleaning output directories
 rm -rf $BUILD_FOLDER
 rm -rf $INSTALLER_FOLDER
 mkdir $BUILD_ROOT
 mkdir $BUILD_FOLDER
 mkdir $INSTALLER_FOLDER
+
+# Enable LTO for official builds
+export CFLAGS=-flto=thin
+export CXXFLAGS=-flto=thin
+export LDFLAGS=-flto=thin
 
 echo Configuring the project
 pushd $BUILD_FOLDER

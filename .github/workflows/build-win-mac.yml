@@ -20,10 +20,10 @@ jobs:
         include:
           # Windows
           - os: windows-2025
-            qt_version: 6.11.0
+            qt_version: 6.11.1
           # macOS
-          - os: macos-15
-            qt_version: 6.11.0
+          - os: macos-26
+            qt_version: 6.11.1
 
     runs-on: ${{ matrix.os }}
 
@@ -33,6 +33,10 @@ jobs:
         with:
           submodules: 'recursive'
           fetch-depth: 1
+
+      - name: Download dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: powershell ./setup-deps.ps1
 
       - name: Install create-dmg (macOS)
         if: runner.os == 'macOS'
@@ -87,7 +91,7 @@ jobs:
           }
 
       - name: Upload Binaries (Windows x64)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: runner.os == 'Windows'
         with:
           name: Moonlight-${{ runner.os }}-x64-${{ env.CI_VERSION }}
@@ -95,7 +99,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Binaries (Windows arm64)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: runner.os == 'Windows'
         with:
           name: Moonlight-${{ runner.os }}-arm64-${{ env.CI_VERSION }}
@@ -103,7 +107,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Binaries (macOS)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: runner.os == 'macOS'
         with:
           name: Moonlight-${{ runner.os }}-${{ env.CI_VERSION }}
@@ -112,7 +116,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload Symbols
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: zDevDbgSyms-${{ runner.os }}-${{ env.CI_VERSION }}
           path: |

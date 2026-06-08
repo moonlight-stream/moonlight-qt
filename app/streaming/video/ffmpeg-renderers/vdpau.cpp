@@ -276,7 +276,7 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
             else  {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Display size not within capabilities %dx%d vs %dx%d",
-                            m_DisplayWidth, m_DisplayWidth,
+                            m_DisplayWidth, m_DisplayHeight,
                             maxWidth, maxHeight);
             }
         }

@@ -42,13 +42,13 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL
-          ref: release-3.4.4
+          ref: release-3.4.10
           path: deps/SDL
 
       - name: Build SDL3
         working-directory: deps/SDL
         run: |
-          cmake -DSDL_KMSDRM=OFF -DSDL_TEST_LIBRARY=OFF -DSDL_INSTALL_DOCS=OFF -S . -B build
+          cmake -DSDL_KMSDRM=OFF -DSDL_TEST_LIBRARY=OFF -DSDL_INSTALL_DOCS=OFF -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -S . -B build
           cmake --build build -j
           sudo cmake --install build
 
@@ -56,13 +56,13 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/sdl2-compat
-          ref: release-2.32.66
+          ref: release-2.32.68
           path: deps/sdl2-compat
 
       - name: Build sdl2-compat
         working-directory: deps/sdl2-compat
         run: |
-          cmake -DSDL2COMPAT_TESTS=OFF -S . -B build
+          cmake -DSDL2COMPAT_TESTS=OFF -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -S . -B build
           cmake --build build -j
           sudo cmake --install build
 
@@ -70,7 +70,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL_ttf
-          ref: release-2.22.0
+          ref: a883e490e30fb44a5336ea3dcb990c6982c5216f
           path: deps/SDL_ttf
           submodules: 'recursive'
 
@@ -101,7 +101,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: haasn/libplacebo
-          ref: v7.360.1
+          ref: b915882db8d349cc1831c3d3978ee7d5f914b10b
           path: deps/libplacebo
           submodules: 'recursive'
 
@@ -128,13 +128,14 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: FFmpeg/FFmpeg
-          ref: n8.1
+          ref: n8.1.1
           path: deps/FFmpeg
 
       - name: Build FFmpeg
         working-directory: deps/FFmpeg
         run: |
-          ./configure --enable-pic --disable-static --enable-shared --disable-all --disable-autodetect --enable-avcodec --enable-avformat --enable-swscale \
+          ./configure --enable-pic --enable-lto --disable-static --enable-shared --disable-all --disable-autodetect \
+            --enable-avcodec --enable-avformat --enable-swscale \
             --enable-decoder=h264 --enable-decoder=hevc --enable-decoder=av1 \
             --enable-vaapi --enable-hwaccel=h264_vaapi --enable-hwaccel=hevc_vaapi --enable-hwaccel=av1_vaapi \
             --enable-vdpau --enable-hwaccel=h264_vdpau  --enable-hwaccel=hevc_vdpau --enable-hwaccel=av1_vdpau \
@@ -143,11 +144,12 @@ jobs:
           make -j$(nproc)
           sudo make install
 
-      - name: Install linuxdeployqt
+      - name: Install linuxdeploy
         working-directory: dep_root/bin
         run: |
-          wget -O linuxdeployqt https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
-          chmod a+x linuxdeployqt
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy*.AppImage
 
       - name: Build Binaries
         run: |
@@ -155,7 +157,7 @@ jobs:
           scripts/build-appimage.sh
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Moonlight-LinuxAppImage-${{ env.CI_VERSION }}
           path: build/installer-release/Moonlight-${{ env.CI_VERSION }}-x86_64.AppImage

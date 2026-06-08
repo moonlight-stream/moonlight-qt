@@ -961,6 +961,19 @@ UnmapExit:
 
 bool PlVkRenderer::testRenderFrame(AVFrame *frame)
 {
+#if PL_API_VER < 360
+    {
+        // Add a check for unrecognized pixel formats on older libplacebo
+        // versions which will dereference a null pointer in this case.
+        // See #1409 for details.
+        pl_frame out;
+        pl_frame_from_avframe(&out, frame);
+        if (out.num_planes == 0) {
+            return false;
+        }
+    }
+#endif
+
     // Test if the frame can be mapped to libplacebo
     pl_frame mappedFrame;
     if (!mapAvFrameToPlacebo(frame, &mappedFrame)) {

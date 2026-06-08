@@ -403,10 +403,10 @@ void DrmRenderer::cleanupRenderContext()
     // Ensure we're out of HDR mode
     setHdrMode(false);
 
-    // Deactivate all planes
-    m_PropSetter.disablePlane(m_VideoPlane);
+    // Restore active planes that we took over
+    m_PropSetter.restorePlane(m_VideoPlane);
     for (int i = 0; i < Overlay::OverlayMax; i++) {
-        m_PropSetter.disablePlane(m_OverlayPlanes[i]);
+        m_PropSetter.restorePlane(m_OverlayPlanes[i]);
     }
 
     // Revert our changes from prepareToRender()
@@ -428,10 +428,7 @@ void DrmRenderer::cleanupRenderContext()
         }
     }
     for (auto &plane : m_UnusedActivePlanes) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Restoring previously active plane: %u",
-                    plane.second.objectId());
-        m_PropSetter.restoreToInitial(plane.second);
+        m_PropSetter.restorePlane(plane.second);
     }
 
     m_PropSetter.apply();

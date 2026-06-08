@@ -195,7 +195,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
             }
         }
 
-        parser.showError(QString("Invalid action"));
+        parser.showError("Invalid action");
     }
 }
 
