@@ -1,42 +1,128 @@
 import QtQuick
 
+import ComputerModel 1.0
+import AppModel 1.0
+import ComputerManager 1.0
+
 // Écran d'accueil "Big Picture" de la console.
-// Autonome : modèle de démo intégré, aucune dépendance au backend Moonlight.
-// Aperçu rapide :  qml6 ConsoleHome.qml
+// Branché sur les vrais modèles Moonlight (ComputerModel + AppModel).
+// Le bouton Jouer reste sur un toast de démo dans ce commit ;
+// la création de session arrive au commit suivant.
 FocusScope {
     id: home
     focus: true
 
-    // Taille par défaut pour l'aperçu autonome.
-    // En intégration réelle, le StackView de Moonlight redimensionne ce composant.
     implicitWidth: 1280
     implicitHeight: 720
 
     // Fond "écran" sombre
     Rectangle { anchors.fill: parent; color: "#0d0f14" }
 
-    // --- Modèle de démo (à remplacer par appModel de Moonlight) ---
-    ListModel {
-        id: gamesModel
-        ListElement { title: "Neon Circuit"; genre: "Course";     art: "#1d4d4a" }
-        ListElement { title: "Stellar Drift"; genre: "Action-RPG"; art: "#4a3a24" }
-        ListElement { title: "Ashen Vale";    genre: "Aventure";   art: "#5a3324" }
-        ListElement { title: "Hollow Tide";   genre: "Strat\u00e9gie";  art: "#20405e" }
-        ListElement { title: "Iron Bloom";    genre: "Plateforme"; art: "#2d4a1e" }
-        ListElement { title: "Dust & Echo";   genre: "Ind\u00e9";       art: "#4b2238" }
-        ListElement { title: "Pale Lantern";  genre: "Survie";     art: "#4d3a12" }
+    // --- Modèles Moonlight ---
+    // Liste des hosts connus (mDNS + manuels). Toujours instancié.
+    property var computerModel: Qt.createQmlObject(
+        'import ComputerModel 1.0; ComputerModel {}', home, '')
+
+    // Index du host actif (= premier online+paired, fallback 0, -1 si vide).
+    // Calculé via l'Instantiator `hostScanner` plus bas.
+    property int activeComputerIndex: -1
+
+    // Liste des jeux du host actif. Recréée à chaque changement de host.
+    property var appModel: null
+
+    // Représentation "vue" du host actif (lu via l'Instantiator).
+    property string activeHostName: ""
+    property bool   activeHostOnline: false
+    property bool   activeHostPaired: false
+
+    Component.onCompleted: {
+        computerModel.initialize(ComputerManager)
     }
 
-    function currentGame() {
-        return gamesModel.get(Math.max(0, carousel.currentIndex))
+    onActiveComputerIndexChanged: rebuildAppModel()
+
+    function rebuildAppModel() {
+        if (activeComputerIndex >= 0) {
+            appModel = Qt.createQmlObject(
+                'import AppModel 1.0; AppModel {}', home, '')
+            appModel.initialize(ComputerManager, activeComputerIndex, false)
+        } else {
+            appModel = null
+        }
+    }
+
+    function currentApp() {
+        if (!appModel || appModel.count === 0) return null
+        var idx = Math.max(0, Math.min(carousel.currentIndex, appModel.count - 1))
+        var item = hostScannerForApps.objectAt(idx)
+        return item ? item : null
+    }
+
+    // --- Scanner caché des hosts : met à jour activeComputerIndex en continu ---
+    Instantiator {
+        id: hostScanner
+        model: home.computerModel
+        delegate: QtObject {
+            readonly property bool isOnline: model.online
+            readonly property bool isPaired: model.paired
+            readonly property string hostName: model.name
+            readonly property bool isCandidate: isOnline && isPaired
+            onIsCandidateChanged: home.pickActiveComputer()
+        }
+        onObjectAdded: function(index, obj) { home.pickActiveComputer() }
+        onObjectRemoved: function(index, obj) { home.pickActiveComputer() }
+    }
+
+    function pickActiveComputer() {
+        // Premier candidat online+paired, sinon premier online, sinon 0, sinon -1.
+        var fallback = computerModel.count > 0 ? 0 : -1
+        var firstOnline = -1
+        for (var i = 0; i < hostScanner.count; i++) {
+            var it = hostScanner.objectAt(i)
+            if (!it) continue
+            if (it.isCandidate) {
+                if (activeComputerIndex !== i) activeComputerIndex = i
+                updateActiveHostView(it)
+                return
+            }
+            if (firstOnline < 0 && it.isOnline) firstOnline = i
+        }
+        var pick = firstOnline >= 0 ? firstOnline : fallback
+        if (activeComputerIndex !== pick) activeComputerIndex = pick
+        var sel = pick >= 0 ? hostScanner.objectAt(pick) : null
+        updateActiveHostView(sel)
+    }
+
+    function updateActiveHostView(it) {
+        if (it) {
+            activeHostName = it.hostName
+            activeHostOnline = it.isOnline
+            activeHostPaired = it.isPaired
+        } else {
+            activeHostName = ""
+            activeHostOnline = false
+            activeHostPaired = false
+        }
+    }
+
+    // Instantiator pour exposer les rôles d'AppModel à currentApp().
+    Instantiator {
+        id: hostScannerForApps
+        model: home.appModel
+        delegate: QtObject {
+            readonly property string name: model.name
+            readonly property bool running: model.running
+            readonly property int appid: model.appid
+            readonly property url boxart: model.boxart
+        }
     }
 
     // --- Bandeau supérieur ---
     StatusBar {
         id: status
         anchors { top: parent.top; left: parent.left; right: parent.right }
-        hostName: "PC de Marco"
-        connected: true
+        hostName: home.activeHostName !== "" ? home.activeHostName : qsTr("Recherche…")
+        connected: home.activeHostOnline && home.activeHostPaired
         batteryPercent: 72
     }
 
@@ -48,12 +134,14 @@ FocusScope {
         Text {
             anchors.left: parent.left; anchors.leftMargin: 24
             anchors.verticalCenter: parent.verticalCenter
-            text: "Vos jeux"; color: "#8b909c"; font.pixelSize: 14
+            text: qsTr("Vos jeux"); color: "#8b909c"; font.pixelSize: 14
         }
         Text {
             anchors.right: parent.right; anchors.rightMargin: 24
             anchors.verticalCenter: parent.verticalCenter
-            text: (carousel.currentIndex + 1) + " / " + gamesModel.count
+            text: appModel && appModel.count > 0
+                  ? (carousel.currentIndex + 1) + " / " + appModel.count
+                  : ""
             color: "#6b7280"; font.pixelSize: 14
         }
     }
@@ -63,36 +151,64 @@ FocusScope {
         id: carousel
         anchors { top: labelRow.bottom; topMargin: 12; left: parent.left; right: parent.right }
         height: focusedH + 30
-        model: gamesModel
-        currentIndex: 1
+        model: home.appModel
         focus: true
+        visible: appModel && appModel.count > 0
 
         onLaunchRequested: function(index) {
-            // POINT D'INTÉGRATION MOONLIGHT :
-            // remplacer ces deux lignes par la création de session réelle, p.ex.
+            // POINT D'INTÉGRATION MOONLIGHT (commit 2/2 de l'étape 5) :
+            // remplacer le toast par la création de session réelle :
             //   var session = appModel.createSessionForApp(index)
-            //   stackView.push("qrc:/gui/StreamSegue.qml", { session: session, appName: gamesModel.get(index).title })
-            console.log("Lancer le jeu :", gamesModel.get(index).title)
-            launchToast.show(gamesModel.get(index).title)
+            //   stackView.push("qrc:/gui/StreamSegue.qml", { session: session, ... })
+            var app = home.currentApp()
+            console.log("Lancer le jeu :", app ? app.name : "?")
+            launchToast.show(app ? app.name : "?")
+        }
+    }
+
+    // --- État vide : pas (encore) de host paired / pas de jeux ---
+    Item {
+        anchors {
+            top: labelRow.bottom; topMargin: 12; bottom: detail.top
+            left: parent.left; right: parent.right
+        }
+        visible: !carousel.visible
+
+        Text {
+            anchors.centerIn: parent
+            color: "#8b909c"; font.pixelSize: 18
+            horizontalAlignment: Text.AlignHCenter
+            text: !home.activeHostOnline
+                  ? qsTr("Recherche de votre PC…")
+                  : !home.activeHostPaired
+                    ? qsTr("Appairage en cours…")
+                    : qsTr("Aucun jeu disponible")
         }
     }
 
     // --- Bloc détail du jeu sélectionné + bouton Jouer ---
     Item {
         id: detail
-        anchors { top: carousel.bottom; topMargin: 16; left: parent.left; right: parent.right }
+        anchors { bottom: legend.top; bottomMargin: 12; left: parent.left; right: parent.right }
         height: 64
+        visible: carousel.visible
 
         Column {
             anchors.left: parent.left; anchors.leftMargin: 30
             anchors.verticalCenter: parent.verticalCenter
             spacing: 3
             Text {
-                text: home.currentGame().title
+                text: { var a = home.currentApp(); return a ? a.name : "" }
                 color: "white"; font.pixelSize: 22; font.weight: Font.Medium
             }
             Text {
-                text: home.currentGame().genre + " \u00b7 diffus\u00e9 depuis votre PC"
+                text: {
+                    var a = home.currentApp()
+                    if (!a) return ""
+                    return a.running
+                        ? qsTr("En cours · diffusé depuis votre PC")
+                        : qsTr("Diffusé depuis votre PC")
+                }
                 color: "#8b909c"; font.pixelSize: 13
             }
         }
@@ -119,7 +235,7 @@ FocusScope {
                     }
                 }
                 Text {
-                    text: "Jouer"; color: "#4A1B0C"
+                    text: qsTr("Jouer"); color: "#4A1B0C"
                     font.pixelSize: 14; font.weight: Font.Medium
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -134,10 +250,11 @@ FocusScope {
 
     // --- Légende manette ---
     ControllerLegend {
+        id: legend
         anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
     }
 
-    // --- Petit toast de démo (sera retiré en intégration réelle) ---
+    // --- Toast de démo : disparaîtra au commit suivant (vraie session) ---
     Rectangle {
         id: launchToast
         anchors.horizontalCenter: parent.horizontalCenter
@@ -150,7 +267,7 @@ FocusScope {
         opacity: 0
         visible: opacity > 0
         Text { id: toastText; anchors.centerIn: parent; color: "white"; font.pixelSize: 14 }
-        function show(name) { toastText.text = "Lancement de " + name + "\u2026"; toastAnim.restart() }
+        function show(name) { toastText.text = qsTr("Lancement de %1…").arg(name); toastAnim.restart() }
         SequentialAnimation {
             id: toastAnim
             NumberAnimation { target: launchToast; property: "opacity"; to: 1; duration: 150 }
