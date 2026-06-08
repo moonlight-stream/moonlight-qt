@@ -5,9 +5,8 @@ import AppModel 1.0
 import ComputerManager 1.0
 
 // Écran d'accueil "Big Picture" de la console.
-// Branché sur les vrais modèles Moonlight (ComputerModel + AppModel).
-// Le bouton Jouer reste sur un toast de démo dans ce commit ;
-// la création de session arrive au commit suivant.
+// Branché sur les vrais modèles Moonlight (ComputerModel + AppModel) ;
+// le bouton Jouer crée une vraie session via StreamSegue.qml.
 FocusScope {
     id: home
     focus: true
@@ -156,13 +155,16 @@ FocusScope {
         visible: appModel && appModel.count > 0
 
         onLaunchRequested: function(index) {
-            // POINT D'INTÉGRATION MOONLIGHT (commit 2/2 de l'étape 5) :
-            // remplacer le toast par la création de session réelle :
-            //   var session = appModel.createSessionForApp(index)
-            //   stackView.push("qrc:/gui/StreamSegue.qml", { session: session, ... })
+            if (!appModel) return
             var app = home.currentApp()
-            console.log("Lancer le jeu :", app ? app.name : "?")
-            launchToast.show(app ? app.name : "?")
+            if (!app) return
+            var component = Qt.createComponent("qrc:/gui/StreamSegue.qml")
+            var segue = component.createObject(stackView, {
+                "appName": app.name,
+                "session": appModel.createSessionForApp(index),
+                "isResume": false
+            })
+            stackView.push(segue)
         }
     }
 
@@ -252,28 +254,6 @@ FocusScope {
     ControllerLegend {
         id: legend
         anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
-    }
-
-    // --- Toast de démo : disparaîtra au commit suivant (vraie session) ---
-    Rectangle {
-        id: launchToast
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 72
-        radius: 8
-        color: "#1b1e26"
-        border.color: "#F2802A"; border.width: 1
-        width: toastText.width + 32; height: 40
-        opacity: 0
-        visible: opacity > 0
-        Text { id: toastText; anchors.centerIn: parent; color: "white"; font.pixelSize: 14 }
-        function show(name) { toastText.text = qsTr("Lancement de %1…").arg(name); toastAnim.restart() }
-        SequentialAnimation {
-            id: toastAnim
-            NumberAnimation { target: launchToast; property: "opacity"; to: 1; duration: 150 }
-            PauseAnimation { duration: 1100 }
-            NumberAnimation { target: launchToast; property: "opacity"; to: 0; duration: 300 }
-        }
     }
 
     Keys.onEscapePressed: console.log("Retour")
