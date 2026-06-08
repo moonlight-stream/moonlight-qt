@@ -45,8 +45,11 @@ comme pour un expert. Conséquences concrètes pour tout ce qu'on code :
 - Une **interface "Big Picture" maison** a été conçue et validée visuellement (voir §5).
   Les 4 fichiers QML existent déjà dans `app/gui/console/` et tournent en aperçu autonome
   (`qml-qt6 ConsoleHome.qml`).
-- **Tâche en cours** : intégrer proprement cette interface dans le build, derrière le flag
-  `embedded`, sans abîmer le code upstream (voir §4 et §9).
+- ✅ **Intégration au build faite** (commit `64bb96a0` sur `console-ui`) : 3 coutures dans
+  `app.pro`, `qml.qrc`, `main.cpp`, derrière `embedded`/`CONSOLE_UI`. Le binaire `embedded`
+  démarre sur `ConsoleHome`, le binaire vanilla est inchangé.
+- **Tâche en cours** : brancher l'UI sur les vraies données Moonlight
+  (`appModel`/`computerModel`) et câbler le bouton Jouer sur la création de session (voir §9).
 
 ---
 
@@ -179,8 +182,8 @@ porteuse + antennes + slot SIM. Le mur n'est pas le débit mais **latence + gigu
 1. ✅ Valider le concept de streaming (fait, depuis 1 an).
 2. ✅ Forker + compiler moonlight-qt, décodage matériel OK.
 3. ✅ Concevoir l'UI Big Picture (4 fichiers QML autonomes).
-4. ⏳ **Intégrer l'UI dans le build derrière le flag `embedded`** (tâche en cours, §9).
-5. Brancher l'UI sur les vraies données Moonlight (catalogue + lancement de session).
+4. ✅ Intégrer l'UI dans le build derrière le flag `embedded` (commit `64bb96a0`).
+5. ⏳ **Brancher l'UI sur les vraies données Moonlight** (catalogue + lancement, §9).
 6. Mode kiosk (boot direct, auto-connexion) + auto-appairage (supprimer le PIN de l'UX).
 7. Monter le proto hardware (Orange Pi 5B + écran + manette + power bank).
 8. Installeur host 1-clic (Apollo/Sunshine + Playnite + Tailscale + Wake-on-LAN).
@@ -191,40 +194,31 @@ porteuse + antennes + slot SIM. Le mur n'est pas le débit mais **latence + gigu
 
 ## 9. Tâche immédiate
 
-Intégrer l'interface (déjà présente dans `app/gui/console/`) au build, de façon **strictement
-additive**, derrière le flag `embedded`. Trois coutures minuscules, et **rien d'autre** :
+Brancher l'UI Big Picture sur les **vraies données Moonlight** au lieu du `ListModel` de
+démo, puis câbler le bouton **Jouer** sur la vraie création de session.
 
-1. **`app/app.pro`** — dans le scope `embedded { ... }` existant, ajouter :
-   `DEFINES += CONSOLE_UI`
-2. **`app/qml.qrc`** — enregistrer les 4 fichiers `gui/console/*.qml` dans le bloc
-   `<qresource>` existant.
-3. **`app/main.cpp`** — dans le `case GlobalCommandLineParser::NormalStartRequested`,
-   encadrer l'affectation de `initialView` :
-   ```cpp
-   #ifdef CONSOLE_UI
-       initialView = "qrc:/gui/console/ConsoleHome.qml";
-   #else
-       initialView = "qrc:/gui/PcView.qml";
-   #endif
-   ```
+État de départ :
+- `ConsoleHome.qml` contient un `ListModel` de démo et un commentaire
+  `POINT D'INTÉGRATION MOONLIGHT` qui marque l'emplacement à remplacer.
+- Moonlight expose déjà côté backend `ComputerManager`, `ComputerModel` et `AppModel`
+  (voir `app/backend/`). `PcView.qml` et `AppView.qml` du build vanilla montrent comment
+  les consommer depuis QML.
 
-**Ne pas modifier `main.qml` ni aucun autre fichier upstream.** Montrer les diffs avant
-d'appliquer. Vérification finale :
-```bash
-qmake6 "CONFIG+=embedded" moonlight-qt.pro && make release -j$(nproc) && ./app/moonlight
-```
-En build `embedded`, l'app doit démarrer directement sur `ConsoleHome`. Un `qmake6` normal
-(sans `embedded`) doit garder le Moonlight vanilla intact.
+Pistes (à confirmer par lecture de l'existant) :
+1. Repérer comment `PcView.qml` instancie `ComputerModel` et reçoit la liste des hosts +
+   le statut online/offline (pour alimenter `StatusBar.qml`).
+2. Repérer comment `AppView.qml` instancie `AppModel` pour un host donné et reçoit la liste
+   des jeux + box art (pour remplacer le `ListModel` de `GameCarousel.qml`).
+3. Repérer comment le bouton « Démarrer » de `AppView.qml` enchaîne sur la création de
+   session (`Session`, `StreamSegue`), et reproduire le même flux depuis `ConsoleHome.qml`.
 
-> **Piège qmake `subdirs`** : si un précédent `qmake6` (sans `embedded`) a déjà généré les
-> Makefiles des sous-projets, relancer `qmake6 "CONFIG+=embedded" moonlight-qt.pro` au
-> niveau racine **ne régénère pas** les sous-Makefiles — le scope `embedded { ... }` reste
-> inactif et `CONSOLE_UI` n'est pas défini (symptôme : pas de `Project MESSAGE: Embedded
-> build`, pas de `-DCONSOLE_UI` dans la ligne `g++ -c ... main.cpp`, l'app démarre sur
-> `PcView` malgré tout). Deux contournements :
-> - `make distclean` avant le `qmake6` racine (propre mais recompile tout),
-> - ou régénérer directement le Makefile du sous-projet : `cd app && qmake6 "CONFIG+=embedded" app.pro`
->   (rapide, recompile uniquement ce qui dépend du nouveau define).
+Contraintes (rappel §4) :
+- Ne modifier aucun fichier upstream. Si une donnée n'est pas exposée comme il faut, créer
+  un *wrapper* QML/C++ dans `app/gui/console/` plutôt que de patcher l'existant.
+- Le build vanilla doit rester intact.
+
+Vérification finale : avec un host appairé en LAN, le carrousel doit afficher les vrais
+jeux du host (avec leurs jaquettes), et le bouton Jouer doit lancer une session de stream.
 
 ---
 
@@ -234,3 +228,60 @@ En build `embedded`, l'app doit démarrer directement sur `ConsoleHome`. Un `qma
 - **Toujours montrer les diffs** avant d'appliquer des changements.
 - Garder les modifs **additives et isolées** ; préserver la compatibilité upstream (§4).
 - En cas de doute sur un fichier upstream, demander plutôt que réécrire.
+
+---
+
+## 11. Notes de build durables
+
+Pièges et conventions de build qui reviennent souvent — à garder sous la main.
+
+### Comment compiler en mode `embedded` (UI maison)
+
+```bash
+qmake6 "CONFIG+=embedded" moonlight-qt.pro && make release -j$(nproc) && ./app/moonlight
+```
+
+L'app doit démarrer directement sur `ConsoleHome`. Un `qmake6` sans `embedded` doit
+produire le Moonlight vanilla intact.
+
+### Piège qmake `subdirs` (à connaître)
+
+Si un précédent `qmake6` (sans `embedded`) a déjà généré les Makefiles des sous-projets,
+relancer `qmake6 "CONFIG+=embedded" moonlight-qt.pro` au niveau racine **ne régénère pas**
+les sous-Makefiles — le scope `embedded { ... }` reste inactif et `CONSOLE_UI` n'est pas
+défini.
+
+Symptômes : pas de `Project MESSAGE: Embedded build` au qmake, pas de `-DCONSOLE_UI` dans
+la ligne `g++ -c ... main.cpp`, l'app démarre sur `PcView` malgré tout.
+
+Deux contournements :
+- `make distclean` avant le `qmake6` racine (propre mais recompile tout) ;
+- ou régénérer directement le Makefile du sous-projet : `cd app && qmake6 "CONFIG+=embedded" app.pro`
+  (rapide, recompile uniquement ce qui dépend du nouveau define).
+
+### Ignorer les artefacts de build sans toucher au `.gitignore` upstream
+
+Le `.gitignore` upstream ne couvre pas les builds in-source de qmake (`Makefile*`,
+`release/`, `*.o`, `*.a`, `.qmake.*`, `app/moonlight`, `config.log`…). Plutôt que de le
+modifier (cf §4), on les ignore **localement à ce clone** via `.git/info/exclude` — fichier
+non versionné, donc à **recréer après un `git clone`**. Contenu :
+
+```
+# qmake / make in-source build artifacts
+Makefile
+Makefile.Debug
+Makefile.Release
+release/
+debug/
+.qmake.cache
+.qmake.stash
+
+# Object files & static libs
+*.o
+*.a
+
+# Build outputs / logs
+config.log
+app/moonlight
+config.tests/*/EGL
+```
