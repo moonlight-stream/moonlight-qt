@@ -48,8 +48,11 @@ comme pour un expert. Conséquences concrètes pour tout ce qu'on code :
 - ✅ **Intégration au build faite** (commit `64bb96a0` sur `console-ui`) : 3 coutures dans
   `app.pro`, `qml.qrc`, `main.cpp`, derrière `embedded`/`CONSOLE_UI`. Le binaire `embedded`
   démarre sur `ConsoleHome`, le binaire vanilla est inchangé.
-- **Tâche en cours** : brancher l'UI sur les vraies données Moonlight
-  (`appModel`/`computerModel`) et câbler le bouton Jouer sur la création de session (voir §9).
+- ✅ **UI branchée sur les vraies données Moonlight** (commits `e0f7600c` + `5df70d84`) :
+  `ConsoleHome` lit `ComputerModel`/`AppModel`, sélectionne automatiquement le premier host
+  online+paired, et le bouton Jouer crée une vraie session via `StreamSegue.qml`.
+- **Tâche en cours** : supprimer les dernières frictions — mode kiosk (boot direct, pas de
+  bureau) + auto-appairage / silent-pair (jamais de PIN visible) — voir §9.
 
 ---
 
@@ -183,8 +186,8 @@ porteuse + antennes + slot SIM. Le mur n'est pas le débit mais **latence + gigu
 2. ✅ Forker + compiler moonlight-qt, décodage matériel OK.
 3. ✅ Concevoir l'UI Big Picture (4 fichiers QML autonomes).
 4. ✅ Intégrer l'UI dans le build derrière le flag `embedded` (commit `64bb96a0`).
-5. ⏳ **Brancher l'UI sur les vraies données Moonlight** (catalogue + lancement, §9).
-6. Mode kiosk (boot direct, auto-connexion) + auto-appairage (supprimer le PIN de l'UX).
+5. ✅ Brancher l'UI sur les vraies données Moonlight (commits `e0f7600c` + `5df70d84`).
+6. ⏳ **Mode kiosk + auto-appairage** (supprimer le PIN et le bureau de l'UX, §9).
 7. Monter le proto hardware (Orange Pi 5B + écran + manette + power bank).
 8. Installeur host 1-clic (Apollo/Sunshine + Playnite + Tailscale + Wake-on-LAN).
 9. Version compacte v2 (SoM/carte custom, batterie, coque 3D).
@@ -194,31 +197,38 @@ porteuse + antennes + slot SIM. Le mur n'est pas le débit mais **latence + gigu
 
 ## 9. Tâche immédiate
 
-Brancher l'UI Big Picture sur les **vraies données Moonlight** au lieu du `ListModel` de
-démo, puis câbler le bouton **Jouer** sur la vraie création de session.
+Atteindre l'expérience « j'allume, je joue » en supprimant les dernières frictions :
+mode kiosk (boot direct, pas de bureau visible) + auto-appairage (jamais de PIN affiché).
 
-État de départ :
-- `ConsoleHome.qml` contient un `ListModel` de démo et un commentaire
-  `POINT D'INTÉGRATION MOONLIGHT` qui marque l'emplacement à remplacer.
-- Moonlight expose déjà côté backend `ComputerManager`, `ComputerModel` et `AppModel`
-  (voir `app/backend/`). `PcView.qml` et `AppView.qml` du build vanilla montrent comment
-  les consommer depuis QML.
+Étape multi-front. Découpage proposé, du plus simple au plus invasif :
 
-Pistes (à confirmer par lecture de l'existant) :
-1. Repérer comment `PcView.qml` instancie `ComputerModel` et reçoit la liste des hosts +
-   le statut online/offline (pour alimenter `StatusBar.qml`).
-2. Repérer comment `AppView.qml` instancie `AppModel` pour un host donné et reçoit la liste
-   des jeux + box art (pour remplacer le `ListModel` de `GameCarousel.qml`).
-3. Repérer comment le bouton « Démarrer » de `AppView.qml` enchaîne sur la création de
-   session (`Session`, `StreamSegue`), et reproduire le même flux depuis `ConsoleHome.qml`.
+### 6a — Auto-launch / focus carrousel (entièrement dans ce repo)
+À la première arrivée du `AppModel`, vérifier `appModel.getDirectLaunchAppIndex()` (cf.
+`AppView.qml:46-56`). Si > 0, lancer directement la session via le même flux que
+`onLaunchRequested`. Sinon, laisser le focus sur la première jaquette du carrousel.
+La logique vit dans `ConsoleHome.qml`, dans un handler `onAppModelChanged` ou
+équivalent. **Aucun fichier upstream touché.**
 
-Contraintes (rappel §4) :
-- Ne modifier aucun fichier upstream. Si une donnée n'est pas exposée comme il faut, créer
-  un *wrapper* QML/C++ dans `app/gui/console/` plutôt que de patcher l'existant.
-- Le build vanilla doit rester intact.
+### 6b — Silent-pair côté console
+Aujourd'hui un host non-paired déclencherait un PIN dialog (`PcView.qml`). On contourne
+ça en restant sur l'écran « Appairage en cours… » silencieusement, et en confiant
+l'accept au host (cf §3, installeur Sunshine/Apollo à venir). À court terme : pré-injecter
+l'identité + le certificat de la console dans `computers.json` de l'image disque (rôle
+du futur installeur host). Côté repo : **vérifier qu'aucun chemin de code ne fait
+apparaître un dialog de PIN dans le build `embedded`**, et le neutraliser si oui (sans
+toucher `PcView.qml` — créer si besoin un overlay dans `app/gui/console/`).
 
-Vérification finale : avec un host appairé en LAN, le carrousel doit afficher les vrais
-jeux du host (avec leurs jaquettes), et le bouton Jouer doit lancer une session de stream.
+### 6c — Boot direct via compositeur kiosk
+Hors de ce repo : configurer **cage** (proto) ou **gamescope** (cible commerciale) pour
+lancer `moonlight` au boot, sans session KDE/GNOME, sans curseur souris. À faire au
+moment du montage proto (§7 du roadmap) ; à documenter ici dans §11 (notes de build).
+
+Contraintes (rappel §4) : tout le code console reste dans `app/gui/console/`. Aucun
+fichier upstream touché. Build vanilla inchangé.
+
+Vérification finale : sur un proto avec host paired, allumer la console doit afficher
+le carrousel en moins de 5 s sans aucun élément Linux visible — et un jeu doit pouvoir
+démarrer en une pression du bouton A.
 
 ---
 
