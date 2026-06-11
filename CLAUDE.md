@@ -43,8 +43,7 @@ comme pour un expert. Conséquences concrètes pour tout ce qu'on code :
 - Le fork **compile et se lance**, et le **décodage matériel fonctionne** (GPU Intel Iris Xe,
   pilote iHD/VAAPI, décodage H.264/HEVC/**AV1** confirmé).
 - Une **interface "Big Picture" maison** a été conçue et validée visuellement (voir §5).
-  Les 4 fichiers QML existent déjà dans `app/gui/console/` et tournent en aperçu autonome
-  (`qml-qt6 ConsoleHome.qml`).
+  Les fichiers QML vivent dans `app/gui/console/` (6 fichiers à ce jour).
 - ✅ **Intégration au build faite** (commit `64bb96a0` sur `console-ui`) : 3 coutures dans
   `app.pro`, `qml.qrc`, `main.cpp`, derrière `embedded`/`CONSOLE_UI`. Le binaire `embedded`
   démarre sur `ConsoleHome`, le binaire vanilla est inchangé.
@@ -58,6 +57,19 @@ comme pour un expert. Conséquences concrètes pour tout ce qu'on code :
   "Recherche…" permanent (modèles initialisés après liaison aux vues, cf §11) et masqué la
   toolbar Material de `main.qml` depuis `ConsoleHome` (zéro élément bureau). Nouveaux
   fichiers : `Spinner.qml`, `PairingOverlay.qml`. Le direct-launch (§9 6a) est câblé.
+- ✅ **Chaîne complète validée en réel contre Apollo** (host « Djinger », juin 2026) :
+  découverte → code de liaison saisi une fois → carrousel avec les vraies apps → stream.
+  Deux correctifs en route (commits `25c02abb` + `c23148af`) :
+  - `AppModel`/`ComputerModel` n'exposent **pas** de `count` en QML (cf §11) → le carrousel
+    ne s'affichait jamais (« Chargement… » infini) ; tout passe par le `count` des
+    `Instantiator` désormais.
+  - au boot, le host passe online **avant** confirmation de son pairState → l'auto-pair
+    exige maintenant un état online+non-appairé+connu **stable 2,5 s** (rôle
+    `statusUnknown` + timer d'armement), sinon il enverrait un PIN parasite à un host
+    déjà appairé.
+- ✅ **Profil de stream console verrouillé** : à chaque démarrage, `ConsoleHome` impose
+  1080p / 60 fps / `max(défaut, 30 Mbps)` (cible §7) via `StreamingPreferences` et `save()`.
+  Un futur écran Paramètres (bouton Y) pourra exposer ces réglages.
 - **Tâche en cours** : mode kiosk (boot direct, pas de bureau, §9 6c) + auto-accept du
   pairing côté host (rôle du futur installeur, §9 6b) pour que le code ne s'affiche jamais.
 
@@ -133,14 +145,17 @@ jamais d'élément "bureau". Choix esthétiques arrêtés :
 Fichiers (dans `app/gui/console/`) :
 - `ConsoleHome.qml` — l'écran d'accueil, assemble les 3 autres
 - `GameCarousel.qml` — le carrousel 16:9 à focus orange
-- `StatusBar.qml` — bandeau connexion + signal/batterie/horloge
+- `StatusBar.qml` — bandeau connexion (wordmark + chip à pastille pulsante) + signal/batterie/horloge
 - `ControllerLegend.qml` — légende des boutons
+- `PairingOverlay.qml` — écran de liaison (code PIN en grandes cases, façon app TV)
+- `Spinner.qml` — indicateur d'activité circulaire réutilisable
 
-Ils sont **autonomes** (modèle de démo intégré, aucune dépendance au backend Moonlight),
-donc testables avec `qml-qt6 ConsoleHome.qml`. Le **prochain gros chantier logiciel** sera
-de remplacer le `ListModel` de démo par le **vrai catalogue** que Moonlight récupère du host
-(`appModel`/`computerModel`) et de câbler le bouton Jouer sur la **vraie création de session**
-(voir le commentaire `POINT D'INTÉGRATION MOONLIGHT` dans `ConsoleHome.qml`).
+`ConsoleHome.qml` est désormais **branché sur le vrai backend Moonlight** (imports
+`ComputerModel`/`AppModel`/`ComputerManager`/`StreamingPreferences`) et n'est **plus
+testable en autonome**. Les composants de présentation purs (`GameCarousel`, `StatusBar`,
+`ControllerLegend`, `PairingOverlay`, `Spinner`) restent sans dépendance Moonlight et
+peuvent se tester avec un `ListModel` de démo dans un harnais `qml-qt6` (penser à
+`import "file:/chemin/vers/app/gui/console"` — les chemins absolus nus sont refusés).
 
 ---
 
@@ -291,6 +306,15 @@ var m = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', parent,
 m.initialize(ComputerManager)   // d'abord initialiser…
 computerModel = m               // …puis assigner la propriété liée aux vues
 ```
+
+### Piège AppModel/ComputerModel : pas de propriété `count` en QML
+
+Ces modèles C++ (QAbstractListModel) n'exposent **pas** de `count` : en QML,
+`appModel.count` vaut `undefined`, donc `appModel.count > 0` est **toujours faux**
+(symptôme : « Chargement de vos jeux… » infini alors que les données sont là).
+Pour compter/observer les éléments, passer par un `Instantiator` lié au modèle et
+utiliser **son** `count` (vraie propriété notifiée) — pattern des `hostScanner` /
+`appViewer` de `ConsoleHome.qml`.
 
 ### Logs Qt invisibles sur Fedora (journald)
 
