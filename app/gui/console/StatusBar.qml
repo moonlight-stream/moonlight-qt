@@ -7,7 +7,10 @@ Item {
 
     property string hostName: "PC de Marco"
     property bool connected: true
-    property int batteryPercent: 72
+    // -1 = pas de donnée → indicateur masqué (pas de fausse jauge).
+    // Le proto branchera UPower (batterie) et le RSSI Wi-Fi (signal 0-4).
+    property int batteryPercent: -1
+    property int signalStrength: -1
     // Marque affichée en haut à gauche — sera remplacée au rebranding.
     property string brand: "MOONLIGHT"
 
@@ -119,8 +122,9 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: 18
 
-        // Barres de signal (4 barres croissantes)
+        // Barres de signal (allumées selon signalStrength 0-4)
         Item {
+            visible: root.signalStrength >= 0
             width: 4 * 4 + 3 * 3
             height: 17
             anchors.verticalCenter: parent.verticalCenter
@@ -133,7 +137,7 @@ Item {
                         width: 4
                         height: 5 + index * 4
                         radius: 1
-                        color: root.connected ? "#cdd2da" : "#5b6170"
+                        color: index < root.signalStrength ? "#cdd2da" : "#3a4150"
                         anchors.bottom: parent.bottom
                     }
                 }
@@ -142,6 +146,7 @@ Item {
 
         // Batterie : jauge + pourcentage
         Row {
+            visible: root.batteryPercent >= 0
             spacing: 7
             anchors.verticalCenter: parent.verticalCenter
 
@@ -175,8 +180,9 @@ Item {
             }
         }
 
-        // Séparateur fin
+        // Séparateur fin (seulement si un indicateur est affiché à gauche)
         Rectangle {
+            visible: root.batteryPercent >= 0 || root.signalStrength >= 0
             width: 1; height: 16
             color: "#1f242e"
             anchors.verticalCenter: parent.verticalCenter

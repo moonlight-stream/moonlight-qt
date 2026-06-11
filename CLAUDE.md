@@ -67,9 +67,19 @@ comme pour un expert. Conséquences concrètes pour tout ce qu'on code :
     exige maintenant un état online+non-appairé+connu **stable 2,5 s** (rôle
     `statusUnknown` + timer d'armement), sinon il enverrait un PIN parasite à un host
     déjà appairé.
-- ✅ **Profil de stream console verrouillé** : à chaque démarrage, `ConsoleHome` impose
-  1080p / 60 fps / `max(défaut, 30 Mbps)` (cible §7) via `StreamingPreferences` et `save()`.
-  Un futur écran Paramètres (bouton Y) pourra exposer ces réglages.
+- ✅ **Profil de stream console** : 1080p / 60 fps / `max(défaut, 30 Mbps)` (cible §7),
+  appliqué **au premier démarrage seulement** (marqueur `ConsoleUi/streamProfileInitialized`
+  dans la conf) ; ensuite l'écran Paramètres fait foi.
+- ✅ **Illusion console complétée** (`ConsoleDialog.qml` + `ConsoleSettings.qml`) :
+  - **Y/X interceptés** dans `ConsoleHome` → ouvrent NOS Paramètres (résolution/fréquence/
+    débit appliqués immédiatement + « Oublier ce PC ») ; sans ça les événements remontaient
+    à `main.qml` qui ouvrait la SettingsView Material. B est consommé à l'accueil.
+  - **Conflit « un autre jeu tourne »** : dialog console (Annuler par défaut) puis
+    `QuitSegue` upstream réutilisé pour quitter-puis-enchaîner (`nextSession`).
+  - **Retour de stream** : `StreamSegue.onDeactivating` ré-affiche la toolbar upstream →
+    `ConsoleHome` re-masque le chrome à chaque `StackView.onActivated` (+ refocus carrousel).
+  - **Batterie/signal factices retirés** de la StatusBar (masqués tant que pas de vraie
+    source ; UPower/RSSI viendront avec le proto). Légende manette contextuelle.
 - **Tâche en cours** : mode kiosk (boot direct, pas de bureau, §9 6c) + auto-accept du
   pairing côté host (rôle du futur installeur, §9 6b) pour que le code ne s'affiche jamais.
 
@@ -140,7 +150,8 @@ jamais d'élément "bureau". Choix esthétiques arrêtés :
 - **État de connexion au PC host affiché en permanence** en haut (point vert + nom du host),
   pour que l'utilisateur voie d'un coup d'œil que tout marche — sans jamais voir d'IP ni de
   réglage réseau.
-- **Légende manette** en bas (A Jouer · B Retour · Y Paramètres).
+- **Légende manette** en bas, **contextuelle** (accueil : A Jouer · Y Paramètres ;
+  dialog : A Valider · B Annuler ; paramètres : A Modifier · B Fermer).
 
 Fichiers (dans `app/gui/console/`) :
 - `ConsoleHome.qml` — l'écran d'accueil, assemble les 3 autres
@@ -149,6 +160,8 @@ Fichiers (dans `app/gui/console/`) :
 - `ControllerLegend.qml` — légende des boutons
 - `PairingOverlay.qml` — écran de liaison (code PIN en grandes cases, façon app TV)
 - `Spinner.qml` — indicateur d'activité circulaire réutilisable
+- `ConsoleDialog.qml` — confirmation modale navigable manette (A/B, gauche/droite)
+- `ConsoleSettings.qml` — écran Paramètres (bouton Y) : résolution/fréquence/débit/oubli du PC
 
 `ConsoleHome.qml` est désormais **branché sur le vrai backend Moonlight** (imports
 `ComputerModel`/`AppModel`/`ComputerManager`/`StreamingPreferences`) et n'est **plus

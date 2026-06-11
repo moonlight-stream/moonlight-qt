@@ -1,4 +1,7 @@
 import QtQuick
+import QtCore
+// Nécessaire pour la propriété attachée StackView.onActivated
+import QtQuick.Controls
 
 import ComputerModel 1.0
 import AppModel 1.0
@@ -78,26 +81,32 @@ FocusScope {
     // Lancement direct (mode "direct launch" du host) : une seule fois par session.
     property bool directLaunchDone: false
 
-    Component.onCompleted: {
-        // Mode console : masquer la barre d'outils Material de main.qml
-        // (élément "bureau" interdit par le principe zéro-friction).
-        // Fait d'ici pour ne pas modifier le fichier upstream.
-        var win = home.Window.window
-        if (win && win.header)
-            win.header.visible = false
+    // Marqueur : le profil de stream par défaut n'est appliqué qu'au premier
+    // démarrage console ; ensuite l'écran Paramètres (bouton Y) fait foi.
+    Settings {
+        id: consoleConfig
+        category: "ConsoleUi"
+        property bool streamProfileInitialized: false
+    }
 
-        // Profil de stream "console" appliqué à chaque démarrage : 1080p60,
-        // 30 Mbps (cible §7 : 30–50 Mbps stables ; le défaut Moonlight pour
-        // du 1080p60 est en dessous). Réglages volontairement déterministes —
-        // un futur écran Paramètres (bouton Y) pourra les exposer.
-        StreamingPreferences.width = 1920
-        StreamingPreferences.height = 1080
-        StreamingPreferences.fps = 60
-        StreamingPreferences.bitrateKbps = Math.max(
-            StreamingPreferences.getDefaultBitrate(1920, 1080, 60,
-                                                   StreamingPreferences.enableYUV444),
-            30000)
-        StreamingPreferences.save()
+    Component.onCompleted: {
+        hideUpstreamChrome()
+
+        // Profil de stream "console" par défaut : 1080p60, 30 Mbps (cible §7 :
+        // 30–50 Mbps stables ; le défaut Moonlight pour du 1080p60 est en
+        // dessous). Appliqué une seule fois — modifiable ensuite via le
+        // bouton Y (ConsoleSettings).
+        if (!consoleConfig.streamProfileInitialized) {
+            StreamingPreferences.width = 1920
+            StreamingPreferences.height = 1080
+            StreamingPreferences.fps = 60
+            StreamingPreferences.bitrateKbps = Math.max(
+                StreamingPreferences.getDefaultBitrate(1920, 1080, 60,
+                                                       StreamingPreferences.enableYUV444),
+                30000)
+            StreamingPreferences.save()
+            consoleConfig.streamProfileInitialized = true
+        }
 
         var m = Qt.createQmlObject(
             'import ComputerModel 1.0; ComputerModel {}', home, '')
@@ -105,6 +114,30 @@ FocusScope {
         m.pairingCompleted.connect(handlePairingCompleted)
         computerModel = m
     }
+
+    // StreamSegue/QuitSegue ré-affichent la toolbar upstream en se dépilant :
+    // on re-masque le chrome à chaque retour sur l'accueil.
+    StackView.onActivated: {
+        hideUpstreamChrome()
+        carousel.forceActiveFocus()
+    }
+
+    function hideUpstreamChrome() {
+        // Mode console : masquer la barre d'outils Material de main.qml
+        // (élément "bureau" interdit par le principe zéro-friction).
+        // Fait d'ici pour ne pas modifier le fichier upstream.
+        var win = home.Window.window
+        if (win && win.header)
+            win.header.visible = false
+    }
+
+    // --- Boutons console au niveau de l'accueil ---
+    // Y/Start (Hangup) et X (Menu) ouvrent NOS paramètres ; sans ça, les
+    // événements remonteraient à main.qml qui ouvrirait la SettingsView
+    // Material du bureau. B (Échap) est consommé : rien derrière l'accueil.
+    Keys.onMenuPressed: settingsOverlay.open()
+    Keys.onHangupPressed: settingsOverlay.open()
+    Keys.onEscapePressed: { /* accueil : rien à fermer */ }
 
     onActiveComputerIndexChanged: rebuildAppModel()
     onActiveHostOnlineChanged: maybeStartPairing()
@@ -273,13 +306,42 @@ FocusScope {
         if (!appModel) return
         var item = appViewer.objectAt(index)
         if (!item) return
+
+        // Un AUTRE jeu tourne déjà sur le host : demander confirmation
+        // (équivalent console du quitAppDialog de AppView.qml).
+        var runningId = appModel.getRunningAppId()
+        if (runningId !== 0 && runningId !== item.appid) {
+            confirmDialog.mode = "quitLaunch"
+            confirmDialog.pendingLaunchIndex = index
+            confirmDialog.title = qsTr("Un jeu est déjà en cours")
+            confirmDialog.message = qsTr("%1 est en cours sur votre PC. Le fermer et lancer %2 ? Toute progression non sauvegardée sera perdue.")
+                .arg(appModel.getRunningAppName()).arg(item.name)
+            confirmDialog.confirmLabel = qsTr("Fermer et jouer")
+            confirmDialog.open()
+            return
+        }
+
         var component = Qt.createComponent("qrc:/gui/StreamSegue.qml")
         var segue = component.createObject(stackView, {
             "appName": item.name,
             "session": appModel.createSessionForApp(index),
-            "isResume": item.running
+            "isResume": runningId === item.appid
         })
         stackView.push(segue)
+    }
+
+    // Ferme le jeu en cours puis enchaîne sur le nouveau, via le QuitSegue
+    // upstream (gère le quit côté host et le chaînage nextSession).
+    function quitAndLaunch(nextIndex) {
+        if (!appModel) return
+        var item = appViewer.objectAt(nextIndex)
+        var component = Qt.createComponent("qrc:/gui/QuitSegue.qml")
+        stackView.push(component.createObject(stackView, {
+            "appName": appModel.getRunningAppName(),
+            "quitRunningAppFn": function() { appModel.quitRunningApp() },
+            "nextAppName": item ? item.name : null,
+            "nextSession": item ? appModel.createSessionForApp(nextIndex) : null
+        }))
     }
 
     // --- Bandeau supérieur ---
@@ -288,7 +350,8 @@ FocusScope {
         anchors { top: parent.top; left: parent.left; right: parent.right }
         hostName: home.activeHostName !== "" ? home.activeHostName : qsTr("Recherche…")
         connected: home.activeHostOnline && home.activeHostPaired
-        batteryPercent: 72
+        // batteryPercent / signalStrength : laissés cachés tant qu'il n'y a
+        // pas de vraie source de données (UPower viendra avec le proto).
     }
 
     // --- Étiquette de section + compteur ---
@@ -460,11 +523,56 @@ FocusScope {
         }
     }
 
-    // --- Légende manette ---
+    // --- Légende manette (contextuelle) ---
     ControllerLegend {
         id: legend
         anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+        hints: confirmDialog.visible
+               ? [ { btn: "A", label: qsTr("Valider"),  color: "#6cc04a" },
+                   { btn: "B", label: qsTr("Annuler"),  color: "#e35b5b" } ]
+               : settingsOverlay.visible
+                 ? [ { btn: "A", label: qsTr("Modifier"),   color: "#6cc04a" },
+                     { btn: "B", label: qsTr("Fermer"),     color: "#e35b5b" } ]
+                 : carousel.visible
+                   ? [ { btn: "A", label: qsTr("Jouer"),      color: "#6cc04a" },
+                       { btn: "Y", label: qsTr("Paramètres"), color: "#e0b020" } ]
+                   : [ { btn: "Y", label: qsTr("Paramètres"), color: "#e0b020" } ]
     }
 
-    Keys.onEscapePressed: console.log("Retour")
+    // --- Overlays console (au-dessus de tout) ---
+    ConsoleSettings {
+        id: settingsOverlay
+        anchors.fill: parent
+        hostName: home.activeHostName
+        onForgetRequested: {
+            confirmDialog.mode = "forget"
+            confirmDialog.title = qsTr("Oublier ce PC ?")
+            confirmDialog.message = qsTr("« %1 » sera supprimé de la console. Il faudra refaire la liaison (code à saisir sur le PC).").arg(home.activeHostName)
+            confirmDialog.confirmLabel = qsTr("Oublier")
+            confirmDialog.open()
+        }
+        onClosed: carousel.forceActiveFocus()
+    }
+
+    ConsoleDialog {
+        id: confirmDialog
+        anchors.fill: parent
+        property string mode: ""
+        property int pendingLaunchIndex: -1
+        onConfirmed: {
+            if (mode === "forget") {
+                settingsOverlay.close()
+                if (home.activeComputerIndex >= 0)
+                    home.computerModel.deleteComputer(home.activeComputerIndex)
+            } else if (mode === "quitLaunch") {
+                home.quitAndLaunch(pendingLaunchIndex)
+            }
+        }
+        onClosed: {
+            if (settingsOverlay.visible)
+                settingsOverlay.forceActiveFocus()
+            else
+                carousel.forceActiveFocus()
+        }
+    }
 }

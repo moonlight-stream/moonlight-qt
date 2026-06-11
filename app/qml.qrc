@@ -25,5 +25,7 @@
         <file>gui/console/ControllerLegend.qml</file>
         <file>gui/console/Spinner.qml</file>
         <file>gui/console/PairingOverlay.qml</file>
+        <file>gui/console/ConsoleDialog.qml</file>
+        <file>gui/console/ConsoleSettings.qml</file>
     </qresource>
 </RCC>
