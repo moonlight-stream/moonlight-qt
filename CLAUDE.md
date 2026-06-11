@@ -222,10 +222,14 @@ porteuse + antennes + slot SIM. Le mur n'est pas le débit mais **latence + gigu
 3. ✅ Concevoir l'UI Big Picture (4 fichiers QML autonomes).
 4. ✅ Intégrer l'UI dans le build derrière le flag `embedded` (commit `64bb96a0`).
 5. ✅ Brancher l'UI sur les vraies données Moonlight (commits `e0f7600c` + `5df70d84`).
-6. ⏳ **Mode kiosk + auto-appairage** (§9) — fait côté console : 6a (direct-launch) et
-   l'appairage auto avec code de liaison ; reste 6c (compositeur kiosk) et l'auto-accept
-   côté host pour rendre le code invisible.
-7. Monter le proto hardware (Orange Pi 5B + écran + manette + power bank).
+6. ⏳ **Mode kiosk + auto-appairage** (§9) — côté console : TERMINÉ (6a direct-launch,
+   appairage auto avec code de liaison, Paramètres/dialogs console, chrome upstream
+   masqué). Reste 6c (compositeur kiosk, lié au proto) et l'auto-accept côté host
+   pour rendre le code invisible (lié à l'installeur, étape 8).
+7. ⏳ Monter le proto hardware (Orange Pi 5B + écran + manette + power bank) —
+   **carte commandée en juin 2026**. Premier objectif à réception : valider le décodage
+   matériel 1080p60 (V4L2/FFmpeg sur RK3588S, kernel mainline + Panthor) — c'est LE
+   risque technique restant du projet.
 8. Installeur host 1-clic (Apollo/Sunshine + Playnite + Tailscale + Wake-on-LAN).
 9. Version compacte v2 (SoM/carte custom, batterie, coque 3D).
 10. Module 5G.
@@ -234,38 +238,40 @@ porteuse + antennes + slot SIM. Le mur n'est pas le débit mais **latence + gigu
 
 ## 9. Tâche immédiate
 
-Atteindre l'expérience « j'allume, je joue » en supprimant les dernières frictions :
-mode kiosk (boot direct, pas de bureau visible) + auto-appairage (jamais de PIN affiché).
+La couche logicielle console est **fonctionnelle de bout en bout** (découverte →
+appairage auto → carrousel → stream → retour carrousel, Paramètres au bouton Y).
+Historique du découpage : 6a (direct-launch) ✅, 6b côté console (code de liaison,
+aucun dialog upstream) ✅, 6c (kiosk) ⏳ hors repo.
 
-Étape multi-front. Découpage proposé, du plus simple au plus invasif :
+Fronts ouverts, par priorité :
 
-### 6a — Auto-launch / focus carrousel (entièrement dans ce repo)
-À la première arrivée du `AppModel`, vérifier `appModel.getDirectLaunchAppIndex()` (cf.
-`AppView.qml:46-56`). Si > 0, lancer directement la session via le même flux que
-`onLaunchRequested`. Sinon, laisser le focus sur la première jaquette du carrousel.
-La logique vit dans `ConsoleHome.qml`, dans un handler `onAppModelChanged` ou
-équivalent. **Aucun fichier upstream touché.**
+### A — Tests utilisateur de la couche console (en cours)
+À valider à la manette par Marco : retour de stream sans toolbar, dialog de conflit
+« un jeu tourne déjà », persistance des réglages Y, B inerte à l'accueil. Corriger ici
+ce qui coince.
 
-### 6b — Silent-pair côté console
-Aujourd'hui un host non-paired déclencherait un PIN dialog (`PcView.qml`). On contourne
-ça en restant sur l'écran « Appairage en cours… » silencieusement, et en confiant
-l'accept au host (cf §3, installeur Sunshine/Apollo à venir). À court terme : pré-injecter
-l'identité + le certificat de la console dans `computers.json` de l'image disque (rôle
-du futur installeur host). Côté repo : **vérifier qu'aucun chemin de code ne fait
-apparaître un dialog de PIN dans le build `embedded`**, et le neutraliser si oui (sans
-toucher `PcView.qml` — créer si besoin un overlay dans `app/gui/console/`).
-
-### 6c — Boot direct via compositeur kiosk
+### B — 6c : boot direct via compositeur kiosk (à l'arrivée de l'Orange Pi)
 Hors de ce repo : configurer **cage** (proto) ou **gamescope** (cible commerciale) pour
-lancer `moonlight` au boot, sans session KDE/GNOME, sans curseur souris. À faire au
-moment du montage proto (§7 du roadmap) ; à documenter ici dans §11 (notes de build).
+lancer `moonlight` au boot, sans session KDE/GNOME, sans curseur souris. Testable dès
+maintenant sur le laptop Fedora (`cage -- ./app/moonlight`) ; à documenter en §11.
+À réception de la carte : valider d'abord le **décodage matériel** (cf roadmap 7).
+
+### C — Données réelles pour la StatusBar (avec le proto)
+Brancher batterie (UPower) et signal Wi-Fi (RSSI 0-4) — les propriétés
+`batteryPercent`/`signalStrength` existent déjà dans `StatusBar.qml` (-1 = masqué).
+Nécessitera probablement un petit backend C++ dans `app/gui/console/` + une couture
+`app.pro` dans le scope `embedded` existant.
+
+### D — Auto-accept du pairing côté host (avec l'installeur, étape 8)
+Pré-injecter l'identité/certificat de la console dans la conf d'Apollo (ou auto-accept),
+pour que `PairingOverlay` ne s'affiche jamais en usage normal.
 
 Contraintes (rappel §4) : tout le code console reste dans `app/gui/console/`. Aucun
 fichier upstream touché. Build vanilla inchangé.
 
-Vérification finale : sur un proto avec host paired, allumer la console doit afficher
-le carrousel en moins de 5 s sans aucun élément Linux visible — et un jeu doit pouvoir
-démarrer en une pression du bouton A.
+Vérification finale inchangée : sur un proto avec host paired, allumer la console doit
+afficher le carrousel en moins de 5 s sans aucun élément Linux visible — et un jeu doit
+pouvoir démarrer en une pression du bouton A.
 
 ---
 
@@ -328,6 +334,11 @@ Ces modèles C++ (QAbstractListModel) n'exposent **pas** de `count` : en QML,
 Pour compter/observer les éléments, passer par un `Instantiator` lié au modèle et
 utiliser **son** `count` (vraie propriété notifiée) — pattern des `hostScanner` /
 `appViewer` de `ConsoleHome.qml`.
+
+### Propriétés attachées : l'import compte
+
+`StackView.onActivated` & co exigent `import QtQuick.Controls` dans le fichier qui les
+utilise. Sans lui : « Non-existent attached object » au push, et la vue ne charge pas.
 
 ### Logs Qt invisibles sur Fedora (journald)
 
