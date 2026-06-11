@@ -67,6 +67,7 @@ FocusScope {
     property string activeHostName: ""
     property bool   activeHostOnline: false
     property bool   activeHostPaired: false
+    property bool   activeHostStatusUnknown: true
 
     // --- État de l'appairage automatique ---
     property string pairingPin: ""
@@ -108,9 +109,11 @@ FocusScope {
         }
     }
 
+    // NB : AppModel/ComputerModel (C++) n'exposent PAS de propriété `count` ;
+    // on passe toujours par le count des Instantiator (appViewer/hostScanner).
     function currentApp() {
-        if (!appModel || appModel.count === 0) return null
-        var idx = Math.max(0, Math.min(carousel.currentIndex, appModel.count - 1))
+        if (appViewer.count === 0) return null
+        var idx = Math.max(0, Math.min(carousel.currentIndex, appViewer.count - 1))
         var item = appViewer.objectAt(idx)
         return item ? item : null
     }
@@ -120,14 +123,38 @@ FocusScope {
     // et on lance l'appairage en arrière-plan. L'utilisateur ne voit qu'un code
     // de liaison plein écran (PairingOverlay), à saisir une fois côté PC.
     // À terme, le host auto-acceptera et cet écran ne s'affichera jamais.
+    //
+    // Garde-fou : au boot, le host passe online AVANT que son pairState soit
+    // confirmé (statusUnknown / bref "non appairé" le temps du serverinfo
+    // HTTPS). On exige donc un état "online + non appairé" STABLE pendant
+    // 2,5 s avant de déclencher — sinon on enverrait une demande de PIN
+    // parasite à un host déjà appairé.
     function maybeStartPairing() {
-        if (pairingInFlight) return
-        if (activeComputerIndex < 0 || !activeHostOnline || activeHostPaired) return
-        pairingError = ""
-        pairingPin = computerModel.generatePinString()
-        pairingInFlight = true
-        console.info("[console-ui] Appairage automatique avec \"" + activeHostName + "\"")
-        computerModel.pairComputer(activeComputerIndex, pairingPin)
+        if (pairingNeeded())
+            pairingArmTimer.start()
+        else
+            pairingArmTimer.stop()
+    }
+
+    function pairingNeeded() {
+        return !pairingInFlight
+            && activeComputerIndex >= 0
+            && activeHostOnline
+            && !activeHostPaired
+            && !activeHostStatusUnknown
+    }
+
+    Timer {
+        id: pairingArmTimer
+        interval: 2500
+        onTriggered: {
+            if (!home.pairingNeeded()) return
+            home.pairingError = ""
+            home.pairingPin = home.computerModel.generatePinString()
+            home.pairingInFlight = true
+            console.info("[console-ui] Appairage automatique avec \"" + home.activeHostName + "\"")
+            home.computerModel.pairComputer(home.activeComputerIndex, home.pairingPin)
+        }
     }
 
     function handlePairingCompleted(error) {
@@ -156,11 +183,13 @@ FocusScope {
         delegate: QtObject {
             readonly property bool isOnline: model.online
             readonly property bool isPaired: model.paired
+            readonly property bool isUnknown: model.statusUnknown
             readonly property string hostName: model.name
             // Chaque changement de rôle relance la sélection : un host qui
             // passe online (même non appairé) doit rafraîchir l'affichage.
             onIsOnlineChanged: home.pickActiveComputer()
             onIsPairedChanged: home.pickActiveComputer()
+            onIsUnknownChanged: home.pickActiveComputer()
             onHostNameChanged: home.pickActiveComputer()
         }
         onObjectAdded: function(index, obj) { home.pickActiveComputer() }
@@ -169,7 +198,7 @@ FocusScope {
 
     function pickActiveComputer() {
         // Premier candidat online+paired, sinon premier online, sinon 0, sinon -1.
-        var fallback = (computerModel && computerModel.count > 0) ? 0 : -1
+        var fallback = hostScanner.count > 0 ? 0 : -1
         var firstOnline = -1
         for (var i = 0; i < hostScanner.count; i++) {
             var it = hostScanner.objectAt(i)
@@ -192,11 +221,14 @@ FocusScope {
             activeHostName = it.hostName
             activeHostOnline = it.isOnline
             activeHostPaired = it.isPaired
+            activeHostStatusUnknown = it.isUnknown
         } else {
             activeHostName = ""
             activeHostOnline = false
             activeHostPaired = false
+            activeHostStatusUnknown = true
         }
+        maybeStartPairing()
     }
 
     // Instantiator pour exposer les rôles d'AppModel à currentApp() / launchApp().
@@ -261,8 +293,8 @@ FocusScope {
         Text {
             anchors.right: parent.right; anchors.rightMargin: 28
             anchors.verticalCenter: parent.verticalCenter
-            text: appModel && appModel.count > 0
-                  ? (carousel.currentIndex + 1) + " / " + appModel.count
+            text: appViewer.count > 0
+                  ? (carousel.currentIndex + 1) + " / " + appViewer.count
                   : ""
             color: "#6b7280"; font.pixelSize: 13
         }
@@ -275,7 +307,7 @@ FocusScope {
         height: focusedH + 46
         model: home.appModel
         focus: true
-        visible: appModel && appModel.count > 0
+        visible: appViewer.count > 0
         opacity: visible ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 250 } }
 

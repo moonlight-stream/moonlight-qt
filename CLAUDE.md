@@ -86,8 +86,8 @@ et de packaging** pour supprimer la friction.
   bibliothèque vers le host + box art) + **Tailscale** (accès distant, traversée du NAT).
 - Le « logiciel host » à écrire = un **installeur/orchestrateur** qui pose et configure ces
   outils, tourne en arrière-plan, et gère l'**onboarding zéro-friction + l'auto-appairage**.
-- (Setup actuellement utilisé au quotidien : **Sunshine** + moonlight-qt. Le passage à
-  Apollo est une option, pas encore tranchée.)
+- (Setup actuel : le host « Djinger » tourne sous **Apollo** — l'appairage du fork a été
+  validé contre Apollo en juin 2026. Sunshine reste compatible, même protocole.)
 
 ### Choix de lignée à garder en tête
 - **Sunshine + moonlight-qt officiels** = plus stables, plus de plateformes.

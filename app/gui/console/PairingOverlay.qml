@@ -50,7 +50,7 @@ Item {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             horizontalAlignment: Text.AlignHCenter
-            text: qsTr("Saisissez ce code dans Sunshine, sur votre PC.\nLa console se connectera ensuite automatiquement.")
+            text: qsTr("Saisissez ce code sur votre PC.\nLa console se connectera ensuite automatiquement.")
             color: "#8b909c"
             font.pixelSize: 15
             lineHeight: 1.3
