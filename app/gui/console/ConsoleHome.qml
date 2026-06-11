@@ -3,6 +3,7 @@ import QtQuick
 import ComputerModel 1.0
 import AppModel 1.0
 import ComputerManager 1.0
+import StreamingPreferences 1.0
 
 // Écran d'accueil "Big Picture" de la console.
 // Branché sur les vrais modèles Moonlight (ComputerModel + AppModel) :
@@ -84,6 +85,19 @@ FocusScope {
         var win = home.Window.window
         if (win && win.header)
             win.header.visible = false
+
+        // Profil de stream "console" appliqué à chaque démarrage : 1080p60,
+        // 30 Mbps (cible §7 : 30–50 Mbps stables ; le défaut Moonlight pour
+        // du 1080p60 est en dessous). Réglages volontairement déterministes —
+        // un futur écran Paramètres (bouton Y) pourra les exposer.
+        StreamingPreferences.width = 1920
+        StreamingPreferences.height = 1080
+        StreamingPreferences.fps = 60
+        StreamingPreferences.bitrateKbps = Math.max(
+            StreamingPreferences.getDefaultBitrate(1920, 1080, 60,
+                                                   StreamingPreferences.enableYUV444),
+            30000)
+        StreamingPreferences.save()
 
         var m = Qt.createQmlObject(
             'import ComputerModel 1.0; ComputerModel {}', home, '')
