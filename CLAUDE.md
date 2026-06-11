@@ -51,8 +51,15 @@ comme pour un expert. Conséquences concrètes pour tout ce qu'on code :
 - ✅ **UI branchée sur les vraies données Moonlight** (commits `e0f7600c` + `5df70d84`) :
   `ConsoleHome` lit `ComputerModel`/`AppModel`, sélectionne automatiquement le premier host
   online+paired, et le bouton Jouer crée une vraie session via `StreamSegue.qml`.
-- **Tâche en cours** : supprimer les dernières frictions — mode kiosk (boot direct, pas de
-  bureau) + auto-appairage / silent-pair (jamais de PIN visible) — voir §9.
+- ✅ **Appairage automatique côté console + refonte visuelle "pro"** : dès qu'un host en
+  ligne non appairé est détecté, la console lance `pairComputer()` elle-même et affiche un
+  **code de liaison** plein écran (`PairingOverlay.qml`, façon appairage d'app TV) ; succès
+  → carrousel, échec → nouvelle tentative auto après 5 s. Corrigé au passage le bug
+  "Recherche…" permanent (modèles initialisés après liaison aux vues, cf §11) et masqué la
+  toolbar Material de `main.qml` depuis `ConsoleHome` (zéro élément bureau). Nouveaux
+  fichiers : `Spinner.qml`, `PairingOverlay.qml`. Le direct-launch (§9 6a) est câblé.
+- **Tâche en cours** : mode kiosk (boot direct, pas de bureau, §9 6c) + auto-accept du
+  pairing côté host (rôle du futur installeur, §9 6b) pour que le code ne s'affiche jamais.
 
 ---
 
@@ -187,7 +194,9 @@ porteuse + antennes + slot SIM. Le mur n'est pas le débit mais **latence + gigu
 3. ✅ Concevoir l'UI Big Picture (4 fichiers QML autonomes).
 4. ✅ Intégrer l'UI dans le build derrière le flag `embedded` (commit `64bb96a0`).
 5. ✅ Brancher l'UI sur les vraies données Moonlight (commits `e0f7600c` + `5df70d84`).
-6. ⏳ **Mode kiosk + auto-appairage** (supprimer le PIN et le bureau de l'UX, §9).
+6. ⏳ **Mode kiosk + auto-appairage** (§9) — fait côté console : 6a (direct-launch) et
+   l'appairage auto avec code de liaison ; reste 6c (compositeur kiosk) et l'auto-accept
+   côté host pour rendre le code invisible.
 7. Monter le proto hardware (Orange Pi 5B + écran + manette + power bank).
 8. Installeur host 1-clic (Apollo/Sunshine + Playnite + Tailscale + Wake-on-LAN).
 9. Version compacte v2 (SoM/carte custom, batterie, coque 3D).
@@ -268,6 +277,33 @@ Deux contournements :
 - `make distclean` avant le `qmake6` racine (propre mais recompile tout) ;
 - ou régénérer directement le Makefile du sous-projet : `cd app && qmake6 "CONFIG+=embedded" app.pro`
   (rapide, recompile uniquement ce qui dépend du nouveau define).
+
+### Piège ComputerModel/AppModel : initialiser AVANT d'assigner aux vues
+
+`ComputerModel::initialize()` et `AppModel::initialize()` remplissent le modèle **sans
+émettre de reset** (`beginResetModel`). Si une vue (ListView, Instantiator…) est liée au
+modèle avant l'appel à `initialize()`, elle le considère **vide pour toujours** — symptôme :
+« Recherche… » permanent alors que le host est en ligne. Le pattern correct (celui de
+`PcView.qml` et de `ConsoleHome.qml`) :
+
+```qml
+var m = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', parent, '')
+m.initialize(ComputerManager)   // d'abord initialiser…
+computerModel = m               // …puis assigner la propriété liée aux vues
+```
+
+### Logs Qt invisibles sur Fedora (journald)
+
+Quand stderr n'est pas un TTY, Qt envoie ses logs vers **journald** au lieu de la console
+(`qml-qt6` n'affiche alors rien) → les lire avec `journalctl --user`. Le binaire
+`moonlight` n'est pas concerné : il installe son propre handler (`qtLogToDiskHandler`)
+qui écrit sur stdout. Attention : ce handler **supprime le niveau debug** (`console.log`
+QML) — utiliser `console.info` pour qu'une trace QML apparaisse dans le log.
+
+### rcc ne dépend que de `qml.qrc`, pas des `.qml`
+
+Modifier un `.qml` ne suffit pas toujours à régénérer `qrc_qml.cpp` : faire
+`touch qml.qrc` avant `make` pour forcer le réembarquement des ressources.
 
 ### Ignorer les artefacts de build sans toucher au `.gitignore` upstream
 

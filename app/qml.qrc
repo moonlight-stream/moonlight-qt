@@ -23,5 +23,7 @@
         <file>gui/console/GameCarousel.qml</file>
         <file>gui/console/StatusBar.qml</file>
         <file>gui/console/ControllerLegend.qml</file>
+        <file>gui/console/Spinner.qml</file>
+        <file>gui/console/PairingOverlay.qml</file>
     </qresource>
 </RCC>

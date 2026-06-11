@@ -1,47 +1,56 @@
 import QtQuick
 
-// Légende manette en bas d'écran : pastilles A / B / Y + libellés.
+// Légende manette en bas d'écran : pastilles A / B / Y + libellés,
+// style "console moderne" (cercles sombres, lettre colorée).
 // Les libellés se modifient via la propriété `hints`.
 Item {
     id: root
 
     property var hints: [
-        { btn: "A", label: "Jouer",       bg: "#6cc04a", fg: "#10250a" },
-        { btn: "B", label: "Retour",      bg: "#e35b5b", fg: "#501313" },
-        { btn: "Y", label: "Param\u00e8tres", bg: "#e0b020", fg: "#412402" }
+        { btn: "A", label: qsTr("Jouer"),       color: "#6cc04a" },
+        { btn: "B", label: qsTr("Retour"),      color: "#e35b5b" },
+        { btn: "Y", label: qsTr("Paramètres"),  color: "#e0b020" }
     ]
 
-    implicitHeight: 46
+    implicitHeight: 48
 
-    // Filet de séparation
+    // Filet de séparation en léger dégradé
     Rectangle {
         anchors.top: parent.top
         width: parent.width
         height: 1
-        color: "#1a1e26"
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+            GradientStop { position: 0.0; color: "#001a1e26" }
+            GradientStop { position: 0.15; color: "#2a2f3a" }
+            GradientStop { position: 0.85; color: "#2a2f3a" }
+            GradientStop { position: 1.0; color: "#001a1e26" }
+        }
     }
 
     Row {
         anchors.left: parent.left
-        anchors.leftMargin: 24
+        anchors.leftMargin: 28
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 22
+        spacing: 24
 
         Repeater {
             model: root.hints
             delegate: Row {
-                spacing: 7
+                spacing: 8
                 anchors.verticalCenter: parent.verticalCenter
 
                 Rectangle {
-                    width: 20; height: 20; radius: 10
-                    color: modelData.bg
+                    width: 22; height: 22; radius: 11
+                    color: "#171b24"
+                    border.color: "#2e3542"
+                    border.width: 1
                     anchors.verticalCenter: parent.verticalCenter
                     Text {
                         anchors.centerIn: parent
                         text: modelData.btn
-                        color: modelData.fg
-                        font.pixelSize: 12; font.weight: Font.Medium
+                        color: modelData.color
+                        font.pixelSize: 12; font.weight: Font.Bold
                     }
                 }
                 Text {
