@@ -1987,7 +1987,9 @@ void Session::exec()
         case SDL_USEREVENT:
             switch (event.user.code) {
             case SDL_CODE_FRAME_READY:
-                if (m_VideoDecoder != nullptr) {
+                if (m_Preferences->noVideo == true) {
+                    break;
+                } else if (m_VideoDecoder != nullptr) {
                     m_VideoDecoder->renderFrameOnMainThread();
                 }
                 break;

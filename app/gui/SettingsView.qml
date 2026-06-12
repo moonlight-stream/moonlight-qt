@@ -845,6 +845,22 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Frame pacing reduces micro-stutter by delaying frames that come in too early")
                 }
+
+                CheckBox {
+                    id: noVideo
+                    width: parent.width
+                    hoverEnabled: true
+                    text: qsTr("Disable video")
+                    font.pointSize:  12
+                    checked: StreamingPreferences.noVideo
+                    onCheckedChanged: {
+                        StreamingPreferences.noVideo = checked
+                    }
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Disable video output. This is useful if you only want to stream audio and pass input but it will use more bandwidth than just streaming audio alone.")
+                }
             }
         }
 
@@ -1213,7 +1229,7 @@ Flickable {
                         ListElement {
                             text: qsTr("Maximized")
                             val: StreamingPreferences.UI_MAXIMIZED
-                        }   
+                        }
                         ListElement {
                             text: qsTr("Fullscreen")
                             val: StreamingPreferences.UI_FULLSCREEN
