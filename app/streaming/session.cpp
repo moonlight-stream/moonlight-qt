@@ -37,6 +37,8 @@
 #include <QSvgRenderer>
 #include <QPainter>
 #include <QImage>
+#include <QFont>
+#include <QColor>
 #include <QGuiApplication>
 #include <QCursor>
 #include <QScreen>
@@ -365,6 +367,10 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     // safely return DR_OK and wait for the IDR frame request by
     // the decoder reinitialization code.
 
+    if (s_ActiveSession->m_Preferences->noVideo) {
+        return DR_OK;
+    }
+
     if (SDL_TryLockMutex(s_ActiveSession->m_DecoderLock) == 0) {
         IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
         if (decoder != nullptr) {
@@ -512,7 +518,11 @@ bool Session::populateDecoderProperties(SDL_Window* window)
     }
 
     m_VideoCallbacks.capabilities = decoder->getDecoderCapabilities();
-    if (m_VideoCallbacks.capabilities & CAPABILITY_PULL_RENDERER) {
+    if (m_Preferences->noVideo) {
+        m_VideoCallbacks.capabilities = 0;
+        m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
+    }
+    else if (m_VideoCallbacks.capabilities & CAPABILITY_PULL_RENDERER) {
         // It is an error to pass a push callback when in pull mode
         m_VideoCallbacks.submitDecodeUnit = nullptr;
     }
@@ -553,6 +563,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_Computer(computer),
       m_App(app),
       m_Window(nullptr),
+      m_NoVideoRenderer(nullptr),
       m_VideoDecoder(nullptr),
       m_DecoderLock(SDL_CreateMutex()),
       m_AudioMuted(false),
@@ -1381,6 +1392,52 @@ void Session::getWindowDimensions(int& x, int& y,
     x = y = SDL_WINDOWPOS_CENTERED_DISPLAY(displayIndex);
 }
 
+void Session::renderNoVideoMessage()
+{
+    if (m_NoVideoRenderer == nullptr) {
+        m_NoVideoRenderer = SDL_CreateRenderer(m_Window, -1, 0);
+        if (m_NoVideoRenderer == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_CreateRenderer() failed: %s",
+                         SDL_GetError());
+            return;
+        }
+    }
+
+    int width, height;
+    SDL_GetRendererOutputSize(m_NoVideoRenderer, &width, &height);
+
+    QImage image(width, height, QImage::Format_RGBA8888);
+    image.fill(QColor(0x40, 0x40, 0x40));
+
+    QPainter painter(&image);
+    QFont font = QGuiApplication::font();
+    font.setPointSize(16);
+    painter.setFont(font);
+    painter.setPen(Qt::white);
+    painter.drawText(image.rect(),
+                     Qt::AlignCenter | Qt::TextWordWrap,
+                     tr("Video is disabled in this mode.\nAudio and input are still being streamed."));
+    painter.end();
+
+    SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom((void*)image.constBits(),
+                                                              image.width(),
+                                                              image.height(),
+                                                              32,
+                                                              image.bytesPerLine(),
+                                                              SDL_PIXELFORMAT_RGBA32);
+    if (surface != nullptr) {
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(m_NoVideoRenderer, surface);
+        if (texture != nullptr) {
+            SDL_RenderCopy(m_NoVideoRenderer, texture, nullptr, nullptr);
+            SDL_DestroyTexture(texture);
+        }
+        SDL_FreeSurface(surface);
+    }
+
+    SDL_RenderPresent(m_NoVideoRenderer);
+}
+
 void Session::updateOptimalWindowDisplayMode()
 {
     SDL_DisplayMode desktopMode, bestMode, mode;
@@ -1829,12 +1886,14 @@ void Session::exec()
     std::string windowName = QString(m_Computer->name + " - Moonlight").toStdString();
 #endif
 
+    Uint32 platformWindowFlags = m_Preferences->noVideo ? 0 : StreamUtils::getPlatformWindowFlags();
+
     m_Window = SDL_CreateWindow(windowName.c_str(),
                                 x,
                                 y,
                                 width,
                                 height,
-                                defaultWindowFlags | StreamUtils::getPlatformWindowFlags());
+                                defaultWindowFlags | platformWindowFlags);
     if (!m_Window) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "SDL_CreateWindow() failed with platform flags: %s",
@@ -2052,6 +2111,20 @@ void Session::exec()
             if (needsFirstEnterCapture && event.window.event == SDL_WINDOWEVENT_ENTER) {
                 m_InputHandler->setCaptureActive(true);
                 needsFirstEnterCapture = false;
+            }
+
+            if (m_Preferences->noVideo) {
+                if (event.window.event == SDL_WINDOWEVENT_SHOWN ||
+                    event.window.event == SDL_WINDOWEVENT_EXPOSED ||
+                    event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    renderNoVideoMessage();
+
+                    if (needsPostDecoderCreationCapture) {
+                        m_InputHandler->setCaptureActive(true);
+                        needsPostDecoderCreationCapture = false;
+                    }
+                }
+                break;
             }
 
             // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event.
@@ -2344,6 +2417,11 @@ DispatchDeferredCleanup:
             m_QtWindow->setWindowState(Qt::WindowNoState);
         }
 #endif
+    }
+
+    if (m_NoVideoRenderer != nullptr) {
+        SDL_DestroyRenderer(m_NoVideoRenderer);
+        m_NoVideoRenderer = nullptr;
     }
 
     // This must be called after the decoder is deleted, because

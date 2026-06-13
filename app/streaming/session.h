@@ -171,6 +171,8 @@ private:
 
     void updateOptimalWindowDisplayMode();
 
+    void renderNoVideoMessage();
+
     enum class DecoderAvailability {
         None,
         Software,
@@ -251,6 +253,7 @@ private:
     NvComputer* m_Computer;
     NvApp m_App;
     SDL_Window* m_Window;
+    SDL_Renderer* m_NoVideoRenderer;
     IVideoDecoder* m_VideoDecoder;
     SDL_mutex* m_DecoderLock;
     bool m_AudioDisabled;
