@@ -361,10 +361,7 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
     vkParams.device = device;
 
     if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
-#if defined(Q_OS_DARWIN)
-        vkParams.opt_extensions = nullptr;
-        vkParams.num_opt_extensions = 0;
-#elif LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 26, 100)
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 26, 100)
         vkParams.opt_extensions = av_vk_get_optional_device_extensions(&vkParams.num_opt_extensions);
 #else
         vkParams.opt_extensions = k_OptionalDeviceExtensions;
