@@ -607,6 +607,16 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 
 #ifdef Q_OS_DARWIN
     m_MetalTextureFactory = std::make_unique<MetalVulkanTextureFactory>(m_Vulkan);
+
+    // Set an initial wide colorspace hint to ensure that MoltenVK sets wantsExtendedDynamicRangeContent
+    // before we request the first drawable. If we don't do this, our Metal layer ends up stuck in SDR
+    // mode even if we later change the colorspace to VK_COLOR_SPACE_HDR10_ST2084_EXT.
+    if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+        pl_color_space wideColorspace = {};
+        wideColorspace.primaries = PL_COLOR_PRIM_BT_709;
+        wideColorspace.transfer = PL_COLOR_TRC_SCRGB;
+        pl_swapchain_colorspace_hint(m_Swapchain, &wideColorspace);
+    }
 #endif
 
     return true;
