@@ -12,7 +12,7 @@
 
 class PlVkRenderer : public IFFmpegRenderer {
 public:
-    PlVkRenderer(bool hwaccel = false, IFFmpegRenderer *backendRenderer = nullptr);
+    PlVkRenderer(AVHWDeviceType hwDeviceType = AV_HWDEVICE_TYPE_NONE, IFFmpegRenderer *backendRenderer = nullptr);
     virtual ~PlVkRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
@@ -46,7 +46,7 @@ private:
 
     // The backend renderer if we're frontend-only
     IFFmpegRenderer* m_Backend;
-    bool m_HwAccelBackend;
+    AVHWDeviceType m_HwDeviceType;
 
     // SDL state
     SDL_Window* m_Window = nullptr;

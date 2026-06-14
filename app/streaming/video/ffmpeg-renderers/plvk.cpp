@@ -134,10 +134,10 @@ void PlVkRenderer::overlayUploadComplete(void* opaque)
     SDL_FreeSurface((SDL_Surface*)opaque);
 }
 
-PlVkRenderer::PlVkRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer) :
+PlVkRenderer::PlVkRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRenderer) :
     IFFmpegRenderer(RendererType::Vulkan),
     m_Backend(backendRenderer),
-    m_HwAccelBackend(hwaccel)
+    m_HwDeviceType(hwDeviceType)
 {
     bool ok;
 
@@ -184,10 +184,7 @@ PlVkRenderer::~PlVkRenderer()
             fn_vkDestroySurfaceKHR(m_PlVkInstance->instance, m_VkSurface, nullptr);
         }
 
-        if (m_HwDeviceCtx != nullptr) {
-            av_buffer_unref(&m_HwDeviceCtx);
-        }
-
+        av_buffer_unref(&m_HwDeviceCtx);
         pl_vk_inst_destroy(&m_PlVkInstance);
     }
 
@@ -287,20 +284,8 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
         return false;
     }
 
-#ifdef Q_OS_WIN32
-    // Intel's Windows drivers seem to have interoperability issues as of FFmpeg 7.0.1
-    // when using Vulkan Video decoding. Since they also expose HEVC REXT profiles using
-    // D3D11VA, let's reject them here so we can select a different Vulkan device or
-    // just allow D3D11VA to take over.
-    if (m_HwAccelBackend && deviceProps->vendorID == 0x8086 && !qEnvironmentVariableIntValue("PLVK_ALLOW_INTEL")) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Skipping Intel GPU for Vulkan Video due to broken drivers");
-        return false;
-    }
-#endif
-
     // If we're acting as the decoder backend, we need a physical device with Vulkan video support
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
         const char* videoDecodeExtension;
 
         if (decoderParams->videoFormat & VIDEO_FORMAT_MASK_H264) {
@@ -330,6 +315,18 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
                         videoDecodeExtension);
             return false;
         }
+
+#ifdef Q_OS_WIN32
+        // Intel's Windows drivers seem to have interoperability issues as of FFmpeg 7.0.1
+        // when using Vulkan Video decoding. Since they also expose HEVC REXT profiles using
+        // D3D11VA, let's reject them here so we can select a different Vulkan device or
+        // just allow D3D11VA to take over.
+        if (deviceProps->vendorID == 0x8086 && !qEnvironmentVariableIntValue("PLVK_ALLOW_INTEL")) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Skipping Intel GPU for Vulkan Video due to broken drivers");
+            return false;
+        }
+#endif
     }
 
     if (!isSurfacePresentationSupportedByPhysicalDevice(device)) {
@@ -359,13 +356,16 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
     vkParams.get_proc_addr = m_PlVkInstance->get_proc_addr;
     vkParams.surface = m_VkSurface;
     vkParams.device = device;
+
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 26, 100)
-    vkParams.opt_extensions = av_vk_get_optional_device_extensions(&vkParams.num_opt_extensions);
+        vkParams.opt_extensions = av_vk_get_optional_device_extensions(&vkParams.num_opt_extensions);
 #else
-    vkParams.opt_extensions = k_OptionalDeviceExtensions;
-    vkParams.num_opt_extensions = SDL_arraysize(k_OptionalDeviceExtensions);
+        vkParams.opt_extensions = k_OptionalDeviceExtensions;
+        vkParams.num_opt_extensions = SDL_arraysize(k_OptionalDeviceExtensions);
 #endif
-    vkParams.extra_queues = m_HwAccelBackend ? VK_QUEUE_FLAG_BITS_MAX_ENUM : 0;
+        vkParams.extra_queues = VK_QUEUE_FLAG_BITS_MAX_ENUM;
+    }
 
     {
         // Don't let Qt take DRM master from us during pl_vulkan_create()
@@ -551,7 +551,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // We only need an hwaccel device context if we're going to act as the backend renderer too
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
         m_HwDeviceCtx = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VULKAN);
         if (m_HwDeviceCtx == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -588,17 +588,32 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
             return false;
         }
     }
+    else if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
+        int err = av_hwdevice_ctx_create(&m_HwDeviceCtx,
+                                         m_HwDeviceType,
+                                         nullptr,
+                                         nullptr,
+                                         0);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_create() failed: %d",
+                         err);
+            return false;
+        }
+    }
 
     return true;
 }
 
 bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary **)
 {
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceCtx) {
+        context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
+    }
+
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using Vulkan video decoding");
-
-        context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
     }
     else {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1104,7 +1119,7 @@ int PlVkRenderer::getDecoderCapabilities()
 
 bool PlVkRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
         return pixelFormat == AV_PIX_FMT_VULKAN;
     }
     else if (m_Backend) {
