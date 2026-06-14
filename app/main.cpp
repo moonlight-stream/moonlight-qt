@@ -635,8 +635,13 @@ int main(int argc, char *argv[])
     qputenv("QSG_RENDER_LOOP", "basic");
 #endif
 
-#if defined(Q_OS_DARWIN) && defined(QT_DEBUG)
-    // Enable Metal valiation for debug builds
+#if defined(Q_OS_DARWIN) && defined(QT_DEBUG) && !defined(HAVE_LIBPLACEBO_VULKAN)
+    // Enable Metal valiation for debug builds without libplacebo
+    //
+    // The current MoltenVK driver as of Vulkan SDK 1.4.350 triggers Metal debug layer
+    // violations on frame and overlay uploads like:
+    // _validateReplaceRegion:252: failed assertion `Replace Region Validation
+    // bytesPerRow(4803) must be a multiple of MTLPixelFormatBGRA8Unorm pixel bytes(4).
     qputenv("MTL_DEBUG_LAYER", "1");
     qputenv("MTL_SHADER_VALIDATION", "1");
 #endif

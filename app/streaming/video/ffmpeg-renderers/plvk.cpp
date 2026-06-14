@@ -177,6 +177,9 @@ PlVkRenderer::~PlVkRenderer()
 
         pl_renderer_destroy(&m_Renderer);
         pl_swapchain_destroy(&m_Swapchain);
+#ifdef Q_OS_DARWIN
+        m_MetalTextureFactory.reset();
+#endif
         pl_vulkan_destroy(&m_Vulkan);
 
         // This surface was created by SDL, so there's no libplacebo API to destroy it
@@ -358,7 +361,10 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
     vkParams.device = device;
 
     if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
-#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 26, 100)
+#if defined(Q_OS_DARWIN)
+        vkParams.opt_extensions = nullptr;
+        vkParams.num_opt_extensions = 0;
+#elif LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 26, 100)
         vkParams.opt_extensions = av_vk_get_optional_device_extensions(&vkParams.num_opt_extensions);
 #else
         vkParams.opt_extensions = k_OptionalDeviceExtensions;
@@ -602,6 +608,10 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
+#ifdef Q_OS_DARWIN
+    m_MetalTextureFactory = std::make_unique<MetalVulkanTextureFactory>(m_Vulkan);
+#endif
+
     return true;
 }
 
@@ -625,13 +635,23 @@ bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary *
 
 bool PlVkRenderer::mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFrame)
 {
-    pl_avframe_params mapParams = {};
-    mapParams.frame = frame;
-    mapParams.tex = m_Textures;
-    if (!pl_map_avframe_ex(m_Vulkan->gpu, mappedFrame, &mapParams)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_map_avframe_ex() failed");
-        return false;
+#ifdef Q_OS_DARWIN
+    if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
+        if (!m_MetalTextureFactory->mapVideoToolboxToPlacebo(frame, mappedFrame)) {
+            return false;
+        }
+    }
+    else
+#endif
+    {
+        pl_avframe_params mapParams = {};
+        mapParams.frame = frame;
+        mapParams.tex = m_Textures;
+        if (!pl_map_avframe_ex(m_Vulkan->gpu, mappedFrame, &mapParams)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "pl_map_avframe_ex() failed");
+            return false;
+        }
     }
 
     // libplacebo assumes a minimum luminance value of 0 means the actual value was unknown.
@@ -651,6 +671,19 @@ bool PlVkRenderer::mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFra
     mappedFrame->repr.levels = PL_COLOR_LEVELS_FULL;
 
     return true;
+}
+
+void PlVkRenderer::unmapAvFrameFromPlacebo(const AVFrame *frame, pl_frame* mappedFrame)
+{
+#ifdef Q_OS_DARWIN
+    if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
+        m_MetalTextureFactory->unmapVideoToolboxFromPlacebo(mappedFrame);
+    }
+    else
+#endif
+    {
+        pl_unmap_avframe(m_Vulkan->gpu, mappedFrame);
+    }
 }
 
 bool PlVkRenderer::populateQueues(int videoFormat)
@@ -971,7 +1004,7 @@ UnmapExit:
         pl_tex_destroy(m_Vulkan->gpu, &texture);
     }
 
-    pl_unmap_avframe(m_Vulkan->gpu, &mappedFrame);
+    unmapAvFrameFromPlacebo(frame, &mappedFrame);
 }
 
 bool PlVkRenderer::testRenderFrame(AVFrame *frame)
@@ -995,7 +1028,7 @@ bool PlVkRenderer::testRenderFrame(AVFrame *frame)
         return false;
     }
 
-    pl_unmap_avframe(m_Vulkan->gpu, &mappedFrame);
+    unmapAvFrameFromPlacebo(frame, &mappedFrame);
     return true;
 }
 
