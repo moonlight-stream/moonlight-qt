@@ -1005,7 +1005,12 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 #endif
 #ifdef Q_OS_DARWIN
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
-            // Prefer the Metal renderer if hardware is compatible
+            // Prefer the libplacebo (on MoltenVK) renderer unless explicitly opted out
+#ifdef HAVE_LIBPLACEBO_VULKAN
+            if (qgetenv("PREFER_VULKAN") != "0") {
+                return new PlVkRenderer(hwDecodeCfg->device_type);
+            }
+#endif
             return VTMetalRendererFactory::createRenderer(true);
 #endif
 #ifdef HAVE_LIBVA
