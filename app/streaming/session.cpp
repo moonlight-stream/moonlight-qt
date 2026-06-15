@@ -38,7 +38,9 @@
 #include <QPainter>
 #include <QImage>
 #include <QFont>
+#include <QFontMetrics>
 #include <QColor>
+#include <QReadWriteLock>
 #include <QGuiApplication>
 #include <QCursor>
 #include <QScreen>
@@ -564,6 +566,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_App(app),
       m_Window(nullptr),
       m_NoVideoRenderer(nullptr),
+      m_NoVideoGameId(-1),
       m_VideoDecoder(nullptr),
       m_DecoderLock(SDL_CreateMutex()),
       m_AudioMuted(false),
@@ -1392,6 +1395,42 @@ void Session::getWindowDimensions(int& x, int& y,
     x = y = SDL_WINDOWPOS_CENTERED_DISPLAY(displayIndex);
 }
 
+bool Session::updateNoVideoGame()
+{
+    int gameId;
+    QString gameName;
+    {
+        QReadLocker lock(&m_Computer->lock);
+        gameId = m_Computer->currentGameId != 0 ? m_Computer->currentGameId : m_App.id;
+        for (const NvApp& app : m_Computer->appList) {
+            if (app.id == gameId) {
+                gameName = app.name;
+                break;
+            }
+        }
+    }
+
+    if (gameName.isEmpty()) {
+        gameName = m_App.name;
+    }
+
+    if (gameId == m_NoVideoGameId) {
+        return false;
+    }
+
+    m_NoVideoGameId = gameId;
+    m_NoVideoGameName = gameName;
+
+    try {
+        NvHTTP http(m_Computer);
+        m_NoVideoBoxArt = http.getBoxArt(gameId);
+    } catch (...) {
+        m_NoVideoBoxArt = QImage();
+    }
+
+    return true;
+}
+
 void Session::renderNoVideoMessage()
 {
     if (m_NoVideoRenderer == nullptr) {
@@ -1411,13 +1450,56 @@ void Session::renderNoVideoMessage()
     image.fill(QColor(0x40, 0x40, 0x40));
 
     QPainter painter(&image);
-    QFont font = QGuiApplication::font();
-    font.setPointSize(16);
-    painter.setFont(font);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
     painter.setPen(Qt::white);
-    painter.drawText(image.rect(),
-                     Qt::AlignCenter | Qt::TextWordWrap,
-                     tr("Video is disabled in this mode.\nAudio and input are still being streamed."));
+
+    QString message = tr("Video is disabled in this mode.\nAudio and input are still being streamed.");
+
+    QFont nameFont = QGuiApplication::font();
+    nameFont.setPointSize(28);
+    nameFont.setBold(true);
+
+    QFont messageFont = QGuiApplication::font();
+    messageFont.setPointSize(16);
+
+    QImage boxArt = m_NoVideoBoxArt;
+    if (!boxArt.isNull()) {
+        boxArt = boxArt.scaledToHeight(height / 3, Qt::SmoothTransformation);
+    }
+
+    int spacing = height / 20;
+    QRect nameRect = QFontMetrics(nameFont).boundingRect(m_NoVideoGameName);
+    QRect messageRect = QFontMetrics(messageFont).boundingRect(QRect(0, 0, width, height),
+                                                               Qt::AlignCenter | Qt::TextWordWrap,
+                                                               message);
+
+    int blockHeight = messageRect.height();
+    if (!boxArt.isNull()) {
+        blockHeight += boxArt.height() + spacing;
+    }
+    if (!m_NoVideoGameName.isEmpty()) {
+        blockHeight += nameRect.height() + spacing;
+    }
+
+    int y = (height - blockHeight) / 2;
+
+    if (!boxArt.isNull()) {
+        painter.drawImage((width - boxArt.width()) / 2, y, boxArt);
+        y += boxArt.height() + spacing;
+    }
+
+    if (!m_NoVideoGameName.isEmpty()) {
+        painter.setFont(nameFont);
+        painter.drawText(QRect(0, y, width, nameRect.height()),
+                         Qt::AlignHCenter | Qt::AlignTop,
+                         m_NoVideoGameName);
+        y += nameRect.height() + spacing;
+    }
+
+    painter.setFont(messageFont);
+    painter.drawText(QRect(0, y, width, messageRect.height()),
+                     Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap,
+                     message);
     painter.end();
 
     SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom((void*)image.constBits(),
@@ -2018,6 +2100,9 @@ void Session::exec()
         // and other problems.
         if (!SDL_WaitEventTimeout(&event, 1000)) {
             presence.runCallbacks();
+            if (m_Preferences->noVideo && updateNoVideoGame()) {
+                renderNoVideoMessage();
+            }
             continue;
         }
 #else
@@ -2034,6 +2119,9 @@ void Session::exec()
             SDL_Delay(10);
 #endif
             presence.runCallbacks();
+            if (m_Preferences->noVideo && updateNoVideoGame()) {
+                renderNoVideoMessage();
+            }
             continue;
         }
 #endif
@@ -2117,6 +2205,7 @@ void Session::exec()
                 if (event.window.event == SDL_WINDOWEVENT_SHOWN ||
                     event.window.event == SDL_WINDOWEVENT_EXPOSED ||
                     event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    updateNoVideoGame();
                     renderNoVideoMessage();
 
                     if (needsPostDecoderCreationCapture) {

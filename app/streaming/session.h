@@ -2,6 +2,7 @@
 
 #include <QSemaphore>
 #include <QQuickWindow>
+#include <QImage>
 
 #include <Limelight.h>
 #include <opus_multistream.h>
@@ -173,6 +174,8 @@ private:
 
     void renderNoVideoMessage();
 
+    bool updateNoVideoGame();
+
     enum class DecoderAvailability {
         None,
         Software,
@@ -254,6 +257,9 @@ private:
     NvApp m_App;
     SDL_Window* m_Window;
     SDL_Renderer* m_NoVideoRenderer;
+    int m_NoVideoGameId;
+    QString m_NoVideoGameName;
+    QImage m_NoVideoBoxArt;
     IVideoDecoder* m_VideoDecoder;
     SDL_mutex* m_DecoderLock;
     bool m_AudioDisabled;
