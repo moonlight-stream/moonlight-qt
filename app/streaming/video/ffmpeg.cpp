@@ -1167,10 +1167,10 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
         *failureReason = IFFmpegRenderer::InitFailureReason::Unknown;
     }
 
-    // i == 0 - Indirect via EGL or DRM frontend with zero-copy DMA-BUF passing
-    // i == 1 - Direct rendering or indirect via SDL read-back
+    // i == 0 - Indirect via EGL, DRM, or Vulkan frontend with zero-copy buffer passing
+    // i == 1 - Direct rendering or indirect via SDL or DRM read-back
     bool backendInitFailure = false;
-#ifdef HAVE_EGL
+#if defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN) && (defined(HAVE_EGL) || defined(HAVE_DRM) || defined(HAVE_LIBPLACEBO_VULKAN))
     for (int i = 0; i < 2 && !backendInitFailure; i++) {
 #else
     for (int i = 1; i < 2 && !backendInitFailure; i++) {
