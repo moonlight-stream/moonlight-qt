@@ -847,19 +847,19 @@ Flickable {
                 }
 
                 CheckBox {
-                    id: noVideo
+                    id: gamepadMode
                     width: parent.width
                     hoverEnabled: true
-                    text: qsTr("Disable video")
+                    text: qsTr("Gamepad mode")
                     font.pointSize:  12
-                    checked: StreamingPreferences.noVideo
+                    checked: StreamingPreferences.gamepadMode
                     onCheckedChanged: {
-                        StreamingPreferences.noVideo = checked
+                        StreamingPreferences.gamepadMode = checked
                     }
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Disable video output. This is useful if you only want to stream audio and pass input but it will use more bandwidth than just streaming audio alone.")
+                    ToolTip.text: qsTr("Stream audio and input without video, turning this device into a wireless gamepad. This uses more bandwidth than streaming audio alone.")
                 }
             }
         }

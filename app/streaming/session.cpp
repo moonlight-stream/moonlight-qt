@@ -369,7 +369,7 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     // safely return DR_OK and wait for the IDR frame request by
     // the decoder reinitialization code.
 
-    if (s_ActiveSession->m_Preferences->noVideo) {
+    if (s_ActiveSession->m_Preferences->gamepadMode) {
         return DR_OK;
     }
 
@@ -520,7 +520,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
     }
 
     m_VideoCallbacks.capabilities = decoder->getDecoderCapabilities();
-    if (m_Preferences->noVideo) {
+    if (m_Preferences->gamepadMode) {
         m_VideoCallbacks.capabilities = 0;
         m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
     }
@@ -565,8 +565,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_Computer(computer),
       m_App(app),
       m_Window(nullptr),
-      m_NoVideoRenderer(nullptr),
-      m_NoVideoGameId(-1),
+      m_GamepadRenderer(nullptr),
+      m_GamepadGameId(-1),
       m_VideoDecoder(nullptr),
       m_DecoderLock(SDL_CreateMutex()),
       m_AudioMuted(false),
@@ -1395,7 +1395,7 @@ void Session::getWindowDimensions(int& x, int& y,
     x = y = SDL_WINDOWPOS_CENTERED_DISPLAY(displayIndex);
 }
 
-bool Session::updateNoVideoGame()
+bool Session::updateGamepadGame()
 {
     int gameId;
     QString gameName;
@@ -1414,28 +1414,28 @@ bool Session::updateNoVideoGame()
         gameName = m_App.name;
     }
 
-    if (gameId == m_NoVideoGameId) {
+    if (gameId == m_GamepadGameId) {
         return false;
     }
 
-    m_NoVideoGameId = gameId;
-    m_NoVideoGameName = gameName;
+    m_GamepadGameId = gameId;
+    m_GamepadGameName = gameName;
 
     try {
         NvHTTP http(m_Computer);
-        m_NoVideoBoxArt = http.getBoxArt(gameId);
+        m_GamepadBoxArt = http.getBoxArt(gameId);
     } catch (...) {
-        m_NoVideoBoxArt = QImage();
+        m_GamepadBoxArt = QImage();
     }
 
     return true;
 }
 
-void Session::renderNoVideoMessage()
+void Session::renderGamepadMessage()
 {
-    if (m_NoVideoRenderer == nullptr) {
-        m_NoVideoRenderer = SDL_CreateRenderer(m_Window, -1, 0);
-        if (m_NoVideoRenderer == nullptr) {
+    if (m_GamepadRenderer == nullptr) {
+        m_GamepadRenderer = SDL_CreateRenderer(m_Window, -1, 0);
+        if (m_GamepadRenderer == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_CreateRenderer() failed: %s",
                          SDL_GetError());
@@ -1444,7 +1444,7 @@ void Session::renderNoVideoMessage()
     }
 
     int width, height;
-    SDL_GetRendererOutputSize(m_NoVideoRenderer, &width, &height);
+    SDL_GetRendererOutputSize(m_GamepadRenderer, &width, &height);
 
     QImage image(width, height, QImage::Format_RGBA8888);
     image.fill(QColor(0x40, 0x40, 0x40));
@@ -1453,7 +1453,7 @@ void Session::renderNoVideoMessage()
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
     painter.setPen(Qt::white);
 
-    QString message = tr("Video is disabled in this mode.\nAudio and input are still being streamed.");
+    QString message = tr("Gamepad mode is enabled.\nVideo is disabled while audio and input keep streaming.");
 
     QFont nameFont = QGuiApplication::font();
     nameFont.setPointSize(28);
@@ -1462,13 +1462,13 @@ void Session::renderNoVideoMessage()
     QFont messageFont = QGuiApplication::font();
     messageFont.setPointSize(16);
 
-    QImage boxArt = m_NoVideoBoxArt;
+    QImage boxArt = m_GamepadBoxArt;
     if (!boxArt.isNull()) {
         boxArt = boxArt.scaledToHeight(height / 3, Qt::SmoothTransformation);
     }
 
     int spacing = height / 20;
-    QRect nameRect = QFontMetrics(nameFont).boundingRect(m_NoVideoGameName);
+    QRect nameRect = QFontMetrics(nameFont).boundingRect(m_GamepadGameName);
     QRect messageRect = QFontMetrics(messageFont).boundingRect(QRect(0, 0, width, height),
                                                                Qt::AlignCenter | Qt::TextWordWrap,
                                                                message);
@@ -1477,7 +1477,7 @@ void Session::renderNoVideoMessage()
     if (!boxArt.isNull()) {
         blockHeight += boxArt.height() + spacing;
     }
-    if (!m_NoVideoGameName.isEmpty()) {
+    if (!m_GamepadGameName.isEmpty()) {
         blockHeight += nameRect.height() + spacing;
     }
 
@@ -1488,11 +1488,11 @@ void Session::renderNoVideoMessage()
         y += boxArt.height() + spacing;
     }
 
-    if (!m_NoVideoGameName.isEmpty()) {
+    if (!m_GamepadGameName.isEmpty()) {
         painter.setFont(nameFont);
         painter.drawText(QRect(0, y, width, nameRect.height()),
                          Qt::AlignHCenter | Qt::AlignTop,
-                         m_NoVideoGameName);
+                         m_GamepadGameName);
         y += nameRect.height() + spacing;
     }
 
@@ -1509,15 +1509,15 @@ void Session::renderNoVideoMessage()
                                                               image.bytesPerLine(),
                                                               SDL_PIXELFORMAT_RGBA32);
     if (surface != nullptr) {
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(m_NoVideoRenderer, surface);
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(m_GamepadRenderer, surface);
         if (texture != nullptr) {
-            SDL_RenderCopy(m_NoVideoRenderer, texture, nullptr, nullptr);
+            SDL_RenderCopy(m_GamepadRenderer, texture, nullptr, nullptr);
             SDL_DestroyTexture(texture);
         }
         SDL_FreeSurface(surface);
     }
 
-    SDL_RenderPresent(m_NoVideoRenderer);
+    SDL_RenderPresent(m_GamepadRenderer);
 }
 
 void Session::updateOptimalWindowDisplayMode()
@@ -1968,7 +1968,7 @@ void Session::exec()
     std::string windowName = QString(m_Computer->name + " - Moonlight").toStdString();
 #endif
 
-    Uint32 platformWindowFlags = m_Preferences->noVideo ? 0 : StreamUtils::getPlatformWindowFlags();
+    Uint32 platformWindowFlags = m_Preferences->gamepadMode ? 0 : StreamUtils::getPlatformWindowFlags();
 
     m_Window = SDL_CreateWindow(windowName.c_str(),
                                 x,
@@ -2100,8 +2100,8 @@ void Session::exec()
         // and other problems.
         if (!SDL_WaitEventTimeout(&event, 1000)) {
             presence.runCallbacks();
-            if (m_Preferences->noVideo && updateNoVideoGame()) {
-                renderNoVideoMessage();
+            if (m_Preferences->gamepadMode && updateGamepadGame()) {
+                renderGamepadMessage();
             }
             continue;
         }
@@ -2119,8 +2119,8 @@ void Session::exec()
             SDL_Delay(10);
 #endif
             presence.runCallbacks();
-            if (m_Preferences->noVideo && updateNoVideoGame()) {
-                renderNoVideoMessage();
+            if (m_Preferences->gamepadMode && updateGamepadGame()) {
+                renderGamepadMessage();
             }
             continue;
         }
@@ -2134,7 +2134,7 @@ void Session::exec()
         case SDL_USEREVENT:
             switch (event.user.code) {
             case SDL_CODE_FRAME_READY:
-                if (m_Preferences->noVideo == true) {
+                if (m_Preferences->gamepadMode == true) {
                     break;
                 } else if (m_VideoDecoder != nullptr) {
                     m_VideoDecoder->renderFrameOnMainThread();
@@ -2201,12 +2201,12 @@ void Session::exec()
                 needsFirstEnterCapture = false;
             }
 
-            if (m_Preferences->noVideo) {
+            if (m_Preferences->gamepadMode) {
                 if (event.window.event == SDL_WINDOWEVENT_SHOWN ||
                     event.window.event == SDL_WINDOWEVENT_EXPOSED ||
                     event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                    updateNoVideoGame();
-                    renderNoVideoMessage();
+                    updateGamepadGame();
+                    renderGamepadMessage();
 
                     if (needsPostDecoderCreationCapture) {
                         m_InputHandler->setCaptureActive(true);
@@ -2508,9 +2508,9 @@ DispatchDeferredCleanup:
 #endif
     }
 
-    if (m_NoVideoRenderer != nullptr) {
-        SDL_DestroyRenderer(m_NoVideoRenderer);
-        m_NoVideoRenderer = nullptr;
+    if (m_GamepadRenderer != nullptr) {
+        SDL_DestroyRenderer(m_GamepadRenderer);
+        m_GamepadRenderer = nullptr;
     }
 
     // This must be called after the decoder is deleted, because

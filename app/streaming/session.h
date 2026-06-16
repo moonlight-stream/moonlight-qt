@@ -172,9 +172,9 @@ private:
 
     void updateOptimalWindowDisplayMode();
 
-    void renderNoVideoMessage();
+    void renderGamepadMessage();
 
-    bool updateNoVideoGame();
+    bool updateGamepadGame();
 
     enum class DecoderAvailability {
         None,
@@ -256,10 +256,10 @@ private:
     NvComputer* m_Computer;
     NvApp m_App;
     SDL_Window* m_Window;
-    SDL_Renderer* m_NoVideoRenderer;
-    int m_NoVideoGameId;
-    QString m_NoVideoGameName;
-    QImage m_NoVideoBoxArt;
+    SDL_Renderer* m_GamepadRenderer;
+    int m_GamepadGameId;
+    QString m_GamepadGameName;
+    QImage m_GamepadBoxArt;
     IVideoDecoder* m_VideoDecoder;
     SDL_mutex* m_DecoderLock;
     bool m_AudioDisabled;
