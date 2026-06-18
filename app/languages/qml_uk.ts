@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="341"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>Здається на цьому комп&apos;ютері немає застосунків, або вони приховані</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="354"/>
@@ -110,12 +110,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished">У мережі</translation>
+        <translation>У мережі</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished">Поза мережею</translation>
+        <translation>Поза мережею</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -124,77 +124,77 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Невідомо</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>Парований</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>Не парований</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Назва: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Статус: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Активна адреса: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Локальна адреса: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Віддалена адреса: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Адреса IPv6: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Уведена адреса: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>MAC-адреса: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Стан парування: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Наразі у грі з ID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Порт HTTPS: %1</translation>
     </message>
 </context>
 <context>
@@ -268,12 +268,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="213"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Деталі</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="225"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>Ця версія GeForce Experience на %1 не підтримується цією збіркою MoonLight.Будь ласка оновіть Moonlight щоб транслювати з %1.</translation>
+        <translation>Версія GeForce Experience на %1 не підтримується цією збіркою MoonLight. Потрібно оновити Moonlight, щоб транслювати з %1.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="324"/>
@@ -416,7 +416,7 @@
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation>Не вдалося знайти гру %1</translation>
+        <translation>Не вдалося знайти застосунок %1</translation>
     </message>
     <message>
         <location filename="../cli/listapps.cpp" line="108"/>
@@ -429,7 +429,7 @@
     <message>
         <location filename="../main.cpp" line="838"/>
         <source>&amp;Yes</source>
-        <translation>Т&amp;ак</translation>
+        <translation>&amp;Так</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="839"/>
@@ -465,7 +465,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="104"/>
         <source>No video received from host.</source>
-        <translation>Відео трансляцію не було отримано від хост-ПК.</translation>
+        <translation>Немає відео з хоста.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="105"/>
@@ -514,42 +514,42 @@
     <message>
         <location filename="../streaming/session.cpp" line="997"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш хост не підтримує кодування HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1015"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Використання програмного декодування через вибір HEVC, котрий не підтримується відеокартою. Якість трансляції може погіршитися.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="967"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation type="unfinished"></translation>
+        <translation>ПЗ або відеокарта вашого хоста не підтримує кодування AV1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="985"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Використання програмного декодування через вибір AV1, що не підтримується відеокартою. Якість трансляції може погіршитися.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1062"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Хост не підтримує транслювання HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1054"/>
         <source>HDR is not supported using the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR не підтримується під час використання кодека H.264.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1077"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Графічна карта цього ПК не підтримує декодування AV1 Main10 для транслювання HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1058"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Відеокарта цього ПК не підтримує декодування 10-bit HEVC або AV1 для транслювання HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1110"/>
@@ -564,73 +564,73 @@
     <message>
         <location filename="../streaming/session.cpp" line="1600"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Хост повернув помилку: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="122"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Хост повідомив про фатальну помилку кодування.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="123"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>Спробуйте вимкнути HDR, змінити роздільну здатність трансляції або змінити роздільну здатність на хості.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="132"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Код помилки: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1034"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Використання програмного декодування через вибір H.264, що не підтримується відеокартою. Якість трансляції може погіршитися.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1044"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш хост ПК та клієнт ПК не підтримують однакові відео кодеки. Якість трансляції може погіршитися.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1047"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Відеокарта на клієнті не підтримує декодування H.264. Якість трансляції може погіршитися.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1083"/>
         <location filename="../streaming/session.cpp" line="1101"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Використання програмного декодування через вибір HDR, що не підтримується відеокартою. Якість трансляції може погіршитися.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1095"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Відеокарта цього ПК не підтримує декодування HEVC Main10 для транслювання HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1117"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Хост не підтримує транслювання YUV 4:4:4.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1125"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Хост не підтримує транслювання YUV 4:4:4 для видраного відео кодека.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1140"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Використання програмного декодування через вибір YUV 4:4:4, що не підтримується відеокартою. Якість трансляції може погіршитися.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1146"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Відеокарта цього ПК не підтримує декодування YUV 4:4:4 для вибраного кодека.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1155"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Потрібно GeForce Experience 3.0 або вище для транслювання 4K.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1170"/>
@@ -640,7 +640,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1176"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не вдалося відкрити аудіо пристрій. Аудіо буде відсутнім протягом цієї сесії.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1181"/>
@@ -673,12 +673,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="13"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Налаштування</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="116"/>
         <source>Resolution and FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>Роздільна здатність та FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="124"/>
@@ -688,27 +688,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="106"/>
         <source>Basic Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Базові налаштування</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="250"/>
         <source>720p</source>
-        <translation type="unfinished"></translation>
+        <translation>720p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="256"/>
         <source>1080p</source>
-        <translation type="unfinished"></translation>
+        <translation>1080p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="262"/>
         <source>1440p</source>
-        <translation type="unfinished"></translation>
+        <translation>1440p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="268"/>
         <source>4K</source>
-        <translation type="unfinished"></translation>
+        <translation>4K</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="375"/>
@@ -723,12 +723,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="382"/>
         <source>Enter a custom resolution:</source>
-        <translation type="unfinished"></translation>
+        <translation>Уведіть користувацьку роздільну здатність:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="604"/>
         <source>%1 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 к/с</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="672"/>
@@ -785,17 +785,17 @@
         <location filename="../gui/SettingsView.qml" line="753"/>
         <location filename="../gui/SettingsView.qml" line="1210"/>
         <source>Windowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Віконний</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="762"/>
         <source>(Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>(Рекомендовано)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="819"/>
         <source>V-Sync</source>
-        <translation type="unfinished"></translation>
+        <translation>Вертикальна синхронізація</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="829"/>
@@ -815,12 +815,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="856"/>
         <source>Audio Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Налаштування аудіо</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="891"/>
         <source>Stereo</source>
-        <translation type="unfinished"></translation>
+        <translation>Стерео</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="895"/>
@@ -855,17 +855,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="989"/>
         <source>UI Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Налаштування інтерфейсу</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="999"/>
         <source>Language</source>
-        <translation type="unfinished"></translation>
+        <translation>Мова</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1025"/>
         <source>Automatic</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматично</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1160"/>
@@ -940,7 +940,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1340"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
-        <translation type="unfinished"></translation>
+        <translation>ПРИМІТКА: Деякі клавіатурні скорочення, як от Ctrl+Alt+Del на Windows, не можуть перехоплюватися будь-якими програмами, включно з Moonlight.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1403"/>
