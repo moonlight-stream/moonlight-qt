@@ -133,6 +133,22 @@ IdentityManager::IdentityManager()
     if (getSslKey().isNull()) {
         qFatal("Private key is unreadable");
     }
+
+    // Load the unique ID from settings
+    m_CachedUniqueId = settings.value(SER_UNIQUEID).toString();
+    if (!m_CachedUniqueId.isEmpty()) {
+        qInfo() << "Loaded unique ID from settings:" << m_CachedUniqueId;
+    }
+    else {
+        // Generate a new unique ID in base 16
+        uint64_t uid;
+        RAND_bytes(reinterpret_cast<unsigned char*>(&uid), sizeof(uid));
+        m_CachedUniqueId = QString::number(uid, 16);
+
+        qInfo() << "Generated new unique ID:" << m_CachedUniqueId;
+
+        settings.setValue(SER_UNIQUEID, m_CachedUniqueId);
+    }
 }
 
 QSslCertificate
@@ -190,25 +206,6 @@ IdentityManager::getSslConfig()
 QString
 IdentityManager::getUniqueId()
 {
-    if (m_CachedUniqueId.isEmpty()) {
-        QSettings settings;
-
-        // Load the unique ID from settings
-        m_CachedUniqueId = settings.value(SER_UNIQUEID).toString();
-        if (!m_CachedUniqueId.isEmpty()) {
-            qInfo() << "Loaded unique ID from settings:" << m_CachedUniqueId;
-        }
-        else {
-            // Generate a new unique ID in base 16
-            uint64_t uid;
-            RAND_bytes(reinterpret_cast<unsigned char*>(&uid), sizeof(uid));
-            m_CachedUniqueId = QString::number(uid, 16);
-
-            qInfo() << "Generated new unique ID:" << m_CachedUniqueId;
-
-            settings.setValue(SER_UNIQUEID, m_CachedUniqueId);
-        }
-    }
     return m_CachedUniqueId;
 }
 
