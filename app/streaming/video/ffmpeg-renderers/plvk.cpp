@@ -575,7 +575,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         vkDeviceContext->nb_enabled_inst_extensions = m_PlVkInstance->num_extensions;
         vkDeviceContext->enabled_dev_extensions = m_Vulkan->extensions;
         vkDeviceContext->nb_enabled_dev_extensions = m_Vulkan->num_extensions;
-#if LIBAVUTIL_VERSION_INT > AV_VERSION_INT(58, 9, 100)
+#if LIBAVUTIL_VERSION_INT > AV_VERSION_INT(58, 9, 100) && LIBAVUTIL_VERSION_MAJOR < 62
         vkDeviceContext->lock_queue = lockQueue;
         vkDeviceContext->unlock_queue = unlockQueue;
 #endif
