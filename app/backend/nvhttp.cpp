@@ -484,7 +484,6 @@ NvHTTP::openConnection(QUrl baseUrl,
     url.setPath("/" + command);
 
     // Use a placeholder UID for GFE allow them to quit games for each other.
-    // We also use this placeholder UID for previously paired Sunshine hosts for backwards compatibility.
     url.setQuery("uniqueid=" + (m_UseTrueUid ? IdentityManager::get()->getUniqueId() : "0123456789ABCDEF") +
                  "&uuid=" + QUuid::createUuid().toRfc4122().toHex() +
                  ((arguments != nullptr) ? ("&" + arguments) : ""));
