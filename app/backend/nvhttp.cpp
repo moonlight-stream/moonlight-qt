@@ -24,9 +24,10 @@
 #define XML_NAME_EQUALS(x, y) ((x) == (u##y))
 #endif
 
-NvHTTP::NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert, QNetworkAccessManager* nam) :
+NvHTTP::NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert, bool useTrueUid, QNetworkAccessManager* nam) :
     m_Nam(nam ? nam : new QNetworkAccessManager(this)),
-    m_ServerCert(serverCert)
+    m_ServerCert(serverCert),
+    m_UseTrueUid(useTrueUid)
 {
     m_BaseUrlHttp.setScheme("http");
     m_BaseUrlHttps.setScheme("https");
@@ -40,9 +41,8 @@ NvHTTP::NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert
 }
 
 NvHTTP::NvHTTP(NvComputer* computer, QNetworkAccessManager* nam) :
-    NvHTTP(computer->activeAddress, computer->activeHttpsPort, computer->serverCert, nam)
+    NvHTTP(computer->activeAddress, computer->activeHttpsPort, computer->serverCert, !computer->isNvidiaServerSoftware, nam)
 {
-
 }
 
 void NvHTTP::setServerCert(QSslCertificate serverCert)
@@ -65,6 +65,11 @@ void NvHTTP::setAddress(NvAddress address)
 void NvHTTP::setHttpsPort(uint16_t port)
 {
     m_BaseUrlHttps.setPort(port);
+}
+
+void NvHTTP::setTrueUid(bool useTrueUid)
+{
+    m_UseTrueUid = useTrueUid;
 }
 
 NvAddress NvHTTP::address()
@@ -478,11 +483,10 @@ NvHTTP::openConnection(QUrl baseUrl,
     QUrl url(baseUrl);
     url.setPath("/" + command);
 
-    // Use a common UID for Moonlight clients to allow them to quit
-    // games for each other (otherwise GFE gets screwed up and it requires
-    // manual intervention to solve).
-    url.setQuery("uniqueid=0123456789ABCDEF&uuid=" +
-                 QUuid::createUuid().toRfc4122().toHex() +
+    // Use a placeholder UID for GFE allow them to quit games for each other.
+    // We also use this placeholder UID for previously paired Sunshine hosts for backwards compatibility.
+    url.setQuery("uniqueid=" + (m_UseTrueUid ? IdentityManager::get()->getUniqueId() : "0123456789ABCDEF") +
+                 "&uuid=" + QUuid::createUuid().toRfc4122().toHex() +
                  ((arguments != nullptr) ? ("&" + arguments) : ""));
 
     QNetworkRequest request(url);
