@@ -687,6 +687,8 @@ void PlVkRenderer::unmapAvFrameFromPlacebo(const AVFrame *frame, pl_frame* mappe
         m_MetalTextureFactory->unmapVideoToolboxFromPlacebo(mappedFrame);
     }
     else
+#else
+    Q_UNUSED(frame)
 #endif
     {
         pl_unmap_avframe(m_Vulkan->gpu, mappedFrame);
