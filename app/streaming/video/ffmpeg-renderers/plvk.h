@@ -23,6 +23,11 @@ private:
     pl_vulkan m_Vulkan;
     /* CVMetalTextureCacheRef */ void* m_TextureCache = nullptr;
 };
+
+// Work around direct-to-display mode sometimes (but not always!) blocking us
+// from getting a new drawable while the current one is getting scanned out.
+#define PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH 1
+
 #endif
 
 class PlVkRenderer : public IFFmpegRenderer {
@@ -49,6 +54,7 @@ private:
     static void unlockQueue(AVHWDeviceContext *dev_ctx, uint32_t queue_family, uint32_t index);
     static void overlayUploadComplete(void* opaque);
 
+    bool createSwapchain(int depth);
     bool mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFrame);
     void unmapAvFrameFromPlacebo(const AVFrame *frame, pl_frame* mappedFrame);
     bool populateQueues(int videoFormat);
@@ -68,13 +74,22 @@ private:
     std::unique_ptr<MetalVulkanTextureFactory> m_MetalTextureFactory;
 #endif
 
+#ifdef PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH
+    int m_DelayedPresents = 0;
+#endif
+
     // SDL state
     SDL_Window* m_Window = nullptr;
+
+    // Stream state
+    int m_MaxVideoFps;
 
     // The libplacebo rendering state
     pl_log m_Log = nullptr;
     pl_vk_inst m_PlVkInstance = nullptr;
     VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
+    int m_SwapchainDepth = 0;
+    VkPresentModeKHR m_VkPresentMode;
     pl_vulkan m_Vulkan = nullptr;
     pl_swapchain m_Swapchain = nullptr;
     pl_renderer m_Renderer = nullptr;
