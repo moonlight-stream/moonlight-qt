@@ -161,6 +161,10 @@ PlVkRenderer::~PlVkRenderer()
     SDL_assert(!m_HasPendingSwapchainFrame);
 
     if (m_Vulkan != nullptr) {
+#ifdef PLVK_USE_EARLY_RENDER_TO_WAIT
+        pl_tex_destroy(m_Vulkan->gpu, &m_EmptyOverlay.tex);
+#endif
+
         for (int i = 0; i < (int)SDL_arraysize(m_Overlays); i++) {
             pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].overlay.tex);
             pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].stagingOverlay.tex);
@@ -538,6 +542,25 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+#ifdef PLVK_USE_EARLY_RENDER_TO_WAIT
+    SDL_Surface *emptySurface = SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 0, SDL_PIXELFORMAT_ARGB8888);
+    if (emptySurface == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateRGBSurfaceWithFormat() failed: %s", SDL_GetError());
+        return false;
+    }
+
+    // emptySurface is owned now by the overlay upload code (even on failure)
+    if (!createOverlay(&m_EmptyOverlay, emptySurface)) {
+        return false;
+    }
+
+    m_EmptyOverlayPart.src = { 0.0f, 0.0f, 1.0f, 1.0f };
+    m_EmptyOverlayPart.dst = { 0.0f, 0.0f, 1.0f, 1.0f };
+    m_EmptyOverlay.num_parts = 1;
+    m_EmptyOverlay.parts = &m_EmptyOverlayPart;
+#endif
+
     // We only need an hwaccel device context if we're going to act as the backend renderer too
     if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
         m_HwDeviceCtx = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VULKAN);
@@ -840,6 +863,27 @@ bool PlVkRenderer::isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevi
     return false;
 }
 
+void PlVkRenderer::beginRenderTiming()
+{
+#ifdef PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH
+    m_RenderStartTime = SDL_GetTicks();
+#endif
+}
+
+void PlVkRenderer::endRenderTiming()
+{
+#ifdef PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH
+    // Trigger a switch to triple-buffered mode if our frame presentation time
+    // exceeds 110% of the frame interval for half a second of frames.
+    if (SDL_GetTicks() - m_RenderStartTime > (1100U / m_MaxVideoFps)) {
+        m_DelayedPresents++;
+    }
+    else if (m_DelayedPresents > 0) {
+        m_DelayedPresents--;
+    }
+#endif
+}
+
 void PlVkRenderer::waitToRender()
 {
     // Check if the GPU has failed before doing anything else
@@ -879,6 +923,25 @@ void PlVkRenderer::waitToRender()
     // renderFrame() wasn't called after waitToRender().
     if (pl_swapchain_start_frame(m_Swapchain, &m_SwapchainFrame)) {
         m_HasPendingSwapchainFrame = true;
+
+#ifdef PLVK_USE_EARLY_RENDER_TO_WAIT
+        // This is a workaround for MoltenVK which lazily fetches a drawable when the
+        // swapchain frame is first modified (rather than in pl_swapchain_start_frame()).
+        // By rendering an empty overlay on the swapchain here, we will trigger this wait
+        // in the desired context (before we've latched the next frame to present), rather
+        // than in the renderFrame() path where delays directly increase video latency.
+        pl_frame targetFrame;
+        pl_frame_from_swapchain(&targetFrame, &m_SwapchainFrame);
+        targetFrame.num_overlays = 1;
+        targetFrame.overlays = &m_EmptyOverlay;
+
+        beginRenderTiming();
+        if (!pl_render_image(m_Renderer, nullptr, &targetFrame, &pl_render_fast_params)) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "pl_render_image() failed during render wait");
+        }
+        endRenderTiming();
+#endif
     }
 }
 
@@ -1005,8 +1068,9 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     targetFrame.crop.x1 = dst.x + dst.w;
     targetFrame.crop.y1 = dst.y + dst.h;
 
-#ifdef PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH
-    Uint32 renderStartTime = SDL_GetTicks();
+#ifndef PLVK_USE_EARLY_RENDER_TO_WAIT
+    // For PLVK_USE_EARLY_RENDER_TO_WAIT, we already timed our early render in waitToRender()
+    beginRenderTiming();
 #endif
 
     // Render the video image and overlays into the swapchain buffer
@@ -1031,16 +1095,11 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         goto UnmapExit;
     }
 
-#ifdef PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH
-    // Trigger a switch to triple-buffered mode if our frame presentation time
-    // exceeds 110% of the frame interval for half a second of frames.
-    if (SDL_GetTicks() - renderStartTime > (1100U / m_MaxVideoFps)) {
-        m_DelayedPresents++;
-    }
-    else if (m_DelayedPresents > 0) {
-        m_DelayedPresents--;
-    }
+#ifndef PLVK_USE_EARLY_RENDER_TO_WAIT
+    endRenderTiming();
+#endif
 
+#ifdef PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH
     if (m_DelayedPresents == m_MaxVideoFps / 2 && m_SwapchainDepth < 2) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Switching to triple-buffered swapchain after delayed presentations");
@@ -1097,6 +1156,66 @@ bool PlVkRenderer::testRenderFrame(AVFrame *frame)
     return true;
 }
 
+// Takes ownership of surface in all cases!
+bool PlVkRenderer::createOverlay(pl_overlay* overlay, SDL_Surface* surface)
+{
+    // Find a compatible texture format
+    SDL_assert(surface->format->format == SDL_PIXELFORMAT_ARGB8888);
+    pl_fmt texFormat = pl_find_named_fmt(m_Vulkan->gpu, "bgra8");
+    if (!texFormat) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_find_named_fmt(bgra8) failed");
+        SDL_FreeSurface(surface);
+        return false;
+    }
+
+    // Create a new texture for this overlay if necessary, otherwise reuse the existing texture.
+    // NB: We're guaranteed that the render thread won't be reading this concurrently because
+    // we set hasStagingOverlay to false above.
+    pl_tex_params texParams = {};
+    texParams.w = surface->w;
+    texParams.h = surface->h;
+    texParams.format = texFormat;
+    texParams.sampleable = true;
+    texParams.host_writable = true;
+    texParams.blit_src = !!(texFormat->caps & PL_FMT_CAP_BLITTABLE);
+    texParams.debug_tag = PL_DEBUG_TAG;
+    if (!pl_tex_recreate(m_Vulkan->gpu, &overlay->tex, &texParams)) {
+        pl_tex_destroy(m_Vulkan->gpu, &overlay->tex);
+        SDL_zerop(overlay);
+        SDL_FreeSurface(surface);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_tex_recreate() failed");
+        return false;
+    }
+
+    // Upload the surface data to the new texture
+    SDL_assert(!SDL_MUSTLOCK(surface));
+    pl_tex_transfer_params xferParams = {};
+    xferParams.tex = overlay->tex;
+    xferParams.row_pitch = (size_t)surface->pitch;
+    xferParams.ptr = surface->pixels;
+    xferParams.callback = overlayUploadComplete;
+    xferParams.priv = surface;
+    if (!pl_tex_upload(m_Vulkan->gpu, &xferParams)) {
+        pl_tex_destroy(m_Vulkan->gpu, &overlay->tex);
+        SDL_zerop(overlay);
+        SDL_FreeSurface(surface);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_tex_upload() failed");
+        return false;
+    }
+
+    // surface is now owned by the texture upload process. It will be freed in overlayUploadComplete()
+
+    // Initialize the rest of the overlay params
+    overlay->mode = PL_OVERLAY_NORMAL;
+    overlay->coords = PL_OVERLAY_COORDS_DST_FRAME;
+    overlay->repr = pl_color_repr_rgb;
+    overlay->color = pl_color_space_srgb;
+    return true;
+}
+
 void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
@@ -1121,61 +1240,10 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    // Find a compatible texture format
-    SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
-    pl_fmt texFormat = pl_find_named_fmt(m_Vulkan->gpu, "bgra8");
-    if (!texFormat) {
-        SDL_FreeSurface(newSurface);
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_find_named_fmt(bgra8) failed");
+    // newSurface is now owned by the texture upload process
+    if (!createOverlay(&m_Overlays[type].stagingOverlay, newSurface)) {
         return;
     }
-
-    // Create a new texture for this overlay if necessary, otherwise reuse the existing texture.
-    // NB: We're guaranteed that the render thread won't be reading this concurrently because
-    // we set hasStagingOverlay to false above.
-    pl_tex_params texParams = {};
-    texParams.w = newSurface->w;
-    texParams.h = newSurface->h;
-    texParams.format = texFormat;
-    texParams.sampleable = true;
-    texParams.host_writable = true;
-    texParams.blit_src = !!(texFormat->caps & PL_FMT_CAP_BLITTABLE);
-    texParams.debug_tag = PL_DEBUG_TAG;
-    if (!pl_tex_recreate(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex, &texParams)) {
-        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
-        SDL_zero(m_Overlays[type].stagingOverlay);
-        SDL_FreeSurface(newSurface);
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_tex_recreate() failed");
-        return;
-    }
-
-    // Upload the surface data to the new texture
-    SDL_assert(!SDL_MUSTLOCK(newSurface));
-    pl_tex_transfer_params xferParams = {};
-    xferParams.tex = m_Overlays[type].stagingOverlay.tex;
-    xferParams.row_pitch = (size_t)newSurface->pitch;
-    xferParams.ptr = newSurface->pixels;
-    xferParams.callback = overlayUploadComplete;
-    xferParams.priv = newSurface;
-    if (!pl_tex_upload(m_Vulkan->gpu, &xferParams)) {
-        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
-        SDL_zero(m_Overlays[type].stagingOverlay);
-        SDL_FreeSurface(newSurface);
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_tex_upload() failed");
-        return;
-    }
-
-    // newSurface is now owned by the texture upload process. It will be freed in overlayUploadComplete()
-    newSurface = nullptr;
-
-    // Initialize the rest of the overlay params
-    m_Overlays[type].stagingOverlay.mode = PL_OVERLAY_NORMAL;
-    m_Overlays[type].stagingOverlay.coords = PL_OVERLAY_COORDS_DST_FRAME;
-    m_Overlays[type].stagingOverlay.repr = pl_color_repr_rgb;
-    m_Overlays[type].stagingOverlay.color = pl_color_space_srgb;
 
     // Make this staging overlay visible to the render thread
     SDL_AtomicLock(&m_OverlayLock);

@@ -28,6 +28,11 @@ private:
 // from getting a new drawable while the current one is getting scanned out.
 #define PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH 1
 
+// MoltenVK will block for the next drawable when we render the next frame
+// rather than inside pl_swapchain_start_frame(), so we will force it to wait
+// by rendering some no-op work right after we get the new swapchain frame.
+#define PLVK_USE_EARLY_RENDER_TO_WAIT 1
+
 #endif
 
 class PlVkRenderer : public IFFmpegRenderer {
@@ -54,7 +59,11 @@ private:
     static void unlockQueue(AVHWDeviceContext *dev_ctx, uint32_t queue_family, uint32_t index);
     static void overlayUploadComplete(void* opaque);
 
+    void beginRenderTiming();
+    void endRenderTiming();
+
     bool createSwapchain(int depth);
+    bool createOverlay(pl_overlay* overlay, SDL_Surface* surface);
     bool mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFrame);
     void unmapAvFrameFromPlacebo(const AVFrame *frame, pl_frame* mappedFrame);
     bool populateQueues(int videoFormat);
@@ -76,6 +85,7 @@ private:
 
 #ifdef PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH
     int m_DelayedPresents = 0;
+    Uint32 m_RenderStartTime = 0;
 #endif
 
     // SDL state
@@ -95,6 +105,11 @@ private:
     pl_renderer m_Renderer = nullptr;
     pl_tex m_Textures[PL_MAX_PLANES] = {};
     pl_color_space m_LastColorspace = {};
+
+#ifdef PLVK_USE_EARLY_RENDER_TO_WAIT
+    pl_overlay m_EmptyOverlay = {};
+    pl_overlay_part m_EmptyOverlayPart = {};
+#endif
 
     // Pending swapchain state shared between waitToRender(), renderFrame(), and cleanupRenderContext()
     pl_swapchain_frame m_SwapchainFrame = {};
