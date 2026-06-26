@@ -6,6 +6,12 @@
 #include <QHostInfo>
 #include <QNetworkInterface>
 #include <QNetworkProxy>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QEventLoop>
+#include <QTimer>
+#include <QCoreApplication>
 
 #define SER_NAME "hostname"
 #define SER_UUID "uuid"
@@ -22,6 +28,8 @@
 #define SER_SRVCERT "srvcert"
 #define SER_CUSTOMNAME "customname"
 #define SER_NVIDIASOFTWARE "nvidiasw"
+#define SER_WAKEMETHOD "wakemethod"
+#define SER_HTTPWAKEURL "httpwakeurl"
 
 NvComputer::NvComputer(QSettings& settings)
 {
@@ -39,6 +47,8 @@ NvComputer::NvComputer(QSettings& settings)
                                     settings.value(SER_MANUALPORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
     this->serverCert = QSslCertificate(settings.value(SER_SRVCERT).toByteArray());
     this->isNvidiaServerSoftware = settings.value(SER_NVIDIASOFTWARE).toBool();
+    this->wakeMethod = static_cast<WakeMethod>(settings.value(SER_WAKEMETHOD, WM_WOL).toInt());
+    this->httpWakeUrl = settings.value(SER_HTTPWAKEURL).toString();
 
     int appCount = settings.beginReadArray(SER_APPLIST);
     this->appList.reserve(appCount);
@@ -92,6 +102,8 @@ void NvComputer::serialize(QSettings& settings, bool serializeApps) const
     settings.setValue(SER_MANUALPORT, manualAddress.port());
     settings.setValue(SER_SRVCERT, serverCert.toPem());
     settings.setValue(SER_NVIDIASOFTWARE, isNvidiaServerSoftware);
+    settings.setValue(SER_WAKEMETHOD, static_cast<int>(wakeMethod));
+    settings.setValue(SER_HTTPWAKEURL, httpWakeUrl);
 
     // Avoid deleting an existing applist if we couldn't get one
     if (!appList.isEmpty() && serializeApps) {
@@ -117,6 +129,8 @@ bool NvComputer::isEqualSerialized(const NvComputer &that) const
            this->manualAddress == that.manualAddress &&
            this->serverCert == that.serverCert &&
            this->isNvidiaServerSoftware == that.isNvidiaServerSoftware &&
+           this->wakeMethod == that.wakeMethod &&
+           this->httpWakeUrl == that.httpWakeUrl &&
            this->appList == that.appList;
 }
 
@@ -211,6 +225,67 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
     this->state = NvComputer::CS_ONLINE;
     this->pendingQuit = false;
     this->isSupportedServerVersion = CompatFetcher::isGfeVersionSupported(this->gfeVersion);
+    this->wakeMethod = WM_WOL;
+    this->httpWakeUrl = QString();
+}
+
+// NOTE: This method performs synchronous network I/O and may block for up to
+// 10 seconds. It should only be called from a worker thread, not the UI thread.
+bool NvComputer::performHttpWake(const QString& url, const QString& computerName) const
+{
+    QUrl qurl(url);
+    if (!qurl.isValid()) {
+        qWarning() << computerName << "has invalid HTTP wake URL";
+        return false;
+    }
+
+    // Log URL without query params or credentials to avoid exposing sensitive data
+    QUrl redactedUrl = qurl;
+    if (redactedUrl.hasQuery()) {
+        redactedUrl.setQuery("***");
+    }
+    if (!redactedUrl.userInfo().isEmpty()) {
+        redactedUrl.setUserInfo("***");
+    }
+    qInfo() << "Sending HTTP wake request for" << computerName << "to" << redactedUrl.toString();
+
+    QNetworkAccessManager nam;
+    nam.setProxy(QNetworkProxy::NoProxy);
+
+    QNetworkRequest request(qurl);
+    QNetworkReply* reply = nam.get(request);
+
+    // Sync-over-async with 10 second timeout
+    bool timedOut = false;
+    QTimer timer;
+    timer.setSingleShot(true);
+    QObject::connect(&timer, &QTimer::timeout, [&]() {
+        timedOut = true;
+        reply->abort();
+    });
+    QEventLoop loop;
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    timer.start(10000);
+    loop.exec(QEventLoop::ExcludeUserInputEvents);
+    timer.stop();
+
+    bool success = false;
+    if (timedOut) {
+        qWarning() << "HTTP wake request timed out for" << computerName;
+    } else if (reply->error() != QNetworkReply::NoError) {
+        qWarning() << "HTTP wake request failed for" << computerName << ":" << reply->errorString();
+    } else {
+        int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        if (status >= 200 && status < 300) {
+            qInfo() << "HTTP wake request succeeded for" << computerName << "(status" << status << ")";
+            success = true;
+        } else {
+            qWarning() << "HTTP wake request failed for" << computerName << "(status" << status << ")";
+        }
+    }
+
+    delete reply;
+    return success;
 }
 
 bool NvComputer::wake() const
@@ -225,6 +300,19 @@ bool NvComputer::wake() const
             return true;
         }
 
+        // Check for HTTP wake method
+        if (wakeMethod == WM_HTTP) {
+            if (httpWakeUrl.isEmpty()) {
+                qWarning() << name << "has HTTP wake configured but no URL set";
+                return false;
+            }
+            QString url = httpWakeUrl;
+            QString computerName = name;
+            readLocker.unlock();
+            return performHttpWake(url, computerName);
+        }
+
+        // Standard WOL path
         if (macAddress.isEmpty()) {
             qWarning() << name << "has no MAC address stored";
             return false;
