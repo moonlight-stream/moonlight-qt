@@ -1703,6 +1703,51 @@ Flickable {
                 }
 
                 CheckBox {
+                    id: enableAdaptiveBitrate
+                    width: parent.width
+                    text: qsTr("Adaptive bitrate")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.enableAdaptiveBitrate
+                    onCheckedChanged: {
+                        StreamingPreferences.enableAdaptiveBitrate = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Automatically adjust bitrate based on packet loss and latency. Uses Sunshine server-side ABR when available, otherwise falls back to a local controller.")
+                }
+
+                Label {
+                    width: parent.width
+                    visible: enableAdaptiveBitrate.checked
+                    text: qsTr("ABR mode:")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                ComboBox {
+                    id: abrModeCombo
+                    width: parent.width
+                    visible: enableAdaptiveBitrate.checked
+                    model: [
+                        { text: qsTr("Quality"), value: 0 },
+                        { text: qsTr("Balanced"), value: 1 },
+                        { text: qsTr("Low latency"), value: 2 }
+                    ]
+                    textRole: "text"
+                    currentIndex: StreamingPreferences.abrMode
+                    onActivated: {
+                        StreamingPreferences.abrMode = model[currentIndex].value
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Quality prefers higher bitrate. Low latency drops faster on packet loss.")
+                }
+
+                CheckBox {
                     id: enableMdns
                     width: parent.width
                     text: qsTr("Automatically find PCs on the local network (Recommended)")
