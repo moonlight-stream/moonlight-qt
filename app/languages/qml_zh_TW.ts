@@ -903,18 +903,18 @@
         <translation>提醒：由於 GeForce Experience 的錯誤，如果您的主機電腦有多部顯示器，此選項可能無法正常運作。</translation>
     </message>
     <message>
-        <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="vanished">啟用 HDR 覆寫手動解碼器選取項目。</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1621"/>
-        <source>AV1 (Experimental)</source>
-        <translation>AV (實驗性)</translation>
+        <source>AV1</source>
+        <translation>AV</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1636"/>
-        <source>Enable HDR (Experimental)</source>
-        <translation>啟用 HDR (實驗性)</translation>
+        <source>Enable HDR</source>
+        <translation>啟用 HDR</translation>
+    </message>
+    <message>
+        <source>Enabling HDR overrides manual decoder selections.</source>
+        <translation type="vanished">啟用 HDR 覆寫手動解碼器選取項目。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1651"/>
@@ -925,6 +925,11 @@
         <location filename="../gui/SettingsView.qml" line="1653"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>此電腦不支援 HDR 串流。</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1659"/>
+        <source>Enable YUV 4:4:4</source>
+        <translation>啟用 YUV 4:4:4</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1740"/>
@@ -1164,11 +1169,6 @@
         <location filename="../gui/SettingsView.qml" line="1617"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1659"/>
-        <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation>啟用 YUV 4:4:4 (實驗性)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1681"/>

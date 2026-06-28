@@ -903,13 +903,18 @@
         <translation>OBS: På grund av ett fel i GeForce Experience kanske det här alternativet inte fungerar korrekt om värddatorn har flera bildskärmar.</translation>
     </message>
     <message>
-        <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="vanished">Tillägg av HDR behärskar manuella val av avkodare.</translation>
+        <location filename="../gui/SettingsView.qml" line="1621"/>
+        <source>AV1</source>
+        <translation>AV1</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1636"/>
-        <source>Enable HDR (Experimental)</source>
-        <translation>Aktivera HDR (Experimentell)</translation>
+        <source>Enable HDR</source>
+        <translation>Aktivera HDR</translation>
+    </message>
+    <message>
+        <source>Enabling HDR overrides manual decoder selections.</source>
+        <translation type="vanished">Tillägg av HDR behärskar manuella val av avkodare.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1651"/>
@@ -920,6 +925,11 @@
         <location filename="../gui/SettingsView.qml" line="1653"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>HDR-strömning stöds inte på den här datorn.</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1659"/>
+        <source>Enable YUV 4:4:4</source>
+        <translation>Aktivera YUV 4:4:4</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1740"/>
@@ -1159,16 +1169,6 @@
         <location filename="../gui/SettingsView.qml" line="1617"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1621"/>
-        <source>AV1 (Experimental)</source>
-        <translation>AV1 (experimentell)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1659"/>
-        <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation>Aktivera YUV 4:4:4 (Experimentell)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1681"/>

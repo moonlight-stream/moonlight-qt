@@ -1618,7 +1618,7 @@ Flickable {
                             val: StreamingPreferences.VCC_FORCE_HEVC
                         }
                         ListElement {
-                            text: qsTr("AV1 (Experimental)")
+                            text: qsTr("AV1")
                             val: StreamingPreferences.VCC_FORCE_AV1
                         }
                     }
@@ -1633,7 +1633,7 @@ Flickable {
                 CheckBox {
                     id: enableHdr
                     width: parent.width
-                    text: qsTr("Enable HDR (Experimental)")
+                    text: qsTr("Enable HDR")
                     font.pointSize: 12
 
                     enabled: SystemProperties.supportsHdr
@@ -1656,7 +1656,7 @@ Flickable {
                 CheckBox {
                     id: enableYUV444
                     width: parent.width
-                    text: qsTr("Enable YUV 4:4:4 (Experimental)")
+                    text: qsTr("Enable YUV 4:4:4")
                     font.pointSize: 12
 
                     checked: StreamingPreferences.enableYUV444

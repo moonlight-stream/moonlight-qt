@@ -903,9 +903,14 @@
         <translation>ПРИМІТКА: Через помилку у GeForce Experience, ця опція може працювати не правильно, якщо у хост-ПК є кілька моніторів.</translation>
     </message>
     <message>
+        <location filename="../gui/SettingsView.qml" line="1621"/>
+        <source>AV1</source>
+        <translation>AV1</translation>
+    </message>
+    <message>
         <location filename="../gui/SettingsView.qml" line="1636"/>
-        <source>Enable HDR (Experimental)</source>
-        <translation>Увімкнути HDR (Експериментально)</translation>
+        <source>Enable HDR</source>
+        <translation>Увімкнути HDR</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1651"/>
@@ -916,6 +921,11 @@
         <location filename="../gui/SettingsView.qml" line="1653"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>Транслювання HDR не підтримується на цьому ПК.</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1659"/>
+        <source>Enable YUV 4:4:4</source>
+        <translation>Увімкнути YUV 4:4:4</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1740"/>
@@ -1155,16 +1165,6 @@
         <location filename="../gui/SettingsView.qml" line="1617"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1621"/>
-        <source>AV1 (Experimental)</source>
-        <translation>AV1 (Експериментальний)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1659"/>
-        <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation>Увімкнути YUV 4:4:4 (Експериментально)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1681"/>
