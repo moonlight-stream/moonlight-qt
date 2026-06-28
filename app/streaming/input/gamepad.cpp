@@ -42,6 +42,17 @@
 #define DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4 19
 #define DUALSENSE_EDGE_PADDLE_MAPPING_COUNT 4
 
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+static_assert(DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 == SDL_CONTROLLER_BUTTON_PADDLE1,
+              "DualSense Edge PADDLE1 mapping must match SDL2's controller button order");
+static_assert(DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE2 == SDL_CONTROLLER_BUTTON_PADDLE2,
+              "DualSense Edge PADDLE2 mapping must match SDL2's controller button order");
+static_assert(DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE3 == SDL_CONTROLLER_BUTTON_PADDLE3,
+              "DualSense Edge PADDLE3 mapping must match SDL2's controller button order");
+static_assert(DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4 == SDL_CONTROLLER_BUTTON_PADDLE4,
+              "DualSense Edge PADDLE4 mapping must match SDL2's controller button order");
+#endif
+
 static const char* const DUALSENSE_EDGE_PADDLE_MAPPING_KEYS[DUALSENSE_EDGE_PADDLE_MAPPING_COUNT] = {
     "paddle1",
     "paddle2",
