@@ -60,11 +60,11 @@ static const char* const DUALSENSE_EDGE_PADDLE_MAPPING_KEYS[DUALSENSE_EDGE_PADDL
     "paddle4",
 };
 
-static const char* const DUALSENSE_EDGE_PADDLE_MAPPING_VALUES[DUALSENSE_EDGE_PADDLE_MAPPING_COUNT] = {
-    "b20",
-    "b19",
-    "b18",
-    "b17",
+static const int DUALSENSE_EDGE_PADDLE_MAPPING_BUTTONS[DUALSENSE_EDGE_PADDLE_MAPPING_COUNT] = {
+    20,
+    19,
+    18,
+    17,
 };
 
 const int SdlInputHandler::k_ButtonMap[] = {
@@ -123,11 +123,20 @@ static bool dualSenseEdgeHasPaddleControllerButtons(SDL_GameController* controll
 {
 #if SDL_VERSION_ATLEAST(2, 0, 14)
     // Raw joystick button count only proves SDL can see the physical controls.
-    // The controller-button layer is what Moonlight can transmit as paddles.
-    return SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1) &&
-           SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE2) &&
-           SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE3) &&
-           SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4);
+    // Moonlight can only transmit the controller-button layer, and the bindings
+    // must point at SDL2's canonical Edge raw buttons to preserve physical labels.
+    for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
+        SDL_GameControllerButton button = (SDL_GameControllerButton)(DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 + i);
+        SDL_GameControllerButtonBind binding = SDL_GameControllerGetBindForButton(controller, button);
+
+        if (!SDL_GameControllerHasButton(controller, button) ||
+            binding.bindType != SDL_CONTROLLER_BINDTYPE_BUTTON ||
+            binding.value.button != DUALSENSE_EDGE_PADDLE_MAPPING_BUTTONS[i]) {
+            return false;
+        }
+    }
+
+    return true;
 #else
     return false;
 #endif
@@ -136,7 +145,7 @@ static bool dualSenseEdgeHasPaddleControllerButtons(SDL_GameController* controll
 static QString dualSenseEdgePaddleMappingEntry(int mappingIndex)
 {
     return QString::fromLatin1(DUALSENSE_EDGE_PADDLE_MAPPING_KEYS[mappingIndex]) + ":" +
-           QString::fromLatin1(DUALSENSE_EDGE_PADDLE_MAPPING_VALUES[mappingIndex]);
+           "b" + QString::number(DUALSENSE_EDGE_PADDLE_MAPPING_BUTTONS[mappingIndex]);
 }
 
 static int dualSenseEdgePaddleMappingIndex(const QString& mappingEntry)
@@ -287,7 +296,7 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
         }
         else {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "DualSense Edge paddle mappings are present, but SDL did not expose the paddle controller buttons");
+                        "DualSense Edge paddle mappings are present, but SDL did not expose the expected paddle controller bindings");
         }
         SDL_free(mapping);
         return false;
@@ -306,7 +315,7 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
     // bind this controller to it before sending arrival capabilities.
     else if (ret == 0 && !dualSenseEdgeHasPaddleControllerButtons(controller)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "DualSense Edge paddle mapping update did not expose the paddle controller buttons");
+                    "DualSense Edge paddle mapping update did not expose the expected paddle controller bindings");
         return false;
     }
     else {
