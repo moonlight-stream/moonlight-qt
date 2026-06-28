@@ -166,6 +166,24 @@ static int dualSenseEdgePaddleMappingIndex(const QString& mappingEntry)
     return -1;
 }
 
+static int dualSenseEdgePaddleRawButtonMappingIndex(const QString& mappingEntry)
+{
+    int separatorIndex = mappingEntry.indexOf(':');
+    if (separatorIndex < 0) {
+        return -1;
+    }
+
+    QString binding = mappingEntry.mid(separatorIndex + 1);
+    for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
+        QString expectedBinding = "b" + QString::number(DUALSENSE_EDGE_PADDLE_MAPPING_BUTTONS[i]);
+        if (binding == expectedBinding) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 static bool isDualSenseEdgeMappingMetadataEntry(const QString& mappingEntry)
 {
     return mappingEntry.startsWith("crc:") ||
@@ -197,14 +215,21 @@ static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString
     changedMappings->clear();
 
     // Normalize existing paddle entries too, because a stale mapping can expose
-    // paddle buttons while assigning the wrong raw DualSense Edge buttons. Pull
-    // them out and reinsert the canonical block below so they never sit behind
-    // SDL metadata entries like platform: or crc:.
+    // paddle buttons while assigning the wrong raw DualSense Edge buttons. Also
+    // remove non-paddle entries that point at the Edge-only raw buttons, so one
+    // physical Edge control never reports as both a normal button and a paddle.
     for (int i = 0; i < entries.size(); i++) {
         const QString& entry = entries.at(i);
         int mappingIndex = dualSenseEdgePaddleMappingIndex(entry);
 
         if (mappingIndex < 0) {
+            mappingIndex = dualSenseEdgePaddleRawButtonMappingIndex(entry);
+            if (mappingIndex >= 0) {
+                changedMappingEntries[mappingIndex] = true;
+                hasChangedMappingEntries = true;
+                continue;
+            }
+
             updatedEntries.append(entry);
             continue;
         }
