@@ -507,11 +507,11 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
 
     const char* edgeButtonName = dualSenseEdgePaddleButtonName(event->button);
     if (edgeButtonName != nullptr && isDualSenseEdgeController(state->controller)) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "DualSense Edge %s %s (paddle/Fn flags: 0x%08x)",
-                    edgeButtonName,
-                    event->state == SDL_PRESSED ? "pressed" : "released",
-                    (unsigned int)(state->buttons & DUALSENSE_EDGE_PADDLE_FLAGS));
+        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+                     "DualSense Edge %s %s (paddle/Fn flags: 0x%08x)",
+                     edgeButtonName,
+                     event->state == SDL_PRESSED ? "pressed" : "released",
+                     (unsigned int)(state->buttons & DUALSENSE_EDGE_PADDLE_FLAGS));
     }
 
     // Handle Start+Select+L1+R1 as a gamepad quit combo
