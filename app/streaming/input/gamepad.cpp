@@ -53,8 +53,12 @@ const int SdlInputHandler::k_ButtonMap[] = {
 
 static bool isDualSenseEdgeController(SDL_GameController* controller)
 {
+#if SDL_VERSION_ATLEAST(2, 0, 6)
     return SDL_GameControllerGetVendor(controller) == SONY_VENDOR_ID &&
            SDL_GameControllerGetProduct(controller) == DUALSENSE_EDGE_PRODUCT_ID;
+#else
+    return false;
+#endif
 }
 
 static int dualSenseEdgeJoystickButtonCount(SDL_GameController* controller)
@@ -107,10 +111,10 @@ static QString missingDualSenseEdgePaddleMappings(const char* mapping)
     return missingMappings;
 }
 
-static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
+static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
 {
     if (!isDualSenseEdgeController(controller)) {
-        return;
+        return false;
     }
 
     int buttonCount = dualSenseEdgeJoystickButtonCount(controller);
@@ -123,7 +127,7 @@ static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
                     "DualSense Edge detected, but SDL exposes %d buttons; need at least %d for Edge-specific buttons",
                     buttonCount,
                     DUALSENSE_EDGE_MIN_BUTTONS);
-        return;
+        return false;
     }
 
     char* mapping = SDL_GameControllerMapping(controller);
@@ -131,7 +135,7 @@ static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Unable to query DualSense Edge controller mapping: %s",
                     SDL_GetError());
-        return;
+        return false;
     }
 
     QString missingMappings = missingDualSenseEdgePaddleMappings(mapping);
@@ -139,7 +143,7 @@ static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "DualSense Edge paddle mappings already present");
         SDL_free(mapping);
-        return;
+        return false;
     }
 
     QString updatedMapping = QString::fromUtf8(mapping);
@@ -161,12 +165,14 @@ static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Failed to add DualSense Edge paddle mappings: %s",
                     SDL_GetError());
+        return false;
     }
     else {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Applied DualSense Edge paddle mappings (%s): %s",
                     ret > 0 ? "added" : "updated",
                     qPrintable(missingMappings));
+        return ret > 0;
     }
 }
 
@@ -693,6 +699,20 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             return;
         }
 
+        if (addDualSenseEdgePaddleMapping(controller)) {
+            SDL_GameControllerClose(controller);
+            controller = SDL_GameControllerOpen(event->which);
+            if (controller == NULL) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to reopen DualSense Edge after applying paddle mappings: %s",
+                             SDL_GetError());
+                return;
+            }
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Reopened DualSense Edge after adding paddle mappings");
+        }
+
         state = &m_GamepadState[i];
         if (m_MultiController) {
             state->index = i;
@@ -753,13 +773,15 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         }
 #endif
 
-        addDualSenseEdgePaddleMapping(state->controller);
-
         mapping = SDL_GameControllerMapping(state->controller);
         name = SDL_GameControllerName(state->controller);
 
-        uint16_t vendorId = SDL_GameControllerGetVendor(state->controller);
-        uint16_t productId = SDL_GameControllerGetProduct(state->controller);
+        uint16_t vendorId = 0;
+        uint16_t productId = 0;
+#if SDL_VERSION_ATLEAST(2, 0, 6)
+        vendorId = SDL_GameControllerGetVendor(state->controller);
+        productId = SDL_GameControllerGetProduct(state->controller);
+#endif
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Gamepad %d (player %d) is: %s (VID/PID: 0x%.4x/0x%.4x) (haptic capabilities: 0x%x) (mapping: %s -> %s)",
                     i,
