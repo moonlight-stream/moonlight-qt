@@ -154,6 +154,7 @@ static int dualSenseEdgePaddleMappingIndex(const QString& mappingEntry)
 static bool isDualSenseEdgeMappingMetadataEntry(const QString& mappingEntry)
 {
     return mappingEntry.startsWith("crc:") ||
+           mappingEntry.startsWith("face:") ||
            mappingEntry.startsWith("hint:") ||
            mappingEntry.startsWith("platform:") ||
            mappingEntry.startsWith("sdk>=:") ||
