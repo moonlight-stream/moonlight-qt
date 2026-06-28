@@ -321,6 +321,7 @@ function hasNoMoonlightStopEvidence(log) {
   return !/DualSense Edge paddle mappings are present, but SDL did not expose/.test(log) &&
          !/DualSense Edge paddle mapping update did not expose/.test(log) &&
          !/DualSense Edge paddle mapping add did not expose/.test(log) &&
+         !/Ignoring DualSense Edge PADDLE[1-4] event without verified paddle bindings/.test(log) &&
          !/Ignoring DualSense Edge controller button .* as stale Edge raw alias/.test(log) &&
          !/DualSense Edge controller button .* not advertising it as a normal button/.test(log);
 }
@@ -380,6 +381,7 @@ assertSource(/isDualSenseEdge && type != LI_CTYPE_PS[\s\S]*type = LI_CTYPE_PS;/,
 assertSource(/supportedButtonFlags &= ~DUALSENSE_EDGE_PADDLE_FLAGS[\s\S]*supportedButtonFlags \|= DUALSENSE_EDGE_PADDLE_FLAGS/, 'DualSense Edge paddle/Fn support must only be advertised after verified controller-button bindings');
 assertSource(/DualSense Edge arrival support: buttons=%d sdlType=%d arrivalType=0x%02x supportedButtonFlags=0x%08x paddle\/Fn=0x%08x capabilities=0x%08x bindings=%s/, 'DualSense Edge arrival evidence log format changed');
 assertSource(/DualSense Edge %s %s \(paddle\/Fn flags: 0x%08x\)/, 'DualSense Edge per-button evidence log format changed');
+assertSource(/without verified paddle bindings/, 'DualSense Edge unverified paddle-event diagnostic missing');
 assertSource(/as stale Edge raw alias/, 'DualSense Edge stale raw-alias diagnostic missing');
 assertSource(/not advertising it as a normal button/, 'DualSense Edge capability alias diagnostic missing');
 assertInSource(limelightSource, /#define PADDLE1_FLAG\s+0x010000\b/, 'Moonlight common PADDLE1 flag must stay in the Sunshine high word');
@@ -467,6 +469,7 @@ assertMoonlightLogEvidence(
   'DualSense Edge paddle mappings are present, but SDL did not expose the expected paddle controller bindings (actual: paddle1=b20,paddle2=b19,paddle3=b18,paddle4=b17)',
   'DualSense Edge paddle mapping update did not expose the expected paddle controller bindings (actual: paddle1=b20,paddle2=b19,paddle3=b18,paddle4=b17)',
   'DualSense Edge paddle mapping add did not expose the expected paddle controller bindings (actual: paddle1=b20,paddle2=b19,paddle3=b18,paddle4=b17)',
+  'Ignoring DualSense Edge PADDLE1 event without verified paddle bindings',
   'Ignoring DualSense Edge controller button a bound to raw paddle1:b20 as stale Edge raw alias',
   'DualSense Edge controller button a is bound to raw paddle1:b20; not advertising it as a normal button',
 ].forEach((stopLine) => {
