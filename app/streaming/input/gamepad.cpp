@@ -255,6 +255,12 @@ static int dualSenseEdgeControllerButtonRawPaddleIndex(SDL_GameController* contr
 #endif
 }
 
+static bool dualSenseEdgeControllerButtonIsStaleRawAlias(SDL_GameController* controller, Uint8 button)
+{
+    return !isDualSenseEdgePaddleControllerButton(button) &&
+           dualSenseEdgeControllerButtonRawPaddleIndex(controller, button) >= 0;
+}
+
 static bool isDualSenseEdgeMappingMetadataEntry(const QString& mappingEntry)
 {
     return mappingEntry.startsWith("crc:") ||
@@ -682,21 +688,20 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
                      dualSenseEdgePaddleButtonName(event->button));
         return;
     }
-    if (isDualSenseEdge && !isDualSenseEdgePaddleButton) {
+    if (isDualSenseEdge &&
+        dualSenseEdgeControllerButtonIsStaleRawAlias(state->controller, event->button)) {
         int rawPaddleIndex = dualSenseEdgeControllerButtonRawPaddleIndex(state->controller, event->button);
-        if (rawPaddleIndex >= 0) {
-            int previousButtons = state->buttons;
-            const char* buttonName = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event->button);
-            state->buttons &= ~k_ButtonMap[event->button];
-            if (previousButtons != state->buttons && state->mouseEmulationTimer == 0) {
-                sendGamepadState(state);
-            }
-            SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-                         "Ignoring DualSense Edge controller button %s bound to raw %s as stale Edge raw alias",
-                         buttonName != nullptr ? buttonName : "<unknown>",
-                         qPrintable(dualSenseEdgePaddleMappingEntry(rawPaddleIndex)));
-            return;
+        int previousButtons = state->buttons;
+        const char* buttonName = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event->button);
+        state->buttons &= ~k_ButtonMap[event->button];
+        if (previousButtons != state->buttons && state->mouseEmulationTimer == 0) {
+            sendGamepadState(state);
         }
+        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+                     "Ignoring DualSense Edge controller button %s bound to raw %s as stale Edge raw alias",
+                     buttonName != nullptr ? buttonName : "<unknown>",
+                     qPrintable(dualSenseEdgePaddleMappingEntry(rawPaddleIndex)));
+        return;
     }
 
     if (m_SwapFaceButtons) {
@@ -1108,13 +1113,23 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
 #if SDL_VERSION_ATLEAST(2, 0, 14)
         // On SDL 2.0.14 and later, we can provide enhanced controller information to the host PC
         // for it to use as a hint for the type of controller to emulate.
+        bool isDualSenseEdge = isDualSenseEdgeController(state->controller);
         uint32_t supportedButtonFlags = 0;
         for (int i = 0; i < (int)SDL_arraysize(k_ButtonMap); i++) {
             if (SDL_GameControllerHasButton(state->controller, (SDL_GameControllerButton)i)) {
+                if (isDualSenseEdge &&
+                    dualSenseEdgeControllerButtonIsStaleRawAlias(state->controller, (Uint8)i)) {
+                    const char* buttonName = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)i);
+                    int rawPaddleIndex = dualSenseEdgeControllerButtonRawPaddleIndex(state->controller, (Uint8)i);
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "DualSense Edge controller button %s is bound to raw %s; not advertising it as a normal button",
+                                buttonName != nullptr ? buttonName : "<unknown>",
+                                qPrintable(dualSenseEdgePaddleMappingEntry(rawPaddleIndex)));
+                    continue;
+                }
                 supportedButtonFlags |= k_ButtonMap[i];
             }
         }
-        bool isDualSenseEdge = isDualSenseEdgeController(state->controller);
         int dualSenseEdgeButtonCount = isDualSenseEdge ? dualSenseEdgeJoystickButtonCount(state->controller) : 0;
         bool hasDualSenseEdgePaddleButtons = isDualSenseEdge && dualSenseEdgeHasPaddleControllerButtons(state->controller);
         if (isDualSenseEdge) {
