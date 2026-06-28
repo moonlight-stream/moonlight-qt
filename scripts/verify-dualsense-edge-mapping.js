@@ -423,6 +423,15 @@ const completeSdl3MoonlightLog = makeCompleteMoonlightLog(moonlightEvidenceVaria
 assertMoonlightLogEvidence(completeSdl2MoonlightLog, moonlightEvidenceVariants.sdl2, true, 'native SDL2 same-log evidence passes');
 assertMoonlightLogEvidence(completeSdl3MoonlightLog, moonlightEvidenceVariants.sdl3Compat, true, 'sdl2-compat/SDL3 same-log evidence passes');
 assertMoonlightLogEvidence(
+  completeSdl2MoonlightLog.replace(
+    `Applied DualSense Edge paddle mappings (updated): ${moonlightEvidenceVariants.sdl2.logMappings}`,
+    'DualSense Edge paddle mappings already present'
+  ),
+  moonlightEvidenceVariants.sdl2,
+  true,
+  'already-present mapping line satisfies Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
   withoutLogLine(completeSdl2MoonlightLog, 'DualSense Edge PADDLE4 released (paddle/Fn flags: 0x00000000)'),
   moonlightEvidenceVariants.sdl2,
   false,
@@ -446,12 +455,20 @@ assertMoonlightLogEvidence(
   false,
   'combined one-at-a-time paddle/Fn mask fails Moonlight log evidence'
 );
-assertMoonlightLogEvidence(
-  `${completeSdl2MoonlightLog}\nIgnoring DualSense Edge controller button a bound to raw paddle1:b20 as stale Edge raw alias`,
-  moonlightEvidenceVariants.sdl2,
-  false,
-  'stale raw-alias diagnostic fails Moonlight log evidence'
-);
+[
+  'DualSense Edge paddle mappings are present, but SDL did not expose the expected paddle controller bindings (actual: paddle1=b20,paddle2=b19,paddle3=b18,paddle4=b17)',
+  'DualSense Edge paddle mapping update did not expose the expected paddle controller bindings (actual: paddle1=b20,paddle2=b19,paddle3=b18,paddle4=b17)',
+  'DualSense Edge paddle mapping add did not expose the expected paddle controller bindings (actual: paddle1=b20,paddle2=b19,paddle3=b18,paddle4=b17)',
+  'Ignoring DualSense Edge controller button a bound to raw paddle1:b20 as stale Edge raw alias',
+  'DualSense Edge controller button a is bound to raw paddle1:b20; not advertising it as a normal button',
+].forEach((stopLine) => {
+  assertMoonlightLogEvidence(
+    `${completeSdl2MoonlightLog}\n${stopLine}`,
+    moonlightEvidenceVariants.sdl2,
+    false,
+    `${stopLine} fails Moonlight log evidence`
+  );
+});
 assertMoonlightLogEvidence(
   completeSdl2MoonlightLog.split('\n').slice(0, 2).join('\n'),
   moonlightEvidenceVariants.sdl2,
