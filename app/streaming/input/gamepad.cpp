@@ -389,8 +389,10 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
     SDL_version version;
     SDL_GetVersion(&version);
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "DualSense Edge detected with %d SDL joystick buttons (SDL %d.%d.%d)",
+                "DualSense Edge detected with %d SDL joystick buttons (VID/PID: 0x%.4x/0x%.4x) (SDL %d.%d.%d)",
                 buttonCount,
+                (unsigned int)SDL_GameControllerGetVendor(controller),
+                (unsigned int)SDL_GameControllerGetProduct(controller),
                 version.major,
                 version.minor,
                 version.patch);
