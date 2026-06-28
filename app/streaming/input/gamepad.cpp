@@ -121,15 +121,20 @@ static int dualSenseEdgeJoystickButtonCount(SDL_GameController* controller)
     return joystick != nullptr ? SDL_JoystickNumButtons(joystick) : -1;
 }
 
+static bool dualSenseEdgeHasSdl3VersionHint()
+{
+    const char* sdl3Version = SDL_GetHint("SDL3_VERSION");
+    return sdl3Version != nullptr && sdl3Version[0] != '\0';
+}
+
 static bool dualSenseEdgeUsesSdl3CompatMappings(SDL_GameController* controller)
 {
-    if (SDL_GetHint("SDL3_VERSION") != nullptr) {
+    if (dualSenseEdgeHasSdl3VersionHint()) {
         return true;
     }
 
     int buttonCount = dualSenseEdgeJoystickButtonCount(controller);
-    return buttonCount >= DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS &&
-           buttonCount < DUALSENSE_EDGE_SDL2_MIN_BUTTONS;
+    return buttonCount == DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS;
 }
 
 static const char* dualSenseEdgeRawMappingName(SDL_GameController* controller)
@@ -148,7 +153,7 @@ static QString dualSenseEdgeRuntimeSdlSummary()
             .arg(version.patch);
 
     const char* sdl3Version = SDL_GetHint("SDL3_VERSION");
-    if (sdl3Version != nullptr && sdl3Version[0] != '\0') {
+    if (dualSenseEdgeHasSdl3VersionHint()) {
         summary += QString::fromLatin1(", SDL3 ") + QString::fromUtf8(sdl3Version);
     }
 

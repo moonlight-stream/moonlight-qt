@@ -164,7 +164,7 @@ assertSource(/static_assert\(PADDLE4_FLAG == 0x080000/, 'PADDLE4 high-word asser
 assertSource(/SDL_CONTROLLER_BUTTON_MISC1 == DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 - 1/, 'MISC/PADDLE adjacency assertion missing');
 assertSource(/SDL_CONTROLLER_BUTTON_TOUCHPAD == DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4 \+ 1/, 'PADDLE/TOUCHPAD adjacency assertion missing');
 assertSource(/SDL_GetHint\("SDL3_VERSION"\)/, 'sdl2-compat/SDL3 runtime detection missing');
-assertSource(/buttonCount >= DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS &&\s*buttonCount < DUALSENSE_EDGE_SDL2_MIN_BUTTONS/, 'sdl2-compat/SDL3 raw count fallback missing');
+assertSource(/buttonCount == DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS/, 'sdl2-compat/SDL3 exact raw count fallback missing');
 assertSource(/dualSenseEdgeMinimumButtonCount\(controller\)/, 'runtime Edge minimum raw button count selection missing');
 assertSource(/SDL3.*QString::fromUtf8\(sdl3Version\)/s, 'Edge detection log must include underlying SDL3 runtime version when available');
 assertSource(/mappingEntry\.startsWith\("type:"\)/, 'SDL2 type metadata must stay treated as non-binding metadata');
