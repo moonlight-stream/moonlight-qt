@@ -62,6 +62,12 @@ static_assert(DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE3 == SDL_CONTROLLER_BUTTON_
               "DualSense Edge PADDLE3 mapping must match SDL2's controller button order");
 static_assert(DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4 == SDL_CONTROLLER_BUTTON_PADDLE4,
               "DualSense Edge PADDLE4 mapping must match SDL2's controller button order");
+static_assert(SDL_CONTROLLER_BUTTON_MISC1 == DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 - 1,
+              "Moonlight's button map must keep MISC immediately before Edge paddle buttons");
+static_assert(SDL_CONTROLLER_BUTTON_TOUCHPAD == DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4 + 1,
+              "Moonlight's button map must keep TOUCHPAD immediately after Edge paddle buttons");
+static_assert(SDL_CONTROLLER_BUTTON_MAX == SDL_CONTROLLER_BUTTON_TOUCHPAD + 1,
+              "Moonlight's button map must cover every SDL2 controller button");
 #endif
 
 static const char* const DUALSENSE_EDGE_PADDLE_MAPPING_KEYS[DUALSENSE_EDGE_PADDLE_MAPPING_COUNT] = {
