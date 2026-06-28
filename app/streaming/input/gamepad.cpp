@@ -157,7 +157,8 @@ static bool isDualSenseEdgeMappingMetadataEntry(const QString& mappingEntry)
            mappingEntry.startsWith("hint:") ||
            mappingEntry.startsWith("platform:") ||
            mappingEntry.startsWith("sdk>=:") ||
-           mappingEntry.startsWith("sdk<=:");
+           mappingEntry.startsWith("sdk<=:") ||
+           mappingEntry.startsWith("type:");
 }
 
 static void addDualSenseEdgePaddleMappingChange(QString* changedMappings, int mappingIndex)
