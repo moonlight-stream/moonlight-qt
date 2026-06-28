@@ -901,7 +901,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1621"/>
         <source>AV1</source>
-        <translation>AV</translation>
+        <translation>AV1</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1636"/>
