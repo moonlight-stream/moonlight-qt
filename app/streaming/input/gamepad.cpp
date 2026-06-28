@@ -159,14 +159,19 @@ static void addDualSenseEdgePaddleMappingChange(QString* changedMappings, int ma
 
 static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString* changedMappings)
 {
-    QStringList entries = QString::fromUtf8(mapping).split(',');
+    QString originalMapping = QString::fromUtf8(mapping);
+    QStringList entries = originalMapping.split(',');
     QStringList updatedEntries;
     bool foundMappings[DUALSENSE_EDGE_PADDLE_MAPPING_COUNT] = {};
+    bool changedMappingEntries[DUALSENSE_EDGE_PADDLE_MAPPING_COUNT] = {};
+    bool hasChangedMappingEntries = false;
 
     changedMappings->clear();
 
     // Normalize existing paddle entries too, because a stale mapping can expose
-    // paddle buttons while assigning the wrong raw DualSense Edge buttons.
+    // paddle buttons while assigning the wrong raw DualSense Edge buttons. Pull
+    // them out and reinsert the canonical block below so they never sit behind
+    // SDL metadata entries like platform: or crc:.
     for (int i = 0; i < entries.size(); i++) {
         const QString& entry = entries.at(i);
         int mappingIndex = dualSenseEdgePaddleMappingIndex(entry);
@@ -177,16 +182,17 @@ static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString
         }
 
         if (foundMappings[mappingIndex]) {
-            addDualSenseEdgePaddleMappingChange(changedMappings, mappingIndex);
+            changedMappingEntries[mappingIndex] = true;
+            hasChangedMappingEntries = true;
             continue;
         }
 
         QString expectedEntry = dualSenseEdgePaddleMappingEntry(mappingIndex);
-        updatedEntries.append(expectedEntry);
         foundMappings[mappingIndex] = true;
 
         if (entry != expectedEntry) {
-            addDualSenseEdgePaddleMappingChange(changedMappings, mappingIndex);
+            changedMappingEntries[mappingIndex] = true;
+            hasChangedMappingEntries = true;
         }
     }
 
@@ -206,12 +212,26 @@ static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString
 
     for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
         if (!foundMappings[i]) {
-            updatedEntries.insert(insertionIndex++, dualSenseEdgePaddleMappingEntry(i));
+            changedMappingEntries[i] = true;
+            hasChangedMappingEntries = true;
+        }
+        updatedEntries.insert(insertionIndex++, dualSenseEdgePaddleMappingEntry(i));
+    }
+
+    QString updatedMapping = updatedEntries.join(",");
+    if (updatedMapping != originalMapping && !hasChangedMappingEntries) {
+        for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
+            changedMappingEntries[i] = true;
+        }
+    }
+
+    for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
+        if (changedMappingEntries[i]) {
             addDualSenseEdgePaddleMappingChange(changedMappings, i);
         }
     }
 
-    return updatedEntries.join(",");
+    return updatedMapping;
 }
 
 static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
