@@ -518,10 +518,6 @@
         <translation>La tua selezione di modalità del mouse su desktop remoto potrebbe provocare problemi nei giochi.</translation>
     </message>
     <message>
-        <source>HDR is not supported with software decoding.</source>
-        <translation type="vanished">La decodifica software non supporta HDR.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="967"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>La selezione per forzare la decodifica software potrebbe provocare basse performance con lo streaming.</translation>
@@ -911,10 +907,6 @@
         <location filename="../gui/SettingsView.qml" line="1636"/>
         <source>Enable HDR</source>
         <translation>Abilita HDR</translation>
-    </message>
-    <message>
-        <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="vanished">L&apos;abilitazione dell&apos;HDR sostituisce le selezioni manuali del decodificatore.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1651"/>

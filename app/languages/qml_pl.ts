@@ -518,10 +518,6 @@
         <translation>Wybranie opcji włączenia trybu myszy pulpitu zdalnego może powodować problemy w grach.</translation>
     </message>
     <message>
-        <source>HDR is not supported with software decoding.</source>
-        <translation type="vanished">Technologia HDR nie jest obsługiwana przy dekodowaniu programowym.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="967"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Wybranie opcji wymuszenia dekodowania programowego może spowodować niską wydajność strumieniowania.</translation>
@@ -911,10 +907,6 @@
         <location filename="../gui/SettingsView.qml" line="1636"/>
         <source>Enable HDR</source>
         <translation>Włącz HDR</translation>
-    </message>
-    <message>
-        <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="vanished">Włączenie HDR nadpisuje manualny wybór dekodera.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1651"/>

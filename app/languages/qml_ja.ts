@@ -518,10 +518,6 @@
         <translation>リモートデスクトップマウスモードを有効にすると、ゲームで問題が発生する場合があります。</translation>
     </message>
     <message>
-        <source>HDR is not supported with software decoding.</source>
-        <translation type="vanished">ソフトウェアデコードではHDRに対応していません。</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="967"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>ソフトウェアデコードを強制する設定になっていると、ストリーミングのパフォーマンスが低下する場合があります。</translation>
@@ -911,10 +907,6 @@
         <location filename="../gui/SettingsView.qml" line="1636"/>
         <source>Enable HDR</source>
         <translation>HDRを有効にする</translation>
-    </message>
-    <message>
-        <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="vanished">HDR を有効にすると、手動で選択したデコーダーが上書きされます。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1651"/>

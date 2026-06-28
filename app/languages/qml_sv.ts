@@ -518,10 +518,6 @@
         <translation>Om du väljer att aktivera musläget för fjärrskrivbord kan det orsaka problem i spel.</translation>
     </message>
     <message>
-        <source>HDR is not supported with software decoding.</source>
-        <translation type="vanished">HDR stöds inte med mjukvaruavkodning.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="967"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Om du väljer inställningar för att tvinga fram mjukvaruavkodning kan det leda till dålig strömningsprestanda.</translation>
@@ -911,10 +907,6 @@
         <location filename="../gui/SettingsView.qml" line="1636"/>
         <source>Enable HDR</source>
         <translation>Aktivera HDR</translation>
-    </message>
-    <message>
-        <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="vanished">Tillägg av HDR behärskar manuella val av avkodare.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1651"/>
