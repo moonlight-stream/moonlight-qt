@@ -199,6 +199,166 @@ function assertNormalize(input, expectedMapping, expectedChangedMappings, paddle
   assert(actual.changedMappings === expectedChangedMappings, `${message}: changed mappings\nexpected: ${expectedChangedMappings}\nactual:   ${actual.changedMappings}`);
 }
 
+function escapeRegex(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function bindingSummary(paddleButtons) {
+  return paddleKeys.map((_, index) => `${paddleKeys[index]}=b${paddleButtons[index]}`).join(',');
+}
+
+function logMappingSummary(paddleButtons) {
+  return paddleKeys.map((_, index) => paddleMappingEntry(index, paddleButtons)).join(',');
+}
+
+const moonlightEvidenceVariants = {
+  sdl2: {
+    label: 'native SDL2',
+    minButtons: sdl2MinButtons,
+    rawMappingName: 'SDL2',
+    runtimeVersionPattern: /SDL \d+\.\d+\.\d+\)/,
+    bindings: bindingSummary(sdl2PaddleButtons),
+    logMappings: logMappingSummary(sdl2PaddleButtons),
+  },
+  sdl3Compat: {
+    label: 'sdl2-compat/SDL3',
+    minButtons: sdl3CompatMinButtons,
+    rawMappingName: 'SDL3/sdl2-compat',
+    runtimeVersionPattern: /SDL \d+\.\d+\.\d+, SDL3 \d+\.\d+\.\d+\)/,
+    bindings: bindingSummary(sdl3CompatPaddleButtons),
+    logMappings: logMappingSummary(sdl3CompatPaddleButtons),
+  },
+};
+
+function hasDetectionEvidence(log, variant) {
+  const detectionPattern = /DualSense Edge detected with (\d+) SDL joystick buttons \(need (\d+) for (SDL2|SDL3\/sdl2-compat) Edge raw mapping\) \(VID\/PID: 0x054c\/0x0df2\) \((SDL \d+\.\d+\.\d+(?:, SDL3 \d+\.\d+\.\d+)?)\)/g;
+  let match;
+
+  while ((match = detectionPattern.exec(log)) !== null) {
+    const buttonCount = Number(match[1]);
+    const requiredButtons = Number(match[2]);
+    const rawMappingName = match[3];
+    const runtimeVersion = `${match[4]})`;
+    if (buttonCount >= variant.minButtons &&
+        requiredButtons === variant.minButtons &&
+        rawMappingName === variant.rawMappingName &&
+        variant.runtimeVersionPattern.test(runtimeVersion)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function hasMappingEvidence(log, variant) {
+  return log.includes('DualSense Edge paddle mappings already present') ||
+         log.includes(`Applied DualSense Edge paddle mappings (updated): ${variant.logMappings}`) ||
+         log.includes(`Applied DualSense Edge paddle mappings (added): ${variant.logMappings}`);
+}
+
+function hasArrivalEvidence(log, variant) {
+  const arrivalPattern = /DualSense Edge arrival support: buttons=(\d+) sdlType=\d+ arrivalType=0x([0-9a-fA-F]{2}) supportedButtonFlags=0x([0-9a-fA-F]{8}) paddle\/Fn=0x([0-9a-fA-F]{8}) capabilities=0x([0-9a-fA-F]{8}) bindings=([^\r\n]+)/g;
+  let match;
+
+  while ((match = arrivalPattern.exec(log)) !== null) {
+    const buttonCount = Number(match[1]);
+    const arrivalType = Number.parseInt(match[2], 16);
+    const paddleFn = Number.parseInt(match[4], 16);
+    const bindings = match[6];
+    if (buttonCount >= variant.minButtons &&
+        arrivalType === 0x02 &&
+        paddleFn === 0x000f0000 &&
+        bindings === variant.bindings) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function hasPerButtonEvidence(log) {
+  const expectedMasks = {
+    PADDLE1: '00010000',
+    PADDLE2: '00020000',
+    PADDLE3: '00040000',
+    PADDLE4: '00080000',
+  };
+  const singleMasks = new Set(['00010000', '00020000', '00040000', '00080000']);
+  const eventPattern = /DualSense Edge (PADDLE[1-4]) (pressed|released) \(paddle\/Fn flags: 0x([0-9a-fA-F]{8})\)/g;
+  const seen = {};
+  let match;
+
+  for (const name of Object.keys(expectedMasks)) {
+    seen[`${name}:pressed`] = false;
+    seen[`${name}:released`] = false;
+  }
+
+  while ((match = eventPattern.exec(log)) !== null) {
+    const name = match[1];
+    const action = match[2];
+    const mask = match[3].toLowerCase();
+    if (action === 'pressed') {
+      if (mask !== expectedMasks[name]) {
+        return false;
+      }
+      seen[`${name}:pressed`] = true;
+    }
+    else {
+      if (mask !== '00000000') {
+        return false;
+      }
+      seen[`${name}:released`] = true;
+    }
+
+    if (mask !== '00000000' && !singleMasks.has(mask)) {
+      return false;
+    }
+  }
+
+  return Object.values(seen).every(Boolean);
+}
+
+function hasNoMoonlightStopEvidence(log) {
+  return !/DualSense Edge paddle mappings are present, but SDL did not expose/.test(log) &&
+         !/DualSense Edge paddle mapping update did not expose/.test(log) &&
+         !/DualSense Edge paddle mapping add did not expose/.test(log) &&
+         !/Ignoring DualSense Edge controller button .* as stale Edge raw alias/.test(log) &&
+         !/DualSense Edge controller button .* not advertising it as a normal button/.test(log);
+}
+
+function hasCompleteMoonlightLogEvidence(log, variant) {
+  return hasDetectionEvidence(log, variant) &&
+         hasMappingEvidence(log, variant) &&
+         hasArrivalEvidence(log, variant) &&
+         hasPerButtonEvidence(log) &&
+         hasNoMoonlightStopEvidence(log);
+}
+
+function makeCompleteMoonlightLog(variant) {
+  return [
+    `DualSense Edge detected with ${variant.minButtons} SDL joystick buttons (need ${variant.minButtons} for ${variant.rawMappingName} Edge raw mapping) (VID/PID: 0x054c/0x0df2) (${variant.rawMappingName === 'SDL2' ? 'SDL 2.30.9' : 'SDL 2.32.70, SDL3 3.4.11'})`,
+    `Applied DualSense Edge paddle mappings (updated): ${variant.logMappings}`,
+    `DualSense Edge arrival support: buttons=${variant.minButtons} sdlType=4 arrivalType=0x02 supportedButtonFlags=0x000f0000 paddle/Fn=0x000f0000 capabilities=0x00000000 bindings=${variant.bindings}`,
+    'DualSense Edge PADDLE1 pressed (paddle/Fn flags: 0x00010000)',
+    'DualSense Edge PADDLE1 released (paddle/Fn flags: 0x00000000)',
+    'DualSense Edge PADDLE2 pressed (paddle/Fn flags: 0x00020000)',
+    'DualSense Edge PADDLE2 released (paddle/Fn flags: 0x00000000)',
+    'DualSense Edge PADDLE3 pressed (paddle/Fn flags: 0x00040000)',
+    'DualSense Edge PADDLE3 released (paddle/Fn flags: 0x00000000)',
+    'DualSense Edge PADDLE4 pressed (paddle/Fn flags: 0x00080000)',
+    'DualSense Edge PADDLE4 released (paddle/Fn flags: 0x00000000)',
+  ].join('\n');
+}
+
+function assertMoonlightLogEvidence(log, variant, expected, message) {
+  const actual = hasCompleteMoonlightLogEvidence(log, variant);
+  assert(actual === expected, `${message}: expected ${expected ? 'complete' : 'incomplete'} Moonlight log evidence`);
+}
+
+function withoutLogLine(log, line) {
+  return log.replace(new RegExp(`^${escapeRegex(line)}\\n?`, 'm'), '');
+}
+
 assertSource(/#define DUALSENSE_EDGE_SDL2_MIN_BUTTONS 21\b/, 'native SDL2 minimum Edge raw button count must stay at 21');
 assertSource(/#define DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS 17\b/, 'sdl2-compat/SDL3 minimum Edge raw button count must stay at 17');
 assertSource(/#define DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 16\b/, 'PADDLE1 controller button index must stay at 16');
@@ -257,6 +417,47 @@ assertRuntimeSelection(true, 16, true, false, 'SDL3 hint still requires enough r
 });
 assert(sunshineButtonFlags2(0x0f0000) === 0x000f, 'all Edge paddle/Fn buttons must serialize as buttonFlags2 mask 0x000f');
 assert(sunshineButtonFlags2(0x2f0000) === 0x002f, 'Edge paddle/Fn, touchpad, and misc buttons must all survive in Sunshine buttonFlags2');
+
+const completeSdl2MoonlightLog = makeCompleteMoonlightLog(moonlightEvidenceVariants.sdl2);
+const completeSdl3MoonlightLog = makeCompleteMoonlightLog(moonlightEvidenceVariants.sdl3Compat);
+assertMoonlightLogEvidence(completeSdl2MoonlightLog, moonlightEvidenceVariants.sdl2, true, 'native SDL2 same-log evidence passes');
+assertMoonlightLogEvidence(completeSdl3MoonlightLog, moonlightEvidenceVariants.sdl3Compat, true, 'sdl2-compat/SDL3 same-log evidence passes');
+assertMoonlightLogEvidence(
+  withoutLogLine(completeSdl2MoonlightLog, 'DualSense Edge PADDLE4 released (paddle/Fn flags: 0x00000000)'),
+  moonlightEvidenceVariants.sdl2,
+  false,
+  'missing release-to-neutral line fails Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
+  completeSdl2MoonlightLog.replace(
+    `bindings=${moonlightEvidenceVariants.sdl2.bindings}`,
+    `bindings=${moonlightEvidenceVariants.sdl3Compat.bindings}`
+  ),
+  moonlightEvidenceVariants.sdl2,
+  false,
+  'mismatched SDL binding variant fails Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
+  completeSdl2MoonlightLog.replace(
+    'DualSense Edge PADDLE2 pressed (paddle/Fn flags: 0x00020000)',
+    'DualSense Edge PADDLE2 pressed (paddle/Fn flags: 0x00030000)'
+  ),
+  moonlightEvidenceVariants.sdl2,
+  false,
+  'combined one-at-a-time paddle/Fn mask fails Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
+  `${completeSdl2MoonlightLog}\nIgnoring DualSense Edge controller button a bound to raw paddle1:b20 as stale Edge raw alias`,
+  moonlightEvidenceVariants.sdl2,
+  false,
+  'stale raw-alias diagnostic fails Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
+  completeSdl2MoonlightLog.split('\n').slice(0, 2).join('\n'),
+  moonlightEvidenceVariants.sdl2,
+  false,
+  'partial copied Moonlight log cannot satisfy complete evidence'
+);
 
 function allPaddles(paddleButtons) {
   return paddleKeys.map((_, index) => paddleMappingEntry(index, paddleButtons)).join(',');
