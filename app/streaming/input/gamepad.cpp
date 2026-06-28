@@ -227,6 +227,34 @@ static int dualSenseEdgePaddleRawButtonMappingIndex(const QString& mappingEntry)
     return -1;
 }
 
+static int dualSenseEdgePaddleRawButtonIndex(int rawButton)
+{
+    for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
+        if (rawButton == DUALSENSE_EDGE_PADDLE_MAPPING_BUTTONS[i]) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+static int dualSenseEdgeControllerButtonRawPaddleIndex(SDL_GameController* controller, Uint8 button)
+{
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+    SDL_GameControllerButtonBind binding = SDL_GameControllerGetBindForButton(controller, (SDL_GameControllerButton)button);
+
+    if (binding.bindType != SDL_CONTROLLER_BINDTYPE_BUTTON) {
+        return -1;
+    }
+
+    return dualSenseEdgePaddleRawButtonIndex(binding.value.button);
+#else
+    Q_UNUSED(controller);
+    Q_UNUSED(button);
+    return -1;
+#endif
+}
+
 static bool isDualSenseEdgeMappingMetadataEntry(const QString& mappingEntry)
 {
     return mappingEntry.startsWith("crc:") ||
@@ -648,6 +676,23 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
                      "Ignoring DualSense Edge %s event without verified paddle bindings",
                      dualSenseEdgePaddleButtonName(event->button));
         return;
+    }
+    if (isDualSenseEdgeController(state->controller) &&
+        !dualSenseEdgeHasPaddleControllerButtons(state->controller)) {
+        int rawPaddleIndex = dualSenseEdgeControllerButtonRawPaddleIndex(state->controller, event->button);
+        if (rawPaddleIndex >= 0) {
+            int previousButtons = state->buttons;
+            const char* buttonName = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event->button);
+            state->buttons &= ~k_ButtonMap[event->button];
+            if (previousButtons != state->buttons && state->mouseEmulationTimer == 0) {
+                sendGamepadState(state);
+            }
+            SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+                         "Ignoring DualSense Edge controller button %s bound to raw %s without verified paddle bindings",
+                         buttonName != nullptr ? buttonName : "<unknown>",
+                         qPrintable(dualSenseEdgePaddleMappingEntry(rawPaddleIndex)));
+            return;
+        }
     }
 
     if (m_SwapFaceButtons) {
