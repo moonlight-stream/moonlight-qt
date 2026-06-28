@@ -1186,8 +1186,9 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             capabilities |= LI_CCAP_RGB_LED;
         }
 
+        SDL_GameControllerType sdlControllerType = SDL_GameControllerGetType(state->controller);
         uint8_t type;
-        switch (SDL_GameControllerGetType(state->controller)) {
+        switch (sdlControllerType) {
         case SDL_CONTROLLER_TYPE_XBOX360:
         case SDL_CONTROLLER_TYPE_XBOXONE:
             type = LI_CTYPE_XBOX;
@@ -1209,6 +1210,14 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             type = LI_CTYPE_UNKNOWN;
             break;
         }
+        if (isDualSenseEdge && type != LI_CTYPE_PS) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "DualSense Edge SDL controller type %d is not PlayStation; advertising PlayStation arrival type because VID/PID is 0x%.4x/0x%.4x",
+                        sdlControllerType,
+                        (unsigned int)SONY_VENDOR_ID,
+                        (unsigned int)DUALSENSE_EDGE_PRODUCT_ID);
+            type = LI_CTYPE_PS;
+        }
 
         // If this is a PlayStation controller that doesn't have a touchpad button mapped,
         // we'll allow the Select+PS button combo to act as the touchpad.
@@ -1220,8 +1229,10 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
 
         if (isDualSenseEdge) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "DualSense Edge arrival support: buttons=%d supportedButtonFlags=0x%08x paddle/Fn=0x%08x capabilities=0x%08x bindings=%s",
+                        "DualSense Edge arrival support: buttons=%d sdlType=%d arrivalType=0x%02x supportedButtonFlags=0x%08x paddle/Fn=0x%08x capabilities=0x%08x bindings=%s",
                         dualSenseEdgeButtonCount,
+                        sdlControllerType,
+                        (unsigned int)type,
                         (unsigned int)supportedButtonFlags,
                         (unsigned int)(supportedButtonFlags & DUALSENSE_EDGE_PADDLE_FLAGS),
                         (unsigned int)capabilities,
