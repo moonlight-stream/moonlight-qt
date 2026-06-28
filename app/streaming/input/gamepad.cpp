@@ -27,11 +27,13 @@
 #define SONY_VENDOR_ID 0x054c
 #define DUALSENSE_EDGE_PRODUCT_ID 0x0df2
 
-// SDL 2's DualSense Edge HIDAPI driver exposes the left/right Fn buttons and
-// left/right rear paddles as joystick buttons 17-20. Older controller DB
-// entries identify the Edge as a generic PS5 controller and omit these bindings.
-// Once mapped, SDL reports those raw joystick buttons as controller buttons
-// 16-19, matching the PADDLE1-4 order in k_ButtonMap.
+// SDL 2's DualSense Edge HIDAPI driver exposes the Edge-specific controls as
+// raw joystick buttons 17-20. Its generated mapping is paddle1:b20,
+// paddle2:b19, paddle3:b18, paddle4:b17, matching right rear, left rear,
+// right Fn, and left Fn. Older controller DB entries identify the Edge as a
+// generic PS5 controller and omit these bindings. Once mapped, SDL reports
+// those raw buttons as controller buttons 16-19, matching the PADDLE1-4 order
+// in k_ButtonMap.
 #define DUALSENSE_EDGE_MIN_BUTTONS 21
 #define DUALSENSE_EDGE_PADDLE_FLAGS (PADDLE1_FLAG | PADDLE2_FLAG | PADDLE3_FLAG | PADDLE4_FLAG)
 #define DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 16
