@@ -322,7 +322,16 @@ NvHTTP::getAppList()
             }
             else if (!apps.isEmpty()) {
                 if (XML_NAME_EQUALS(name, "AppTitle")) {
-                    apps.last().name = xmlReader.readElementText();
+                    // If an app has no name, Sunshine may send us <AppTitle/>,
+                    // which readElementText() returns as a null QString.
+                    // We want to treat this as an empty QString instead, so we
+                    // will explicitly convert it. An empty string will satisfy
+                    // NvApp's isInitialized() check.
+                    QString name = xmlReader.readElementText();
+                    if (name.isNull()) {
+                        name = "";
+                    }
+                    apps.last().name = name;
                 }
                 else if (XML_NAME_EQUALS(name, "ID")) {
                     apps.last().id = xmlReader.readElementText().toInt();

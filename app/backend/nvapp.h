@@ -25,7 +25,9 @@ public:
 
     bool isInitialized()
     {
-        return id != 0 && !name.isEmpty();
+        // We use isNull() instead of isEmpty() here because we want
+        // to detect cases where the name is unassigned, not empty.
+        return id != 0 && !name.isNull();
     }
 
     void
