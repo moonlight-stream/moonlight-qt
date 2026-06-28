@@ -148,6 +148,49 @@ static bool dualSenseEdgeHasPaddleControllerButtons(SDL_GameController* controll
 #endif
 }
 
+static QString dualSenseEdgePaddleBindingSummary(SDL_GameController* controller)
+{
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+    QStringList bindings;
+
+    for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
+        SDL_GameControllerButton button = (SDL_GameControllerButton)(DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 + i);
+        SDL_GameControllerButtonBind binding = SDL_GameControllerGetBindForButton(controller, button);
+        QString value;
+
+        if (!SDL_GameControllerHasButton(controller, button)) {
+            value = "missing";
+        }
+        else {
+            switch (binding.bindType) {
+            case SDL_CONTROLLER_BINDTYPE_NONE:
+                value = "none";
+                break;
+            case SDL_CONTROLLER_BINDTYPE_BUTTON:
+                value = "b" + QString::number(binding.value.button);
+                break;
+            case SDL_CONTROLLER_BINDTYPE_AXIS:
+                value = "a" + QString::number(binding.value.axis);
+                break;
+            case SDL_CONTROLLER_BINDTYPE_HAT:
+                value = "h" + QString::number(binding.value.hat.hat) + "." + QString::number(binding.value.hat.hat_mask);
+                break;
+            default:
+                value = "unknown";
+                break;
+            }
+        }
+
+        bindings.append(QString::fromLatin1(DUALSENSE_EDGE_PADDLE_MAPPING_KEYS[i]) + "=" + value);
+    }
+
+    return bindings.join(",");
+#else
+    Q_UNUSED(controller);
+    return QString::fromLatin1("unavailable before SDL 2.0.14");
+#endif
+}
+
 static QString dualSenseEdgePaddleMappingEntry(int mappingIndex)
 {
     return QString::fromLatin1(DUALSENSE_EDGE_PADDLE_MAPPING_KEYS[mappingIndex]) + ":" +
@@ -327,7 +370,8 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
         }
         else {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "DualSense Edge paddle mappings are present, but SDL did not expose the expected paddle controller bindings");
+                        "DualSense Edge paddle mappings are present, but SDL did not expose the expected paddle controller bindings (actual: %s)",
+                        qPrintable(dualSenseEdgePaddleBindingSummary(controller)));
         }
         SDL_free(mapping);
         return false;
@@ -346,7 +390,8 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
     // bind this controller to it before sending arrival capabilities.
     else if (ret == 0 && !dualSenseEdgeHasPaddleControllerButtons(controller)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "DualSense Edge paddle mapping update did not expose the expected paddle controller bindings");
+                    "DualSense Edge paddle mapping update did not expose the expected paddle controller bindings (actual: %s)",
+                    qPrintable(dualSenseEdgePaddleBindingSummary(controller)));
         return false;
     }
     else {
@@ -910,7 +955,8 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
                         "Reopened DualSense Edge after adding paddle mappings");
             if (!dualSenseEdgeHasPaddleControllerButtons(controller)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "DualSense Edge paddle mapping add did not expose the expected paddle controller bindings");
+                            "DualSense Edge paddle mapping add did not expose the expected paddle controller bindings (actual: %s)",
+                            qPrintable(dualSenseEdgePaddleBindingSummary(controller)));
             }
         }
 
@@ -1094,11 +1140,12 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
 
         if (isDualSenseEdge) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "DualSense Edge arrival support: buttons=%d supportedButtonFlags=0x%08x paddle/Fn=0x%08x capabilities=0x%08x",
+                        "DualSense Edge arrival support: buttons=%d supportedButtonFlags=0x%08x paddle/Fn=0x%08x capabilities=0x%08x bindings=%s",
                         dualSenseEdgeButtonCount,
                         (unsigned int)supportedButtonFlags,
                         (unsigned int)(supportedButtonFlags & DUALSENSE_EDGE_PADDLE_FLAGS),
-                        (unsigned int)capabilities);
+                        (unsigned int)capabilities,
+                        qPrintable(dualSenseEdgePaddleBindingSummary(state->controller)));
         }
 
         LiSendControllerArrivalEvent(state->index, m_GamepadMask, type, supportedButtonFlags, capabilities);
