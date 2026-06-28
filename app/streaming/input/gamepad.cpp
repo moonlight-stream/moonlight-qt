@@ -664,9 +664,14 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         return;
     }
 
-    if (isDualSenseEdgeController(state->controller) &&
-        isDualSenseEdgePaddleControllerButton(event->button) &&
-        !dualSenseEdgeHasPaddleControllerButtons(state->controller)) {
+    const bool isDualSenseEdge = isDualSenseEdgeController(state->controller);
+    const bool isDualSenseEdgePaddleButton = isDualSenseEdgePaddleControllerButton(event->button);
+    const bool hasDualSenseEdgePaddleButtons =
+            isDualSenseEdge && dualSenseEdgeHasPaddleControllerButtons(state->controller);
+
+    if (isDualSenseEdge &&
+        isDualSenseEdgePaddleButton &&
+        !hasDualSenseEdgePaddleButtons) {
         int previousButtons = state->buttons;
         state->buttons &= ~k_ButtonMap[event->button];
         if (previousButtons != state->buttons && state->mouseEmulationTimer == 0) {
@@ -677,8 +682,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
                      dualSenseEdgePaddleButtonName(event->button));
         return;
     }
-    if (isDualSenseEdgeController(state->controller) &&
-        !dualSenseEdgeHasPaddleControllerButtons(state->controller)) {
+    if (isDualSenseEdge && !isDualSenseEdgePaddleButton) {
         int rawPaddleIndex = dualSenseEdgeControllerButtonRawPaddleIndex(state->controller, event->button);
         if (rawPaddleIndex >= 0) {
             int previousButtons = state->buttons;
@@ -688,7 +692,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
                 sendGamepadState(state);
             }
             SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-                         "Ignoring DualSense Edge controller button %s bound to raw %s without verified paddle bindings",
+                         "Ignoring DualSense Edge controller button %s bound to raw %s as stale Edge raw alias",
                          buttonName != nullptr ? buttonName : "<unknown>",
                          qPrintable(dualSenseEdgePaddleMappingEntry(rawPaddleIndex)));
             return;
