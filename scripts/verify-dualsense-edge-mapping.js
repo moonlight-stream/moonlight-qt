@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Verifies the DualSense Edge SDL2 mapping assumptions used by
+ * Verifies the DualSense Edge SDL controller mapping assumptions used by
  * app/streaming/input/gamepad.cpp without requiring physical hardware.
  */
 
@@ -203,6 +203,12 @@ assertSource(/dualSenseEdgeMinimumButtonCount\(controller\)/, 'runtime Edge mini
 assertSource(/SDL3.*QString::fromUtf8\(sdl3Version\)/s, 'Edge detection log must include underlying SDL3 runtime version when available');
 assertSource(/mappingEntry\.startsWith\("type:"\)/, 'SDL2 type metadata must stay treated as non-binding metadata');
 assertSource(/mappingEntry\.startsWith\("face:"\)/, 'SDL3 face metadata must stay treated as non-binding metadata');
+assertSource(/isDualSenseEdge && type != LI_CTYPE_PS[\s\S]*type = LI_CTYPE_PS;/, 'DualSense Edge must advertise PlayStation arrival type by VID/PID even if SDL type is generic');
+assertSource(/supportedButtonFlags &= ~DUALSENSE_EDGE_PADDLE_FLAGS[\s\S]*supportedButtonFlags \|= DUALSENSE_EDGE_PADDLE_FLAGS/, 'DualSense Edge paddle/Fn support must only be advertised after verified controller-button bindings');
+assertSource(/DualSense Edge arrival support: buttons=%d sdlType=%d arrivalType=0x%02x supportedButtonFlags=0x%08x paddle\/Fn=0x%08x capabilities=0x%08x bindings=%s/, 'DualSense Edge arrival evidence log format changed');
+assertSource(/DualSense Edge %s %s \(paddle\/Fn flags: 0x%08x\)/, 'DualSense Edge per-button evidence log format changed');
+assertSource(/as stale Edge raw alias/, 'DualSense Edge stale raw-alias diagnostic missing');
+assertSource(/not advertising it as a normal button/, 'DualSense Edge capability alias diagnostic missing');
 
 assertRuntimeSelection(false, 21, false, true, 'native SDL2 exposes the 21-button Edge shape');
 assertRuntimeSelection(false, 20, false, false, 'unknown 20-button Edge shape fails closed without an SDL3 hint');
