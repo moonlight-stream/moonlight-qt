@@ -140,6 +140,15 @@ static int dualSenseEdgePaddleMappingIndex(const QString& mappingEntry)
     return -1;
 }
 
+static bool isDualSenseEdgeMappingMetadataEntry(const QString& mappingEntry)
+{
+    return mappingEntry.startsWith("crc:") ||
+           mappingEntry.startsWith("hint:") ||
+           mappingEntry.startsWith("platform:") ||
+           mappingEntry.startsWith("sdk>=:") ||
+           mappingEntry.startsWith("sdk<=:");
+}
+
 static void addDualSenseEdgePaddleMappingChange(QString* changedMappings, int mappingIndex)
 {
     if (!changedMappings->isEmpty()) {
@@ -183,7 +192,7 @@ static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString
 
     int insertionIndex = -1;
     for (int i = 0; i < updatedEntries.size(); i++) {
-        if (updatedEntries.at(i).startsWith("platform:")) {
+        if (isDualSenseEdgeMappingMetadataEntry(updatedEntries.at(i))) {
             insertionIndex = i;
             break;
         }
