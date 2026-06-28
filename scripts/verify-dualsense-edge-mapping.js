@@ -443,6 +443,39 @@ assertMoonlightLogEvidence(
   'sdl2-compat runtime-version signal satisfies SDL3-compatible log evidence without SDL3_VERSION'
 );
 assertMoonlightLogEvidence(
+  completeSdl2MoonlightLog.replace(
+    'DualSense Edge detected with 21 SDL joystick buttons',
+    'DualSense Edge detected with 20 SDL joystick buttons'
+  ),
+  moonlightEvidenceVariants.sdl2,
+  false,
+  'native SDL2 raw-button undercount fails Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
+  completeSdl3MoonlightLog.replace(
+    'DualSense Edge detected with 17 SDL joystick buttons',
+    'DualSense Edge detected with 16 SDL joystick buttons'
+  ),
+  moonlightEvidenceVariants.sdl3Compat,
+  false,
+  'sdl2-compat/SDL3 raw-button undercount fails Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
+  completeSdl3MoonlightLog.replace(
+    '(SDL 2.32.70, SDL3 3.4.11) (raw mapping signal: SDL3_VERSION)',
+    '(SDL 2.32.10) (raw mapping signal: sdl2-compat runtime version)'
+  ),
+  moonlightEvidenceVariants.sdl3Compat,
+  false,
+  'ambiguous low-patch sdl2-compat claim fails Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
+  completeSdl2MoonlightLog.replace('VID/PID: 0x054c/0x0df2', 'VID/PID: 0x054c/0x0ce6'),
+  moonlightEvidenceVariants.sdl2,
+  false,
+  'wrong Edge VID/PID fails Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
   completeSdl2MoonlightLog.replace(' (raw mapping signal: native SDL2 runtime)', ''),
   moonlightEvidenceVariants.sdl2,
   false,
