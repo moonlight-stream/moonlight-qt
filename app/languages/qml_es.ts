@@ -66,7 +66,7 @@
     <message>
         <location filename="../gui/CliPair.qml" line="12"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation>Emparejando... Introduce &apos;1%&apos; en %2.</translation>
+        <translation>Emparejando... Introduce &apos;%1&apos; en %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="81"/>

@@ -38,7 +38,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="326"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>इस गेम को ऐप ग्रिड से छिपाएं। छिपे हुए खेलों तक पहुँचने के लिए, होस्ट पर राइट-क्लिक करें और% 1 चुनें।</translation>
+        <translation>इस गेम को ऐप ग्रिड से छिपाएं। छिपे हुए खेलों तक पहुँचने के लिए, होस्ट पर राइट-क्लिक करें और %1 चुनें।</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="326"/>
@@ -53,7 +53,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="354"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>क्या आप वाकई% 1 छोड़ना चाहते हैं? कोई भी सहेजी नहीं गई प्रगति खो जाएगी।</translation>
+        <translation>क्या आप वाकई %1 छोड़ना चाहते हैं? कोई भी सहेजी नहीं गई प्रगति खो जाएगी।</translation>
     </message>
 </context>
 <context>
@@ -102,7 +102,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="78"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>क्या आप वाकई% 1 छोड़ना चाहते हैं? कोई भी सहेजी नहीं गई प्रगति खो जाएगी।</translation>
+        <translation>क्या आप वाकई %1 छोड़ना चाहते हैं? कोई भी सहेजी नहीं गई प्रगति खो जाएगी।</translation>
     </message>
 </context>
 <context>

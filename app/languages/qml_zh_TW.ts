@@ -149,7 +149,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation>作用中位址</translation>
+        <translation>作用中位址: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
@@ -159,12 +159,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation>本地位址</translation>
+        <translation>本地位址: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation>遠端位址</translation>
+        <translation>遠端位址: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>

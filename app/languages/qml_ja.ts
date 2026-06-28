@@ -184,7 +184,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation>ペア状況</translation>
+        <translation>ペア状況: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
@@ -194,7 +194,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation>HTTPSポート</translation>
+        <translation>HTTPSポート: %1</translation>
     </message>
 </context>
 <context>

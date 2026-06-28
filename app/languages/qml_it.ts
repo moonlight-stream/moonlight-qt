@@ -579,7 +579,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1600"/>
         <source>Host returned error: %1</source>
-        <translation>L&apos;host ha restituito un errore: %</translation>
+        <translation>L&apos;host ha restituito un errore: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1034"/>

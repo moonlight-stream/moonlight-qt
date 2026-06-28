@@ -159,7 +159,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation>Lokaalne Aadress: 1%</translation>
+        <translation>Lokaalne Aadress: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
