@@ -137,6 +137,24 @@ static const char* dualSenseEdgeRawMappingName(SDL_GameController* controller)
     return dualSenseEdgeUsesSdl3CompatMappings(controller) ? "SDL3/sdl2-compat" : "SDL2";
 }
 
+static QString dualSenseEdgeRuntimeSdlSummary()
+{
+    SDL_version version;
+    SDL_GetVersion(&version);
+
+    QString summary = QString("SDL %1.%2.%3")
+            .arg(version.major)
+            .arg(version.minor)
+            .arg(version.patch);
+
+    const char* sdl3Version = SDL_GetHint("SDL3_VERSION");
+    if (sdl3Version != nullptr && sdl3Version[0] != '\0') {
+        summary += QString::fromLatin1(", SDL3 ") + QString::fromUtf8(sdl3Version);
+    }
+
+    return summary;
+}
+
 static int dualSenseEdgeMinimumButtonCount(SDL_GameController* controller)
 {
     return dualSenseEdgeUsesSdl3CompatMappings(controller) ?
@@ -434,18 +452,15 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
     }
 
     int buttonCount = dualSenseEdgeJoystickButtonCount(controller);
-    SDL_version version;
-    SDL_GetVersion(&version);
+    QString runtimeSdlSummary = dualSenseEdgeRuntimeSdlSummary();
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "DualSense Edge detected with %d SDL joystick buttons (need %d for %s Edge raw mapping) (VID/PID: 0x%.4x/0x%.4x) (SDL %d.%d.%d)",
+                "DualSense Edge detected with %d SDL joystick buttons (need %d for %s Edge raw mapping) (VID/PID: 0x%.4x/0x%.4x) (%s)",
                 buttonCount,
                 dualSenseEdgeMinimumButtonCount(controller),
                 dualSenseEdgeRawMappingName(controller),
                 (unsigned int)SDL_GameControllerGetVendor(controller),
                 (unsigned int)SDL_GameControllerGetProduct(controller),
-                version.major,
-                version.minor,
-                version.patch);
+                qPrintable(runtimeSdlSummary));
 
     if (!dualSenseEdgeExposesPaddleButtons(controller)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,

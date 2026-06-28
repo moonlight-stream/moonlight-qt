@@ -166,6 +166,7 @@ assertSource(/SDL_CONTROLLER_BUTTON_TOUCHPAD == DUALSENSE_EDGE_CONTROLLER_BUTTON
 assertSource(/SDL_GetHint\("SDL3_VERSION"\)/, 'sdl2-compat/SDL3 runtime detection missing');
 assertSource(/buttonCount >= DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS &&\s*buttonCount < DUALSENSE_EDGE_SDL2_MIN_BUTTONS/, 'sdl2-compat/SDL3 raw count fallback missing');
 assertSource(/dualSenseEdgeMinimumButtonCount\(controller\)/, 'runtime Edge minimum raw button count selection missing');
+assertSource(/SDL3.*QString::fromUtf8\(sdl3Version\)/s, 'Edge detection log must include underlying SDL3 runtime version when available');
 assertSource(/mappingEntry\.startsWith\("type:"\)/, 'SDL2 type metadata must stay treated as non-binding metadata');
 assertSource(/mappingEntry\.startsWith\("face:"\)/, 'SDL3 face metadata must stay treated as non-binding metadata');
 
