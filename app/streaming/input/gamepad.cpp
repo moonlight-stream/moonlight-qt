@@ -92,6 +92,18 @@ static const char* dualSenseEdgePaddleButtonName(Uint8 button)
     }
 }
 
+static bool dualSenseEdgeHasPaddleControllerButtons(SDL_GameController* controller)
+{
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+    return SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1) &&
+           SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE2) &&
+           SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE3) &&
+           SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4);
+#else
+    return false;
+#endif
+}
+
 static QString missingDualSenseEdgePaddleMappings(const char* mapping)
 {
     QString missingMappings;
@@ -113,6 +125,10 @@ static QString missingDualSenseEdgePaddleMappings(const char* mapping)
 
 static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
 {
+#if !SDL_VERSION_ATLEAST(2, 0, 14)
+    Q_UNUSED(controller);
+    return false;
+#else
     if (!isDualSenseEdgeController(controller)) {
         return false;
     }
@@ -140,8 +156,14 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
 
     QString missingMappings = missingDualSenseEdgePaddleMappings(mapping);
     if (missingMappings.isEmpty()) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "DualSense Edge paddle mappings already present");
+        if (dualSenseEdgeHasPaddleControllerButtons(controller)) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "DualSense Edge paddle mappings already present");
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "DualSense Edge paddle mappings are present, but SDL did not expose the paddle controller buttons");
+        }
         SDL_free(mapping);
         return false;
     }
@@ -167,6 +189,11 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
                     SDL_GetError());
         return false;
     }
+    else if (ret == 0 && !dualSenseEdgeHasPaddleControllerButtons(controller)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "DualSense Edge paddle mapping update did not expose the paddle controller buttons");
+        return false;
+    }
     else {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Applied DualSense Edge paddle mappings (%s): %s",
@@ -174,6 +201,7 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
                     qPrintable(missingMappings));
         return ret > 0;
     }
+#endif
 }
 
 GamepadState*
@@ -820,7 +848,8 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         }
         bool isDualSenseEdge = isDualSenseEdgeController(state->controller);
         int dualSenseEdgeButtonCount = isDualSenseEdge ? dualSenseEdgeJoystickButtonCount(state->controller) : 0;
-        if (isDualSenseEdge && dualSenseEdgeButtonCount >= DUALSENSE_EDGE_MIN_BUTTONS) {
+        bool hasDualSenseEdgePaddleButtons = isDualSenseEdge && dualSenseEdgeHasPaddleControllerButtons(state->controller);
+        if (hasDualSenseEdgePaddleButtons) {
             supportedButtonFlags |= DUALSENSE_EDGE_PADDLE_FLAGS;
         }
 
