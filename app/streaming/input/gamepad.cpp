@@ -31,7 +31,14 @@
 // SDL 2's DualSense Edge HIDAPI driver exposes the left/right Fn buttons and
 // left/right rear paddles as joystick buttons 17-20. Older controller DB
 // entries identify the Edge as a generic PS5 controller and omit these bindings.
+// Once mapped, SDL reports those raw joystick buttons as controller buttons
+// 16-19, matching the PADDLE1-4 order in k_ButtonMap.
 #define DUALSENSE_EDGE_MIN_BUTTONS 21
+#define DUALSENSE_EDGE_PADDLE_FLAGS (PADDLE1_FLAG | PADDLE2_FLAG | PADDLE3_FLAG | PADDLE4_FLAG)
+#define DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 16
+#define DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE2 17
+#define DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE3 18
+#define DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4 19
 
 const int SdlInputHandler::k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
@@ -50,14 +57,35 @@ static bool isDualSenseEdgeController(SDL_GameController* controller)
            SDL_GameControllerGetProduct(controller) == DUALSENSE_EDGE_PRODUCT_ID;
 }
 
+static int dualSenseEdgeJoystickButtonCount(SDL_GameController* controller)
+{
+    SDL_Joystick* joystick = SDL_GameControllerGetJoystick(controller);
+    return joystick != nullptr ? SDL_JoystickNumButtons(joystick) : -1;
+}
+
 static bool dualSenseEdgeExposesPaddleButtons(SDL_GameController* controller)
 {
     if (!isDualSenseEdgeController(controller)) {
         return false;
     }
 
-    SDL_Joystick* joystick = SDL_GameControllerGetJoystick(controller);
-    return joystick != nullptr && SDL_JoystickNumButtons(joystick) >= DUALSENSE_EDGE_MIN_BUTTONS;
+    return dualSenseEdgeJoystickButtonCount(controller) >= DUALSENSE_EDGE_MIN_BUTTONS;
+}
+
+static const char* dualSenseEdgePaddleButtonName(Uint8 button)
+{
+    switch (button) {
+    case DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1:
+        return "PADDLE1";
+    case DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE2:
+        return "PADDLE2";
+    case DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE3:
+        return "PADDLE3";
+    case DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4:
+        return "PADDLE4";
+    default:
+        return nullptr;
+    }
 }
 
 static QString missingDualSenseEdgePaddleMappings(const char* mapping)
@@ -85,19 +113,31 @@ static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
         return;
     }
 
+    int buttonCount = dualSenseEdgeJoystickButtonCount(controller);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "DualSense Edge detected with %d SDL joystick buttons",
+                buttonCount);
+
     if (!dualSenseEdgeExposesPaddleButtons(controller)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "DualSense Edge detected, but SDL does not expose the Edge-specific buttons");
+                    "DualSense Edge detected, but SDL exposes %d buttons; need at least %d for Edge-specific buttons",
+                    buttonCount,
+                    DUALSENSE_EDGE_MIN_BUTTONS);
         return;
     }
 
     char* mapping = SDL_GameControllerMapping(controller);
     if (mapping == nullptr) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Unable to query DualSense Edge controller mapping: %s",
+                    SDL_GetError());
         return;
     }
 
     QString missingMappings = missingDualSenseEdgePaddleMappings(mapping);
     if (missingMappings.isEmpty()) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "DualSense Edge paddle mappings already present");
         SDL_free(mapping);
         return;
     }
@@ -124,7 +164,9 @@ static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
     }
     else {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Added DualSense Edge paddle mappings");
+                    "Applied DualSense Edge paddle mappings (%s): %s",
+                    ret > 0 ? "added" : "updated",
+                    qPrintable(missingMappings));
     }
 }
 
@@ -457,6 +499,15 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         }
     }
 
+    const char* edgeButtonName = dualSenseEdgePaddleButtonName(event->button);
+    if (edgeButtonName != nullptr && isDualSenseEdgeController(state->controller)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "DualSense Edge %s %s (paddle/Fn flags: 0x%08x)",
+                    edgeButtonName,
+                    event->state == SDL_PRESSED ? "pressed" : "released",
+                    (unsigned int)(state->buttons & DUALSENSE_EDGE_PADDLE_FLAGS));
+    }
+
     // Handle Start+Select+L1+R1 as a gamepad quit combo
     if (state->buttons == (PLAY_FLAG | BACK_FLAG | LB_FLAG | RB_FLAG) && qgetenv("NO_GAMEPAD_QUIT") != "1") {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -745,8 +796,10 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
                 supportedButtonFlags |= k_ButtonMap[i];
             }
         }
-        if (dualSenseEdgeExposesPaddleButtons(state->controller)) {
-            supportedButtonFlags |= PADDLE1_FLAG | PADDLE2_FLAG | PADDLE3_FLAG | PADDLE4_FLAG;
+        bool isDualSenseEdge = isDualSenseEdgeController(state->controller);
+        int dualSenseEdgeButtonCount = isDualSenseEdge ? dualSenseEdgeJoystickButtonCount(state->controller) : 0;
+        if (isDualSenseEdge && dualSenseEdgeButtonCount >= DUALSENSE_EDGE_MIN_BUTTONS) {
+            supportedButtonFlags |= DUALSENSE_EDGE_PADDLE_FLAGS;
         }
 
         uint32_t capabilities = 0;
@@ -811,6 +864,15 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             SDL_GameControllerGetBindForButton(state->controller, SDL_CONTROLLER_BUTTON_TOUCHPAD).bindType == SDL_CONTROLLER_BINDTYPE_NONE &&
 #endif
             type == LI_CTYPE_PS;
+
+        if (isDualSenseEdge) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "DualSense Edge arrival support: buttons=%d supportedButtonFlags=0x%08x paddle/Fn=0x%08x capabilities=0x%08x",
+                        dualSenseEdgeButtonCount,
+                        (unsigned int)supportedButtonFlags,
+                        (unsigned int)(supportedButtonFlags & DUALSENSE_EDGE_PADDLE_FLAGS),
+                        (unsigned int)capabilities);
+        }
 
         LiSendControllerArrivalEvent(state->index, m_GamepadMask, type, supportedButtonFlags, capabilities);
 #else
