@@ -14,6 +14,8 @@ const source = fs.readFileSync(gamepadPath, 'utf8');
 const paddleKeys = ['paddle1', 'paddle2', 'paddle3', 'paddle4'];
 const sdl2PaddleButtons = [20, 19, 18, 17];
 const sdl3CompatPaddleButtons = [16, 15, 14, 13];
+const sdl2MinButtons = 21;
+const sdl3CompatMinButtons = 17;
 
 function fail(message) {
   console.error(`DualSense Edge mapping verification failed: ${message}`);
@@ -28,6 +30,38 @@ function assert(condition, message) {
 
 function assertSource(pattern, message) {
   assert(pattern.test(source), message);
+}
+
+function usesSdl3CompatMappings(hasSdl3VersionHint, buttonCount) {
+  if (hasSdl3VersionHint) {
+    return true;
+  }
+
+  return buttonCount === sdl3CompatMinButtons;
+}
+
+function minimumButtonCount(hasSdl3VersionHint, buttonCount) {
+  return usesSdl3CompatMappings(hasSdl3VersionHint, buttonCount) ?
+    sdl3CompatMinButtons :
+    sdl2MinButtons;
+}
+
+function exposesPaddleButtons(hasSdl3VersionHint, buttonCount) {
+  return buttonCount >= minimumButtonCount(hasSdl3VersionHint, buttonCount);
+}
+
+function assertRuntimeSelection(hasSdl3VersionHint, buttonCount, expectedUsesSdl3Compat, expectedExposesPaddles, message) {
+  const actualUsesSdl3Compat = usesSdl3CompatMappings(hasSdl3VersionHint, buttonCount);
+  const actualExposesPaddles = exposesPaddleButtons(hasSdl3VersionHint, buttonCount);
+
+  assert(
+    actualUsesSdl3Compat === expectedUsesSdl3Compat,
+    `${message}: raw mapping selection expected ${expectedUsesSdl3Compat ? 'SDL3/sdl2-compat' : 'SDL2'} but got ${actualUsesSdl3Compat ? 'SDL3/sdl2-compat' : 'SDL2'}`
+  );
+  assert(
+    actualExposesPaddles === expectedExposesPaddles,
+    `${message}: paddle exposure expected ${expectedExposesPaddles} but got ${actualExposesPaddles}`
+  );
 }
 
 function paddleMappingEntry(index, paddleButtons) {
@@ -169,6 +203,14 @@ assertSource(/dualSenseEdgeMinimumButtonCount\(controller\)/, 'runtime Edge mini
 assertSource(/SDL3.*QString::fromUtf8\(sdl3Version\)/s, 'Edge detection log must include underlying SDL3 runtime version when available');
 assertSource(/mappingEntry\.startsWith\("type:"\)/, 'SDL2 type metadata must stay treated as non-binding metadata');
 assertSource(/mappingEntry\.startsWith\("face:"\)/, 'SDL3 face metadata must stay treated as non-binding metadata');
+
+assertRuntimeSelection(false, 21, false, true, 'native SDL2 exposes the 21-button Edge shape');
+assertRuntimeSelection(false, 20, false, false, 'unknown 20-button Edge shape fails closed without an SDL3 hint');
+assertRuntimeSelection(false, 18, false, false, 'unknown 18-button Edge shape fails closed without an SDL3 hint');
+assertRuntimeSelection(false, 17, true, true, 'exact 17-button Edge shape selects sdl2-compat/SDL3 fallback');
+assertRuntimeSelection(true, 21, true, true, 'SDL3 hint selects sdl2-compat mapping even if future SDL3 exposes more raw buttons');
+assertRuntimeSelection(true, 17, true, true, 'SDL3 hint accepts current sdl2-compat Edge shape');
+assertRuntimeSelection(true, 16, true, false, 'SDL3 hint still requires enough raw buttons');
 
 function allPaddles(paddleButtons) {
   return paddleKeys.map((_, index) => paddleMappingEntry(index, paddleButtons)).join(',');
