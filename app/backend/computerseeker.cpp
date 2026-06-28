@@ -7,11 +7,9 @@ ComputerSeeker::ComputerSeeker(ComputerManager *manager, QString computerName, Q
       m_TimeoutTimer(new QTimer(this))
 {
     // If we know this computer, send a WOL packet to wake it up in case it is asleep.
-    const auto computers = m_ComputerManager->getComputers();
-    for (NvComputer* computer : computers) {
-        if (this->matchComputer(computer)) {
-            computer->wake();
-        }
+    NvComputer* matchingComputer = findMatchingComputer();
+    if (matchingComputer) {
+        matchingComputer->wake();
     }
 
     m_TimeoutTimer->setSingleShot(true);
@@ -24,11 +22,16 @@ ComputerSeeker::ComputerSeeker(ComputerManager *manager, QString computerName, Q
 void ComputerSeeker::start(int timeout)
 {
     m_TimeoutTimer->start(timeout);
-    // Seek desired computer by both connecting to it directly (this may fail
-    // if m_ComputerName is UUID, or the name that doesn't resolve to an IP
-    // address) and by polling it using mDNS, hopefully one of these methods
-    // would find the host
-    m_ComputerManager->addNewHostManually(m_ComputerName);
+
+    // If we don't know this computer by name, address, or UUID, try adding it
+    // manually and see if we can find it by address, hostname, or mDNS.
+    //
+    // NB: We don't do this unconditionally because it will wipe out the user's
+    // manual address if they pass another reachable hostname/address.
+    if (!findMatchingComputer()) {
+        m_ComputerManager->addNewHostManually(m_ComputerName);
+    }
+
     m_ComputerManager->startPolling();
 }
 
@@ -60,6 +63,18 @@ bool ComputerSeeker::matchComputer(NvComputer *computer) const
     }
 
     return false;
+}
+
+NvComputer* ComputerSeeker::findMatchingComputer() const
+{
+    const auto computers = m_ComputerManager->getComputers();
+    for (NvComputer* computer : computers) {
+        if (this->matchComputer(computer)) {
+            return computer;
+        }
+    }
+
+    return nullptr;
 }
 
 bool ComputerSeeker::isOnline(NvComputer *computer) const

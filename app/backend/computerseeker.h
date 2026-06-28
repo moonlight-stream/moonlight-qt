@@ -24,6 +24,7 @@ private slots:
 
 private:
     bool matchComputer(NvComputer *computer) const;
+    NvComputer* findMatchingComputer() const;
     bool isOnline(NvComputer *computer) const;
 
 private:
