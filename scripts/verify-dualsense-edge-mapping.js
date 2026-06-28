@@ -380,6 +380,8 @@ assertSource(/SDL_CONTROLLER_BUTTON_MISC1 == DUALSENSE_EDGE_CONTROLLER_BUTTON_PA
 assertSource(/SDL_CONTROLLER_BUTTON_TOUCHPAD == DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4 \+ 1/, 'PADDLE/TOUCHPAD adjacency assertion missing');
 assertSource(/SDL_GetHint\("SDL3_VERSION"\)/, 'sdl2-compat/SDL3 runtime detection missing');
 assertSource(/version\.major == 2 && version\.patch >= 50/, 'sdl2-compat/SDL3 runtime-version fallback missing');
+assertSource(/SDL_GameControllerHasButton\(controller, button\)/, 'Edge paddle support must probe the SDL controller-button layer');
+assertSource(/SDL_GameControllerGetBindForButton\(controller, button\)/, 'Edge paddle support must verify SDL controller-button bindings');
 assertSource(/dualSenseEdgeMinimumButtonCount\(controller\)/, 'runtime Edge minimum raw button count selection missing');
 assertSource(/raw mapping signal: %s/, 'Edge detection log must include raw mapping selection signal');
 assertSource(/SDL3.*QString::fromUtf8\(sdl3Version\)/s, 'Edge detection log must include underlying SDL3 runtime version when available');
