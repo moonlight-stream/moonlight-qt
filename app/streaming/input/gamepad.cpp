@@ -863,6 +863,10 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
 
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Reopened DualSense Edge after adding paddle mappings");
+            if (!dualSenseEdgeHasPaddleControllerButtons(controller)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "DualSense Edge paddle mapping add did not expose the expected paddle controller bindings");
+            }
         }
 
         state = &m_GamepadState[i];
