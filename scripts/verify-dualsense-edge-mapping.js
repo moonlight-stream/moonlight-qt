@@ -250,10 +250,9 @@ function hasDetectionEvidence(log, variant) {
   return false;
 }
 
-function hasMappingEvidence(log, variant) {
+function hasMappingEvidence(log) {
   return log.includes('DualSense Edge paddle mappings already present') ||
-         log.includes(`Applied DualSense Edge paddle mappings (updated): ${variant.logMappings}`) ||
-         log.includes(`Applied DualSense Edge paddle mappings (added): ${variant.logMappings}`);
+         /Applied DualSense Edge paddle mappings \((added|updated)\): /.test(log);
 }
 
 function hasArrivalEvidence(log, variant) {
@@ -430,6 +429,15 @@ assertMoonlightLogEvidence(
   moonlightEvidenceVariants.sdl2,
   true,
   'already-present mapping line satisfies Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
+  completeSdl2MoonlightLog.replace(
+    `Applied DualSense Edge paddle mappings (updated): ${moonlightEvidenceVariants.sdl2.logMappings}`,
+    'Applied DualSense Edge paddle mappings (updated): paddle2:b19,paddle4:b17'
+  ),
+  moonlightEvidenceVariants.sdl2,
+  true,
+  'partial mapping-change line can satisfy Moonlight log evidence when arrival bindings are complete'
 );
 assertMoonlightLogEvidence(
   withoutLogLine(completeSdl2MoonlightLog, 'DualSense Edge PADDLE4 released (paddle/Fn flags: 0x00000000)'),
