@@ -109,6 +109,8 @@ static const char* dualSenseEdgePaddleButtonName(Uint8 button)
 static bool dualSenseEdgeHasPaddleControllerButtons(SDL_GameController* controller)
 {
 #if SDL_VERSION_ATLEAST(2, 0, 14)
+    // Raw joystick button count only proves SDL can see the physical controls.
+    // The controller-button layer is what Moonlight can transmit as paddles.
     return SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1) &&
            SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE2) &&
            SDL_GameControllerHasButton(controller, (SDL_GameControllerButton)DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE3) &&
