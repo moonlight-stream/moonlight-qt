@@ -268,6 +268,9 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
                     SDL_GetError());
         return false;
     }
+    // SDL refreshes open controllers when an existing mapping is updated and
+    // returns 0 for that path. A new mapping returns >0, so reopen below to
+    // bind this controller to it before sending arrival capabilities.
     else if (ret == 0 && !dualSenseEdgeHasPaddleControllerButtons(controller)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "DualSense Edge paddle mapping update did not expose the paddle controller buttons");
