@@ -27,14 +27,17 @@
 #define SONY_VENDOR_ID 0x054c
 #define DUALSENSE_EDGE_PRODUCT_ID 0x0df2
 
-// SDL 2's DualSense Edge HIDAPI driver exposes the Edge-specific controls as
-// raw joystick buttons 17-20. Its generated mapping is paddle1:b20,
+// Native SDL2's DualSense Edge HIDAPI driver exposes the Edge-specific controls
+// as raw joystick buttons 17-20. Its generated mapping is paddle1:b20,
 // paddle2:b19, paddle3:b18, paddle4:b17, matching right rear, left rear,
-// right Fn, and left Fn. Older controller DB entries identify the Edge as a
-// generic PS5 controller and omit these bindings. Once mapped, SDL reports
-// those raw buttons as controller buttons 16-19, matching the PADDLE1-4 order
-// in k_ButtonMap.
-#define DUALSENSE_EDGE_MIN_BUTTONS 21
+// right Fn, and left Fn. Moonlight builds may also run through sdl2-compat over
+// SDL3, where the same semantic controls are exposed as raw buttons 13-16 and
+// generated as paddle1:b16,paddle2:b15,paddle3:b14,paddle4:b13. Older
+// controller DB entries identify the Edge as a generic PS5 controller and omit
+// these bindings. Once mapped, SDL reports those raw buttons as controller
+// buttons 16-19, matching the PADDLE1-4 order in k_ButtonMap.
+#define DUALSENSE_EDGE_SDL2_MIN_BUTTONS 21
+#define DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS 17
 #define DUALSENSE_EDGE_PADDLE_FLAGS (PADDLE1_FLAG | PADDLE2_FLAG | PADDLE3_FLAG | PADDLE4_FLAG)
 #define DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 16
 #define DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE2 17
@@ -77,11 +80,18 @@ static const char* const DUALSENSE_EDGE_PADDLE_MAPPING_KEYS[DUALSENSE_EDGE_PADDL
     "paddle4",
 };
 
-static const int DUALSENSE_EDGE_PADDLE_MAPPING_BUTTONS[DUALSENSE_EDGE_PADDLE_MAPPING_COUNT] = {
+static const int DUALSENSE_EDGE_SDL2_PADDLE_MAPPING_BUTTONS[DUALSENSE_EDGE_PADDLE_MAPPING_COUNT] = {
     20,
     19,
     18,
     17,
+};
+
+static const int DUALSENSE_EDGE_SDL3_COMPAT_PADDLE_MAPPING_BUTTONS[DUALSENSE_EDGE_PADDLE_MAPPING_COUNT] = {
+    16,
+    15,
+    14,
+    13,
 };
 
 const int SdlInputHandler::k_ButtonMap[] = {
@@ -111,13 +121,43 @@ static int dualSenseEdgeJoystickButtonCount(SDL_GameController* controller)
     return joystick != nullptr ? SDL_JoystickNumButtons(joystick) : -1;
 }
 
+static bool dualSenseEdgeUsesSdl3CompatMappings(SDL_GameController* controller)
+{
+    if (SDL_GetHint("SDL3_VERSION") != nullptr) {
+        return true;
+    }
+
+    int buttonCount = dualSenseEdgeJoystickButtonCount(controller);
+    return buttonCount >= DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS &&
+           buttonCount < DUALSENSE_EDGE_SDL2_MIN_BUTTONS;
+}
+
+static const char* dualSenseEdgeRawMappingName(SDL_GameController* controller)
+{
+    return dualSenseEdgeUsesSdl3CompatMappings(controller) ? "SDL3/sdl2-compat" : "SDL2";
+}
+
+static int dualSenseEdgeMinimumButtonCount(SDL_GameController* controller)
+{
+    return dualSenseEdgeUsesSdl3CompatMappings(controller) ?
+        DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS :
+        DUALSENSE_EDGE_SDL2_MIN_BUTTONS;
+}
+
+static const int* dualSenseEdgePaddleMappingButtons(SDL_GameController* controller)
+{
+    return dualSenseEdgeUsesSdl3CompatMappings(controller) ?
+        DUALSENSE_EDGE_SDL3_COMPAT_PADDLE_MAPPING_BUTTONS :
+        DUALSENSE_EDGE_SDL2_PADDLE_MAPPING_BUTTONS;
+}
+
 static bool dualSenseEdgeExposesPaddleButtons(SDL_GameController* controller)
 {
     if (!isDualSenseEdgeController(controller)) {
         return false;
     }
 
-    return dualSenseEdgeJoystickButtonCount(controller) >= DUALSENSE_EDGE_MIN_BUTTONS;
+    return dualSenseEdgeJoystickButtonCount(controller) >= dualSenseEdgeMinimumButtonCount(controller);
 }
 
 static const char* dualSenseEdgePaddleButtonName(Uint8 button)
@@ -147,14 +187,15 @@ static bool dualSenseEdgeHasPaddleControllerButtons(SDL_GameController* controll
 #if SDL_VERSION_ATLEAST(2, 0, 14)
     // Raw joystick button count only proves SDL can see the physical controls.
     // Moonlight can only transmit the controller-button layer, and the bindings
-    // must point at SDL2's canonical Edge raw buttons to preserve physical labels.
+    // must point at the current SDL Edge raw buttons to preserve physical labels.
+    const int* paddleMappingButtons = dualSenseEdgePaddleMappingButtons(controller);
     for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
         SDL_GameControllerButton button = (SDL_GameControllerButton)(DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 + i);
         SDL_GameControllerButtonBind binding = SDL_GameControllerGetBindForButton(controller, button);
 
         if (!SDL_GameControllerHasButton(controller, button) ||
             binding.bindType != SDL_CONTROLLER_BINDTYPE_BUTTON ||
-            binding.value.button != DUALSENSE_EDGE_PADDLE_MAPPING_BUTTONS[i]) {
+            binding.value.button != paddleMappingButtons[i]) {
             return false;
         }
     }
@@ -208,10 +249,10 @@ static QString dualSenseEdgePaddleBindingSummary(SDL_GameController* controller)
 #endif
 }
 
-static QString dualSenseEdgePaddleMappingEntry(int mappingIndex)
+static QString dualSenseEdgePaddleMappingEntry(int mappingIndex, const int* paddleMappingButtons)
 {
     return QString::fromLatin1(DUALSENSE_EDGE_PADDLE_MAPPING_KEYS[mappingIndex]) + ":" +
-           "b" + QString::number(DUALSENSE_EDGE_PADDLE_MAPPING_BUTTONS[mappingIndex]);
+           "b" + QString::number(paddleMappingButtons[mappingIndex]);
 }
 
 static int dualSenseEdgePaddleMappingIndex(const QString& mappingEntry)
@@ -226,7 +267,7 @@ static int dualSenseEdgePaddleMappingIndex(const QString& mappingEntry)
     return -1;
 }
 
-static int dualSenseEdgePaddleRawButtonMappingIndex(const QString& mappingEntry)
+static int dualSenseEdgePaddleRawButtonMappingIndex(const QString& mappingEntry, const int* paddleMappingButtons)
 {
     int separatorIndex = mappingEntry.indexOf(':');
     if (separatorIndex < 0) {
@@ -235,7 +276,7 @@ static int dualSenseEdgePaddleRawButtonMappingIndex(const QString& mappingEntry)
 
     QString binding = mappingEntry.mid(separatorIndex + 1);
     for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
-        QString expectedBinding = "b" + QString::number(DUALSENSE_EDGE_PADDLE_MAPPING_BUTTONS[i]);
+        QString expectedBinding = "b" + QString::number(paddleMappingButtons[i]);
         if (binding == expectedBinding) {
             return i;
         }
@@ -244,10 +285,11 @@ static int dualSenseEdgePaddleRawButtonMappingIndex(const QString& mappingEntry)
     return -1;
 }
 
-static int dualSenseEdgePaddleRawButtonIndex(int rawButton)
+static int dualSenseEdgePaddleRawButtonIndex(SDL_GameController* controller, int rawButton)
 {
+    const int* paddleMappingButtons = dualSenseEdgePaddleMappingButtons(controller);
     for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
-        if (rawButton == DUALSENSE_EDGE_PADDLE_MAPPING_BUTTONS[i]) {
+        if (rawButton == paddleMappingButtons[i]) {
             return i;
         }
     }
@@ -264,7 +306,7 @@ static int dualSenseEdgeControllerButtonRawPaddleIndex(SDL_GameController* contr
         return -1;
     }
 
-    return dualSenseEdgePaddleRawButtonIndex(binding.value.button);
+    return dualSenseEdgePaddleRawButtonIndex(controller, binding.value.button);
 #else
     Q_UNUSED(controller);
     Q_UNUSED(button);
@@ -289,15 +331,15 @@ static bool isDualSenseEdgeMappingMetadataEntry(const QString& mappingEntry)
            mappingEntry.startsWith("type:");
 }
 
-static void addDualSenseEdgePaddleMappingChange(QString* changedMappings, int mappingIndex)
+static void addDualSenseEdgePaddleMappingChange(QString* changedMappings, int mappingIndex, const int* paddleMappingButtons)
 {
     if (!changedMappings->isEmpty()) {
         changedMappings->append(",");
     }
-    changedMappings->append(dualSenseEdgePaddleMappingEntry(mappingIndex));
+    changedMappings->append(dualSenseEdgePaddleMappingEntry(mappingIndex, paddleMappingButtons));
 }
 
-static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString* changedMappings)
+static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString* changedMappings, const int* paddleMappingButtons)
 {
     QString originalMapping = QString::fromUtf8(mapping);
     QStringList entries = originalMapping.split(',');
@@ -317,7 +359,7 @@ static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString
         int mappingIndex = dualSenseEdgePaddleMappingIndex(entry);
 
         if (mappingIndex < 0) {
-            mappingIndex = dualSenseEdgePaddleRawButtonMappingIndex(entry);
+            mappingIndex = dualSenseEdgePaddleRawButtonMappingIndex(entry, paddleMappingButtons);
             if (mappingIndex >= 0) {
                 changedMappingEntries[mappingIndex] = true;
                 hasChangedMappingEntries = true;
@@ -334,7 +376,7 @@ static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString
             continue;
         }
 
-        QString expectedEntry = dualSenseEdgePaddleMappingEntry(mappingIndex);
+        QString expectedEntry = dualSenseEdgePaddleMappingEntry(mappingIndex, paddleMappingButtons);
         foundMappings[mappingIndex] = true;
 
         if (entry != expectedEntry) {
@@ -362,7 +404,7 @@ static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString
             changedMappingEntries[i] = true;
             hasChangedMappingEntries = true;
         }
-        updatedEntries.insert(insertionIndex++, dualSenseEdgePaddleMappingEntry(i));
+        updatedEntries.insert(insertionIndex++, dualSenseEdgePaddleMappingEntry(i, paddleMappingButtons));
     }
 
     QString updatedMapping = updatedEntries.join(",");
@@ -374,7 +416,7 @@ static QString normalizeDualSenseEdgePaddleMappings(const char* mapping, QString
 
     for (int i = 0; i < DUALSENSE_EDGE_PADDLE_MAPPING_COUNT; i++) {
         if (changedMappingEntries[i]) {
-            addDualSenseEdgePaddleMappingChange(changedMappings, i);
+            addDualSenseEdgePaddleMappingChange(changedMappings, i, paddleMappingButtons);
         }
     }
 
@@ -395,8 +437,10 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
     SDL_version version;
     SDL_GetVersion(&version);
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "DualSense Edge detected with %d SDL joystick buttons (VID/PID: 0x%.4x/0x%.4x) (SDL %d.%d.%d)",
+                "DualSense Edge detected with %d SDL joystick buttons (need %d for %s Edge raw mapping) (VID/PID: 0x%.4x/0x%.4x) (SDL %d.%d.%d)",
                 buttonCount,
+                dualSenseEdgeMinimumButtonCount(controller),
+                dualSenseEdgeRawMappingName(controller),
                 (unsigned int)SDL_GameControllerGetVendor(controller),
                 (unsigned int)SDL_GameControllerGetProduct(controller),
                 version.major,
@@ -405,9 +449,10 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
 
     if (!dualSenseEdgeExposesPaddleButtons(controller)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "DualSense Edge detected, but SDL exposes %d buttons; need at least %d for Edge-specific buttons",
+                    "DualSense Edge detected, but SDL exposes %d buttons; need at least %d for Edge-specific buttons with %s raw mapping",
                     buttonCount,
-                    DUALSENSE_EDGE_MIN_BUTTONS);
+                    dualSenseEdgeMinimumButtonCount(controller),
+                    dualSenseEdgeRawMappingName(controller));
         return false;
     }
 
@@ -420,7 +465,8 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
     }
 
     QString changedMappings;
-    QString updatedMapping = normalizeDualSenseEdgePaddleMappings(mapping, &changedMappings);
+    const int* paddleMappingButtons = dualSenseEdgePaddleMappingButtons(controller);
+    QString updatedMapping = normalizeDualSenseEdgePaddleMappings(mapping, &changedMappings, paddleMappingButtons);
     if (changedMappings.isEmpty()) {
         if (dualSenseEdgeHasPaddleControllerButtons(controller)) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -717,6 +763,10 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         int rawPaddleIndex = dualSenseEdgeControllerButtonRawPaddleIndex(state->controller, event->button);
         int previousButtons = state->buttons;
         const char* buttonName = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event->button);
+        QString rawPaddleEntry = dualSenseEdgePaddleMappingEntry(
+            rawPaddleIndex,
+            dualSenseEdgePaddleMappingButtons(state->controller)
+        );
         state->buttons &= ~k_ButtonMap[event->button];
         if (previousButtons != state->buttons && state->mouseEmulationTimer == 0) {
             sendGamepadState(state);
@@ -724,7 +774,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
                      "Ignoring DualSense Edge controller button %s bound to raw %s as stale Edge raw alias",
                      buttonName != nullptr ? buttonName : "<unknown>",
-                     qPrintable(dualSenseEdgePaddleMappingEntry(rawPaddleIndex)));
+                     qPrintable(rawPaddleEntry));
         return;
     }
 
@@ -1145,10 +1195,14 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
                     dualSenseEdgeControllerButtonIsStaleRawAlias(state->controller, (Uint8)i)) {
                     const char* buttonName = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)i);
                     int rawPaddleIndex = dualSenseEdgeControllerButtonRawPaddleIndex(state->controller, (Uint8)i);
+                    QString rawPaddleEntry = dualSenseEdgePaddleMappingEntry(
+                        rawPaddleIndex,
+                        dualSenseEdgePaddleMappingButtons(state->controller)
+                    );
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                 "DualSense Edge controller button %s is bound to raw %s; not advertising it as a normal button",
                                 buttonName != nullptr ? buttonName : "<unknown>",
-                                qPrintable(dualSenseEdgePaddleMappingEntry(rawPaddleIndex)));
+                                qPrintable(rawPaddleEntry));
                     continue;
                 }
                 supportedButtonFlags |= k_ButtonMap[i];
