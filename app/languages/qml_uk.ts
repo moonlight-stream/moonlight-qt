@@ -129,12 +129,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation>Парований</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation>Не парований</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
@@ -184,7 +184,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation>Стан парування: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
@@ -615,7 +615,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1125"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation>Хост не підтримує транслювання YUV 4:4:4 для видраного відео кодека.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1140"/>

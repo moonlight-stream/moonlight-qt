@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="341"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation>Este computador parece não ter nenhuma aplicação disponível ou alguma aplicações estão ocultas</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="354"/>
@@ -361,7 +361,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="608"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>Não pode parear enquanto a sessão anterior está em progresso no PC host. Encerre jogos em andamento ou reinicie e tente parear novamente.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="611"/>
@@ -1039,7 +1039,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1264"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation>Atualize o seu estado do DIscord para mostrar o nome do jogo que está a transmittir.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1483"/>
