@@ -9,7 +9,13 @@ const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
 const gamepadPath = path.join(repoRoot, 'app', 'streaming', 'input', 'gamepad.cpp');
+const limelightPath = path.join(repoRoot, 'moonlight-common-c', 'moonlight-common-c', 'src', 'Limelight.h');
+const inputHeaderPath = path.join(repoRoot, 'moonlight-common-c', 'moonlight-common-c', 'src', 'Input.h');
+const inputStreamPath = path.join(repoRoot, 'moonlight-common-c', 'moonlight-common-c', 'src', 'InputStream.c');
 const source = fs.readFileSync(gamepadPath, 'utf8');
+const limelightSource = fs.readFileSync(limelightPath, 'utf8');
+const inputHeaderSource = fs.readFileSync(inputHeaderPath, 'utf8');
+const inputStreamSource = fs.readFileSync(inputStreamPath, 'utf8');
 
 const paddleKeys = ['paddle1', 'paddle2', 'paddle3', 'paddle4'];
 const sdl2PaddleButtons = [20, 19, 18, 17];
@@ -28,8 +34,12 @@ function assert(condition, message) {
   }
 }
 
+function assertInSource(sourceText, pattern, message) {
+  assert(pattern.test(sourceText), message);
+}
+
 function assertSource(pattern, message) {
-  assert(pattern.test(source), message);
+  assertInSource(source, pattern, message);
 }
 
 function usesSdl3CompatMappings(hasSdl3VersionHint, buttonCount) {
@@ -48,6 +58,10 @@ function minimumButtonCount(hasSdl3VersionHint, buttonCount) {
 
 function exposesPaddleButtons(hasSdl3VersionHint, buttonCount) {
   return buttonCount >= minimumButtonCount(hasSdl3VersionHint, buttonCount);
+}
+
+function sunshineButtonFlags2(buttonFlags) {
+  return (buttonFlags >>> 16) & 0xffff;
 }
 
 function assertRuntimeSelection(hasSdl3VersionHint, buttonCount, expectedUsesSdl3Compat, expectedExposesPaddles, message) {
@@ -209,6 +223,14 @@ assertSource(/DualSense Edge arrival support: buttons=%d sdlType=%d arrivalType=
 assertSource(/DualSense Edge %s %s \(paddle\/Fn flags: 0x%08x\)/, 'DualSense Edge per-button evidence log format changed');
 assertSource(/as stale Edge raw alias/, 'DualSense Edge stale raw-alias diagnostic missing');
 assertSource(/not advertising it as a normal button/, 'DualSense Edge capability alias diagnostic missing');
+assertInSource(limelightSource, /#define PADDLE1_FLAG\s+0x010000\b/, 'Moonlight common PADDLE1 flag must stay in the Sunshine high word');
+assertInSource(limelightSource, /#define PADDLE2_FLAG\s+0x020000\b/, 'Moonlight common PADDLE2 flag must stay in the Sunshine high word');
+assertInSource(limelightSource, /#define PADDLE3_FLAG\s+0x040000\b/, 'Moonlight common PADDLE3 flag must stay in the Sunshine high word');
+assertInSource(limelightSource, /#define PADDLE4_FLAG\s+0x080000\b/, 'Moonlight common PADDLE4 flag must stay in the Sunshine high word');
+assertInSource(inputHeaderSource, /short buttonFlags2; \/\/ Sunshine protocol extension \(always 0 for GFE\)/, 'multi-controller packet must retain the Sunshine buttonFlags2 extension');
+assertInSource(inputStreamSource, /buttonFlags2 != \(IS_SUNSHINE\(\) \? LE16\(\(short\)\(buttonFlags >> 16\)\) : 0\)/, 'batched controller comparison must include Sunshine high-word buttonFlags2');
+assertInSource(inputStreamSource, /buttonFlags2 = IS_SUNSHINE\(\) \? LE16\(\(short\)\(buttonFlags >> 16\)\) : 0;/, 'controller packets must carry high-word Edge buttons in Sunshine buttonFlags2');
+assertInSource(inputStreamSource, /controllerArrival\.supportedButtonFlags = LE32\(supportedButtonFlags\);/, 'arrival packets must advertise the full 32-bit supported button mask');
 
 assertRuntimeSelection(false, 21, false, true, 'native SDL2 exposes the 21-button Edge shape');
 assertRuntimeSelection(false, 20, false, false, 'unknown 20-button Edge shape fails closed without an SDL3 hint');
@@ -217,6 +239,24 @@ assertRuntimeSelection(false, 17, true, true, 'exact 17-button Edge shape select
 assertRuntimeSelection(true, 21, true, true, 'SDL3 hint selects sdl2-compat mapping even if future SDL3 exposes more raw buttons');
 assertRuntimeSelection(true, 17, true, true, 'SDL3 hint accepts current sdl2-compat Edge shape');
 assertRuntimeSelection(true, 16, true, false, 'SDL3 hint still requires enough raw buttons');
+
+[
+  [0x010000, 0x0001, 'PADDLE1'],
+  [0x020000, 0x0002, 'PADDLE2'],
+  [0x040000, 0x0004, 'PADDLE3'],
+  [0x080000, 0x0008, 'PADDLE4'],
+].forEach(([buttonFlag, expectedButtonFlags2, name]) => {
+  assert(
+    sunshineButtonFlags2(buttonFlag) === expectedButtonFlags2,
+    `${name} must serialize to Sunshine buttonFlags2 bit 0x${expectedButtonFlags2.toString(16).padStart(4, '0')}`
+  );
+  assert(
+    (buttonFlag & 0xffff) === 0,
+    `${name} must not collide with the legacy 16-bit buttonFlags field`
+  );
+});
+assert(sunshineButtonFlags2(0x0f0000) === 0x000f, 'all Edge paddle/Fn buttons must serialize as buttonFlags2 mask 0x000f');
+assert(sunshineButtonFlags2(0x2f0000) === 0x002f, 'Edge paddle/Fn, touchpad, and misc buttons must all survive in Sunshine buttonFlags2');
 
 function allPaddles(paddleButtons) {
   return paddleKeys.map((_, index) => paddleMappingEntry(index, paddleButtons)).join(',');
