@@ -217,6 +217,7 @@ const moonlightEvidenceVariants = {
     minButtons: sdl2MinButtons,
     rawMappingName: 'SDL2',
     runtimeVersionPattern: /SDL \d+\.\d+\.\d+\)/,
+    rawMappingSignalPattern: /^native SDL2 runtime$/,
     bindings: bindingSummary(sdl2PaddleButtons),
     logMappings: logMappingSummary(sdl2PaddleButtons),
   },
@@ -224,14 +225,15 @@ const moonlightEvidenceVariants = {
     label: 'sdl2-compat/SDL3',
     minButtons: sdl3CompatMinButtons,
     rawMappingName: 'SDL3/sdl2-compat',
-    runtimeVersionPattern: /SDL \d+\.\d+\.\d+, SDL3 \d+\.\d+\.\d+\)/,
+    runtimeVersionPattern: /^(?:SDL \d+\.\d+\.\d+, SDL3 \d+\.\d+\.\d+\)|SDL 2\.\d+\.(?:[5-9]\d|[1-9]\d{2,})\))$/,
+    rawMappingSignalPattern: /^(SDL3_VERSION|sdl2-compat runtime version)$/,
     bindings: bindingSummary(sdl3CompatPaddleButtons),
     logMappings: logMappingSummary(sdl3CompatPaddleButtons),
   },
 };
 
 function hasDetectionEvidence(log, variant) {
-  const detectionPattern = /DualSense Edge detected with (\d+) SDL joystick buttons \(need (\d+) for (SDL2|SDL3\/sdl2-compat) Edge raw mapping\) \(VID\/PID: 0x054c\/0x0df2\) \((SDL \d+\.\d+\.\d+(?:, SDL3 \d+\.\d+\.\d+)?)\)/g;
+  const detectionPattern = /DualSense Edge detected with (\d+) SDL joystick buttons \(need (\d+) for (SDL2|SDL3\/sdl2-compat) Edge raw mapping\) \(VID\/PID: 0x054c\/0x0df2\) \((SDL \d+\.\d+\.\d+(?:, SDL3 \d+\.\d+\.\d+)?)\) \(raw mapping signal: ([^)]+)\)/g;
   let match;
 
   while ((match = detectionPattern.exec(log)) !== null) {
@@ -239,10 +241,12 @@ function hasDetectionEvidence(log, variant) {
     const requiredButtons = Number(match[2]);
     const rawMappingName = match[3];
     const runtimeVersion = `${match[4]})`;
+    const rawMappingSignal = match[5];
     if (buttonCount >= variant.minButtons &&
         requiredButtons === variant.minButtons &&
         rawMappingName === variant.rawMappingName &&
-        variant.runtimeVersionPattern.test(runtimeVersion)) {
+        variant.runtimeVersionPattern.test(runtimeVersion) &&
+        variant.rawMappingSignalPattern.test(rawMappingSignal)) {
       return true;
     }
   }
@@ -335,8 +339,11 @@ function hasCompleteMoonlightLogEvidence(log, variant) {
 }
 
 function makeCompleteMoonlightLog(variant) {
+  const runtimeSummary = variant.rawMappingName === 'SDL2' ? 'SDL 2.30.9' : 'SDL 2.32.70, SDL3 3.4.11';
+  const rawMappingSignal = variant.rawMappingName === 'SDL2' ? 'native SDL2 runtime' : 'SDL3_VERSION';
+
   return [
-    `DualSense Edge detected with ${variant.minButtons} SDL joystick buttons (need ${variant.minButtons} for ${variant.rawMappingName} Edge raw mapping) (VID/PID: 0x054c/0x0df2) (${variant.rawMappingName === 'SDL2' ? 'SDL 2.30.9' : 'SDL 2.32.70, SDL3 3.4.11'})`,
+    `DualSense Edge detected with ${variant.minButtons} SDL joystick buttons (need ${variant.minButtons} for ${variant.rawMappingName} Edge raw mapping) (VID/PID: 0x054c/0x0df2) (${runtimeSummary}) (raw mapping signal: ${rawMappingSignal})`,
     `Applied DualSense Edge paddle mappings (updated): ${variant.logMappings}`,
     `DualSense Edge arrival support: buttons=${variant.minButtons} sdlType=4 arrivalType=0x02 supportedButtonFlags=0x000f0000 paddle/Fn=0x000f0000 capabilities=0x00000000 bindings=${variant.bindings}`,
     'DualSense Edge PADDLE1 pressed (paddle/Fn flags: 0x00010000)',
@@ -374,6 +381,7 @@ assertSource(/SDL_CONTROLLER_BUTTON_TOUCHPAD == DUALSENSE_EDGE_CONTROLLER_BUTTON
 assertSource(/SDL_GetHint\("SDL3_VERSION"\)/, 'sdl2-compat/SDL3 runtime detection missing');
 assertSource(/version\.major == 2 && version\.patch >= 50/, 'sdl2-compat/SDL3 runtime-version fallback missing');
 assertSource(/dualSenseEdgeMinimumButtonCount\(controller\)/, 'runtime Edge minimum raw button count selection missing');
+assertSource(/raw mapping signal: %s/, 'Edge detection log must include raw mapping selection signal');
 assertSource(/SDL3.*QString::fromUtf8\(sdl3Version\)/s, 'Edge detection log must include underlying SDL3 runtime version when available');
 assertSource(/mappingEntry\.startsWith\("type:"\)/, 'SDL2 type metadata must stay treated as non-binding metadata');
 assertSource(/mappingEntry\.startsWith\("face:"\)/, 'SDL3 face metadata must stay treated as non-binding metadata');
@@ -425,6 +433,27 @@ const completeSdl2MoonlightLog = makeCompleteMoonlightLog(moonlightEvidenceVaria
 const completeSdl3MoonlightLog = makeCompleteMoonlightLog(moonlightEvidenceVariants.sdl3Compat);
 assertMoonlightLogEvidence(completeSdl2MoonlightLog, moonlightEvidenceVariants.sdl2, true, 'native SDL2 same-log evidence passes');
 assertMoonlightLogEvidence(completeSdl3MoonlightLog, moonlightEvidenceVariants.sdl3Compat, true, 'sdl2-compat/SDL3 same-log evidence passes');
+assertMoonlightLogEvidence(
+  completeSdl3MoonlightLog.replace(
+    '(SDL 2.32.70, SDL3 3.4.11) (raw mapping signal: SDL3_VERSION)',
+    '(SDL 2.32.70) (raw mapping signal: sdl2-compat runtime version)'
+  ),
+  moonlightEvidenceVariants.sdl3Compat,
+  true,
+  'sdl2-compat runtime-version signal satisfies SDL3-compatible log evidence without SDL3_VERSION'
+);
+assertMoonlightLogEvidence(
+  completeSdl2MoonlightLog.replace(' (raw mapping signal: native SDL2 runtime)', ''),
+  moonlightEvidenceVariants.sdl2,
+  false,
+  'missing raw mapping signal fails Moonlight log evidence'
+);
+assertMoonlightLogEvidence(
+  completeSdl3MoonlightLog.replace('raw mapping signal: SDL3_VERSION', 'raw mapping signal: native SDL2 runtime'),
+  moonlightEvidenceVariants.sdl3Compat,
+  false,
+  'wrong raw mapping signal fails sdl2-compat/SDL3 log evidence'
+);
 assertMoonlightLogEvidence(
   completeSdl2MoonlightLog.replace(
     `Applied DualSense Edge paddle mappings (updated): ${moonlightEvidenceVariants.sdl2.logMappings}`,
