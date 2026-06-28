@@ -119,6 +119,12 @@ static const char* dualSenseEdgePaddleButtonName(Uint8 button)
     }
 }
 
+static bool isDualSenseEdgePaddleControllerButton(Uint8 button)
+{
+    return button >= DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 &&
+           button <= DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4;
+}
+
 static bool dualSenseEdgeHasPaddleControllerButtons(SDL_GameController* controller)
 {
 #if SDL_VERSION_ATLEAST(2, 0, 14)
@@ -560,6 +566,16 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         return;
     }
 
+    if (isDualSenseEdgeController(state->controller) &&
+        isDualSenseEdgePaddleControllerButton(event->button) &&
+        !dualSenseEdgeHasPaddleControllerButtons(state->controller)) {
+        state->buttons &= ~k_ButtonMap[event->button];
+        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+                     "Ignoring DualSense Edge %s event without verified paddle bindings",
+                     dualSenseEdgePaddleButtonName(event->button));
+        return;
+    }
+
     if (m_SwapFaceButtons) {
         switch (event->button) {
         case SDL_CONTROLLER_BUTTON_A:
@@ -977,6 +993,9 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         bool isDualSenseEdge = isDualSenseEdgeController(state->controller);
         int dualSenseEdgeButtonCount = isDualSenseEdge ? dualSenseEdgeJoystickButtonCount(state->controller) : 0;
         bool hasDualSenseEdgePaddleButtons = isDualSenseEdge && dualSenseEdgeHasPaddleControllerButtons(state->controller);
+        if (isDualSenseEdge) {
+            supportedButtonFlags &= ~DUALSENSE_EDGE_PADDLE_FLAGS;
+        }
         if (hasDualSenseEdgePaddleButtons) {
             supportedButtonFlags |= DUALSENSE_EDGE_PADDLE_FLAGS;
         }
