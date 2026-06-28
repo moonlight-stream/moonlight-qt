@@ -42,6 +42,17 @@
 #define DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4 19
 #define DUALSENSE_EDGE_PADDLE_MAPPING_COUNT 4
 
+static_assert(PADDLE1_FLAG == 0x010000,
+              "DualSense Edge PADDLE1 must stay in the Sunshine buttonFlags2 high word");
+static_assert(PADDLE2_FLAG == 0x020000,
+              "DualSense Edge PADDLE2 must stay in the Sunshine buttonFlags2 high word");
+static_assert(PADDLE3_FLAG == 0x040000,
+              "DualSense Edge PADDLE3 must stay in the Sunshine buttonFlags2 high word");
+static_assert(PADDLE4_FLAG == 0x080000,
+              "DualSense Edge PADDLE4 must stay in the Sunshine buttonFlags2 high word");
+static_assert(DUALSENSE_EDGE_PADDLE_FLAGS == 0x0f0000,
+              "DualSense Edge paddle/Fn mask must preserve all four high-word bits");
+
 #if SDL_VERSION_ATLEAST(2, 0, 14)
 static_assert(DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 == SDL_CONTROLLER_BUTTON_PADDLE1,
               "DualSense Edge PADDLE1 mapping must match SDL2's controller button order");
@@ -375,9 +386,14 @@ static bool addDualSenseEdgePaddleMapping(SDL_GameController* controller)
     }
 
     int buttonCount = dualSenseEdgeJoystickButtonCount(controller);
+    SDL_version version;
+    SDL_GetVersion(&version);
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "DualSense Edge detected with %d SDL joystick buttons",
-                buttonCount);
+                "DualSense Edge detected with %d SDL joystick buttons (SDL %d.%d.%d)",
+                buttonCount,
+                version.major,
+                version.minor,
+                version.patch);
 
     if (!dualSenseEdgeExposesPaddleButtons(controller)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
