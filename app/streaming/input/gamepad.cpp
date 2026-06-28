@@ -4,6 +4,8 @@
 #include "SDL_compat.h"
 #include "settings/mappingmanager.h"
 
+#include <cstring>
+
 #include <QtMath>
 
 // How long the Start button must be pressed to toggle mouse emulation
@@ -23,6 +25,15 @@
 #define ML_HAPTIC_SIMPLE_RUMBLE     (1U << 17)
 #define ML_HAPTIC_GC_TRIGGER_RUMBLE (1U << 18)
 
+#define SONY_VENDOR_ID 0x054c
+#define DUALSENSE_EDGE_PRODUCT_ID 0x0df2
+
+// SDL 2's DualSense Edge HIDAPI driver exposes the left/right Fn buttons and
+// left/right rear paddles as joystick buttons 17-20. Older controller DB
+// entries identify the Edge as a generic PS5 controller and omit these bindings.
+#define DUALSENSE_EDGE_MIN_BUTTONS 21
+#define DUALSENSE_EDGE_PADDLE_MAPPINGS "paddle1:b20,paddle2:b19,paddle3:b18,paddle4:b17,"
+
 const int SdlInputHandler::k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
     BACK_FLAG, SPECIAL_FLAG, PLAY_FLAG,
@@ -33,6 +44,69 @@ const int SdlInputHandler::k_ButtonMap[] = {
     PADDLE1_FLAG, PADDLE2_FLAG, PADDLE3_FLAG, PADDLE4_FLAG,
     TOUCHPAD_FLAG,
 };
+
+static bool isDualSenseEdgeController(SDL_GameController* controller)
+{
+    return SDL_GameControllerGetVendor(controller) == SONY_VENDOR_ID &&
+           SDL_GameControllerGetProduct(controller) == DUALSENSE_EDGE_PRODUCT_ID;
+}
+
+static bool mappingHasPaddles(const char* mapping)
+{
+    return std::strstr(mapping, "paddle1:") != nullptr ||
+           std::strstr(mapping, "paddle2:") != nullptr ||
+           std::strstr(mapping, "paddle3:") != nullptr ||
+           std::strstr(mapping, "paddle4:") != nullptr;
+}
+
+static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
+{
+    if (!isDualSenseEdgeController(controller)) {
+        return;
+    }
+
+    SDL_Joystick* joystick = SDL_GameControllerGetJoystick(controller);
+    if (joystick == nullptr || SDL_JoystickNumButtons(joystick) < DUALSENSE_EDGE_MIN_BUTTONS) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "DualSense Edge detected, but SDL does not expose the Edge-specific buttons");
+        return;
+    }
+
+    char* mapping = SDL_GameControllerMapping(controller);
+    if (mapping == nullptr) {
+        return;
+    }
+
+    if (mappingHasPaddles(mapping)) {
+        SDL_free(mapping);
+        return;
+    }
+
+    QString updatedMapping = QString::fromUtf8(mapping);
+    SDL_free(mapping);
+
+    int platformIndex = updatedMapping.indexOf(",platform:");
+    if (platformIndex >= 0) {
+        updatedMapping.insert(platformIndex + 1, DUALSENSE_EDGE_PADDLE_MAPPINGS);
+    }
+    else {
+        if (!updatedMapping.endsWith(",")) {
+            updatedMapping.append(",");
+        }
+        updatedMapping.append(DUALSENSE_EDGE_PADDLE_MAPPINGS);
+    }
+
+    int ret = SDL_GameControllerAddMapping(qPrintable(updatedMapping));
+    if (ret < 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to add DualSense Edge paddle mappings: %s",
+                    SDL_GetError());
+    }
+    else {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Added DualSense Edge paddle mappings");
+    }
+}
 
 GamepadState*
 SdlInputHandler::findStateForGamepad(SDL_JoystickID id)
@@ -607,6 +681,8 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             hapticCaps = 0;
         }
 #endif
+
+        addDualSenseEdgePaddleMapping(state->controller);
 
         mapping = SDL_GameControllerMapping(state->controller);
         name = SDL_GameControllerName(state->controller);
