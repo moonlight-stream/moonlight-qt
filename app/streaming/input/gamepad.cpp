@@ -32,7 +32,6 @@
 // left/right rear paddles as joystick buttons 17-20. Older controller DB
 // entries identify the Edge as a generic PS5 controller and omit these bindings.
 #define DUALSENSE_EDGE_MIN_BUTTONS 21
-#define DUALSENSE_EDGE_PADDLE_MAPPINGS "paddle1:b20,paddle2:b19,paddle3:b18,paddle4:b17,"
 
 const int SdlInputHandler::k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
@@ -51,12 +50,23 @@ static bool isDualSenseEdgeController(SDL_GameController* controller)
            SDL_GameControllerGetProduct(controller) == DUALSENSE_EDGE_PRODUCT_ID;
 }
 
-static bool mappingHasPaddles(const char* mapping)
+static QString missingDualSenseEdgePaddleMappings(const char* mapping)
 {
-    return std::strstr(mapping, "paddle1:") != nullptr ||
-           std::strstr(mapping, "paddle2:") != nullptr ||
-           std::strstr(mapping, "paddle3:") != nullptr ||
-           std::strstr(mapping, "paddle4:") != nullptr;
+    QString missingMappings;
+    if (std::strstr(mapping, "paddle1:") == nullptr) {
+        missingMappings.append("paddle1:b20,");
+    }
+    if (std::strstr(mapping, "paddle2:") == nullptr) {
+        missingMappings.append("paddle2:b19,");
+    }
+    if (std::strstr(mapping, "paddle3:") == nullptr) {
+        missingMappings.append("paddle3:b18,");
+    }
+    if (std::strstr(mapping, "paddle4:") == nullptr) {
+        missingMappings.append("paddle4:b17,");
+    }
+
+    return missingMappings;
 }
 
 static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
@@ -77,7 +87,8 @@ static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
         return;
     }
 
-    if (mappingHasPaddles(mapping)) {
+    QString missingMappings = missingDualSenseEdgePaddleMappings(mapping);
+    if (missingMappings.isEmpty()) {
         SDL_free(mapping);
         return;
     }
@@ -87,13 +98,13 @@ static void addDualSenseEdgePaddleMapping(SDL_GameController* controller)
 
     int platformIndex = updatedMapping.indexOf(",platform:");
     if (platformIndex >= 0) {
-        updatedMapping.insert(platformIndex + 1, DUALSENSE_EDGE_PADDLE_MAPPINGS);
+        updatedMapping.insert(platformIndex + 1, missingMappings);
     }
     else {
         if (!updatedMapping.endsWith(",")) {
             updatedMapping.append(",");
         }
-        updatedMapping.append(DUALSENSE_EDGE_PADDLE_MAPPINGS);
+        updatedMapping.append(missingMappings);
     }
 
     int ret = SDL_GameControllerAddMapping(qPrintable(updatedMapping));
