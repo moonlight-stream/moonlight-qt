@@ -569,7 +569,11 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
     if (isDualSenseEdgeController(state->controller) &&
         isDualSenseEdgePaddleControllerButton(event->button) &&
         !dualSenseEdgeHasPaddleControllerButtons(state->controller)) {
+        int previousButtons = state->buttons;
         state->buttons &= ~k_ButtonMap[event->button];
+        if (previousButtons != state->buttons && state->mouseEmulationTimer == 0) {
+            sendGamepadState(state);
+        }
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
                      "Ignoring DualSense Edge %s event without verified paddle bindings",
                      dualSenseEdgePaddleButtonName(event->button));
