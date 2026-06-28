@@ -42,31 +42,31 @@ function assertSource(pattern, message) {
   assertInSource(source, pattern, message);
 }
 
-function usesSdl3CompatMappings(hasSdl3VersionHint, buttonCount) {
+function usesSdl3CompatMappings(hasSdl3VersionHint, runtimeLooksLikeSdl2Compat) {
   if (hasSdl3VersionHint) {
     return true;
   }
 
-  return buttonCount === sdl3CompatMinButtons;
+  return runtimeLooksLikeSdl2Compat;
 }
 
-function minimumButtonCount(hasSdl3VersionHint, buttonCount) {
-  return usesSdl3CompatMappings(hasSdl3VersionHint, buttonCount) ?
+function minimumButtonCount(hasSdl3VersionHint, runtimeLooksLikeSdl2Compat) {
+  return usesSdl3CompatMappings(hasSdl3VersionHint, runtimeLooksLikeSdl2Compat) ?
     sdl3CompatMinButtons :
     sdl2MinButtons;
 }
 
-function exposesPaddleButtons(hasSdl3VersionHint, buttonCount) {
-  return buttonCount >= minimumButtonCount(hasSdl3VersionHint, buttonCount);
+function exposesPaddleButtons(hasSdl3VersionHint, runtimeLooksLikeSdl2Compat, buttonCount) {
+  return buttonCount >= minimumButtonCount(hasSdl3VersionHint, runtimeLooksLikeSdl2Compat);
 }
 
 function sunshineButtonFlags2(buttonFlags) {
   return (buttonFlags >>> 16) & 0xffff;
 }
 
-function assertRuntimeSelection(hasSdl3VersionHint, buttonCount, expectedUsesSdl3Compat, expectedExposesPaddles, message) {
-  const actualUsesSdl3Compat = usesSdl3CompatMappings(hasSdl3VersionHint, buttonCount);
-  const actualExposesPaddles = exposesPaddleButtons(hasSdl3VersionHint, buttonCount);
+function assertRuntimeSelection(hasSdl3VersionHint, runtimeLooksLikeSdl2Compat, buttonCount, expectedUsesSdl3Compat, expectedExposesPaddles, message) {
+  const actualUsesSdl3Compat = usesSdl3CompatMappings(hasSdl3VersionHint, runtimeLooksLikeSdl2Compat);
+  const actualExposesPaddles = exposesPaddleButtons(hasSdl3VersionHint, runtimeLooksLikeSdl2Compat, buttonCount);
 
   assert(
     actualUsesSdl3Compat === expectedUsesSdl3Compat,
@@ -372,7 +372,7 @@ assertSource(/static_assert\(PADDLE4_FLAG == 0x080000/, 'PADDLE4 high-word asser
 assertSource(/SDL_CONTROLLER_BUTTON_MISC1 == DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE1 - 1/, 'MISC/PADDLE adjacency assertion missing');
 assertSource(/SDL_CONTROLLER_BUTTON_TOUCHPAD == DUALSENSE_EDGE_CONTROLLER_BUTTON_PADDLE4 \+ 1/, 'PADDLE/TOUCHPAD adjacency assertion missing');
 assertSource(/SDL_GetHint\("SDL3_VERSION"\)/, 'sdl2-compat/SDL3 runtime detection missing');
-assertSource(/buttonCount == DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS/, 'sdl2-compat/SDL3 exact raw count fallback missing');
+assertSource(/version\.major == 2 && version\.patch >= 50/, 'sdl2-compat/SDL3 runtime-version fallback missing');
 assertSource(/dualSenseEdgeMinimumButtonCount\(controller\)/, 'runtime Edge minimum raw button count selection missing');
 assertSource(/SDL3.*QString::fromUtf8\(sdl3Version\)/s, 'Edge detection log must include underlying SDL3 runtime version when available');
 assertSource(/mappingEntry\.startsWith\("type:"\)/, 'SDL2 type metadata must stay treated as non-binding metadata');
@@ -393,13 +393,15 @@ assertInSource(inputStreamSource, /buttonFlags2 != \(IS_SUNSHINE\(\) \? LE16\(\(
 assertInSource(inputStreamSource, /buttonFlags2 = IS_SUNSHINE\(\) \? LE16\(\(short\)\(buttonFlags >> 16\)\) : 0;/, 'controller packets must carry high-word Edge buttons in Sunshine buttonFlags2');
 assertInSource(inputStreamSource, /controllerArrival\.supportedButtonFlags = LE32\(supportedButtonFlags\);/, 'arrival packets must advertise the full 32-bit supported button mask');
 
-assertRuntimeSelection(false, 21, false, true, 'native SDL2 exposes the 21-button Edge shape');
-assertRuntimeSelection(false, 20, false, false, 'unknown 20-button Edge shape fails closed without an SDL3 hint');
-assertRuntimeSelection(false, 18, false, false, 'unknown 18-button Edge shape fails closed without an SDL3 hint');
-assertRuntimeSelection(false, 17, true, true, 'exact 17-button Edge shape selects sdl2-compat/SDL3 fallback');
-assertRuntimeSelection(true, 21, true, true, 'SDL3 hint selects sdl2-compat mapping even if future SDL3 exposes more raw buttons');
-assertRuntimeSelection(true, 17, true, true, 'SDL3 hint accepts current sdl2-compat Edge shape');
-assertRuntimeSelection(true, 16, true, false, 'SDL3 hint still requires enough raw buttons');
+assertRuntimeSelection(false, false, 21, false, true, 'native SDL2 exposes the 21-button Edge shape');
+assertRuntimeSelection(false, false, 20, false, false, 'unknown 20-button Edge shape fails closed without an SDL3 hint');
+assertRuntimeSelection(false, false, 18, false, false, 'unknown 18-button Edge shape fails closed without an SDL3 hint');
+assertRuntimeSelection(false, false, 17, false, false, 'ambiguous 17-button Edge shape fails closed without an SDL3/sdl2-compat runtime signal');
+assertRuntimeSelection(false, true, 17, true, true, 'sdl2-compat runtime fallback accepts current 17-button Edge shape');
+assertRuntimeSelection(false, true, 16, true, false, 'sdl2-compat runtime fallback still requires enough raw buttons');
+assertRuntimeSelection(true, false, 21, true, true, 'SDL3 hint selects sdl2-compat mapping even if future SDL3 exposes more raw buttons');
+assertRuntimeSelection(true, false, 17, true, true, 'SDL3 hint accepts current sdl2-compat Edge shape');
+assertRuntimeSelection(true, false, 16, true, false, 'SDL3 hint still requires enough raw buttons');
 
 [
   [0x010000, 0x0001, 'PADDLE1'],

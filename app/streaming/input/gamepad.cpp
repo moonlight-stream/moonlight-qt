@@ -127,14 +127,25 @@ static bool dualSenseEdgeHasSdl3VersionHint()
     return sdl3Version != nullptr && sdl3Version[0] != '\0';
 }
 
+static bool dualSenseEdgeRuntimeLooksLikeSdl2Compat()
+{
+    SDL_version version;
+    SDL_GetVersion(&version);
+
+    // Some older sdl2-compat builds do not set SDL3_VERSION. Moonlight already
+    // treats high-patch SDL2 compatibility versions as sdl2-compat in main.cpp;
+    // use that runtime signal instead of trusting an ambiguous 17-button shape.
+    return version.major == 2 && version.patch >= 50;
+}
+
 static bool dualSenseEdgeUsesSdl3CompatMappings(SDL_GameController* controller)
 {
     if (dualSenseEdgeHasSdl3VersionHint()) {
         return true;
     }
 
-    int buttonCount = dualSenseEdgeJoystickButtonCount(controller);
-    return buttonCount == DUALSENSE_EDGE_SDL3_COMPAT_MIN_BUTTONS;
+    Q_UNUSED(controller);
+    return dualSenseEdgeRuntimeLooksLikeSdl2Compat();
 }
 
 static const char* dualSenseEdgeRawMappingName(SDL_GameController* controller)
