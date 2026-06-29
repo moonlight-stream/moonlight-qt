@@ -66,12 +66,12 @@
     <message>
         <location filename="../gui/CliPair.qml" line="12"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation>З&apos;єднання... Будь ласка, введіть &apos;%1&apos; на %2.</translation>
+        <translation>Парування... Будь ласка, введіть «%1» на %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="81"/>
         <source>Pairing completed successfully</source>
-        <translation>З&apos;єднання успішно завершено</translation>
+        <translation>Парування успішно завершено</translation>
     </message>
 </context>
 <context>
@@ -129,12 +129,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>Парований</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>Не парований</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
@@ -184,7 +184,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Стан парування: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
@@ -392,7 +392,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation>%1 вже з&apos;єднано</translation>
+        <translation>%1 вже паровано</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="109"/>
@@ -405,7 +405,7 @@
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>З ком&apos;ютером %1 не було створено пари. Будь ласка відкрийте Moonlight щоб створити пару перед тим як запускати трансляцію.</translation>
+        <translation>Не паровано з комп&apos;ютером %1. Будь ласка, відкрийте Moonlight для парування перед тим як запускати трансляцію.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
@@ -421,7 +421,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="108"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation>Комп&apos;ютер %1 не було з&apos;єднано. Будь ласка, запустіть Moonlight для з&apos;єднання перед тим, як отримати список ігор.</translation>
+        <translation>Не паровано з комп&apos;ютером %1. Будь ласка, запустіть Moonlight для парування перед запитом списку ігор.</translation>
     </message>
 </context>
 <context>
@@ -611,7 +611,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1131"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш хост-ПК не підтримує транслювання YUV 4:4:4 для вибраного відео кодека.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1146"/>
@@ -674,7 +674,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="116"/>
         <source>Resolution and FPS</source>
-        <translation>Роздільність та FPS</translation>
+        <translation>Роздільність та частота кадрів</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="124"/>
@@ -770,7 +770,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
+        <translation>Нативний (Без вирізу)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
@@ -801,12 +801,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="836"/>
         <source>Frame pacing</source>
-        <translation type="unfinished"></translation>
+        <translation>Вирівнювання інтервалу між кадрами</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="846"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation type="unfinished"></translation>
+        <translation>Вирівнювання інтервалу між кадрами покращує плавність трансляції, затримуючи кадри, що надходять зарано.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="856"/>
@@ -836,7 +836,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="923"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
-        <translation type="unfinished"></translation>
+        <translation>Потрібно перезапустити будь-яку активну гру, щоб зміни застосувалися.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="929"/>
@@ -926,7 +926,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1740"/>
         <source>Show performance stats while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Показувати показники продуктивності під час трансляції</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1750"/>
@@ -936,12 +936,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1751"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation type="unfinished"></translation>
+        <translation>Можна перемкнути у будь-який момент під час трансляції використавши Ctrl+Alt+Shift+S або Select+L1+R1+X.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1752"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation type="unfinished"></translation>
+        <translation>Оверлей продуктивності не підтримується на Steam Link та Raspberry Pi.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1340"/>
@@ -971,12 +971,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1456"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>Поміняти місцями A/B та X/Y на контролері</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1466"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation type="unfinished"></translation>
+        <translation>Міняє місцями кнопки на контролери на подобу контролерів Nintendo.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1472"/>
@@ -991,7 +991,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1320"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
-        <translation type="unfinished"></translation>
+        <translation>Можна перемкнути під час трансляції натиснувши Ctrl+Alt+Shift+M.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1490"/>
@@ -1052,7 +1052,7 @@
         <location filename="../gui/SettingsView.qml" line="512"/>
         <location filename="../gui/SettingsView.qml" line="622"/>
         <source>Custom (%1 FPS)</source>
-        <translation type="unfinished"></translation>
+        <translation>Користувацька (%1 К/с)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="527"/>
