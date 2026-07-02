@@ -2,6 +2,7 @@
 
 #include <QSemaphore>
 #include <QQuickWindow>
+#include <QImage>
 
 #include <Limelight.h>
 #include <opus_multistream.h>
@@ -171,6 +172,10 @@ private:
 
     void updateOptimalWindowDisplayMode();
 
+    void renderGamepadMessage();
+
+    bool updateGamepadGame();
+
     enum class DecoderAvailability {
         None,
         Software,
@@ -251,6 +256,10 @@ private:
     NvComputer* m_Computer;
     NvApp m_App;
     SDL_Window* m_Window;
+    SDL_Renderer* m_GamepadRenderer;
+    int m_GamepadGameId;
+    QString m_GamepadGameName;
+    QImage m_GamepadBoxArt;
     IVideoDecoder* m_VideoDecoder;
     SDL_mutex* m_DecoderLock;
     bool m_AudioDisabled;

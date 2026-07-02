@@ -37,6 +37,10 @@
 #include <QSvgRenderer>
 #include <QPainter>
 #include <QImage>
+#include <QFont>
+#include <QFontMetrics>
+#include <QColor>
+#include <QReadWriteLock>
 #include <QGuiApplication>
 #include <QCursor>
 #include <QScreen>
@@ -365,6 +369,10 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     // safely return DR_OK and wait for the IDR frame request by
     // the decoder reinitialization code.
 
+    if (s_ActiveSession->m_Preferences->gamepadMode) {
+        return DR_OK;
+    }
+
     if (SDL_TryLockMutex(s_ActiveSession->m_DecoderLock) == 0) {
         IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
         if (decoder != nullptr) {
@@ -512,7 +520,11 @@ bool Session::populateDecoderProperties(SDL_Window* window)
     }
 
     m_VideoCallbacks.capabilities = decoder->getDecoderCapabilities();
-    if (m_VideoCallbacks.capabilities & CAPABILITY_PULL_RENDERER) {
+    if (m_Preferences->gamepadMode) {
+        m_VideoCallbacks.capabilities = 0;
+        m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
+    }
+    else if (m_VideoCallbacks.capabilities & CAPABILITY_PULL_RENDERER) {
         // It is an error to pass a push callback when in pull mode
         m_VideoCallbacks.submitDecodeUnit = nullptr;
     }
@@ -553,6 +565,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_Computer(computer),
       m_App(app),
       m_Window(nullptr),
+      m_GamepadRenderer(nullptr),
+      m_GamepadGameId(-1),
       m_VideoDecoder(nullptr),
       m_DecoderLock(SDL_CreateMutex()),
       m_AudioMuted(false),
@@ -1381,6 +1395,131 @@ void Session::getWindowDimensions(int& x, int& y,
     x = y = SDL_WINDOWPOS_CENTERED_DISPLAY(displayIndex);
 }
 
+bool Session::updateGamepadGame()
+{
+    int gameId;
+    QString gameName;
+    {
+        QReadLocker lock(&m_Computer->lock);
+        gameId = m_Computer->currentGameId != 0 ? m_Computer->currentGameId : m_App.id;
+        for (const NvApp& app : m_Computer->appList) {
+            if (app.id == gameId) {
+                gameName = app.name;
+                break;
+            }
+        }
+    }
+
+    if (gameName.isEmpty()) {
+        gameName = m_App.name;
+    }
+
+    if (gameId == m_GamepadGameId) {
+        return false;
+    }
+
+    m_GamepadGameId = gameId;
+    m_GamepadGameName = gameName;
+
+    try {
+        NvHTTP http(m_Computer);
+        m_GamepadBoxArt = http.getBoxArt(gameId);
+    } catch (...) {
+        m_GamepadBoxArt = QImage();
+    }
+
+    return true;
+}
+
+void Session::renderGamepadMessage()
+{
+    if (m_GamepadRenderer == nullptr) {
+        m_GamepadRenderer = SDL_CreateRenderer(m_Window, -1, 0);
+        if (m_GamepadRenderer == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_CreateRenderer() failed: %s",
+                         SDL_GetError());
+            return;
+        }
+    }
+
+    int width, height;
+    SDL_GetRendererOutputSize(m_GamepadRenderer, &width, &height);
+
+    QImage image(width, height, QImage::Format_RGBA8888);
+    image.fill(QColor(0x40, 0x40, 0x40));
+
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::SmoothPixmapTransform);
+    painter.setPen(Qt::white);
+
+    QString message = tr("Gamepad mode is enabled.\nVideo is disabled while audio and input keep streaming.");
+
+    QFont nameFont = QGuiApplication::font();
+    nameFont.setPointSize(28);
+    nameFont.setBold(true);
+
+    QFont messageFont = QGuiApplication::font();
+    messageFont.setPointSize(16);
+
+    QImage boxArt = m_GamepadBoxArt;
+    if (!boxArt.isNull()) {
+        boxArt = boxArt.scaledToHeight(height / 3, Qt::SmoothTransformation);
+    }
+
+    int spacing = height / 20;
+    QRect nameRect = QFontMetrics(nameFont).boundingRect(m_GamepadGameName);
+    QRect messageRect = QFontMetrics(messageFont).boundingRect(QRect(0, 0, width, height),
+                                                               Qt::AlignCenter | Qt::TextWordWrap,
+                                                               message);
+
+    int blockHeight = messageRect.height();
+    if (!boxArt.isNull()) {
+        blockHeight += boxArt.height() + spacing;
+    }
+    if (!m_GamepadGameName.isEmpty()) {
+        blockHeight += nameRect.height() + spacing;
+    }
+
+    int y = (height - blockHeight) / 2;
+
+    if (!boxArt.isNull()) {
+        painter.drawImage((width - boxArt.width()) / 2, y, boxArt);
+        y += boxArt.height() + spacing;
+    }
+
+    if (!m_GamepadGameName.isEmpty()) {
+        painter.setFont(nameFont);
+        painter.drawText(QRect(0, y, width, nameRect.height()),
+                         Qt::AlignHCenter | Qt::AlignTop,
+                         m_GamepadGameName);
+        y += nameRect.height() + spacing;
+    }
+
+    painter.setFont(messageFont);
+    painter.drawText(QRect(0, y, width, messageRect.height()),
+                     Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap,
+                     message);
+    painter.end();
+
+    SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom((void*)image.constBits(),
+                                                              image.width(),
+                                                              image.height(),
+                                                              32,
+                                                              image.bytesPerLine(),
+                                                              SDL_PIXELFORMAT_RGBA32);
+    if (surface != nullptr) {
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(m_GamepadRenderer, surface);
+        if (texture != nullptr) {
+            SDL_RenderCopy(m_GamepadRenderer, texture, nullptr, nullptr);
+            SDL_DestroyTexture(texture);
+        }
+        SDL_FreeSurface(surface);
+    }
+
+    SDL_RenderPresent(m_GamepadRenderer);
+}
+
 void Session::updateOptimalWindowDisplayMode()
 {
     SDL_DisplayMode desktopMode, bestMode, mode;
@@ -1829,12 +1968,14 @@ void Session::exec()
     std::string windowName = QString(m_Computer->name + " - Moonlight").toStdString();
 #endif
 
+    Uint32 platformWindowFlags = m_Preferences->gamepadMode ? 0 : StreamUtils::getPlatformWindowFlags();
+
     m_Window = SDL_CreateWindow(windowName.c_str(),
                                 x,
                                 y,
                                 width,
                                 height,
-                                defaultWindowFlags | StreamUtils::getPlatformWindowFlags());
+                                defaultWindowFlags | platformWindowFlags);
     if (!m_Window) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "SDL_CreateWindow() failed with platform flags: %s",
@@ -1959,6 +2100,9 @@ void Session::exec()
         // and other problems.
         if (!SDL_WaitEventTimeout(&event, 1000)) {
             presence.runCallbacks();
+            if (m_Preferences->gamepadMode && updateGamepadGame()) {
+                renderGamepadMessage();
+            }
             continue;
         }
 #else
@@ -1975,6 +2119,9 @@ void Session::exec()
             SDL_Delay(10);
 #endif
             presence.runCallbacks();
+            if (m_Preferences->gamepadMode && updateGamepadGame()) {
+                renderGamepadMessage();
+            }
             continue;
         }
 #endif
@@ -1987,7 +2134,9 @@ void Session::exec()
         case SDL_USEREVENT:
             switch (event.user.code) {
             case SDL_CODE_FRAME_READY:
-                if (m_VideoDecoder != nullptr) {
+                if (m_Preferences->gamepadMode == true) {
+                    break;
+                } else if (m_VideoDecoder != nullptr) {
                     m_VideoDecoder->renderFrameOnMainThread();
                 }
                 break;
@@ -2050,6 +2199,21 @@ void Session::exec()
             if (needsFirstEnterCapture && event.window.event == SDL_WINDOWEVENT_ENTER) {
                 m_InputHandler->setCaptureActive(true);
                 needsFirstEnterCapture = false;
+            }
+
+            if (m_Preferences->gamepadMode) {
+                if (event.window.event == SDL_WINDOWEVENT_SHOWN ||
+                    event.window.event == SDL_WINDOWEVENT_EXPOSED ||
+                    event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    updateGamepadGame();
+                    renderGamepadMessage();
+
+                    if (needsPostDecoderCreationCapture) {
+                        m_InputHandler->setCaptureActive(true);
+                        needsPostDecoderCreationCapture = false;
+                    }
+                }
+                break;
             }
 
             // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event.
@@ -2342,6 +2506,11 @@ DispatchDeferredCleanup:
             m_QtWindow->setWindowState(Qt::WindowNoState);
         }
 #endif
+    }
+
+    if (m_GamepadRenderer != nullptr) {
+        SDL_DestroyRenderer(m_GamepadRenderer);
+        m_GamepadRenderer = nullptr;
     }
 
     // This must be called after the decoder is deleted, because

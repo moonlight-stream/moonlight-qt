@@ -871,6 +871,22 @@ Flickable {
                                     :
                                       qsTr("HDR streaming is not supported on this PC.")
                 }
+
+                CheckBox {
+                    id: gamepadMode
+                    width: parent.width
+                    hoverEnabled: true
+                    text: qsTr("Gamepad mode")
+                    font.pointSize:  12
+                    checked: StreamingPreferences.gamepadMode
+                    onCheckedChanged: {
+                        StreamingPreferences.gamepadMode = checked
+                    }
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Stream audio and input without video, turning this device into a wireless gamepad. This uses more bandwidth than streaming audio alone.")
+                }
             }
         }
 
@@ -1239,7 +1255,7 @@ Flickable {
                         ListElement {
                             text: qsTr("Maximized")
                             val: StreamingPreferences.UI_MAXIMIZED
-                        }   
+                        }
                         ListElement {
                             text: qsTr("Fullscreen")
                             val: StreamingPreferences.UI_FULLSCREEN
