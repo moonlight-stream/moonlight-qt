@@ -171,9 +171,24 @@ SDL_Surface* OverlayManager::RenderTextOutlinedWrapped(TTF_Font* font, const cha
         return nullptr;
     }
 
-    // Draw text twice, but outline is a bit bigger
     int oldOutline = TTF_GetFontOutline(font);
     TTF_SetFontOutline(font, outlineWidth);
+
+    // Verify that the string won't require wrapping (which could cause the outline and the text
+    // to diverge due to different wrapping positions).
+    //
+    // FIXME: We do this rather than just disabling wrapping entirely (wrapWidth = 0) because we
+    // need further testing to ensure that all renderers can handle non-NPOT overlay textures.
+    for (const QString& line : QString(text).split('\n')) {
+        int extent, count;
+        if (TTF_MeasureUTF8(font, line.toUtf8(), wrapWidth, &extent, &count) == 0 && count < line.size()) {
+            // If it requires wrapping, render it without the outline
+            TTF_SetFontOutline(font, oldOutline);
+            return TTF_RenderUTF8_Blended_Wrapped(font, text, textColor, wrapWidth);
+        }
+    }
+
+    // Draw text twice, but outline is a bit bigger
     auto outlineSurface = TTF_RenderUTF8_Blended_Wrapped(font, text, outlineColor, wrapWidth);
     TTF_SetFontOutline(font, 0);
     auto textSurface = TTF_RenderUTF8_Blended_Wrapped(font, text, textColor, wrapWidth);
