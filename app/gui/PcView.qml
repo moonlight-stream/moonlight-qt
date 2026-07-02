@@ -115,7 +115,7 @@ CenteredGridView {
         Image {
             id: pcIcon
             anchors.horizontalCenter: parent.horizontalCenter
-            source: "qrc:/res/desktop_windows-48px.svg"
+            source: "qrc:/res/desktop_windows_FILL0_wght700_GRAD200_opsz48.svg"
             sourceSize {
                 width: 200
                 height: 200
@@ -129,7 +129,7 @@ CenteredGridView {
             anchors.verticalCenter: pcIcon.verticalCenter
             anchors.verticalCenterOffset: !model.online ? -18 : -16
             visible: !model.statusUnknown && (!model.online || !model.paired)
-            source: !model.online ? "qrc:/res/warning_FILL1_wght300_GRAD200_opsz24.svg" : "qrc:/res/baseline-lock-24px.svg"
+            source: !model.online ? "qrc:/res/warning_FILL1_wght700_GRAD200_opsz48.svg" : "qrc:/res/lock_FILL1_wght700_GRAD200_opsz48.svg"
             sourceSize {
                 width: !model.online ? 75 : 70
                 height: !model.online ? 75 : 70
@@ -329,16 +329,16 @@ CenteredGridView {
         {
             if (result === -1) {
                 text = qsTr("The network test could not be performed because none of Moonlight's connection testing servers were reachable from this PC. Check your Internet connection or try again later.")
-                imageSrc = "qrc:/res/baseline-warning-24px.svg"
+                imageSrc = "qrc:/res/warning_FILL1_wght700_GRAD200_opsz48.svg"
             }
             else if (result === 0) {
                 text = qsTr("This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC's firewall settings.") + "\n\n" + qsTr("If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC's Internet connection.")
-                imageSrc = "qrc:/res/baseline-check_circle_outline-24px.svg"
+                imageSrc = "qrc:/res/check_circle_FILL0_wght700_GRAD200_opsz48.svg"
             }
             else {
                 text = qsTr("Your PC's current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.") + "\n\n" + qsTr("The following network ports were blocked:") + "\n"
                 text += blockedPorts
-                imageSrc = "qrc:/res/baseline-error_outline-24px.svg"
+                imageSrc = "qrc:/res/error_FILL0_wght700_GRAD200_opsz48.svg"
             }
 
             // Stop showing the spinner and show the image instead
