@@ -50,6 +50,8 @@
 #define SER_SWAPFACEBUTTONS "swapfacebuttons"
 #define SER_CAPTURESYSKEYS "capturesyskeys"
 #define SER_KEEPAWAKE "keepawake"
+#define SER_INACTIVITY_TIMEOUT_ENABLED "inactivityTimeoutEnabled"
+#define SER_INACTIVITY_TIMEOUT_MINUTES "inactivityTimeoutMinutes"
 #define SER_LANGUAGE "language"
 
 #define CURRENT_DEFAULT_VER 2
@@ -150,6 +152,8 @@ void StreamingPreferences::reload()
     reverseScrollDirection = settings.value(SER_REVERSESCROLL, false).toBool();
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
+    inactivityTimeoutEnabled = settings.value(SER_INACTIVITY_TIMEOUT_ENABLED, false).toBool();
+    inactivityTimeoutMinutes = settings.value(SER_INACTIVITY_TIMEOUT_MINUTES, 30).toInt();
     enableHdr = settings.value(SER_HDR, false).toBool();
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
@@ -358,6 +362,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
+    settings.setValue(SER_INACTIVITY_TIMEOUT_ENABLED, inactivityTimeoutEnabled);
+    settings.setValue(SER_INACTIVITY_TIMEOUT_MINUTES, inactivityTimeoutMinutes);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps, bool yuv444)
