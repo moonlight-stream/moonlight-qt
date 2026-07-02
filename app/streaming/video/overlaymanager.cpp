@@ -174,9 +174,9 @@ SDL_Surface* OverlayManager::RenderTextOutlinedWrapped(TTF_Font* font, const cha
     // Draw text twice, but outline is a bit bigger
     int oldOutline = TTF_GetFontOutline(font);
     TTF_SetFontOutline(font, outlineWidth);
-    auto outlineSurface = TTF_RenderText_Blended_Wrapped(font, text, outlineColor, wrapWidth);
+    auto outlineSurface = TTF_RenderUTF8_Blended_Wrapped(font, text, outlineColor, wrapWidth);
     TTF_SetFontOutline(font, 0);
-    auto textSurface = TTF_RenderText_Blended_Wrapped(font, text, textColor, wrapWidth);
+    auto textSurface = TTF_RenderUTF8_Blended_Wrapped(font, text, textColor, wrapWidth);
     TTF_SetFontOutline(font, oldOutline);
 
     if (outlineSurface == nullptr || textSurface == nullptr) {
