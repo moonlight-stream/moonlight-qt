@@ -422,6 +422,13 @@ embedded {
 
     DEFINES += EMBEDDED_BUILD
     DEFINES += CONSOLE_UI
+
+    # Couche console <-> HostCompanion (Companion API, docs/protocol.md).
+    # Isolee au build embedded : le build vanilla ne la compile jamais (CLAUDE.md §4).
+    # WebSocket /v1/events => module websockets (paquet qt6-qtwebsockets-devel sur Fedora).
+    QT += websockets
+    SOURCES += gui/console/backend/companionclient.cpp
+    HEADERS += gui/console/backend/companionclient.h
 }
 glslow {
     message(GL slow build)

@@ -80,8 +80,27 @@ comme pour un expert. Conséquences concrètes pour tout ce qu'on code :
     `ConsoleHome` re-masque le chrome à chaque `StackView.onActivated` (+ refocus carrousel).
   - **Batterie/signal factices retirés** de la StatusBar (masqués tant que pas de vraie
     source ; UPower/RSSI viendront avec le proto). Légende manette contextuelle.
-- **Tâche en cours** : mode kiosk (boot direct, pas de bureau, §9 6c) + auto-accept du
-  pairing côté host (rôle du futur installeur, §9 6b) pour que le code ne s'affiche jamais.
+- 🚧 **Couture console ↔ host — `CompanionClient` (2026-06-28)** : backend C++
+  `app/gui/console/backend/companionclient.{h,cpp}`, compilé en build **`embedded` seulement**
+  (singleton QML `CompanionClient` ; coutures isolées dans `app.pro` + `main.cpp`, build
+  vanilla intact). Consomme la **Companion API** du repo HostCompanion
+  (`../HostCompanion/docs/protocol.md`). **Tranches 1+2+3 codées mais PAS encore compilées**
+  (build Fedora requis ; `git submodule update --init` d'abord) :
+  - T1 : découverte mDNS `_hostcompanion._tcp` (calquée sur ComputerManager), `GET /v1/info`
+    (pin **TOFU** du SHA-256 du cert), appairage par **code à 6 chiffres** (le HOST l'affiche,
+    la console le SAISIT — décision 2026-06-28), token persisté en QSettings.
+  - T2 : `GET /v1/library` (+ etag/If-None-Match), helper média, **WebSocket `/v1/events`**
+    (reçoit LAUNCH_STATE / UPDATE_REQUIRED / UPDATE_PROGRESS / READY / LAUNCH_ERROR /
+    GAME_STARTED / GAME_STOPPED / LIBRARY_UPDATED) avec reconnexion à backoff.
+  - T3 : **`CompanionPairing.qml`** (saisie du code 6 chiffres, ←→/↑↓/A/B) + **`LaunchOverlay.qml`**
+    (préparation/maj/erreur) ; `ConsoleHome.launchApp` **recâblé** : `POST /v1/launch` → dialog de
+    maj éventuel → `READY` → ALORS `StreamSegue` (mapping app↔gameId par nom). **Repli direct**
+    (`directLaunch`) si Companion absent/jeu inconnu. PIN Moonlight **auto-soumis** à Apollo une
+    fois le Companion appairé (`submitMoonlightPin` → §6.4), `PairingOverlay` Moonlight masqué dans
+    ce cas. ⚠️ **À VALIDER VISUELLEMENT** sur Fedora (jamais compilé/lancé) : focus manette, état
+    de l'overlay, mapping ; `mediaUrl()` non câblé sur l'`Image` (auth Bearer, cf §9 C).
+- **Tâche en cours** : compiler/valider T1→T3 sur Fedora ; mode kiosk (boot direct, §9 6c) +
+  auto-accept du pairing côté host (installeur, §9 6b).
 
 ---
 
@@ -162,6 +181,11 @@ Fichiers (dans `app/gui/console/`) :
 - `Spinner.qml` — indicateur d'activité circulaire réutilisable
 - `ConsoleDialog.qml` — confirmation modale navigable manette (A/B, gauche/droite)
 - `ConsoleSettings.qml` — écran Paramètres (bouton Y) : résolution/fréquence/débit/oubli du PC
+- `CompanionPairing.qml` — saisie du code d'appairage Companion à 6 chiffres (host→console)
+- `LaunchOverlay.qml` — overlay de préparation/maj/erreur pendant un lancement piloté Companion
+- `backend/companionclient.{h,cpp}` — pont C++ vers le HostCompanion (Companion API). Build
+  `embedded` uniquement. Découverte mDNS, appairage 6 chiffres, bibliothèque, WebSocket events
+  (cf §2). Seul fichier console NON purement QML ; nécessite `QT += websockets`.
 
 `ConsoleHome.qml` est désormais **branché sur le vrai backend Moonlight** (imports
 `ComputerModel`/`AppModel`/`ComputerManager`/`StreamingPreferences`) et n'est **plus
@@ -242,6 +266,14 @@ La couche logicielle console est **fonctionnelle de bout en bout** (découverte 
 appairage auto → carrousel → stream → retour carrousel, Paramètres au bouton Y).
 Historique du découpage : 6a (direct-launch) ✅, 6b côté console (code de liaison,
 aucun dialog upstream) ✅, 6c (kiosk) ⏳ hors repo.
+
+> ⚠️ **Important** : historiquement ce « bout en bout » passait par **Apollo en DIRECT**
+> (`ConsoleHome.launchApp` → `StreamSegue`), chemin proscrit par le repo host
+> (`../HostCompanion/CLAUDE.md §4`). **La tranche 3 de `CompanionClient` a recâblé ce lancement**
+> (cf §2) : quand le Companion est appairé+connecté, Play fait `POST /v1/launch` → `READY` →
+> `StreamSegue` (et gère « maj AVANT stream »). `directLaunch` reste le **repli** si le Companion
+> est absent. ⚠️ Tout T3 est **codé mais pas encore compilé/validé** (build Fedora) — tant que ce
+> n'est pas vérifié à la manette, considérer le chemin Companion comme non éprouvé.
 
 Fronts ouverts, par priorité :
 

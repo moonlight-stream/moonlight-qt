@@ -27,5 +27,7 @@
         <file>gui/console/PairingOverlay.qml</file>
         <file>gui/console/ConsoleDialog.qml</file>
         <file>gui/console/ConsoleSettings.qml</file>
+        <file>gui/console/CompanionPairing.qml</file>
+        <file>gui/console/LaunchOverlay.qml</file>
     </qresource>
 </RCC>

@@ -7,6 +7,7 @@ import ComputerModel 1.0
 import AppModel 1.0
 import ComputerManager 1.0
 import StreamingPreferences 1.0
+import CompanionClient 1.0
 
 // Écran d'accueil "Big Picture" de la console.
 // Branché sur les vrais modèles Moonlight (ComputerModel + AppModel) :
@@ -91,6 +92,11 @@ FocusScope {
 
     Component.onCompleted: {
         hideUpstreamChrome()
+
+        // Démarre la découverte du HostCompanion (mDNS _hostcompanion._tcp).
+        // Si un host appairé est déjà connu, le client se reconnecte tout seul
+        // (events + bibliothèque) dès qu'il est joignable.
+        CompanionClient.startDiscovery()
 
         // Profil de stream "console" par défaut : 1080p60, 30 Mbps (cible §7 :
         // 30–50 Mbps stables ; le défaut Moonlight pour du 1080p60 est en
@@ -201,6 +207,11 @@ FocusScope {
             home.pairingInFlight = true
             console.info("[console-ui] Appairage automatique avec \"" + home.activeHostName + "\"")
             home.computerModel.pairComputer(home.activeComputerIndex, home.pairingPin)
+            // Si le Companion est déjà appairé, il soumet le PIN à Apollo à notre
+            // place → l'utilisateur n'a rien à faire côté PC (§6.4). Sinon, repli :
+            // le PairingOverlay affiche le PIN à saisir sur le PC.
+            if (CompanionClient.paired)
+                CompanionClient.submitMoonlightPin(home.pairingPin)
         }
     }
 
@@ -302,13 +313,33 @@ FocusScope {
         }
     }
 
+    // Index du jeu sélectionné en attente d'un READY du Companion (mapping après maj).
+    property int pendingLaunchIndex: -1
+
+    function findAppIndexByName(name) {
+        for (var i = 0; i < appViewer.count; i++) {
+            var it = appViewer.objectAt(i)
+            if (it && it.name === name) return i
+        }
+        return -1
+    }
+
+    function humanSize(bytes) {
+        if (!bytes || bytes <= 0) return ""
+        var u = ["o", "Ko", "Mo", "Go", "To"]
+        var i = 0; var v = bytes
+        while (v >= 1024 && i < u.length - 1) { v /= 1024; i++ }
+        return (i >= 2 ? v.toFixed(1) : Math.round(v)) + " " + u[i]
+    }
+
     function launchApp(index) {
         if (!appModel) return
+        if (launchOverlay.visible) return   // un lancement est déjà en cours
         var item = appViewer.objectAt(index)
         if (!item) return
 
         // Un AUTRE jeu tourne déjà sur le host : demander confirmation
-        // (équivalent console du quitAppDialog de AppView.qml).
+        // (équivalent console du quitAppDialog de AppView.qml). Chemin direct.
         var runningId = appModel.getRunningAppId()
         if (runningId !== 0 && runningId !== item.appid) {
             confirmDialog.mode = "quitLaunch"
@@ -321,11 +352,51 @@ FocusScope {
             return
         }
 
+        // Chemin Companion = LE différenciateur : POST /v1/launch → (maj si besoin)
+        // → READY → stream. On NE démarre PAS le stream nous-mêmes ici (§4 host).
+        // Repli direct si le Companion est absent ou ne connaît pas ce jeu.
+        if (CompanionClient.paired && CompanionClient.eventsConnected) {
+            var gameId = CompanionClient.gameIdForName(item.name)
+            if (gameId !== "") {
+                home.pendingLaunchIndex = index
+                launchOverlay.show(item.name)
+                CompanionClient.launch(gameId)
+                return
+            }
+        }
+
+        directLaunch(index)
+    }
+
+    // Lancement direct historique (Apollo sans orchestration Companion) — repli.
+    function directLaunch(index) {
+        if (!appModel) return
+        var item = appViewer.objectAt(index)
+        if (!item) return
+        var runningId = appModel.getRunningAppId()
         var component = Qt.createComponent("qrc:/gui/StreamSegue.qml")
         var segue = component.createObject(stackView, {
             "appName": item.name,
             "session": appModel.createSessionForApp(index),
             "isResume": runningId === item.appid
+        })
+        stackView.push(segue)
+    }
+
+    // READY reçu du Companion : l'app Apollo du jeu est prête (virtual display armé)
+    // → on démarre enfin la session Moonlight sur cette app (mapping par nom, §4).
+    function streamReadyApp(apolloAppId) {
+        launchOverlay.hide()
+        var idx = findAppIndexByName(apolloAppId)
+        if (idx < 0) idx = home.pendingLaunchIndex
+        home.pendingLaunchIndex = -1
+        if (idx < 0 || !appModel) return
+        var item = appViewer.objectAt(idx)
+        var component = Qt.createComponent("qrc:/gui/StreamSegue.qml")
+        var segue = component.createObject(stackView, {
+            "appName": item ? item.name : "",
+            "session": appModel.createSessionForApp(idx),
+            "isResume": false
         })
         stackView.push(segue)
     }
@@ -433,8 +504,10 @@ FocusScope {
         PairingOverlay {
             id: pairingScreen
             anchors.fill: parent
+            // Repli : visible seulement si le Companion n'est PAS appairé (sinon il
+            // soumet le PIN à Apollo tout seul → aucun code à saisir côté PC).
             visible: home.activeHostOnline && !home.activeHostPaired
-                     && home.pairingPin !== ""
+                     && home.pairingPin !== "" && !CompanionClient.paired
             hostName: home.activeHostName
             pin: home.pairingPin
             errorText: home.pairingError
@@ -573,6 +646,111 @@ FocusScope {
                 settingsOverlay.forceActiveFocus()
             else
                 carousel.forceActiveFocus()
+        }
+    }
+
+    // --- Mise à jour requise (dialog dédié, piloté par le Companion, §9.1) ---
+    ConsoleDialog {
+        id: updateDialog
+        anchors.fill: parent
+        z: 60
+        confirmLabel: qsTr("Mettre à jour")
+        cancelLabel: qsTr("Annuler")
+        // Distingue « confirmé » de « simplement fermé » : ConsoleDialog émet
+        // confirmed() PUIS closed() quand on valide → sans ce flag on enverrait
+        // accept=true puis accept=false.
+        property bool answered: false
+        onConfirmed: { answered = true; CompanionClient.respondUpdate(true) }
+        onClosed: {
+            if (!answered) {
+                CompanionClient.respondUpdate(false)   // refus = retour carrousel (§9.1 ABORTED)
+                launchOverlay.hide()
+                home.pendingLaunchIndex = -1
+                carousel.forceActiveFocus()
+            } else if (launchOverlay.visible) {
+                launchOverlay.forceActiveFocus()       // garde B actif pendant la maj
+            }
+        }
+    }
+
+    // --- Overlay de lancement (préparation / maj en cours / erreur) ---
+    LaunchOverlay {
+        id: launchOverlay
+        anchors.fill: parent
+        z: 50
+        onCancelRequested: {
+            if (phase !== "error")
+                CompanionClient.cancelLaunch()
+            home.pendingLaunchIndex = -1
+            hide()
+            carousel.forceActiveFocus()
+        }
+    }
+
+    // --- Saisie du code d'appairage Companion (6 chiffres, host → console) ---
+    CompanionPairing {
+        id: companionPairing
+        anchors.fill: parent
+        z: 70
+        // « Découvert mais pas appairé » : on a un fingerprint live mais pas de token.
+        visible: CompanionClient.certFingerprint !== "" && !CompanionClient.paired
+        hostName: home.activeHostName !== "" ? home.activeHostName : CompanionClient.hostName
+        // À l'apparition : on demande au host de GÉNÉRER + AFFICHER son code (pair/start).
+        // L'utilisateur le lit sur le PC et le saisit ici ; la validation = pair/confirm.
+        onVisibleChanged: if (visible) {
+            reset()
+            forceActiveFocus()
+            CompanionClient.startPairing(qsTr("Console"))
+        }
+        onSubmitted: function(code) { CompanionClient.confirmPairing(code) }
+        onCancelled: { /* la découverte continue ; rien à fermer côté console */ }
+    }
+
+    // --- Branchement des événements Companion (REST + WS) ---
+    Connections {
+        target: CompanionClient
+
+        function onPairingFailed(code) {
+            companionPairing.busy = false
+            companionPairing.errorText = (code === "PAIR_EXPIRED")
+                ? qsTr("Code expiré — relancez la liaison depuis le PC.")
+                : qsTr("Code incorrect — réessayez.")
+        }
+        function onPairingSucceeded() {
+            companionPairing.errorText = ""
+            // Si un appairage Moonlight est en cours, soumettre son PIN maintenant.
+            if (home.pairingInFlight && home.pairingPin !== "")
+                CompanionClient.submitMoonlightPin(home.pairingPin)
+        }
+
+        function onLaunchStateChanged(sessionId, gameId, state) {
+            if (!launchOverlay.visible) return
+            if (state === "CHECKING" || state === "ARMING" || state === "UP_TO_DATE")
+                launchOverlay.phase = "preparing"
+            else if (state === "STREAMING")
+                launchOverlay.hide()
+        }
+        function onUpdateRequired(sessionId, gameId, sizeBytes) {
+            updateDialog.title = qsTr("Mise à jour requise")
+            updateDialog.message = sizeBytes > 0
+                ? qsTr("Ce jeu doit être mis à jour (%1) avant d'y jouer.").arg(home.humanSize(sizeBytes))
+                : qsTr("Ce jeu doit être mis à jour avant d'y jouer.")
+            updateDialog.answered = false
+            updateDialog.open()
+        }
+        function onUpdateProgress(sessionId, pct, bytesDone, bytesTotal) {
+            launchOverlay.phase = "updating"
+            launchOverlay.pct = pct
+        }
+        function onLaunchReady(sessionId, apolloAppId) {
+            home.streamReadyApp(apolloAppId)
+        }
+        function onLaunchFailed(sessionId, code, message) {
+            home.pendingLaunchIndex = -1
+            launchOverlay.phase = "error"
+            launchOverlay.message = (message && message !== "") ? message : code
+            launchOverlay.visible = true
+            launchOverlay.forceActiveFocus()   // B ferme l'écran d'erreur
         }
     }
 }
