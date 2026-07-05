@@ -50,7 +50,9 @@ SOURCES += \
     $$ENET_DIR/protocol.c \
     $$ENET_DIR/unix.c \
     $$ENET_DIR/win32.c \
-    $$COMMON_C_DIR/src/rswrapper.c \
+    $$COMMON_C_DIR/nanors/deps/obl/oblas_common.c \
+    $$COMMON_C_DIR/nanors/deps/obl/oblas_lite.c \
+    $$COMMON_C_DIR/nanors/rs.c \
     $$COMMON_C_DIR/src/AudioStream.c \
     $$COMMON_C_DIR/src/ByteBuffer.c \
     $$COMMON_C_DIR/src/Connection.c \
