@@ -10,6 +10,7 @@
 #include <SDL_vulkan.h>
 
 extern "C" {
+#include <libavutil/hwcontext_drm.h>
 #include <libavutil/hwcontext_vulkan.h>
 }
 
@@ -1145,6 +1146,24 @@ bool PlVkRenderer::testRenderFrame(AVFrame *frame)
         }
     }
 #endif
+
+    if (frame->format == AV_PIX_FMT_DRM_PRIME) {
+        auto drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
+
+        // This can happen with out-of-tree FFmpeg patches if the V4L2
+        // format lacks a mapping to a DRM format.
+        if (drmFrame->nb_layers == 0) {
+            return false;
+        }
+
+        // Current versions of libplacebo only support one plane per layer
+        // and will assert if provided a frame that violates this constraint.
+        for (int i = 0; i < drmFrame->nb_layers; i++) {
+            if (drmFrame->layers[i].nb_planes != 1) {
+                return false;
+            }
+        }
+    }
 
     // Test if the frame can be mapped to libplacebo
     pl_frame mappedFrame;
