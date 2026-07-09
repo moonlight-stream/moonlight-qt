@@ -86,7 +86,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: intel/libva
-          ref: 2.23.0
+          ref: 2.24.1
           path: deps/libva
 
       - name: Build libva
