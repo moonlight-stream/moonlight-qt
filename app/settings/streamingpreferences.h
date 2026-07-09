@@ -108,6 +108,41 @@ public:
     };
     Q_ENUM(CaptureSysKeysMode);
 
+    enum NativeResScale
+    {
+        NRS_FULL,
+        NRS_3_4,
+        NRS_2_3,
+        NRS_HALF,
+        NRS_1_3,
+        NRS_QUARTER
+    };
+    Q_ENUM(NativeResScale);
+
+    Q_INVOKABLE static void getNativeResScaleFraction(NativeResScale scale, int& numerator, int& denominator) {
+        switch (scale) {
+        case NRS_FULL:    numerator = 1; denominator = 1; break;
+        case NRS_3_4:     numerator = 3; denominator = 4; break;
+        case NRS_2_3:     numerator = 2; denominator = 3; break;
+        case NRS_HALF:    numerator = 1; denominator = 2; break;
+        case NRS_1_3:     numerator = 1; denominator = 3; break;
+        case NRS_QUARTER: numerator = 1; denominator = 4; break;
+        default:          numerator = 1; denominator = 1; break;
+        }
+    }
+
+    Q_INVOKABLE static int getNativeResScaleNumerator(NativeResScale scale) {
+        int num, den;
+        getNativeResScaleFraction(scale, num, den);
+        return num;
+    }
+
+    Q_INVOKABLE static int getNativeResScaleDenominator(NativeResScale scale) {
+        int num, den;
+        getNativeResScaleFraction(scale, num, den);
+        return den;
+    }
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
@@ -145,6 +180,8 @@ public:
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
+    Q_PROPERTY(bool isNativeResolution MEMBER isNativeResolution NOTIFY isNativeResolutionChanged)
+    Q_PROPERTY(NativeResScale nativeResScale MEMBER nativeResScale NOTIFY nativeResScaleChanged)
 
     Q_INVOKABLE bool retranslate();
 
@@ -187,6 +224,8 @@ public:
     UIDisplayMode uiDisplayMode;
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
+    bool isNativeResolution;
+    NativeResScale nativeResScale;
 
 signals:
     void displayModeChanged();
@@ -224,6 +263,8 @@ signals:
     void captureSysKeysModeChanged();
     void keepAwakeChanged();
     void languageChanged();
+    void isNativeResolutionChanged();
+    void nativeResScaleChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);
