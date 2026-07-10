@@ -812,38 +812,64 @@ Flickable {
                     ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
                 }
 
-                CheckBox {
-                    id: vsyncCheck
+                Row {
+                    spacing: 5
                     width: parent.width
-                    hoverEnabled: true
-                    text: qsTr("V-Sync")
-                    font.pointSize:  12
-                    checked: StreamingPreferences.enableVsync
-                    onCheckedChanged: {
-                        StreamingPreferences.enableVsync = checked
+
+                    CheckBox {
+                        id: vsyncCheck
+                        hoverEnabled: true
+                        text: qsTr("V-Sync")
+                        font.pointSize:  12
+                        checked: StreamingPreferences.enableVsync
+                        onCheckedChanged: {
+                            StreamingPreferences.enableVsync = checked
+                        }
+
+                        ToolTip.delay: 1000
+                        ToolTip.timeout: 5000
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing")
                     }
 
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 5000
-                    ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing")
+                    CheckBox {
+                        id: framePacingCheck
+                        hoverEnabled: true
+                        text: qsTr("Frame pacing")
+                        font.pointSize:  12
+                        enabled: StreamingPreferences.enableVsync
+                        checked: StreamingPreferences.enableVsync && StreamingPreferences.framePacing
+                        onCheckedChanged: {
+                            StreamingPreferences.framePacing = checked
+                        }
+                        ToolTip.delay: 1000
+                        ToolTip.timeout: 5000
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Frame pacing reduces micro-stutter by delaying frames that come in too early")
+                    }
                 }
 
                 CheckBox {
-                    id: framePacingCheck
+                    id: enableHdr
                     width: parent.width
-                    hoverEnabled: true
-                    text: qsTr("Frame pacing")
-                    font.pointSize:  12
-                    enabled: StreamingPreferences.enableVsync
-                    checked: StreamingPreferences.enableVsync && StreamingPreferences.framePacing
+                    text: qsTr("Enable HDR")
+                    font.pointSize: 12
+
+                    enabled: SystemProperties.supportsHdr
+                    checked: enabled && StreamingPreferences.enableHdr
                     onCheckedChanged: {
-                        StreamingPreferences.framePacing = checked
+                        StreamingPreferences.enableHdr = checked
                     }
+
+                    // Updating StreamingPreferences.videoCodecConfig is handled above
+
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Frame pacing reduces micro-stutter by delaying frames that come in too early")
+                    ToolTip.text: enabled ?
+                                      qsTr("The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.")
+                                    :
+                                      qsTr("HDR streaming is not supported on this PC.")
                 }
             }
         }
@@ -1618,7 +1644,7 @@ Flickable {
                             val: StreamingPreferences.VCC_FORCE_HEVC
                         }
                         ListElement {
-                            text: qsTr("AV1 (Experimental)")
+                            text: qsTr("AV1")
                             val: StreamingPreferences.VCC_FORCE_AV1
                         }
                     }
@@ -1631,32 +1657,9 @@ Flickable {
                 }
 
                 CheckBox {
-                    id: enableHdr
-                    width: parent.width
-                    text: qsTr("Enable HDR (Experimental)")
-                    font.pointSize: 12
-
-                    enabled: SystemProperties.supportsHdr
-                    checked: enabled && StreamingPreferences.enableHdr
-                    onCheckedChanged: {
-                        StreamingPreferences.enableHdr = checked
-                    }
-
-                    // Updating StreamingPreferences.videoCodecConfig is handled above
-
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 5000
-                    ToolTip.visible: hovered
-                    ToolTip.text: enabled ?
-                                      qsTr("The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.")
-                                    :
-                                      qsTr("HDR streaming is not supported on this PC.")
-                }
-
-                CheckBox {
                     id: enableYUV444
                     width: parent.width
-                    text: qsTr("Enable YUV 4:4:4 (Experimental)")
+                    text: qsTr("Enable YUV 4:4:4")
                     font.pointSize: 12
 
                     checked: StreamingPreferences.enableYUV444

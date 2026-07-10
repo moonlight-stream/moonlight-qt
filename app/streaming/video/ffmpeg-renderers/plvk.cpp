@@ -10,6 +10,7 @@
 #include <SDL_vulkan.h>
 
 extern "C" {
+#include <libavutil/hwcontext_drm.h>
 #include <libavutil/hwcontext_vulkan.h>
 }
 
@@ -134,10 +135,10 @@ void PlVkRenderer::overlayUploadComplete(void* opaque)
     SDL_FreeSurface((SDL_Surface*)opaque);
 }
 
-PlVkRenderer::PlVkRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer) :
+PlVkRenderer::PlVkRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRenderer) :
     IFFmpegRenderer(RendererType::Vulkan),
     m_Backend(backendRenderer),
-    m_HwAccelBackend(hwaccel)
+    m_HwDeviceType(hwDeviceType)
 {
     bool ok;
 
@@ -161,6 +162,10 @@ PlVkRenderer::~PlVkRenderer()
     SDL_assert(!m_HasPendingSwapchainFrame);
 
     if (m_Vulkan != nullptr) {
+#ifdef PLVK_USE_EARLY_RENDER_TO_WAIT
+        pl_tex_destroy(m_Vulkan->gpu, &m_EmptyOverlay.tex);
+#endif
+
         for (int i = 0; i < (int)SDL_arraysize(m_Overlays); i++) {
             pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].overlay.tex);
             pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].stagingOverlay.tex);
@@ -177,6 +182,9 @@ PlVkRenderer::~PlVkRenderer()
 
         pl_renderer_destroy(&m_Renderer);
         pl_swapchain_destroy(&m_Swapchain);
+#ifdef Q_OS_DARWIN
+        m_MetalTextureFactory.reset();
+#endif
         pl_vulkan_destroy(&m_Vulkan);
 
         // This surface was created by SDL, so there's no libplacebo API to destroy it
@@ -184,10 +192,7 @@ PlVkRenderer::~PlVkRenderer()
             fn_vkDestroySurfaceKHR(m_PlVkInstance->instance, m_VkSurface, nullptr);
         }
 
-        if (m_HwDeviceCtx != nullptr) {
-            av_buffer_unref(&m_HwDeviceCtx);
-        }
-
+        av_buffer_unref(&m_HwDeviceCtx);
         pl_vk_inst_destroy(&m_PlVkInstance);
     }
 
@@ -287,20 +292,8 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
         return false;
     }
 
-#ifdef Q_OS_WIN32
-    // Intel's Windows drivers seem to have interoperability issues as of FFmpeg 7.0.1
-    // when using Vulkan Video decoding. Since they also expose HEVC REXT profiles using
-    // D3D11VA, let's reject them here so we can select a different Vulkan device or
-    // just allow D3D11VA to take over.
-    if (m_HwAccelBackend && deviceProps->vendorID == 0x8086 && !qEnvironmentVariableIntValue("PLVK_ALLOW_INTEL")) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Skipping Intel GPU for Vulkan Video due to broken drivers");
-        return false;
-    }
-#endif
-
     // If we're acting as the decoder backend, we need a physical device with Vulkan video support
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
         const char* videoDecodeExtension;
 
         if (decoderParams->videoFormat & VIDEO_FORMAT_MASK_H264) {
@@ -330,6 +323,18 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
                         videoDecodeExtension);
             return false;
         }
+
+#ifdef Q_OS_WIN32
+        // Intel's Windows drivers seem to have interoperability issues as of FFmpeg 7.0.1
+        // when using Vulkan Video decoding. Since they also expose HEVC REXT profiles using
+        // D3D11VA, let's reject them here so we can select a different Vulkan device or
+        // just allow D3D11VA to take over.
+        if (deviceProps->vendorID == 0x8086 && !qEnvironmentVariableIntValue("PLVK_ALLOW_INTEL")) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Skipping Intel GPU for Vulkan Video due to broken drivers");
+            return false;
+        }
+#endif
     }
 
     if (!isSurfacePresentationSupportedByPhysicalDevice(device)) {
@@ -359,13 +364,16 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
     vkParams.get_proc_addr = m_PlVkInstance->get_proc_addr;
     vkParams.surface = m_VkSurface;
     vkParams.device = device;
+
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 26, 100)
-    vkParams.opt_extensions = av_vk_get_optional_device_extensions(&vkParams.num_opt_extensions);
+        vkParams.opt_extensions = av_vk_get_optional_device_extensions(&vkParams.num_opt_extensions);
 #else
-    vkParams.opt_extensions = k_OptionalDeviceExtensions;
-    vkParams.num_opt_extensions = SDL_arraysize(k_OptionalDeviceExtensions);
+        vkParams.opt_extensions = k_OptionalDeviceExtensions;
+        vkParams.num_opt_extensions = SDL_arraysize(k_OptionalDeviceExtensions);
 #endif
-    vkParams.extra_queues = m_HwAccelBackend ? VK_QUEUE_FLAG_BITS_MAX_ENUM : 0;
+        vkParams.extra_queues = VK_QUEUE_FLAG_BITS_MAX_ENUM;
+    }
 
     {
         // Don't let Qt take DRM master from us during pl_vulkan_create()
@@ -418,6 +426,7 @@ bool PlVkRenderer::isExtensionSupportedByPhysicalDevice(VkPhysicalDevice device,
 bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 {
     m_Window = params->window;
+    m_MaxVideoFps = params->frameRate;
 
     unsigned int instanceExtensionCount = 0;
     if (!SDL_Vulkan_GetInstanceExtensions(params->window, &instanceExtensionCount, nullptr)) {
@@ -485,18 +494,17 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    VkPresentModeKHR presentMode;
     if (params->enableVsync) {
         // FIFO mode improves frame pacing compared with Mailbox, especially for
         // platforms like X11 that lack a VSyncSource implementation for Pacer.
-        presentMode = VK_PRESENT_MODE_FIFO_KHR;
+        m_VkPresentMode = VK_PRESENT_MODE_FIFO_KHR;
     }
     else {
         // We want immediate mode for V-Sync disabled if possible
         if (isPresentModeSupportedByPhysicalDevice(m_Vulkan->phys_device, VK_PRESENT_MODE_IMMEDIATE_KHR)) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Using Immediate present mode with V-Sync disabled");
-            presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+            m_VkPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
         }
         else {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -506,41 +514,26 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
             if (isPresentModeSupportedByPhysicalDevice(m_Vulkan->phys_device, VK_PRESENT_MODE_FIFO_RELAXED_KHR)) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using FIFO Relaxed present mode with V-Sync disabled");
-                presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
+                m_VkPresentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
             }
             // Mailbox at least provides non-blocking behavior
             else if (isPresentModeSupportedByPhysicalDevice(m_Vulkan->phys_device, VK_PRESENT_MODE_MAILBOX_KHR)) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using Mailbox present mode with V-Sync disabled");
-                presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+                m_VkPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
             }
             // FIFO is always supported
             else {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using FIFO present mode with V-Sync disabled");
-                presentMode = VK_PRESENT_MODE_FIFO_KHR;
+                m_VkPresentMode = VK_PRESENT_MODE_FIFO_KHR;
             }
         }
     }
 
-    pl_vulkan_swapchain_params vkSwapchainParams = {};
-    vkSwapchainParams.surface = m_VkSurface;
-    vkSwapchainParams.present_mode = presentMode;
-    vkSwapchainParams.swapchain_depth = 1; // No queued frames
-#if PL_API_VER >= 338
-    vkSwapchainParams.disable_10bit_sdr = true; // Some drivers don't dither 10-bit SDR output correctly
-#endif
-
-    {
-        // Don't let Qt take DRM master from us during pl_vulkan_create_swapchain()
-        DrmMasterLocker locker;
-
-        m_Swapchain = pl_vulkan_create_swapchain(m_Vulkan, &vkSwapchainParams);
-        if (m_Swapchain == nullptr) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "pl_vulkan_create_swapchain() failed");
-            return false;
-        }
+    // Start with a swapchain that is double-buffered for lowest display latency
+    if (!createSwapchain(1)) {
+        return false;
     }
 
     m_Renderer = pl_renderer_create(m_Log, m_Vulkan->gpu);
@@ -550,8 +543,27 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+#ifdef PLVK_USE_EARLY_RENDER_TO_WAIT
+    SDL_Surface *emptySurface = SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 0, SDL_PIXELFORMAT_ARGB8888);
+    if (emptySurface == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateRGBSurfaceWithFormat() failed: %s", SDL_GetError());
+        return false;
+    }
+
+    // emptySurface is owned now by the overlay upload code (even on failure)
+    if (!createOverlay(&m_EmptyOverlay, emptySurface)) {
+        return false;
+    }
+
+    m_EmptyOverlayPart.src = { 0.0f, 0.0f, 1.0f, 1.0f };
+    m_EmptyOverlayPart.dst = { 0.0f, 0.0f, 1.0f, 1.0f };
+    m_EmptyOverlay.num_parts = 1;
+    m_EmptyOverlay.parts = &m_EmptyOverlayPart;
+#endif
+
     // We only need an hwaccel device context if we're going to act as the backend renderer too
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
         m_HwDeviceCtx = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VULKAN);
         if (m_HwDeviceCtx == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -572,7 +584,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         vkDeviceContext->nb_enabled_inst_extensions = m_PlVkInstance->num_extensions;
         vkDeviceContext->enabled_dev_extensions = m_Vulkan->extensions;
         vkDeviceContext->nb_enabled_dev_extensions = m_Vulkan->num_extensions;
-#if LIBAVUTIL_VERSION_INT > AV_VERSION_INT(58, 9, 100)
+#if LIBAVUTIL_VERSION_INT > AV_VERSION_INT(58, 9, 100) && LIBAVUTIL_VERSION_MAJOR < 62
         vkDeviceContext->lock_queue = lockQueue;
         vkDeviceContext->unlock_queue = unlockQueue;
 #endif
@@ -588,17 +600,75 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
             return false;
         }
     }
+    else if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
+        int err = av_hwdevice_ctx_create(&m_HwDeviceCtx,
+                                         m_HwDeviceType,
+                                         nullptr,
+                                         nullptr,
+                                         0);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_create() failed: %d",
+                         err);
+            return false;
+        }
+    }
 
+#ifdef Q_OS_DARWIN
+    m_MetalTextureFactory = std::make_unique<MetalVulkanTextureFactory>(m_Vulkan);
+
+    // Set an initial wide colorspace hint to ensure that MoltenVK sets wantsExtendedDynamicRangeContent
+    // before we request the first drawable. If we don't do this, our Metal layer ends up stuck in SDR
+    // mode even if we later change the colorspace to VK_COLOR_SPACE_HDR10_ST2084_EXT.
+    if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+        pl_color_space wideColorspace = {};
+        wideColorspace.primaries = PL_COLOR_PRIM_BT_709;
+        wideColorspace.transfer = PL_COLOR_TRC_SCRGB;
+        pl_swapchain_colorspace_hint(m_Swapchain, &wideColorspace);
+    }
+#endif
+
+    return true;
+}
+
+
+bool PlVkRenderer::createSwapchain(int depth)
+{
+    pl_swapchain_destroy(&m_Swapchain);
+
+    pl_vulkan_swapchain_params vkSwapchainParams = {};
+    vkSwapchainParams.surface = m_VkSurface;
+    vkSwapchainParams.present_mode = m_VkPresentMode;
+    vkSwapchainParams.swapchain_depth = depth;
+#if PL_API_VER >= 338
+    vkSwapchainParams.disable_10bit_sdr = true; // Some drivers don't dither 10-bit SDR output correctly
+#endif
+
+    {
+        // Don't let Qt take DRM master from us during pl_vulkan_create_swapchain()
+        DrmMasterLocker locker;
+
+        m_Swapchain = pl_vulkan_create_swapchain(m_Vulkan, &vkSwapchainParams);
+        if (m_Swapchain == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "pl_vulkan_create_swapchain() failed");
+            return false;
+        }
+    }
+
+    m_SwapchainDepth = depth;
     return true;
 }
 
 bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary **)
 {
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceCtx) {
+        context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
+    }
+
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using Vulkan video decoding");
-
-        context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
     }
     else {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -610,13 +680,23 @@ bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary *
 
 bool PlVkRenderer::mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFrame)
 {
-    pl_avframe_params mapParams = {};
-    mapParams.frame = frame;
-    mapParams.tex = m_Textures;
-    if (!pl_map_avframe_ex(m_Vulkan->gpu, mappedFrame, &mapParams)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_map_avframe_ex() failed");
-        return false;
+#ifdef Q_OS_DARWIN
+    if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
+        if (!m_MetalTextureFactory->mapVideoToolboxToPlacebo(frame, mappedFrame)) {
+            return false;
+        }
+    }
+    else
+#endif
+    {
+        pl_avframe_params mapParams = {};
+        mapParams.frame = frame;
+        mapParams.tex = m_Textures;
+        if (!pl_map_avframe_ex(m_Vulkan->gpu, mappedFrame, &mapParams)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "pl_map_avframe_ex() failed");
+            return false;
+        }
     }
 
     // libplacebo assumes a minimum luminance value of 0 means the actual value was unknown.
@@ -636,6 +716,21 @@ bool PlVkRenderer::mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFra
     mappedFrame->repr.levels = PL_COLOR_LEVELS_FULL;
 
     return true;
+}
+
+void PlVkRenderer::unmapAvFrameFromPlacebo(const AVFrame *frame, pl_frame* mappedFrame)
+{
+#ifdef Q_OS_DARWIN
+    if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
+        m_MetalTextureFactory->unmapVideoToolboxFromPlacebo(mappedFrame);
+    }
+    else
+#else
+    Q_UNUSED(frame)
+#endif
+    {
+        pl_unmap_avframe(m_Vulkan->gpu, mappedFrame);
+    }
 }
 
 bool PlVkRenderer::populateQueues(int videoFormat)
@@ -769,6 +864,27 @@ bool PlVkRenderer::isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevi
     return false;
 }
 
+void PlVkRenderer::beginRenderTiming()
+{
+#ifdef PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH
+    m_RenderStartTime = SDL_GetTicks();
+#endif
+}
+
+void PlVkRenderer::endRenderTiming()
+{
+#ifdef PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH
+    // Trigger a switch to triple-buffered mode if our frame presentation time
+    // exceeds 110% of the frame interval for half a second of frames.
+    if (SDL_GetTicks() - m_RenderStartTime > (1100U / m_MaxVideoFps)) {
+        m_DelayedPresents++;
+    }
+    else if (m_DelayedPresents > 0) {
+        m_DelayedPresents--;
+    }
+#endif
+}
+
 void PlVkRenderer::waitToRender()
 {
     // Check if the GPU has failed before doing anything else
@@ -808,6 +924,25 @@ void PlVkRenderer::waitToRender()
     // renderFrame() wasn't called after waitToRender().
     if (pl_swapchain_start_frame(m_Swapchain, &m_SwapchainFrame)) {
         m_HasPendingSwapchainFrame = true;
+
+#ifdef PLVK_USE_EARLY_RENDER_TO_WAIT
+        // This is a workaround for MoltenVK which lazily fetches a drawable when the
+        // swapchain frame is first modified (rather than in pl_swapchain_start_frame()).
+        // By rendering an empty overlay on the swapchain here, we will trigger this wait
+        // in the desired context (before we've latched the next frame to present), rather
+        // than in the renderFrame() path where delays directly increase video latency.
+        pl_frame targetFrame;
+        pl_frame_from_swapchain(&targetFrame, &m_SwapchainFrame);
+        targetFrame.num_overlays = 1;
+        targetFrame.overlays = &m_EmptyOverlay;
+
+        beginRenderTiming();
+        if (!pl_render_image(m_Renderer, nullptr, &targetFrame, &pl_render_fast_params)) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "pl_render_image() failed during render wait");
+        }
+        endRenderTiming();
+#endif
     }
 }
 
@@ -840,7 +975,19 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     if (!pl_color_space_equal(&mappedFrame.color, &m_LastColorspace)) {
         m_LastColorspace = mappedFrame.color;
         SDL_assert(pl_color_space_equal(&mappedFrame.color, &m_LastColorspace));
-        pl_swapchain_colorspace_hint(m_Swapchain, &mappedFrame.color);
+
+#ifdef Q_OS_DARWIN
+        // There is a gamma mismatch on macOS between what libplacebo thinks BT.709
+        // should use and what the Metal layer actually displays. Use sRGB for the
+        // swapchain when the incoming frames are BT.709 as a workaround.
+        if (pl_color_space_equal(&mappedFrame.color, &pl_color_space_bt709)) {
+            pl_swapchain_colorspace_hint(m_Swapchain, &pl_color_space_srgb);
+        }
+        else
+#endif
+        {
+            pl_swapchain_colorspace_hint(m_Swapchain, &mappedFrame.color);
+        }
     }
 
     // Reserve enough space to avoid allocating under the overlay lock
@@ -922,6 +1069,11 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     targetFrame.crop.x1 = dst.x + dst.w;
     targetFrame.crop.y1 = dst.y + dst.h;
 
+#ifndef PLVK_USE_EARLY_RENDER_TO_WAIT
+    // For PLVK_USE_EARLY_RENDER_TO_WAIT, we already timed our early render in waitToRender()
+    beginRenderTiming();
+#endif
+
     // Render the video image and overlays into the swapchain buffer
     targetFrame.num_overlays = (int)overlays.size();
     targetFrame.overlays = overlays.data();
@@ -944,6 +1096,27 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         goto UnmapExit;
     }
 
+#ifndef PLVK_USE_EARLY_RENDER_TO_WAIT
+    endRenderTiming();
+#endif
+
+#ifdef PLVK_USE_DYNAMIC_SWAPCHAIN_DEPTH
+    if (m_DelayedPresents == m_MaxVideoFps / 2 && m_SwapchainDepth < 2) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Switching to triple-buffered swapchain after delayed presentations");
+        if (!createSwapchain(2)) {
+            // Recreate the renderer
+            SDL_Event event;
+            event.type = SDL_RENDER_DEVICE_RESET;
+            SDL_PushEvent(&event);
+            goto UnmapExit;
+        }
+
+        // Restore the swapchain's colorspace from the previous swapchain frame
+        pl_swapchain_colorspace_hint(m_Swapchain, &targetFrame.color);
+    }
+#endif
+
 #ifdef Q_OS_WIN32
     // On Windows, we swap buffers here instead of waitToRender()
     // to avoid some performance problems on Nvidia GPUs.
@@ -956,7 +1129,7 @@ UnmapExit:
         pl_tex_destroy(m_Vulkan->gpu, &texture);
     }
 
-    pl_unmap_avframe(m_Vulkan->gpu, &mappedFrame);
+    unmapAvFrameFromPlacebo(frame, &mappedFrame);
 }
 
 bool PlVkRenderer::testRenderFrame(AVFrame *frame)
@@ -974,13 +1147,91 @@ bool PlVkRenderer::testRenderFrame(AVFrame *frame)
     }
 #endif
 
+    if (frame->format == AV_PIX_FMT_DRM_PRIME) {
+        auto drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
+
+        // This can happen with out-of-tree FFmpeg patches if the V4L2
+        // format lacks a mapping to a DRM format.
+        if (drmFrame->nb_layers == 0) {
+            return false;
+        }
+
+        // Current versions of libplacebo only support one plane per layer
+        // and will assert if provided a frame that violates this constraint.
+        for (int i = 0; i < drmFrame->nb_layers; i++) {
+            if (drmFrame->layers[i].nb_planes != 1) {
+                return false;
+            }
+        }
+    }
+
     // Test if the frame can be mapped to libplacebo
     pl_frame mappedFrame;
     if (!mapAvFrameToPlacebo(frame, &mappedFrame)) {
         return false;
     }
 
-    pl_unmap_avframe(m_Vulkan->gpu, &mappedFrame);
+    unmapAvFrameFromPlacebo(frame, &mappedFrame);
+    return true;
+}
+
+// Takes ownership of surface in all cases!
+bool PlVkRenderer::createOverlay(pl_overlay* overlay, SDL_Surface* surface)
+{
+    // Find a compatible texture format
+    SDL_assert(surface->format->format == SDL_PIXELFORMAT_ARGB8888);
+    pl_fmt texFormat = pl_find_named_fmt(m_Vulkan->gpu, "bgra8");
+    if (!texFormat) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_find_named_fmt(bgra8) failed");
+        SDL_FreeSurface(surface);
+        return false;
+    }
+
+    // Create a new texture for this overlay if necessary, otherwise reuse the existing texture.
+    // NB: We're guaranteed that the render thread won't be reading this concurrently because
+    // we set hasStagingOverlay to false above.
+    pl_tex_params texParams = {};
+    texParams.w = surface->w;
+    texParams.h = surface->h;
+    texParams.format = texFormat;
+    texParams.sampleable = true;
+    texParams.host_writable = true;
+    texParams.blit_src = !!(texFormat->caps & PL_FMT_CAP_BLITTABLE);
+    texParams.debug_tag = PL_DEBUG_TAG;
+    if (!pl_tex_recreate(m_Vulkan->gpu, &overlay->tex, &texParams)) {
+        pl_tex_destroy(m_Vulkan->gpu, &overlay->tex);
+        SDL_zerop(overlay);
+        SDL_FreeSurface(surface);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_tex_recreate() failed");
+        return false;
+    }
+
+    // Upload the surface data to the new texture
+    SDL_assert(!SDL_MUSTLOCK(surface));
+    pl_tex_transfer_params xferParams = {};
+    xferParams.tex = overlay->tex;
+    xferParams.row_pitch = (size_t)surface->pitch;
+    xferParams.ptr = surface->pixels;
+    xferParams.callback = overlayUploadComplete;
+    xferParams.priv = surface;
+    if (!pl_tex_upload(m_Vulkan->gpu, &xferParams)) {
+        pl_tex_destroy(m_Vulkan->gpu, &overlay->tex);
+        SDL_zerop(overlay);
+        SDL_FreeSurface(surface);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_tex_upload() failed");
+        return false;
+    }
+
+    // surface is now owned by the texture upload process. It will be freed in overlayUploadComplete()
+
+    // Initialize the rest of the overlay params
+    overlay->mode = PL_OVERLAY_NORMAL;
+    overlay->coords = PL_OVERLAY_COORDS_DST_FRAME;
+    overlay->repr = pl_color_repr_rgb;
+    overlay->color = pl_color_space_srgb;
     return true;
 }
 
@@ -1008,61 +1259,10 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    // Find a compatible texture format
-    SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
-    pl_fmt texFormat = pl_find_named_fmt(m_Vulkan->gpu, "bgra8");
-    if (!texFormat) {
-        SDL_FreeSurface(newSurface);
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_find_named_fmt(bgra8) failed");
+    // newSurface is now owned by the texture upload process
+    if (!createOverlay(&m_Overlays[type].stagingOverlay, newSurface)) {
         return;
     }
-
-    // Create a new texture for this overlay if necessary, otherwise reuse the existing texture.
-    // NB: We're guaranteed that the render thread won't be reading this concurrently because
-    // we set hasStagingOverlay to false above.
-    pl_tex_params texParams = {};
-    texParams.w = newSurface->w;
-    texParams.h = newSurface->h;
-    texParams.format = texFormat;
-    texParams.sampleable = true;
-    texParams.host_writable = true;
-    texParams.blit_src = !!(texFormat->caps & PL_FMT_CAP_BLITTABLE);
-    texParams.debug_tag = PL_DEBUG_TAG;
-    if (!pl_tex_recreate(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex, &texParams)) {
-        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
-        SDL_zero(m_Overlays[type].stagingOverlay);
-        SDL_FreeSurface(newSurface);
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_tex_recreate() failed");
-        return;
-    }
-
-    // Upload the surface data to the new texture
-    SDL_assert(!SDL_MUSTLOCK(newSurface));
-    pl_tex_transfer_params xferParams = {};
-    xferParams.tex = m_Overlays[type].stagingOverlay.tex;
-    xferParams.row_pitch = (size_t)newSurface->pitch;
-    xferParams.ptr = newSurface->pixels;
-    xferParams.callback = overlayUploadComplete;
-    xferParams.priv = newSurface;
-    if (!pl_tex_upload(m_Vulkan->gpu, &xferParams)) {
-        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
-        SDL_zero(m_Overlays[type].stagingOverlay);
-        SDL_FreeSurface(newSurface);
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_tex_upload() failed");
-        return;
-    }
-
-    // newSurface is now owned by the texture upload process. It will be freed in overlayUploadComplete()
-    newSurface = nullptr;
-
-    // Initialize the rest of the overlay params
-    m_Overlays[type].stagingOverlay.mode = PL_OVERLAY_NORMAL;
-    m_Overlays[type].stagingOverlay.coords = PL_OVERLAY_COORDS_DST_FRAME;
-    m_Overlays[type].stagingOverlay.repr = pl_color_repr_rgb;
-    m_Overlays[type].stagingOverlay.color = pl_color_space_srgb;
 
     // Make this staging overlay visible to the render thread
     SDL_AtomicLock(&m_OverlayLock);
@@ -1104,7 +1304,7 @@ int PlVkRenderer::getDecoderCapabilities()
 
 bool PlVkRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_VULKAN) {
         return pixelFormat == AV_PIX_FMT_VULKAN;
     }
     else if (m_Backend) {

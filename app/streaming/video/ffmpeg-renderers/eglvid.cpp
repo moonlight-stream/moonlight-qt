@@ -627,6 +627,8 @@ bool EGLRenderer::setupVideoRenderingState() {
     glGenTextures(EGL_MAX_PLANES, m_Textures);
     for (size_t i = 0; i < EGL_MAX_PLANES; ++i) {
         glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_Textures[i]);
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
@@ -784,16 +786,6 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         }
     }
 
-    int drawableWidth, drawableHeight;
-    SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
-    SDL_Rect src, dst;
-    src.x = src.y = dst.x = dst.y = 0;
-    src.w = frame->width;
-    src.h = frame->height;
-    dst.w = drawableWidth;
-    dst.h = drawableHeight;
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
     ssize_t plane_count = m_Backend->exportEGLImages(frame, m_EGLDisplay, imgs);
     if (plane_count < 0)
         return;
@@ -801,16 +793,6 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_Textures[i]);
         m_glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, imgs[i]);
-
-        // Use GL_NEAREST to reduce sampling if the video region is a multiple of the frame size
-        if (dst.w % frame->width == 0 && dst.h % frame->height == 0) {
-            glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        }
-        else {
-            glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        }
     }
 
     // We already called glClear() after last frame's SDL_GL_SwapWindow()
@@ -819,7 +801,17 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         glClear(GL_COLOR_BUFFER_BIT);
     }
 
+    int drawableWidth, drawableHeight;
+    SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+
     // Set the viewport to the size of the aspect-ratio-scaled video
+    SDL_Rect src, dst;
+    src.x = src.y = dst.x = dst.y = 0;
+    src.w = frame->width;
+    src.h = frame->height;
+    dst.w = drawableWidth;
+    dst.h = drawableHeight;
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
     glViewport(dst.x, dst.y, dst.w, dst.h);
 
     glUseProgram(m_ShaderProgram);
