@@ -164,6 +164,28 @@ macx {
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework QuartzCore
     CONFIG += ffmpeg
 }
+macx {
+    # GipBridgeController (streaming/input/gipbridge.cpp) reads GIP-protocol
+    # controllers directly over USB and feeds them into SDL as a virtual
+    # controller, since macOS has no HID class driver for them and creating
+    # a system-wide virtual HID device requires an Apple entitlement this
+    # project doesn't have. Its USB/protocol layer lives in the vendored
+    # gip-bridge Rust crate, built here as a static library with a small C ABI.
+    GIP_BRIDGE_DIR = $$PWD/../gip-bridge
+    GIP_BRIDGE_LIB = $$GIP_BRIDGE_DIR/target/release/libgip_bridge.a
+
+    gipbridge.target = $$GIP_BRIDGE_LIB
+    gipbridge.commands = cd $$GIP_BRIDGE_DIR && cargo build --release
+    gipbridge.CONFIG = phony
+    QMAKE_EXTRA_TARGETS += gipbridge
+    PRE_TARGETDEPS += $$GIP_BRIDGE_LIB
+
+    INCLUDEPATH += $$GIP_BRIDGE_DIR/include
+    LIBS += $$GIP_BRIDGE_LIB -framework IOKit -framework CoreFoundation
+
+    SOURCES += streaming/input/gipbridge.cpp
+    HEADERS += streaming/input/gipbridge.h
+}
 
 SOURCES += \
     backend/nvaddress.cpp \
