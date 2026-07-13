@@ -943,6 +943,8 @@ void PlVkRenderer::waitToRender()
         }
         endRenderTiming();
 #endif
+
+        SDL_Delay(10);
     }
 }
 
