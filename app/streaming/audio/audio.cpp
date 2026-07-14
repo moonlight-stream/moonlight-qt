@@ -5,6 +5,10 @@
 #include "renderers/slaud.h"
 #endif
 
+#ifdef HAVE_WASAPI_AUDIO
+#include "renderers/wasapi.h"
+#endif
+
 #include "renderers/sdl.h"
 
 #include <Limelight.h>
@@ -21,17 +25,23 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
 {
     // Handle explicit ML_AUDIO setting and fail if the requested backend fails
     QString mlAudio = qgetenv("ML_AUDIO").toLower();
+#ifdef HAVE_WASAPI_AUDIO
+    if (mlAudio == "wasapi") {
+        TRY_INIT_RENDERER(WasapiAudioRenderer, opusConfig)
+        return nullptr;
+    }
+#endif
     if (mlAudio == "sdl") {
         TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
         return nullptr;
     }
 #if defined(HAVE_SLAUDIO)
-    else if (mlAudio == "slaudio") {
+    if (mlAudio == "slaudio") {
         TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
         return nullptr;
     }
 #endif
-    else if (!mlAudio.isEmpty()) {
+    if (!mlAudio.isEmpty()) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unknown audio backend: %s",
                      SDL_getenv("ML_AUDIO"));
@@ -43,6 +53,12 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
 #if defined(HAVE_SLAUDIO)
     // Steam Link should always have SLAudio
     TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
+#endif
+
+#ifdef HAVE_WASAPI_AUDIO
+    // Prefer direct exclusive-mode output on Windows. Unsupported formats,
+    // unavailable devices, and disabled exclusive-mode access fall back to SDL.
+    TRY_INIT_RENDERER(WasapiAudioRenderer, opusConfig)
 #endif
 
     // Default to SDL
