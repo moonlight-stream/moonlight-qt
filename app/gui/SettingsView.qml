@@ -965,6 +965,22 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Mutes Moonlight's audio when you Alt+Tab out of the stream or click on a different window.")
                 }
+
+                CheckBox {
+                    id: exclusiveAudioCheck
+                    width: parent.width
+                    text: qsTr("Use exclusive audio output (Windows, experimental)")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.exclusiveAudio
+                    onCheckedChanged: {
+                        StreamingPreferences.exclusiveAudio = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Takes exclusive control of the output device, bypasses the Windows mixer and per-app volume, and falls back automatically if unavailable.")
+                }
             }
         }
 

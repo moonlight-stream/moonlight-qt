@@ -55,6 +55,12 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
     TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
 #endif
 
+#ifdef HAVE_WASAPI_AUDIO
+    if (m_Preferences->exclusiveAudio) {
+        TRY_INIT_RENDERER(WasapiAudioRenderer, opusConfig)
+    }
+#endif
+
     // Default to SDL
     TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
 
