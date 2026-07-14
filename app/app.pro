@@ -397,12 +397,12 @@ win32:!winrt {
 
     DEFINES += HAVE_WASAPI_AUDIO
     LIBS += avrt.lib
+    INCLUDEPATH += $$PWD/../miniaudio/miniaudio
     SOURCES += \
         streaming/audio/renderers/wasapiaud.cpp \
-        streaming/audio/renderers/miniaudio/miniaudioimpl.cpp
+        streaming/audio/renderers/miniaudioimpl.cpp
     HEADERS += \
-        streaming/audio/renderers/wasapi.h \
-        streaming/audio/renderers/miniaudio/miniaudio.h
+        streaming/audio/renderers/wasapi.h
 
     SOURCES += \
         streaming/video/ffmpeg-renderers/dxva2.cpp \

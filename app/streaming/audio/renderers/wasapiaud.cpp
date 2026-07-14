@@ -18,7 +18,7 @@
 
 #include <Limelight.h>
 
-#include "miniaudio/miniaudio.h"
+#include "miniaudio.h"
 
 #include <algorithm>
 #include <atomic>
