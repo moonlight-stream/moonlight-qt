@@ -55,9 +55,7 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
     TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
 #endif
 
-    // Default to SDL. WASAPI exclusive-mode is available only as an explicit
-    // opt-in via ML_AUDIO=wasapi because it monopolizes the endpoint and
-    // bypasses the Windows shared mixer / per-app session volume.
+    // Default to SDL
     TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
 
     return nullptr;

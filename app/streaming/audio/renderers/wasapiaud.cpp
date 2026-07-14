@@ -62,9 +62,6 @@ std::vector<DWORD> channelMasksForCount(int channelCount)
     case 2:
         return {KSAUDIO_SPEAKER_STEREO};
     case 6:
-        // Limelight orders channels 4 and 5 as back left/right. Some Windows
-        // drivers expose the equivalent 5.1 layout with side surrounds instead,
-        // so probe both masks without changing interleaved channel order.
         return {KSAUDIO_SPEAKER_5POINT1, KSAUDIO_SPEAKER_5POINT1_SURROUND};
     case 8:
         return {KSAUDIO_SPEAKER_7POINT1_SURROUND};
@@ -129,11 +126,6 @@ int32_t floatToSigned(float sample, int validBits)
     return static_cast<int32_t>(std::llround(clamped * static_cast<double>(positiveMax)));
 }
 
-// Receives default-endpoint change notifications from the system. The callback
-// only signals a manual-reset event; the render thread is responsible for
-// tearing down and handing off to the existing reinitialization path. This
-// keeps all COM resource management on the single-threaded apartment (STA)
-// render thread.
 class DeviceNotificationClient : public IMMNotificationClient
 {
 public:
@@ -143,7 +135,6 @@ public:
     {
     }
 
-    // IUnknown
     ULONG STDMETHODCALLTYPE AddRef() override
     {
         return InterlockedIncrement(&m_RefCount);
@@ -172,7 +163,6 @@ public:
         return E_NOINTERFACE;
     }
 
-    // IMMNotificationClient — only default device changes are relevant.
     HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(LPCWSTR, DWORD) override { return S_OK; }
     HRESULT STDMETHODCALLTYPE OnDeviceAdded(LPCWSTR) override { return S_OK; }
     HRESULT STDMETHODCALLTYPE OnDeviceRemoved(LPCWSTR) override { return S_OK; }
@@ -198,7 +188,7 @@ private:
     ULONG m_RefCount;
 };
 
-} // namespace
+}
 
 class WasapiAudioRenderer::Impl
 {
@@ -277,8 +267,6 @@ public:
             return false;
         }
 
-        // Match the SDL renderer's latency control and avoid feeding local audio
-        // while Moonlight already has excessive network-side audio queued.
         if (LiGetPendingAudioDuration() > 30) {
             return true;
         }
@@ -441,8 +429,6 @@ private:
             return false;
         }
 
-        // The default period is intentionally preferred over the minimum period.
-        // Moonlight values stable playback over workstation-class minimum latency.
         if (!initializeStream(device, audioClient, selectedFormat, defaultPeriod)) {
             return false;
         }
@@ -513,12 +499,6 @@ private:
         WAVEFORMATEXTENSIBLE selectedFormat = {};
         bool streamStarted = false;
 
-        // The renderer must run in a single-threaded apartment (STA) so that
-        // IMMDeviceEnumerator and IMMNotificationClient callbacks are delivered
-        // predictably. RPC_E_CHANGED_MODE means the thread was already
-        // initialized in an incompatible apartment (typically MTA); we cannot
-        // safely proceed, so treat it as a hard failure rather than continuing
-        // in the wrong apartment.
         HRESULT comResult = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
         if (FAILED(comResult)) {
             logHresult("CoInitializeEx(STA)", comResult);
@@ -540,10 +520,6 @@ private:
             return;
         }
 
-        // Register for default endpoint change notifications so that device
-        // switches, HDMI hot-plug, and AVR power cycles are detected promptly
-        // instead of waiting for a render-event timeout. The callback only
-        // signals m_DeviceChangeEvent; teardown happens on this thread.
         m_NotificationClient = new DeviceNotificationClient(m_DeviceChangeEvent);
         HRESULT registerResult =
             enumerator->RegisterEndpointNotificationCallback(m_NotificationClient);
@@ -594,10 +570,6 @@ private:
         streamStarted = true;
         completeInitialization(true);
 
-        // MsgWaitForMultipleObjects is used instead of WaitForMultipleObjects
-        // because the render thread runs in an STA. IMMNotificationClient
-        // callbacks are marshaled through the STA message queue, so the message
-        // pump must run for the device-change event to be signaled.
         HANDLE waitHandles[] = {m_StopEvent, audioEvent, m_DeviceChangeEvent};
         const DWORD waitCount = static_cast<DWORD>(sizeof(waitHandles) / sizeof(waitHandles[0]));
         while (true) {
@@ -611,8 +583,6 @@ private:
             }
 
             if (waitResult == WAIT_OBJECT_0 + 2) {
-                // Default render endpoint changed — tear down so the caller
-                // rebuilds against the new device.
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Default audio endpoint changed; reinitializing WASAPI renderer");
                 m_FatalError.store(true, std::memory_order_release);
@@ -620,9 +590,6 @@ private:
             }
 
             if (waitResult == WAIT_OBJECT_0 + waitCount) {
-                // A window message is available. Pumping messages lets the STA
-                // deliver IMMNotificationClient callbacks, which may signal
-                // m_DeviceChangeEvent. Loop back to let the next wait pick it up.
                 MSG msg;
                 while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
                     TranslateMessage(&msg);
@@ -704,8 +671,6 @@ private:
             AvRevertMmThreadCharacteristics(mmcssTask);
             mmcssTask = nullptr;
         }
-        // Unregister the notification callback before releasing the enumerator
-        // so no callbacks arrive after teardown begins.
         if (m_NotificationClient != nullptr) {
             if (enumerator != nullptr) {
                 enumerator->UnregisterEndpointNotificationCallback(m_NotificationClient);
