@@ -1,0 +1,13 @@
+diff --git a/src/vulkan/context.c b/src/vulkan/context.c
+index bc9084ad..52290154 100644
+--- a/src/vulkan/context.c
++++ b/src/vulkan/context.c
+@@ -265,7 +265,7 @@ static_assert(PL_ARRAY_SIZE(pl_vulkan_recommended_extensions) + 1 ==
+ #ifdef VK_KHR_internally_synchronized_queues
+ static const VkPhysicalDeviceInternallySynchronizedQueuesFeaturesKHR synchronized_queues = {
+     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INTERNALLY_SYNCHRONIZED_QUEUES_FEATURES_KHR,
+-    .internallySynchronizedQueues = true,
++    .internallySynchronizedQueues = false,
+ };
+ #endif
+ 

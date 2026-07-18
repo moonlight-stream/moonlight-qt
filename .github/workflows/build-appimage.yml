@@ -108,6 +108,7 @@ jobs:
       - name: Build libplacebo
         working-directory: deps/libplacebo
         run: |
+          git apply ../../app/deploy/linux/appimage/*.patch
           meson setup build -Dvulkan=enabled -Dopengl=disabled -Ddemos=false
           ninja -C build
           sudo ninja install -C build
