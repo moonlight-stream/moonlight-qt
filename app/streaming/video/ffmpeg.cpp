@@ -988,7 +988,7 @@ void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
     }
 }
 
-IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass)
+IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, PDECODER_PARAMETERS params, int pass)
 {
     if (!(hwDecodeCfg->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
         return nullptr;
@@ -1007,11 +1007,17 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
             // Prefer the libplacebo (on MoltenVK) renderer unless explicitly opted out
 #ifdef HAVE_LIBPLACEBO_VULKAN
-            if (qgetenv("PREFER_VULKAN") != "0") {
+            if (params->renderer == StreamingPreferences::RS_AUTO || params->renderer == StreamingPreferences::RS_VULKAN) {
                 return new PlVkRenderer(hwDecodeCfg->device_type);
             }
 #endif
-            return VTMetalRendererFactory::createRenderer(true);
+            if (params->renderer == StreamingPreferences::RS_AVSBDL) {
+                return VTRendererFactory::createRenderer();
+            }
+            else {
+                // This covers both Metal explicitly selected and probe-only (since Metal is cheap to instantiate)
+                return VTMetalRendererFactory::createRenderer(true);
+            }
 #endif
 #ifdef HAVE_LIBVA
         case AV_HWDEVICE_TYPE_VAAPI:
@@ -1334,7 +1340,7 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
                 // Initialize the hardware codec and submit a test frame if the renderer needs it
                 IFFmpegRenderer::InitFailureReason failureReason;
                 if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config, &failureReason,
-                                          [config, pass]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, pass); })) {
+                                          [config, params, pass]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, params, pass); })) {
                     return true;
                 }
                 else if (failureReason == IFFmpegRenderer::InitFailureReason::NoHardwareSupport) {
@@ -1534,7 +1540,7 @@ bool FFmpegVideoDecoder::tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params,
             // Initialize the hardware codec and submit a test frame if the renderer needs it
             IFFmpegRenderer::InitFailureReason failureReason;
             if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config, &failureReason,
-                                      [config, pass]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, pass); })) {
+                                      [config, params, pass]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, params, pass); })) {
                 return true;
             }
             else if (failureReason == IFFmpegRenderer::InitFailureReason::NoHardwareSupport) {

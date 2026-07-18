@@ -1656,6 +1656,62 @@ Flickable {
                     }
                 }
 
+                Label {
+                    width: parent.width
+                    id: rendererTitle
+                    text: qsTr("Renderer")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                    visible: SystemProperties.isDarwin
+                }
+
+                AutoResizingComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        var saved_rs = StreamingPreferences.rendererSelection
+
+                        // Default to Automatic
+                        currentIndex = 0
+
+                        for(var i = 0; i < rendererListModel.count; i++) {
+                            var el_rs = rendererListModel.get(i).val;
+                            if (saved_rs === el_rs) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+
+                        activated(currentIndex)
+                    }
+
+                    id: rendererComboBox
+                    visible: SystemProperties.isDarwin
+                    textRole: "text"
+                    model: ListModel {
+                        id: rendererListModel
+                        ListElement {
+                            text: qsTr("Automatic (Recommended)")
+                            val: StreamingPreferences.RS_AUTO
+                        }
+                        ListElement {
+                            text: "Vulkan"
+                            val: StreamingPreferences.RS_VULKAN
+                        }
+                        ListElement {
+                            text: "Metal"
+                            val: StreamingPreferences.RS_METAL
+                        }
+                        ListElement {
+                            text: "AVSampleBufferDisplayLayer"
+                            val: StreamingPreferences.RS_AVSBDL
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        StreamingPreferences.rendererSelection = rendererListModel.get(currentIndex).val
+                    }
+                }
+
                 CheckBox {
                     id: enableYUV444
                     width: parent.width

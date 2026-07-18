@@ -51,6 +51,13 @@ SystemProperties::SystemProperties()
     isRunningWayland = WMUtils::isRunningWayland();
     isRunningXWayland = isRunningWayland && QGuiApplication::platformName() == "xcb";
     usesMaterial3Theme = QLibraryInfo::version() >= QVersionNumber(6, 5, 0);
+
+#ifdef Q_OS_DARWIN
+    isDarwin = true;
+#else
+    isDarwin = false;
+#endif
+
     QString nativeArch = QSysInfo::currentCpuArchitecture();
 
 #ifdef Q_OS_WIN32
