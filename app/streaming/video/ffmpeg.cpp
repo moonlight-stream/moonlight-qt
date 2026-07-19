@@ -3,7 +3,9 @@
 #include "utils.h"
 #include "streaming/session.h"
 
+#ifdef HAVE_H264BITSTREAM
 #include <h264_stream.h>
+#endif
 
 extern "C" {
 #include <libavutil/mastering_display_metadata.h>
@@ -715,8 +717,13 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     if (testMode != TestMode::TestFrameOnly) {
         if ((params->videoFormat & VIDEO_FORMAT_MASK_H264) &&
                 !(m_BackendRenderer->getDecoderCapabilities() & CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC)) {
+#ifdef HAVE_H264BITSTREAM
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Using H.264 SPS fixup");
+#else
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "H.264 SPS fixup cannot be performed without h264bitstream. H.264 may have excessive decoding latency!");
+#endif
             m_NeedsSpsFixup = true;
         }
         else {
@@ -1758,6 +1765,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 
 void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
 {
+#ifdef HAVE_H264BITSTREAM
     if (m_NeedsSpsFixup && entry->bufferType == BUFFER_TYPE_SPS) {
         h264_stream_t* stream = h264_new();
         int nalStart, nalEnd;
@@ -1803,7 +1811,9 @@ void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
 
         h264_free(stream);
     }
-    else {
+    else
+#endif
+    {
         // Write the buffer as-is
         memcpy(&m_DecodeBuffer.data()[offset],
                entry->data,
