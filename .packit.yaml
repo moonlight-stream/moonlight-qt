@@ -9,6 +9,11 @@ actions:
   post-upstream-clone:
     - ./.distro/post-upstream-clone.py
 
+notifications:
+  failure_comment:
+    message: |
+      Packit build failed @LecrisUT please check
+
 targets:
   - fedora-all
 
