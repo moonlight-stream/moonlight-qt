@@ -761,6 +761,31 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     return true;
 }
 
+bool FFmpegVideoDecoder::getAdaptiveBitrateStats(PADAPTIVE_BITRATE_STATS stats)
+{
+    VIDEO_STATS combined = {};
+    addVideoStats(m_LastWndVideoStats, combined);
+    addVideoStats(m_ActiveWndVideoStats, combined);
+
+    if (combined.totalFrames == 0) {
+        stats->valid = false;
+        return false;
+    }
+
+    uint32_t rtt = 0;
+    uint32_t rttVariance = 0;
+    if (!LiGetEstimatedRttInfo(&rtt, &rttVariance)) {
+        rtt = 0;
+    }
+
+    stats->packetLossPercent = (float)combined.networkDroppedFrames / combined.totalFrames * 100.0f;
+    stats->rttMs = static_cast<int>(rtt);
+    stats->totalFps = static_cast<float>(combined.totalFps);
+    stats->droppedFrames = static_cast<int>(combined.pacerDroppedFrames);
+    stats->valid = true;
+    return true;
+}
+
 void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
 {
     dst.receivedFrames += src.receivedFrames;
