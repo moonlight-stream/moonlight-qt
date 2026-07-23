@@ -817,6 +817,16 @@
         <translation>全屏通常提供最好的性能，但是无边框窗口可以更好地与 macOS Spaces、Alt+Tab、屏幕截图工具、屏幕覆盖等功能配合使用。</translation>
     </message>
     <message>
+        <location filename="../gui/SettingsView.qml" line="820"/>
+        <source>Extend stream content into the title bar</source>
+        <translation>将串流画面延伸至标题栏</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="830"/>
+        <source>Keeps the macOS window controls and extends the stream content behind the transparent title bar.</source>
+        <translation>保留 macOS 窗口控制按钮，并让串流画面延伸至透明标题栏后方。</translation>
+    </message>
+    <message>
         <location filename="../gui/SettingsView.qml" line="819"/>
         <source>V-Sync</source>
         <translation>垂直同步</translation>

@@ -146,6 +146,7 @@ public:
     Q_PROPERTY(bool enableYUV444 MEMBER enableYUV444 NOTIFY enableYUV444Changed)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
     Q_PROPERTY(RendererSelection rendererSelection MEMBER rendererSelection NOTIFY rendererSelectionChanged)
+    Q_PROPERTY(bool macOSFullSizeContentView MEMBER macOSFullSizeContentView NOTIFY macOSFullSizeContentViewChanged)
     Q_PROPERTY(WindowMode windowMode MEMBER windowMode NOTIFY windowModeChanged)
     Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
     Q_PROPERTY(UIDisplayMode uiDisplayMode MEMBER uiDisplayMode NOTIFY uiDisplayModeChanged)
@@ -200,6 +201,7 @@ public:
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
     RendererSelection rendererSelection;
+    bool macOSFullSizeContentView;
 
 signals:
     void displayModeChanged();
@@ -238,6 +240,7 @@ signals:
     void keepAwakeChanged();
     void languageChanged();
     void rendererSelectionChanged();
+    void macOSFullSizeContentViewChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);
@@ -246,4 +249,3 @@ private:
 
     QQmlEngine* m_QmlEngine;
 };
-
