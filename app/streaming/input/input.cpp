@@ -5,6 +5,10 @@
 #include "path.h"
 #include "utils.h"
 
+#ifdef Q_OS_DARWIN
+#include "streaming/macoswindow.h"
+#endif
+
 #include <QtGlobal>
 #include <QDir>
 #include <QGuiApplication>
@@ -420,6 +424,12 @@ void SdlInputHandler::setCaptureActive(bool active)
             SDL_SetRelativeMouseMode(SDL_FALSE);
         }
     }
+
+#ifdef Q_OS_DARWIN
+    if (m_Window != nullptr) {
+        MacOSWindow::notifyInputCaptureChanged(m_Window);
+    }
+#endif
 
     // Update mouse pointer region constraints
     updatePointerRegionLock();

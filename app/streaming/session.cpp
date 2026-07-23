@@ -3,6 +3,10 @@
 #include "streaming/streamutils.h"
 #include "backend/richpresencemanager.h"
 
+#ifdef Q_OS_DARWIN
+#include "streaming/macoswindow.h"
+#endif
+
 #include <Limelight.h>
 #include "SDL_compat.h"
 #include "utils.h"
@@ -574,6 +578,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_DecoderLock(SDL_CreateMutex()),
       m_AudioMuted(false),
       m_QtWindow(nullptr),
+      m_UseFullSizeContentView(false),
       m_UnexpectedTermination(true), // Failure prior to streaming is unexpected
       m_InputHandler(nullptr),
       m_MouseEmulationRefCount(0),
@@ -1878,6 +1883,26 @@ void Session::exec()
 
     m_InputHandler->setWindow(m_Window);
 
+#ifdef Q_OS_DARWIN
+    if (!Utils::getEnvironmentVariableOverride("MACOS_FULL_SIZE_CONTENT_VIEW",
+                                               &m_UseFullSizeContentView)) {
+        m_UseFullSizeContentView = true;
+    }
+    if (m_UseFullSizeContentView &&
+            !MacOSWindow::enableFullSizeContentView(
+                m_Window,
+                [](void* context) {
+                    return static_cast<SdlInputHandler*>(context)->isCaptureActive();
+                },
+                m_InputHandler)) {
+        m_UseFullSizeContentView = false;
+    }
+    else if (!m_UseFullSizeContentView) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Full-size macOS content view disabled by environment override");
+    }
+#endif
+
     QSvgRenderer svgIconRenderer(QString(":/res/moonlight.svg"));
     QImage svgImage(ICON_SIZE, ICON_SIZE, QImage::Format_RGBA8888);
     svgImage.fill(0);
@@ -2042,6 +2067,15 @@ void Session::exec()
             break;
 
         case SDL_WINDOWEVENT:
+#ifdef Q_OS_DARWIN
+            // SDL restores its own style mask after leaving fullscreen.
+            if (m_UseFullSizeContentView &&
+                    event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED &&
+                    !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) {
+                MacOSWindow::updateFullSizeContentView(m_Window);
+            }
+#endif
+
             // Early handling of some events
             switch (event.window.event) {
             case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -2223,6 +2257,13 @@ void Session::exec()
                     goto DispatchDeferredCleanup;
                 }
 
+#ifdef Q_OS_DARWIN
+                // A renderer may recreate the native window while initializing.
+                if (m_UseFullSizeContentView) {
+                    MacOSWindow::updateFullSizeContentView(m_Window);
+                }
+#endif
+
                 // As of SDL 2.0.12, SDL_RecreateWindow() doesn't carry over mouse capture
                 // or mouse hiding state to the new window. By capturing after the decoder
                 // is set up, this ensures the window re-creation is already done.
@@ -2326,6 +2367,11 @@ DispatchDeferredCleanup:
     // Destroy the input handler now. This must be destroyed
     // before allowwing the UI to continue execution or it could
     // interfere with SDLGamepadKeyNavigation.
+#ifdef Q_OS_DARWIN
+    if (m_UseFullSizeContentView) {
+        MacOSWindow::disableFullSizeContentView(m_Window);
+    }
+#endif
     delete m_InputHandler;
     m_InputHandler = nullptr;
 
