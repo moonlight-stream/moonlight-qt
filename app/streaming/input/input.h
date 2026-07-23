@@ -5,6 +5,10 @@
 
 #include "SDL_compat.h"
 
+#ifdef Q_OS_DARWIN
+#include "gipbridge.h"
+#endif
+
 struct GamepadState {
     SDL_GameController* controller;
     SDL_JoystickID jsId;
@@ -248,6 +252,10 @@ private:
     SDL_TimerID m_DragTimer;
     char m_DragButton;
     int m_NumFingersDown;
+
+#ifdef Q_OS_DARWIN
+    GipBridgeController* m_GipBridge;
+#endif
 
     static const int k_ButtonMap[];
 };

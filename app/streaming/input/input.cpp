@@ -34,6 +34,9 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_DragTimer(0),
       m_DragButton(0),
       m_NumFingersDown(0)
+#ifdef Q_OS_DARWIN
+      , m_GipBridge(nullptr)
+#endif
 {
     // System keys are always captured when running without a DE
     if (!WMUtils::isRunningDesktopEnvironment()) {
@@ -192,6 +195,13 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     }
 #endif
 
+#ifdef Q_OS_DARWIN
+    // macOS has no HID class driver for GIP-protocol controllers (Xbox
+    // One/Series-generation accessories); GipBridgeController reads them
+    // directly over USB and feeds them into SDL as a virtual controller.
+    m_GipBridge = new GipBridgeController();
+#endif
+
     // Initialize the gamepad mask with currently attached gamepads to avoid
     // causing gamepads to unexpectedly disappear and reappear on the host
     // during stream startup as we detect currently attached gamepads one at a time.
@@ -219,6 +229,15 @@ SdlInputHandler::~SdlInputHandler()
             SDL_GameControllerClose(m_GamepadState[i].controller);
         }
     }
+
+#ifdef Q_OS_DARWIN
+    // Only detach our virtual joystick after every SDL_GameController handle
+    // pointing at it (including the one Moonlight itself opened above) is
+    // closed. Detaching first leaves those handles dangling and crashes the
+    // subsystem teardown below.
+    delete m_GipBridge;
+    m_GipBridge = nullptr;
+#endif
 
     SDL_RemoveTimer(m_LongPressTimer);
     SDL_RemoveTimer(m_LeftButtonReleaseTimer);

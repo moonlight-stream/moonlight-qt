@@ -164,6 +164,37 @@ macx {
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework QuartzCore
     CONFIG += ffmpeg
 }
+macx {
+    # GipBridgeController (streaming/input/gipbridge.mm) reads GIP-protocol
+    # controllers (Xbox One/Series-licensed accessories - many 8BitDo,
+    # PowerA, PDP, Razer pads and 20+ other vendors) directly over USB via
+    # IOUSBHost and feeds them into SDL as a virtual controller, since macOS
+    # has no HID class driver for them and creating a system-wide virtual
+    # HID device requires an Apple entitlement
+    # (com.apple.developer.hid.virtual.device) that Apple restricts to
+    # virtualization software vendors and isn't available here.
+    SOURCES += \
+        streaming/input/gipbridge.mm \
+        streaming/input/gipusbdevice.mm \
+        streaming/input/gipprotocol.cpp
+
+    HEADERS += \
+        streaming/input/gipbridge.h \
+        streaming/input/gipusbdevice.h \
+        streaming/input/gipprotocol.h
+
+    LIBS += -framework IOKit -framework IOUSBHost -framework CoreFoundation -framework Foundation
+
+    # gipbridge.mm/gipusbdevice.mm use manual reference counting, matching
+    # the rest of this project's .mm files (vt_metal.mm, vt_avsamplelayer.mm),
+    # but rely on __weak self captures in async IOUSBHost callback blocks to
+    # avoid a retain cycle / a callback firing on a freed object if a device
+    # disconnects mid-I/O. -fobjc-weak enables that ARC-style qualifier
+    # without switching the project to ARC (which would break the existing
+    # MRC .mm files' explicit release/autorelease calls) - it's purely
+    # additive and doesn't change codegen for code that doesn't use __weak.
+    QMAKE_OBJECTIVE_CFLAGS += -fobjc-weak
+}
 
 SOURCES += \
     backend/nvaddress.cpp \
