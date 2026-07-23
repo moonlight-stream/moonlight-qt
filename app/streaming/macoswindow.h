@@ -10,5 +10,4 @@ namespace MacOSWindow {
                                    void* callbackContext);
     void updateFullSizeContentView(SDL_Window* window);
     void disableFullSizeContentView(SDL_Window* window);
-    void notifyInputCaptureChanged(SDL_Window* window);
 }

@@ -745,7 +745,7 @@ Flickable {
                                      })
 
                         model.append({
-                                         text: qsTr("Borderless fullscreen"),
+                                         text: qsTr("Borderless windowed"),
                                          val: StreamingPreferences.WM_FULLSCREEN_DESKTOP
                                      })
 
@@ -809,7 +809,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless fullscreen may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
+                    ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
                 }
 
                 CheckBox {

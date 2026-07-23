@@ -138,7 +138,6 @@ bool MacOSWindow::enableFullSizeContentView(SDL_Window* window,
                     SDL_GetError());
     }
 
-    notifyInputCaptureChanged(window);
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Enabled full-size content view for the macOS streaming window");
     return true;
@@ -152,21 +151,8 @@ void MacOSWindow::updateFullSizeContentView(SDL_Window* window)
 void MacOSWindow::disableFullSizeContentView(SDL_Window* window)
 {
     SDL_SetWindowHitTest(window, nullptr, nullptr);
-    notifyInputCaptureChanged(window);
 
     auto state = static_cast<FullSizeContentViewState*>(
                 SDL_SetWindowData(window, kFullSizeContentViewStateKey, nullptr));
     delete state;
-}
-
-void MacOSWindow::notifyInputCaptureChanged(SDL_Window* window)
-{
-    if (SDL_GetWindowData(window, kFullSizeContentViewStateKey) == nullptr) {
-        return;
-    }
-
-    NSWindow* nativeWindow = getNativeWindow(window);
-    if (nativeWindow != nil) {
-        nativeWindow.movableByWindowBackground = NO;
-    }
 }
