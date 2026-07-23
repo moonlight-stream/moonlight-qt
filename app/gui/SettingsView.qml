@@ -745,7 +745,7 @@ Flickable {
                                      })
 
                         model.append({
-                                         text: qsTr("Borderless windowed"),
+                                         text: qsTr("Borderless fullscreen"),
                                          val: StreamingPreferences.WM_FULLSCREEN_DESKTOP
                                      })
 
@@ -809,7 +809,27 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
+                    ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless fullscreen may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
+                }
+
+                CheckBox {
+                    id: macOSFullSizeContentViewCheck
+                    width: parent.width
+                    visible: SystemProperties.isDarwin &&
+                             StreamingPreferences.windowMode === StreamingPreferences.WM_WINDOWED &&
+                             !SystemProperties.rendererAlwaysFullScreen
+                    hoverEnabled: true
+                    text: qsTr("Extend stream content into the title bar")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.macOSFullSizeContentView
+                    onCheckedChanged: {
+                        StreamingPreferences.macOSFullSizeContentView = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Keeps the macOS window controls and extends the stream content behind the transparent title bar.")
                 }
 
                 Row {

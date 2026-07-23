@@ -759,13 +759,23 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="812"/>
-        <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation>全螢幕通常能夠提供最佳效能，但無邊框視窗較能支援 macOS Spaces、Alt+Tab、截圖工具、遊戲嵌入介面等功能。</translation>
+        <source>Fullscreen generally provides the best performance, but borderless fullscreen may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
+        <translation>全螢幕通常能提供最佳效能，但無邊框全螢幕較能支援 macOS Spaces、Alt+Tab、截圖工具、遊戲嵌入介面等功能。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="748"/>
-        <source>Borderless windowed</source>
-        <translation>無邊框視窗</translation>
+        <source>Borderless fullscreen</source>
+        <translation>無邊框全螢幕</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="820"/>
+        <source>Extend stream content into the title bar</source>
+        <translation>將串流畫面延伸至標題列</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="830"/>
+        <source>Keeps the macOS window controls and extends the stream content behind the transparent title bar.</source>
+        <translation>保留 macOS 視窗控制按鈕，並讓串流畫面延伸至透明標題列後方。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="182"/>

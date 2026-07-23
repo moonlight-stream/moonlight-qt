@@ -1886,7 +1886,7 @@ void Session::exec()
 #ifdef Q_OS_DARWIN
     if (!Utils::getEnvironmentVariableOverride("MACOS_FULL_SIZE_CONTENT_VIEW",
                                                &m_UseFullSizeContentView)) {
-        m_UseFullSizeContentView = true;
+        m_UseFullSizeContentView = m_Preferences->macOSFullSizeContentView;
     }
     if (m_UseFullSizeContentView &&
             !MacOSWindow::enableFullSizeContentView(
@@ -1899,7 +1899,7 @@ void Session::exec()
     }
     else if (!m_UseFullSizeContentView) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Full-size macOS content view disabled by environment override");
+                    "Full-size macOS content view disabled");
     }
 #endif
 

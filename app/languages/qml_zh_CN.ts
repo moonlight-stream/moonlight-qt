@@ -802,8 +802,8 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="748"/>
-        <source>Borderless windowed</source>
-        <translation>无边框窗口</translation>
+        <source>Borderless fullscreen</source>
+        <translation>无边框全屏</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -813,8 +813,18 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="812"/>
-        <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation>全屏通常提供最好的性能，但是无边框窗口可以更好地与 macOS Spaces、Alt+Tab、屏幕截图工具、屏幕覆盖等功能配合使用。</translation>
+        <source>Fullscreen generally provides the best performance, but borderless fullscreen may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
+        <translation>全屏通常提供最佳性能，但无边框全屏可以更好地与 macOS Spaces、Alt+Tab、屏幕截图工具、屏幕覆盖等功能配合使用。</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="820"/>
+        <source>Extend stream content into the title bar</source>
+        <translation>将串流画面延伸至标题栏</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="830"/>
+        <source>Keeps the macOS window controls and extends the stream content behind the transparent title bar.</source>
+        <translation>保留 macOS 窗口控制按钮，并让串流画面延伸至透明标题栏后方。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="819"/>
