@@ -392,7 +392,17 @@ win32 {
     HEADERS += streaming/video/ffmpeg-renderers/dxutil.h
 }
 win32:!winrt {
+    message(WASAPI exclusive audio renderer selected)
     message(DXVA2 and D3D11VA renderers selected)
+
+    DEFINES += HAVE_WASAPI_AUDIO
+    LIBS += avrt.lib
+    INCLUDEPATH += $$PWD/../miniaudio/miniaudio
+    SOURCES += \
+        streaming/audio/renderers/wasapiaud.cpp \
+        streaming/audio/renderers/miniaudioimpl.cpp
+    HEADERS += \
+        streaming/audio/renderers/wasapi.h
 
     SOURCES += \
         streaming/video/ffmpeg-renderers/dxva2.cpp \
