@@ -24,16 +24,10 @@ include(../globaldefs.pri)
     QMAKE_CFLAGS += -std=gnu99
 }
 
-SRC_DIR = $$PWD/h264bitstream
-
 SOURCES += \
-    $$SRC_DIR/h264_nal.c            \
-    $$SRC_DIR/h264_sei.c            \
-    $$SRC_DIR/h264_stream.c
+    h264_nal.c \
+    h264_stream.c
 
 HEADERS += \
-    $$SRC_DIR/bs.h              \
-    $$SRC_DIR/h264_sei.h        \
-    $$SRC_DIR/h264_stream.h
-
-INCLUDEPATH += $$INC_DIR
+    bs.h \
+    h264_stream.h
