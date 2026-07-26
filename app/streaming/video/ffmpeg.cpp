@@ -1781,33 +1781,42 @@ void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
 
         // Fixup the SPS to what OS X needs to use hardware acceleration
         // This is also critical for decoding latency on the Pi 2.
-        stream->sps->num_ref_frames = 1;
-        stream->sps->vui.max_dec_frame_buffering = 1;
+        if (stream->sps->num_ref_frames != 1 || stream->sps->vui.max_dec_frame_buffering != 1) {
+            stream->sps->num_ref_frames = 1;
+            stream->sps->vui.max_dec_frame_buffering = 1;
 
-        // NVENC doesn't seem to add bitstream restrictions anymore (591.59),
-        // so we need to add them ourselves if not present to ensure that
-        // the max_dec_frame_buffering option actually takes effect.
-        // We use the defaults for everything except max_dec_frame_buffering.
-        if (!stream->sps->vui.bitstream_restriction_flag) {
-            stream->sps->vui.bitstream_restriction_flag = 1;
-            stream->sps->vui.motion_vectors_over_pic_boundaries_flag = 1;
-            stream->sps->vui.max_bytes_per_pic_denom = 2;
-            stream->sps->vui.max_bits_per_mb_denom = 1;
-            stream->sps->vui.log2_max_mv_length_horizontal = 16;
-            stream->sps->vui.log2_max_mv_length_vertical = 16;
-            stream->sps->vui.num_reorder_frames = 0;
+            // NVENC doesn't seem to add bitstream restrictions anymore (591.59),
+            // so we need to add them ourselves if not present to ensure that
+            // the max_dec_frame_buffering option actually takes effect.
+            // We use the defaults for everything except max_dec_frame_buffering.
+            if (!stream->sps->vui.bitstream_restriction_flag) {
+                stream->sps->vui.bitstream_restriction_flag = 1;
+                stream->sps->vui.motion_vectors_over_pic_boundaries_flag = 1;
+                stream->sps->vui.max_bytes_per_pic_denom = 2;
+                stream->sps->vui.max_bits_per_mb_denom = 1;
+                stream->sps->vui.log2_max_mv_length_horizontal = 16;
+                stream->sps->vui.log2_max_mv_length_vertical = 16;
+                stream->sps->vui.num_reorder_frames = 0;
+            }
+
+            int initialOffset = offset;
+
+            // Copy the modified NALU data. This clobbers byte 0 and starts NALU data at byte 1.
+            // Since it prepended one extra byte, subtract one from the returned length.
+            offset += write_nal_unit(stream, (uint8_t*)&m_DecodeBuffer.data()[initialOffset + nalStart - 1],
+                                     MAX_SPS_EXTRA_SIZE + entry->length - nalStart) - 1;
+
+            // Copy the NALU prefix over from the original SPS
+            memcpy(&m_DecodeBuffer.data()[initialOffset], entry->data, nalStart);
+            offset += nalStart;
         }
-
-        int initialOffset = offset;
-
-        // Copy the modified NALU data. This clobbers byte 0 and starts NALU data at byte 1.
-        // Since it prepended one extra byte, subtract one from the returned length.
-        offset += write_nal_unit(stream, (uint8_t*)&m_DecodeBuffer.data()[initialOffset + nalStart - 1],
-                                 MAX_SPS_EXTRA_SIZE + entry->length - nalStart) - 1;
-
-        // Copy the NALU prefix over from the original SPS
-        memcpy(&m_DecodeBuffer.data()[initialOffset], entry->data, nalStart);
-        offset += nalStart;
+        else {
+            // Write the SPS as-is if it required no modification
+            memcpy(&m_DecodeBuffer.data()[offset],
+                   entry->data,
+                   entry->length);
+            offset += entry->length;
+        }
 
         h264_free(stream);
     }
