@@ -74,6 +74,7 @@ extern "C" {
 #include <Limelight.h>
 
 #include <map>
+#include <unordered_set>
 
 #ifdef HAVE_DRM_MASTER_HOOKS
 extern "C" {
@@ -1750,6 +1751,7 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
     uint32_t offsets[4] = {};
     uint64_t modifiers[4] = {};
     uint32_t flags = 0;
+    std::unordered_set<uint32_t> handleSet;
 
     // DRM requires composed layers rather than separate layers per plane
     SDL_assert(drmFrame->nb_layers == 1);
@@ -1763,8 +1765,15 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "drmPrimeFDToHandle() failed: %d",
                          errno);
+            for (uint32_t handle : handleSet) {
+                drmCloseBufferHandle(m_DrmFd, handle);
+            }
             return false;
         }
+
+        // Handles aren't unique for calls with the same FD, so we need to
+        // keep track of only the unique handles to avoid double-closing.
+        handleSet.emplace(handles[i]);
 
         pitches[i] = layer.planes[i].pitch;
         offsets[i] = layer.planes[i].offset;
@@ -1784,6 +1793,12 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
                                      handles, pitches, offsets,
                                      (flags & DRM_MODE_FB_MODIFIERS) ? modifiers : NULL,
                                      newFbId, flags);
+
+    // Handles can be closed immediately after drmModeAddFB2WithModifiers()
+    for (uint32_t handle : handleSet) {
+        drmCloseBufferHandle(m_DrmFd, handle);
+    }
+
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "drmModeAddFB2[WithModifiers]() failed: %d",
