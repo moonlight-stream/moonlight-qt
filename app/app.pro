@@ -448,9 +448,6 @@ wayland {
     SOURCES += streaming/video/ffmpeg-renderers/pacer/waylandvsyncsource.cpp
     HEADERS += streaming/video/ffmpeg-renderers/pacer/waylandvsyncsource.h
 }
-!disable-h264bitstream {
-    DEFINES += HAVE_H264BITSTREAM
-}
 
 RESOURCES += \
     resources.qrc \
