@@ -1791,6 +1791,30 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
         return false;
     }
 
+    // The FB holds its own reference to the underlying buffer objects, so the GEM
+    // handles imported above can (and should) be released now. Leaving them open
+    // leaks a handle for every distinct buffer imported. That is normally invisible
+    // because the decoder reuses a fixed DMA-BUF pool (same fd -> same handle), but
+    // when the pool is reallocated — a colorspace or HDR transition, a resolution
+    // change — the old pool's handles are never freed. They accumulate until the
+    // GEM handle table is exhausted, at which point drmPrimeFDToHandle() starts
+    // failing with ENOMEM: new frames can no longer be imported, the last frame
+    // stays stuck on the plane, and the video freezes.
+    for (int i = 0; i < layer.nb_planes; i++) {
+        // Planes can share a buffer object (e.g. NV12/P010), in which case
+        // drmPrimeFDToHandle() returned the same handle for each. Close once.
+        bool alreadyClosed = false;
+        for (int j = 0; j < i; j++) {
+            if (handles[j] == handles[i]) {
+                alreadyClosed = true;
+                break;
+            }
+        }
+        if (!alreadyClosed) {
+            drmCloseBufferHandle(m_DrmFd, handles[i]);
+        }
+    }
+
     // For atomic drivers, we'll use a test-only commit to confirm this plane+FB works
     if (testMode && m_PropSetter.isAtomic()) {
         SDL_Rect src, dst;
