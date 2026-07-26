@@ -26,31 +26,35 @@ int find_nal_unit(uint8_t* buf, int size, int* nal_start, int* nal_end)
 
     i = 0;
     while (
+        (i + 2 < size) &&
         (buf[i] != 0 || buf[i+1] != 0 || buf[i+2] != 0x01) &&
-        (buf[i] != 0 || buf[i+1] != 0 || buf[i+2] != 0 || buf[i+3] != 0x01)
+        (i + 3 >= size || buf[i] != 0 || buf[i+1] != 0 || buf[i+2] != 0 || buf[i+3] != 0x01)
         )
     {
         i++;
-        if (i+4 >= size) { return 0; }
     }
 
-    if  (buf[i] != 0 || buf[i+1] != 0 || buf[i+2] != 0x01)
+    if (i + 2 >= size) { return 0; }
+
+    if (buf[i] != 0 || buf[i+1] != 0 || buf[i+2] != 0x01)
     {
         i++;
     }
 
-    if  (buf[i] != 0 || buf[i+1] != 0 || buf[i+2] != 0x01) { return 0; }
-    i+= 3;
+    if (i + 2 >= size || buf[i] != 0 || buf[i+1] != 0 || buf[i+2] != 0x01) { return 0; }
+    i += 3;
     *nal_start = i;
 
     while (
+        (i + 2 < size) &&
         (buf[i] != 0 || buf[i+1] != 0 || buf[i+2] != 0) &&
         (buf[i] != 0 || buf[i+1] != 0 || buf[i+2] != 0x01)
         )
     {
         i++;
-        if (i+3 >= size) { *nal_end = size; return -1; }
     }
+
+    if (i + 2 >= size) { *nal_end = size; return (*nal_end - *nal_start); }
 
     *nal_end = i;
     return (*nal_end - *nal_start);

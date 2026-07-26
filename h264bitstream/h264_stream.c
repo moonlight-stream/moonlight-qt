@@ -109,6 +109,10 @@ void read_seq_parameter_set_rbsp(sps_t* sps, bs_t* b)
         sps->offset_for_non_ref_pic = bs_read_se(b);
         sps->offset_for_top_to_bottom_field = bs_read_se(b);
         sps->num_ref_frames_in_pic_order_cnt_cycle = bs_read_ue(b);
+        if (sps->num_ref_frames_in_pic_order_cnt_cycle > 256)
+        {
+            sps->num_ref_frames_in_pic_order_cnt_cycle = 256;
+        }
         for( i = 0; i < sps->num_ref_frames_in_pic_order_cnt_cycle; i++ )
         {
             sps->offset_for_ref_frame[ i ] = bs_read_se(b);
@@ -231,6 +235,10 @@ void read_vui_parameters(sps_t* sps, bs_t* b)
 void read_hrd_parameters(hrd_t* hrd, bs_t* b)
 {
     hrd->cpb_cnt_minus1 = bs_read_ue(b);
+    if (hrd->cpb_cnt_minus1 > 31)
+    {
+        hrd->cpb_cnt_minus1 = 31;
+    }
     hrd->bit_rate_scale = bs_read_u(b, 4);
     hrd->cpb_size_scale = bs_read_u(b, 4);
     for( int SchedSelIdx = 0; SchedSelIdx <= hrd->cpb_cnt_minus1; SchedSelIdx++ )
@@ -326,7 +334,7 @@ void write_seq_parameter_set_rbsp(sps_t* sps, bs_t* b)
         bs_write_u1(b, sps->seq_scaling_matrix_present_flag);
         if( sps->seq_scaling_matrix_present_flag )
         {
-            for( i = 0; i < 8; i++ )
+            for( i = 0; i < ((sps->chroma_format_idc != 3) ? 8 : 12); i++ )
             {
                 bs_write_u1(b, sps->seq_scaling_list_present_flag[ i ]);
                 if( sps->seq_scaling_list_present_flag[ i ] )
@@ -396,9 +404,29 @@ void write_scaling_list(bs_t* b, int* scalingList, int sizeOfScalingList, int* u
     {
         if( nextScale != 0 )
         {
-            nextScale = scalingList[ j ];
-            if (useDefaultScalingMatrixFlag[0]) { nextScale = 0; }
-            delta_scale = (nextScale - lastScale) % 256 ;
+            if (useDefaultScalingMatrixFlag[0]) {
+                nextScale = 0;
+            } else {
+                nextScale = scalingList[ j ];
+                if (j > 0 && nextScale == lastScale) {
+                    int all_same = 1;
+                    for (int k = j + 1; k < sizeOfScalingList; k++) {
+                        if (scalingList[k] != lastScale) {
+                            all_same = 0;
+                            break;
+                        }
+                    }
+                    if (all_same) {
+                        nextScale = 0;
+                    }
+                }
+            }
+            delta_scale = nextScale - lastScale;
+            if (delta_scale < -128) {
+                delta_scale += 256;
+            } else if (delta_scale > 127) {
+                delta_scale -= 256;
+            }
             bs_write_se(b, delta_scale);
         }
         lastScale = scalingList[ j ];
