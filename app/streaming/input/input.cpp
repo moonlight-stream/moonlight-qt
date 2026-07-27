@@ -40,6 +40,19 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
         m_CaptureSystemKeysMode = StreamingPreferences::CSK_ALWAYS;
     }
 
+    // SDL3 breaks our auto-capture-on-leave logic because the mouse focus has already
+    // been lost by the time we attempt to call SDL_CaptureMouse(). Fortunately, SDL3's
+    // own auto-capture logic seems to be stable now (unlike SDL2), so we can rely on
+    // that instead of our own hack when running on sdl2-compat.
+    // https://github.com/libsdl-org/SDL/commit/e54001b02809dcebbb822bd0297919c8c76976a1
+    SDL_version ver;
+    SDL_GetVersion(&ver);
+    m_NeedsManualCaptureOnLeave = !(ver.major == 2 && ver.minor >= 30 && ver.patch >= 50) && !SDL_GetHint("SDL3_VERSION");
+    if (m_NeedsManualCaptureOnLeave) {
+        // Disable the buggy auto-capture on earlier SDL2 builds
+        SDL_SetHint(SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
+    }
+
     // Allow gamepad input when the app doesn't have focus if requested
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, prefs.backgroundGamepad ? "1" : "0");
 
@@ -276,19 +289,21 @@ void SdlInputHandler::raiseAllKeys()
 
 void SdlInputHandler::notifyMouseLeave()
 {
-    // SDL on Windows doesn't send the mouse button up until the mouse re-enters the window
-    // after leaving it. This breaks some of the Aero snap gestures, so we'll capture it to
-    // allow us to receive the mouse button up events later.
-    //
-    // On macOS and X11, capturing the mouse allows us to receive mouse motion outside the
-    // window (button up already worked without capture).
-    if (m_AbsoluteMouseMode && isCaptureActive()) {
-        // NB: Not using SDL_GetGlobalMouseState() because we want our state not the system's
-        Uint32 mouseState = SDL_GetMouseState(nullptr, nullptr);
-        for (Uint32 button = SDL_BUTTON_LEFT; button <= SDL_BUTTON_X2; button++) {
-            if (mouseState & SDL_BUTTON(button)) {
-                SDL_CaptureMouse(SDL_TRUE);
-                break;
+    if (m_NeedsManualCaptureOnLeave) {
+        // SDL on Windows doesn't send the mouse button up until the mouse re-enters the window
+        // after leaving it. This breaks some of the Aero snap gestures, so we'll capture it to
+        // allow us to receive the mouse button up events later.
+        //
+        // On macOS and X11, capturing the mouse allows us to receive mouse motion outside the
+        // window (button up already worked without capture).
+        if (m_AbsoluteMouseMode && isCaptureActive()) {
+            // NB: Not using SDL_GetGlobalMouseState() because we want our state not the system's
+            Uint32 mouseState = SDL_GetMouseState(nullptr, nullptr);
+            for (Uint32 button = SDL_BUTTON_LEFT; button <= SDL_BUTTON_X2; button++) {
+                if (mouseState & SDL_BUTTON(button)) {
+                    SDL_CaptureMouse(SDL_TRUE);
+                    break;
+                }
             }
         }
     }

@@ -128,8 +128,10 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         Uint32 buttonState = SDL_GetMouseState(nullptr, nullptr);
         if (buttonState == 0) {
             if (m_PendingMouseButtonsAllUpOnVideoRegionLeave) {
-                // Stop capturing the mouse now
-                SDL_CaptureMouse(SDL_FALSE);
+                if (m_NeedsManualCaptureOnLeave) {
+                    // Stop capturing the mouse now
+                    SDL_CaptureMouse(SDL_FALSE);
+                }
                 m_PendingMouseButtonsAllUpOnVideoRegionLeave = false;
             }
         }
