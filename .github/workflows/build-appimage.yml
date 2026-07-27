@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL
-          ref: release-3.4.12
+          ref: c9ad296376ed6091e0fdec9844461fdf09af7845
           path: deps/SDL
 
       - name: Build SDL3
@@ -116,7 +116,7 @@ jobs:
       - name: Build dav1d
         working-directory: deps
         env:
-          DAV1D_VER: 1.5.3
+          DAV1D_VER: 1.5.4
         run: |
           git clone --branch $DAV1D_VER --depth 1 https://code.videolan.org/videolan/dav1d.git
           pushd dav1d
