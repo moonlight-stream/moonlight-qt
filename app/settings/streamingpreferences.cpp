@@ -71,6 +71,7 @@
 #define SER_OVERLAYMENUPOS "overlaymenuposition"
 #define SER_HDRMODE "hdrmode"
 #define SER_AUTOUPDATECHECK "autoupdatecheck"
+#define SER_RENDERER "renderer"
 
 #define CURRENT_DEFAULT_VER 2
 
@@ -201,6 +202,8 @@ void StreamingPreferences::reload()
                                                   static_cast<int>(VideoCodecConfig::VCC_AUTO)).toInt());
     videoDecoderSelection = static_cast<VideoDecoderSelection>(settings.value(SER_VIDEODEC,
                                                   static_cast<int>(VideoDecoderSelection::VDS_AUTO)).toInt());
+    rendererSelection = static_cast<RendererSelection>(settings.value(SER_RENDERER,
+                                                  static_cast<int>(RendererSelection::RS_AUTO)).toInt());
     windowMode = static_cast<WindowMode>(settings.value(SER_WINDOWMODE,
                                                         // Try to load from the old preference value too
                                                         static_cast<int>(settings.value(SER_FULLSCREEN, true).toBool() ?
@@ -402,6 +405,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_YUV444, enableYUV444);
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
+    settings.setValue(SER_RENDERER, static_cast<int>(rendererSelection));
     settings.setValue(SER_WINDOWMODE, static_cast<int>(windowMode));
     settings.setValue(SER_UIDISPLAYMODE, static_cast<int>(uiDisplayMode));
     settings.setValue(SER_LANGUAGE, static_cast<int>(language));

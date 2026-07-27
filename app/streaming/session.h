@@ -223,6 +223,7 @@ private:
 
     static
     bool chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
+                       StreamingPreferences::RendererSelection renderer,
                        SDL_Window* window, int videoFormat, int width, int height,
                        int frameRate, bool enableVsync, bool enableFramePacing,
                        bool enableVideoEnhancement, bool ignoreAspectRatio, bool testOnly,

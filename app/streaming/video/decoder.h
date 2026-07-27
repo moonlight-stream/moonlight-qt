@@ -36,6 +36,7 @@ typedef struct _VIDEO_STATS {
 typedef struct _DECODER_PARAMETERS {
     SDL_Window* window;
     StreamingPreferences::VideoDecoderSelection vds;
+    StreamingPreferences::RendererSelection renderer;
 
     int videoFormat;
     int width;

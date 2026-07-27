@@ -287,6 +287,7 @@ private:
     bool m_SwapFaceButtons;
     StreamingPreferences::GamepadQuitCombo m_GamepadQuitCombo;
 
+    bool m_NeedsManualCaptureOnLeave;
     bool m_MouseWasInVideoRegion;
     bool m_PendingMouseButtonsAllUpOnVideoRegionLeave;
     bool m_PointerRegionLockActive;
