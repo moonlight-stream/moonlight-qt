@@ -1761,6 +1761,7 @@ void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
     if (m_NeedsSpsFixup && entry->bufferType == BUFFER_TYPE_SPS) {
         h264_stream_t* stream = h264_new();
         int nalStart, nalEnd;
+        bool needsFixup;
 
         // Read the old NALU
         find_nal_unit((uint8_t*)entry->data, entry->length, &nalStart, &nalEnd);
@@ -1773,7 +1774,11 @@ void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
 
         // Fixup the SPS to what OS X needs to use hardware acceleration
         // This is also critical for decoding latency on the Pi 2.
-        if (stream->sps->num_ref_frames != 1 || stream->sps->vui.max_dec_frame_buffering != 1) {
+        needsFixup = (stream->sps->num_ref_frames != 1 || stream->sps->vui.max_dec_frame_buffering != 1);
+#ifndef QT_DEBUG
+        if (needsFixup)
+#endif
+        {
             stream->sps->num_ref_frames = 1;
             stream->sps->vui.max_dec_frame_buffering = 1;
 
@@ -1801,7 +1806,20 @@ void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
             // Copy the NALU prefix over from the original SPS
             memcpy(&m_DecodeBuffer.data()[initialOffset], entry->data, nalStart);
             offset += nalStart;
+
+#ifdef QT_DEBUG
+            // If we didn't need a fixup, the SPS should have stayed the exact same
+            if (!needsFixup) {
+                SDL_assert(offset - initialOffset == entry->length);
+                SDL_assert(memcmp(&m_DecodeBuffer.data()[initialOffset], entry->data, entry->length) == 0);
+            }
+            else {
+                // The SPS should never get smaller with a fixup
+                SDL_assert(offset - initialOffset >= entry->length);
+            }
+#endif
         }
+#ifndef QT_DEBUG
         else {
             // Write the SPS as-is if it required no modification
             memcpy(&m_DecodeBuffer.data()[offset],
@@ -1809,6 +1827,7 @@ void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
                    entry->length);
             offset += entry->length;
         }
+#endif
 
         h264_free(stream);
     }
