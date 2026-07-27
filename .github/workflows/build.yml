@@ -324,7 +324,7 @@ jobs:
 
     - name: Build libplacebo
       run: |
-        export LIBPLACEBO_REV=v7.349.0
+        export LIBPLACEBO_REV=2d0979fb54e025e904c7372666fffbf5dae40f66
         git clone https://code.videolan.org/videolan/libplacebo.git
         cd libplacebo
         git checkout $LIBPLACEBO_REV
