@@ -1243,6 +1243,118 @@
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>自動偵測被封鎖的連線 (建議)</translation>
     </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1068"/>
+        <source>HDR brightness profile</source>
+        <translation>HDR 亮度設定</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1076"/>
+        <source>Controls the display metadata used by Foundation Sunshine&apos;s virtual display.</source>
+        <translation>控制 Foundation Sunshine 虛擬顯示器使用的顯示亮度中繼資料。</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1095"/>
+        <source>HDR active</source>
+        <translation>HDR 已啟用</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1095"/>
+        <source>Enable HDR to use</source>
+        <translation>啟用 HDR 後生效</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1110"/>
+        <source>Use host defaults</source>
+        <translation>使用主機預設值</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1111"/>
+        <source>Detect client display automatically</source>
+        <translation>自動偵測用戶端顯示器</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1112"/>
+        <source>Set brightness manually</source>
+        <translation>手動設定亮度</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1127"/>
+        <source>No brightness values are sent. Foundation Sunshine will use its configured defaults.</source>
+        <translation>不傳送亮度參數，由 Foundation Sunshine 使用主機端設定。</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1129"/>
+        <source>The HDR display is detected when streaming starts. Automatic detection is currently available on Windows.</source>
+        <translation>串流開始時偵測 HDR 顯示器，目前僅 Windows 支援自動偵測。</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1131"/>
+        <source>Use calibrated values when display detection is unavailable or reports inaccurate metadata.</source>
+        <translation>顯示器無法自動偵測或回報資料不準確時，可使用校準值。</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1147"/>
+        <source>Peak brightness</source>
+        <translation>峰值亮度</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1181"/>
+        <source>Minimum brightness</source>
+        <translation>最低亮度</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1215"/>
+        <source>Full-frame brightness</source>
+        <translation>全螢幕最大亮度</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1175"/>
+        <location filename="../gui/SettingsView.qml" line="1209"/>
+        <location filename="../gui/SettingsView.qml" line="1243"/>
+        <source>nits</source>
+        <translation>尼特</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1257"/>
+        <source>HDR luminance range</source>
+        <translation>HDR 亮度範圍</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1281"/>
+        <source>Perceptual PQ scale · drag the markers to adjust. Positions show HDR signal levels, not actual screen brightness.</source>
+        <translation>感知 PQ 標尺 · 拖曳標記即可調整；位置表示 HDR 訊號等級，而非螢幕實際亮度。</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1295"/>
+        <source>SDR white</source>
+        <translation>SDR 白色</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1297"/>
+        <source>PQ limit</source>
+        <translation>PQ 上限</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1327"/>
+        <source>Black</source>
+        <translation>黑位</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1338"/>
+        <source>Full frame</source>
+        <translation>全螢幕</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1349"/>
+        <source>Peak</source>
+        <translation>峰值</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1361"/>
+        <source>Enter values in this order: minimum ≤ full-frame ≤ peak brightness.</source>
+        <translation>請依「最低亮度 ≤ 全螢幕亮度 ≤ 峰值亮度」的順序填寫。</translation>
+    </message>
 </context>
 <context>
     <name>StreamSegue</name>

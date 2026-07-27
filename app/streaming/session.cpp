@@ -3016,11 +3016,32 @@ bool Session::startConnectionAsync()
 
     QString rtspSessionUrl;
 
-    // Query display HDR brightness capabilities
+    // Resolve the HDR brightness profile for Foundation Sunshine.
     float maxBrightness = 0, minBrightness = 0, maxAverageBrightness = 0;
+    switch (m_Preferences->hdrBrightnessMode) {
+    case StreamingPreferences::HBM_MANUAL:
+        maxBrightness = static_cast<float>(m_Preferences->hdrMaxBrightness);
+        minBrightness = static_cast<float>(m_Preferences->hdrMinBrightness);
+        maxAverageBrightness = static_cast<float>(m_Preferences->hdrMaxAverageBrightness);
+
+        if (maxBrightness <= 0 || minBrightness < 0 ||
+                maxAverageBrightness <= 0 || minBrightness > maxAverageBrightness ||
+                maxAverageBrightness > maxBrightness) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Ignoring invalid manual HDR brightness profile: max=%.3f, min=%.6f, maxAverage=%.3f",
+                        maxBrightness, minBrightness, maxAverageBrightness);
+            maxBrightness = minBrightness = maxAverageBrightness = 0;
+        }
+        break;
+    case StreamingPreferences::HBM_AUTO:
 #ifdef Q_OS_WIN32
-    queryDisplayHdrBrightness(maxBrightness, minBrightness, maxAverageBrightness);
+        queryDisplayHdrBrightness(maxBrightness, minBrightness, maxAverageBrightness);
 #endif
+        break;
+    case StreamingPreferences::HBM_HOST_DEFAULT:
+    default:
+        break;
+    }
 
     try {
         NvHTTP http(m_Computer);

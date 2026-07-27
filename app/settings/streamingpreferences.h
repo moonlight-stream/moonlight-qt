@@ -136,6 +136,14 @@ public:
     };
     Q_ENUM(HdrMode);
 
+    enum HdrBrightnessMode
+    {
+        HBM_HOST_DEFAULT = 0,
+        HBM_AUTO = 1,
+        HBM_MANUAL = 2,
+    };
+    Q_ENUM(HdrBrightnessMode);
+
     enum GamepadQuitCombo
     {
         GQC_DEFAULT         = 0,  // Start + Select + L1 + R1 (original)
@@ -184,6 +192,10 @@ public:
     Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
     Q_PROPERTY(bool enableHdr MEMBER enableHdr NOTIFY enableHdrChanged)
     Q_PROPERTY(HdrMode hdrMode MEMBER hdrMode NOTIFY hdrModeChanged)
+    Q_PROPERTY(HdrBrightnessMode hdrBrightnessMode MEMBER hdrBrightnessMode NOTIFY hdrBrightnessModeChanged)
+    Q_PROPERTY(double hdrMaxBrightness MEMBER hdrMaxBrightness NOTIFY hdrBrightnessValuesChanged)
+    Q_PROPERTY(double hdrMinBrightness MEMBER hdrMinBrightness NOTIFY hdrBrightnessValuesChanged)
+    Q_PROPERTY(double hdrMaxAverageBrightness MEMBER hdrMaxAverageBrightness NOTIFY hdrBrightnessValuesChanged)
     Q_PROPERTY(bool enableYUV444 MEMBER enableYUV444 NOTIFY enableYUV444Changed)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
     Q_PROPERTY(RendererSelection rendererSelection MEMBER rendererSelection NOTIFY rendererSelectionChanged)
@@ -254,6 +266,10 @@ public:
     VideoCodecConfig videoCodecConfig;
     bool enableHdr;
     HdrMode hdrMode;
+    HdrBrightnessMode hdrBrightnessMode;
+    double hdrMaxBrightness;
+    double hdrMinBrightness;
+    double hdrMaxAverageBrightness;
     bool enableYUV444;
     VideoDecoderSelection videoDecoderSelection;
     WindowMode windowMode;
@@ -289,6 +305,8 @@ signals:
     void videoCodecConfigChanged();
     void enableHdrChanged();
     void hdrModeChanged();
+    void hdrBrightnessModeChanged();
+    void hdrBrightnessValuesChanged();
     void enableYUV444Changed();
     void videoDecoderSelectionChanged();
     void uiDisplayModeChanged();

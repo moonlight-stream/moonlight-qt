@@ -70,6 +70,10 @@
 #define SER_MICROPHONE "microphone"
 #define SER_OVERLAYMENUPOS "overlaymenuposition"
 #define SER_HDRMODE "hdrmode"
+#define SER_HDRBRIGHTNESSMODE "hdrbrightnessmode"
+#define SER_HDRMAXBRIGHTNESS "hdrmaxbrightness"
+#define SER_HDRMINBRIGHTNESS "hdrminbrightness"
+#define SER_HDRMAXAVERAGEBRIGHTNESS "hdrmaxaveragebrightness"
 #define SER_AUTOUPDATECHECK "autoupdatecheck"
 #define SER_RENDERER "renderer"
 
@@ -194,6 +198,20 @@ void StreamingPreferences::reload()
     enableHdr = settings.value(SER_HDR, false).toBool();
     hdrMode = static_cast<HdrMode>(settings.value(SER_HDRMODE,
                                                    static_cast<int>(HdrMode::HDR_PQ)).toInt());
+#ifdef Q_OS_WIN32
+    const auto defaultHdrBrightnessMode = HdrBrightnessMode::HBM_AUTO;
+#else
+    const auto defaultHdrBrightnessMode = HdrBrightnessMode::HBM_HOST_DEFAULT;
+#endif
+    hdrBrightnessMode = static_cast<HdrBrightnessMode>(
+        settings.value(SER_HDRBRIGHTNESSMODE, static_cast<int>(defaultHdrBrightnessMode)).toInt());
+    if (hdrBrightnessMode < HdrBrightnessMode::HBM_HOST_DEFAULT ||
+            hdrBrightnessMode > HdrBrightnessMode::HBM_MANUAL) {
+        hdrBrightnessMode = defaultHdrBrightnessMode;
+    }
+    hdrMaxBrightness = settings.value(SER_HDRMAXBRIGHTNESS, 1000.0).toDouble();
+    hdrMinBrightness = settings.value(SER_HDRMINBRIGHTNESS, 0.001).toDouble();
+    hdrMaxAverageBrightness = settings.value(SER_HDRMAXAVERAGEBRIGHTNESS, 1000.0).toDouble();
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
@@ -402,6 +420,10 @@ void StreamingPreferences::save()
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
     settings.setValue(SER_HDR, enableHdr);
     settings.setValue(SER_HDRMODE, static_cast<int>(hdrMode));
+    settings.setValue(SER_HDRBRIGHTNESSMODE, static_cast<int>(hdrBrightnessMode));
+    settings.setValue(SER_HDRMAXBRIGHTNESS, hdrMaxBrightness);
+    settings.setValue(SER_HDRMINBRIGHTNESS, hdrMinBrightness);
+    settings.setValue(SER_HDRMAXAVERAGEBRIGHTNESS, hdrMaxAverageBrightness);
     settings.setValue(SER_YUV444, enableYUV444);
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
