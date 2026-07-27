@@ -291,7 +291,7 @@ jobs:
 
     - name: Build libva
       run: |
-        export LIBVA_VER=2.22.0
+        export LIBVA_VER=2.24.1
         git clone --branch $LIBVA_VER --depth 1 https://github.com/intel/libva.git
         cd libva
         ./autogen.sh
