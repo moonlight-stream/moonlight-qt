@@ -12,9 +12,9 @@
 - 发布 Release
 
 **支持平台：**
-- Windows (x64/ARM64) - 使用 Qt 6.8.0
-- macOS - 使用 Qt 6.6.0
-- Linux (x86_64) - 使用系统 Qt 5.15
+- Windows (x64/ARM64) - 使用 Qt 6.11.1
+- macOS - 使用 Qt 6.11.1
+- Linux (x86_64) - 使用 Qt 6.11.1
 - SteamLink - 交叉编译
 
 **构建产物：**
@@ -73,7 +73,7 @@
 
 3. **Qt 版本问题**：
    - Windows/macOS 使用 Qt 6.x
-   - Linux 使用系统 Qt 5.15
+   - Linux 使用 CI 安装的 Qt 6.x
 
 4. **依赖库构建失败**：
    - 检查网络连接（需要下载源码）
@@ -81,9 +81,9 @@
 
 ### 环境要求
 
-- **Windows**: Visual Studio 2022, Qt 6.8.0
-- **macOS**: Xcode, Qt 6.6.0, Node.js
-- **Linux**: 完整的开发环境，系统 Qt 5.15
+- **Windows**: Visual Studio 2022, Qt 6.11.1
+- **macOS**: Xcode, Qt 6.11.1, Node.js
+- **Linux**: 完整的开发环境，Qt 6.11.1
 - **所有平台**: Git, 网络访问
 
 ### 密钥配置
@@ -118,4 +118,4 @@
 - 详细的错误日志
 - 优雅的失败处理
 
-这个工作流设计为开箱即用，无需额外配置即可在 GitHub Actions 中运行。 
+这个工作流设计为开箱即用，无需额外配置即可在 GitHub Actions 中运行。

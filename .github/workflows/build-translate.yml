@@ -20,7 +20,7 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.8.3'
+        version: '6.11.1'
         arch: 'win64_msvc2022_64'
         modules: 'qtmultimedia'
         cache: true

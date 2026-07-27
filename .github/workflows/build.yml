@@ -48,7 +48,7 @@ jobs:
         arch: win64_msvc2022_64
         host: windows
         target: desktop
-        version: '6.8.3'
+        version: '6.11.1'
         modules: 'qtmultimedia qtimageformats'
         use-naqt: true
 
@@ -115,7 +115,7 @@ jobs:
         dir: ${{ github.workspace }}\arm64\
         host: windows
         target: desktop
-        version: '6.8.3'
+        version: '6.11.1'
         modules: 'qtmultimedia qtimageformats'
         use-naqt: true
 
@@ -181,7 +181,7 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.11.0'
+        version: '6.11.1'
         modules: 'qtmultimedia qtimageformats'
         cache: true
         aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@073e34d7c2ab4ae6961ed7cca690b3abd5ba5a7e'
@@ -212,10 +212,10 @@ jobs:
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "CI_VERSION=$VERSION" >> $GITHUB_ENV
 
-    - name: Install Qt 6.8.3
+    - name: Install Qt 6.11.1
       uses: jurplel/install-qt-action@v3
       with:
-        version: '6.8.3'
+        version: '6.11.1'
         modules: 'qtmultimedia qtimageformats'
         cache: true
 
