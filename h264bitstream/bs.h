@@ -264,7 +264,7 @@ static inline void bs_write_se(bs_t* b, int32_t v)
 {
     if (v <= 0)
     {
-        bs_write_ue(b, (-(uint32_t)v) * 2);
+        bs_write_ue(b, (~(uint32_t)v + 1) * 2);
     }
     else
     {
