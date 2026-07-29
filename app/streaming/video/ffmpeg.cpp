@@ -5,6 +5,8 @@
 
 #include <h264_stream.h>
 
+#include <utility>
+
 extern "C" {
 #include <libavutil/mastering_display_metadata.h>
 #include <libavutil/pixdesc.h>
@@ -82,7 +84,37 @@ void FFmpegVideoDecoder::setHdrMode(bool enabled)
 
 bool FFmpegVideoDecoder::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 {
-    return m_FrontendRenderer->notifyWindowChanged(info);
+    if (info == nullptr) {
+        return m_FrontendRenderer->notifyWindowChanged(info);
+    }
+
+    constexpr uint32_t deferredPacerFlags =
+        WINDOW_STATE_CHANGE_SIZE |
+        WINDOW_STATE_CHANGE_DISPLAY;
+    const WINDOW_STATE_CHANGE_INFO originalInfo = *info;
+
+    // Suspension must reach the worker immediately so it cannot submit
+    // another frame after a minimize/background notification. Geometry and
+    // display changes are different: the renderer first completes its
+    // synchronous refresh (D3D11) or queues the refresh that its next prepare
+    // must complete (Vulkan). Only then does the pacing worker mark the next
+    // frame as the first row of the new display epoch.
+    if (m_Pacer != nullptr &&
+            (originalInfo.stateChangeFlags & ~deferredPacerFlags) != 0) {
+        WINDOW_STATE_CHANGE_INFO pacingInfo = originalInfo;
+        pacingInfo.stateChangeFlags &= ~deferredPacerFlags;
+        m_Pacer->notifyWindowChanged(&pacingInfo);
+    }
+
+    const bool handled =
+        m_FrontendRenderer->notifyWindowChanged(info);
+    if (m_Pacer != nullptr && handled &&
+            (originalInfo.stateChangeFlags & deferredPacerFlags) != 0) {
+        WINDOW_STATE_CHANGE_INFO pacingInfo = originalInfo;
+        pacingInfo.stateChangeFlags &= deferredPacerFlags;
+        m_Pacer->notifyWindowChanged(&pacingInfo);
+    }
+    return handled;
 }
 
 int FFmpegVideoDecoder::getDecoderCapabilities()
@@ -498,7 +530,10 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     if (testMode != TestMode::TestFrameOnly) {
         m_Pacer = new Pacer(m_FrontendRenderer, &m_ActiveWndVideoStats);
         if (!m_Pacer->initialize(params->window, params->frameRate,
-                                 params->enableFramePacing || (params->enableVsync && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FORCE_PACING)))) {
+                                 params->enableFramePacing || (params->enableVsync && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FORCE_PACING)),
+                                 params->enableVsync,
+                                 params->enableVrr,
+                                 params->vrrDisplayRefreshHz)) {
             return false;
         }
     }
@@ -1886,6 +1921,29 @@ void FFmpegVideoDecoder::decoderThreadProc()
                     SDL_assert(m_FrameInfoQueue.size() == m_FramesIn - m_FramesOut);
                     m_FramesOut++;
 
+                    // Only active VRR needs decoder-facing pacing metadata.
+                    // Keep legacy handoff and its AVFrame-only path unchanged.
+                    const bool vrrActive = m_Pacer->isVrrActive();
+                    uint64_t decodeCompleteUs = 0;
+                    int frameNumber = -1;
+                    uint32_t rtpTimestamp = 0;
+                    bool timestampValid = false;
+
+                    if (vrrActive) {
+                        // Capture timing while the matching DECODE_UNIT is
+                        // still available. RTP timestamp 0 is valid, so
+                        // validity is represented separately rather than
+                        // inferred from the raw value.
+                        decodeCompleteUs = LiGetMicroseconds();
+                        if (!m_FrameInfoQueue.isEmpty()) {
+                            // Snapshot without moving the legacy dequeue point.
+                            const DECODE_UNIT& du = m_FrameInfoQueue.head();
+                            frameNumber = du.frameNumber;
+                            rtpTimestamp = du.rtpTimestamp;
+                            timestampValid = true;
+                        }
+                    }
+
                     // Attach HDR metadata to the frame if it's not already present. We will defer to
                     // any metadata contained in the bitstream itself since that is guaranteed to be
                     // correctly synchronized to each frame, unlike our async HDR metadata message.
@@ -1952,26 +2010,39 @@ void FFmpegVideoDecoder::decoderThreadProc()
                     // Restore default log level after a successful decode
                     av_log_set_level(AV_LOG_INFO);
 
-                    // Capture a frame timestamp to measuring pacing delay
+                    // Keep the established legacy pacing timestamp at its
+                    // original handoff point. VRR never reads pkt_dts: its
+                    // PacedFrame carries the earlier decoder-complete stamp.
                     frame->pkt_dts = LiGetMicroseconds();
 
                     if (!m_FrameInfoQueue.isEmpty()) {
                         // Data buffers in the DU are not valid here!
                         DECODE_UNIT du = m_FrameInfoQueue.dequeue();
 
-                        // Count time in avcodec_send_packet() and avcodec_receive_frame()
-                        // as time spent decoding. Also count time spent in the decode unit
-                        // queue because that's directly caused by decoder latency.
-                        m_ActiveWndVideoStats.totalDecodeTimeUs += (LiGetMicroseconds() - du.enqueueTimeUs);
+                        // Preserve the legacy measurement point. VRR's
+                        // decode-complete timestamp above is intentionally a
+                        // separate, earlier value used only for scheduling.
+                        m_ActiveWndVideoStats.totalDecodeTimeUs +=
+                            (LiGetMicroseconds() - du.enqueueTimeUs);
 
-                        // Store the presentation time (90 kHz timebase)
+                        // Store the presentation time (90 kHz timebase) for
+                        // existing renderers. VRR uses PacedFrame instead.
                         frame->pts = (int64_t)du.rtpTimestamp;
                     }
 
                     m_ActiveWndVideoStats.decodedFrames++;
 
                     // Queue the frame for rendering (or render now if pacer is disabled)
-                    m_Pacer->submitFrame(frame);
+                    if (vrrActive) {
+                        m_Pacer->submitFrame(PacedFrame(frame,
+                                                        frameNumber,
+                                                        rtpTimestamp,
+                                                        timestampValid,
+                                                        decodeCompleteUs));
+                    }
+                    else {
+                        m_Pacer->submitFrame(frame);
+                    }
                 }
                 else if (err == AVERROR(EAGAIN)) {
                     VIDEO_FRAME_HANDLE handle;
@@ -2152,4 +2223,3 @@ void FFmpegVideoDecoder::renderFrameOnMainThread()
 {
     m_Pacer->renderOnMainThread();
 }
-
