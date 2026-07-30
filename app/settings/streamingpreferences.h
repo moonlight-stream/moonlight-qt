@@ -14,6 +14,12 @@ public:
     Q_INVOKABLE static int
     getDefaultBitrate(int width, int height, int fps, bool yuv444);
 
+    Q_INVOKABLE static bool
+    isValidWolProxyList(const QString& addressList);
+
+    Q_INVOKABLE static QString
+    normalizeWolProxyList(const QString& addressList);
+
     Q_INVOKABLE void save();
 
     void reload();
@@ -155,6 +161,7 @@ public:
     Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
+    Q_PROPERTY(QString wolProxyAddresses MEMBER wolProxyAddresses NOTIFY wolProxyAddressesChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
 
@@ -188,6 +195,7 @@ public:
     bool reverseScrollDirection;
     bool swapFaceButtons;
     bool keepAwake;
+    QString wolProxyAddresses;
     int packetSize;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
@@ -236,6 +244,7 @@ signals:
     void swapFaceButtonsChanged();
     void captureSysKeysModeChanged();
     void keepAwakeChanged();
+    void wolProxyAddressesChanged();
     void languageChanged();
     void rendererSelectionChanged();
 
@@ -246,4 +255,3 @@ private:
 
     QQmlEngine* m_QmlEngine;
 };
-

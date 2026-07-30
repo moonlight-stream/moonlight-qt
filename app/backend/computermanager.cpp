@@ -1,4 +1,5 @@
 #include "computermanager.h"
+#include "settings/wolproxysettings.h"
 #include "boxartmanager.h"
 #include "nvhttp.h"
 #include "nvpairingmanager.h"
@@ -198,6 +199,11 @@ ComputerManager::ComputerManager(StreamingPreferences* prefs)
     // while quitting, however this is a one time signal - additional
     // requests would not be aborted and block termination.
     connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this, &ComputerManager::handleAboutToQuit);
+}
+
+QList<QHostAddress> ComputerManager::getWolProxyAddresses() const
+{
+    return WolProxySettings::parseAddressList(m_Prefs->wolProxyAddresses);
 }
 
 ComputerManager::~ComputerManager()
