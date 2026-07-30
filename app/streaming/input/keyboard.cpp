@@ -67,6 +67,7 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 
         // Toggle mouse mode
         m_AbsoluteMouseMode = !m_AbsoluteMouseMode;
+        synchronizeLocalCursorMode();
 
         // Recapture input
         setCaptureActive(true);
@@ -79,7 +80,8 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         if (!SDL_GetRelativeMouseMode()) {
             // 切换本地鼠标光标可见性状态
             m_MouseCursorCapturedVisibilityState = !m_MouseCursorCapturedVisibilityState;
-            SDL_ShowCursor(m_MouseCursorCapturedVisibilityState);
+            synchronizeLocalCursorMode();
+            applyCapturedCursorState();
         }
         else {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,

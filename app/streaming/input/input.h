@@ -5,8 +5,11 @@
 
 #include "SDL_compat.h"
 
+#include <QByteArray>
 #include <QHash>
 #include <QSet>
+
+#include <atomic>
 
 #ifdef HAVE_WINDOWS_RAW_TOUCHPAD
 #include <memory>
@@ -94,6 +97,17 @@ struct DualSenseOutputReport{
 #define GAMEPAD_HAPTIC_SIMPLE_HIFREQ_MOTOR_WEIGHT 0.33
 #define GAMEPAD_HAPTIC_SIMPLE_LOWFREQ_MOTOR_WEIGHT 0.8
 
+struct RemoteCursorUpdate {
+    bool hasShape;
+    bool visible;
+    uint32_t shapeId;
+    uint16_t width;
+    uint16_t height;
+    int16_t hotspotX;
+    int16_t hotspotY;
+    QByteArray bgra;
+};
+
 class SdlInputHandler
 {
 public:
@@ -168,6 +182,12 @@ public:
 
     void updatePointerRegionLock();
 
+    void updateRemoteCursor(const RemoteCursorUpdate& update);
+
+    void synchronizeLocalCursorMode();
+
+    int getLocalCursorMode() const;
+
     static
     QString getUnmappedGamepads();
 
@@ -229,6 +249,12 @@ private:
     void selectNativeTouchpadTransport();
 
     void transitionNativeTouchpadToSoftwarePointer();
+
+    int getCapturedCursorVisibilityState() const;
+
+    void applyCapturedCursorState();
+
+    void resetRemoteCursor();
 
     struct NativeTouchpadContact {
         uint8_t eventType;
@@ -303,6 +329,9 @@ private:
     QStringList m_IgnoreDeviceGuids;
     StreamingPreferences::CaptureSysKeysMode m_CaptureSystemKeysMode;
     int m_MouseCursorCapturedVisibilityState;
+    std::atomic<int> m_LocalCursorMode;
+    bool m_RemoteCursorVisible;
+    SDL_Cursor* m_RemoteCursor;
 
     struct {
         KeyCombo keyCombo;

@@ -5,6 +5,7 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 
 #include <Limelight.h>
 #include <opus_multistream.h>
@@ -266,6 +267,9 @@ private:
     void clClipboardData(const char* data, int length);
 
     static
+    void clCursorUpdate(const LI_CURSOR_UPDATE* update);
+
+    static
     int arInit(int audioConfiguration,
                const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                void* arContext, int arFlags);
@@ -363,6 +367,9 @@ private:
     QString m_FileMappingSessionId;
     Uint32 m_MenuCloseTicks;       // 菜单关闭时间戳（防抖）
     class ClipboardHelperClient* m_ClipboardHelper; // Bidirectional clipboard sync helper process; nullptr when stream not active
+    std::mutex m_CursorUpdateMutex;
+    std::shared_ptr<RemoteCursorUpdate> m_PendingCursorUpdate;
+    bool m_CursorUpdateEventQueued = false;
 
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
     static Session* s_ActiveSession;

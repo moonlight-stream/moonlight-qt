@@ -38,6 +38,10 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_KeyboardCaptureActive(false),
       m_CaptureSystemKeysMode(prefs.captureSysKeysMode),
       m_MouseCursorCapturedVisibilityState(prefs.showLocalCursor ? SDL_ENABLE : SDL_DISABLE),
+      m_LocalCursorMode(prefs.absoluteMouseMode && prefs.showLocalCursor ?
+                            LI_CURSOR_MODE_LOCAL : LI_CURSOR_MODE_VIDEO),
+      m_RemoteCursorVisible(true),
+      m_RemoteCursor(nullptr),
       m_LongPressTimer(0),
       m_StreamWidth(streamWidth),
       m_StreamHeight(streamHeight),
@@ -254,6 +258,7 @@ SdlInputHandler::~SdlInputHandler()
     m_WindowsTouchpadInput.reset();
 #endif
     cancelNativeTouchpadContacts();
+    resetRemoteCursor();
 
     for (int i = 0; i < MAX_GAMEPADS; i++) {
         if (m_GamepadState[i].mouseEmulationTimer != 0) {
@@ -322,6 +327,122 @@ void SdlInputHandler::setWindow(SDL_Window *window)
         ImmAssociateContext(info.info.win.window, NULL);
     }
 #endif
+}
+
+int SdlInputHandler::getLocalCursorMode() const
+{
+    return m_LocalCursorMode.load(std::memory_order_relaxed);
+}
+
+int SdlInputHandler::getCapturedCursorVisibilityState() const
+{
+    if (m_MouseCursorCapturedVisibilityState == SDL_DISABLE) {
+        return SDL_DISABLE;
+    }
+
+    if (getLocalCursorMode() == LI_CURSOR_MODE_LOCAL &&
+        (LiGetHostFeatureFlags() & LI_FF_CURSOR_SHAPE) != 0) {
+        return m_RemoteCursorVisible ? SDL_ENABLE : SDL_DISABLE;
+    }
+
+    return SDL_ENABLE;
+}
+
+void SdlInputHandler::applyCapturedCursorState()
+{
+    if (getLocalCursorMode() == LI_CURSOR_MODE_LOCAL &&
+        m_RemoteCursor != nullptr) {
+        SDL_SetCursor(m_RemoteCursor);
+    }
+    SDL_ShowCursor(getCapturedCursorVisibilityState());
+}
+
+void SdlInputHandler::resetRemoteCursor()
+{
+    if (m_RemoteCursor == nullptr) {
+        return;
+    }
+
+    if (SDL_GetCursor() == m_RemoteCursor) {
+        SDL_SetCursor(SDL_GetDefaultCursor());
+    }
+    SDL_FreeCursor(m_RemoteCursor);
+    m_RemoteCursor = nullptr;
+}
+
+void SdlInputHandler::synchronizeLocalCursorMode()
+{
+    const int cursorMode = m_AbsoluteMouseMode &&
+                           m_MouseCursorCapturedVisibilityState == SDL_ENABLE ?
+                               LI_CURSOR_MODE_LOCAL : LI_CURSOR_MODE_VIDEO;
+    m_LocalCursorMode.store(cursorMode, std::memory_order_relaxed);
+    const int result = LiSetCursorMode(cursorMode);
+    if (result != LI_CURSOR_MODE_OK &&
+        result != LI_CURSOR_MODE_ERR_UNSUPPORTED &&
+        result != LI_CURSOR_MODE_ERR_NOT_CONNECTED) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to synchronize local cursor mode: %d",
+                    result);
+    }
+
+    if (cursorMode == LI_CURSOR_MODE_VIDEO) {
+        resetRemoteCursor();
+    }
+    else {
+        // The host will immediately send the authoritative state. Keep the
+        // default cursor visible until that update arrives.
+        m_RemoteCursorVisible = true;
+    }
+}
+
+void SdlInputHandler::updateRemoteCursor(const RemoteCursorUpdate& update)
+{
+    m_RemoteCursorVisible = update.visible;
+
+    if (update.hasShape) {
+        const qsizetype expectedSize =
+            static_cast<qsizetype>(update.width) * update.height * 4;
+        if (update.width == 0 || update.height == 0 ||
+            update.hotspotX < 0 || update.hotspotX >= update.width ||
+            update.hotspotY < 0 || update.hotspotY >= update.height ||
+            update.bgra.size() != expectedSize) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Ignoring invalid remote cursor shape %u",
+                        update.shapeId);
+        }
+        else {
+            SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom(
+                const_cast<char*>(update.bgra.constData()),
+                update.width,
+                update.height,
+                32,
+                update.width * 4,
+                SDL_PIXELFORMAT_BGRA32);
+            if (surface == nullptr) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Failed to create remote cursor surface: %s",
+                            SDL_GetError());
+            }
+            else {
+                SDL_Cursor* cursor =
+                    SDL_CreateColorCursor(surface, update.hotspotX, update.hotspotY);
+                SDL_FreeSurface(surface);
+                if (cursor == nullptr) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Failed to create remote cursor: %s",
+                                SDL_GetError());
+                }
+                else {
+                    resetRemoteCursor();
+                    m_RemoteCursor = cursor;
+                }
+            }
+        }
+    }
+
+    if (isCaptureActive()) {
+        applyCapturedCursorState();
+    }
 }
 
 void SdlInputHandler::raiseAllKeys(bool clearKeys)
@@ -489,9 +610,10 @@ void SdlInputHandler::setCaptureActive(bool active)
     if (active) {
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
-            // Relative mouse mode didn't work or was disabled, so we'll just hide the cursor
-            SDL_ShowCursor(m_MouseCursorCapturedVisibilityState);
             m_FakeMouseCaptureActive = true;
+            // Relative mouse mode didn't work or was disabled, so apply the
+            // cursor shape and visibility directly.
+            applyCapturedCursorState();
         }
 
         // Synchronize the client and host cursor when activating absolute capture
@@ -525,6 +647,10 @@ void SdlInputHandler::setCaptureActive(bool active)
         // example, when the user explicitly releases input). Ensure Sunshine
         // never retains contacts from the previous capture state.
         cancelNativeTouchpadContacts();
+
+        if (m_RemoteCursor != nullptr && SDL_GetCursor() == m_RemoteCursor) {
+            SDL_SetCursor(SDL_GetDefaultCursor());
+        }
 
         if (m_FakeMouseCaptureActive) {
             // Display the cursor again

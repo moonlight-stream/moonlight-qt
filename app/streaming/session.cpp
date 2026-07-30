@@ -39,6 +39,7 @@
 #define SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED 104
 #define SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS 105
 #define SDL_CODE_FLUSH_TOUCHPAD_FRAME 106
+#define SDL_CODE_CURSOR_UPDATE 107
 
 #include <openssl/rand.h>
 
@@ -85,7 +86,8 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clSetControllerLED,
     Session::clSetAdaptiveTriggers,
     nullptr, // resolutionChanged (unused on Qt client)
-    Session::clClipboardData
+    Session::clClipboardData,
+    Session::clCursorUpdate
 };
 
 Session* Session::s_ActiveSession;
@@ -478,6 +480,52 @@ void Session::clClipboardData(const char* data, int length)
 
     // Queues internally; safe to call from the recv thread.
     session->m_ClipboardHelper->handleIncomingFrame(data, length);
+}
+
+void Session::clCursorUpdate(const LI_CURSOR_UPDATE* update)
+{
+    Session* session = s_ActiveSession;
+    if (session == nullptr || update == nullptr) {
+        return;
+    }
+
+    auto pending = std::make_shared<RemoteCursorUpdate>();
+    pending->hasShape = (update->flags & LI_CURSOR_UPDATE_FLAG_SHAPE) != 0;
+    pending->visible = (update->flags & LI_CURSOR_UPDATE_FLAG_VISIBLE) != 0;
+    pending->shapeId = update->shapeId;
+    pending->width = update->width;
+    pending->height = update->height;
+    pending->hotspotX = update->hotspotX;
+    pending->hotspotY = update->hotspotY;
+    if (pending->hasShape && update->pixels != nullptr && update->pixelDataLength != 0) {
+        pending->bgra = QByteArray(
+            reinterpret_cast<const char*>(update->pixels),
+            static_cast<int>(update->pixelDataLength));
+    }
+
+    bool queueCursorEvent = false;
+    {
+        std::lock_guard<std::mutex> lock(session->m_CursorUpdateMutex);
+        session->m_PendingCursorUpdate = pending;
+        if (!session->m_CursorUpdateEventQueued) {
+            session->m_CursorUpdateEventQueued = true;
+            queueCursorEvent = true;
+        }
+    }
+
+    if (!queueCursorEvent) {
+        return;
+    }
+
+    SDL_Event cursorEvent = {};
+    cursorEvent.type = SDL_USEREVENT;
+    cursorEvent.user.code = SDL_CODE_CURSOR_UPDATE;
+    if (SDL_PushEvent(&cursorEvent) <= 0) {
+        std::lock_guard<std::mutex> lock(session->m_CursorUpdateMutex);
+        // Keep the latest mailbox value. A subsequent callback will enqueue
+        // another wakeup after observing the cleared flag.
+        session->m_CursorUpdateEventQueued = false;
+    }
 }
 
 void Session::clRumbleTriggers(uint16_t controllerNumber, uint16_t leftTrigger, uint16_t rightTrigger)
@@ -3161,6 +3209,17 @@ bool Session::startConnectionAsync()
         return false;
     }
 
+    if (m_InputHandler != nullptr) {
+        const int cursorResult =
+            LiSetCursorMode(m_InputHandler->getLocalCursorMode());
+        if (cursorResult != LI_CURSOR_MODE_OK &&
+            cursorResult != LI_CURSOR_MODE_ERR_UNSUPPORTED) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to set initial local cursor mode: %d",
+                        cursorResult);
+        }
+    }
+
     emit connectionStarted();
     startSunshineAbr();
     startFileMappingUxProbe();
@@ -3690,6 +3749,19 @@ void Session::exec()
             case SDL_CODE_FLUSH_TOUCHPAD_FRAME:
                 m_InputHandler->flushPendingTouchpadFrameEvent();
                 break;
+            case SDL_CODE_CURSOR_UPDATE:
+            {
+                std::shared_ptr<RemoteCursorUpdate> cursorUpdate;
+                {
+                    std::lock_guard<std::mutex> lock(m_CursorUpdateMutex);
+                    cursorUpdate.swap(m_PendingCursorUpdate);
+                    m_CursorUpdateEventQueued = false;
+                }
+                if (cursorUpdate != nullptr && m_InputHandler != nullptr) {
+                    m_InputHandler->updateRemoteCursor(*cursorUpdate);
+                }
+                break;
+            }
             default:
                 SDL_assert(false);
             }
