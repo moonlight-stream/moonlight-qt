@@ -99,7 +99,13 @@ if [ ! -f "$HELPER_BINARY" ]; then
 fi
 cp "$HELPER_BINARY" $BUILD_FOLDER/app/Moonlight.app/Contents/MacOS/ || fail "Clipboard helper copy failed!"
 
-macdeployqt $BUILD_FOLDER/app/Moonlight.app $EXTRA_ARGS -qmldir=$SOURCE_ROOT/app/gui -appstore-compliant || fail "macdeployqt failed!"
+# macdeployqt only rewrites Qt references in the main executable and the
+# plugins it deploys, so the clipboard helper has to be named explicitly with
+# -executable. Otherwise it keeps the build machine's absolute Qt paths, which
+# either don't exist on the user's machine or pull a second copy of Qt into the
+# process alongside the bundled one. Either way the helper aborts at startup
+# and clipboard sync silently disables itself.
+macdeployqt $BUILD_FOLDER/app/Moonlight.app $EXTRA_ARGS -executable=$BUILD_FOLDER/app/Moonlight.app/Contents/MacOS/moonlight-clipboard-helper -qmldir=$SOURCE_ROOT/app/gui -appstore-compliant || fail "macdeployqt failed!"
 
 echo Building File Provider extension into app bundle
 bash "$SOURCE_ROOT/scripts/build-macos-fileprovider-extension.sh" "$SOURCE_ROOT" "$BUILD_FOLDER" "$BUILD_FOLDER/app/Moonlight.app" "$MOONLIGHT_ARCH" || fail "File Provider extension build failed"
