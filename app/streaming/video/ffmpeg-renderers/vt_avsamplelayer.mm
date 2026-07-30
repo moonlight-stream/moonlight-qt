@@ -10,11 +10,13 @@
 #include <streaming/session.h>
 
 #include <mach/mach_time.h>
+#include <cmath>
 #import <Cocoa/Cocoa.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 #import <dispatch/dispatch.h>
 #import <Metal/Metal.h>
+#import <QuartzCore/QuartzCore.h>
 
 @interface VTView : NSView
 - (NSView *)hitTest:(NSPoint)point;
@@ -43,9 +45,12 @@ public:
           m_LastColorTrc(-1),
           m_ColorSpace(nullptr),
           m_VsyncMutex(nullptr),
-          m_VsyncPassed(nullptr)
+          m_VsyncPassed(nullptr),
+          m_OverlayLock(0)
     {
-        SDL_zero(m_OverlayTextFields);
+        SDL_zero(m_OverlayLayers);
+        SDL_zero(m_OverlayImages);
+        SDL_zero(m_OverlayEnabled);
         for (int i = 0; i < Overlay::OverlayMax; i++) {
             m_OverlayUpdateBlocks[i] = dispatch_block_create(DISPATCH_BLOCK_DETACHED, ^{
                 updateOverlayOnMainThread((Overlay::OverlayType)i);
@@ -88,9 +93,12 @@ public:
         }
 
         for (int i = 0; i < Overlay::OverlayMax; i++) {
-            if (m_OverlayTextFields[i] != nullptr) {
-                [m_OverlayTextFields[i] removeFromSuperview];
-                [m_OverlayTextFields[i] release];
+            if (m_OverlayLayers[i] != nullptr) {
+                [m_OverlayLayers[i] removeFromSuperlayer];
+                [m_OverlayLayers[i] release];
+            }
+            if (m_OverlayImages[i] != nullptr) {
+                CGImageRelease(m_OverlayImages[i]);
             }
         }
 
@@ -406,43 +414,149 @@ public:
         return true;
     }}
 
+    // Converts an OverlayManager surface (always ARGB8888) into a CGImage.
+    // The surface data is copied, so the caller may free it after we return.
+    static CGImageRef createImageFromSurface(SDL_Surface* surface)
+    {
+        SDL_assert(surface->format->format == SDL_PIXELFORMAT_ARGB8888);
+
+        CFDataRef data = CFDataCreate(kCFAllocatorDefault,
+                                      (const UInt8*)surface->pixels,
+                                      surface->h * surface->pitch);
+        if (data == nullptr) {
+            return nullptr;
+        }
+
+        CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
+        CFRelease(data);
+        if (provider == nullptr) {
+            return nullptr;
+        }
+
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+
+        // SDL_PIXELFORMAT_ARGB8888 is a native-endian 32-bit word with
+        // non-premultiplied alpha in the high byte.
+        CGImageRef image = CGImageCreate(surface->w, surface->h, 8, 32, surface->pitch,
+                                         colorSpace,
+                                         kCGBitmapByteOrder32Host | kCGImageAlphaFirst,
+                                         provider, nullptr, false,
+                                         kCGRenderingIntentDefault);
+
+        CGColorSpaceRelease(colorSpace);
+        CGDataProviderRelease(provider);
+
+        return image;
+    }
+
     void updateOverlayOnMainThread(Overlay::OverlayType type)
     { @autoreleasepool {
         // Lazy initialization for the overlay
-        if (m_OverlayTextFields[type] == nullptr) {
-            m_OverlayTextFields[type] = [[NSTextField alloc] initWithFrame:m_StreamView.bounds];
-            [m_OverlayTextFields[type] setBezeled:NO];
-            [m_OverlayTextFields[type] setDrawsBackground:NO];
-            [m_OverlayTextFields[type] setEditable:NO];
-            [m_OverlayTextFields[type] setSelectable:NO];
+        if (m_OverlayLayers[type] == nullptr) {
+            m_OverlayLayers[type] = [[CALayer alloc] init];
+            m_OverlayLayers[type].anchorPoint = CGPointMake(0, 0);
 
+            // Overlays are always drawn at exact size, like our other renderers
+            m_OverlayLayers[type].magnificationFilter = kCAFilterNearest;
+            m_OverlayLayers[type].minificationFilter = kCAFilterNearest;
+
+            [m_DisplayLayer addSublayer: m_OverlayLayers[type]];
+        }
+
+        // Grab the latest image produced by notifyOverlayUpdated()
+        SDL_AtomicLock(&m_OverlayLock);
+        CGImageRef image = CGImageRetain(m_OverlayImages[type]);
+        bool enabled = m_OverlayEnabled[type];
+        SDL_AtomicUnlock(&m_OverlayLock);
+
+        // Don't animate contents/geometry changes
+        [CATransaction begin];
+        [CATransaction setDisableActions:YES];
+
+        if (image != nullptr) {
+            // NSWindow.backingScaleFactor stays valid even when the window is
+            // not currently on a screen, unlike NSWindow.screen which can be nil
+            // while moving between displays or entering full-screen. Getting this
+            // wrong stretches the overlay and makes it look blurry.
+            CGFloat scale = m_StreamView.window.backingScaleFactor;
+            if (scale <= 0) {
+                scale = [NSScreen mainScreen].backingScaleFactor;
+            }
+            if (scale <= 0) {
+                scale = 1;
+            }
+
+            // The overlay surface is sized in pixels, so scale the layer to
+            // render it 1:1 with the display's pixel grid.
+            m_OverlayLayers[type].contentsScale = scale;
+
+            CGRect bounds = m_StreamView.bounds;
+            CGSize size = CGSizeMake(CGImageGetWidth(image) / scale,
+                                     CGImageGetHeight(image) / scale);
+
+            CGPoint position;
             switch (type) {
             case Overlay::OverlayDebug:
-                [m_OverlayTextFields[type] setAlignment:NSTextAlignmentLeft];
+                // Top center
+                position = CGPointMake(CGRectGetMidX(bounds) - (size.width / 2),
+                                       CGRectGetMaxY(bounds) - size.height);
                 break;
             case Overlay::OverlayStatusUpdate:
-                [m_OverlayTextFields[type] setAlignment:NSTextAlignmentRight];
-                break;
             default:
+                // Bottom left
+                position = CGPointMake(0, 0);
                 break;
             }
 
-            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(type);
-            [m_OverlayTextFields[type] setTextColor:[NSColor colorWithSRGBRed:color.r / 255.0 green:color.g / 255.0 blue:color.b / 255.0 alpha:color.a / 255.0]];
-            [m_OverlayTextFields[type] setFont:[NSFont messageFontOfSize:Session::get()->getOverlayManager().getOverlayFontSize(type)]];
+            // Snap the origin to the pixel grid. Centering an overlay with an odd
+            // pixel width lands it on a half pixel, which resamples the bitmap font
+            // and makes the text look smeared. The overlay text changes size as it
+            // updates, so without this the overlay alternates between crisp and blurry.
+            position.x = std::round(position.x * scale) / scale;
+            position.y = std::round(position.y * scale) / scale;
 
-            [m_StreamView addSubview: m_OverlayTextFields[type]];
+            m_OverlayLayers[type].bounds = CGRectMake(0, 0, size.width, size.height);
+            m_OverlayLayers[type].position = position;
+            m_OverlayLayers[type].contents = (id)image;
+
+            CGImageRelease(image);
+        }
+        else {
+            m_OverlayLayers[type].contents = nil;
         }
 
-        // Update text contents
-        [m_OverlayTextFields[type] setStringValue: [NSString stringWithUTF8String:Session::get()->getOverlayManager().getOverlayText(type)]];
+        [m_OverlayLayers[type] setHidden: !enabled];
 
-        // Unhide if it's enabled
-        [m_OverlayTextFields[type] setHidden: !Session::get()->getOverlayManager().isOverlayEnabled(type)];
+        [CATransaction commit];
     }}
 
     virtual void notifyOverlayUpdated(Overlay::OverlayType type) override
     {
+        SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+        bool overlayEnabled = Session::get()->getOverlayManager().isOverlayEnabled(type);
+        if (newSurface == nullptr && overlayEnabled) {
+            // The overlay is enabled and there is no new surface. Leave the old image alone.
+            return;
+        }
+
+        CGImageRef newImage = nullptr;
+        if (newSurface != nullptr) {
+            if (overlayEnabled) {
+                newImage = createImageFromSurface(newSurface);
+            }
+            SDL_FreeSurface(newSurface);
+        }
+
+        SDL_AtomicLock(&m_OverlayLock);
+        CGImageRef oldImage = m_OverlayImages[type];
+        m_OverlayImages[type] = newImage;
+        m_OverlayEnabled[type] = overlayEnabled;
+        SDL_AtomicUnlock(&m_OverlayLock);
+
+        if (oldImage != nullptr) {
+            CGImageRelease(oldImage);
+        }
+
         // We must do the actual UI updates on the main thread, so queue an
         // async callback on the main thread via GCD to do the UI update.
         dispatch_async(dispatch_get_main_queue(), m_OverlayUpdateBlocks[type]);
@@ -487,13 +601,16 @@ private:
     CMVideoFormatDescriptionRef m_FormatDesc;
     NSView* m_StreamView;
     dispatch_block_t m_OverlayUpdateBlocks[Overlay::OverlayMax];
-    NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
+    CALayer* m_OverlayLayers[Overlay::OverlayMax];
+    CGImageRef m_OverlayImages[Overlay::OverlayMax];
+    bool m_OverlayEnabled[Overlay::OverlayMax];
     CVDisplayLinkRef m_DisplayLink;
     int m_LastColorSpace;
     int m_LastColorTrc;
     CGColorSpaceRef m_ColorSpace;
     SDL_mutex* m_VsyncMutex;
     SDL_cond* m_VsyncPassed;
+    SDL_SpinLock m_OverlayLock;
     bool m_DirectRendering;
 };
 
