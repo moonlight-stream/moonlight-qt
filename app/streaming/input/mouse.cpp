@@ -12,6 +12,13 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
         // Ignore synthetic mouse events
         return;
     }
+#ifdef HAVE_MACOS_NATIVE_TOUCHPAD
+    else if (shouldSuppressMacTouchpadMouseButtonEvent(event)) {
+        // macOS reports a trackpad click as a regular mouse button event even
+        // when the same gesture is already being sent as native contacts.
+        return;
+    }
+#endif
 #ifdef HAVE_WINDOWS_RAW_TOUCHPAD
     else if (shouldSuppressWindowsTouchpadMouseButtonEvent(event)) {
         // The click state is carried by the native touchpad frame.

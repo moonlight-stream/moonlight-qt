@@ -90,6 +90,15 @@ struct DualSenseOutputReport{
 
 #define TOUCHPAD_SCROLL_SUPPRESSION_TIMEOUT_MS 500
 
+#ifdef HAVE_MACOS_NATIVE_TOUCHPAD
+// macOS reports trackpad contacts and promoted mouse clicks through separate
+// SDL event paths. Keep the click correlation window deliberately short to
+// avoid consuming an unrelated click from a physical mouse.
+#define MACOS_TOUCHPAD_TAP_MAX_DURATION_MS 500
+#define MACOS_TOUCHPAD_CLICK_CORRELATION_TIMEOUT_MS 250
+#define MACOS_TOUCHPAD_TAP_MAX_MOVEMENT 0.01f
+#endif
+
 #define GAMEPAD_HAPTIC_METHOD_NONE 0
 #define GAMEPAD_HAPTIC_METHOD_LEFTRIGHT 1
 #define GAMEPAD_HAPTIC_METHOD_SIMPLERUMBLE 2
@@ -270,6 +279,16 @@ private:
                                     uint16_t deviceWidthMm = 0,
                                     uint16_t deviceHeightMm = 0);
 
+#ifdef HAVE_MACOS_NATIVE_TOUCHPAD
+    void updateMacTouchpadGesture(const SDL_TouchFingerEvent* event);
+
+    bool sendMacTouchpadButtonState(bool down);
+
+    bool shouldSuppressMacTouchpadMouseButtonEvent(const SDL_MouseButtonEvent* event);
+
+    void resetMacTouchpadState();
+#endif
+
 #ifdef HAVE_WINDOWS_RAW_TOUCHPAD
     void handleWindowsTouchpadFrame(uint64_t deviceId,
                                     const uint32_t* pointerIds,
@@ -367,6 +386,21 @@ private:
     QHash<SDL_FingerID, NativeTouchpadContact> m_ActiveTouchpadContacts;
     QSet<SDL_FingerID> m_IgnoredTouchpadContacts;
     Uint32 m_LastTouchpadScrollTimestamp;
+
+#ifdef HAVE_MACOS_NATIVE_TOUCHPAD
+    Uint32 m_MacTouchpadSuppressedMouseButtons;
+    Uint32 m_MacTouchpadPendingTapButtons;
+    Uint32 m_MacTouchpadLastTapTimestamp;
+    Uint32 m_MacTouchpadGestureStartTimestamp;
+    SDL_FingerID m_MacTouchpadGesturePrimaryFinger;
+    QSet<SDL_FingerID> m_MacTouchpadGestureContacts;
+    float m_MacTouchpadGestureStartX;
+    float m_MacTouchpadGestureStartY;
+    int m_MacTouchpadGestureMaxContacts;
+    bool m_MacTouchpadGestureMoved;
+    bool m_MacTouchpadGestureHadPhysicalButton;
+    bool m_MacTouchpadButtonDown;
+#endif
 
 #ifdef HAVE_WINDOWS_RAW_TOUCHPAD
     QHash<uint32_t, NativeTouchpadContact> m_ActiveWindowsTouchpadContacts;

@@ -720,6 +720,14 @@ int main(int argc, char *argv[])
     // initializing the SDL video subsystem to have any effect.
     SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
 
+#ifdef Q_OS_DARWIN
+    // SDL reads this hint when the video subsystem is first initialized. Set
+    // the saved preference here so the hardware capability probe cannot lock
+    // in the default mouse-only behavior before a streaming session starts.
+    SDL_SetHint(SDL_HINT_TRACKPAD_IS_TOUCH_ONLY,
+                StreamingPreferences::get()->enableNativeTouchpad ? "1" : "0");
+#endif
+
     // We use MMAL to render on Raspberry Pi, so we do not require DRM master.
     SDL_SetHint(SDL_HINT_KMSDRM_REQUIRE_DRM_MASTER, "0");
 

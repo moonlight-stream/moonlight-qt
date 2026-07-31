@@ -56,6 +56,19 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_PendingTouchpadContactCount(0),
       m_ActiveTouchpadId(0),
       m_LastTouchpadScrollTimestamp(0),
+#ifdef HAVE_MACOS_NATIVE_TOUCHPAD
+      m_MacTouchpadSuppressedMouseButtons(0),
+      m_MacTouchpadPendingTapButtons(0),
+      m_MacTouchpadLastTapTimestamp(0),
+      m_MacTouchpadGestureStartTimestamp(0),
+      m_MacTouchpadGesturePrimaryFinger(0),
+      m_MacTouchpadGestureStartX(0),
+      m_MacTouchpadGestureStartY(0),
+      m_MacTouchpadGestureMaxContacts(0),
+      m_MacTouchpadGestureMoved(false),
+      m_MacTouchpadGestureHadPhysicalButton(false),
+      m_MacTouchpadButtonDown(false),
+#endif
 #ifdef HAVE_WINDOWS_RAW_TOUCHPAD
       m_ActiveWindowsTouchpadDevice(0),
       m_LastWindowsTouchpadFrameTicks(0),

@@ -39,17 +39,20 @@ void SdlInputHandler::handleNativeTouchpadEvent(SDL_TouchFingerEvent* event)
 
     selectNativeTouchpadTransport();
 
-    if (m_NativeTouchpadTransport == NTT_SOFTWARE_POINTER) {
-        handleRelativeFingerEvent(event);
-        return;
-    }
-
     uint8_t eventType;
     switch (event->type) {
     case SDL_FINGERDOWN: eventType = LI_TOUCH_EVENT_DOWN; break;
     case SDL_FINGERMOTION: eventType = LI_TOUCH_EVENT_MOVE; break;
     case SDL_FINGERUP: eventType = LI_TOUCH_EVENT_UP; break;
     default: return;
+    }
+
+    if (m_NativeTouchpadTransport == NTT_SOFTWARE_POINTER) {
+#ifdef HAVE_MACOS_NATIVE_TOUCHPAD
+        updateMacTouchpadGesture(event);
+#endif
+        handleRelativeFingerEvent(event);
+        return;
     }
 
     if ((!m_ActiveTouchpadContacts.isEmpty() || !m_IgnoredTouchpadContacts.isEmpty()) &&
@@ -64,6 +67,10 @@ void SdlInputHandler::handleNativeTouchpadEvent(SDL_TouchFingerEvent* event)
         // previous device before switching to another touch surface.
         cancelSdlTouchpadContacts();
     }
+
+#ifdef HAVE_MACOS_NATIVE_TOUCHPAD
+    updateMacTouchpadGesture(event);
+#endif
 
     if (m_IgnoredTouchpadContacts.contains(event->fingerId)) {
         if (eventType == LI_TOUCH_EVENT_UP || eventType == LI_TOUCH_EVENT_CANCEL) {
@@ -158,6 +165,232 @@ void SdlInputHandler::handleNativeTouchpadEvent(SDL_TouchFingerEvent* event)
         }
     }
 }
+
+#ifdef HAVE_MACOS_NATIVE_TOUCHPAD
+void SdlInputHandler::updateMacTouchpadGesture(const SDL_TouchFingerEvent* event)
+{
+    if (event->type == SDL_FINGERDOWN &&
+            m_MacTouchpadGestureContacts.isEmpty()) {
+        m_MacTouchpadGestureStartTimestamp = event->timestamp;
+        m_MacTouchpadGesturePrimaryFinger = event->fingerId;
+        m_MacTouchpadGestureStartX = event->x;
+        m_MacTouchpadGestureStartY = event->y;
+        m_MacTouchpadGestureMaxContacts = 1;
+        m_MacTouchpadGestureMoved = false;
+        m_MacTouchpadGestureHadPhysicalButton = false;
+        m_MacTouchpadPendingTapButtons = 0;
+    }
+
+    if (event->type == SDL_FINGERDOWN) {
+        m_MacTouchpadGestureContacts.insert(event->fingerId);
+    }
+    else if (event->type == SDL_FINGERUP) {
+        m_MacTouchpadGestureContacts.remove(event->fingerId);
+    }
+
+    m_MacTouchpadGestureMaxContacts =
+            qMax(m_MacTouchpadGestureMaxContacts,
+                 static_cast<int>(m_MacTouchpadGestureContacts.size()));
+
+    if (event->fingerId == m_MacTouchpadGesturePrimaryFinger) {
+        const float deltaX = event->x - m_MacTouchpadGestureStartX;
+        const float deltaY = event->y - m_MacTouchpadGestureStartY;
+        const float maxMovement = MACOS_TOUCHPAD_TAP_MAX_MOVEMENT;
+        if (deltaX * deltaX + deltaY * deltaY > maxMovement * maxMovement) {
+            m_MacTouchpadGestureMoved = true;
+        }
+    }
+
+    if (!m_MacTouchpadGestureContacts.isEmpty()) {
+        return;
+    }
+
+    const Uint32 gestureDuration =
+            event->timestamp - m_MacTouchpadGestureStartTimestamp;
+    if (!m_MacTouchpadGestureHadPhysicalButton &&
+            !m_MacTouchpadGestureMoved &&
+            m_MacTouchpadGestureMaxContacts > 0 &&
+            m_MacTouchpadGestureMaxContacts <= 2 &&
+            gestureDuration <= MACOS_TOUCHPAD_TAP_MAX_DURATION_MS) {
+        m_MacTouchpadPendingTapButtons =
+                m_MacTouchpadGestureMaxContacts == 1 ?
+                    SDL_BUTTON(SDL_BUTTON_LEFT) :
+                    SDL_BUTTON(SDL_BUTTON_RIGHT);
+        m_MacTouchpadLastTapTimestamp = event->timestamp;
+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
+                     "macOS trackpad tap candidate armed: fingers=%d timestamp=%u",
+                     m_MacTouchpadGestureMaxContacts, event->timestamp);
+    }
+    else {
+        m_MacTouchpadPendingTapButtons = 0;
+        m_MacTouchpadLastTapTimestamp = 0;
+    }
+
+    m_MacTouchpadGestureStartTimestamp = 0;
+    m_MacTouchpadGesturePrimaryFinger = 0;
+    m_MacTouchpadGestureMaxContacts = 0;
+    m_MacTouchpadGestureMoved = false;
+    m_MacTouchpadGestureHadPhysicalButton = false;
+}
+
+bool SdlInputHandler::sendMacTouchpadButtonState(bool down)
+{
+    const uint8_t buttonState = down ? LI_TOUCHPAD_BUTTON_PRIMARY : 0;
+
+    if (m_NativeTouchpadTransport == NTT_FRAME) {
+        int rc = LiSendTouchpadFrameEvent(0, nullptr, nullptr, nullptr, nullptr,
+                                          nullptr, LI_ROT_UNKNOWN, 0, 0,
+                                          buttonState);
+        if (rc == 0) {
+            return true;
+        }
+        if (rc != LI_ERR_UNSUPPORTED) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "LiSendTouchpadFrameEvent for macOS button failed: %d", rc);
+            return false;
+        }
+
+        if (LiGetHostFeatureFlags() & LI_FF_TOUCHPAD_EVENTS) {
+            m_NativeTouchpadTransport = NTT_INDIVIDUAL;
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Native touchpad transport downgraded: frame -> individual");
+        }
+        else {
+            m_NativeTouchpadTransport = NTT_SOFTWARE_POINTER;
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Native touchpad transport downgraded: frame -> software-pointer");
+            transitionNativeTouchpadToSoftwarePointer();
+            return false;
+        }
+    }
+
+    if (m_NativeTouchpadTransport == NTT_INDIVIDUAL) {
+        int rc = LiSendTouchpadEvent(LI_TOUCH_EVENT_BUTTON_ONLY, 0,
+                                     0.0f, 0.0f, 0.0f,
+                                     0.0f, 0.0f, LI_ROT_UNKNOWN,
+                                     0, 0, buttonState);
+        if (rc == 0) {
+            return true;
+        }
+        if (rc == LI_ERR_UNSUPPORTED) {
+            m_NativeTouchpadTransport = NTT_SOFTWARE_POINTER;
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Native touchpad transport downgraded: individual -> software-pointer");
+            transitionNativeTouchpadToSoftwarePointer();
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "LiSendTouchpadEvent for macOS button failed: %d", rc);
+        }
+    }
+
+    return false;
+}
+
+bool SdlInputHandler::shouldSuppressMacTouchpadMouseButtonEvent(
+        const SDL_MouseButtonEvent* event)
+{
+    if (!m_NativeTouchpadEnabled ||
+            m_NativeTouchpadTransport == NTT_UNKNOWN ||
+            event->button < SDL_BUTTON_LEFT ||
+            event->button > SDL_BUTTON_X2) {
+        return false;
+    }
+
+    const Uint32 buttonMask = SDL_BUTTON(event->button);
+    if (event->state == SDL_RELEASED) {
+        if (!(m_MacTouchpadSuppressedMouseButtons & buttonMask)) {
+            return false;
+        }
+
+        m_MacTouchpadSuppressedMouseButtons &= ~buttonMask;
+        if (m_MacTouchpadButtonDown &&
+                m_MacTouchpadSuppressedMouseButtons == 0) {
+            sendMacTouchpadButtonState(false);
+            m_MacTouchpadButtonDown = false;
+        }
+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
+                     "Suppressed macOS trackpad mouse button release: button=%d",
+                     static_cast<int>(event->button));
+        return true;
+    }
+
+    if (event->state != SDL_PRESSED || !isCaptureActive()) {
+        return false;
+    }
+
+    const bool hasActiveContacts = !m_MacTouchpadGestureContacts.isEmpty();
+    const bool hasCorrelatedTap =
+            (m_MacTouchpadPendingTapButtons & buttonMask) &&
+            event->timestamp - m_MacTouchpadLastTapTimestamp <=
+                MACOS_TOUCHPAD_CLICK_CORRELATION_TIMEOUT_MS;
+    if (!hasActiveContacts && !hasCorrelatedTap) {
+        if (m_MacTouchpadPendingTapButtons != 0 &&
+                event->timestamp - m_MacTouchpadLastTapTimestamp >
+                    MACOS_TOUCHPAD_CLICK_CORRELATION_TIMEOUT_MS) {
+            m_MacTouchpadPendingTapButtons = 0;
+            m_MacTouchpadLastTapTimestamp = 0;
+        }
+        return false;
+    }
+
+    if (hasActiveContacts &&
+            m_NativeTouchpadTransport == NTT_SOFTWARE_POINTER) {
+        // The legacy relative-touch path will otherwise synthesize another
+        // tap after this real click. Let the real mouse event through, but
+        // invalidate tap and long-press emulation for the current gesture.
+        m_MacTouchpadGestureHadPhysicalButton = true;
+        SDL_RemoveTimer(m_DragTimer);
+        m_DragTimer = 0;
+        for (int i = 0; i < MAX_FINGERS; i++) {
+            m_TouchDownEvent[i].timestamp = 0;
+        }
+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
+                     "Using legacy macOS trackpad mouse button: button=%d",
+                     static_cast<int>(event->button));
+        return false;
+    }
+
+    if (hasActiveContacts) {
+        m_MacTouchpadGestureHadPhysicalButton = true;
+        if (!m_MacTouchpadButtonDown) {
+            if (!sendMacTouchpadButtonState(true)) {
+                return false;
+            }
+            m_MacTouchpadButtonDown = true;
+        }
+    }
+
+    m_MacTouchpadPendingTapButtons = 0;
+    m_MacTouchpadLastTapTimestamp = 0;
+    m_MacTouchpadSuppressedMouseButtons |= buttonMask;
+    SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
+                 "Suppressed promoted macOS trackpad mouse button press: button=%d source=%s",
+                 static_cast<int>(event->button),
+                 hasActiveContacts ? "active-contact" : "tap");
+    return true;
+}
+
+void SdlInputHandler::resetMacTouchpadState()
+{
+    if (m_MacTouchpadButtonDown) {
+        sendMacTouchpadButtonState(false);
+    }
+
+    // Preserve suppressed buttons until SDL delivers their matching releases.
+    m_MacTouchpadPendingTapButtons = 0;
+    m_MacTouchpadLastTapTimestamp = 0;
+    m_MacTouchpadGestureStartTimestamp = 0;
+    m_MacTouchpadGesturePrimaryFinger = 0;
+    m_MacTouchpadGestureContacts.clear();
+    m_MacTouchpadGestureStartX = 0;
+    m_MacTouchpadGestureStartY = 0;
+    m_MacTouchpadGestureMaxContacts = 0;
+    m_MacTouchpadGestureMoved = false;
+    m_MacTouchpadGestureHadPhysicalButton = false;
+    m_MacTouchpadButtonDown = false;
+}
+#endif
 
 void SdlInputHandler::sendNativeTouchpadContacts(const NativeTouchpadContact* contacts,
                                                  int contactCount,
@@ -538,7 +771,13 @@ void SdlInputHandler::sendPendingTouchpadFrame()
     if (m_PendingTouchpadContactCount == 0) {
         return;
     }
-    sendNativeTouchpadContacts(m_PendingTouchpadContacts, m_PendingTouchpadContactCount);
+    uint8_t buttonState = 0;
+#ifdef HAVE_MACOS_NATIVE_TOUCHPAD
+    buttonState = m_MacTouchpadButtonDown ? LI_TOUCHPAD_BUTTON_PRIMARY : 0;
+#endif
+    sendNativeTouchpadContacts(m_PendingTouchpadContacts,
+                               m_PendingTouchpadContactCount,
+                               true, buttonState);
     m_PendingTouchpadContactCount = 0;
     m_PendingTouchpadId = 0;
     m_PendingTouchpadTimestamp = 0;
@@ -553,6 +792,10 @@ void SdlInputHandler::flushPendingTouchpadFrameEvent()
 void SdlInputHandler::cancelSdlTouchpadContacts()
 {
     sendPendingTouchpadFrame();
+
+#ifdef HAVE_MACOS_NATIVE_TOUCHPAD
+    resetMacTouchpadState();
+#endif
 
     if (!m_ActiveTouchpadContacts.isEmpty()) {
         const NativeTouchpadContact cancelAll = {
