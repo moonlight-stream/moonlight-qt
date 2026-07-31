@@ -1,0 +1,8 @@
+SettingsCard 1.0 SettingsCard.qml
+SettingsRow 1.0 SettingsRow.qml
+ToggleRow 1.0 ToggleRow.qml
+CategoryRail 1.0 CategoryRail.qml
+SettingsScrollArea 1.0 SettingsScrollArea.qml
+HdrBrightnessCard 1.0 HdrBrightnessCard.qml
+BasicSettingsPage 1.0 BasicSettingsPage.qml
+LegacySettingsPage 1.0 LegacySettingsPage.qml

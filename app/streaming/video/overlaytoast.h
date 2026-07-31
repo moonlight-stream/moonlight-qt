@@ -46,5 +46,4 @@ private:
     int m_ToastHeight;
     int m_HorizPadding;
     int m_VertPadding;
-    int m_BorderRadius;
 };

@@ -193,6 +193,18 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
                 // by the control in focus.
                 sendKey(type, Qt::Key_Hangup);
                 break;
+            case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                if (m_UiNavMode) {
+                    // Used by SettingsView to switch to the previous category
+                    sendKey(type, Qt::Key_PageUp);
+                }
+                break;
+            case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                if (m_UiNavMode) {
+                    // Used by SettingsView to switch to the next category
+                    sendKey(type, Qt::Key_PageDown);
+                }
+                break;
             default:
                 break;
             }

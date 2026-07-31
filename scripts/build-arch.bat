@@ -230,8 +230,10 @@ if not x%QT_PATH:\5.=%==x%QT_PATH% (
 ) else (
     rem Qt 6.8+
     set WINDEPLOYQT_ARGS=--no-system-d3d-compiler --no-system-dxc-compiler --skip-plugin-types qmltooling,generic --no-ffmpeg
-    set WINDEPLOYQT_ARGS=!WINDEPLOYQT_ARGS! --no-quickcontrols2fusion --no-quickcontrols2imagine --no-quickcontrols2universal
-    set WINDEPLOYQT_ARGS=!WINDEPLOYQT_ARGS! --no-quickcontrols2fusionstyleimpl --no-quickcontrols2imaginestyleimpl --no-quickcontrols2universalstyleimpl --no-quickcontrols2windowsstyleimpl --no-quickcontrols2fluentwinui3styleimpl
+    rem FluentWinUI3 depends on the Fusion fallback style, so deploy both styles
+    rem and their implementation libraries.
+    set WINDEPLOYQT_ARGS=!WINDEPLOYQT_ARGS! --no-quickcontrols2imagine --no-quickcontrols2universal
+    set WINDEPLOYQT_ARGS=!WINDEPLOYQT_ARGS! --no-quickcontrols2imaginestyleimpl --no-quickcontrols2universalstyleimpl --no-quickcontrols2windowsstyleimpl
 )
 
 echo Deploying Qt dependencies
@@ -243,12 +245,11 @@ rem Qt 5.x directories
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Fusion
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Imagine
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Universal
-rem Qt 6.8+ directories
-rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Fusion
+rem Qt 6.8+ directories. FluentWinUI3 is the active style and imports
+rem Fusion as a fallback, so both directories must remain in the bundle.
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Imagine
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Universal
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Windows
-rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\FluentWinUI3
 rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\NativeStyle
 rem icuuc.dll ships with all supported OSes (and Qt incorrectly deploys the x64 version on ARM64)
 del %DEPLOY_FOLDER%\icuuc.dll

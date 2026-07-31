@@ -61,6 +61,7 @@
 #include <QtGlobal>
 #include <QMutexLocker>
 #include <QUuid>
+#include <QElapsedTimer>
 #include <QUrl>
 
 #include <utility>
@@ -3358,6 +3359,14 @@ void Session::queryDisplayHdrBrightness(float& maxNits, float& minNits, float& m
 }
 #endif
 
+// 加载页退场淡幕的时长上限，比 StreamSegue.qml 里那条 340ms 动画留一点余量。
+// 两边要一起改。
+static const int k_StreamEnterVeilMs = 380;
+
+// 等全屏切换完成的兜底超时。macOS 的全屏动画约 0.5~0.7s，取个宽松上限；
+// 万一平台不发 SIZE_CHANGED，也不能让界面窗口一直留着。
+static const Uint32 k_FullScreenEntryTimeoutMs = 1200;
+
 void Session::exec()
 {
     // If the connection failed, clean up and abort the connection.
@@ -3386,6 +3395,47 @@ void Session::exec()
 
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
+
+    // 全屏会话：让串流窗口从 Qt 界面窗口所在的位置和尺寸起步。
+    //
+    // getWindowDimensions() 给的是「屏幕居中 + 串流分辨率」，那是退出全屏之后
+    // 该有的窗口大小，但拿它当全屏动画的起点就不对了 —— 系统会从一个和刚才那个
+    // 界面窗口毫无关系的矩形开始放大，看起来像凭空弹出一个空窗口再被撑大。
+    // 用界面窗口自己的 frame 起步，动画读起来就是「刚才那个窗口变成了全屏」。
+    //
+    // 这里只改初始创建；运行中 Ctrl+Alt+Shift+F 退出全屏时走的是 toggleFullscreen()
+    // 里的那次 getWindowDimensions()，恢复的仍然是串流分辨率大小。
+    if (m_IsFullScreen && m_QtWindow != nullptr) {
+        QRect guiFrame = m_QtWindow->geometry();
+        if (guiFrame.width() > 0 && guiFrame.height() > 0) {
+            qreal scale = 1.0;
+#ifndef Q_OS_DARWIN
+            // macOS 上 SDL 和 Qt 都用点（逻辑坐标）；其他平台 SDL 用物理像素，要折算
+            scale = m_QtWindow->devicePixelRatio();
+#endif
+            x = qRound(guiFrame.x() * scale);
+            y = qRound(guiFrame.y() * scale);
+            width = qRound(guiFrame.width() * scale);
+            height = qRound(guiFrame.height() * scale);
+        }
+    }
+
+    // 让加载页的退场动画真正跑完，再去创建串流窗口。
+    //
+    // connectionStarted 和 exec() 是同一批投递到主线程的信号，所以那个 340ms 的
+    // 淡幕动画实际上拿不到任何主循环时间 —— 幕从来没黑下来过，SDL 窗口就直接盖在
+    // 加载页上，观感是硬切。这里主动把主循环喂满一段时间让它跑完。
+    //
+    // 必须在这儿做完：exec() 往下就进 SDL 事件循环了，那之后 Qt 的定时器和队列信号
+    // 只在串流覆盖层可见时才会被 pump，QML 侧再也等不到机会。
+    if (m_QtWindow != nullptr) {
+        QElapsedTimer veilTimer;
+        veilTimer.start();
+        while (veilTimer.elapsed() < k_StreamEnterVeilMs) {
+            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+            SDL_Delay(4);
+        }
+    }
 
 #ifdef STEAM_LINK
     // We need a little delay before creating the window or we will trigger some kind
@@ -3499,8 +3549,42 @@ void Session::exec()
     updateOptimalWindowDisplayMode();
 
     // Enter full screen if requested
+    bool awaitingFullScreenEntry = false;
     if (m_IsFullScreen) {
-        SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
+        if (SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag) == 0) {
+            awaitingFullScreenEntry = true;
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "SDL_SetWindowFullscreen() failed: %s",
+                        SDL_GetError());
+        }
+    }
+
+    // 串流窗口就位之后才隐藏界面窗口。
+    //
+    // 以前这件事在 QML 的退场动画末尾做（hideForStreaming），时机太早：macOS 上
+    // 全屏窗口会切进一个新的 Space，界面窗口一旦提前藏掉，旧 Space 在整个切换动画
+    // 期间露出来的就是桌面。留着它（上面盖着那层已经全黑的幕）观感是连续的。
+    //
+    // 但也不能在这儿就藏：SDL_SetWindowFullscreen() 在 macOS 上是异步的，它在 Cocoa
+    // 的 toggleFullScreen: 动画一开始就返回，那会儿旧 Space 还在往外滑。所以这里只
+    // 登记一个截止时间，真正的隐藏交给事件循环 —— 收到 SIZE_CHANGED（Cocoa 在全屏
+    // 切换结束后才发）就藏，收不到就等超时兜底。
+    //
+    // 由 C++ 来做是因为 QML 等不到通知：往下就进 SDL 事件循环了，那之后 Qt 的队列
+    // 信号和定时器只在串流覆盖层可见时才会被 pump。
+    Uint32 qtWindowHideDeadline = 0;
+    if (m_QtWindow != nullptr) {
+        if (awaitingFullScreenEntry) {
+            qtWindowHideDeadline = SDL_GetTicks() + k_FullScreenEntryTimeoutMs;
+        }
+        else {
+            // 没有全屏切换要等：窗口化会话，或者上面那次请求失败了。
+            // 失败也照样藏 —— 界面窗口在串流期间没有任何作用，留着它只会把一张
+            // 停在加载页的窗口压在串流窗口后面。
+            m_QtWindow->setVisible(false);
+        }
     }
 
     bool needsFirstEnterCapture = false;
@@ -3639,8 +3723,21 @@ void Session::exec()
         }
     };
 
+    // 见上面 qtWindowHideDeadline 处的注释：串流窗口真的落定了（或者等超时了）
+    // 再把界面窗口藏掉。
+    auto hideGuiWindowWhenSettled = [&](bool settled) {
+        if (qtWindowHideDeadline == 0 || m_QtWindow == nullptr) {
+            return;
+        }
+        if (settled || SDL_TICKS_PASSED(SDL_GetTicks(), qtWindowHideDeadline)) {
+            m_QtWindow->setVisible(false);
+            qtWindowHideDeadline = 0;
+        }
+    };
+
     SDL_Event event;
     for (;;) {
+        hideGuiWindowWhenSettled(false);
         processSunshineAbrFeedback();
         processFileMappingUxProbeResult();
         processFileMappingMountResult();
@@ -3795,6 +3892,8 @@ void Session::exec()
             case SDL_WINDOWEVENT_SHOWN:
             case SDL_WINDOWEVENT_MOVED:
             case SDL_WINDOWEVENT_SIZE_CHANGED:
+                // Cocoa 在全屏切换结束之后才发这个事件，拿它当「窗口已落定」的信号
+                hideGuiWindowWhenSettled(true);
                 syncQtOverlayWindowsWithSdlWindowState();
                 break;
             }

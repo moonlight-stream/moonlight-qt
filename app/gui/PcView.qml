@@ -1,6 +1,7 @@
 import QtQuick 2.9
-import QtQuick.Controls 2.2
+import QtQuick.Controls
 import QtQuick.Layouts 1.3
+import QtQuick.Window 2.2
 import Qt.labs.platform 1.1
 import QtCore
 
@@ -12,14 +13,26 @@ import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 import ImageUtils 1.0
 
+import "theme"
+
 CenteredGridView {
+    // 这一页自带壁纸，main.qml 不用再垫一层
+    readonly property bool usesOwnBackground: true
     property ComputerModel computerModel : createModel()
     property string currentBgUrl: backgroundImage.currentImageUrl  // 添加根组件属性用于外部访问
+
+    // 壁纸由这一页负责抓取和刷新，但整个窗口都要用，所以每次变化都同步给 ApplicationWindow。
+    // 这样离开这一页之后（连接进度页、退出页、设置页）背景不会突然变成一块纯色。
+    onCurrentBgUrlChanged: {
+        if (Window.window) {
+            Window.window.backgroundImageUrl = currentBgUrl
+        }
+    }
 
     id: pcGrid
     focus: true
     activeFocusOnTab: true
-    topMargin: 80
+    topMargin: 72   // 工具栏 56 + 一格间距
     bottomMargin: 5
     cellWidth: 240; cellHeight: 280;
     objectName: qsTr("Computers")
@@ -134,30 +147,51 @@ CenteredGridView {
         selectAddressDialog.open()
     }
 
-    Row {
+    // 搜索状态：Manrope 800 大标题 + DM Mono 说明行 + 斜条纹读条，
+    // 都咬着同一条左基线。
+    Column {
         anchors.centerIn: parent
-        spacing: 5
+        width: Math.min(parent.width - Theme.spaceXl * 2, 560)
+        spacing: Theme.spaceMd
         visible: pcGrid.count === 0
 
-        BusyIndicator {
-            id: searchSpinner
-            visible: StreamingPreferences.enableMdns
-            running: visible
+        Text {
+            width: parent.width
+            text: StreamingPreferences.enableMdns ? qsTr("Searching") : qsTr("No Computers")
+            color: Theme.text
+            font.family: Theme.fontSans
+            font.pointSize: 26
+            font.weight: Font.ExtraBold
+            font.capitalization: Font.AllUppercase
+            font.letterSpacing: Theme.trackingTight(26)
+            // 标题和说明都咬着读条的左基线，不居中 —— 和加载页、退出页一致
+            horizontalAlignment: Text.AlignLeft
         }
 
-        Label {
-            height: searchSpinner.height
-            elide: Label.ElideRight
+        // 关掉 mDNS 时读条停在暗态：这里本来就没有在扫描，一台没通电的仪表比
+        // 一条空轨道更说明问题。
+        HardProgress {
+            width: parent.width
+            running: StreamingPreferences.enableMdns
+        }
+
+        Text {
+            width: parent.width
             text: StreamingPreferences.enableMdns ? qsTr("Searching for compatible hosts on your local network...")
                                                   : qsTr("Automatic PC discovery is disabled. Add your PC manually.")
-            font.pointSize: 20
-            verticalAlignment: Text.AlignVCenter
+            color: Theme.textDim
+            font.family: Theme.fontMono
+            font.pointSize: Theme.fontBody
+            horizontalAlignment: Text.AlignLeft
             wrapMode: Text.Wrap
         }
     }
 
     model: computerModel
 
+    // 这一项刻意不跟着换成 Panel 硬卡片：月球头像是这一页的创意主体，
+    // 一旦套上方角卡片和硬投影，月球就从「浮在壁纸上的天体」变成「贴纸」，
+    // 而且卡片自带的 hover 高亮块会和头像抢注意力。样式和交互都按改造前保留。
     delegate: NavigableItemDelegate {
         width: 240; height: 240;
         grid: pcGrid
@@ -185,14 +219,14 @@ CenteredGridView {
                 }
                 return color;
             }
-            
+
             Image {
                 id: moonMask
                 anchors.fill: parent
                 source: "qrc:/res/moon-mask.png"
                 opacity: 0.7
                 fillMode: Image.PreserveAspectFit
-                
+
                 // 根据PC名称生成旋转角度
                 property real rotationAngle: {
                     var hash = 0;
@@ -201,10 +235,10 @@ CenteredGridView {
                     }
                     return (hash % 180);
                 }
-                
+
                 rotation: rotationAngle
             }
-            
+
             Text {
                 anchors.centerIn: parent
                 text: model.name ? model.name.charAt(0).toUpperCase() : "?"
@@ -241,14 +275,14 @@ CenteredGridView {
             height: 160
             color: "transparent"
             visible: model.statusUnknown
-            
+
             Image {
                 id: spinnerImage
                 anchors.centerIn: parent
                 width: 160
                 height: 160
                 source: "qrc:/res/loading.svg"
-                
+
                 RotationAnimation {
                     target: spinnerImage
                     property: "rotation"
@@ -486,12 +520,16 @@ CenteredGridView {
         }
 
         ColumnLayout {
-            Label {
+            Text {
                 text: renamePcDialog.label
-                font.bold: true
+                color: Theme.text
+                font.family: Theme.fontSans
+                font.pointSize: Theme.fontRowTitle
+                font.weight: Font.DemiBold
+                Layout.fillWidth: true
             }
 
-            TextField {
+            HardTextField {
                 id: editText
                 placeholderText: renamePcDialog.originalName
                 Layout.fillWidth: true
@@ -560,8 +598,12 @@ CenteredGridView {
             width: parent.width
             spacing: 8
 
-            Label {
+            Text {
                 text: qsTr("Choose the IP address to connect to %1:").arg(selectAddressDialog.pcName)
+                color: Theme.text
+                font.family: Theme.fontSans
+                font.pointSize: Theme.fontRowTitle
+                font.weight: Font.DemiBold
                 wrapMode: Text.Wrap
                 Layout.fillWidth: true
             }
@@ -579,7 +621,9 @@ CenteredGridView {
                 visible: addressCombo.currentIndex >= 0 &&
                          addressCombo.currentIndex < selectAddressDialog.addresses.length
                 text: visible ? qsTr("Address type: %1").arg(selectAddressDialog.addresses[addressCombo.currentIndex].type) : ""
-                color: "#CCCCCC"
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontBody
                 wrapMode: Text.Wrap
                 Layout.fillWidth: true
             }
@@ -603,13 +647,13 @@ CenteredGridView {
         fillMode: Image.PreserveAspectCrop
         z: -2
         property string currentImageUrl: ""
-        
+
         Settings {
             id: settings
             property string cachedImagePath: ""
             property real lastRefreshTime: Date.now()
         }
-        
+
         onStatusChanged: {
             if (status === Image.Loading) {
                 loadingIndicator.visible = true
@@ -623,10 +667,10 @@ CenteredGridView {
 
         function getBackgroundImage() {
             loadingIndicator.visible = true
-            
+
             var cachePath = imageUtils.fetchAndSaveRandomBackground("https://img-api.pipw.top/")
             loadingIndicator.visible = false
-            
+
             if (cachePath) {
                 handleImageResponse(cachePath)
             } else {
@@ -651,7 +695,7 @@ CenteredGridView {
                 source = "qrc:/res/gura.jpg"
             }
         }
-        
+
         Component.onCompleted: {
             // 先检查缓存图是否存在
             if (settings.cachedImagePath && imageUtils.fileExists(settings.cachedImagePath)) {
@@ -661,7 +705,7 @@ CenteredGridView {
                     console.log("loadBackgroundImageFromCache: " + fileUrl);
                     currentImageUrl = fileUrl;
                     pcGrid.currentBgUrl = fileUrl;  // 初始化时同步属性
-                    
+
                     // 检查是否需要刷新（如果上次刷新时间超过1小时）
                     var oneHour = 60 * 60 * 1000 * 24 * 7;
                     if (Date.now() - settings.lastRefreshTime > oneHour) {
@@ -676,7 +720,7 @@ CenteredGridView {
                 getBackgroundImage();
             }
         }
-        
+
         Timer {
             id: loadNewImageTimer
             interval: 1000 // 延迟1秒加载新图片
@@ -705,13 +749,13 @@ CenteredGridView {
                     // 更新缓存路径和刷新时间
                     settings.cachedImagePath = filePath.toString().substring(8)
                     settings.lastRefreshTime = Date.now()
-                    
+
                     // 更新背景图
                     backgroundImage.source = filePath;
                     currentImageUrl = filePath;
                     pcGrid.currentBgUrl = filePath;  // 拖放时同步属性
                 } else {
-                    errorDialog.text = qsTr("不支持的图片格式")
+                    errorDialog.text = qsTr("Unsupported image format")
                     errorDialog.open()
                 }
             }
@@ -723,20 +767,34 @@ CenteredGridView {
         id: dragBorder
         anchors.fill: parent
         color: "transparent"
-        border.color: "#4CAF50"
+        border.color: Theme.acid
         border.width: 4
         visible: false
         z: 1
     }
 
     // 拖放提示文字
-    Label {
+    Column {
         anchors.centerIn: parent
-        text: qsTr("拖放图片设置背景")
-        font.pointSize: 24
-        color: "white"
+        spacing: Theme.spaceSm
         visible: dragBorder.visible
         z: 1
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: qsTr("Drop To Set Wallpaper")
+            color: Theme.acid
+            font.family: Theme.fontSans
+            font.pointSize: 22
+            font.weight: Font.ExtraBold
+            font.capitalization: Font.AllUppercase
+            font.letterSpacing: Theme.tracking(22, 0.08)
+        }
+
+        MicroLabel {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "JPG / PNG / WEBP"
+        }
     }
 
     // 添加右键菜单功能
@@ -745,7 +803,7 @@ CenteredGridView {
         acceptedButtons: Qt.RightButton
         propagateComposedEvents: true
         z: -1  // 确保这个MouseArea位于PC条目之下
-        
+
         onClicked: function(mouse) {
             if (mouse.button === Qt.RightButton) {
                 if (backgroundImage.currentImageUrl) {
@@ -755,33 +813,33 @@ CenteredGridView {
             }
         }
     }
-    
+
     // 添加上下文菜单
     NavigableMenu {
         id: backgroundContextMenu
         property real lastRefreshTime: 0  // Date.now() is a 13-digit millisecond timestamp
-        
+
         NavigableMenuItem {
             parentMenu: backgroundContextMenu
-            text: qsTr("下载背景图片")
+            text: qsTr("Save wallpaper")
             onTriggered: {
                 console.log("触发下载背景图片")
                 saveFileDialog.open()
             }
         }
-        
+
         NavigableMenuItem {
             parentMenu: backgroundContextMenu
-            text: qsTr("刷新背景图片")
+            text: qsTr("Refresh wallpaper")
             onTriggered: {
                 var currentTime = Date.now();
                 if (currentTime - backgroundContextMenu.lastRefreshTime < 10000) {
-                    saveNotification.text = "请稍等片刻再刷新（至少间隔10秒）"
+                    saveNotification.text = qsTr("Please wait at least 10 seconds between refreshes.")
                     saveNotification.open()
                     return;
                 }
                 backgroundContextMenu.lastRefreshTime = currentTime;
-                
+
                 loadingIndicator.visible = true
                 refreshTimer.start()
             }
@@ -801,10 +859,10 @@ CenteredGridView {
     // 文件保存对话框
     FileDialog {
         id: saveFileDialog
-        title: qsTr("选择保存位置")
-        nameFilters: ["图片文件 (*.jpg *.jpeg *.png *.webp)"]
+        title: qsTr("Choose where to save")
+        nameFilters: [qsTr("Image files (*.jpg *.jpeg *.png *.webp)")]
         fileMode: FileDialog.SaveFile
-        
+
         currentFile: {
             var timestamp = new Date().getTime()
             // 从URL中提取文件扩展名
@@ -818,12 +876,12 @@ CenteredGridView {
             }
             return "file:///setu_" + timestamp + extension
         }
-        
+
         onAccepted: {
             var finalPath = saveFileDialog.fileUrl || saveFileDialog.currentFile || saveFileDialog.file
-    
+
             console.log("原始路径: " + finalPath)
-            
+
             if (finalPath) {
                 var ext = finalPath.toString().split('.').pop().toLowerCase()
                 if (["jpg", "jpeg", "png", "webp"].indexOf(ext) === -1) {
@@ -855,10 +913,12 @@ CenteredGridView {
         fillMode: Image.PreserveAspectFit
         visible: false
     }
-    
+
+    // 壁纸遮罩。换成 ink 并压得更狠：卡片是不透明硬物件，底图越安静，
+    // 方角 + 硬投影的层次越清楚。
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.6)
+        color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.72)
         z: -1
     }
 
@@ -866,11 +926,11 @@ CenteredGridView {
         id: imageUtils
         onSaveCompleted: function(success, message) {
             if (success) {
-                saveNotification.text = "图片已保存到: " + message
+                saveNotification.text = qsTr("Image saved to: %1").arg(message)
                 // 自动关闭通知
                 autoCloseTimer.start()
             } else {
-                saveNotification.text = "保存失败: " + message
+                saveNotification.text = qsTr("Save failed: %1").arg(message)
             }
             saveNotification.open()
         }
@@ -878,9 +938,9 @@ CenteredGridView {
 
     NavigableMessageDialog {
         id: saveNotification
-        title: qsTr("保存结果")
+        title: qsTr("Save result")
         standardButtons: DialogButtonBox.Ok
-        
+
         // 添加自动关闭计时器
         Timer {
             id: autoCloseTimer

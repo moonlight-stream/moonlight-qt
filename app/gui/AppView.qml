@@ -1,13 +1,16 @@
 import QtQuick 2.9
-import QtQuick.Controls 2.2
-import QtQuick.Controls.Material 2.2
+import QtQuick.Controls
 
 import AppModel 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 import StreamingPreferences 1.0
 
+import "theme"
+
 CenteredGridView {
+    // 这一页自带壁纸，main.qml 不用再垫一层
+    readonly property bool usesOwnBackground: true
     readonly property int nameRole: AppModel.NameRole
     readonly property int runningRole: AppModel.RunningRole
     readonly property int boxArtRole: AppModel.BoxArtRole
@@ -25,7 +28,7 @@ CenteredGridView {
     id: appGrid
     focus: true
     activeFocusOnTab: true
-    topMargin: 70
+    topMargin: 72   // 工具栏 56 + 一格间距
     bottomMargin: 5
     cellWidth: 230; cellHeight: 297;
 
@@ -89,66 +92,66 @@ CenteredGridView {
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         anchors.centerIn: parent
         width: Math.min(500, appGrid.width - 40)
-        padding: 20
+        padding: Theme.spaceXl
 
-        background: Rectangle {
-            color: "#EE333333"
-            radius: 12
-            border.color: "#55FFFFFF"
-            border.width: 1
+        background: Panel {
+            fill: Theme.surfaceLayer
+            accentBarWidth: Theme.accentBar
         }
 
         Column {
             anchors.left: parent.left
             anchors.right: parent.right
-            spacing: 16
+            spacing: Theme.spaceLg
 
             // 标题
-            Label {
+            Text {
                 text: qsTr("Display Settings")
-                color: "#FFFFFF"
-                font.pointSize: 14
-                font.bold: true
-                anchors.horizontalCenter: parent.horizontalCenter
+                color: Theme.text
+                font.family: Theme.fontSans
+                font.pointSize: Theme.fontCardTitle
+                font.weight: Font.ExtraBold
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: Theme.tracking(Theme.fontCardTitle, 0.08)
             }
 
             // 分隔线
             Rectangle {
                 width: parent.width
                 height: 1
-                color: "#44FFFFFF"
+                color: Theme.line
             }
 
             // 显示器选择区
-            Label {
+            MicroLabel {
                 text: qsTr("Select Display:")
-                color: "#AAFFFFFF"
-                font.pointSize: 11
             }
 
             Flow {
                 width: parent.width
-                spacing: 8
+                spacing: Theme.spaceSm
 
                 // 动态物理显示器按钮
                 Repeater {
                     model: ListModel { id: displayListModel }
 
                     Rectangle {
-                        width: displayBtnLabel.implicitWidth + 24
+                        readonly property bool selected: selectedDisplayId === model.displayGuid
+
+                        width: displayBtnLabel.implicitWidth + Theme.spaceXl
                         height: 32
-                        radius: 16
-                        color: selectedDisplayId === model.displayGuid ? "#4CAF50" : "#44FFFFFF"
-                        border.color: selectedDisplayId === model.displayGuid ? "#66BB6A" : "#33FFFFFF"
+                        color: selected ? Theme.accent : Theme.surface2
+                        border.color: selected ? Theme.accentStrong : Theme.lineStrong
                         border.width: 1
 
-                        Label {
+                        Text {
                             id: displayBtnLabel
                             anchors.centerIn: parent
                             text: model.displayName
-                            color: selectedDisplayId === model.displayGuid ? "#FFFFFF" : "#CCFFFFFF"
-                            font.pointSize: 10
-                            font.bold: selectedDisplayId === model.displayGuid
+                            color: parent.selected ? Theme.ink : Theme.textDim
+                            font.family: Theme.fontSans
+                            font.pointSize: Theme.fontBody
+                            font.bold: parent.selected
                         }
 
                         MouseArea {
@@ -170,19 +173,19 @@ CenteredGridView {
 
                 // VDD 按钮
                 Rectangle {
-                    width: vddBtnLabel.implicitWidth + 24
+                    width: vddBtnLabel.implicitWidth + Theme.spaceXl
                     height: 32
-                    radius: 16
-                    color: isVddSelected ? "#2196F3" : "#44FFFFFF"
-                    border.color: isVddSelected ? "#42A5F5" : "#33FFFFFF"
+                    color: isVddSelected ? Theme.acid : Theme.surface2
+                    border.color: isVddSelected ? Theme.acid : Theme.lineStrong
                     border.width: 1
 
-                    Label {
+                    Text {
                         id: vddBtnLabel
                         anchors.centerIn: parent
                         text: qsTr("VDD Display")
-                        color: isVddSelected ? "#FFFFFF" : "#CCFFFFFF"
-                        font.pointSize: 10
+                        color: isVddSelected ? Theme.ink : Theme.textDim
+                        font.family: Theme.fontSans
+                        font.pointSize: Theme.fontBody
                         font.bold: isVddSelected
                     }
 
@@ -206,25 +209,23 @@ CenteredGridView {
             // 组合模式区（选中显示器后显示）
             Column {
                 width: parent.width
-                spacing: 8
+                spacing: Theme.spaceSm
                 visible: selectedDisplayId !== ""
 
                 Rectangle {
                     width: parent.width
                     height: 1
-                    color: "#44FFFFFF"
+                    color: Theme.line
                 }
 
-                Label {
+                MicroLabel {
                     text: isVddSelected ? qsTr("VDD Combination Mode:") : qsTr("Screen Combination Mode:")
-                    color: "#AAFFFFFF"
-                    font.pointSize: 11
                 }
 
-                ComboBox {
+                AutoResizingComboBox {
                     id: combinationModeCombo
                     width: parent.width
-                    font.pointSize: 10
+                    maximumWidth: parent.width
                     textRole: "text"
                     model: isVddSelected ? vddModeModel : physicalModeModel
 
@@ -247,8 +248,6 @@ CenteredGridView {
                         }
                         StreamingPreferences.save()
                     }
-
-                    Material.foreground: "#CCFFFFFF"
                 }
             }
         }
@@ -358,136 +357,315 @@ CenteredGridView {
     model: appModel
 
     delegate: NavigableItemDelegate {
+        id: appTile
+
         width: 220; height: 287;
         grid: appGrid
+        padding: 0
 
         property alias appContextMenu: appContextMenuLoader.item
         property alias appNameText: appNameTextLoader.item
 
+        // hover / 手柄高亮 / 键盘焦点走同一套视觉，别分三种状态
+        readonly property bool active: hovered || highlighted
+
         // Dim the app if it's hidden
         opacity: model.hidden ? 0.4 : 1.0
 
-        Image {
-            property bool isPlaceholder: false
+        // 抬起时的位移。Panel 自己也会算一份，但内容层在 background 外面，
+        // 两边必须共用同一个动画值才不会错开。
+        property real tileShift: active ? -3 : 0
 
-            id: appIcon
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: 10
-            source: model.boxart
-            fillMode: Image.PreserveAspectCrop
-
-            onSourceSizeChanged: {
-                // Nearly all of Nvidia's official box art does not match the dimensions of placeholder
-                // images, however the one known exception is Overcooked. Therefore, we only execute
-                // the image size checks if this is not an app collector game. We know the officially
-                // supported games all have box art, so this check is not required.
-                if (!model.isAppCollectorGame &&
-                    ((sourceSize.width === 130 && sourceSize.height === 180) || // GFE 2.0 placeholder image
-                     (sourceSize.width === 628 && sourceSize.height === 888) || // GFE 3.0 placeholder image
-                     (sourceSize.width === 200 && sourceSize.height === 266)))  // Our no_app_image.png
-                {
-                    isPlaceholder = true
-                }
-                else
-                {
-                    isPlaceholder = false
-                }
-
-                width = 200
-                height = 267
-            }
-
-            // Display a tooltip with the full name if it's truncated
-            ToolTip.text: model.name
-            ToolTip.delay: 1000
-            ToolTip.timeout: 5000
-            ToolTip.visible: (parent.hovered || parent.highlighted) && (!appNameText || appNameText.truncated)
+        Behavior on tileShift {
+            NumberAnimation { duration: Theme.durFast; easing.type: Theme.easing }
         }
 
-        Loader {
-            active: model.running
-            asynchronous: true
-            anchors.fill: appIcon
+        // FluentWinUI3 给 ItemDelegate 的默认背景是圆角 + hover 高亮块，整块替掉。
+        // background 里只放这块硬卡片本身，别放任何要点的东西 —— 原因见 tileBody。
+        background: Panel {
+            lifted: appTile.active
+            liftShift: appTile.tileShift
+            fill: Theme.ink
+            borderColor: appTile.active ? Theme.accent : Theme.line
 
-            sourceComponent: Item {
-                RoundButton {
-                    // Don't steal focus from the toolbar buttons
-                    focusPolicy: Qt.NoFocus
-
-                    anchors.horizontalCenterOffset: appIcon.isPlaceholder ? -47 : 0
-                    anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : -60
-                    anchors.centerIn: parent
-                    implicitWidth: 85
-                    implicitHeight: 85
-
-                    icon.source: "qrc:/res/play_arrow_FILL1_wght700_GRAD200_opsz48.svg"
-                    icon.width: 75
-                    icon.height: 75
-
-                    onClicked: {
-                        launchOrResumeSelectedApp(true)
-                    }
-
-                    ToolTip.text: qsTr("Resume Game")
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 3000
-                    ToolTip.visible: hovered
-
-                    Material.background: "#D0808080"
-                }
-
-                RoundButton {
-                    // Don't steal focus from the toolbar buttons
-                    focusPolicy: Qt.NoFocus
-
-                    anchors.horizontalCenterOffset: appIcon.isPlaceholder ? 47 : 0
-                    anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : 60
-                    anchors.centerIn: parent
-                    implicitWidth: 85
-                    implicitHeight: 85
-
-                    icon.source: "qrc:/res/stop_FILL1_wght700_GRAD200_opsz48.svg"
-                    icon.width: 75
-                    icon.height: 75
-
-                    onClicked: {
-                        doQuitGame()
-                    }
-
-                    ToolTip.text: qsTr("Quit Game")
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 3000
-                    ToolTip.visible: hovered
-
-                    Material.background: "#D0808080"
-                }
-            }
+            // 正在运行 → 左侧酸性绿粗条。整个应用里只有这里和 LIVE 徽标用酸性绿。
+            accentBarColor: Theme.acid
+            accentBarWidth: model.running ? Theme.accentBarStrong : 0
         }
 
-        Loader {
-            id: appNameTextLoader
-            active: appIcon.isPlaceholder
+        // 封面、信息条、徽标、Resume/Quit 按钮都住在 background 外面。
+        //
+        // 一开始它们是 Panel 的子项，结果运行中的游戏上那两个按钮点了没反应：
+        // Control 会把 background 压到 z = -1，而 Qt 的命中测试顺序是
+        // 「z >= 0 的子项 → 控件自己 → z < 0 的子项」，所以 ItemDelegate 自己的
+        // onClicked 永远先把点击吃掉，按钮根本等不到。
+        //
+        // 代价是位移要自己跟：Panel 的「抬起」是把本体往左上挪 3px，这一层必须用
+        // 同一个 tileShift，否则封面会和描边错开。
+        Item {
+            id: tileBody
 
-            // This loader is not asynchronous to avoid noticeable differences
-            // in the time in which the text loads for each game.
+            // 运行时左边让出那条酸性绿粗条的位置
+            readonly property int barInset: model.running ? Theme.accentBarStrong : 0
 
-            width: appIcon.width
-            height: model.running ? 175 : appIcon.height
+            x: appTile.tileShift + 1 + barInset   // +1 是别盖住 Panel 那 1px 描边
+            y: appTile.tileShift + 1
+            width: appTile.width - 2 - barInset
+            height: appTile.height - 2
+            clip: true
 
-            anchors.left: appIcon.left
-            anchors.right: appIcon.right
-            anchors.bottom: appIcon.bottom
+            Image {
+                property bool isPlaceholder: false
 
-            sourceComponent: Label {
-                id: appNameText
-                text: model.name
-                font.pointSize: 22
-                leftPadding: 20
-                rightPadding: 20
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.Wrap
-                elide: Text.ElideRight
+                id: appIcon
+
+                // 封面铺满整块 tile，不再是居中的 200×267 + 顶部 10px 偏移
+                anchors.fill: parent
+                source: model.boxart
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+
+                onSourceSizeChanged: {
+                    // Nearly all of Nvidia's official box art does not match the dimensions of placeholder
+                    // images, however the one known exception is Overcooked. Therefore, we only execute
+                    // the image size checks if this is not an app collector game. We know the officially
+                    // supported games all have box art, so this check is not required.
+                    if (!model.isAppCollectorGame &&
+                        ((sourceSize.width === 130 && sourceSize.height === 180) || // GFE 2.0 placeholder image
+                         (sourceSize.width === 628 && sourceSize.height === 888) || // GFE 3.0 placeholder image
+                         (sourceSize.width === 200 && sourceSize.height === 266)))  // Our no_app_image.png
+                    {
+                        isPlaceholder = true
+                    }
+                    else
+                    {
+                        isPlaceholder = false
+                    }
+
+                    // 以前这里还会把 width/height 钉成 200×267，现在靠 anchors 铺满，
+                    // 再赋值会把 anchors 打掉。
+                }
+
+                // Display a tooltip with the full name if it's truncated
+                ToolTip.text: model.name
+                ToolTip.delay: 1000
+                ToolTip.timeout: 5000
+                ToolTip.visible: appTile.active &&
+                                 (nameLabel.truncated || (appNameText && appNameText.truncated))
+            }
+
+            // 占位封面的大字名。声明在这里（紧跟封面之后）是为了排在下面那层
+            // 运行态蒙版之下 —— 那层蒙版带 visible: !isPlaceholder，所以永远不会
+            // 挡住这段大字名，而 Resume/Quit 按钮仍然画在它上面，和改动前一致。
+            Loader {
+                id: appNameTextLoader
+                active: appIcon.isPlaceholder
+
+                // This loader is not asynchronous to avoid noticeable differences
+                // in the time in which the text loads for each game.
+
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    bottom: parent.bottom
+                }
+                height: model.running ? 175 : parent.height
+
+                sourceComponent: Text {
+                    id: appNameText
+                    text: model.name
+                    color: Theme.text
+                    font.family: Theme.fontSans
+                    font.pointSize: 20
+                    font.weight: Font.ExtraBold
+                    font.letterSpacing: Theme.trackingTight(20)
+                    leftPadding: Theme.spaceLg
+                    rightPadding: Theme.spaceLg
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.Wrap
+                    elide: Text.ElideRight
+                }
+            }
+
+            // 底部信息条。以前游戏名只在占位封面时才画出来，有真封面的游戏
+            // 根本读不到名字 —— 这条就是修那个。占位封面仍旧走下面的大字名。
+            Rectangle {
+                id: infoBar
+
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    bottom: parent.bottom
+                }
+                height: infoColumn.implicitHeight + Theme.spaceSm * 2
+                color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.92)
+                visible: !appIcon.isPlaceholder
+
+                Rectangle {
+                    anchors { left: parent.left; right: parent.right; top: parent.top }
+                    height: 1
+                    color: Theme.line
+                }
+
+                Column {
+                    id: infoColumn
+
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        verticalCenter: parent.verticalCenter
+                        leftMargin: Theme.spaceSm
+                        rightMargin: Theme.spaceSm
+                    }
+                    spacing: 2
+
+                    Text {
+                        id: nameLabel
+
+                        width: parent.width
+                        text: model.name
+                        color: Theme.text
+                        font.family: Theme.fontSans
+                        font.pointSize: Theme.fontRowTitle
+                        font.weight: Font.DemiBold
+                        font.letterSpacing: Theme.trackingTight(Theme.fontRowTitle)
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                    }
+
+                    MicroLabel {
+                        width: parent.width
+                        text: qsTr("Direct Launch")
+                        color: Theme.accent
+                        visible: model.directLaunch
+                        height: visible ? implicitHeight : 0
+                    }
+                }
+            }
+
+            Loader {
+                active: model.running
+                asynchronous: true
+
+                // 别盖住信息条，游戏名在运行时也要能读
+                anchors.fill: parent
+                anchors.bottomMargin: infoBar.visible ? infoBar.height : 0
+
+                sourceComponent: Item {
+                    // 压暗封面让按钮读得出来。占位封面本来就是一块平灰，不用压。
+                    Rectangle {
+                        anchors.fill: parent
+                        color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.55)
+                        visible: !appIcon.isPlaceholder
+                    }
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                        // 占位封面的大字名占满整块，按钮往上挪开
+                        anchors.verticalCenterOffset: appIcon.isPlaceholder ? -70 : 0
+                        spacing: Theme.spaceMd
+
+                        HardButton {
+                            // Don't steal focus from the toolbar buttons
+                            focusPolicy: Qt.NoFocus
+
+                            width: 62; height: 62
+
+                            icon.source: "qrc:/res/play_arrow_FILL1_wght700_GRAD200_opsz48.svg"
+                            icon.width: 34
+                            icon.height: 34
+                            icon.color: Theme.text
+
+                            onClicked: {
+                                launchOrResumeSelectedApp(true)
+                            }
+
+                            ToolTip.text: qsTr("Resume Game")
+                            ToolTip.delay: 1000
+                            ToolTip.timeout: 3000
+                            ToolTip.visible: hovered
+                        }
+
+                        HardButton {
+                            // Don't steal focus from the toolbar buttons
+                            focusPolicy: Qt.NoFocus
+
+                            width: 62; height: 62
+
+                            icon.source: "qrc:/res/stop_FILL1_wght700_GRAD200_opsz48.svg"
+                            icon.width: 34
+                            icon.height: 34
+                            icon.color: Theme.danger
+
+                            onClicked: {
+                                doQuitGame()
+                            }
+
+                            ToolTip.text: qsTr("Quit Game")
+                            ToolTip.delay: 1000
+                            ToolTip.timeout: 3000
+                            ToolTip.visible: hovered
+                        }
+                    }
+                }
+            }
+
+            // LIVE / HIDDEN 徽标声明在最后，也就是画在最上层。运行态蒙版把封面
+            // 压到 55%，徽标要是排在它下面就会被一起压暗（实测酸性绿被压成
+            // (49,55,63)）—— 状态标记必须是整块 tile 里最亮的东西。
+            //
+            // 光晕垫在徽标之前才在下层：QtGraphicalEffects 不一定可用，直接用一圈
+            // 半透明酸性绿顶替参考站的 box-shadow: 0 0 12px。
+            Rectangle {
+                anchors.fill: liveBadge
+                anchors.margins: -3
+                color: Theme.acidGlow
+                visible: liveBadge.visible
+            }
+
+            Rectangle {
+                id: liveBadge
+
+                anchors {
+                    left: parent.left
+                    top: parent.top
+                    leftMargin: Theme.spaceSm
+                    topMargin: Theme.spaceSm
+                }
+                width: liveText.implicitWidth + Theme.spaceSm * 2
+                height: liveText.implicitHeight + Theme.spaceXs * 2
+                color: Theme.acid
+                visible: model.running
+
+                MicroLabel {
+                    id: liveText
+                    anchors.centerIn: parent
+                    text: "● " + qsTr("Live")
+                    color: Theme.ink
+                }
+            }
+
+            Rectangle {
+                anchors {
+                    right: parent.right
+                    top: parent.top
+                    rightMargin: Theme.spaceSm
+                    topMargin: Theme.spaceSm
+                }
+                width: hiddenText.implicitWidth + Theme.spaceSm * 2
+                height: hiddenText.implicitHeight + Theme.spaceXs * 2
+                color: Theme.surface2
+                border.width: 1
+                border.color: Theme.lineStrong
+                visible: model.hidden
+
+                MicroLabel {
+                    id: hiddenText
+                    anchors.centerIn: parent
+                    text: qsTr("Hidden")
+                }
             }
         }
 
@@ -509,6 +687,7 @@ CenteredGridView {
             var component = Qt.createComponent("StreamSegue.qml")
             var segue = component.createObject(stackView, {
                                                    "appName": model.name,
+                                                   "boxArtUrl": model.boxart,
                                                    "session": appModel.createSessionForApp(index),
                                                    "isResume": runningId === model.appid
                                                })
@@ -620,15 +799,38 @@ CenteredGridView {
         }
     }
 
-    Row {
+    // 空状态：Manrope 800 大标题 + DM Mono 暗色副行
+    Column {
         anchors.centerIn: parent
-        spacing: 5
+        width: Math.min(parent.width - Theme.spaceXl * 2, 520)
+        spacing: Theme.spaceMd
         visible: appGrid.count === 0
 
-        Label {
+        Text {
+            width: parent.width
+            text: qsTr("No Apps")
+            color: Theme.text
+            font.family: Theme.fontSans
+            font.pointSize: 26
+            font.weight: Font.ExtraBold
+            font.capitalization: Font.AllUppercase
+            font.letterSpacing: Theme.trackingTight(26)
+            horizontalAlignment: Text.AlignHCenter
+        }
+
+        Rectangle {
+            width: parent.width
+            height: 1
+            color: Theme.line
+        }
+
+        Text {
+            width: parent.width
             text: qsTr("This computer doesn't seem to have any applications or some applications are hidden")
-            font.pointSize: 20
-            verticalAlignment: Text.AlignVCenter
+            color: Theme.textDim
+            font.family: Theme.fontMono
+            font.pointSize: Theme.fontBody
+            horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
         }
     }
@@ -642,69 +844,72 @@ CenteredGridView {
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
         anchors.centerIn: parent
         width: Math.min(500, appGrid.width - 40)
-        padding: 20
+        padding: Theme.spaceXl
 
-        background: Rectangle {
-            color: "#EE333333"
-            radius: 12
-            border.color: "#55FFFFFF"
-            border.width: 1
+        background: Panel {
+            fill: Theme.surfaceLayer
+            accentBarWidth: Theme.accentBar
         }
 
         Column {
             anchors.left: parent.left
             anchors.right: parent.right
-            spacing: 16
+            spacing: Theme.spaceLg
 
-            Label {
+            Text {
                 text: qsTr("Connection IP Settings")
-                color: "#FFFFFF"
-                font.pointSize: 14
-                font.bold: true
-                anchors.horizontalCenter: parent.horizontalCenter
+                color: Theme.text
+                font.family: Theme.fontSans
+                font.pointSize: Theme.fontCardTitle
+                font.weight: Font.ExtraBold
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: Theme.tracking(Theme.fontCardTitle, 0.08)
             }
 
             Rectangle {
                 width: parent.width
                 height: 1
-                color: "#44FFFFFF"
+                color: Theme.line
             }
 
-            Label {
-                text: qsTr("Select the IP address to connect to this PC:")
-                color: "#AAFFFFFF"
-                font.pointSize: 11
-                wrapMode: Text.Wrap
+            MicroLabel {
                 width: parent.width
+                text: qsTr("Select the IP address to connect to this PC:")
+                // 这句比一般微标签长，允许折行（MicroLabel 默认是单行省略）
+                elide: Text.ElideNone
+                wrapMode: Text.Wrap
             }
 
-            ComboBox {
+            // 走 AutoResizingComboBox 而不是裸 ComboBox：方角背景和方角展开面板
+            // 都在那个文件里统一定义，裸 ComboBox 会退回 FluentWinUI3 的圆角面板。
+            AutoResizingComboBox {
                 id: ipCombo
                 width: parent.width
-                font.pointSize: 10
+                maximumWidth: parent.width
                 model: ipDialog.addresses
                 textRole: "display"
-
-                Material.foreground: "#CCFFFFFF"
             }
 
-            Label {
+            // 地址类型 / 未验证告警：都是机读信息，走等宽
+            Text {
                 visible: ipCombo.currentIndex >= 0 &&
                          ipCombo.currentIndex < ipDialog.addresses.length
                 text: visible ? qsTr("Type: %1").arg(ipDialog.addresses[ipCombo.currentIndex].type) : ""
-                color: "#AAFFFFFF"
-                font.pointSize: 10
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontBody
                 wrapMode: Text.Wrap
                 width: parent.width
             }
 
-            Label {
+            Text {
                 visible: ipCombo.currentIndex > 0 &&
                          ipCombo.currentIndex < ipDialog.addresses.length &&
                          !ipDialog.addresses[ipCombo.currentIndex].isTested
                 text: qsTr("Warning: This address has not been verified by polling yet.")
-                color: "#FFCC00"
-                font.pointSize: 9
+                color: Theme.danger
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 wrapMode: Text.Wrap
                 width: parent.width
             }
@@ -712,14 +917,14 @@ CenteredGridView {
             Rectangle {
                 width: parent.width
                 height: 1
-                color: "#44FFFFFF"
+                color: Theme.line
             }
 
             Row {
-                spacing: 12
+                spacing: Theme.spaceMd
                 anchors.horizontalCenter: parent.horizontalCenter
 
-                Button {
+                HardButton {
                     text: qsTr("Apply")
                     onClicked: {
                         if (ipCombo.currentIndex < 0 || ipCombo.currentIndex >= ipDialog.addresses.length) {
@@ -736,22 +941,19 @@ CenteredGridView {
                         }
                         ipDialog.close()
                     }
-
-                    Material.foreground: "#FFFFFF"
                 }
 
-                Button {
+                HardButton {
                     text: qsTr("Cancel")
                     onClicked: ipDialog.close()
-
-                    Material.foreground: "#AAFFFFFF"
                 }
             }
 
-            Label {
+            Text {
                 text: qsTr("\"Auto\" uses the default address selection with automatic fallback. Selecting a specific IP will pin the connection to that address.")
-                color: "#77FFFFFF"
-                font.pointSize: 9
+                color: Theme.textFaint
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 wrapMode: Text.Wrap
                 width: parent.width
             }
@@ -774,10 +976,12 @@ CenteredGridView {
                 // Store the session and app name if we're going to stream after
                 // successfully quitting the old app.
                 params.nextAppName = nextAppName
+                params.nextBoxArtUrl = appModel.data(appModel.index(nextAppIndex, 0), boxArtRole)
                 params.nextSession = appModel.createSessionForApp(nextAppIndex)
             }
             else {
                 params.nextAppName = null
+                params.nextBoxArtUrl = ""
                 params.nextSession = null
             }
 
@@ -789,28 +993,28 @@ CenteredGridView {
 
     ScrollBar.vertical: ScrollBar {}
 
-    // 修改背景图定义部分
+    // 壁纸和它的遮罩都是 GridView contentItem 的兄弟节点，和 delegate 同一个父级。
+    // z 相同的话按声明顺序绘制，而这两块声明在 delegate 之后 —— 所以必须给负 z，
+    // 否则遮罩会盖在所有 tile 上面（封面会被压成一片灰，实测峰值只剩 48%）。
     Image {
         id: backgroundImage
         anchors.fill: parent
         source: getBackgroundSource()
-        opacity: 0.3
+        // 壁纸压得比以前更暗（0.3 → 0.18）：新风格里 tile 要读起来像一块硬物件，
+        // 底图越安静，方角 + 硬投影的层次就越清楚。
+        opacity: 0.18
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         cache: true
-        z: -1
+        z: -2
     }
 
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.25)
-        z: 0  // 在背景图之上，内容之下
+        color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.55)
+        z: -1
     }
 
-    // 确保内容列表在顶层
-    ListView {
-        z: 1
-    }
 
     function getBackgroundSource() {
         // 优先使用正在运行的应用的封面
@@ -825,14 +1029,14 @@ CenteredGridView {
                 }
             }
         }
-        
+
         // 没有运行应用时使用第一个应用的封面
         if (appModel.rowCount() > 0) {
             let firstAppIndex = appModel.index(0, 0)
             let boxArt = appModel.data(firstAppIndex, boxArtRole)
             return boxArt || "qrc:/res/gura.png"
         }
-        
+
         return "qrc:/res/gura.png"
     }
 

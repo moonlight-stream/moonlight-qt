@@ -303,6 +303,12 @@ HEADERS += \
 !config_SL:macx: SOURCES += streaming/macpermissions.mm
 !config_SL:!macx: SOURCES += streaming/macpermissions_stub.cpp
 
+# 把红绿灯沉到我们自己那条 bar 的中线上，顺带让 AppKit 的标题栏拖动区覆盖整条 bar
+macx {
+    HEADERS += gui/macwindowchrome.h
+    SOURCES += gui/macwindowchrome.mm
+}
+
 # Platform-specific renderers and decoders
 ffmpeg {
     message(FFmpeg decoder selected)

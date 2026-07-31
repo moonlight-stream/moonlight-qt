@@ -1,0 +1,11 @@
+singleton Theme 1.0 Theme.qml
+
+Panel 1.0 Panel.qml
+MicroLabel 1.0 MicroLabel.qml
+HardButton 1.0 HardButton.qml
+HardCheckBox 1.0 HardCheckBox.qml
+HardSwitch 1.0 HardSwitch.qml
+HardSlider 1.0 HardSlider.qml
+HardGroupBox 1.0 HardGroupBox.qml
+HardTextField 1.0 HardTextField.qml
+HardProgress 1.0 HardProgress.qml

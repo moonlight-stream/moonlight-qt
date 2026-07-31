@@ -1,14 +1,18 @@
 import QtQuick 2.0
-import QtQuick.Controls 2.2
+import QtQuick.Controls
 
 import ComputerManager 1.0
 import Session 1.0
+
+import "theme"
 
 Item {
     property string appName
     property var quitRunningAppFn
     property Session nextSession : null
     property string nextAppName : ""
+    // 退出旧游戏后要接着启动的那个游戏的封面，转交给加载页当背景
+    property string nextBoxArtUrl : ""
 
     property string stageText : qsTr("Quitting %1...").arg(appName)
 
@@ -24,7 +28,9 @@ Item {
         // If we're supposed to launch another game after this, do so now
         if (error === undefined && nextSession !== null) {
             var component = Qt.createComponent("StreamSegue.qml")
-            var segue = component.createObject(stackView, {"appName": nextAppName, "session": nextSession})
+            var segue = component.createObject(stackView, {"appName": nextAppName,
+                                                                    "boxArtUrl": nextBoxArtUrl,
+                                                                    "session": nextSession})
             stackView.replace(segue)
         }
         else {
@@ -35,7 +41,7 @@ Item {
 
     StackView.onActivated: {
         // Hide the toolbar before we start loading
-        toolBar.visible = false
+        toolBar.shown = false
 
         // Connect the quit completion signal
         ComputerManager.quitAppCompleted.connect(quitAppCompleted)
@@ -48,29 +54,37 @@ Item {
 
     StackView.onDeactivating: {
         // Show the toolbar again
-        toolBar.visible = true
+        toolBar.shown = true
 
         // Disconnect the signal
         ComputerManager.quitAppCompleted.disconnect(quitAppCompleted)
     }
 
-    Row {
+    // 和加载页同一套：Manrope 800 大字阶段文字 + 一条来回扫的酸性绿实心条，不用转圈
+    Column {
         anchors.centerIn: parent
-        spacing: 5
+        width: Math.min(parent.width - Theme.spaceXl * 2, 620)
+        spacing: Theme.spaceLg
 
-        BusyIndicator {
-            id: stageSpinner
-            running: visible
+        Text {
+            id: stageLabel
+
+            width: parent.width
+            text: stageText
+            color: Theme.text
+            font.family: Theme.fontSans
+            font.pointSize: 24
+            font.weight: Font.ExtraBold
+            font.letterSpacing: Theme.trackingTight(24)
+            // 和加载页一致：咬着读条的左基线，不居中
+            horizontalAlignment: Text.AlignLeft
+            wrapMode: Text.Wrap
         }
 
-        Label {
-            id: stageLabel
-            height: stageSpinner.height
-            text: stageText
-            font.pointSize: 20
-            verticalAlignment: Text.AlignVCenter
+        HardProgress {
+            id: stageSpinner
 
-            wrapMode: Text.Wrap
+            width: parent.width
         }
     }
 

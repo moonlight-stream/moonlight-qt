@@ -1,8 +1,21 @@
 import QtQuick 2.0
-import QtQuick.Controls 2.2
+import QtQuick.Controls
+
+import "theme"
 
 Menu {
+    id: control
+
     property var initiator
+
+    padding: Theme.spaceXs
+
+    // 方角 + 1px 描边 + 硬投影。菜单不用左侧粗条：它本身已经是一块小硬板，
+    // 再加粗条会和菜单项的 hover 抢注意力。
+    background: Panel {
+        implicitWidth: 200
+        fill: Theme.surfaceLayer
+    }
 
     onOpened: {
         // If the initiating object currently has keyboard focus,

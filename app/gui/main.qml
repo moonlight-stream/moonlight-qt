@@ -1,14 +1,16 @@
-import QtQuick 2.9
-import QtQuick.Controls 2.2
+import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
-import QtQuick.Controls.Material 2.2
+import QtQuick.Controls.Material as MaterialStyle
 
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
 import StreamingPreferences 1.0
 import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
+
+import "theme"
 
 ApplicationWindow {
     property bool pollingActive: false
@@ -22,13 +24,43 @@ ApplicationWindow {
     width: 1280
     height: 640
 
+    // 去掉系统标题栏的外壳：内容顶到窗口最上沿、系统不再画标题栏底色，于是下面
+    // 那条 56px 的工具栏本身就成了标题栏，整个窗口从上到下都是我们自己的配色。
+    //
+    // 仍然是一个正常的原生窗口，resize 边缘、窗口阴影和任务栏集成都由系统管理。
+    // Windows 只关闭原生 caption buttons，改由工具栏右侧的自绘按钮提供窗口操作；
+    // 没有使用 FramelessWindowHint，因此不会丢掉系统边框行为。
+    flags: Qt.Window
+           | Qt.ExpandedClientAreaHint
+           | Qt.NoTitleBarBackgroundHint
+           // Windows otherwise keeps drawing the native window icon and title
+           // over our own wordmark. CustomizeWindowHint removes those default
+           // decorations; the three caption buttons are drawn below in QML.
+           | (Qt.platform.os === "windows"
+              ? Qt.CustomizeWindowHint
+              : 0)
+
+    // 加了上面那两个 flag 之后窗口的可绘制区域顶到了最上沿，但 ApplicationWindow 仍然
+    // 把 contentItem 往下缩了一个安全区（实测 macOS 上 contentItem.y = 32，正好是系统
+    // 标题栏那条带子的高度）。结果是工具栏其实从 32pt 才开始，上面留着一条空带。
+    //
+    // 我们要的是「工具栏本身就是标题栏」，所以把顶层的几层都往上顶回去，一切仍然从
+    // 窗口真正的顶边开始量。全屏时 contentItem.y 会变回 0，这个绑定跟着走。
+    readonly property real chromeInset: contentItem.y
+
+    // FluentWinUI3's ApplicationWindow is just "color: palette.window", and on macOS
+    // that palette follows the system appearance regardless of the color scheme we
+    // ask for. Pin it so pages we haven't given a background of their own (the
+    // connection spinner, the quit page) are never white-on-white.
+    color: Theme.ink
+
     // This function runs prior to creation of the initial StackView item
     function doEarlyInit() {
         // Override the background color to Material 2 colors for Qt 6.5+
         // in order to improve contrast between GFE's placeholder box art
         // and the background of the app grid.
         if (SystemProperties.usesMaterial3Theme) {
-            Material.background = "#303030"
+            MaterialStyle.Material.background = "#303030"
         }
 
         SdlGamepadKeyNavigation.enable()
@@ -102,10 +134,70 @@ ApplicationWindow {
         }
     }
 
+    // 全局壁纸。PcView 负责抓取、缓存和刷新，抓到之后写回这里，
+    // 这样连接进度页、退出页、设置页共用同一张背景，而不是各自一片纯色。
+    property string backgroundImageUrl: ""
+
+    // PcView / AppView / SettingsView 各自已经按自己的配方铺了一层壁纸（半透明 + 压暗），
+    // 它们背后再垫一张全尺寸原图的话两层会错位叠在一起。所以这层只服务于自己不画背景的页面
+    // ——连接进度页、退出页。
+    readonly property bool showGlobalBackground:
+        !(stackView.currentItem && stackView.currentItem.usesOwnBackground === true)
+
+    Image {
+        anchors.fill: parent
+        anchors.topMargin: -window.chromeInset
+        source: window.backgroundImageUrl
+        visible: source != "" && window.showGlobalBackground
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        cache: true
+        z: -3
+    }
+
+    // 压暗壁纸，保证上层的文字和加载动画有足够对比度。用 ink 而不是纯黑，
+    // 和各页自己那层遮罩同一个底色，切页时不会有色温跳变。
+    Rectangle {
+        anchors.fill: parent
+        anchors.topMargin: -window.chromeInset
+        color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.72)
+        visible: window.showGlobalBackground
+        z: -2
+    }
+
     StackView {
         id: stackView
         anchors.fill: parent
+        // 各页自己按 72 让出工具栏的高度，那个 72 是从窗口顶边算的
+        anchors.topMargin: -window.chromeInset
         focus: true
+
+        // 切页动效：neo-brutalism 要更短更机械，所以不缩放（缩放读起来是「软」的），
+        // 改成 12px 横向位移 + 淡入，150ms OutQuad。
+        pushEnter: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.durNormal; easing.type: Theme.easing }
+                NumberAnimation { property: "x"; from: 12; to: 0; duration: Theme.durNormal; easing.type: Theme.easing }
+            }
+        }
+        pushExit: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.durFast; easing.type: Easing.InQuad }
+                NumberAnimation { property: "x"; from: 0; to: -12; duration: Theme.durFast; easing.type: Easing.InQuad }
+            }
+        }
+        popEnter: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.durNormal; easing.type: Theme.easing }
+                NumberAnimation { property: "x"; from: -12; to: 0; duration: Theme.durNormal; easing.type: Theme.easing }
+            }
+        }
+        popExit: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 1; to: 0; duration: Theme.durFast; easing.type: Easing.InQuad }
+                NumberAnimation { property: "x"; from: 0; to: 12; duration: Theme.durFast; easing.type: Easing.InQuad }
+            }
+        }
 
         // This configures the maximum width of the singleton attached QML ToolTip. If left unconstrained,
         // it will never insert a line break and just extend on forever.
@@ -241,39 +333,120 @@ ApplicationWindow {
     // 添加工具栏作为浮动元素
     ToolBar {
         id: toolBar
-        height: 60
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.topMargin: 5
-        z: 1
-        
-        background: Rectangle {
-            color: "transparent"
+
+        // 各个 segue 页面用 shown 而不是直接写 visible：直接 visible=false 的话
+        // 工具栏会「啪」地消失，而 visible 变假之后就不再渲染，opacity 动画也没机会跑。
+        property bool shown: true
+        opacity: shown ? 1 : 0
+        visible: opacity > 0
+
+        Behavior on opacity {
+            NumberAnimation { duration: 220; easing.type: Easing.InOutQuad }
         }
 
-        Label {
-            id: titleLabel
-            visible: toolBar.width > 700
+        height: 56
+        anchors.top: parent.top
+        anchors.topMargin: -window.chromeInset
+        anchors.left: parent.left
+        anchors.right: parent.right
+        z: 1
+
+        // Qt 6.9 起 Control 会把安全区当成 padding 自动加上去（实测这里 topPadding
+        // 被设成了 32），于是这条 bar 里能用的高度只剩 24，字标和按钮被挤到下半部分，
+        // 和红绿灯对不齐。这层 padding 的用意是「别把内容放到刘海/标题栏底下」，而我们
+        // 恰恰是故意把工具栏当标题栏用的 —— 红绿灯的位置由下面 windowButtonInsetLeft
+        // 自己让，所以这里四边都归零。
+        topPadding: 0
+        bottomPadding: 0
+        leftPadding: 0
+        rightPadding: 0
+
+        // 给系统窗口按钮让位。Qt 的 SafeArea 只报了标题栏那条带子的高度
+        // （实测 macOS 上 top=32、left=0），没有给出按钮的水平占位，只能自己留。
+        //
+        // macOS：红绿灯被 macwindowchrome.mm 挪到了 x=20 起（整组 60pt 宽，到 80 结束），
+        // 这里再留一格间距 —— 20 + 60 + 20 = 100，减掉 RowLayout 自带的 spaceLg(16)
+        // 就是 84。改动那边的 kButtonLeftMargin 时这个数要跟着改。
+        //
+        // Windows：右边是三颗 44px 的自绘窗口按钮。
+        //
+        // 全屏时两边都不留：macOS 全屏会把红绿灯藏起来（要鼠标移到顶边才浮出来），
+        // 这时候还留着那段让位就是一段莫名其妙的空档 —— 界面全屏是个偏好项，
+        // 真有人这么用。
+        readonly property bool windowChromeVisible: window.visibility !== Window.FullScreen
+        readonly property int customWindowControlsWidth: 132
+        readonly property int windowButtonInsetLeft:
+            (SystemProperties.isDarwin && windowChromeVisible) ? 84 : 0
+        readonly property int windowButtonInsetRight:
+            (Qt.platform.os === "windows" && windowChromeVisible)
+                ? customWindowControlsWidth : 0
+
+        // 以前这是一条「浮」在壁纸上的透明工具栏（topMargin: 5 + transparent 背景）。
+        // 新风格里它是一条真正的 bar：贴住窗口顶边、底部一条 1px 分隔线，页面内容从
+        // 线下面开始。底色留一半透明度让壁纸透上来 —— 全不透明的话这条 bar 会像一块
+        // 贴在窗口上的黑板，和下面的壁纸完全割裂。不加模糊（这套风格里没有毛玻璃）。
+        background: Rectangle {
+            color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.55)
+
+            Rectangle {
+                anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                height: 1
+                color: Theme.line
+            }
+        }
+
+        // 空白处拖动整个窗口，双击最大化/还原。
+        //
+        // macOS 上走不到这里：那边把系统标题栏那条带子拉高到了整条 bar
+        // （macwindowchrome.mm），拖动和双击缩放由 AppKit 自己接管，这个 MouseArea
+        // 拿不到 bar 区域的事件。这一份是给 Windows / Linux 用的。
+        //
+        // 声明在 RowLayout 之前：同层同 z 时后声明的先拿到事件，所以按钮和字标照常
+        // 响应，只有真正空着的地方才落到这里。
+        MouseArea {
             anchors.fill: parent
-            text: stackView.currentItem ? stackView.currentItem.objectName : ""
-            font.pointSize: 20
-            elide: Label.ElideRight
-            horizontalAlignment: Qt.AlignHCenter
-            verticalAlignment: Qt.AlignVCenter
+            acceptedButtons: Qt.LeftButton
+
+            property point pressPosition
+            property bool systemMoveStarted: false
+
+            onPressed: function(mouse) {
+                pressPosition = Qt.point(mouse.x, mouse.y)
+                systemMoveStarted = false
+            }
+            onPositionChanged: function(mouse) {
+                if (!pressed || systemMoveStarted) {
+                    return
+                }
+
+                var deltaX = Math.abs(mouse.x - pressPosition.x)
+                var deltaY = Math.abs(mouse.y - pressPosition.y)
+                if (Math.max(deltaX, deltaY) >= Qt.styleHints.startDragDistance) {
+                    systemMoveStarted = true
+                    window.startSystemMove()
+                }
+            }
+            onDoubleClicked: {
+                if (window.visibility === Window.Maximized) {
+                    window.showNormal()
+                }
+                else {
+                    window.showMaximized()
+                }
+            }
         }
 
         RowLayout {
-            spacing: 10
-            anchors.leftMargin: 10
-            anchors.rightMargin: 10
+            spacing: Theme.spaceSm
+            anchors.leftMargin: Theme.spaceLg + toolBar.windowButtonInsetLeft
+            anchors.rightMargin: Theme.spaceLg + toolBar.windowButtonInsetRight
             anchors.fill: parent
 
             NavigableToolButton {
                 // Only make the button visible if the user has navigated somewhere.
                 visible: stackView.depth > 1
 
-                iconSource: "qrc:/res/arrow_left.svg"
+                iconSource: "qrc:/res/fluent/tb-back.svg"
 
                 onClicked: goBack()
 
@@ -282,29 +455,59 @@ ApplicationWindow {
                 }
             }
 
-            // This label will appear when the window gets too small and
-            // we need to ensure the toolbar controls don't collide
-            Label {
-                id: titleRowLabel
-                font.pointSize: titleLabel.font.pointSize
-                elide: Label.ElideRight
-                horizontalAlignment: Qt.AlignHCenter
-                verticalAlignment: Qt.AlignVCenter
-                Layout.fillWidth: true
-
-                // We need this label to always be visible so it can occupy
-                // the remaining space in the RowLayout. To "hide" it, we
-                // just set the text to empty string.
-                text: !titleLabel.visible ? stackView.currentItem.objectName : ""
+            // 字标 + 页名面包屑，左对齐。窄窗口下字标先让位，页名一直留着。
+            Text {
+                id: wordmark
+                visible: toolBar.width > 700
+                text: "MOONLIGHT"
+                color: Theme.text
+                font.family: Theme.fontSans
+                font.pointSize: Theme.fontCardTitle
+                font.weight: Font.ExtraBold
+                font.letterSpacing: Theme.tracking(Theme.fontCardTitle, 0.1)
+                verticalAlignment: Text.AlignVCenter
+                Layout.fillHeight: true
             }
 
-            Label {
+            Text {
+                visible: wordmark.visible
+                text: "/"
+                color: Theme.textFaint
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCardTitle
+                verticalAlignment: Text.AlignVCenter
+                Layout.fillHeight: true
+                Layout.leftMargin: Theme.spaceXs
+                Layout.rightMargin: Theme.spaceXs
+            }
+
+            // 这一条必须始终存在：RowLayout 靠它 fillWidth 把右边那排按钮推到边上。
+            Text {
+                id: titleRowLabel
+                text: stackView.currentItem ? stackView.currentItem.objectName : ""
+                color: Theme.accent
+                font.family: Theme.fontSans
+                font.pointSize: Theme.fontRowTitle
+                font.weight: Font.Bold
+                font.capitalization: Font.AllUppercase
+                font.letterSpacing: Theme.tracking(Theme.fontRowTitle, 0.14)
+                elide: Text.ElideRight
+                verticalAlignment: Text.AlignVCenter
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+            }
+
+            Text {
                 id: versionLabel
                 visible: stackView.currentItem instanceof SettingsView
                 text: qsTr("Version %1").arg(SystemProperties.versionString)
-                font.pointSize: 12
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 horizontalAlignment: Qt.AlignRight
-                verticalAlignment: Qt.AlignVCenter
+                verticalAlignment: Text.AlignVCenter
+                Layout.fillHeight: true
+                Layout.rightMargin: Theme.spaceSm
             }
 
             NavigableToolButton {
@@ -317,7 +520,10 @@ ApplicationWindow {
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
-                ToolTip.text: qsTr("来裙里丸")
+                // 源串必须是英文：这个仓库的源语言是 en_GB，中文源串会变成 28 个
+                // 语言包里的 msgid，而且全都 unfinished —— 英语用户看到的就是那四个
+                // 中文字。梗放到 zh_CN 的译文里，两边都能要。
+                ToolTip.text: qsTr("Join our QQ group")
 
                 // TODO need to make sure browser is brought to foreground.
                 onClicked: Qt.openUrlExternally("https://qm.qq.com/cgi-bin/qm/qr?k=wI7aTvDQdd900n1L_wjjJw3qNP0yOgUa&jump_from=webapi&authKey=CDBn7sGy7HpCKYTcFmoEdNuG/zmkrBWUC/W5A/oZZycKzXwuO/XFCA97IpJRktj3");
@@ -331,7 +537,7 @@ ApplicationWindow {
                 id: addPcButton
                 visible: stackView.currentItem instanceof PcView
 
-                iconSource:  "qrc:/res/ic_add_to_queue_white_48px.svg"
+                iconSource:  "qrc:/res/fluent/tb-add-pc.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -358,7 +564,7 @@ ApplicationWindow {
 
                 id: updateButton
 
-                iconSource: "qrc:/res/update.svg"
+                iconSource: "qrc:/res/fluent/tb-update.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -419,7 +625,7 @@ ApplicationWindow {
                 id: helpButton
                 visible: SystemProperties.hasBrowser
 
-                iconSource: "qrc:/res/question_mark.svg"
+                iconSource: "qrc:/res/fluent/tb-help.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -449,7 +655,7 @@ ApplicationWindow {
                 ToolTip.visible: hovered
                 ToolTip.text: qsTr("Gamepad Mapper")
 
-                iconSource: "qrc:/res/ic_videogame_asset_white_48px.svg"
+                iconSource: "qrc:/res/fluent/tb-gamepad.svg"
 
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", GamepadMapper)
 
@@ -463,7 +669,7 @@ ApplicationWindow {
                 visible: stackView.currentItem instanceof AppView &&
                          stackView.currentItem.hasMultipleAddresses
 
-                iconSource: "qrc:/res/ic_network_white_48px.svg"
+                iconSource: "qrc:/res/fluent/tb-network.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -485,7 +691,7 @@ ApplicationWindow {
                 id: displaySettingsButton
                 visible: stackView.currentItem instanceof AppView
 
-                iconSource: "qrc:/res/desktop_windows-48px.svg"
+                iconSource: "qrc:/res/fluent/tb-display.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -506,7 +712,7 @@ ApplicationWindow {
             NavigableToolButton {
                 id: settingsButton
 
-                iconSource:  "qrc:/res/settings.svg"
+                iconSource:  "qrc:/res/fluent/tb-settings.svg"
 
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", SettingsView)
 
@@ -524,6 +730,44 @@ ApplicationWindow {
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
                 ToolTip.text: qsTr("Settings") + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
+            }
+        }
+
+        Row {
+            id: windowControls
+            visible: Qt.platform.os === "windows" && toolBar.windowChromeVisible
+            anchors.top: parent.top
+            anchors.right: parent.right
+            height: 40
+            z: 2
+
+            WindowControlButton {
+                controlType: "minimize"
+                accessibleName: qsTr("Minimize")
+                highlightColor: Theme.acid
+                onClicked: window.showMinimized()
+            }
+
+            WindowControlButton {
+                controlType: window.visibility === Window.Maximized ? "restore" : "maximize"
+                accessibleName: window.visibility === Window.Maximized
+                                ? qsTr("Restore") : qsTr("Maximize")
+                highlightColor: Theme.accent
+                onClicked: {
+                    if (window.visibility === Window.Maximized) {
+                        window.showNormal()
+                    }
+                    else {
+                        window.showMaximized()
+                    }
+                }
+            }
+
+            WindowControlButton {
+                controlType: "close"
+                accessibleName: qsTr("Close")
+                highlightColor: Theme.danger
+                onClicked: window.close()
             }
         }
     }
@@ -629,14 +873,22 @@ ApplicationWindow {
         }
 
         ColumnLayout {
-            Label {
+            spacing: Theme.spaceSm
+
+            Text {
                 text: addPcDialog.label
-                font.bold: true
+                color: Theme.text
+                font.family: Theme.fontSans
+                font.pointSize: Theme.fontRowTitle
+                font.weight: Font.DemiBold
+                Layout.fillWidth: true
             }
 
-            TextField {
+            HardTextField {
                 id: editText
+                placeholderText: "192.168.1.100"
                 Layout.fillWidth: true
+                Layout.minimumWidth: 260
                 focus: true
 
                 Keys.onReturnPressed: {
@@ -645,6 +897,56 @@ ApplicationWindow {
 
                 Keys.onEnterPressed: {
                     addPcDialog.accept()
+                }
+            }
+
+            // 云主机推广。放在这里是因为「我没有可以串流的主机」正好是打开这个框的
+            // 人最可能卡住的地方 —— 手动填 IP 填不出一台主机来。
+            //
+            // 没有浏览器可用时整块隐藏（和 QQ 按钮同一个判断），否则按钮点了没反应。
+            Item {
+                Layout.fillWidth: true
+                Layout.topMargin: Theme.spaceSm
+                implicitHeight: promoColumn.implicitHeight
+                visible: SystemProperties.hasBrowser
+
+                Column {
+                    id: promoColumn
+
+                    anchors { left: parent.left; right: parent.right }
+                    spacing: Theme.spaceSm
+
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: Theme.line
+                    }
+
+                    MicroLabel {
+                        width: parent.width
+                        text: qsTr("No host PC of your own?")
+                        // 这句比一般微标签长，允许折行（MicroLabel 默认单行省略）
+                        elide: Text.ElideNone
+                        wrapMode: Text.Wrap
+                    }
+
+                    Text {
+                        width: parent.width
+                        //: Procriva Cloud is a product name and must not be translated.
+                        text: qsTr("Procriva Cloud rents out cloud hosts that are ready to stream.")
+                        color: Theme.text
+                        font.family: Theme.fontSans
+                        font.pointSize: Theme.fontBody
+                        wrapMode: Text.Wrap
+                    }
+
+                    HardButton {
+                        text: qsTr("Learn more")
+                        // 焦点默认停在输入框上，别让这颗按钮抢走
+                        focusPolicy: Qt.TabFocus
+
+                        onClicked: Qt.openUrlExternally("https://client.cloud.procriva.com/")
+                    }
                 }
             }
         }

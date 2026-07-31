@@ -1,5 +1,7 @@
 import QtQuick 2.12
-import QtQuick.Controls 2.2
+import QtQuick.Controls
+
+import "theme"
 
 Item {
     id: handle
@@ -32,15 +34,17 @@ Item {
     Accessible.role: Accessible.Slider
     Accessible.name: valueLabel
 
+    // 三个把手全部方角，配色跟着刻度条的三段：暗青 / 青 / 酸性绿。
+    // 焦点态统一用一圈亮描边，不再靠改颜色区分。
     Rectangle {
         anchors.centerIn: parent
         visible: handle.handleStyle === handle.minimumStyle
         width: 10
         height: 10
-        radius: width / 2
-        color: "#64B5F6"
+        radius: 0
+        color: Theme.accentDim
         border.width: 2
-        border.color: handle.activeFocus ? "#FFFFFF" : "#D9FFFFFF"
+        border.color: handle.activeFocus ? Theme.text : Theme.ink
     }
 
     Rectangle {
@@ -48,10 +52,10 @@ Item {
         visible: handle.handleStyle === handle.averageStyle
         width: 5
         height: handle.scaleItem ? handle.scaleItem.height + 12 : 26
-        radius: 2
-        color: "#A8D3EC"
+        radius: 0
+        color: Theme.accent
         border.width: handle.activeFocus ? 1 : 0
-        border.color: "#FFFFFF"
+        border.color: Theme.text
     }
 
     Rectangle {
@@ -59,19 +63,20 @@ Item {
         visible: handle.handleStyle === handle.peakStyle
         width: 14
         height: 14
-        radius: width / 2
-        color: "#F4FAFF"
+        radius: 0
+        color: Theme.acid
         border.width: 2
-        border.color: handle.activeFocus ? "#FFFFFF" : "#FFB86B"
+        border.color: handle.activeFocus ? Theme.text : Theme.ink
 
+        // 峰值把手带一圈酸性绿光晕，替代参考站的 box-shadow: 0 0 12px
         Rectangle {
             anchors.centerIn: parent
             width: parent.width + 8
             height: width
-            radius: width / 2
+            radius: 0
             color: "transparent"
             border.width: 2
-            border.color: "#45FFB86B"
+            border.color: Theme.acidGlow
             z: -1
         }
     }

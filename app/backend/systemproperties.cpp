@@ -51,7 +51,9 @@ SystemProperties::SystemProperties()
     hasDesktopEnvironment = WMUtils::isRunningDesktopEnvironment();
     isRunningWayland = WMUtils::isRunningWayland();
     isRunningXWayland = isRunningWayland && QGuiApplication::platformName() == "xcb";
-    usesMaterial3Theme = QLibraryInfo::version() >= QVersionNumber(6, 5, 0);
+    // Keep in sync with the style selection in main.cpp
+    usesFluentTheme = QLibraryInfo::version() >= QVersionNumber(6, 8, 0);
+    usesMaterial3Theme = !usesFluentTheme && QLibraryInfo::version() >= QVersionNumber(6, 5, 0);
 
 #ifdef Q_OS_DARWIN
     isDarwin = true;
