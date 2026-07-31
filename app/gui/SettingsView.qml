@@ -83,14 +83,13 @@ Item {
         }
     }
 
-    // 只为了拿到当前主机的背景图
-    PcView {
-        id: pcViewPage
-    }
-
+    // Reuse the background already owned by the application window. Creating a
+    // hidden PcView here duplicated its model, network work, and scene graph.
     Image {
         anchors.fill: parent
-        source: pcViewPage.currentBgUrl || "qrc:/res/gura.png"
+        source: Window.window && Window.window.backgroundImageUrl !== ""
+                ? Window.window.backgroundImageUrl
+                : "qrc:/res/gura.png"
         opacity: 0.35
         fillMode: Image.PreserveAspectCrop
         z: -2

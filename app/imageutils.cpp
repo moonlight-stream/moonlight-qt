@@ -1,14 +1,20 @@
 #include "imageutils.h"
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QFile>
-#include <QDir>
-#include <QStandardPaths>
-#include <QEventLoop>
-#include <QFileInfo>
-#include <QDateTime>
-#include <QImage>
+
 #include <QBuffer>
+#include <QDateTime>
+#include <QDebug>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
+#include <QImage>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QStandardPaths>
+#include <QThread>
+#include <QTimer>
+
+#include <limits>
+#include <memory>
 
 #ifdef Q_OS_WIN
 #include <wincodec.h>
@@ -16,157 +22,170 @@
 #pragma comment(lib, "ole32.lib")
 #endif
 
-ImageUtils::ImageUtils(QObject *parent) : QObject(parent)
+ImageUtils::ImageUtils(QObject *parent)
+    : QObject(parent),
+      m_backgroundNetworkManager(this)
 {
 }
 
 void ImageUtils::saveImageToFile(const QString &imageUrl, const QUrl &localPath)
 {
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    QNetworkRequest request((QUrl(imageUrl)));
+    QNetworkReply *reply = manager->get(QNetworkRequest(QUrl(imageUrl)));
 
-    QNetworkReply *reply = manager->get(request);
-    connect(reply, &QNetworkReply::finished, [=]()
-            {
-        if(reply->error() == QNetworkReply::NoError) {
-            QString filePath = localPath.toLocalFile();
+    connect(reply, &QNetworkReply::finished, this, [this, manager, reply, localPath]() {
+        if (reply->error() == QNetworkReply::NoError) {
+            const QString filePath = localPath.toLocalFile();
             QFile file(filePath);
-            if(file.open(QIODevice::WriteOnly)) {
-                file.write(reply->readAll());
+            if (file.open(QIODevice::WriteOnly)) {
+                const QByteArray payload = reply->readAll();
+                const bool written = file.write(payload) == payload.size();
                 file.close();
-                emit saveCompleted(true, filePath);
-            } else {
-                emit saveCompleted(false, "无法写入文件");
+                if (written && file.error() == QFileDevice::NoError) {
+                    emit saveCompleted(true, filePath);
+                }
+                else {
+                    emit saveCompleted(false, tr("Unable to write file"));
+                }
             }
-        } else {
+            else {
+                emit saveCompleted(false, tr("Unable to write file"));
+            }
+        }
+        else {
             emit saveCompleted(false, reply->errorString());
         }
+
         reply->deleteLater();
-        manager->deleteLater(); });
+        manager->deleteLater();
+    });
 }
 
-QString ImageUtils::saveImageFromUrl(const QString &url)
+void ImageUtils::fetchAndSaveRandomBackground(const QString &apiUrl)
 {
-    QNetworkAccessManager manager;
-    QEventLoop loop;
+    if (m_backgroundFetchInProgress) {
+        emit backgroundBusy();
+        return;
+    }
 
-    QNetworkRequest request(url);
-    QNetworkReply *reply = manager.get(request);
+    m_backgroundApiUrl = QUrl(apiUrl);
+    if (!m_backgroundApiUrl.isValid()) {
+        emit backgroundError(tr("Invalid background image URL"));
+        return;
+    }
 
-    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    loop.exec();
+    m_backgroundAttempt = 0;
+    m_backgroundFetchInProgress = true;
+    startBackgroundRequest();
+}
 
-    if (reply->error() != QNetworkReply::NoError)
-    {
+void ImageUtils::startBackgroundRequest()
+{
+    ++m_backgroundAttempt;
+
+    QNetworkRequest request(m_backgroundApiUrl);
+    request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                       "Chrome/125.0.0.0 Safari/537.36");
+    request.setRawHeader("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
+    request.setRawHeader("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8");
+    request.setRawHeader("Referer", m_backgroundApiUrl.toEncoded());
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                         QNetworkRequest::NoLessSafeRedirectPolicy);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    request.setTransferTimeout(15000);
+#endif
+
+    QNetworkReply *reply = m_backgroundNetworkManager.get(request);
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+    QTimer::singleShot(15000, reply, [reply]() {
+        if (reply->isRunning()) {
+            reply->abort();
+        }
+    });
+#endif
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        if (reply->error() != QNetworkReply::NoError) {
+            const QString errorMessage = reply->errorString();
+            reply->deleteLater();
+            retryOrFailBackground(errorMessage);
+            return;
+        }
+
+        const QByteArray imageData = reply->readAll();
         reply->deleteLater();
+        if (imageData.size() < 1024) {
+            retryOrFailBackground(tr("Background server returned an empty response"));
+            return;
+        }
+
+        const auto result = std::make_shared<QString>();
+        QThread *worker = QThread::create([result, imageData]() {
+            *result = ImageUtils::decodeAndSaveBackground(imageData);
+        });
+        connect(worker, &QThread::finished, this, [this, result]() {
+            if (result->isEmpty()) {
+                retryOrFailBackground(tr("Unable to decode background image"));
+                return;
+            }
+
+            m_backgroundFetchInProgress = false;
+            emit backgroundReady(*result);
+        });
+        connect(worker, &QThread::finished, worker, &QObject::deleteLater);
+        worker->start();
+    });
+}
+
+void ImageUtils::retryOrFailBackground(const QString &errorMessage)
+{
+    qWarning() << "fetchAndSaveRandomBackground: attempt" << m_backgroundAttempt
+               << "failed:" << errorMessage;
+    if (m_backgroundAttempt < 3) {
+        QTimer::singleShot(500 * m_backgroundAttempt, this, [this]() {
+            startBackgroundRequest();
+        });
+        return;
+    }
+
+    m_backgroundFetchInProgress = false;
+    emit backgroundError(errorMessage);
+}
+
+QString ImageUtils::decodeAndSaveBackground(const QByteArray &imageData)
+{
+    QByteArray decodableData = imageData;
+    QImage image;
+    if (!image.loadFromData(decodableData)) {
+        decodableData = convertToJpeg(decodableData);
+        if (decodableData.isEmpty() || !image.loadFromData(decodableData)) {
+            return QString();
+        }
+    }
+
+    const QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) +
+            "/backgrounds";
+    QDir().mkpath(cacheDir);
+    const QString filePath = cacheDir + "/background_" +
+            QString::number(QDateTime::currentMSecsSinceEpoch()) + ".jpg";
+    if (!image.save(filePath, "JPEG", 90)) {
         return QString();
     }
 
-    QByteArray imageData = reply->readAll();
-    reply->deleteLater();
-
-    // 创建缓存目录
-    QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/backgrounds";
-    QDir().mkpath(cacheDir);
-
-    // 生成文件名
-    QString filePath = cacheDir + "/background.jpg";
-
-    // 保存文件
-    QFile file(filePath);
-    if (file.open(QIODevice::WriteOnly))
-    {
-        file.write(imageData);
-        file.close();
-        return filePath;
-    }
-
-    return QString();
-}
-
-QString ImageUtils::fetchAndSaveRandomBackground(const QString &apiUrl)
-{
-    QNetworkAccessManager manager;
-    
-    // 最多重试3次（因为部分随机图片可能返回500）
-    for (int attempt = 0; attempt < 3; attempt++) {
-        QNetworkRequest request{QUrl(apiUrl)};
-        request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36");
-        request.setRawHeader("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
-        request.setRawHeader("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8");
-        request.setRawHeader("Referer", QUrl(apiUrl).toEncoded());
-        request.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
-                             QNetworkRequest::NoLessSafeRedirectPolicy);
-        
-        QEventLoop loop;
-        QNetworkReply *reply = manager.get(request);
-        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-        loop.exec();
-
-        if (reply->error() != QNetworkReply::NoError) {
-            qWarning() << "fetchAndSaveRandomBackground: attempt" << (attempt + 1) 
-                       << "failed:" << reply->errorString();
-            reply->deleteLater();
-            continue;
-        }
-
-        QByteArray imageData = reply->readAll();
-        reply->deleteLater();
-
-        if (imageData.isEmpty() || imageData.size() < 1024) {
-            qWarning() << "fetchAndSaveRandomBackground: attempt" << (attempt + 1) 
-                       << "got empty/tiny response";
-            continue;
-        }
-
-        // 尝试用 QImage 加载（支持 jpg/png/gif 等 Qt 内置格式）
-        QImage image;
-        if (!image.loadFromData(imageData)) {
-            // QImage 无法加载（可能是 WebP 等不支持的格式）
-            // 尝试转换为 JPEG
-            QByteArray jpegData = convertToJpeg(imageData);
-            if (jpegData.isEmpty()) {
-                qWarning() << "fetchAndSaveRandomBackground: attempt" << (attempt + 1) 
-                           << "failed to decode image";
-                continue;
-            }
-            imageData = jpegData;
-            // 验证转换结果
-            if (!image.loadFromData(imageData)) {
-                qWarning() << "fetchAndSaveRandomBackground: converted data still unreadable";
-                continue;
-            }
-        }
-
-        // 创建缓存目录
-        QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/backgrounds";
-        QDir().mkpath(cacheDir);
-
-        // 使用时间戳作为文件名
-        QString filePath = cacheDir + "/background_" + QString::number(QDateTime::currentMSecsSinceEpoch()) + ".jpg";
-
-        // 保存为 JPEG（确保 Qt Image 可以加载）
-        if (image.save(filePath, "JPEG", 90)) {
-            // 清理旧的背景图文件（保留最新的）
-            QDir bgDir(cacheDir);
-            QStringList filters;
-            filters << "background_*.*";
-            QFileInfoList oldFiles = bgDir.entryInfoList(filters, QDir::Files, QDir::Time);
-            for (int i = 1; i < oldFiles.size(); i++) {
-                QFile::remove(oldFiles[i].absoluteFilePath());
-            }
-            
-            return filePath;
+    QDir bgDir(cacheDir);
+    QStringList filters;
+    filters << "background_*.*";
+    const QFileInfoList oldFiles = bgDir.entryInfoList(filters, QDir::Files, QDir::Time);
+    for (const QFileInfo &oldFile : oldFiles) {
+        if (oldFile.absoluteFilePath() != filePath) {
+            QFile::remove(oldFile.absoluteFilePath());
         }
     }
-    
-    qWarning() << "fetchAndSaveRandomBackground: all attempts failed";
-    return QString();
+    return filePath;
 }
 
 QByteArray ImageUtils::convertToJpeg(const QByteArray &imageData)
 {
-    // 首先尝试 QImage（如果安装了 qtimageformats 模块，支持 WebP/TIFF等）
     QImage image;
     if (image.loadFromData(imageData)) {
         QByteArray result;
@@ -177,77 +196,84 @@ QByteArray ImageUtils::convertToJpeg(const QByteArray &imageData)
     }
 
 #ifdef Q_OS_WIN
-    // Windows 后备方案：使用 WIC (Windows Imaging Component)
-    // Windows 10+ 原生支持 WebP 解码
-    CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    
+    const HRESULT comResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    const bool shouldUninitialize = SUCCEEDED(comResult);
+
     QByteArray result;
     IWICImagingFactory *factory = nullptr;
     IWICStream *stream = nullptr;
     IWICBitmapDecoder *decoder = nullptr;
     IWICBitmapFrameDecode *frame = nullptr;
-    
+
     HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
                                   IID_PPV_ARGS(&factory));
     if (FAILED(hr)) goto cleanup;
-    
+
     hr = factory->CreateStream(&stream);
     if (FAILED(hr)) goto cleanup;
-    
-    hr = stream->InitializeFromMemory(reinterpret_cast<BYTE*>(const_cast<char*>(imageData.data())),
-                                       imageData.size());
+
+    hr = stream->InitializeFromMemory(reinterpret_cast<BYTE *>(const_cast<char *>(imageData.data())),
+                                      imageData.size());
     if (FAILED(hr)) goto cleanup;
-    
+
     hr = factory->CreateDecoderFromStream(stream, nullptr, WICDecodeMetadataCacheOnDemand, &decoder);
     if (FAILED(hr)) goto cleanup;
-    
+
     hr = decoder->GetFrame(0, &frame);
     if (FAILED(hr)) goto cleanup;
-    
+
     {
-        UINT width, height;
+        UINT width = 0;
+        UINT height = 0;
         frame->GetSize(&width, &height);
-        
-        // 转换为 32bpp BGRA
+
+        const qint64 stride = static_cast<qint64>(width) * 4;
+        const qint64 bufferSize = stride * static_cast<qint64>(height);
+        static constexpr qint64 kMaximumDecodedBytes = 512LL * 1024 * 1024;
+        if (width == 0 || height == 0 ||
+                width > static_cast<UINT>((std::numeric_limits<int>::max)()) ||
+                height > static_cast<UINT>((std::numeric_limits<int>::max)()) ||
+                stride > (std::numeric_limits<UINT>::max)() ||
+                bufferSize <= 0 || bufferSize > kMaximumDecodedBytes ||
+                bufferSize > (std::numeric_limits<UINT>::max)()) {
+            goto cleanup;
+        }
+
         IWICFormatConverter *converter = nullptr;
         hr = factory->CreateFormatConverter(&converter);
         if (FAILED(hr)) goto cleanup;
-        
+
         hr = converter->Initialize(frame, GUID_WICPixelFormat32bppBGRA,
-                                    WICBitmapDitherTypeNone, nullptr, 0.0,
-                                    WICBitmapPaletteTypeCustom);
+                                   WICBitmapDitherTypeNone, nullptr, 0.0,
+                                   WICBitmapPaletteTypeCustom);
         if (FAILED(hr)) {
             converter->Release();
             goto cleanup;
         }
-        
-        // 读取像素数据
-        QByteArray pixels(width * height * 4, 0);
-        hr = converter->CopyPixels(nullptr, width * 4, pixels.size(),
-                                    reinterpret_cast<BYTE*>(pixels.data()));
+
+        QByteArray pixels(static_cast<qsizetype>(bufferSize), 0);
+        hr = converter->CopyPixels(nullptr, static_cast<UINT>(stride),
+                                   static_cast<UINT>(bufferSize),
+                                   reinterpret_cast<BYTE *>(pixels.data()));
         converter->Release();
         if (FAILED(hr)) goto cleanup;
-        
-        // 创建 QImage 并保存为 JPEG
-        QImage wicImage(reinterpret_cast<const uchar*>(pixels.constData()),
-                        width, height, width * 4, QImage::Format_ARGB32);
-        
+
+        QImage wicImage(reinterpret_cast<const uchar *>(pixels.constData()),
+                        static_cast<int>(width), static_cast<int>(height),
+                        static_cast<qsizetype>(stride), QImage::Format_ARGB32);
         QBuffer buffer(&result);
         buffer.open(QIODevice::WriteOnly);
         wicImage.save(&buffer, "JPEG", 90);
     }
-    
+
 cleanup:
     if (frame) frame->Release();
     if (decoder) decoder->Release();
     if (stream) stream->Release();
     if (factory) factory->Release();
-    
+    if (shouldUninitialize) CoUninitialize();
     return result;
 #else
-    // Linux/macOS: 需要安装 qtimageformats 模块以支持 WebP
-    // Linux: sudo apt install qt6-image-formats-plugins (或对应包管理器)
-    // macOS: brew install qt (通常已包含)
     qWarning() << "convertToJpeg: unsupported image format. Install qtimageformats for WebP support.";
     return QByteArray();
 #endif
@@ -264,20 +290,16 @@ bool ImageUtils::isValidCache(const QString &cachePath)
         return false;
     }
 
-    QFileInfo fileInfo(cachePath);
-    const qint64 twentyFourHours = 24 * 60 * 60;  // 24小时有效期
-    
-    // 检查文件时效性和有效性
+    const QFileInfo fileInfo(cachePath);
+    const qint64 twentyFourHours = 24 * 60 * 60;
     return fileInfo.lastModified().secsTo(QDateTime::currentDateTime()) < twentyFourHours &&
-           fileInfo.size() > 1024 &&          // 文件至少1KB
-           fileInfo.suffix().toLower() == "jpg"; // 验证文件格式
+           fileInfo.size() > 1024 &&
+           fileInfo.suffix().toLower() == "jpg";
 }
 
 bool ImageUtils::validateExtension(const QString &filePath)
 {
     static const QStringList allowedExtensions = {"jpg", "jpeg", "png", "bmp"};
-    QFileInfo fileInfo(filePath);
-    QString extension = fileInfo.suffix().toLower();
-    
+    const QString extension = QFileInfo(filePath).suffix().toLower();
     return !extension.isEmpty() && allowedExtensions.contains(extension);
 }

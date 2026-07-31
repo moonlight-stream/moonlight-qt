@@ -3,6 +3,8 @@
 #include "computermanager.h"
 #include <QDir>
 #include <QImage>
+#include <QHash>
+#include <QMutex>
 #include <QThreadPool>
 #include <QRunnable>
 
@@ -34,11 +36,22 @@ private slots:
 
 private:
     QUrl
-    loadBoxArtFromNetwork(NvComputer* computer, int appId);
+    loadBoxArtFromNetwork(NvComputer* computer, const NvApp& app);
+
+    static bool
+    isPlaceholderBoxArt(const QSize& size);
+
+    bool
+    isCachedPlaceholderBoxArt(const QString& cachePath);
+
+    void
+    rememberPlaceholderBoxArt(const QString& cachePath, bool isPlaceholder);
 
     QString
     getFilePathForBoxArt(NvComputer* computer, int appId);
 
     QDir m_BoxArtDir;
     QThreadPool m_ThreadPool;
+    QMutex m_PlaceholderCacheMutex;
+    QHash<QString, bool> m_PlaceholderCache;
 };

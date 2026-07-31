@@ -667,15 +667,7 @@ CenteredGridView {
 
         function getBackgroundImage() {
             loadingIndicator.visible = true
-
-            var cachePath = imageUtils.fetchAndSaveRandomBackground("https://img-api.pipw.top/")
-            loadingIndicator.visible = false
-
-            if (cachePath) {
-                handleImageResponse(cachePath)
-            } else {
-                handleImageError("fetchAndSaveRandomBackground returned empty")
-            }
+            imageUtils.fetchAndSaveRandomBackground("https://img-api.pipw.top/")
         }
 
         function handleImageResponse(cachePath) {
@@ -689,10 +681,10 @@ CenteredGridView {
             settings.lastRefreshTime = Date.now()
         }
 
-        function handleImageError(status) {
-            console.error("Background image load failed:", status)
+        function handleImageError(errorMessage) {
+            console.error("Background image load failed:", errorMessage)
             if (!source.toString().startsWith("file://")) {
-                source = "qrc:/res/gura.jpg"
+                source = "qrc:/res/gura.png"
             }
         }
 
@@ -924,6 +916,15 @@ CenteredGridView {
 
     ImageUtils {
         id: imageUtils
+        onBackgroundReady: function(filePath) {
+            loadingIndicator.visible = false
+            backgroundImage.handleImageResponse(filePath)
+        }
+        onBackgroundError: function(errorMessage) {
+            loadingIndicator.visible = false
+            backgroundImage.handleImageError(errorMessage)
+        }
+        onBackgroundBusy: loadingIndicator.visible = false
         onSaveCompleted: function(success, message) {
             if (success) {
                 saveNotification.text = qsTr("Image saved to: %1").arg(message)

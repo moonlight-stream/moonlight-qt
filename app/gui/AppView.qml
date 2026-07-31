@@ -1,5 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls
+import QtQuick.Window 2.2
 
 import AppModel 1.0
 import ComputerManager 1.0
@@ -416,34 +417,23 @@ CenteredGridView {
 
             Image {
                 property bool isPlaceholder: false
+                readonly property real requestedDpr:
+                    Window.window ? Window.window.devicePixelRatio : 1
 
                 id: appIcon
 
                 // 封面铺满整块 tile，不再是居中的 200×267 + 顶部 10px 偏移
                 anchors.fill: parent
                 source: model.boxart
+                sourceSize: Qt.size(Math.max(1, Math.ceil(width * requestedDpr)),
+                                    Math.max(1, Math.ceil(height * requestedDpr)))
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
 
-                onSourceSizeChanged: {
-                    // Nearly all of Nvidia's official box art does not match the dimensions of placeholder
-                    // images, however the one known exception is Overcooked. Therefore, we only execute
-                    // the image size checks if this is not an app collector game. We know the officially
-                    // supported games all have box art, so this check is not required.
-                    if (!model.isAppCollectorGame &&
-                        ((sourceSize.width === 130 && sourceSize.height === 180) || // GFE 2.0 placeholder image
-                         (sourceSize.width === 628 && sourceSize.height === 888) || // GFE 3.0 placeholder image
-                         (sourceSize.width === 200 && sourceSize.height === 266)))  // Our no_app_image.png
-                    {
-                        isPlaceholder = true
-                    }
-                    else
-                    {
-                        isPlaceholder = false
-                    }
-
-                    // 以前这里还会把 width/height 钉成 200×267，现在靠 anchors 铺满，
-                    // 再赋值会把 anchors 打掉。
+                onSourceChanged: {
+                    // BoxArtManager normalizes host placeholders to this resource
+                    // before display, so source-size decoding cannot break detection.
+                    isPlaceholder = source.toString() === "qrc:/res/no_app_image.png"
                 }
 
                 // Display a tooltip with the full name if it's truncated

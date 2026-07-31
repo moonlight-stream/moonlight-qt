@@ -3,6 +3,7 @@
 
 #include <QImageReader>
 #include <QImageWriter>
+#include <QMutexLocker>
 
 BoxArtManager::BoxArtManager(QObject *parent) :
     QObject(parent),
@@ -36,6 +37,34 @@ BoxArtManager::getFilePathForBoxArt(NvComputer* computer, int appId)
     return dir.filePath(QString::number(appId) + ".png");
 }
 
+bool BoxArtManager::isPlaceholderBoxArt(const QSize& size)
+{
+    return size == QSize(130, 180) ||
+           size == QSize(628, 888) ||
+           size == QSize(200, 266);
+}
+
+bool BoxArtManager::isCachedPlaceholderBoxArt(const QString& cachePath)
+{
+    {
+        QMutexLocker locker(&m_PlaceholderCacheMutex);
+        const auto cached = m_PlaceholderCache.constFind(cachePath);
+        if (cached != m_PlaceholderCache.constEnd()) {
+            return cached.value();
+        }
+    }
+
+    const bool isPlaceholder = isPlaceholderBoxArt(QImageReader(cachePath).size());
+    rememberPlaceholderBoxArt(cachePath, isPlaceholder);
+    return isPlaceholder;
+}
+
+void BoxArtManager::rememberPlaceholderBoxArt(const QString& cachePath, bool isPlaceholder)
+{
+    QMutexLocker locker(&m_PlaceholderCacheMutex);
+    m_PlaceholderCache.insert(cachePath, isPlaceholder);
+}
+
 class NetworkBoxArtLoadTask : public QObject, public QRunnable
 {
     Q_OBJECT
@@ -56,10 +85,10 @@ signals:
 private:
     void run()
     {
-        QUrl image = m_Bam->loadBoxArtFromNetwork(m_Computer, m_App.id);
+        QUrl image = m_Bam->loadBoxArtFromNetwork(m_Computer, m_App);
         if (image.isEmpty()) {
             // Give it another shot if it fails once
-            image = m_Bam->loadBoxArtFromNetwork(m_Computer, m_App.id);
+            image = m_Bam->loadBoxArtFromNetwork(m_Computer, m_App);
         }
         emit boxArtFetchCompleted(m_Computer, m_App, image);
     }
@@ -74,6 +103,9 @@ QUrl BoxArtManager::loadBoxArt(NvComputer* computer, NvApp& app)
     // Try to open the cached file if it exists and contains data
     QFile cacheFile(getFilePathForBoxArt(computer, app.id));
     if (cacheFile.exists() && cacheFile.size() > 0) {
+        if (!app.isAppCollectorGame && isCachedPlaceholderBoxArt(cacheFile.fileName())) {
+            return QUrl("qrc:/res/no_app_image.png");
+        }
         return QUrl::fromLocalFile(cacheFile.fileName());
     }
 
@@ -104,19 +136,27 @@ void BoxArtManager::handleBoxArtLoadComplete(NvComputer* computer, NvApp app, QU
     }
 }
 
-QUrl BoxArtManager::loadBoxArtFromNetwork(NvComputer* computer, int appId)
+QUrl BoxArtManager::loadBoxArtFromNetwork(NvComputer* computer, const NvApp& app)
 {
     NvHTTP http(computer);
 
-    QString cachePath = getFilePathForBoxArt(computer, appId);
+    QString cachePath = getFilePathForBoxArt(computer, app.id);
     QImage image;
     try {
-        image = http.getBoxArt(appId);
+        image = http.getBoxArt(app.id);
     } catch (...) {}
 
     // Cache the box art on disk if it loaded
     if (!image.isNull()) {
         if (image.save(cachePath)) {
+            // Cache only the image property. App classification is applied by
+            // the caller so a later classification change cannot poison this
+            // path's cached result.
+            const bool isPlaceholder = isPlaceholderBoxArt(image.size());
+            rememberPlaceholderBoxArt(cachePath, isPlaceholder);
+            if (!app.isAppCollectorGame && isPlaceholder) {
+                return QUrl("qrc:/res/no_app_image.png");
+            }
             return QUrl::fromLocalFile(cachePath);
         }
         else {
