@@ -123,6 +123,22 @@ void AutoUpdateChecker::parseStringToVersionQuad(const QString& string, QVector<
     }
 }
 
+QString AutoUpdateChecker::getPreferredAssetSuffix() const
+{
+#if defined(Q_OS_DARWIN)
+    // CI 出的 DMG 现在带架构后缀（Moonlight-<版本>-arm64.dmg）。
+    // QSysInfo::buildCpuArchitecture() 给的是 arm64 / x86_64，和 generate-dmg.sh
+    // 里的 MOONLIGHT_ARCH 用词一致。
+    //
+    // 只是「优先」而不是「必须」：这个后缀是从某个版本才开始有的，旧 release 里是
+    // Moonlight-<版本>.dmg。匹配不到就退回任意 .dmg，否则老版本的用户会看到
+    // 「找不到更新包」。
+    return QStringLiteral("-") + QSysInfo::buildCpuArchitecture() + QStringLiteral(".dmg");
+#else
+    return QString();
+#endif
+}
+
 QString AutoUpdateChecker::getExpectedAssetSuffix() const
 {
 #if defined(Q_OS_WIN32)
@@ -277,8 +293,15 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
             QString expectedPrefix = getExpectedAssetPrefix();
             QString expectedSuffix = getExpectedAssetSuffix();
 
+            QString preferredSuffix = getPreferredAssetSuffix();
+
             if (!expectedSuffix.isEmpty() && releaseObj.contains("assets") && releaseObj["assets"].isArray()) {
                 QJsonArray assets = releaseObj["assets"].toArray();
+
+                // 后备候选：后缀对得上但不带本机架构后缀的那个（旧 release 的命名）
+                QString fallbackUrl;
+                QString fallbackName;
+
                 for (const auto& asset : std::as_const(assets)) {
                     if (asset.isObject()) {
                         QJsonObject assetObj = asset.toObject();
@@ -287,12 +310,35 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
                                              assetName.startsWith(expectedPrefix, Qt::CaseInsensitive);
                         bool suffixMatches = assetName.endsWith(expectedSuffix, Qt::CaseInsensitive);
 
-                        if (prefixMatches && suffixMatches) {
+                        if (!prefixMatches || !suffixMatches) {
+                            continue;
+                        }
+
+                        if (!preferredSuffix.isEmpty() &&
+                                assetName.endsWith(preferredSuffix, Qt::CaseInsensitive)) {
                             downloadUrl = assetObj["browser_download_url"].toString();
-                            qDebug() << "Found matching asset:" << assetName;
+                            qDebug() << "Found matching asset for this architecture:" << assetName;
                             break;
                         }
+
+                        // 后备只认「没带架构后缀」的旧命名。带了别的架构后缀的资产
+                        // 绝对不能当后备 —— 只发了 arm64 包的 release 会把 arm64 的
+                        // DMG 喂给 Intel 客户端。这种情况下宁可让 downloadUrl 留空，
+                        // 退回打开 release 页面让用户自己看。
+                        bool isOtherArchAsset =
+                                assetName.endsWith(QStringLiteral("-arm64.dmg"), Qt::CaseInsensitive) ||
+                                assetName.endsWith(QStringLiteral("-x86_64.dmg"), Qt::CaseInsensitive);
+
+                        if (fallbackUrl.isEmpty() && !isOtherArchAsset) {
+                            fallbackUrl = assetObj["browser_download_url"].toString();
+                            fallbackName = assetName;
+                        }
                     }
+                }
+
+                if (downloadUrl.isEmpty() && !fallbackUrl.isEmpty()) {
+                    downloadUrl = fallbackUrl;
+                    qDebug() << "Found matching asset:" << fallbackName;
                 }
             }
 

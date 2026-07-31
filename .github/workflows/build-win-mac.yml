@@ -4,6 +4,14 @@ permissions:
   contents: read
 
 on:
+  # 目前没有别的 workflow 调用这一份（发布走 build.yml），加上手动触发至少让它
+  # 可以被单独跑一次验证，而不是躺在仓库里永远不执行。
+  workflow_dispatch:
+    inputs:
+      ci_version:
+        required: false
+        default: manual
+        type: string
   workflow_call:
     inputs:
       ci_version:

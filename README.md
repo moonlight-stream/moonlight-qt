@@ -13,6 +13,8 @@
 
 推荐从本 fork 的 [GitHub Releases](https://github.com/qiin2333/moonlight-qt/releases) 下载 Windows、macOS、Linux AppImage 和 Steam Link 构建产物。
 
+> **macOS 目前只提供 Apple Silicon（arm64）构建**，资产名形如 `Moonlight-<版本>-arm64.dmg`。Intel Mac 需要自行按下面「从源码构建」的步骤编译。
+
 如果你需要上游 Moonlight 的官方发行渠道、移动端客户端、Flatpak、Snap 或发行版软件源，请参考 [Moonlight 官方网站](https://moonlight-stream.org) 和 [上游仓库](https://github.com/moonlight-stream/moonlight-qt)。这些渠道不一定包含本 fork 与 Foundation Sunshine 配套的扩展能力。
 
 ## Foundation Sunshine 协同

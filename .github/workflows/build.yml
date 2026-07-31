@@ -213,7 +213,7 @@ jobs:
         echo "CI_VERSION=$VERSION" >> $GITHUB_ENV
 
     - name: Install Qt 6.11.1
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         version: '6.11.1'
         modules: 'qtmultimedia qtimageformats'
@@ -226,7 +226,9 @@ jobs:
         echo "PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig:$HOME/local/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
         echo "UBUNTU_RELEASE=$(lsb_release -rs)" >> $GITHUB_ENV
 
-    # This may still install various Qt packages, but the later install step will override them
+    # 注意顺序：上面的 install-qt-action 已经装好了 6.11.1 并把它的 qmake 放进 PATH，
+    # 这一步在它之后。所以这里不要再 apt 装任何 Qt 包 —— 发行版的 Qt（jammy 上是
+    # 6.2.x）不会被用到，装了只是白下载，还可能在 AppImage 打包阶段被扫进去。
     - name: Install packaged deps
       run: |
         wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
@@ -243,7 +245,7 @@ jobs:
           libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxss-dev libxt-dev \
           libxv-dev libxxf86vm-dev libxcb-dri3-dev libx11-xcb-dev libwayland-dev wayland-protocols \
           libxfixes-dev libxtst-dev libpipewire-0.3-dev \
-          libopus-dev libvdpau-dev vulkan-sdk qt6-multimedia-dev cmake
+          libopus-dev libvdpau-dev vulkan-sdk cmake
         
         # Install XCB runtime libraries for Qt6 XCB platform plugin
         echo "Installing XCB runtime libraries..."
