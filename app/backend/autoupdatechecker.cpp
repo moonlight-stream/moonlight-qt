@@ -51,7 +51,8 @@ bool AutoUpdateChecker::supportsInAppUpdate() const
 
 void AutoUpdateChecker::installUpdate(QString url)
 {
-    m_PortableUpdateInstaller->installUpdate(url);
+    const QString expectedDigest = url == m_UpdateDownloadUrl ? m_UpdateAssetDigest : QString();
+    m_PortableUpdateInstaller->installUpdate(url, expectedDigest);
 }
 
 void AutoUpdateChecker::start()
@@ -290,6 +291,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
 
             // Try to find a platform-specific download URL from assets
             QString downloadUrl;
+            QString assetDigest;
             QString expectedPrefix = getExpectedAssetPrefix();
             QString expectedSuffix = getExpectedAssetSuffix();
 
@@ -301,6 +303,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
                 // 后备候选：后缀对得上但不带本机架构后缀的那个（旧 release 的命名）
                 QString fallbackUrl;
                 QString fallbackName;
+                QString fallbackDigest;
 
                 for (const auto& asset : std::as_const(assets)) {
                     if (asset.isObject()) {
@@ -317,6 +320,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
                         if (!preferredSuffix.isEmpty() &&
                                 assetName.endsWith(preferredSuffix, Qt::CaseInsensitive)) {
                             downloadUrl = assetObj["browser_download_url"].toString();
+                            assetDigest = assetObj["digest"].toString();
                             qDebug() << "Found matching asset for this architecture:" << assetName;
                             break;
                         }
@@ -332,12 +336,14 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
                         if (fallbackUrl.isEmpty() && !isOtherArchAsset) {
                             fallbackUrl = assetObj["browser_download_url"].toString();
                             fallbackName = assetName;
+                            fallbackDigest = assetObj["digest"].toString();
                         }
                     }
                 }
 
                 if (downloadUrl.isEmpty() && !fallbackUrl.isEmpty()) {
                     downloadUrl = fallbackUrl;
+                    assetDigest = fallbackDigest;
                     qDebug() << "Found matching asset:" << fallbackName;
                 }
             }
@@ -346,6 +352,9 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
             if (downloadUrl.isEmpty()) {
                 downloadUrl = releaseObj["html_url"].toString();
             }
+
+            m_UpdateDownloadUrl = downloadUrl;
+            m_UpdateAssetDigest = assetDigest;
 
             emit onUpdateAvailable(tagName, downloadUrl);
         }

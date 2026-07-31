@@ -1826,87 +1826,139 @@
 <context>
     <name>PortableUpdateInstaller</name>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="39"/>
-        <source>In-app update is only supported for the portable Windows build.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="44"/>
-        <source>Portable update is already in progress.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="50"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="61"/>
         <source>The update URL is invalid.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="55"/>
-        <source>The portable update package was not found for this release.</source>
+        <location filename="../backend/portableupdateinstaller.cpp" line="50"/>
+        <source>In-app update is not supported for this installation.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="67"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="55"/>
+        <source>An update is already in progress.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="66"/>
+        <source>The update package was not found for this release.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="78"/>
+        <source>The update package has no valid integrity information. Please install the update manually.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="83"/>
+        <source>The update package has invalid integrity information.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="96"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="447"/>
         <source>Unable to create a temporary folder for the update.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="85"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="115"/>
         <source>Unable to create the update package on disk.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="112"/>
-        <source>Downloading portable update...</source>
+        <location filename="../backend/portableupdateinstaller.cpp" line="142"/>
+        <source>Downloading update...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="145"/>
-        <source>The current Moonlight folder is not writable. Move the portable build to a writable location, run Moonlight with sufficient permissions, or download and install the update manually.</source>
+        <location filename="../backend/portableupdateinstaller.cpp" line="236"/>
+        <source>The current Moonlight folder is not writable. Move Moonlight to a writable location, run it with sufficient permissions, or download and install the update manually.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="203"/>
-        <source>Unable to determine free disk space for the portable update.</source>
+        <location filename="../backend/portableupdateinstaller.cpp" line="245"/>
+        <source>In-app update requires running Moonlight from an app bundle.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="208"/>
-        <source>Not enough free disk space for the portable update. Need about %1 MB free.</source>
+        <location filename="../backend/portableupdateinstaller.cpp" line="257"/>
+        <source>Moonlight is installed in a folder you can&apos;t write to. Move it to your Applications folder, or download and install the update manually.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="287"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="329"/>
+        <source>Unable to determine free disk space for the update.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="334"/>
+        <source>Not enough free disk space for the update. Need about %1 MB free.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="364"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="372"/>
+        <source>Unable to verify the downloaded update package.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="379"/>
+        <source>The downloaded update package failed its integrity check.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="459"/>
+        <source>Unable to open the downloaded disk image.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="468"/>
+        <source>The downloaded disk image does not contain Moonlight.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="473"/>
+        <source>Unable to extract the update.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="579"/>
+        <source>Downloading update... %1%</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="583"/>
+        <source>Downloading update... %1 MB</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="613"/>
+        <source>Verifying update...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="635"/>
+        <source>Unable to prepare the update installer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="671"/>
+        <source>Unable to launch the updater.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="570"/>
         <source>Failed while writing the update package to disk.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="296"/>
-        <source>Downloading portable update... %1%</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="300"/>
-        <source>Downloading portable update... %1 MB</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="312"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="595"/>
         <source>Failed to download the update: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="331"/>
-        <source>Unable to prepare the portable update installer.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="354"/>
-        <source>Unable to launch the portable updater.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="358"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="675"/>
         <source>Installing update and restarting Moonlight...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2111,27 +2163,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="922"/>
+        <location filename="../main.cpp" line="930"/>
         <source>&amp;Yes</source>
         <translation>예(&amp;Y)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="923"/>
+        <location filename="../main.cpp" line="931"/>
         <source>&amp;No</source>
         <translation>아니요(&amp;N)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="924"/>
+        <location filename="../main.cpp" line="932"/>
         <source>OK</source>
         <translation>확인</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="925"/>
+        <location filename="../main.cpp" line="933"/>
         <source>Help</source>
         <translation>도움말</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="926"/>
+        <location filename="../main.cpp" line="934"/>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
@@ -2147,291 +2199,291 @@
 <context>
     <name>Session</name>
     <message>
-        <location filename="../streaming/session.cpp" line="356"/>
+        <location filename="../streaming/session.cpp" line="358"/>
         <source>No video received from host.</source>
         <translation>호스트로부터 받은 영상이 없습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="357"/>
+        <location filename="../streaming/session.cpp" line="359"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>방화벽 및 다음 포트의 포트 포워딩 규칙을 확인하여 주십시오: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="363"/>
+        <location filename="../streaming/session.cpp" line="365"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
         <translation>네트워크 연결이 제대로 작동하지 않습니다. 비디오 비트레이트 설정을 줄이거나 더 빠른 연결을 시도하십시오.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="369"/>
+        <location filename="../streaming/session.cpp" line="371"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>스트리밍을 시작할 때 호스트 PC에서 문제가 발생했습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="370"/>
+        <location filename="../streaming/session.cpp" line="372"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>호스트 PC에 DRM으로 보호된 콘텐츠가 열려 있지 않은지 확인하십시오. 또한 호스트 PC를 다시 시작하는 것을 시도해 볼 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="375"/>
+        <location filename="../streaming/session.cpp" line="377"/>
         <source>The host PC reported a fatal video encoding error.</source>
         <translation>호스트 PC에서 치명적인 비디오 인코딩 오류를 보고했습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="376"/>
+        <location filename="../streaming/session.cpp" line="378"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
         <translation>HDR 모드를 비활성화하거나 스트리밍 해상도를 변경하거나 호스트 PC의 디스플레이 해상도를 변경해 보십시오.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="384"/>
+        <location filename="../streaming/session.cpp" line="386"/>
         <source>Connection terminated</source>
         <translation>연결이 종료되었습니다</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="385"/>
+        <location filename="../streaming/session.cpp" line="387"/>
         <source>Error code: %1</source>
         <translation>에러 코드: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1304"/>
+        <location filename="../streaming/session.cpp" line="1352"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>%1의 GeForce Experience 버전은 이 빌드의 Moonlight에서 지원되지 않습니다. %1에서 스트리밍하려면 Moonlight를 업데이트 해야 합니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1309"/>
+        <location filename="../streaming/session.cpp" line="1357"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>원격 데스크톱 마우스 모드를 활성화하도록 선택하면 게임에서 문제가 발생할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1313"/>
+        <location filename="../streaming/session.cpp" line="1361"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>소프트웨어 디코딩을 강제하도록 선택하면 스트리밍 성능이 저하 될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1349"/>
+        <location filename="../streaming/session.cpp" line="1397"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
         <translation>호스트 PC가 HEVC 인코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1367"/>
+        <location filename="../streaming/session.cpp" line="1415"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>HEVC 사용을 강제하도록 선택하였으나 GPU 미지원으로 인해 소프트웨어 디코딩을 사용 중입니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1319"/>
+        <location filename="../streaming/session.cpp" line="1367"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
         <translation>호스트 소프트웨어 또는 GPU가 AV1 인코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1337"/>
+        <location filename="../streaming/session.cpp" line="1385"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
         <translation>AV1 사용을 강제하도록 선택하였으나 GPU 미지원으로 인해 소프트웨어 디코딩을 사용 중입니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1414"/>
+        <location filename="../streaming/session.cpp" line="1462"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
         <translation>호스트 PC가 HDR 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1406"/>
+        <location filename="../streaming/session.cpp" line="1454"/>
         <source>HDR is not supported using the H.264 codec.</source>
         <translation>HDR는 H.264 코덱 사용 시 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1429"/>
+        <location filename="../streaming/session.cpp" line="1477"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
         <translation>이 PC의 GPU는 HDR 스트리밍을 위한 AV1 Main10 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1410"/>
+        <location filename="../streaming/session.cpp" line="1458"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
         <translation>이 PC의 GPU는 HDR 스트리밍을 위한 10-bit HEVC 또는 AV1 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1462"/>
+        <location filename="../streaming/session.cpp" line="1510"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
         <translation>호스트 PC와 클라이언트 PC는 동일한 HDR 비디오 코덱을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1555"/>
+        <location filename="../streaming/session.cpp" line="1603"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
         <translation>4K 이상의 비디오 해상도는 H.264 코덱에서 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="3091"/>
+        <location filename="../streaming/session.cpp" line="3139"/>
         <source>Host returned error: %1</source>
         <translation>호스트가 오류를 반환하였습니다: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1386"/>
+        <location filename="../streaming/session.cpp" line="1434"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>H.264 사용을 강제하도록 선택하였으나 GPU 미지원으로 인해 소프트웨어 디코딩을 사용 중입니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="874"/>
-        <location filename="../streaming/session.cpp" line="2390"/>
+        <location filename="../streaming/session.cpp" line="922"/>
+        <location filename="../streaming/session.cpp" line="2438"/>
         <source>Checking</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1396"/>
+        <location filename="../streaming/session.cpp" line="1444"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>호스트 PC와 클라이언트 PC가 동일한 비디오 코덱을 지원하지 않습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1399"/>
+        <location filename="../streaming/session.cpp" line="1447"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>클라이언트 GPU가 H.264 디코딩을 지원하지 않습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1435"/>
-        <location filename="../streaming/session.cpp" line="1453"/>
+        <location filename="../streaming/session.cpp" line="1483"/>
+        <location filename="../streaming/session.cpp" line="1501"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
         <translation>GPU 지원 없이 HDR을 강제로 사용하도록 선택했기 때문에 소프트웨어 디코딩을 사용하고 있습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1447"/>
+        <location filename="../streaming/session.cpp" line="1495"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>이 PC의 GPU는 HDR 스트리밍을 위한 HEVC Main10 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1469"/>
+        <location filename="../streaming/session.cpp" line="1517"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
         <translation>호스트 PC가 YUV 4:4:4 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1477"/>
+        <location filename="../streaming/session.cpp" line="1525"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
         <translation>호스트 PC가 선택한 비디오 코덱에 대해 YUV 4:4:4 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1492"/>
+        <location filename="../streaming/session.cpp" line="1540"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
         <translation>GPU 지원 없이 YUV 4:4:4를 강제로 사용하도록 설정하여 소프트웨어 디코딩을 사용하고 있습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1498"/>
+        <location filename="../streaming/session.cpp" line="1546"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
         <translation>이 PC의 GPU는 선택된 비디오 코덱에 대한 YUV 4:4:4 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1507"/>
+        <location filename="../streaming/session.cpp" line="1555"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>4K 스트리밍에는 GeForce Experience 3.0 이상이 필요합니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1522"/>
+        <location filename="../streaming/session.cpp" line="1570"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>선택한 서라운드 사운드 설정은 현재 오디오 장치에서 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1528"/>
+        <location filename="../streaming/session.cpp" line="1576"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>오디오 장치를 열지 못했습니다. 이 세션에서는 오디오를 사용할 수 없습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1533"/>
+        <location filename="../streaming/session.cpp" line="1581"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>연결된 게임 패드에 매핑이 없으며 사용할 수 없습니다. 이 문제를 해결하려면 Moonlight 도움말을 방문하십시오.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1551"/>
+        <location filename="../streaming/session.cpp" line="1599"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>호스트 PC의 GPU가 4K 이상의 비디오 해상도 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1569"/>
+        <location filename="../streaming/session.cpp" line="1617"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>이 PC의 GPU가 하드웨어 디코딩을 지원하지 않아 하드웨어 디코딩을 강제하도록 선택하였으나 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1572"/>
+        <location filename="../streaming/session.cpp" line="1620"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>선택한 코덱과 하드웨어 디코딩을 강제하도록 선택한 설정이 호환되지 않습니다. 이 PC의 GPU는 선택한 코덱의 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2046"/>
-        <location filename="../streaming/session.cpp" line="2391"/>
+        <location filename="../streaming/session.cpp" line="2094"/>
+        <location filename="../streaming/session.cpp" line="2439"/>
         <source>Checking host file sharing...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2049"/>
-        <location filename="../streaming/session.cpp" line="2477"/>
-        <location filename="../streaming/session.cpp" line="2489"/>
+        <location filename="../streaming/session.cpp" line="2097"/>
+        <location filename="../streaming/session.cpp" line="2525"/>
+        <location filename="../streaming/session.cpp" line="2537"/>
         <source>Preparing host files...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2054"/>
-        <location filename="../streaming/session.cpp" line="2483"/>
+        <location filename="../streaming/session.cpp" line="2102"/>
+        <location filename="../streaming/session.cpp" line="2531"/>
         <source>Opening host files...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2062"/>
+        <location filename="../streaming/session.cpp" line="2110"/>
         <source>Host file sharing is not available. Retrying...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2063"/>
+        <location filename="../streaming/session.cpp" line="2111"/>
         <source> Retrying...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2068"/>
-        <location filename="../streaming/session.cpp" line="2398"/>
-        <location filename="../streaming/session.cpp" line="2497"/>
+        <location filename="../streaming/session.cpp" line="2116"/>
+        <location filename="../streaming/session.cpp" line="2446"/>
+        <location filename="../streaming/session.cpp" line="2545"/>
         <source>Host file sharing is not available.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2397"/>
-        <location filename="../streaming/session.cpp" line="2496"/>
+        <location filename="../streaming/session.cpp" line="2445"/>
+        <location filename="../streaming/session.cpp" line="2544"/>
         <source>Unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2488"/>
+        <location filename="../streaming/session.cpp" line="2536"/>
         <source>Preparing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2559"/>
+        <location filename="../streaming/session.cpp" line="2607"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2560"/>
+        <location filename="../streaming/session.cpp" line="2608"/>
         <source>Host files are ready.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2565"/>
+        <location filename="../streaming/session.cpp" line="2613"/>
         <source>Host files are ready, but the folder did not open. Check %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2571"/>
+        <location filename="../streaming/session.cpp" line="2619"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2572"/>
+        <location filename="../streaming/session.cpp" line="2620"/>
         <source>Host files could not be opened.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2783"/>
+        <location filename="../streaming/session.cpp" line="2831"/>
         <source>Connection interrupted. Reconnecting... (%1s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2866"/>
+        <location filename="../streaming/session.cpp" line="2914"/>
         <source>Reconnected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="3989"/>
+        <location filename="../streaming/session.cpp" line="4061"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>비디오 디코더를 초기화 할 수 없습니다. 스트리밍 설정을 확인하고 다시 시도하십시오.</translation>
     </message>
@@ -2581,14 +2633,14 @@
         <translation>도움말</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="579"/>
-        <location filename="../gui/main.qml" line="788"/>
-        <source>Preparing portable update...</source>
+        <location filename="../gui/main.qml" line="677"/>
+        <source>Connection IP</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="677"/>
-        <source>Connection IP</source>
+        <location filename="../gui/main.qml" line="579"/>
+        <location filename="../gui/main.qml" line="788"/>
+        <source>Preparing update...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

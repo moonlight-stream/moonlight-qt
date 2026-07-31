@@ -40,4 +40,6 @@ private:
     QVector<int> m_CurrentVersionQuad;
     QNetworkAccessManager* m_Nam;
     PortableUpdateInstaller* m_PortableUpdateInstaller;
+    QString m_UpdateDownloadUrl;
+    QString m_UpdateAssetDigest;
 };

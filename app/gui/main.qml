@@ -576,7 +576,7 @@ ApplicationWindow {
 
                 onClicked: {
                     if (AutoUpdateChecker.supportsInAppUpdate()) {
-                        portableUpdateDialog.text = qsTr("Preparing portable update...")
+                        portableUpdateDialog.text = qsTr("Preparing update...")
                         portableUpdateDialog.open()
                         AutoUpdateChecker.installUpdate(browserUrl)
                     }
@@ -785,7 +785,7 @@ ApplicationWindow {
         standardButtons: Dialog.NoButton
         closePolicy: Popup.CloseOnEscape
         showSpinner: true
-        text: qsTr("Preparing portable update...")
+        text: qsTr("Preparing update...")
     }
 
     ErrorMessageDialog {

@@ -463,10 +463,6 @@
         <translation>HDR 渲染在不同 GPU 上存在多种问题。我们正在努力解决，但目前建议使用非 HDR 模式。</translation>
     </message>
     <message>
-        <source>HDR rendering has divers issues depending on the GPU used, we are working on it but we advise to currently use Non-HDR.</source>
-        <translation type="vanished">HDR渲染在不同的GPU上存在不同的问题，建议不配合HDR使用</translation>
-    </message>
-    <message>
         <location filename="../gui/settings/BasicSettingsPage.qml" line="886"/>
         <source>Be advised that using this feature on laptops running on battery power may lead to significant battery drain.</source>
         <translation>请注意，在笔记本电脑上使用电池供电时，使用此功能可能会导致显著的电池消耗。</translation>
@@ -959,10 +955,6 @@
         <location filename="../gui/settings/LegacySettingsPage.qml" line="133"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
         <translation>当你用 Alt+Tab 键离开流式传输或者点击其他窗口时，Moonlight 将静音。</translation>
-    </message>
-    <message>
-        <source>Enable microphone streaming(test)</source>
-        <translation type="vanished">启用麦克风流式传输（测试）</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="138"/>
@@ -1834,87 +1826,143 @@
 <context>
     <name>PortableUpdateInstaller</name>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="39"/>
-        <source>In-app update is only supported for the portable Windows build.</source>
-        <translation>应用内更新仅支持 Windows 便携版。</translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="44"/>
-        <source>Portable update is already in progress.</source>
-        <translation>便携版更新已在进行中。</translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="50"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="61"/>
         <source>The update URL is invalid.</source>
         <translation>更新链接无效。</translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="55"/>
-        <source>The portable update package was not found for this release.</source>
-        <translation>此版本未找到对应的便携版更新包。</translation>
+        <location filename="../backend/portableupdateinstaller.cpp" line="50"/>
+        <source>In-app update is not supported for this installation.</source>
+        <translation>这种安装方式不支持应用内更新。</translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="67"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="55"/>
+        <source>An update is already in progress.</source>
+        <translation>已经有一个更新在进行中。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="66"/>
+        <source>The update package was not found for this release.</source>
+        <translation>这个版本里没有找到对应的更新包。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="78"/>
+        <source>The update package has no valid integrity information. Please install the update manually.</source>
+        <translation>更新包缺少有效的完整性信息，请手动安装更新。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="83"/>
+        <source>The update package has invalid integrity information.</source>
+        <translation>更新包的完整性信息无效。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="96"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="447"/>
         <source>Unable to create a temporary folder for the update.</source>
         <translation>无法为更新创建临时目录。</translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="85"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="115"/>
         <source>Unable to create the update package on disk.</source>
         <translation>无法在磁盘上创建更新包。</translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="112"/>
-        <source>Downloading portable update...</source>
-        <translation>正在下载便携版更新...</translation>
+        <location filename="../backend/portableupdateinstaller.cpp" line="142"/>
+        <source>Downloading update...</source>
+        <translation>正在下载更新…</translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="145"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="236"/>
+        <source>The current Moonlight folder is not writable. Move Moonlight to a writable location, run it with sufficient permissions, or download and install the update manually.</source>
+        <translation>当前 Moonlight 所在文件夹不可写。请将 Moonlight 移动到可写位置、以足够的权限运行，或者手动下载安装更新。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="245"/>
+        <source>In-app update requires running Moonlight from an app bundle.</source>
+        <translation>应用内更新要求从 .app 里运行 Moonlight。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="257"/>
+        <source>Moonlight is installed in a folder you can&apos;t write to. Move it to your Applications folder, or download and install the update manually.</source>
+        <translation>Moonlight 所在的文件夹没有写入权限。请把它移动到「应用程序」文件夹，或者手动下载安装更新。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="329"/>
+        <source>Unable to determine free disk space for the update.</source>
+        <translation>无法确定更新所需的磁盘剩余空间。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="334"/>
+        <source>Not enough free disk space for the update. Need about %1 MB free.</source>
+        <translation>磁盘剩余空间不足，更新大约需要 %1 MB。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="364"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="372"/>
+        <source>Unable to verify the downloaded update package.</source>
+        <translation>无法验证已下载的更新包。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="379"/>
+        <source>The downloaded update package failed its integrity check.</source>
+        <translation>已下载的更新包未通过完整性检查。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="459"/>
+        <source>Unable to open the downloaded disk image.</source>
+        <translation>无法打开下载的磁盘映像。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="468"/>
+        <source>The downloaded disk image does not contain Moonlight.</source>
+        <translation>下载的磁盘映像里没有 Moonlight。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="473"/>
+        <source>Unable to extract the update.</source>
+        <translation>无法解出更新内容。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="579"/>
+        <source>Downloading update... %1%</source>
+        <translation>正在下载更新… %1%</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="583"/>
+        <source>Downloading update... %1 MB</source>
+        <translation>正在下载更新… %1 MB</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="613"/>
+        <source>Verifying update...</source>
+        <translation>正在校验更新…</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="635"/>
+        <source>Unable to prepare the update installer.</source>
+        <translation>无法准备更新安装程序。</translation>
+    </message>
+    <message>
+        <location filename="../backend/portableupdateinstaller.cpp" line="671"/>
+        <source>Unable to launch the updater.</source>
+        <translation>无法启动更新程序。</translation>
+    </message>
+    <message>
         <source>The current Moonlight folder is not writable. Move the portable build to a writable location, run Moonlight with sufficient permissions, or download and install the update manually.</source>
-        <translation>当前 Moonlight 所在文件夹不可写。请把便携版移动到可写位置、以足够的权限运行 Moonlight，或者手动下载安装更新。</translation>
+        <translation type="vanished">当前 Moonlight 所在文件夹不可写。请把便携版移动到可写位置、以足够的权限运行 Moonlight，或者手动下载安装更新。</translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="203"/>
-        <source>Unable to determine free disk space for the portable update.</source>
-        <translation>无法确定便携版更新所需的可用磁盘空间。</translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="208"/>
-        <source>Not enough free disk space for the portable update. Need about %1 MB free.</source>
-        <translation>便携版更新所需磁盘空间不足。大约需要 %1 MB 可用空间。</translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="287"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="570"/>
         <source>Failed while writing the update package to disk.</source>
         <translation>将更新包写入磁盘时失败。</translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="296"/>
-        <source>Downloading portable update... %1%</source>
-        <translation>正在下载便携版更新... %1%</translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="300"/>
-        <source>Downloading portable update... %1 MB</source>
-        <translation>正在下载便携版更新... %1 MB</translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="312"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="595"/>
         <source>Failed to download the update: %1</source>
         <translation>下载更新失败：%1</translation>
     </message>
     <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="331"/>
-        <source>Unable to prepare the portable update installer.</source>
-        <translation>无法准备便携版更新安装程序。</translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="354"/>
-        <source>Unable to launch the portable updater.</source>
-        <translation>无法启动便携版更新程序。</translation>
-    </message>
-    <message>
-        <location filename="../backend/portableupdateinstaller.cpp" line="358"/>
+        <location filename="../backend/portableupdateinstaller.cpp" line="675"/>
         <source>Installing update and restarting Moonlight...</source>
         <translation>正在安装更新并重启 Moonlight...</translation>
     </message>
@@ -2119,27 +2167,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="922"/>
+        <location filename="../main.cpp" line="930"/>
         <source>&amp;Yes</source>
         <translation>是(&amp;Y)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="923"/>
+        <location filename="../main.cpp" line="931"/>
         <source>&amp;No</source>
         <translation>否(&amp;N)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="924"/>
+        <location filename="../main.cpp" line="932"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="925"/>
+        <location filename="../main.cpp" line="933"/>
         <source>Help</source>
         <translation>帮助</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="926"/>
+        <location filename="../main.cpp" line="934"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -2155,291 +2203,291 @@
 <context>
     <name>Session</name>
     <message>
-        <location filename="../streaming/session.cpp" line="356"/>
+        <location filename="../streaming/session.cpp" line="358"/>
         <source>No video received from host.</source>
         <translation>没有从主机接收到视频画面。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="357"/>
+        <location filename="../streaming/session.cpp" line="359"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>检查防火墙和端口转发规则: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="363"/>
+        <location filename="../streaming/session.cpp" line="365"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
         <translation>网络连接性能不佳。请降低视频比特率或尝试更快的网络连接。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="369"/>
+        <location filename="../streaming/session.cpp" line="371"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>主机启动流式传输时出现问题。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="370"/>
+        <location filename="../streaming/session.cpp" line="372"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>确保主机上没有打开任何受 DRM 保护的内容。你也可以尝试重新启动主机。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="375"/>
+        <location filename="../streaming/session.cpp" line="377"/>
         <source>The host PC reported a fatal video encoding error.</source>
         <translation>主机 PC 报告了致命的视频编码错误。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="376"/>
+        <location filename="../streaming/session.cpp" line="378"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
         <translation>尝试禁用 HDR 模式、更改流分辨率或更改主机 PC 的显示分辨率。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="384"/>
+        <location filename="../streaming/session.cpp" line="386"/>
         <source>Connection terminated</source>
         <translation>会话已终止</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="385"/>
+        <location filename="../streaming/session.cpp" line="387"/>
         <source>Error code: %1</source>
         <translation>错误代码: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1304"/>
+        <location filename="../streaming/session.cpp" line="1352"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>在 %1 安装的 GeForce Experience 版本不受当前版本的 Moonlight 支持。你必须升级 Moonlight 才能从 %1 串流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1309"/>
+        <location filename="../streaming/session.cpp" line="1357"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>启用远程桌面鼠标模式可能会导致游戏出现问题。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1313"/>
+        <location filename="../streaming/session.cpp" line="1361"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>你选择的用于强制软件解码的设置可能会导致流式传输性能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1349"/>
+        <location filename="../streaming/session.cpp" line="1397"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
         <translation>你的 PC 主机不支持使用HEVC编码。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1367"/>
+        <location filename="../streaming/session.cpp" line="1415"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>根据你的选择使用软件解码，以在没有显卡支持的情况下强制 HEVC。这可能会导致流式传输性能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1319"/>
+        <location filename="../streaming/session.cpp" line="1367"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
         <translation>你的主机软件或显卡不支持进行 AV1 编码。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1337"/>
+        <location filename="../streaming/session.cpp" line="1385"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
         <translation>由于你选择在没有显卡支持的情况下强制使用 AV1，因此目前使用软件解码。这可能会导致视频流解码处理性能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1414"/>
+        <location filename="../streaming/session.cpp" line="1462"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
         <translation>你的 PC 主机不支持 HDR 串流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1406"/>
+        <location filename="../streaming/session.cpp" line="1454"/>
         <source>HDR is not supported using the H.264 codec.</source>
         <translation>使用 H.264 编解码器的情况下不支持 HDR。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1429"/>
+        <location filename="../streaming/session.cpp" line="1477"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
         <translation>这台电脑的显卡不支持包含 HDR 的 AV1 Main10 解码。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1410"/>
+        <location filename="../streaming/session.cpp" line="1458"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
         <translation>这台电脑的显卡不支持包含 HDR 的 HEVC 或 AV1 Main10 解码。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1462"/>
+        <location filename="../streaming/session.cpp" line="1510"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
         <translation>主机电脑和客户端电脑不支持相同的 HDR 视频编解码器。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1555"/>
+        <location filename="../streaming/session.cpp" line="1603"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
         <translation>H.264 编解码器不支持超过 4K 的视频分辨率。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="3091"/>
+        <location filename="../streaming/session.cpp" line="3139"/>
         <source>Host returned error: %1</source>
         <translation>主机返回错误：%1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1386"/>
+        <location filename="../streaming/session.cpp" line="1434"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>使用软件解码，因为你选择强制使用没有 GPU 支持的 H.264。这可能会导致较差的流性能。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="874"/>
-        <location filename="../streaming/session.cpp" line="2390"/>
+        <location filename="../streaming/session.cpp" line="922"/>
+        <location filename="../streaming/session.cpp" line="2438"/>
         <source>Checking</source>
         <translation>检查中</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1396"/>
+        <location filename="../streaming/session.cpp" line="1444"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>你的主机和客户端 PC 不支持相同的视频编解码器。这可能会导致较差的流性能。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1399"/>
+        <location filename="../streaming/session.cpp" line="1447"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>你的客户端 GPU 不支持 H.264 解码。这可能会导致较差的流性能。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1435"/>
-        <location filename="../streaming/session.cpp" line="1453"/>
+        <location filename="../streaming/session.cpp" line="1483"/>
+        <location filename="../streaming/session.cpp" line="1501"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
         <translation>由于您选择强制使用未经 GPU 支持的 HDR，因此将采用软件解码。这可能会导致串流性能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1447"/>
+        <location filename="../streaming/session.cpp" line="1495"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>此计算机的显卡不支持 HEVC Main10 解码 HDR 流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1469"/>
+        <location filename="../streaming/session.cpp" line="1517"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
         <translation>您的主机 PC 不支持 YUV 4:4:4 串流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1477"/>
+        <location filename="../streaming/session.cpp" line="1525"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
         <translation>您的主机 PC 不支持所选视频编解码器的 YUV 4:4:4 串流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1492"/>
+        <location filename="../streaming/session.cpp" line="1540"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
         <translation>由于您选择强制使用未经 GPU 支持的 YUV 4:4:4，因此将采用软件解码。这可能会导致串流性能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1498"/>
+        <location filename="../streaming/session.cpp" line="1546"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
         <translation>这台 PC 的 GPU 不支持所选视频编解码器的 YUV 4:4:4 解码。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1507"/>
+        <location filename="../streaming/session.cpp" line="1555"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>4K 流式传输需要 GeForce Experience 3.0 或更高版本。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1522"/>
+        <location filename="../streaming/session.cpp" line="1570"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>当前音频设备不支持你选择的环绕声设置。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1528"/>
+        <location filename="../streaming/session.cpp" line="1576"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>无法打开音频设备。音频在此会话期间将不可用。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1533"/>
+        <location filename="../streaming/session.cpp" line="1581"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>附加的手柄没有映射，因此无法使用。请访问 Moonlight 帮助解决此问题。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1551"/>
+        <location filename="../streaming/session.cpp" line="1599"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>主机的显卡不支持 4K 以上的流式传输视频分辨率。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1569"/>
+        <location filename="../streaming/session.cpp" line="1617"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>由于此计算机的显卡上缺少硬件解码支持，无法满足强制硬件解码的选择。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1572"/>
+        <location filename="../streaming/session.cpp" line="1620"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>你选择的编解码器和强制硬件解码设置不兼容。此计算机的显卡不支持解码你选择的编解码器。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2046"/>
-        <location filename="../streaming/session.cpp" line="2391"/>
+        <location filename="../streaming/session.cpp" line="2094"/>
+        <location filename="../streaming/session.cpp" line="2439"/>
         <source>Checking host file sharing...</source>
         <translation>正在检查主机文件共享…</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2049"/>
-        <location filename="../streaming/session.cpp" line="2477"/>
-        <location filename="../streaming/session.cpp" line="2489"/>
+        <location filename="../streaming/session.cpp" line="2097"/>
+        <location filename="../streaming/session.cpp" line="2525"/>
+        <location filename="../streaming/session.cpp" line="2537"/>
         <source>Preparing host files...</source>
         <translation>正在准备主机文件…</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2054"/>
-        <location filename="../streaming/session.cpp" line="2483"/>
+        <location filename="../streaming/session.cpp" line="2102"/>
+        <location filename="../streaming/session.cpp" line="2531"/>
         <source>Opening host files...</source>
         <translation>正在打开主机文件…</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2062"/>
+        <location filename="../streaming/session.cpp" line="2110"/>
         <source>Host file sharing is not available. Retrying...</source>
         <translation>主机文件共享不可用，正在重试…</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2063"/>
+        <location filename="../streaming/session.cpp" line="2111"/>
         <source> Retrying...</source>
         <translation> 正在重试…</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2068"/>
-        <location filename="../streaming/session.cpp" line="2398"/>
-        <location filename="../streaming/session.cpp" line="2497"/>
+        <location filename="../streaming/session.cpp" line="2116"/>
+        <location filename="../streaming/session.cpp" line="2446"/>
+        <location filename="../streaming/session.cpp" line="2545"/>
         <source>Host file sharing is not available.</source>
         <translation>主机文件共享不可用。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2397"/>
-        <location filename="../streaming/session.cpp" line="2496"/>
+        <location filename="../streaming/session.cpp" line="2445"/>
+        <location filename="../streaming/session.cpp" line="2544"/>
         <source>Unavailable</source>
         <translation>不可用</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2488"/>
+        <location filename="../streaming/session.cpp" line="2536"/>
         <source>Preparing</source>
         <translation>准备中</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2559"/>
+        <location filename="../streaming/session.cpp" line="2607"/>
         <source>Open</source>
         <translation>打开</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2560"/>
+        <location filename="../streaming/session.cpp" line="2608"/>
         <source>Host files are ready.</source>
         <translation>主机文件已就绪。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2565"/>
+        <location filename="../streaming/session.cpp" line="2613"/>
         <source>Host files are ready, but the folder did not open. Check %1.</source>
         <translation>主机文件已就绪，但文件夹没有打开。请检查 %1。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2571"/>
+        <location filename="../streaming/session.cpp" line="2619"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2572"/>
+        <location filename="../streaming/session.cpp" line="2620"/>
         <source>Host files could not be opened.</source>
         <translation>无法打开主机文件。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2783"/>
+        <location filename="../streaming/session.cpp" line="2831"/>
         <source>Connection interrupted. Reconnecting... (%1s)</source>
         <translation>连接中断，正在重连…（%1 秒）</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2866"/>
+        <location filename="../streaming/session.cpp" line="2914"/>
         <source>Reconnected</source>
         <translation>已重连</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="3989"/>
+        <location filename="../streaming/session.cpp" line="4061"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>无法初始化视频解码器。请检查你的流式传输设置，然后重试。</translation>
     </message>
@@ -2564,15 +2612,15 @@
         <translation>Moonlight 可用更新：版本 %1</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="579"/>
-        <location filename="../gui/main.qml" line="788"/>
-        <source>Preparing portable update...</source>
-        <translation>正在准备便携版更新...</translation>
-    </message>
-    <message>
         <location filename="../gui/main.qml" line="633"/>
         <source>Help</source>
         <translation>帮助</translation>
+    </message>
+    <message>
+        <location filename="../gui/main.qml" line="579"/>
+        <location filename="../gui/main.qml" line="788"/>
+        <source>Preparing update...</source>
+        <translation>正在准备更新…</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="656"/>
