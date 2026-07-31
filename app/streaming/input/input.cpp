@@ -12,6 +12,9 @@
 #include <QtGlobal>
 #include <QDir>
 #include <QGuiApplication>
+#ifdef Q_OS_MACOS
+#include <QImage>
+#endif
 
 // Include SDL_syswm.h after Qt headers to avoid X11 macro conflicts on Linux
 #include <SDL_syswm.h>
@@ -42,6 +45,8 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
                             LI_CURSOR_MODE_LOCAL : LI_CURSOR_MODE_VIDEO),
       m_RemoteCursorVisible(true),
       m_RemoteCursor(nullptr),
+      m_HasLastCursorShape(false),
+      m_RemoteCursorScale(1.0),
       m_LongPressTimer(0),
       m_StreamWidth(streamWidth),
       m_StreamHeight(streamHeight),
@@ -408,6 +413,56 @@ void SdlInputHandler::synchronizeLocalCursorMode()
     }
 }
 
+qreal SdlInputHandler::getRemoteCursorScale() const
+{
+#ifdef Q_OS_MACOS
+    // SDL 的 Cocoa 后端把 surface 的像素宽高当成 NSImage 的逻辑 point 尺寸，所以
+    // Retina 屏上要先按 backing 比例把光标缩回去。比例从窗口的 point / pixel 尺寸算，
+    // 而不是问屏幕 —— 窗口横跨两块屏时它反映的是实际渲染用的那个 backing store。
+    if (m_Window == nullptr) {
+        return 1.0;
+    }
+
+    int windowWidth = 0;
+    int windowHeight = 0;
+    int pixelWidth = 0;
+    int pixelHeight = 0;
+    SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+    SDL_GetWindowSizeInPixels(m_Window, &pixelWidth, &pixelHeight);
+
+    if (windowWidth <= 0 || windowHeight <= 0 ||
+        pixelWidth < windowWidth || pixelHeight < windowHeight) {
+        return 1.0;
+    }
+
+    return static_cast<qreal>(pixelWidth) / windowWidth;
+#else
+    return 1.0;
+#endif
+}
+
+void SdlInputHandler::refreshRemoteCursorScale()
+{
+#ifdef Q_OS_MACOS
+    // 缩放比例是创建光标那一刻算的，而 updateRemoteCursor() 只在主机推来新形状时才会
+    // 被调用。窗口从 Retina 屏拖到 1x 屏（或反过来）时，光标会一直停在旧比例上 ——
+    // 大一倍或小一倍 —— 直到主机下一次换形状。这里用缓存的那份形状重建一次。
+    if (!m_HasLastCursorShape) {
+        return;
+    }
+
+    const qreal scale = getRemoteCursorScale();
+    if (qFuzzyCompare(scale, m_RemoteCursorScale)) {
+        return;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Rebuilding remote cursor for backing scale %f -> %f",
+                m_RemoteCursorScale, scale);
+    updateRemoteCursor(m_LastCursorShape);
+#endif
+}
+
 void SdlInputHandler::updateRemoteCursor(const RemoteCursorUpdate& update)
 {
     m_RemoteCursorVisible = update.visible;
@@ -424,12 +479,46 @@ void SdlInputHandler::updateRemoteCursor(const RemoteCursorUpdate& update)
                         update.shapeId);
         }
         else {
+            int cursorWidth = update.width;
+            int cursorHeight = update.height;
+            int hotspotX = update.hotspotX;
+            int hotspotY = update.hotspotY;
+            int cursorPitch = update.width * 4;
+            const char* cursorPixels = update.bgra.constData();
+
+#ifdef Q_OS_MACOS
+            QImage scaledCursor;
+            const qreal scale = getRemoteCursorScale();
+            if (scale > 1.0) {
+                cursorWidth = qMax(1, qRound(update.width / scale));
+                cursorHeight = qMax(1, qRound(update.height / scale));
+                hotspotX = qBound(0, qRound(update.hotspotX / scale), cursorWidth - 1);
+                hotspotY = qBound(0, qRound(update.hotspotY / scale), cursorHeight - 1);
+
+                if (cursorWidth != update.width || cursorHeight != update.height) {
+                    const QImage source(
+                        reinterpret_cast<const uchar*>(update.bgra.constData()),
+                        update.width,
+                        update.height,
+                        update.width * 4,
+                        QImage::Format_ARGB32);
+                    scaledCursor = source.scaled(
+                        cursorWidth,
+                        cursorHeight,
+                        Qt::IgnoreAspectRatio,
+                        Qt::SmoothTransformation);
+                    cursorPixels = reinterpret_cast<const char*>(scaledCursor.constBits());
+                    cursorPitch = scaledCursor.bytesPerLine();
+                }
+            }
+#endif
+
             SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormatFrom(
-                const_cast<char*>(update.bgra.constData()),
-                update.width,
-                update.height,
+                const_cast<char*>(cursorPixels),
+                cursorWidth,
+                cursorHeight,
                 32,
-                update.width * 4,
+                cursorPitch,
                 SDL_PIXELFORMAT_BGRA32);
             if (surface == nullptr) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -438,7 +527,7 @@ void SdlInputHandler::updateRemoteCursor(const RemoteCursorUpdate& update)
             }
             else {
                 SDL_Cursor* cursor =
-                    SDL_CreateColorCursor(surface, update.hotspotX, update.hotspotY);
+                    SDL_CreateColorCursor(surface, hotspotX, hotspotY);
                 SDL_FreeSurface(surface);
                 if (cursor == nullptr) {
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -448,6 +537,12 @@ void SdlInputHandler::updateRemoteCursor(const RemoteCursorUpdate& update)
                 else {
                     resetRemoteCursor();
                     m_RemoteCursor = cursor;
+
+                    // 记下这一份形状和它用的缩放比例。换显示器时靠它重建 ——
+                    // 主机不会因为我们换了屏就重推一次形状。
+                    m_LastCursorShape = update;
+                    m_HasLastCursorShape = true;
+                    m_RemoteCursorScale = getRemoteCursorScale();
                 }
             }
         }

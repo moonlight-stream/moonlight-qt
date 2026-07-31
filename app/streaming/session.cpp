@@ -3895,6 +3895,11 @@ void Session::exec()
                 // Cocoa 在全屏切换结束之后才发这个事件，拿它当「窗口已落定」的信号
                 hideGuiWindowWhenSettled(true);
                 syncQtOverlayWindowsWithSdlWindowState();
+                // 远端光标的尺寸是按窗口的 backing 比例算的（见 getRemoteCursorScale()），
+                // 换屏、改分辨率、改缩放都会让它失效。挂在这一组事件上而不是只挂
+                // DISPLAY_CHANGED：同一块屏上改系统缩放只会发 SIZE_CHANGED。
+                // 比例没变时这个调用会直接返回，挂宽一点不亏。
+                m_InputHandler->refreshRemoteCursorScale();
                 break;
             }
 
