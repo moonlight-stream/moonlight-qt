@@ -7,6 +7,8 @@ import "."
 CheckBox {
     id: control
 
+    font.family: Theme.fontSans
+
     indicator: Rectangle {
         implicitWidth: 18
         implicitHeight: 18
@@ -20,6 +22,21 @@ CheckBox {
                     : control.checked ? Theme.accent
                     : (control.hovered || control.visualFocus ? Theme.accent : Theme.lineStrong)
         opacity: control.enabled ? 1.0 : 0.45
+
+        // Own clicks on the painted box. FluentWinUI3 can ignore a stationary
+        // release on a replaced indicator, which makes a normal click appear
+        // to work only after several attempts. Keep the base CheckBox behavior
+        // for its label, keyboard navigation, and accessibility.
+        MouseArea {
+            anchors.fill: parent
+            anchors.margins: -6
+            enabled: control.enabled
+            acceptedButtons: Qt.LeftButton
+            cursorShape: Qt.PointingHandCursor
+
+            onPressed: control.forceActiveFocus(Qt.MouseFocusReason)
+            onClicked: control.click()
+        }
 
         Behavior on color {
             ColorAnimation { duration: Theme.durFast }
