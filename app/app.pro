@@ -296,7 +296,8 @@ HEADERS += \
     streaming/video/overlaymenubutton.h \
     streaming/video/overlaytoast.h \
     backend/systemproperties.h \
-    imageutils.h
+    imageutils.h \
+    uifont.h
 
 # Conditional files for non-Steam Link builds
 !config_SL: SOURCES += streaming/micstream.cpp

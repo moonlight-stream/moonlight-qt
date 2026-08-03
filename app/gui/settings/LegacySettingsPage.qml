@@ -12,7 +12,7 @@ import SystemProperties 1.0
 
 // 尚未迁移到新架构的 6 组设置（音频/主机/界面/输入/手柄/高级），
 // 从旧 SettingsView.qml 原样搬运。根节点沿用 settingsPage 这个 id，
-// 好让组内那些 settingsPage.groupBoxTitleFont 引用继续成立。
+// 供组内跨控件绑定继续使用。
 Column {
     id: settingsPage
 
@@ -25,14 +25,6 @@ Column {
     property var bitrateSlider: null
     property var videoEnhancementCheck: null
 
-    readonly property bool useCuteChineseTitleFont: StreamingPreferences.language === StreamingPreferences.LANG_ZH_CN ||
-                                                   StreamingPreferences.language === StreamingPreferences.LANG_ZH_TW ||
-                                                   (StreamingPreferences.language === StreamingPreferences.LANG_AUTO &&
-                                                    Qt.locale().name.indexOf("zh") === 0)
-    property font defaultTitleFont: Qt.font({ weight: Font.Normal, pointSize: 13 })
-    property font cuteChineseTitleFont: Qt.font({ family: "YouYuan", weight: Font.Normal, pointSize: 13 })
-    property font groupBoxTitleFont: useCuteChineseTitleFont ? cuteChineseTitleFont : defaultTitleFont
-
     width: parent ? parent.width : 0
     padding: 0
     spacing: 15
@@ -43,7 +35,6 @@ Column {
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<b><font color=\"#39C5BB\">" + qsTr("Audio Settings") + "</font></b>"
-            font: settingsPage.groupBoxTitleFont
 
             Column {
                 anchors.fill: parent
@@ -151,7 +142,6 @@ Column {
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<b><font color=\"#39C5BB\">" + qsTr("Host Settings") + "</font></b>"
-            font: settingsPage.groupBoxTitleFont
 
             Column {
                 anchors.fill: parent
@@ -308,7 +298,6 @@ Column {
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<b><font color=\"#39C5BB\">" + qsTr("UI Settings") + "</font></b>"
-            font: settingsPage.groupBoxTitleFont
 
             Column {
                 anchors.fill: parent
@@ -673,7 +662,6 @@ Column {
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<b><font color=\"#39C5BB\">" + qsTr("Input Settings") + "</font></b>"
-            font: settingsPage.groupBoxTitleFont
 
             Column {
                 anchors.fill: parent
@@ -870,7 +858,6 @@ Column {
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<b><font color=\"#39C5BB\">" + qsTr("Gamepad Settings") + "</font></b>"
-            font: settingsPage.groupBoxTitleFont
 
             Column {
                 anchors.fill: parent
@@ -1010,7 +997,6 @@ Column {
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<b><font color=\"#39C5BB\">" + qsTr("Advanced Settings") + "</font></b>"
-            font: settingsPage.groupBoxTitleFont
 
             Column {
                 anchors.fill: parent

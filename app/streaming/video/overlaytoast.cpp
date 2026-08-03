@@ -1,4 +1,5 @@
 #include "overlaytoast.h"
+#include "uifont.h"
 
 #include <QScreen>
 #include <QFontMetrics>
@@ -36,16 +37,7 @@ OverlayToast::OverlayToast(QWindow* parent)
     // macOS 和 Linux 上根本没有，实际渲染出来是系统回退字体，三个平台长得不一样。
     // Manrope 由 main.cpp 注册进 QFontDatabase，进程内哪儿都能用；它没有中文字形，
     // 所以后面按平台补 CJK 回退（提示文案是会被翻译的）。
-    QStringList families;
-    families << QStringLiteral("Manrope");
-#ifdef Q_OS_DARWIN
-    families << QStringLiteral("PingFang SC");
-#elif defined(Q_OS_WIN32)
-    families << QStringLiteral("Microsoft YaHei UI") << QStringLiteral("Microsoft YaHei");
-#else
-    families << QStringLiteral("Noto Sans CJK SC") << QStringLiteral("Source Han Sans SC");
-#endif
-    m_Font.setFamilies(families);
+    m_Font.setFamilies(UiFont::familyChain(QStringLiteral("Manrope")));
     m_Font.setPointSize(11);
     m_Font.setWeight(QFont::DemiBold);
     m_Font.setStyleHint(QFont::SansSerif);

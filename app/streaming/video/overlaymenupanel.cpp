@@ -1,4 +1,5 @@
 #include "overlaymenupanel.h"
+#include "uifont.h"
 
 #include <QScreen>
 #include <QGuiApplication>
@@ -49,16 +50,8 @@ OverlayMenuPanel::OverlayMenuPanel(QWindow* parent)
             modeSeven = families.first();
     }
 
-    // Primary: ModeSeven, fallback: Microsoft YaHei UI for elegant Chinese rendering
-    if (!modeSeven.isEmpty()) {
-        m_LabelFont = QFont(modeSeven, 9);
-        m_LabelFont.setFamilies({modeSeven, QStringLiteral("Microsoft YaHei UI"), QStringLiteral("Microsoft YaHei")});
-    } else {
-        // Fallback if ModeSeven fails to load
-        m_LabelFont = QFont(QStringLiteral("Microsoft YaHei UI"), 9);
-        if (!QFontInfo(m_LabelFont).exactMatch())
-            m_LabelFont = QFont(QStringLiteral("Microsoft YaHei"), 9);
-    }
+    m_LabelFont.setFamilies(UiFont::familyChain(modeSeven));
+    m_LabelFont.setPointSize(9);
     m_LabelFont.setWeight(QFont::Normal);
 
     m_DetailFont = QFont(m_LabelFont);

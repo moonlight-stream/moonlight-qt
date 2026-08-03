@@ -90,6 +90,7 @@ static QString getStartupApplicationDir(const char* argv0)
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
 #include "imageutils.h"
+#include "uifont.h"
 #include "streaming/macpermissions.h"
 #ifdef Q_OS_DARWIN
 #include "gui/macwindowchrome.h"
@@ -969,27 +970,6 @@ int main(int argc, char *argv[])
     // Move the mouse to the bottom right so it's invisible when using
     // gamepad-only navigation.
     QCursor().setPos(0xFFFF, 0xFFFF);
-#elif defined(Q_OS_WIN32)
-    const QStringList fontFamilies = QFontDatabase::families();
-    QString defaultFontFamily = QStringLiteral("Segoe UI");
-
-    if (shouldUseChineseWindowsUiFont(StreamingPreferences::get()->language)) {
-        if (fontFamilies.contains(QStringLiteral("Microsoft YaHei UI"))) {
-            defaultFontFamily = QStringLiteral("Microsoft YaHei UI");
-        }
-        else if (fontFamilies.contains(QStringLiteral("Microsoft YaHei"))) {
-            defaultFontFamily = QStringLiteral("Microsoft YaHei");
-        }
-    }
-
-    QFont defaultFont(defaultFontFamily, 9);
-    defaultFont.setStyleHint(QFont::SansSerif);
-    if (fontFamilies.contains(defaultFontFamily)) {
-        app.setFont(defaultFont);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Set default font to %s", qPrintable(defaultFontFamily));
-    } else {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s font not found, using system default", qPrintable(defaultFontFamily));
-    }
 #elif !SDL_VERSION_ATLEAST(2, 0, 11) && defined(Q_OS_LINUX) && (defined(__arm__) || defined(__aarch64__))
     if (qgetenv("SDL_VIDEO_GL_DRIVER").isEmpty() && QGuiApplication::platformName() == "eglfs") {
         // Look for Raspberry Pi GLES libraries. SDL 2.0.10 and earlier needs some help finding
@@ -1136,8 +1116,6 @@ int main(int argc, char *argv[])
     // 界面字体：Manrope（正文/标题）+ DM Mono（数字、状态徽标、宽字距微标签），
     // 这是 neo-brutalism 视觉的一半，见 app/res/fonts/README.md。
     //
-    // 必须放在上面那整段样式/palette 块之后：Windows 分支在更前面已经调过一次
-    // app.setFont()，谁最后调谁生效，顺序反了这里就白设了。
     {
         static const char* const kBundledFonts[] = {
             ":/res/fonts/Manrope-Regular.ttf",
@@ -1156,30 +1134,38 @@ int main(int argc, char *argv[])
             }
         }
 
+        QFont uiFont = app.font();
+
+#ifdef Q_OS_WIN32
+        const QStringList installedFamilies = QFontDatabase::families();
+        QString defaultFontFamily = QStringLiteral("Segoe UI");
+        if (shouldUseChineseWindowsUiFont(StreamingPreferences::get()->language)) {
+            for (const QString& family : UiFont::systemHanFallbackFamilies()) {
+                if (installedFamilies.contains(family)) {
+                    defaultFontFamily = family;
+                    break;
+                }
+            }
+        }
+
+        if (installedFamilies.contains(defaultFontFamily)) {
+            uiFont.setFamily(defaultFontFamily);
+            uiFont.setPointSize(9);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Set default font to %s", qPrintable(defaultFontFamily));
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s font not found, using system default", qPrintable(defaultFontFamily));
+        }
+#endif
+
         if (haveManrope) {
             // Manrope 和 DM Mono 都没有中文字形，中文交给系统字体回退。
             // Qt 会跳过列表里不存在的 family，所以这里可以无条件把候选都列上。
-            QStringList families;
-            families << QStringLiteral("Manrope");
-#ifdef Q_OS_DARWIN
-            families << QStringLiteral("PingFang SC");
-#elif defined(Q_OS_WIN32)
-            const QStringList preferredHanFamilies = {
-                QStringLiteral("Microsoft YaHei UI"),
-                QStringLiteral("Microsoft YaHei"),
-                QStringLiteral("Noto Sans SC"),
-                QStringLiteral("DengXian"),
-            };
-            families << preferredHanFamilies;
-#else
-            families << QStringLiteral("Noto Sans CJK SC") << QStringLiteral("Source Han Sans SC");
-#endif
+            QStringList families = UiFont::familyChain(QStringLiteral("Manrope"));
             // 最后兜住原本的系统默认字体，别把上面平台分支设好的字号/字形提示丢了
-            QFont uiFont = app.font();
             families << uiFont.family();
             uiFont.setFamilies(families);
             uiFont.setStyleHint(QFont::SansSerif);
-            app.setFont(uiFont);
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0) && defined(Q_OS_WIN32)
             // QML controls frequently select Manrope or DM Mono directly.
@@ -1187,8 +1173,7 @@ int main(int argc, char *argv[])
             // choose SimSun for missing Han glyphs. Pin the application-wide
             // Han fallback to modern sans-serif fonts instead.
             QStringList hanFallbackFamilies;
-            const QStringList installedFamilies = QFontDatabase::families();
-            for (const QString &family : preferredHanFamilies) {
+            for (const QString &family : UiFont::systemHanFallbackFamilies()) {
                 if (installedFamilies.contains(family)) {
                     hanFallbackFamilies << family;
                 }
@@ -1202,6 +1187,8 @@ int main(int argc, char *argv[])
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "UI font families: %s",
                         qPrintable(families.join(QLatin1String(", "))));
         }
+
+        app.setFont(uiFont);
     }
 
     QQmlApplicationEngine engine;

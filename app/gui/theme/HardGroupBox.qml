@@ -12,6 +12,11 @@ import "."
 GroupBox {
     id: control
 
+    property font titleFont: Qt.font({
+        family: Theme.fontSans,
+        pointSize: Theme.fontCardTitle
+    })
+
     topPadding: labelText.implicitHeight + Theme.spaceLg
     leftPadding: Theme.spaceLg
     rightPadding: Theme.spaceLg
@@ -25,13 +30,11 @@ GroupBox {
         text: control.title
         textFormat: Text.StyledText
         color: Theme.accent
-        // 字族和字号跟着控件自己的 font 走：旧设置页会把 groupBoxTitleFont 设成
-        // 「幼圆」来给中文标题换脸，写死 Theme.fontSans 就把那个功能弄丢了。
-        font.family: control.font.family
-        font.pointSize: control.font.pointSize
-        font.bold: true
+        font.family: control.titleFont.family
+        font.pointSize: control.titleFont.pointSize
+        font.weight: Font.ExtraBold
         font.capitalization: Font.AllUppercase
-        font.letterSpacing: Theme.tracking(control.font.pointSize, 0.08)
+        font.letterSpacing: Theme.tracking(control.titleFont.pointSize, 0.08)
         elide: Text.ElideRight
     }
 
