@@ -43,8 +43,8 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 ## Building
 
 ### Windows Build Requirements
-* Qt 6.7 SDK or later (earlier versions may work but are not officially supported)
-* [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
+* Qt 6.11 SDK or later (earlier versions may work but are not officially supported)
+* [Visual Studio 2026](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
 * Select **MSVC** option during Qt installation. MinGW is not supported.
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
 * Graphics Tools (only if running debug builds)
@@ -52,8 +52,8 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
   * Alternatively, run `dism /online /add-capability /capabilityname:Tools.Graphics.DirectX~~~~0.0.1.0` and reboot.
 
 ### macOS Build Requirements
-* Qt 6.7 SDK or later (earlier versions may work but are not officially supported)
-* Xcode 14 or later (earlier versions may work but are not officially supported)
+* Qt 6.11 SDK or later (earlier versions may work but are not officially supported)
+* Xcode 15 or later (earlier versions may work but are not officially supported)
 * [create-dmg](https://github.com/sindresorhus/create-dmg) (only if building DMGs for use on non-development Macs)
 
 ### Linux/Unix Build Requirements
