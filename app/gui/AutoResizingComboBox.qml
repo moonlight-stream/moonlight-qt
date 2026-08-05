@@ -114,10 +114,9 @@ ComboBox {
         height: control.popupItemHeight
         highlighted: control.highlightedIndex === index
 
-        // ComboBox 默认代理的取值方式：数组模型给 modelData，对象模型给 model[textRole]
-        readonly property string itemText: control.textRole
-            ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole])
-            : modelData
+        // 交给 ComboBox 自己解析 textRole。这样 JS 数组、QVariantList 和 ListModel
+        // 都走 Qt 的同一条取值路径，不依赖它们在 QML 里的运行时包装类型。
+        readonly property string itemText: control.textAt(index)
 
         contentItem: Text {
             leftPadding: Theme.spaceSm
