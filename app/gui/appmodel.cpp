@@ -253,26 +253,31 @@ void AppModel::setAppDirectLaunch(int appIndex, bool directLaunch)
 
 QVariantList AppModel::getConnectionAddresses()
 {
+    return buildConnectionAddressList(m_Computer);
+}
+
+QVariantList AppModel::buildConnectionAddressList(NvComputer* computer)
+{
     QVariantList addresses;
-    if (!m_Computer) {
+    if (!computer) {
         return addresses;
     }
 
-    QVector<NvAddress> allAddresses = m_Computer->uniqueAddresses();
+    QVector<NvAddress> allAddresses = computer->uniqueAddresses();
 
     NvAddress localAddress;
     NvAddress remoteAddress;
     NvAddress manualAddress;
     NvAddress ipv6Address;
-    NvAddress activeAddress;
+    NvAddress pinnedAddress;
 
     {
-        QReadLocker lock(&m_Computer->lock);
-        localAddress = m_Computer->localAddress;
-        remoteAddress = m_Computer->remoteAddress;
-        manualAddress = m_Computer->manualAddress;
-        ipv6Address = m_Computer->ipv6Address;
-        activeAddress = m_Computer->activeAddress;
+        QReadLocker lock(&computer->lock);
+        localAddress = computer->localAddress;
+        remoteAddress = computer->remoteAddress;
+        manualAddress = computer->manualAddress;
+        ipv6Address = computer->ipv6Address;
+        pinnedAddress = computer->pinnedAddress;
     }
 
     // Add "Auto (default)" option
@@ -281,7 +286,9 @@ QVariantList AppModel::getConnectionAddresses()
     autoItem["port"] = 0;
     autoItem["display"] = tr("Auto (default)");
     autoItem["type"] = tr("Automatic selection with fallback");
-    autoItem["isActive"] = false;
+    // 没固定地址就是自动模式。这一位是弹窗预选的依据 —— 光看 activeAddress
+    // 分不出「自动选中的」和「用户固定的」。
+    autoItem["isActive"] = pinnedAddress.isNull();
     autoItem["isAuto"] = true;
     addresses.append(autoItem);
 
@@ -291,9 +298,11 @@ QVariantList AppModel::getConnectionAddresses()
         item["port"] = static_cast<int>(address.port());
         item["display"] = address.toString();
         item["type"] = getAddressType(address, localAddress, remoteAddress, manualAddress, ipv6Address);
-        item["isActive"] = address == activeAddress;
+        // 具体条目只在「被固定」时算选中；自动模式下选中的是上面的「自动」项，
+        // 实际生效的地址交给轮询，不在这里标。
+        item["isActive"] = !pinnedAddress.isNull() && address == pinnedAddress;
         item["isAuto"] = false;
-        item["isTested"] = m_Computer->hasAddressTestSucceeded(address);
+        item["isTested"] = computer->hasAddressTestSucceeded(address);
         addresses.append(item);
     }
 
@@ -333,12 +342,18 @@ bool AppModel::setActiveAddress(QString address, int port)
         return false;
     }
 
-    {
-        QWriteLocker lock(&m_Computer->lock);
-        m_Computer->activeAddress = selectedAddress;
-    }
+    m_Computer->pinAddress(selectedAddress);
 
     return true;
+}
+
+bool AppModel::resetToAutomaticAddress()
+{
+    if (!m_Computer) {
+        return false;
+    }
+
+    return m_Computer->resetToAutomaticAddress();
 }
 
 QVariantMap AppModel::getActiveAddressInfo()

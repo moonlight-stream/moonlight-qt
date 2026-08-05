@@ -113,37 +113,35 @@ CenteredGridView {
     function showAddressSelectionForComputer(computerIndex, computerName, openAppAfterSelection)
     {
         var addresses = computerModel.getConnectionAddressesForComputer(computerIndex)
-        if (addresses.length === 0) {
+
+        // 列表里第一项是「自动」这个伪条目，判断有没有可选地址得数真地址。
+        var realAddressCount = 0
+        for (var i = 0; i < addresses.length; i++) {
+            if (!addresses[i].isAuto) {
+                realAddressCount++
+            }
+        }
+
+        if (realAddressCount === 0) {
             errorDialog.text = qsTr("No connection IP addresses are available for %1.").arg(computerName)
             errorDialog.helpText = ""
             errorDialog.open()
             return
         }
 
-        if (addresses.length === 1) {
+        if (realAddressCount === 1) {
             if (openAppAfterSelection === true) {
                 openAppView(computerIndex, computerName, false)
             }
             return
         }
 
-        var formattedAddresses = []
-        for (var i = 0; i < addresses.length; i++) {
-            var address = addresses[i]
-            formattedAddresses.push({
-                "address": address.address,
-                "port": address.port,
-                "displayText": address.display,
-                "type": address.type,
-                "isActive": address.isActive,
-                "isTested": address.isTested
-            })
-        }
-
+        // 预选交给 SelectAddressDialog 自己按 isActive 算
         selectAddressDialog.pcIndex = computerIndex
         selectAddressDialog.pcName = computerName
         selectAddressDialog.openAppAfterSelection = openAppAfterSelection === true
-        selectAddressDialog.addresses = formattedAddresses
+        selectAddressDialog.addresses = addresses
+        selectAddressDialog.promptText = qsTr("Choose the IP address to connect to %1:").arg(computerName)
         selectAddressDialog.open()
     }
 
@@ -546,36 +544,18 @@ CenteredGridView {
         }
     }
 
-    NavigableDialog {
+    // 和 AppView 的地址选择框是同一个组件，只有提示语和落地方式不同
+    SelectAddressDialog {
         id: selectAddressDialog
         property int pcIndex: -1
         property string pcName: ""
         property bool openAppAfterSelection: false
-        property var addresses: []
 
-        title: qsTr("Select Connection IP")
-        standardButtons: DialogButtonBox.Ok | DialogButtonBox.Cancel
-        width: Math.max(320, Math.min(560, pcGrid.width - 40))
-
-        onOpened: {
-            var activeIndex = 0
-            for (var i = 0; i < addresses.length; i++) {
-                if (addresses[i].isActive) {
-                    activeIndex = i
-                    break
-                }
-            }
-            addressCombo.currentIndex = activeIndex
-            addressCombo.forceActiveFocus()
-        }
-
-        onAccepted: {
-            if (addressCombo.currentIndex < 0 || addressCombo.currentIndex >= addresses.length) {
-                return
-            }
-
-            var selectedAddress = addresses[addressCombo.currentIndex]
-            if (!computerModel.setActiveAddressForComputer(pcIndex, selectedAddress.address, selectedAddress.port)) {
+        onAddressSelected: function(address) {
+            var ok = address.isAuto
+                    ? computerModel.resetToAutomaticAddressForComputer(pcIndex)
+                    : computerModel.setActiveAddressForComputer(pcIndex, address.address, address.port)
+            if (!ok) {
                 errorDialog.text = qsTr("Unable to switch the connection IP for %1.").arg(pcName)
                 errorDialog.helpText = ""
                 errorDialog.open()
@@ -592,41 +572,6 @@ CenteredGridView {
             openAppAfterSelection = false
             pcIndex = -1
             pcName = ""
-        }
-
-        ColumnLayout {
-            width: parent.width
-            spacing: 8
-
-            Text {
-                text: qsTr("Choose the IP address to connect to %1:").arg(selectAddressDialog.pcName)
-                color: Theme.text
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontRowTitle
-                font.weight: Font.DemiBold
-                wrapMode: Text.Wrap
-                Layout.fillWidth: true
-            }
-
-            AutoResizingComboBox {
-                id: addressCombo
-                model: selectAddressDialog.addresses
-                textRole: "displayText"
-                maximumWidth: parent.width
-                popup.width: width
-                Layout.fillWidth: true
-            }
-
-            Label {
-                visible: addressCombo.currentIndex >= 0 &&
-                         addressCombo.currentIndex < selectAddressDialog.addresses.length
-                text: visible ? qsTr("Address type: %1").arg(selectAddressDialog.addresses[addressCombo.currentIndex].type) : ""
-                color: Theme.textDim
-                font.family: Theme.fontMono
-                font.pointSize: Theme.fontBody
-                wrapMode: Text.Wrap
-                Layout.fillWidth: true
-            }
         }
     }
 

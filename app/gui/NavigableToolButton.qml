@@ -52,10 +52,10 @@ ToolButton {
     }
 
     Keys.onRightPressed: {
-        nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
+        nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason)
     }
 
     Keys.onLeftPressed: {
-        nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocus)
+        nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocusReason)
     }
 }

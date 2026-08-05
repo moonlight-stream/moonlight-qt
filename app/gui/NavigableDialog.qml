@@ -85,8 +85,21 @@ Dialog {
         delegate: HardButton {
             Keys.onReturnPressed: clicked()
             Keys.onEnterPressed: clicked()
-            Keys.onRightPressed: nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
-            Keys.onLeftPressed: nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocus)
+            Keys.onRightPressed: nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason)
+            Keys.onLeftPressed: nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocusReason)
+
+            // 向上退回内容区。焦点链的上一项不一定还在对话框里 —— 纯消息框的按钮行
+            // 上面没有可聚焦的东西，一路往回会绕到模态遮罩背后的页面上去，所以先确认
+            // 它确实在 contentItem 之内，不在就只吃掉按键。
+            Keys.onUpPressed: {
+                var prev = nextItemInFocusChain(false)
+                for (var item = prev; item; item = item.parent) {
+                    if (item === control.contentItem) {
+                        prev.forceActiveFocus(Qt.TabFocusReason)
+                        return
+                    }
+                }
+            }
         }
     }
 

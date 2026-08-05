@@ -52,6 +52,9 @@ public:
 
     Q_INVOKABLE bool setActiveAddressForComputer(int computerIndex, QString address, int port);
 
+    // Undo a setActiveAddressForComputer() pin and go back to automatic selection.
+    Q_INVOKABLE bool resetToAutomaticAddressForComputer(int computerIndex);
+
 signals:
     void pairingCompleted(QVariant error);
     void connectionTestCompleted(int result, QString blockedPorts);

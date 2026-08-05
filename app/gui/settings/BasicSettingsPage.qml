@@ -19,9 +19,6 @@ Column {
     property alias bitrateSlider: bitrateSlider
     property alias videoEnhancementCheck: videoEnhancementSwitch
 
-    // 手柄进入设置页时的初始焦点
-    property alias firstControl: resolutionComboBox
-
     width: parent ? parent.width : 0
     spacing: Theme.spaceLg
 

@@ -451,7 +451,7 @@ ApplicationWindow {
                 onClicked: goBack()
 
                 Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocusReason)
                 }
             }
 
@@ -529,7 +529,7 @@ ApplicationWindow {
                 onClicked: Qt.openUrlExternally("https://qm.qq.com/cgi-bin/qm/qr?k=wI7aTvDQdd900n1L_wjjJw3qNP0yOgUa&jump_from=webapi&authKey=CDBn7sGy7HpCKYTcFmoEdNuG/zmkrBWUC/W5A/oZZycKzXwuO/XFCA97IpJRktj3");
 
                 Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocusReason)
                 }
             }
 
@@ -555,7 +555,7 @@ ApplicationWindow {
                 }
 
                 Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocusReason)
                 }
             }
 
@@ -617,7 +617,7 @@ ApplicationWindow {
                 }
 
                 Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocusReason)
                 }
             }
 
@@ -642,7 +642,7 @@ ApplicationWindow {
                 onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
 
                 Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocusReason)
                 }
             }
 
@@ -660,7 +660,7 @@ ApplicationWindow {
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", GamepadMapper)
 
                 Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocusReason)
                 }
             }
 
@@ -683,7 +683,7 @@ ApplicationWindow {
                 }
 
                 Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocusReason)
                 }
             }
 
@@ -705,7 +705,7 @@ ApplicationWindow {
                 }
 
                 Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocusReason)
                 }
             }
 
@@ -717,7 +717,7 @@ ApplicationWindow {
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", SettingsView)
 
                 Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocusReason)
                 }
 
                 Shortcut {

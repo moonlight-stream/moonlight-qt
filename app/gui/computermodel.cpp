@@ -1,4 +1,5 @@
 #include "computermodel.h"
+#include "appmodel.h"
 #include "backend/nvcomputer.h"
 
 #include <QDebug>
@@ -6,36 +7,6 @@
 #include <QThreadPool>
 #include <QWriteLocker>
 
-namespace {
-QString getAddressType(const NvAddress& address,
-                       const NvAddress& localAddress,
-                       const NvAddress& remoteAddress,
-                       const NvAddress& manualAddress,
-                       const NvAddress& ipv6Address)
-{
-    if (address == localAddress) {
-        return ComputerModel::tr("Local network");
-    }
-    if (address == remoteAddress) {
-        return ComputerModel::tr("Remote network");
-    }
-    if (address == manualAddress) {
-        return ComputerModel::tr("Manual");
-    }
-    if (address == ipv6Address) {
-        return ComputerModel::tr("IPv6 network");
-    }
-
-    return ComputerModel::tr("Other network");
-}
-
-QVector<NvAddress> getSelectableAddresses(NvComputer* computer)
-{
-    // Return all unique addresses, not just tested ones,
-    // so the user can always select from all known addresses.
-    return computer->uniqueAddresses();
-}
-}
 
 ComputerModel::ComputerModel(QObject* object)
     : QAbstractListModel(object) {}
@@ -182,36 +153,9 @@ QVariantList ComputerModel::getConnectionAddressesForComputer(int computerIndex)
         return addresses;
     }
 
-    NvComputer* computer = m_Computers[computerIndex];
-    const QVector<NvAddress> selectableAddresses = getSelectableAddresses(computer);
-
-    NvAddress localAddress;
-    NvAddress remoteAddress;
-    NvAddress manualAddress;
-    NvAddress ipv6Address;
-    NvAddress activeAddress;
-
-    {
-        QReadLocker lock(&computer->lock);
-        localAddress = computer->localAddress;
-        remoteAddress = computer->remoteAddress;
-        manualAddress = computer->manualAddress;
-        ipv6Address = computer->ipv6Address;
-        activeAddress = computer->activeAddress;
-    }
-
-    for (const NvAddress& address : selectableAddresses) {
-        QVariantMap item;
-        item["address"] = address.address();
-        item["port"] = static_cast<int>(address.port());
-        item["display"] = address.toString();
-        item["type"] = getAddressType(address, localAddress, remoteAddress, manualAddress, ipv6Address);
-        item["isActive"] = address == activeAddress;
-        item["isTested"] = computer->hasAddressTestSucceeded(address);
-        addresses.append(item);
-    }
-
-    return addresses;
+    // 和 AppView 那边共用一份构造逻辑：两边喂的是同一个 QML 组件，
+    // 条目形状和「哪一项算选中」的判定必须一致。
+    return AppModel::buildConnectionAddressList(m_Computers[computerIndex]);
 }
 
 bool ComputerModel::hasMultipleConnectionAddresses(int computerIndex) const
@@ -221,7 +165,8 @@ bool ComputerModel::hasMultipleConnectionAddresses(int computerIndex) const
         return false;
     }
 
-    return getSelectableAddresses(m_Computers[computerIndex]).count() > 1;
+    // 数的是全部已知地址，不只是验证过的 —— 用户应该总能从所有地址里挑。
+    return m_Computers[computerIndex]->uniqueAddresses().count() > 1;
 }
 
 bool ComputerModel::setActiveAddressForComputer(int computerIndex, QString address, int port)
@@ -252,9 +197,21 @@ bool ComputerModel::setActiveAddressForComputer(int computerIndex, QString addre
         return false;
     }
 
-    {
-        QWriteLocker lock(&computer->lock);
-        computer->activeAddress = selectedAddress;
+    computer->pinAddress(selectedAddress);
+
+    emit dataChanged(createIndex(computerIndex, 0), createIndex(computerIndex, 0));
+    return true;
+}
+
+bool ComputerModel::resetToAutomaticAddressForComputer(int computerIndex)
+{
+    if (computerIndex < 0 || computerIndex >= m_Computers.count()) {
+        qWarning() << "Invalid computer index for resetToAutomaticAddressForComputer:" << computerIndex;
+        return false;
+    }
+
+    if (!m_Computers[computerIndex]->resetToAutomaticAddress()) {
+        return false;
     }
 
     emit dataChanged(createIndex(computerIndex, 0), createIndex(computerIndex, 0));

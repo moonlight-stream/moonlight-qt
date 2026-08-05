@@ -43,8 +43,72 @@ CenteredGridView {
     property bool hasMultipleAddresses: appModel.hasMultipleConnectionAddresses()
     // 当前活动地址信息
     property var activeAddressInfo: appModel.getActiveAddressInfo()
-    // 是否使用自动选择模式
-    property bool useAutoAddress: true
+
+    // 显示器 / VDD 选择按钮。以前是裸 Rectangle + MouseArea，手柄和键盘完全够不到 ——
+    // 而这个弹窗是切换 VDD 的唯一入口。换成 AbstractButton 才能进焦点链。
+    //
+    // 这一页的手柄导航是「普通模式」（uiNavMode 为假，方向键原样发过来，没有 Tab），
+    // 所以四个方向都得自己接：左右在同一排里走，上下进出下面的组合模式下拉。
+    component DisplayChip: AbstractButton {
+        id: chip
+
+        property bool selected: false
+        property color selectedFill: Theme.accent
+        property color selectedBorder: Theme.accentStrong
+
+        implicitWidth: chipLabel.implicitWidth + Theme.spaceXl
+        implicitHeight: 32
+
+        activeFocusOnTab: true
+        hoverEnabled: true
+
+        HoverHandler {
+            cursorShape: Qt.PointingHandCursor
+        }
+
+        background: Rectangle {
+            radius: 0
+            color: chip.selected ? chip.selectedFill
+                                 : (chip.hovered ? Theme.surface : Theme.surface2)
+            // 焦点描边压过选中描边：选中与否已经靠填充色表达了，描边留给「焦点在哪」。
+            border.color: chip.visualFocus ? Theme.text
+                        : (chip.selected ? chip.selectedBorder : Theme.lineStrong)
+            border.width: chip.visualFocus ? 2 : 1
+
+            Behavior on color {
+                ColorAnimation { duration: Theme.durFast }
+            }
+        }
+
+        contentItem: Text {
+            id: chipLabel
+            text: chip.text
+            color: chip.selected ? Theme.ink : Theme.textDim
+            font.family: Theme.fontSans
+            font.pointSize: Theme.fontBody
+            font.bold: chip.selected
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+
+        // 向下的去向。chips 住在一个横向 Flow 里，焦点链的下一项是同一行的下一颗，
+        // 不是「下面那个控件」—— 纵向只能显式指定。为空表示这个方向没有去处，
+        // 吃掉按键。
+        property Item navDownItem: null
+
+        function moveFocus(forward) {
+            nextItemInFocusChain(forward).forceActiveFocus(Qt.TabFocusReason)
+        }
+
+        Keys.onReturnPressed: clicked()
+        Keys.onEnterPressed: clicked()
+        // 左右沿焦点链走：Flow 的排列顺序就是焦点链顺序，横向是对得上的
+        Keys.onRightPressed: moveFocus(true)
+        Keys.onLeftPressed: moveFocus(false)
+        Keys.onDownPressed: if (navDownItem) navDownItem.forceActiveFocus(Qt.TabFocusReason)
+        // chips 上方没有可聚焦的东西（只有标题和分隔线），吃掉
+        Keys.onUpPressed: {}
+    }
 
     // 加载显示器列表
     function loadDisplays() {
@@ -68,60 +132,51 @@ CenteredGridView {
 
     // IP选择弹窗
     function openIpDialog() {
-        var addresses = appModel.getConnectionAddresses()
-        ipDialog.addresses = addresses
-        // Find current active index
-        var activeIdx = 0
-        if (useAutoAddress) {
-            activeIdx = 0 // "Auto (default)" is always index 0
-        } else {
-            for (var i = 0; i < addresses.length; i++) {
-                if (addresses[i].isActive && !addresses[i].isAuto) {
-                    activeIdx = i
-                    break
-                }
-            }
-        }
-        ipCombo.currentIndex = activeIdx
+        ipDialog.addresses = appModel.getConnectionAddresses()
         ipDialog.open()
     }
 
-    Popup {
+    // 走 NavigableDialog 而不是裸 Popup：方角 Panel、ink 遮罩、宽字距大写标题、
+    // 关闭时归还焦点，这些在那个壳里已经实现过一遍了。
+    NavigableDialog {
         id: displayDialog
-        modal: true
-        focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        anchors.centerIn: parent
-        width: Math.min(500, appGrid.width - 40)
-        padding: Theme.spaceXl
 
-        background: Panel {
-            fill: Theme.surfaceLayer
-            accentBarWidth: Theme.accentBar
+        title: qsTr("Display Settings")
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        // 宽度显式给，别让内容撑：下面的 Column 按 availableWidth 排版，
+        // 两边互相依赖就成环了。
+        width: Math.min(500, appGrid.width - 40)
+
+        // 这个框没有确定 / 取消：选中即生效，靠 B / Esc / 点外面关掉。
+        // NavigableDialog 的 footer 在没有 standardButtons 时不显示。
+
+        // 光把焦点给弹窗本体不够，手柄用户还得盲按一下才有高亮。
+        // 开的时候直接落到当前选中的显示器上。
+        onOpened: focusInitialItem()
+
+        // 基类的 onClosed 会把焦点还给 stackView，这里再收紧到应用网格本身。
+        // QML 的信号处理器是累加的，基类那份仍然会执行。
+        onClosed: appGrid.forceActiveFocus()
+
+        function focusInitialItem() {
+            for (var i = 0; i < displayChips.children.length; i++) {
+                var chip = displayChips.children[i]
+                // Repeater 自己也在 children 里，但它没有 selected，会自动跳过
+                if (chip.selected) {
+                    chip.forceActiveFocus(Qt.TabFocusReason)
+                    return
+                }
+            }
+            // 没有物理显示器被选中时至少落在 VDD 上：它是静态声明的，一直都在
+            vddChip.forceActiveFocus(Qt.TabFocusReason)
         }
 
         Column {
-            anchors.left: parent.left
-            anchors.right: parent.right
+            width: displayDialog.availableWidth
             spacing: Theme.spaceLg
 
-            // 标题
-            Text {
-                text: qsTr("Display Settings")
-                color: Theme.text
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontCardTitle
-                font.weight: Font.ExtraBold
-                font.capitalization: Font.AllUppercase
-                font.letterSpacing: Theme.tracking(Theme.fontCardTitle, 0.08)
-            }
-
-            // 分隔线
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: Theme.line
-            }
+            // 标题和它下面那条分隔线现在由 NavigableDialog 的 header 提供
 
             // 显示器选择区
             MicroLabel {
@@ -129,6 +184,7 @@ CenteredGridView {
             }
 
             Flow {
+                id: displayChips
                 width: parent.width
                 spacing: Theme.spaceSm
 
@@ -136,36 +192,18 @@ CenteredGridView {
                 Repeater {
                     model: ListModel { id: displayListModel }
 
-                    Rectangle {
-                        readonly property bool selected: selectedDisplayId === model.displayGuid
+                    DisplayChip {
+                        text: model.displayName
+                        selected: selectedDisplayId === model.displayGuid
+                        navDownItem: combinationModeCombo.visible ? combinationModeCombo : null
 
-                        width: displayBtnLabel.implicitWidth + Theme.spaceXl
-                        height: 32
-                        color: selected ? Theme.accent : Theme.surface2
-                        border.color: selected ? Theme.accentStrong : Theme.lineStrong
-                        border.width: 1
-
-                        Text {
-                            id: displayBtnLabel
-                            anchors.centerIn: parent
-                            text: model.displayName
-                            color: parent.selected ? Theme.ink : Theme.textDim
-                            font.family: Theme.fontSans
-                            font.pointSize: Theme.fontBody
-                            font.bold: parent.selected
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                selectedDisplayId = model.displayGuid
-                                var saved = StreamingPreferences.customScreenMode
-                                for (var i = 0; i < physicalModeModel.count; i++) {
-                                    if (physicalModeModel.get(i).val === saved) {
-                                        combinationModeCombo.currentIndex = i
-                                        break
-                                    }
+                        onClicked: {
+                            selectedDisplayId = model.displayGuid
+                            var saved = StreamingPreferences.customScreenMode
+                            for (var i = 0; i < physicalModeModel.count; i++) {
+                                if (physicalModeModel.get(i).val === saved) {
+                                    combinationModeCombo.currentIndex = i
+                                    break
                                 }
                             }
                         }
@@ -173,34 +211,21 @@ CenteredGridView {
                 }
 
                 // VDD 按钮
-                Rectangle {
-                    width: vddBtnLabel.implicitWidth + Theme.spaceXl
-                    height: 32
-                    color: isVddSelected ? Theme.acid : Theme.surface2
-                    border.color: isVddSelected ? Theme.acid : Theme.lineStrong
-                    border.width: 1
+                DisplayChip {
+                    id: vddChip
+                    text: qsTr("VDD Display")
+                    selected: isVddSelected
+                    selectedFill: Theme.acid
+                    selectedBorder: Theme.acid
+                    navDownItem: combinationModeCombo.visible ? combinationModeCombo : null
 
-                    Text {
-                        id: vddBtnLabel
-                        anchors.centerIn: parent
-                        text: qsTr("VDD Display")
-                        color: isVddSelected ? Theme.ink : Theme.textDim
-                        font.family: Theme.fontSans
-                        font.pointSize: Theme.fontBody
-                        font.bold: isVddSelected
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            selectedDisplayId = "vdd"
-                            var saved = StreamingPreferences.customVddScreenMode
-                            for (var i = 0; i < vddModeModel.count; i++) {
-                                if (vddModeModel.get(i).val === saved) {
-                                    combinationModeCombo.currentIndex = i
-                                    break
-                                }
+                    onClicked: {
+                        selectedDisplayId = "vdd"
+                        var saved = StreamingPreferences.customVddScreenMode
+                        for (var i = 0; i < vddModeModel.count; i++) {
+                            if (vddModeModel.get(i).val === saved) {
+                                combinationModeCombo.currentIndex = i
+                                break
                             }
                         }
                     }
@@ -229,6 +254,11 @@ CenteredGridView {
                     maximumWidth: parent.width
                     textRole: "text"
                     model: isVddSelected ? vddModeModel : physicalModeModel
+
+                    // 收起状态下上下键改为导航：不然手柄落到这里就出不去了，
+                    // 而且一路把组合模式静默改掉。向上回到显示器按钮行的末尾；
+                    // 这是弹窗里最后一个控件，向下没有去处，吃掉即可。
+                    navUpItem: vddChip
 
                     Component.onCompleted: {
                         var saved = StreamingPreferences.customScreenMode
@@ -825,129 +855,23 @@ CenteredGridView {
         }
     }
 
-    Popup {
+    // 连接 IP 选择框。和 PcView 用的是同一个组件（那边是对某台主机切地址，
+    // 这边是在应用列表里切当前主机的地址），差别只有提示语和「自动」这一项。
+    SelectAddressDialog {
         id: ipDialog
-        property var addresses: []
 
-        modal: true
-        focus: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-        anchors.centerIn: parent
-        width: Math.min(500, appGrid.width - 40)
-        padding: Theme.spaceXl
+        promptText: qsTr("Select the IP address to connect to this PC:")
 
-        background: Panel {
-            fill: Theme.surfaceLayer
-            accentBarWidth: Theme.accentBar
+        onAddressSelected: function(address) {
+            if (address.isAuto) {
+                appModel.resetToAutomaticAddress()
+            } else {
+                appModel.setActiveAddress(address.address, address.port)
+            }
+            activeAddressInfo = appModel.getActiveAddressInfo()
         }
 
-        Column {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            spacing: Theme.spaceLg
-
-            Text {
-                text: qsTr("Connection IP Settings")
-                color: Theme.text
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontCardTitle
-                font.weight: Font.ExtraBold
-                font.capitalization: Font.AllUppercase
-                font.letterSpacing: Theme.tracking(Theme.fontCardTitle, 0.08)
-            }
-
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: Theme.line
-            }
-
-            MicroLabel {
-                width: parent.width
-                text: qsTr("Select the IP address to connect to this PC:")
-                // 这句比一般微标签长，允许折行（MicroLabel 默认是单行省略）
-                elide: Text.ElideNone
-                wrapMode: Text.Wrap
-            }
-
-            // 走 AutoResizingComboBox 而不是裸 ComboBox：方角背景和方角展开面板
-            // 都在那个文件里统一定义，裸 ComboBox 会退回 FluentWinUI3 的圆角面板。
-            AutoResizingComboBox {
-                id: ipCombo
-                width: parent.width
-                maximumWidth: parent.width
-                model: ipDialog.addresses
-                textRole: "display"
-            }
-
-            // 地址类型 / 未验证告警：都是机读信息，走等宽
-            Text {
-                visible: ipCombo.currentIndex >= 0 &&
-                         ipCombo.currentIndex < ipDialog.addresses.length
-                text: visible ? qsTr("Type: %1").arg(ipDialog.addresses[ipCombo.currentIndex].type) : ""
-                color: Theme.textDim
-                font.family: Theme.fontMono
-                font.pointSize: Theme.fontBody
-                wrapMode: Text.Wrap
-                width: parent.width
-            }
-
-            Text {
-                visible: ipCombo.currentIndex > 0 &&
-                         ipCombo.currentIndex < ipDialog.addresses.length &&
-                         !ipDialog.addresses[ipCombo.currentIndex].isTested
-                text: qsTr("Warning: This address has not been verified by polling yet.")
-                color: Theme.danger
-                font.family: Theme.fontMono
-                font.pointSize: Theme.fontCaption
-                wrapMode: Text.Wrap
-                width: parent.width
-            }
-
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: Theme.line
-            }
-
-            Row {
-                spacing: Theme.spaceMd
-                anchors.horizontalCenter: parent.horizontalCenter
-
-                HardButton {
-                    text: qsTr("Apply")
-                    onClicked: {
-                        if (ipCombo.currentIndex < 0 || ipCombo.currentIndex >= ipDialog.addresses.length) {
-                            return
-                        }
-
-                        var selected = ipDialog.addresses[ipCombo.currentIndex]
-                        if (selected.isAuto) {
-                            useAutoAddress = true
-                        } else {
-                            useAutoAddress = false
-                            appModel.setActiveAddress(selected.address, selected.port)
-                            activeAddressInfo = appModel.getActiveAddressInfo()
-                        }
-                        ipDialog.close()
-                    }
-                }
-
-                HardButton {
-                    text: qsTr("Cancel")
-                    onClicked: ipDialog.close()
-                }
-            }
-
-            Text {
-                text: qsTr("\"Auto\" uses the default address selection with automatic fallback. Selecting a specific IP will pin the connection to that address.")
-                color: Theme.textFaint
-                font.family: Theme.fontMono
-                font.pointSize: Theme.fontCaption
-                wrapMode: Text.Wrap
-                width: parent.width
-            }
-        }
+        onClosed: appGrid.forceActiveFocus()
     }
 
     NavigableMessageDialog {

@@ -13,7 +13,11 @@ import "theme"
 // 设置页外壳：左侧分类 rail + 右侧卡片内容。
 // 「基本设置」已迁移到 settings/BasicSettingsPage.qml；
 // 其余 6 组仍走旧的 GroupBox 路径（settings/LegacySettingsPage.qml），逐步迁移。
-Item {
+// 根用 FocusScope 而不是 Item：工具栏的 Keys.onDownPressed 走的是
+// stackView.currentItem.forceActiveFocus()，落在普通 Item 上会停在一个看不见的
+// 死点上（PcView / AppView 是 GridView + activeFocusOnTab，所以没这问题）。
+// FocusScope 会把焦点转交给内部真正持焦的控件。
+FocusScope {
     id: settingsPage
     // 这一页自带壁纸，main.qml 不用再垫一层
     readonly property bool usesOwnBackground: true
@@ -43,18 +47,35 @@ Item {
         // It is required to shift focus between controls on the settings page.
         SdlGamepadKeyNavigation.setUiNavMode(true)
 
-        // Highlight the first item if a gamepad is connected
+        // 手柄进来时把焦点放在分类栏的当前分类上，而不是内容区第一个控件。
         //
-        // category 会跨次进入保留下来，所以不能无条件去点基本设置页的第一个控件：
-        // 当前分类不是 basic 时那个控件是不可见的，forceActiveFocus() 静默失效，
-        // 手柄用户就一个可用焦点都没有（firstControl 万一是 undefined 还会抛）。
+        // 以前是直接点基本设置页的分辨率下拉，于是用户进设置的第一下左右输入就把
+        // 分辨率改了（issue #144）。落在分类栏上就没这个问题：分类栏不吃左右键，
+        // 而且 category 是跨次保留的，从分类栏出发永远是可见、可用的那一项。
         if (SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
-            if (settingsPage.category === "basic" && basicPage.firstControl) {
-                basicPage.firstControl.forceActiveFocus(Qt.TabFocus)
-            }
-            else {
-                rail.forceActiveFocus(Qt.TabFocus)
-            }
+            rail.focusCurrent()
+        }
+    }
+
+    // 焦点在内容区时，B / Esc 先退回分类栏；已经在分类栏了才放行给 main.qml
+    // 去弹出整个设置页。之前不分级，手柄用户在内容区随手一个 B 就整页退出了。
+    Keys.onEscapePressed: function(event) {
+        event.accepted = !rail.railFocused
+        if (event.accepted) {
+            rail.focusCurrent()
+        }
+    }
+
+    // 把焦点交给内容区的第一个可聚焦控件。
+    //
+    // 不直接引用某个页面的首个控件：那只对基本设置页有效，其余六组还在
+    // LegacySettingsPage 里，而且随分类切换。scrollArea 在声明顺序上排在分类栏
+    // 之后，往后走一格 Tab 就是它内部第一个可聚焦控件 —— 焦点链本身会跳过
+    // 不可见的分类。
+    function focusContent() {
+        var first = scrollArea.nextItemInFocusChain(true)
+        if (first) {
+            first.forceActiveFocus(Qt.TabFocusReason)
         }
     }
 
@@ -71,14 +92,26 @@ Item {
         StreamingPreferences.save()
     }
 
+    // 焦点落到 FocusScope 壳自己身上时（工具栏按向下、或 StackView 切页回来），
+    // 转交给分类栏。停在壳上是个看不见的死点，用户得多按一次才有反应。
+    onActiveFocusChanged: {
+        if (activeFocus && Window.window && Window.window.activeFocusItem === settingsPage) {
+            rail.focusCurrent()
+        }
+    }
+
     // 手柄 LB/RB 映射成 PageUp/PageDown，用来切分类
     Keys.onPressed: {
         if (event.key === Qt.Key_PageUp) {
             rail.step(-1)
+            // 切完分类要把焦点收回分类栏：原来持焦的控件已经随着旧分类隐藏了，
+            // 焦点会凭空消失，手柄看起来就像失灵。
+            rail.focusCurrent()
             event.accepted = true
         }
         else if (event.key === Qt.Key_PageDown) {
             rail.step(1)
+            rail.focusCurrent()
             event.accepted = true
         }
     }
@@ -145,6 +178,7 @@ Item {
                     settingsPage.category = category
                     scrollArea.contentY = 0
                 }
+                onContentRequested: settingsPage.focusContent()
             }
         }
 

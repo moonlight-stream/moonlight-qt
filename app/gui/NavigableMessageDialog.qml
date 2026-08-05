@@ -19,7 +19,7 @@ NavigableDialog {
     onOpened: {
         // Force keyboard focus on the label so keyboard navigation works
         if (dialogButtonBox.count > 0) {
-            dialogButtonBox.itemAt(dialogButtonBox.count - 1).forceActiveFocus(Qt.TabFocus)
+            dialogButtonBox.itemAt(dialogButtonBox.count - 1).forceActiveFocus(Qt.TabFocusReason)
         }
     }
 
@@ -101,8 +101,8 @@ NavigableDialog {
         delegate: HardButton {
             Keys.onReturnPressed: clicked()
             Keys.onEnterPressed: clicked()
-            Keys.onRightPressed: nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
-            Keys.onLeftPressed: nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocus)
+            Keys.onRightPressed: nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason)
+            Keys.onLeftPressed: nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocusReason)
         }
 
         onHelpRequested: {
