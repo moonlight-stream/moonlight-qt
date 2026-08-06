@@ -101,12 +101,34 @@ CenteredGridView {
 
     function openAppView(computerIndex, computerName, showHiddenGames)
     {
+        // 造不出来时 createObject 返回 null，push(null) 只会往日志里丢一句
+        // 「nothing to push」就完了 —— 界面上表现为「点了没反应」，非常难查。
+        // status 和 createObject 的返回值都要看：status 只说明文件加载成功了，
+        // 实例化本身还可能失败（属性赋值出错等）。
+        function fail(reason) {
+            console.error("Failed to open AppView.qml: " + reason)
+            errorDialog.text = qsTr("Unable to open the app list for %1.").arg(computerName)
+            errorDialog.helpText = reason
+            errorDialog.open()
+        }
+
         var component = Qt.createComponent("AppView.qml")
+        if (component.status !== Component.Ready) {
+            fail(component.errorString())
+            return
+        }
+
         var properties = {"computerIndex": computerIndex, "objectName": computerName}
         if (showHiddenGames === true) {
             properties.showHiddenGames = true
         }
+
         var appView = component.createObject(stackView, properties)
+        if (!appView) {
+            fail(component.errorString())
+            return
+        }
+
         stackView.push(appView)
     }
 
@@ -195,6 +217,28 @@ CenteredGridView {
         grid: pcGrid
 
         property alias pcContextMenu : pcContextMenuLoader.item
+
+        // 右键菜单是异步 Loader 造的，刚进视野的条目上 item 还是 null。四个调用点
+        // 以前都直接用，读 null 的成员会抛 TypeError，这一次点击就被静默吃掉 ——
+        // 表现正是「点了没反应，再点一次才出来」。这里记下意图，等造好再开。
+        // 0 = 没有待处理，1 = open()，2 = popup()（跟着鼠标位置）
+        property int pendingMenuRequest: 0
+
+        function openContextMenu(atCursor) {
+            if (!pcContextMenuLoader.item) {
+                pendingMenuRequest = atCursor ? 2 : 1
+                return
+            }
+
+            pendingMenuRequest = 0
+            if (atCursor && pcContextMenuLoader.item.popup) {
+                pcContextMenuLoader.item.popup()
+            }
+            else {
+                // Qt 5.9 没有 popup()；键盘触发时也走这条，菜单落在条目上而不是光标处
+                pcContextMenuLoader.item.open()
+            }
+        }
 
         Rectangle {
             id: pcIcon
@@ -310,6 +354,19 @@ CenteredGridView {
         Loader {
             id: pcContextMenuLoader
             asynchronous: true
+            onLoaded: {
+                // 造好之前有人点过，把那次点击补上。但要确认这一页还在最前面 ——
+                // 点完立刻返回或进入某台主机的话，菜单会弹在新页面上。
+                if (pcContextMenuLoader.parent.pendingMenuRequest !== 0) {
+                    if (pcGrid.StackView.status === StackView.Active) {
+                        pcContextMenuLoader.parent.openContextMenu(
+                            pcContextMenuLoader.parent.pendingMenuRequest === 2)
+                    }
+                    else {
+                        pcContextMenuLoader.parent.pendingMenuRequest = 0
+                    }
+                }
+            }
             sourceComponent: NavigableMenu {
                 id: pcContextMenu
                 initiator: pcContextMenuLoader.parent
@@ -392,19 +449,13 @@ CenteredGridView {
                 }
             } else if (!model.online) {
                 // Using open() here because it may be activated by keyboard
-                pcContextMenu.open()
+                openContextMenu(false)
             }
         }
 
         onPressAndHold: {
             // popup() ensures the menu appears under the mouse cursor
-            if (pcContextMenu.popup) {
-                pcContextMenu.popup()
-            }
-            else {
-                // Qt 5.9 doesn't have popup()
-                pcContextMenu.open()
-            }
+            openContextMenu(true)
         }
 
         MouseArea {
@@ -418,7 +469,7 @@ CenteredGridView {
         Keys.onMenuPressed: {
             // We must use open() here so the menu is positioned on
             // the ItemDelegate and not where the mouse cursor is
-            pcContextMenu.open()
+            openContextMenu(false)
         }
 
         Keys.onDeletePressed: {
