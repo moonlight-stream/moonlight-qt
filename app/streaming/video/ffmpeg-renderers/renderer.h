@@ -508,7 +508,8 @@ public:
         return AV_PIX_FMT_NONE;
     }
 
-    virtual bool initializeEGL(EGLDisplay,
+    virtual bool initializeEGL(IFFmpegRenderer*,
+                               EGLDisplay,
                                const EGLExtensions &) {
         return false;
     }

@@ -26,8 +26,7 @@ VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
       m_RequiresExplicitPixelFormat(false),
       m_OverlayMutex(nullptr)
 #ifdef HAVE_EGL
-    , m_EglExportType(EglExportType::Unknown),
-      m_EglImageFactory(this)
+    , m_EglExportType(EglExportType::Unknown)
 #endif
 {
 #ifdef HAVE_LIBVA_X11
@@ -1082,11 +1081,12 @@ AVPixelFormat VAAPIRenderer::getEGLImagePixelFormat() {
 }
 
 bool
-VAAPIRenderer::initializeEGL(EGLDisplay dpy,
+VAAPIRenderer::initializeEGL(IFFmpegRenderer* eglRenderer,
+                             EGLDisplay dpy,
                              const EGLExtensions &ext) {
     VADRMPRIMESurfaceDescriptor descriptor;
 
-    if (!m_EglImageFactory.initializeEGL(dpy, ext)) {
+    if (!m_EglImageFactory.initializeEGL(eglRenderer, dpy, ext)) {
         return false;
     }
 

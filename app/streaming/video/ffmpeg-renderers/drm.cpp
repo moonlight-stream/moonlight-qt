@@ -163,9 +163,6 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_OutputRect{},
       m_SwFrameMapper(this),
       m_CurrentSwFrameIdx(0)
-#ifdef HAVE_EGL
-    , m_EglImageFactory(this)
-#endif
 {
     SDL_zero(m_SwFrame);
 }
@@ -2100,9 +2097,10 @@ AVPixelFormat DrmRenderer::getEGLImagePixelFormat() {
     return AV_PIX_FMT_DRM_PRIME;
 }
 
-bool DrmRenderer::initializeEGL(EGLDisplay display,
+bool DrmRenderer::initializeEGL(IFFmpegRenderer* eglRenderer,
+                                EGLDisplay display,
                                 const EGLExtensions &ext) {
-    return m_EglImageFactory.initializeEGL(display, ext);
+    return m_EglImageFactory.initializeEGL(eglRenderer, display, ext);
 }
 
 ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,

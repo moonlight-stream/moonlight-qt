@@ -776,7 +776,7 @@ public:
 #ifdef HAVE_EGL
     virtual bool canExportEGL() override;
     virtual AVPixelFormat getEGLImagePixelFormat() override;
-    virtual bool initializeEGL(EGLDisplay dpy, const EGLExtensions &ext) override;
+    virtual bool initializeEGL(IFFmpegRenderer* eglRenderer, EGLDisplay dpy, const EGLExtensions &ext) override;
     virtual ssize_t exportEGLImages(AVFrame *frame, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) override;
 #endif
 
