@@ -49,11 +49,16 @@
 #define SER_REVERSESCROLL "reversescroll"
 #define SER_SWAPFACEBUTTONS "swapfacebuttons"
 #define SER_CAPTURESYSKEYS "capturesyskeys"
+#define SER_GAMEPADQUITCOMBOENABLED "gamepadquitcomboenabled"
+#define SER_GAMEPADQUITCOMBOMASK "gamepadquitcombomask"
 #define SER_KEEPAWAKE "keepawake"
 #define SER_LANGUAGE "language"
 #define SER_RENDERER "renderer"
 
 #define CURRENT_DEFAULT_VER 2
+
+// Matches the combo that was hardcoded prior to this being configurable
+#define DEFAULT_GAMEPAD_QUIT_COMBO_MASK (StreamingPreferences::GQC_START | StreamingPreferences::GQC_BACK | StreamingPreferences::GQC_LB | StreamingPreferences::GQC_RB)
 
 static StreamingPreferences* s_GlobalPrefs;
 
@@ -154,6 +159,20 @@ void StreamingPreferences::reload()
     enableHdr = settings.value(SER_HDR, false).toBool();
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
+    gamepadQuitComboEnabled = settings.value(SER_GAMEPADQUITCOMBOENABLED, true).toBool();
+    gamepadQuitComboMask = settings.value(SER_GAMEPADQUITCOMBOMASK, DEFAULT_GAMEPAD_QUIT_COMBO_MASK).toInt();
+    {
+        // A combo needs at least 2 buttons to avoid accidentally quitting
+        // from normal gameplay input. Fall back to the default if the
+        // stored mask is invalid (e.g. corrupted or from a future version).
+        int bitCount = 0;
+        for (int mask = gamepadQuitComboMask; mask != 0; mask &= mask - 1) {
+            bitCount++;
+        }
+        if (bitCount < 2) {
+            gamepadQuitComboMask = DEFAULT_GAMEPAD_QUIT_COMBO_MASK;
+        }
+    }
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_STEREO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
@@ -361,6 +380,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
+    settings.setValue(SER_GAMEPADQUITCOMBOENABLED, gamepadQuitComboEnabled);
+    settings.setValue(SER_GAMEPADQUITCOMBOMASK, gamepadQuitComboMask);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
 }
 
