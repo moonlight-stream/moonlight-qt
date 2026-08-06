@@ -21,7 +21,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>11.0.0</string>
+	<string>13.0.0</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
@@ -44,6 +44,10 @@
 	<string>Moonlight uses the local network to connect to your gaming PC for streaming.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Moonlight needs access to the microphone to support microphone redirection to the host.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_nvstream._tcp</string>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>VERSION</string>
 	<key>CFBundleShortVersionString</key>
