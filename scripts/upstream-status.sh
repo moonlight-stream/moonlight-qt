@@ -20,17 +20,25 @@ if [ "${1:-}" != "--no-fetch" ]; then
     if ! git remote get-url upstream > /dev/null 2>&1; then
         echo "添加 upstream remote..."
         git remote add upstream "$UPSTREAM_URL"
-        # 防手滑往上游推
-        git remote set-url --push upstream DISABLED
     fi
+    # 防手滑往上游推。放在 if 外面：remote 可能是别人先手工加的，那种情况下
+    # push url 还是继承 fetch url，有上游写权限的人一个 git push upstream 就出去了。
+    git remote set-url --push upstream DISABLED
     echo "拉取上游..."
     git fetch upstream --quiet
 fi
 
 # 已经落进 master 的：提交信息里带 cherry-pick 来源
 merged=$(git log "$BASE_BRANCH" --format=%B | grep -oE "cherry picked from commit [0-9a-f]{40}" | awk '{print $5}' || true)
-# 还在别的分支上（PR 进行中）
-inflight=$(git log --all --not "$BASE_BRANCH" --format=%B | grep -oE "cherry picked from commit [0-9a-f]{40}" | awk '{print $5}' || true)
+# 还在别的分支上（PR 进行中）。只看本地分支和 origin 的远端分支 —— 用 --all 会把
+# upstream/* 和 tag 也算进来，上游自己在分支间 cherry-pick 过的提交就会被误判成
+# 「我们正在处理」，从待评估里凭空消失。
+inflight_refs=$(git for-each-ref --format='%(refname)' refs/heads refs/remotes/origin || true)
+if [ -n "$inflight_refs" ]; then
+    inflight=$(git log $inflight_refs --not "$BASE_BRANCH" --format=%B | grep -oE "cherry picked from commit [0-9a-f]{40}" | awk '{print $5}' || true)
+else
+    inflight=""
+fi
 
 pending=0
 while read -r full short subj; do
