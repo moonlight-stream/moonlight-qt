@@ -247,10 +247,16 @@ public:
     }
 
     virtual bool isFrameFullRange(const AVFrame* frame) {
-        // This handles the case where the color range is unknown,
-        // so that we use Limited color range which is the default
-        // behavior for Moonlight.
-        return frame->color_range == AVCOL_RANGE_JPEG;
+        switch (frame->color_range) {
+        case AVCOL_RANGE_JPEG:
+            return true;
+        case AVCOL_RANGE_MPEG:
+            return false;
+        default:
+            // If the color range is not populated, assume the encoder
+            // is sending the color range that we requested.
+            return getDecoderColorRange() == COLOR_RANGE_FULL;
+        }
     }
 
     virtual bool isRenderThreadSupported() {
