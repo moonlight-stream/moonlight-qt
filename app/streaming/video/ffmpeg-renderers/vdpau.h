@@ -19,6 +19,7 @@ public:
     virtual void waitToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual int getDecoderColorspace() override;
+    virtual int getDecoderColorRange() override;
     virtual int getDecoderCapabilities() override;
 
 private:

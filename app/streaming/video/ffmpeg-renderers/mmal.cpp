@@ -242,6 +242,12 @@ int MmalRenderer::getDecoderColorspace()
     return COLORSPACE_REC_709;
 }
 
+int MmalRenderer::getDecoderColorRange()
+{
+    // MMAL_COLOR_SPACE_ITUR_BT709 assumes limited range content
+    return COLOR_RANGE_LIMITED;
+}
+
 void MmalRenderer::InputPortCallback(MMAL_PORT_T*, MMAL_BUFFER_HEADER_T* buffer)
 {
     mmal_buffer_header_release(buffer);

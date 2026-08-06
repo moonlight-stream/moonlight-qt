@@ -578,6 +578,11 @@ public:
         return COLORSPACE_REC_601;
     }
 
+    int getDecoderColorRange() override
+    {
+        return COLOR_RANGE_LIMITED;
+    }
+
     int getDecoderCapabilities() override
     {
         return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC |

@@ -41,8 +41,8 @@ class EglImageFactory
     };
 
 public:
-    EglImageFactory(IFFmpegRenderer* renderer);
-    bool initializeEGL(EGLDisplay, const EGLExtensions &ext);
+    EglImageFactory();
+    bool initializeEGL(IFFmpegRenderer* eglRenderer, EGLDisplay, const EGLExtensions &ext);
     void resetCache();
 
 #ifdef HAVE_DRM

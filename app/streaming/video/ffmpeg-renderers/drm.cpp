@@ -164,9 +164,6 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_OutputRect{},
       m_SwFrameMapper(this),
       m_CurrentSwFrameIdx(0)
-#ifdef HAVE_EGL
-    , m_EglImageFactory(this)
-#endif
 {
     SDL_zero(m_SwFrame);
 }
@@ -2068,6 +2065,22 @@ int DrmRenderer::getDecoderColorspace()
     return COLORSPACE_REC_601;
 }
 
+int DrmRenderer::getDecoderColorRange()
+{
+    if (auto prop = m_VideoPlane.property("COLOR_RANGE")) {
+        // Prefer full range if the video plane supports it
+        if (prop->containsValue("YCbCr full range")) {
+            return COLOR_RANGE_FULL;
+        }
+        else if (prop->containsValue("YCbCr limited range")) {
+            return COLOR_RANGE_LIMITED;
+        }
+    }
+
+    // Default to limited if we couldn't find a valid COLOR_RANGE property
+    return COLOR_RANGE_LIMITED;
+}
+
 const char* DrmRenderer::getDrmColorEncodingValue(AVFrame* frame)
 {
     switch (getFrameColorspace(frame)) {
@@ -2133,9 +2146,10 @@ AVPixelFormat DrmRenderer::getEGLImagePixelFormat() {
     return AV_PIX_FMT_DRM_PRIME;
 }
 
-bool DrmRenderer::initializeEGL(EGLDisplay display,
+bool DrmRenderer::initializeEGL(IFFmpegRenderer* eglRenderer,
+                                EGLDisplay display,
                                 const EGLExtensions &ext) {
-    return m_EglImageFactory.initializeEGL(display, ext);
+    return m_EglImageFactory.initializeEGL(eglRenderer, display, ext);
 }
 
 ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,

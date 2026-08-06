@@ -64,6 +64,7 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool isDirectRenderingSupported() override;
     virtual int getDecoderColorspace() override;
+    virtual int getDecoderColorRange() override;
     virtual int getDecoderCapabilities() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) override;
@@ -71,7 +72,7 @@ public:
 #ifdef HAVE_EGL
     virtual bool canExportEGL() override;
     virtual AVPixelFormat getEGLImagePixelFormat() override;
-    virtual bool initializeEGL(EGLDisplay dpy, const EGLExtensions &ext) override;
+    virtual bool initializeEGL(IFFmpegRenderer* eglRenderer, EGLDisplay dpy, const EGLExtensions &ext) override;
     virtual ssize_t exportEGLImages(AVFrame *frame, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) override;
 #endif
 

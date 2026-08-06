@@ -523,7 +523,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    if (!m_Backend->initializeEGL(m_EGLDisplay, eglExtensions))
+    if (!m_Backend->initializeEGL(this, m_EGLDisplay, eglExtensions))
         return false;
 
     if (!(m_glEGLImageTargetTexture2DOES = (typeof(m_glEGLImageTargetTexture2DOES))eglGetProcAddress("glEGLImageTargetTexture2DOES"))) {

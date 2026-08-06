@@ -1969,6 +1969,74 @@ void FFmpegVideoDecoder::decoderThreadProc()
                         }
                     }
 
+                    // Some decoders don't propagate color metadata from the bitstream,
+                    // so we will try to guess it here if it was unset.
+                    if (frame->color_range == AVCOL_RANGE_UNSPECIFIED) {
+                        switch (getDecoderColorRange()) {
+                        case COLOR_RANGE_LIMITED:
+                            frame->color_range = AVCOL_RANGE_MPEG;
+                            break;
+                        case COLOR_RANGE_FULL:
+                            frame->color_range = AVCOL_RANGE_JPEG;
+                            break;
+                        }
+                    }
+                    if (frame->colorspace == AVCOL_SPC_UNSPECIFIED) {
+                        switch (getDecoderColorspace()) {
+                        case COLORSPACE_REC_601:
+                            frame->colorspace = AVCOL_SPC_SMPTE170M;
+                            break;
+                        case COLORSPACE_REC_709:
+                            frame->colorspace = AVCOL_SPC_BT709;
+                            break;
+                        case COLORSPACE_REC_2020:
+                            frame->colorspace = AVCOL_SPC_BT2020_NCL;
+                            break;
+                        }
+
+                        // HDR forces BT.2020 regardless of decoder preference
+                        if (LiGetCurrentHostDisplayHdrMode()) {
+                            frame->colorspace = AVCOL_SPC_BT2020_NCL;
+                        }
+                    }
+                    if (frame->color_primaries == AVCOL_PRI_UNSPECIFIED) {
+                        switch (frame->colorspace) {
+                        case AVCOL_SPC_BT709:
+                            frame->color_primaries = AVCOL_PRI_BT709;
+                            break;
+                        case AVCOL_SPC_SMPTE170M:
+                            frame->color_primaries = AVCOL_PRI_SMPTE170M;
+                            break;
+                        case AVCOL_SPC_BT2020_NCL:
+                        case AVCOL_SPC_BT2020_CL:
+                            frame->color_primaries = AVCOL_PRI_BT2020;
+                            break;
+                        default:
+                            break;
+                        }
+                    }
+                    if (frame->color_trc == AVCOL_TRC_UNSPECIFIED) {
+                        switch (frame->colorspace) {
+                        case AVCOL_SPC_BT709:
+                            frame->color_trc = AVCOL_TRC_BT709;
+                            break;
+                        case AVCOL_SPC_SMPTE170M:
+                            frame->color_trc = AVCOL_TRC_SMPTE170M;
+                            break;
+                        case AVCOL_SPC_BT2020_NCL:
+                        case AVCOL_SPC_BT2020_CL:
+                            frame->color_trc = AVCOL_TRC_BT2020_10;
+                            break;
+                        default:
+                            break;
+                        }
+
+                        // HDR forces SMPTE 2084 PQ regardless of decoder preference
+                        if (LiGetCurrentHostDisplayHdrMode()) {
+                            frame->color_trc = AVCOL_TRC_SMPTE2084;
+                        }
+                    }
+
                     // Reset failed decodes count if we reached this far
                     m_ConsecutiveFailedDecodes = 0;
 
