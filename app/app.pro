@@ -181,7 +181,7 @@ macx {
     DEFINES += HAVE_MACOS_NATIVE_TOUCHPAD
 
     !disable-prebuilts {
-        LIBS += -lssl.3 -lcrypto.3 -lavcodec.62 -lavutil.60 -lswscale.9 -lopus.0 -lSDL2 -lSDL2_ttf -lplacebo
+        LIBS += -lssl.3 -lcrypto.3 -lavcodec.63 -lavutil.61 -lswscale.10 -lopus.0 -lSDL2 -lSDL2_ttf -lplacebo
         CONFIG += discord-rpc libplacebo
     }
 
