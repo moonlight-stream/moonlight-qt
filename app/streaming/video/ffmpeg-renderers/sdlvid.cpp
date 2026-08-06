@@ -352,9 +352,11 @@ ReadbackRetry:
             av_dict_set_int(&options, "srcw", frame->width, 0);
             av_dict_set_int(&options, "srch", frame->height, 0);
             av_dict_set_int(&options, "src_format", frame->format, 0);
+            av_dict_set_int(&options, "src_range", isFrameFullRange(frame) ? 1 : 0, 0);
             av_dict_set_int(&options, "dstw", m_RgbFrame->width, 0);
             av_dict_set_int(&options, "dsth", m_RgbFrame->height, 0);
             av_dict_set_int(&options, "dst_format", m_RgbFrame->format, 0);
+            av_dict_set_int(&options, "dst_range", 1, 0);
             av_dict_set_int(&options, "threads", std::min(SDL_GetCPUCount(), 4), 0); // Up to 4 threads
 
             err = av_opt_set_dict(m_SwsContext, &options);
@@ -637,4 +639,22 @@ bool SdlRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 {
     // We can transparently handle size and display changes
     return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_SIZE | WINDOW_STATE_CHANGE_DISPLAY));
+}
+
+int SdlRenderer::getDecoderColorspace()
+{
+    // SDL2 only supports both full and limited range for BT.601. Additionally, libswscale
+    // assumes content is in the BT.601 color space when performing YUV to RGB conversion.
+    return COLORSPACE_REC_601;
+}
+
+int SdlRenderer::getDecoderColorRange()
+{
+    // Prefer full range only on FFmpeg 5.0 or later, since we don't implement
+    // color range handling in the legacy FFmpeg 4.x codepath.
+#if LIBSWSCALE_VERSION_INT >= AV_VERSION_INT(6, 1, 100)
+    return COLOR_RANGE_FULL;
+#else
+    return COLOR_RANGE_LIMITED;
+#endif
 }
