@@ -470,6 +470,12 @@ int VDPAURenderer::getDecoderColorspace()
     return COLORSPACE_REC_601;
 }
 
+int VDPAURenderer::getDecoderColorRange()
+{
+    // The default VdpVideoMixer CSC matrix assumes limited range
+    return COLOR_RANGE_LIMITED;
+}
+
 int VDPAURenderer::getDecoderCapabilities()
 {
     return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC |

@@ -784,6 +784,14 @@ int DXVA2Renderer::getDecoderColorspace()
     }
 }
 
+int DXVA2Renderer::getDecoderColorRange()
+{
+    // StretchRect() assumes limited range on Intel and Qualcomm GPUs.
+    // VideoProcessBlt() should handle either fine, but let's not take
+    // chances on potentially broken DXVA2 GPU drivers for little gain.
+    return COLOR_RANGE_LIMITED;
+}
+
 int DXVA2Renderer::getDecoderCapabilities()
 {
     return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC |

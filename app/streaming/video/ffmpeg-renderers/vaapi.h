@@ -64,6 +64,7 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool isDirectRenderingSupported() override;
     virtual int getDecoderColorspace() override;
+    virtual int getDecoderColorRange() override;
     virtual int getDecoderCapabilities() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) override;
