@@ -770,6 +770,7 @@ public:
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual bool isDirectRenderingSupported() override;
     virtual int getDecoderColorspace() override;
+    virtual int getDecoderColorRange() override;
     virtual void setHdrMode(bool enabled) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType type) override;
 #ifdef HAVE_EGL

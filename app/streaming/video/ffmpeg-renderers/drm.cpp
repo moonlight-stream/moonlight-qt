@@ -2019,6 +2019,22 @@ int DrmRenderer::getDecoderColorspace()
     return COLORSPACE_REC_601;
 }
 
+int DrmRenderer::getDecoderColorRange()
+{
+    if (auto prop = m_VideoPlane.property("COLOR_RANGE")) {
+        // Prefer full range if the video plane supports it
+        if (prop->containsValue("YCbCr full range")) {
+            return COLOR_RANGE_FULL;
+        }
+        else if (prop->containsValue("YCbCr limited range")) {
+            return COLOR_RANGE_LIMITED;
+        }
+    }
+
+    // Default to limited if we couldn't find a valid COLOR_RANGE property
+    return COLOR_RANGE_LIMITED;
+}
+
 const char* DrmRenderer::getDrmColorEncodingValue(AVFrame* frame)
 {
     switch (getFrameColorspace(frame)) {
