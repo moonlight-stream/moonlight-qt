@@ -1,0 +1,6 @@
+# 主动决定不跟进的上游提交。格式：<短 sha> <原因>
+#
+# 只记「评估过、决定不要」的。已经 cherry-pick 的不用写在这里 ——
+# upstream-status.sh 靠提交信息里的 (cherry picked from commit ...) 自动识别。
+
+fcba7df8 README 构建要求；我们的 README 是重写过的中文版，对应段落已写明「建议使用与 CI 接近的 Qt 6.11.x」，比上游表述更准
