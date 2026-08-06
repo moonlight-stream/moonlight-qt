@@ -21,6 +21,35 @@ env:
   BUILD_NUMBER: ${{ github.run_number }}
 
 jobs:
+  qml-lint:
+    # QML 的类型解析失败是运行期致命的，但 qmlcachegen 编得过、四平台构建全绿，
+    # 所以必须单独拦一道（见 scripts/qmllint-check.sh 里的说明）。
+    # 只装 Qt、不构建，和四个 build 并行跑。
+    runs-on: ubuntu-latest
+
+    # 这个 job 会执行 PR 版本里的 scripts/qmllint-check.sh。顶层 permissions 给的是
+    # contents: write，这里收回到只读，并且不把 checkout 的 token 写进本地 git 配置 ——
+    # 否则 PR 作者改一行脚本就能拿着仓库的写权限跑任意命令。
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.11.1'
+        modules: 'qtmultimedia qtimageformats'
+        cache: true
+        aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@073e34d7c2ab4ae6961ed7cca690b3abd5ba5a7e'
+
+    - name: Check QML type resolution
+      run: scripts/qmllint-check.sh
+
   build-windows:
     runs-on: windows-2022
     steps:
@@ -449,7 +478,7 @@ jobs:
 
   release:
     if: github.event_name == 'release'
-    needs: [build-windows, build-macos, build-linux, build-steamlink]
+    needs: [qml-lint, build-windows, build-macos, build-linux, build-steamlink]
     runs-on: ubuntu-latest
     
     steps:
