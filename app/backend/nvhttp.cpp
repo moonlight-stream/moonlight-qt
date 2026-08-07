@@ -11,9 +11,13 @@
 #include <QImageReader>
 #include <QtEndian>
 #include <QNetworkProxy>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
 #define FAST_FAIL_TIMEOUT_MS 2000
 #define REQUEST_TIMEOUT_MS 5000
+#define ABR_TIMEOUT_MS 10000
 #define LAUNCH_TIMEOUT_MS 120000
 #define RESUME_TIMEOUT_MS 30000
 #define QUIT_TIMEOUT_MS 30000
@@ -266,6 +270,158 @@ NvHTTP::quitApp()
         // that they can't kill someone else's stream.
         throw GfeHttpResponseException(599, "");
     }
+}
+
+bool
+NvHTTP::setBitrate(int bitrateKbps)
+{
+    QString response = openConnectionToString(m_BaseUrlHttps,
+                                            "bitrate",
+                                            QString("bitrate=%1").arg(bitrateKbps),
+                                            ABR_TIMEOUT_MS,
+                                            NvLogLevel::NVLL_ERROR);
+    return getXmlString(response, "bitrate") != "0";
+}
+
+QString
+NvHTTP::abrGet(const QString& pathSegments)
+{
+    QUrl url(m_BaseUrlHttps);
+    url.setPath("/" + pathSegments);
+
+    QNetworkRequest request(url);
+    request.setSslConfiguration(IdentityManager::get()->getSslConfig());
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
+#endif
+#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
+    request.setAttribute(QNetworkRequest::ConnectionCacheExpiryTimeoutSecondsAttribute, 0);
+#endif
+
+    auto sslErrorsConnection = connect(m_Nam, &QNetworkAccessManager::sslErrors, this, &NvHTTP::handleSslErrors);
+    QNetworkReply* reply = m_Nam->get(request);
+
+    QEventLoop loop;
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, &loop, &QEventLoop::quit);
+    QTimer::singleShot(ABR_TIMEOUT_MS, &loop, &QEventLoop::quit);
+    loop.exec();
+
+    disconnect(sslErrorsConnection);
+
+    QString ret;
+    if (reply->error() == QNetworkReply::NoError) {
+        ret = QString::fromUtf8(reply->readAll());
+    }
+    delete reply;
+    return ret;
+}
+
+QString
+NvHTTP::abrPost(const QString& pathSegments, const QByteArray& payload)
+{
+    QUrl url(m_BaseUrlHttps);
+    url.setPath("/" + pathSegments);
+
+    QNetworkRequest request(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json; charset=utf-8");
+    request.setSslConfiguration(IdentityManager::get()->getSslConfig());
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
+#endif
+#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
+    request.setAttribute(QNetworkRequest::ConnectionCacheExpiryTimeoutSecondsAttribute, 0);
+#endif
+
+    auto sslErrorsConnection = connect(m_Nam, &QNetworkAccessManager::sslErrors, this, &NvHTTP::handleSslErrors);
+    QNetworkReply* reply = m_Nam->post(request, payload);
+
+    QEventLoop loop;
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, &loop, &QEventLoop::quit);
+    QTimer::singleShot(ABR_TIMEOUT_MS, &loop, &QEventLoop::quit);
+    loop.exec();
+
+    disconnect(sslErrorsConnection);
+
+    QString ret;
+    if (reply->error() == QNetworkReply::NoError) {
+        ret = QString::fromUtf8(reply->readAll());
+    }
+    delete reply;
+    return ret;
+}
+
+AbrCapabilities
+NvHTTP::getAbrCapabilities()
+{
+    QString body = abrGet("api/abr/capabilities");
+    if (body.isEmpty()) {
+        return {false, 0, {}};
+    }
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(body.toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError || !doc.isObject()) {
+        return {false, 0, {}};
+    }
+
+    QJsonObject json = doc.object();
+    QStringList features;
+    QJsonArray featureArray = json.value("features").toArray();
+    for (const QJsonValue& feature : featureArray) {
+        features.append(feature.toString());
+    }
+
+    return {
+        json.value("supported").toBool(false),
+        json.value("version").toInt(0),
+        features
+    };
+}
+
+bool
+NvHTTP::setAbrMode(const AbrConfig& config)
+{
+    QJsonObject payload;
+    payload.insert("enabled", config.enabled);
+    payload.insert("minBitrate", config.minBitrate);
+    payload.insert("maxBitrate", config.maxBitrate);
+    payload.insert("mode", config.mode);
+
+    return !abrPost("api/abr", QJsonDocument(payload).toJson(QJsonDocument::Compact)).isEmpty();
+}
+
+std::optional<AbrAction>
+NvHTTP::reportNetworkFeedback(const NetworkFeedback& feedback)
+{
+    QJsonObject payload;
+    payload.insert("packetLoss", static_cast<double>(feedback.packetLoss));
+    payload.insert("rttMs", feedback.rttMs);
+    payload.insert("decodeFps", static_cast<double>(feedback.decodeFps));
+    payload.insert("droppedFrames", feedback.droppedFrames);
+    payload.insert("currentBitrate", feedback.currentBitrate);
+
+    QString body = abrPost("api/abr/feedback", QJsonDocument(payload).toJson(QJsonDocument::Compact));
+    if (body.isEmpty()) {
+        return std::nullopt;
+    }
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(body.toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError || !doc.isObject()) {
+        return std::nullopt;
+    }
+
+    QJsonObject json = doc.object();
+    AbrAction action;
+    if (json.contains("newBitrate")) {
+        action.newBitrate = json.value("newBitrate").toInt();
+    }
+    if (json.contains("reason")) {
+        action.reason = json.value("reason").toString();
+    }
+    return action;
 }
 
 QVector<NvDisplayMode>
