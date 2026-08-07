@@ -1537,6 +1537,76 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Allows Moonlight to capture gamepad inputs even if it's not the current window in focus")
                 }
+
+                CheckBox {
+                    id: gamepadQuitComboCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Enable gamepad button combo to quit session")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.gamepadQuitComboEnabled
+                    onCheckedChanged: {
+                        StreamingPreferences.gamepadQuitComboEnabled = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 10000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Holding all of the selected buttons at once will immediately end the current session.")
+                }
+
+                Label {
+                    text: qsTr("Quit combo buttons (select at least 2):")
+                    font.pointSize: 12
+                    enabled: gamepadQuitComboCheck.checked
+                }
+
+                Flow {
+                    width: parent.width
+                    spacing: 10
+
+                    Repeater {
+                        model: ListModel {
+                            id: gamepadQuitComboButtonModel
+                            ListElement { text: "Start"; val: StreamingPreferences.GQC_START }
+                            ListElement { text: "Back"; val: StreamingPreferences.GQC_BACK }
+                            ListElement { text: "LB"; val: StreamingPreferences.GQC_LB }
+                            ListElement { text: "RB"; val: StreamingPreferences.GQC_RB }
+                            ListElement { text: "LS"; val: StreamingPreferences.GQC_LS }
+                            ListElement { text: "RS"; val: StreamingPreferences.GQC_RS }
+                            ListElement { text: "A"; val: StreamingPreferences.GQC_A }
+                            ListElement { text: "B"; val: StreamingPreferences.GQC_B }
+                            ListElement { text: "X"; val: StreamingPreferences.GQC_X }
+                            ListElement { text: "Y"; val: StreamingPreferences.GQC_Y }
+                        }
+
+                        CheckBox {
+                            text: model.text
+                            font.pointSize: 12
+                            enabled: gamepadQuitComboCheck.checked
+                            checked: (StreamingPreferences.gamepadQuitComboMask & model.val) !== 0
+                            onCheckedChanged: {
+                                var newMask = checked ? (StreamingPreferences.gamepadQuitComboMask | model.val)
+                                                       : (StreamingPreferences.gamepadQuitComboMask & ~model.val)
+
+                                // Require at least 2 buttons in the combo to avoid accidental triggers
+                                var bitCount = 0
+                                var remainingBits = newMask
+                                while (remainingBits !== 0) {
+                                    remainingBits = remainingBits & (remainingBits - 1)
+                                    bitCount++
+                                }
+
+                                if (bitCount < 2) {
+                                    checked = !checked
+                                    return
+                                }
+
+                                StreamingPreferences.gamepadQuitComboMask = newMask
+                            }
+                        }
+                    }
+                }
             }
         }
 

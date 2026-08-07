@@ -4,6 +4,8 @@
 #include <QRect>
 #include <QQmlEngine>
 
+#include <Limelight.h>
+
 class StreamingPreferences : public QObject
 {
     Q_OBJECT
@@ -119,6 +121,24 @@ public:
     };
     Q_ENUM(CaptureSysKeysMode);
 
+    // Buttons available for the gamepad quit combo. Values match the
+    // corresponding *_FLAG constants from Limelight.h so the mask can be
+    // compared directly against GamepadState::buttons.
+    enum GamepadQuitComboButton
+    {
+        GQC_A = A_FLAG,
+        GQC_B = B_FLAG,
+        GQC_X = X_FLAG,
+        GQC_Y = Y_FLAG,
+        GQC_BACK = BACK_FLAG,
+        GQC_START = PLAY_FLAG,
+        GQC_LB = LB_FLAG,
+        GQC_RB = RB_FLAG,
+        GQC_LS = LS_CLK_FLAG,
+        GQC_RS = RS_CLK_FLAG,
+    };
+    Q_ENUM(GamepadQuitComboButton);
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
@@ -156,6 +176,8 @@ public:
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
+    Q_PROPERTY(bool gamepadQuitComboEnabled MEMBER gamepadQuitComboEnabled NOTIFY gamepadQuitComboEnabledChanged)
+    Q_PROPERTY(int gamepadQuitComboMask MEMBER gamepadQuitComboMask NOTIFY gamepadQuitComboMaskChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
 
     Q_INVOKABLE bool retranslate();
@@ -200,6 +222,8 @@ public:
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
     RendererSelection rendererSelection;
+    bool gamepadQuitComboEnabled;
+    int gamepadQuitComboMask;
 
 signals:
     void displayModeChanged();
@@ -235,6 +259,8 @@ signals:
     void reverseScrollDirectionChanged();
     void swapFaceButtonsChanged();
     void captureSysKeysModeChanged();
+    void gamepadQuitComboEnabledChanged();
+    void gamepadQuitComboMaskChanged();
     void keepAwakeChanged();
     void languageChanged();
     void rendererSelectionChanged();

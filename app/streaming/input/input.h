@@ -209,6 +209,7 @@ private:
     bool m_SwapMouseButtons;
     bool m_ReverseScrollDirection;
     bool m_SwapFaceButtons;
+    int m_GamepadQuitComboMask;
 
     bool m_NeedsManualCaptureOnLeave;
     bool m_MouseWasInVideoRegion;
