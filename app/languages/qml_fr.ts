@@ -808,7 +808,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation>Utiliser la valuer par défaut (%1 Mbps)</translation>
+        <translation>Utiliser la valeur par défaut (%1 Mbps)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
