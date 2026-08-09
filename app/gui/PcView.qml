@@ -172,6 +172,11 @@ CenteredGridView {
                     enabled: false
                 }
                 NavigableMenuItem {
+                    text: qsTr("Wake and Open")
+                    onTriggered: wakeAndOpen()
+                    visible: !model.online && model.wakeable
+                }
+                NavigableMenuItem {
                     text: qsTr("View All Apps")
                     onTriggered: {
                         var component = Qt.createComponent("AppView.qml")
@@ -219,29 +224,63 @@ CenteredGridView {
             }
         }
 
+        // Set when the user chose "Wake and Open"; we open the PC
+        // automatically once it comes online.
+        property bool wakeAndOpenPending: false
+        property bool onlineRole: model.online
+
+        onOnlineRoleChanged: {
+            if (wakeAndOpenPending && onlineRole) {
+                wakeAndOpenPending = false
+                wakeOpenTimeout.stop()
+                activatePc()
+            }
+        }
+
+        Timer {
+            id: wakeOpenTimeout
+            interval: 120000
+            onTriggered: {
+                wakeAndOpenPending = false
+                errorDialog.text = qsTr("Timed out waiting for %1 to wake up.").arg(model.name)
+                errorDialog.helpText = ""
+                errorDialog.open()
+            }
+        }
+
+        function wakeAndOpen() {
+            wakeAndOpenPending = true
+            wakeOpenTimeout.restart()
+            computerModel.wakeComputer(index)
+        }
+
+        function activatePc() {
+            if (!model.serverSupported) {
+                errorDialog.text = qsTr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(model.name)
+                errorDialog.helpText = ""
+                errorDialog.open()
+            }
+            else if (model.paired) {
+                // go to game view
+                var component = Qt.createComponent("AppView.qml")
+                var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
+                stackView.push(appView)
+            }
+            else {
+                var pin = computerModel.generatePinString()
+
+                // Kick off pairing in the background
+                computerModel.pairComputer(index, pin)
+
+                // Display the pairing dialog
+                pairDialog.pin = pin
+                pairDialog.open()
+            }
+        }
+
         onClicked: {
             if (model.online) {
-                if (!model.serverSupported) {
-                    errorDialog.text = qsTr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(model.name)
-                    errorDialog.helpText = ""
-                    errorDialog.open()
-                }
-                else if (model.paired) {
-                    // go to game view
-                    var component = Qt.createComponent("AppView.qml")
-                    var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
-                    stackView.push(appView)
-                }
-                else {
-                    var pin = computerModel.generatePinString()
-
-                    // Kick off pairing in the background
-                    computerModel.pairComputer(index, pin)
-
-                    // Display the pairing dialog
-                    pairDialog.pin = pin
-                    pairDialog.open()
-                }
+                activatePc()
             } else if (!model.online) {
                 // Using open() here because it may be activated by keyboard
                 pcContextMenu.open()
