@@ -903,12 +903,16 @@ ApplicationWindow {
             // 云主机推广。放在这里是因为「我没有可以串流的主机」正好是打开这个框的
             // 人最可能卡住的地方 —— 手动填 IP 填不出一台主机来。
             //
-            // 没有浏览器可用时整块隐藏（和 QQ 按钮同一个判断），否则按钮点了没反应。
+            // 基地云目前只面向简体中文用户；自动语言模式下跟随系统语言。
+            // 没有浏览器可用时也整块隐藏（和 QQ 按钮同一个判断），否则按钮点了没反应。
             Item {
                 Layout.fillWidth: true
                 Layout.topMargin: Theme.spaceSm
                 implicitHeight: promoColumn.implicitHeight
-                visible: SystemProperties.hasBrowser
+                visible: SystemProperties.hasBrowser &&
+                         (StreamingPreferences.language === StreamingPreferences.LANG_ZH_CN ||
+                          (StreamingPreferences.language === StreamingPreferences.LANG_AUTO &&
+                           Qt.locale().name === "zh_CN"))
 
                 Column {
                     id: promoColumn
