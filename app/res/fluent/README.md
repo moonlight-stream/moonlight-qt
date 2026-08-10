@@ -17,6 +17,7 @@ MIT License, Copyright (c) 2020 Microsoft Corporation.
 | `cat-ui.svg` | `Color/SVG/ic_fluent_color_24_regular.svg` |
 | `cat-input.svg` | `Keyboard/SVG/ic_fluent_keyboard_24_regular.svg` |
 | `cat-gamepad.svg` | `Xbox Controller/SVG/ic_fluent_xbox_controller_24_regular.svg` |
+| `cat-display.svg` | `Full Screen Maximize/SVG/ic_fluent_full_screen_maximize_24_regular.svg` |
 | `cat-advanced.svg` | `Wrench/SVG/ic_fluent_wrench_24_regular.svg` |
 | `tb-back.svg` | `Arrow Left/SVG/ic_fluent_arrow_left_24_regular.svg` |
 | `tb-add-pc.svg` | `Desktop Arrow Right/SVG/ic_fluent_desktop_arrow_right_24_regular.svg` |

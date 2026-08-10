@@ -11,7 +11,7 @@ import "settings"
 import "theme"
 
 // 设置页外壳：左侧分类 rail + 右侧卡片内容。
-// 「基本设置」已迁移到 settings/BasicSettingsPage.qml；
+// 「基本设置」「显示」已迁移到 settings/ 下的独立页面；
 // 其余 6 组仍走旧的 GroupBox 路径（settings/LegacySettingsPage.qml），逐步迁移。
 // 根用 FocusScope 而不是 Item：工具栏的 Keys.onDownPressed 走的是
 // stackView.currentItem.forceActiveFocus()，落在普通 Item 上会停在一个看不见的
@@ -34,6 +34,7 @@ FocusScope {
     // 之前用 emoji，各平台字体不同，渲染出来大小、粗细、配色都对不齐。
     readonly property var categories: [
         { key: "basic",    icon: "qrc:/res/fluent/cat-basic.svg",    title: qsTr("Basic Settings") },
+        { key: "display",  icon: "qrc:/res/fluent/cat-display.svg",  title: qsTr("Display Settings") },
         { key: "audio",    icon: "qrc:/res/fluent/cat-audio.svg",    title: qsTr("Audio Settings") },
         { key: "host",     icon: "qrc:/res/fluent/cat-host.svg",     title: qsTr("Host Settings") },
         { key: "ui",       icon: "qrc:/res/fluent/cat-ui.svg",       title: qsTr("UI Settings") },
@@ -201,9 +202,18 @@ FocusScope {
                 height: visible ? implicitHeight : 0
             }
 
+            DisplaySettingsPage {
+                id: displayPage
+                y: basicPage.height
+                width: parent.width
+                visible: settingsPage.category === "display"
+                height: visible ? implicitHeight : 0
+            }
+
             LegacySettingsPage {
                 id: legacyPage
-                y: basicPage.height
+                // 已迁移的新页面都在上面按顺序堆着，隐藏时高度为 0，所以这里累加即可
+                y: basicPage.height + displayPage.height
                 width: parent.width
                 category: settingsPage.category
 
@@ -220,5 +230,6 @@ FocusScope {
 
         // 语言切换需要重建若干下拉的模型
         settingsPage.languageChanged.connect(basicPage.languageChanged)
+        settingsPage.languageChanged.connect(displayPage.languageChanged)
     }
 }

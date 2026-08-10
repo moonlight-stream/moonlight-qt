@@ -29,12 +29,12 @@
         <translation>其他网络</translation>
     </message>
     <message>
-        <location filename="../gui/appmodel.cpp" line="282"/>
+        <location filename="../gui/appmodel.cpp" line="287"/>
         <source>Auto (default)</source>
         <translation>自动（默认）</translation>
     </message>
     <message>
-        <location filename="../gui/appmodel.cpp" line="283"/>
+        <location filename="../gui/appmodel.cpp" line="288"/>
         <source>Automatic selection with fallback</source>
         <translation>自动选择并回退</translation>
     </message>
@@ -42,176 +42,146 @@
 <context>
     <name>AppView</name>
     <message>
-        <location filename="../gui/AppView.qml" line="109"/>
+        <location filename="../gui/AppView.qml" line="149"/>
         <source>Display Settings</source>
         <translation>显示设置</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="127"/>
+        <location filename="../gui/AppView.qml" line="188"/>
         <source>Select Display:</source>
         <translation>选择显示器：</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="185"/>
+        <location filename="../gui/AppView.qml" line="221"/>
         <source>VDD Display</source>
         <translation>VDD 虚拟显示器</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="222"/>
+        <location filename="../gui/AppView.qml" line="253"/>
         <source>VDD Combination Mode:</source>
         <translation>VDD 组合模式：</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="222"/>
+        <location filename="../gui/AppView.qml" line="253"/>
         <source>Screen Combination Mode:</source>
         <translation>屏幕组合模式：</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="259"/>
-        <location filename="../gui/AppView.qml" line="269"/>
+        <location filename="../gui/AppView.qml" line="295"/>
+        <location filename="../gui/AppView.qml" line="305"/>
         <source>Use host config (default)</source>
         <translation>使用主机配置（默认）</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="260"/>
+        <location filename="../gui/AppView.qml" line="296"/>
         <source>Do not change</source>
         <translation>不做改动</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="261"/>
+        <location filename="../gui/AppView.qml" line="297"/>
         <source>Ensure active</source>
         <translation>确保已启用</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="262"/>
+        <location filename="../gui/AppView.qml" line="298"/>
         <source>Ensure primary</source>
         <translation>确保为主显示器</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="263"/>
+        <location filename="../gui/AppView.qml" line="299"/>
         <source>Only display</source>
         <translation>仅此显示器</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="270"/>
+        <location filename="../gui/AppView.qml" line="306"/>
         <source>Keep current layout</source>
         <translation>保持当前布局</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="271"/>
+        <location filename="../gui/AppView.qml" line="307"/>
         <source>VDD primary + Physical extended</source>
         <translation>VDD 为主 + 物理显示器扩展</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="272"/>
+        <location filename="../gui/AppView.qml" line="308"/>
         <source>Physical primary + VDD extended</source>
         <translation>物理显示器为主 + VDD 扩展</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="273"/>
+        <location filename="../gui/AppView.qml" line="309"/>
         <source>VDD only (disable physical)</source>
         <translation>仅 VDD（关闭物理显示器）</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="585"/>
-        <location filename="../gui/AppView.qml" line="766"/>
+        <location filename="../gui/AppView.qml" line="610"/>
+        <location filename="../gui/AppView.qml" line="791"/>
         <source>Resume Game</source>
         <translation>继续游戏</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="606"/>
-        <location filename="../gui/AppView.qml" line="770"/>
+        <location filename="../gui/AppView.qml" line="631"/>
+        <location filename="../gui/AppView.qml" line="795"/>
         <source>Quit Game</source>
         <translation>退出游戏</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="645"/>
+        <location filename="../gui/AppView.qml" line="670"/>
         <source>Live</source>
         <translation>运行中</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="667"/>
+        <location filename="../gui/AppView.qml" line="692"/>
         <source>Hidden</source>
         <translation>已隐藏</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="766"/>
+        <location filename="../gui/AppView.qml" line="791"/>
         <source>Launch Game</source>
         <translation>启动游戏</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="539"/>
-        <location filename="../gui/AppView.qml" line="777"/>
+        <location filename="../gui/AppView.qml" line="564"/>
+        <location filename="../gui/AppView.qml" line="802"/>
         <source>Direct Launch</source>
         <translation>直接启动</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="781"/>
+        <location filename="../gui/AppView.qml" line="806"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
         <translation>选择主机后立即启动此应用程序，绕过应用程序选择网格。</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="789"/>
+        <location filename="../gui/AppView.qml" line="814"/>
         <source>Hide Game</source>
         <translation>隐藏游戏</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="793"/>
+        <location filename="../gui/AppView.qml" line="818"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
         <translation>从应用程序网格中隐藏此游戏。要访问隐藏的游戏，请右键单击主机并选择 %1。</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="793"/>
+        <location filename="../gui/AppView.qml" line="818"/>
         <source>View All Apps</source>
         <translation>查看所有应用程序</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="811"/>
+        <location filename="../gui/AppView.qml" line="836"/>
         <source>No Apps</source>
         <translation>没有应用</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="829"/>
+        <location filename="../gui/AppView.qml" line="854"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
         <translation>这台计算机上似乎没有任何应用程序，或者有些应用程序已被隐藏</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="860"/>
-        <source>Connection IP Settings</source>
-        <translation>连接 IP 设置</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="877"/>
+        <location filename="../gui/AppView.qml" line="868"/>
         <source>Select the IP address to connect to this PC:</source>
         <translation>选择连接这台计算机使用的 IP 地址：</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="897"/>
-        <source>Type: %1</source>
-        <translation>类型：%1</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="909"/>
-        <source>Warning: This address has not been verified by polling yet.</source>
-        <translation>警告：这个地址还没有通过轮询验证。</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="928"/>
-        <source>Apply</source>
-        <translation>应用</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="947"/>
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="953"/>
-        <source>&quot;Auto&quot; uses the default address selection with automatic fallback. Selecting a specific IP will pin the connection to that address.</source>
-        <translation>「自动」使用默认的地址选择并在失败时自动回退。选择某个具体 IP 会把连接固定到那个地址。</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="969"/>
+        <location filename="../gui/AppView.qml" line="888"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>你确定要退出 %1 吗？所有未保存的游戏进度都将丢失。</translation>
     </message>
@@ -219,301 +189,206 @@
 <context>
     <name>BasicSettingsPage</name>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="30"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="27"/>
         <source>Video</source>
         <translation>画面</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="31"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="28"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
         <translation>如果你的计算机或网络连接设置的值过高，可能会导致延迟，卡顿或错误。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="34"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="31"/>
         <source>Resolution and FPS</source>
         <translation>分辨率和 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="93"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="90"/>
         <source>Native</source>
         <translation>原生</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="94"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="91"/>
         <source>Native (Excluding Notch)</source>
         <translation>原生(不包括刻痕)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="130"/>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="139"/>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="268"/>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="539"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="127"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="136"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="265"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="536"/>
         <source>Custom</source>
         <translation>自定义</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="158"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="155"/>
         <source>720p</source>
         <translation>720p</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="164"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="161"/>
         <source>1080p</source>
         <translation>1080p</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="170"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="167"/>
         <source>1440p</source>
         <translation>1440p</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="176"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="173"/>
         <source>4K</source>
         <translation>4K</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="283"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="280"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
         <translation>自定义分辨率不受 GeForce Experience 的正式支持，因此不会设置主机的分辨率。你需要在游戏中手动设置。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="284"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="281"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
         <translation>使用当前计算机或主机不支持的分辨率可能会导致流式传输错误。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="290"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="287"/>
         <source>Enter a custom resolution:</source>
         <translation>输入自定义分辨率:</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="426"/>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="536"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="423"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="533"/>
         <source>Custom (%1 FPS)</source>
         <translation>自定义(%1 FPS)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="441"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="438"/>
         <source>Enter a custom frame rate:</source>
         <translation>输入自定义帧率:</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="518"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="515"/>
         <source>%1 FPS</source>
         <translation>%1 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="557"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="554"/>
         <source>30 FPS</source>
         <translation>30 帧</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="562"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="559"/>
         <source>60 FPS</source>
         <translation>60 帧</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="583"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="580"/>
         <source>Video bitrate</source>
         <translation>视频码率</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="584"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="581"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
         <translation>在较慢的连接上降低比特率。提高比特率以提高图像质量。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="654"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="651"/>
         <source>Use Default (%1 Mbps)</source>
         <translation>使用默认值 (%1 Mbps)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="693"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="690"/>
         <source>Smart bitrate with Sunshine</source>
         <translation>Sunshine 智能码率</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="694"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="691"/>
         <source>Allows Sunshine to automatically adjust stream bitrate up to the selected video bitrate when the host supports ABR.</source>
         <translation>当主机支持 ABR 时，允许 Sunshine 在所选视频码率以内自动调整串流码率。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="702"/>
-        <source>Display</source>
-        <translation>显示</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="706"/>
-        <source>Display mode</source>
-        <translation>显示模式</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="707"/>
-        <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation>全屏通常提供最好的性能，但是无边框窗口可以更好地与 macOS Spaces、Alt+Tab、屏幕截图工具、屏幕覆盖等功能配合使用。</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="720"/>
-        <source>Fullscreen</source>
-        <translation>全屏</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="725"/>
-        <source>Borderless windowed</source>
-        <translation>无边框窗口</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="730"/>
-        <source>Windowed</source>
-        <translation>窗口化</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="738"/>
-        <source>(Recommended)</source>
-        <translation>(推荐)</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="782"/>
-        <source>Stretch presentation</source>
-        <translation>拉伸画面</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="783"/>
-        <source>Ignores both client and host PC aspect ratios, which is required for displaying Half-SBS (Side-By-Side) 3D signals to AR/XR devices that only support Full-SBS (usually 1920x1080 per eye, meaning a total resolution of 3840x1080)</source>
-        <translation>忽略客户端和主机电脑的纵横比，用于在只支持 Full-SBS 的 AR/XR 设备上显示 Half-SBS（左右并排）3D 信号（通常为每只眼 1920×1080，总分辨率 3840×1080）。</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="790"/>
-        <source>V-Sync</source>
-        <translation>垂直同步</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="791"/>
-        <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation>禁用垂直同步可允许子帧渲染延迟，但会显示可见的撕裂</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="797"/>
-        <source>Frame pacing</source>
-        <translation>帧速调节</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="798"/>
-        <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation>通过延迟过早进入的帧来减少卡顿</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="807"/>
-        <source>HDR</source>
-        <translation>HDR</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="810"/>
-        <source>Enable HDR</source>
-        <translation>启用HDR</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="812"/>
-        <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation>HDR功能将在串流中可用，但一些游戏可能需要PC端接入HDR显示器以启用HDR模式。</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="814"/>
-        <source>HDR streaming is not supported on this PC.</source>
-        <translation>此PC不支持HDR。</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="822"/>
-        <source>HDR format</source>
-        <translation>HDR 格式</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="823"/>
-        <source>HDR10 (PQ) is the standard HDR format. HLG offers better compatibility with SDR displays when HDR is not active on the host.</source>
-        <translation>HDR10（PQ）是标准的 HDR 格式。当主机未启用 HDR 时，HLG 与 SDR 显示器的兼容性更好。</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="877"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="699"/>
         <source>Enhancements</source>
         <translation>画质增强</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="881"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="703"/>
         <source>Enhance video quality by utilizing the GPU&apos;s AI-Enhancement capabilities.</source>
         <translation>使用 AI 增强视频质量</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="882"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="704"/>
         <source>This feature effectively upscales, reduces compression artifacts and enhances the clarity of streamed content.</source>
         <translation>此功能有效提高分辨率，减少压缩伪影并增强流式传输内容的质量。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="883"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="705"/>
         <source>Note:</source>
         <translation>注意：</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="884"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="706"/>
         <source>If available, ensure that appropriate settings (i.e. RTX Video enhancement) are enabled in your GPU driver configuration.</source>
         <translation>如果能够使用, 请确保在你的GPU驱动程序配置中启用了对应设置（例如 RTX Video 增强）</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="885"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="707"/>
         <source>HDR rendering has diverse issues depending on the GPU used, we are working on it but we advise to currently use Non-HDR.</source>
         <translation>HDR 渲染在不同 GPU 上存在多种问题。我们正在努力解决，但目前建议使用非 HDR 模式。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="886"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="708"/>
         <source>Be advised that using this feature on laptops running on battery power may lead to significant battery drain.</source>
         <translation>请注意，在笔记本电脑上使用电池供电时，使用此功能可能会导致显著的电池消耗。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="893"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="715"/>
         <source>Video AI-Enhancement</source>
         <translation>视频 AI 增强</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="905"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="727"/>
         <source>Video AI-Enhancement (Not supported by the GPU)</source>
         <translation>视频 AI 增强（当前显卡不支持）</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="910"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="732"/>
         <source>Video AI-Enhancement (Experimental)</source>
         <translation>视频 AI 增强（实验性）</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="917"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="739"/>
         <source>Stream Resolution Scale</source>
         <translation>流分辨率缩放</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="918"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="740"/>
         <source>Renders the stream below the selected resolution and upscales it on the client.</source>
         <translation>以低于所选分辨率的画面串流，再在本机放大。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="961"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="783"/>
         <source>Remote overrides</source>
         <translation>远程串流覆盖</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="962"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="784"/>
         <source>Used instead of the values above when streaming over the internet.</source>
         <translation>通过互联网串流时，使用这些值代替上面的设置。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="965"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="787"/>
         <source>Remote Resolution</source>
         <translation>远程分辨率</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="1025"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="847"/>
         <source>Remote Frame Rate</source>
         <translation>远程帧率</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="1059"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="881"/>
         <source>FPS</source>
         <translation>帧</translation>
     </message>
@@ -570,124 +445,197 @@
 <context>
     <name>ComputerModel</name>
     <message>
-        <location filename="../gui/computermodel.cpp" line="85"/>
+        <location filename="../gui/computermodel.cpp" line="56"/>
         <source>Online</source>
         <translation>在线</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="88"/>
+        <location filename="../gui/computermodel.cpp" line="59"/>
         <source>Offline</source>
         <translation>离线</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="91"/>
-        <location filename="../gui/computermodel.cpp" line="103"/>
-        <location filename="../gui/computermodel.cpp" line="108"/>
-        <location filename="../gui/computermodel.cpp" line="119"/>
-        <location filename="../gui/computermodel.cpp" line="121"/>
-        <location filename="../gui/computermodel.cpp" line="122"/>
+        <location filename="../gui/computermodel.cpp" line="62"/>
+        <location filename="../gui/computermodel.cpp" line="74"/>
+        <location filename="../gui/computermodel.cpp" line="79"/>
+        <location filename="../gui/computermodel.cpp" line="90"/>
+        <location filename="../gui/computermodel.cpp" line="92"/>
+        <location filename="../gui/computermodel.cpp" line="93"/>
         <source>Unknown</source>
         <translation>未知</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="97"/>
+        <location filename="../gui/computermodel.cpp" line="68"/>
         <source>Paired</source>
         <translation>已配对</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="100"/>
+        <location filename="../gui/computermodel.cpp" line="71"/>
         <source>Unpaired</source>
         <translation>未配对</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="110"/>
+        <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Name: %1</source>
         <translation>名称: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="111"/>
+        <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Status: %1</source>
         <translation>状态: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="112"/>
+        <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Active Address: %1</source>
         <translation>活动地址: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="113"/>
+        <location filename="../gui/computermodel.cpp" line="84"/>
         <source>UUID: %1</source>
         <translation>UUID: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="114"/>
+        <location filename="../gui/computermodel.cpp" line="85"/>
         <source>Pair Name: %1</source>
         <translation>配对名称：%1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="115"/>
+        <location filename="../gui/computermodel.cpp" line="86"/>
         <source>Local Address: %1</source>
         <translation>本地地址: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="116"/>
+        <location filename="../gui/computermodel.cpp" line="87"/>
         <source>Remote Address: %1</source>
         <translation>远程地址: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="117"/>
+        <location filename="../gui/computermodel.cpp" line="88"/>
         <source>IPv6 Address: %1</source>
         <translation>IPv6 地址: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="118"/>
+        <location filename="../gui/computermodel.cpp" line="89"/>
         <source>Manual Address: %1</source>
         <translation>手动地址: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="119"/>
+        <location filename="../gui/computermodel.cpp" line="90"/>
         <source>MAC Address: %1</source>
         <translation>MAC 地址: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="120"/>
+        <location filename="../gui/computermodel.cpp" line="91"/>
         <source>Pair State: %1</source>
         <translation>配对状态: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="121"/>
+        <location filename="../gui/computermodel.cpp" line="92"/>
         <source>Running Game ID: %1</source>
         <translation>正在运行的游戏 ID: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="122"/>
+        <location filename="../gui/computermodel.cpp" line="93"/>
         <source>HTTPS Port: %1</source>
         <translation>HTTPS 端口: %1</translation>
     </message>
+</context>
+<context>
+    <name>DisplaySettingsPage</name>
     <message>
-        <location filename="../gui/computermodel.cpp" line="17"/>
-        <source>Local network</source>
-        <translation>局域网</translation>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="28"/>
+        <source>Display</source>
+        <translation>显示</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="20"/>
-        <source>Remote network</source>
-        <translation>远程网络</translation>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="32"/>
+        <source>Display mode</source>
+        <translation>显示模式</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="23"/>
-        <source>Manual</source>
-        <translation>手动配置</translation>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="33"/>
+        <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
+        <translation>全屏通常提供最好的性能，但是无边框窗口可以更好地与 macOS Spaces、Alt+Tab、屏幕截图工具、屏幕覆盖等功能配合使用。</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="26"/>
-        <source>IPv6 network</source>
-        <translation>IPv6 网络</translation>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="46"/>
+        <source>Fullscreen</source>
+        <translation>全屏</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="29"/>
-        <source>Other network</source>
-        <translation>其他网络</translation>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="51"/>
+        <source>Borderless windowed</source>
+        <translation>无边框窗口</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="56"/>
+        <source>Windowed</source>
+        <translation>窗口化</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="64"/>
+        <source>(Recommended)</source>
+        <translation>(推荐)</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="108"/>
+        <source>Stretch presentation</source>
+        <translation>拉伸画面</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="109"/>
+        <source>Ignores both client and host PC aspect ratios, which is required for displaying Half-SBS (Side-By-Side) 3D signals to AR/XR devices that only support Full-SBS (usually 1920x1080 per eye, meaning a total resolution of 3840x1080)</source>
+        <translation>忽略客户端和主机电脑的纵横比，用于在只支持 Full-SBS 的 AR/XR 设备上显示 Half-SBS（左右并排）3D 信号（通常为每只眼 1920×1080，总分辨率 3840×1080）。</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="116"/>
+        <source>V-Sync</source>
+        <translation>垂直同步</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="117"/>
+        <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
+        <translation>禁用垂直同步可允许子帧渲染延迟，但会显示可见的撕裂</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="123"/>
+        <source>Frame pacing</source>
+        <translation>帧速调节</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="124"/>
+        <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
+        <translation>通过延迟过早进入的帧来减少卡顿</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="133"/>
+        <source>HDR</source>
+        <translation>HDR</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="136"/>
+        <source>Enable HDR</source>
+        <translation>启用HDR</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="138"/>
+        <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
+        <translation>HDR功能将在串流中可用，但一些游戏可能需要PC端接入HDR显示器以启用HDR模式。</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="140"/>
+        <source>HDR streaming is not supported on this PC.</source>
+        <translation>此PC不支持HDR。</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="148"/>
+        <source>HDR format</source>
+        <translation>HDR 格式</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="149"/>
+        <source>HDR10 (PQ) is the standard HDR format. HLG offers better compatibility with SDR displays when HDR is not active on the host.</source>
+        <translation>HDR10（PQ）是标准的 HDR 格式。当主机未启用 HDR 时，HLG 与 SDR 显示器的兼容性更好。</translation>
     </message>
 </context>
 <context>
@@ -905,527 +853,551 @@
     </message>
 </context>
 <context>
+    <name>ImageUtils</name>
+    <message>
+        <location filename="../imageutils.cpp" line="48"/>
+        <location filename="../imageutils.cpp" line="52"/>
+        <source>Unable to write file</source>
+        <translation>无法写入文件</translation>
+    </message>
+    <message>
+        <location filename="../imageutils.cpp" line="73"/>
+        <source>Invalid background image URL</source>
+        <translation>背景图片地址无效</translation>
+    </message>
+    <message>
+        <location filename="../imageutils.cpp" line="118"/>
+        <source>Background server returned an empty response</source>
+        <translation>背景图服务器返回了空响应</translation>
+    </message>
+    <message>
+        <location filename="../imageutils.cpp" line="128"/>
+        <source>Unable to decode background image</source>
+        <translation>无法解码背景图片</translation>
+    </message>
+</context>
+<context>
     <name>LegacySettingsPage</name>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="45"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="37"/>
         <source>Audio Settings</source>
         <translation>音频设置</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="55"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="46"/>
         <source>Audio configuration</source>
         <translation>音频配置</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="80"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="71"/>
         <source>Stereo</source>
         <translation>立体声</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="84"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="75"/>
         <source>5.1 surround sound</source>
         <translation>5.1 环绕声</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="88"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="79"/>
         <source>7.1 surround sound</source>
         <translation>7.1 环绕声</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="92"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="83"/>
         <source>7.1.4 surround sound</source>
         <translation>7.1.4 环绕声</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="106"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="97"/>
         <source>Mute host PC speakers while streaming</source>
         <translation>流式传输启动时将主机的扬声器静音</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="116"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="107"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
         <translation>要使此设置生效，必须重新启动当前正在进行的所有游戏</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="122"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="113"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
         <translation>当 Moonlight 失去焦点时静音</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="133"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="124"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
         <translation>当你用 Alt+Tab 键离开流式传输或者点击其他窗口时，Moonlight 将静音。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="138"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="129"/>
         <source>Enable microphone streaming (test)</source>
         <translation>启用麦克风串流（测试）</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="153"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="144"/>
         <source>Host Settings</source>
         <translation>主机设置</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="164"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="154"/>
         <source>Custom Screen Mode</source>
         <translation>自定义屏幕模式</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="191"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="181"/>
         <source>Nothing</source>
         <translation>关闭</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="195"/>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="659"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="185"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="648"/>
         <source>Disabled</source>
         <translation>无操作</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="199"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="189"/>
         <source>Activate the display automatically</source>
         <translation>自动激活指定显示器</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="203"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="193"/>
         <source>Activate the display automatically and make it a primary display</source>
         <translation>自动激活指定显示器并设置为主显示器</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="207"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="197"/>
         <source>Deactivate other displays and activate only the specified display</source>
         <translation>禁用其他显示器，只启用指定显示器</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="223"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="213"/>
         <source>VDD Screen Mode</source>
         <translation>VDD 屏幕模式</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="249"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="239"/>
         <source>Use Sunshine host configuration (default)</source>
         <translation>使用 Sunshine 主机配置（默认）</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="253"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="243"/>
         <source>Keep current layout</source>
         <translation>保持当前布局</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="257"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="247"/>
         <source>VDD primary + Physical extended</source>
         <translation>VDD 为主 + 物理显示器扩展</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="261"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="251"/>
         <source>Physical primary + VDD extended</source>
         <translation>物理显示器为主 + VDD 扩展</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="265"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="255"/>
         <source>VDD only (disable physical displays)</source>
         <translation>仅 VDD（关闭物理显示器）</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="279"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="269"/>
         <source>Optimize game settings for streaming</source>
         <translation>优化游戏设置以进行流式传输</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="290"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="280"/>
         <source>Quit app on host PC after ending stream</source>
         <translation>流式传输结束后退出主机上的应用程序</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="300"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="290"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
         <translation>当你结束流式传输时，这将关闭正在运行的应用程序或游戏。这会导致你失去所有未保存的游戏进度！</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="310"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="300"/>
         <source>UI Settings</source>
         <translation>界面设置</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="320"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="309"/>
         <source>Language</source>
         <translation>语言</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="346"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="335"/>
         <source>Automatic</source>
         <translation>自动</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="481"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="470"/>
         <source>You must restart Moonlight for this change to take effect</source>
         <translation>你必须重新启动 Moonlight 才能使更改生效</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="498"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="487"/>
         <source>GUI display mode</source>
         <translation>窗口显示模式</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="533"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="522"/>
         <source>Windowed</source>
         <translation>窗口化</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="537"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="526"/>
         <source>Maximized</source>
         <translation>最大化</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="541"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="530"/>
         <source>Fullscreen</source>
         <translation>全屏</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="554"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="543"/>
         <source>Show connection quality warnings</source>
         <translation>显示连接质量警告</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="565"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="554"/>
         <source>Show configuration warnings</source>
         <translation>显示配置警告</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="577"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="566"/>
         <source>Discord Rich Presence integration</source>
         <translation>Discord Rich Presence 集成</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="587"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="576"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>更新你的 Discord 状态，以显示正在运行的游戏名称。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="593"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="582"/>
         <source>Keep the display awake while streaming</source>
         <translation>在串流时保持屏幕开启</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="603"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="592"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
         <translation>防止串流时进入屏保或屏幕休眠。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="609"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="598"/>
         <source>Automatically check for updates</source>
         <translation>自动检查更新</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="619"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="608"/>
         <source>Check for new versions of Moonlight when the app starts.</source>
         <translation>启动时检查 Moonlight 是否有新版本。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="624"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="613"/>
         <source>Overlay menu position</source>
         <translation>覆盖菜单位置</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="647"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="636"/>
         <source>Right edge (default)</source>
         <translation>右侧边缘（默认）</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="651"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="640"/>
         <source>Left edge</source>
         <translation>左侧边缘</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="655"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="644"/>
         <source>Floating button</source>
         <translation>浮动按钮</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="675"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="664"/>
         <source>Input Settings</source>
         <translation>输入设置</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="686"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="674"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>为远程桌面而不是游戏优化鼠标</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="696"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="684"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>这可以实现无缝鼠标控制，而无需捕获客户端的鼠标光标。这是理想的远程桌面使用方案，但不会在大多数游戏中工作。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="697"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="685"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>你可以使用 Ctrl+Alt+Shift+M 切换鼠标控制模式。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="698"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="686"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>注意：由于 GeForce Experience 的 Bug，如果你的主机有多个显示器，则此选项可能无法正常工作。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="705"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="693"/>
         <source>Show local cursor</source>
         <translation>显示本地鼠标</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="715"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="703"/>
         <source>This makes the client&apos;s mouse cursor visible in the stream.</source>
         <translation>让客户端的鼠标指针在串流画面里可见。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="716"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="704"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+C.</source>
         <translation>你可以使用 Ctrl+Alt+Shift+C 切换显示本地鼠标模式。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="726"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="714"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>捕获系统快捷键</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="734"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="722"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>这样可以捕获系统范围的键盘快捷键，例如 Alt + Tab，这些快捷键通常在流式传输时由客户端系统处理。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="735"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="723"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>注意：Windows 上的某些键盘快捷键（如 Ctrl+Alt+Del）不能被任何应用程序截获，包括 Moonlight。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="765"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="753"/>
         <source>in fullscreen</source>
         <translation>全屏</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="769"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="757"/>
         <source>always</source>
         <translation>总是</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="799"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="787"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>将触摸屏用作虚拟触控板</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="809"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="797"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>选中时，触摸屏就像一个触控板。取消选中时，触摸屏将直接控制鼠标指针。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="816"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="804"/>
         <source>Use precision touchpad input when available</source>
         <translation>可用时使用精确式触控板输入</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="826"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="814"/>
         <source>Sends native multi-touch trackpad contacts to compatible Sunshine hosts. Unsupported devices and hosts fall back to pointer input. Changes apply to the next stream.</source>
         <translation>向兼容的 Sunshine 主机发送原生多点触控板接触信息。不支持的设备和主机将回退到指针输入。更改将在下次串流时生效。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="833"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="821"/>
         <source>Swap left and right mouse buttons</source>
         <translation>交换鼠标左键和右键</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="845"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="833"/>
         <source>Swap Alt and Win keys</source>
         <translation>交换 Alt 和 Win</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="857"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="845"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>反转鼠标滚动方向</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="872"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="860"/>
         <source>Gamepad Settings</source>
         <translation>手柄设置</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="882"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="869"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>交换手柄的 A/B 和 X/Y 按钮</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="892"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="879"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>这会将手柄切换为任天堂风格的按钮布局</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="898"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="885"/>
         <source>Force gamepad #1 always connected</source>
         <translation>强制手柄 #1 始终连接</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="908"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="895"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>强制单个手柄始终与主机保持连接，即使没有任何手柄实际连接到此计算机。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="909"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="896"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>仅在游戏启动后不支持手柄连接时才启用此选项。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="916"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="903"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>按住手柄的“Start”按钮启用鼠标控制</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="927"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="914"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>当 Moonlight 在后台时处理手柄输入</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="938"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="925"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>即使不是焦点窗口，也允许 Moonlight 捕获手柄的输入</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="943"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="930"/>
         <source>Gamepad quit combo</source>
         <translation>手柄退出组合键</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="966"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="953"/>
         <source>Start + Select + L1 + R1 (Default)</source>
         <translation>Start + Select + L1 + R1（默认）</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="970"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="957"/>
         <source>Select + L1 + R1 + X</source>
         <translation>Select + L1 + R1 + X</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="974"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="961"/>
         <source>Select + L1 + R1 + Y</source>
         <translation>Select + L1 + R1 + Y</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="978"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="965"/>
         <source>Start + L1 + R1 + A</source>
         <translation>Start + L1 + R1 + A</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="982"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="969"/>
         <source>Start + L1 + R1 + B</source>
         <translation>Start + L1 + R1 + B</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="986"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="973"/>
         <source>L1 + R1 + X + Y</source>
         <translation>L1 + R1 + X + Y</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="990"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="977"/>
         <source>L1 + R1 + A + B</source>
         <translation>L1 + R1 + A + B</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1002"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="989"/>
         <source>Choose which button combination exits streaming. Use alternatives if the default doesn&apos;t work on your device.</source>
         <translation>选择用哪组按键退出串流。默认组合在你的设备上不生效时可以换一个。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1012"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="999"/>
         <source>Advanced Settings</source>
         <translation>高级设置</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1022"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1008"/>
         <source>Video decoder</source>
         <translation>视频解码器</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1047"/>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1114"/>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1172"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1033"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1100"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1158"/>
         <source>Automatic (Recommended)</source>
         <translation>自动 (推荐)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1051"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1037"/>
         <source>Force software decoding</source>
         <translation>强制软件解码</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1055"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1041"/>
         <source>Force hardware decoding</source>
         <translation>强制硬件解码</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1084"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1070"/>
         <source>Video codec</source>
         <translation>视频编解码器</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1118"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1104"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1122"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1108"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1126"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1112"/>
         <source>AV1</source>
         <translation>AV1</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1141"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1127"/>
         <source>Renderer</source>
         <translation>渲染器</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1197"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1183"/>
         <source>Enable YUV 4:4:4</source>
         <translation>启用 YUV 4:4:4</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1221"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1207"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
         <translation>适合串流桌面和文字较多的游戏，但不推荐用于快节奏游戏。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1223"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1209"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
         <translation>此电脑不支持 YUV 4:4:4。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1229"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1215"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>自动在本地网络上查找计算机 (推荐)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1250"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1236"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>自动检测被阻止的连接 (推荐)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1261"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1247"/>
         <source>Show performance stats while streaming</source>
         <translation>在流中显示性能统计数据</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1271"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1257"/>
         <source>Display real-time stream performance information while streaming.</source>
         <translation>在流中显示实时流性能信息。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1272"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1258"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
         <translation>你可以在任何时候使用 Ctrl + Alt + Shift + S 或选择 + L1 + R1 + X 来切换它。</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1273"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1259"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
         <translation>Steam链接或树莓派不支持性能覆盖。</translation>
     </message>
@@ -1441,124 +1413,124 @@
 <context>
     <name>OverlayMenuPanel</name>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="18"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="19"/>
         <source>Checking</source>
         <translation>检查中</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="153"/>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="176"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="146"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="169"/>
         <source>Quick Actions</source>
         <translation>快捷操作</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="155"/>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="197"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="148"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="190"/>
         <source>Bitrate</source>
         <translation>码率</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="157"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="150"/>
         <source>Host Files</source>
         <translation>主机文件</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="161"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="154"/>
         <source>Toggle Fullscreen</source>
         <translation>切换全屏</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="163"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="156"/>
         <source>Microphone</source>
         <translation>麦克风</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="167"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="160"/>
         <source>Gamepad Mouse</source>
         <translation>手柄鼠标</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="170"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="163"/>
         <source>Disconnect</source>
         <translation>断开连接</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="177"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="170"/>
         <source>Quit Moonlight</source>
         <translation>退出 Moonlight</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="179"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="172"/>
         <source>Performance Stats</source>
         <translation>性能统计</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="181"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="174"/>
         <source>Mouse Mode</source>
         <translation>鼠标模式</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="183"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="176"/>
         <source>Show/Hide Cursor</source>
         <translation>显示/隐藏光标</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="185"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="178"/>
         <source>Minimize</source>
         <translation>最小化</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="187"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="180"/>
         <source>Ungrab Mouse</source>
         <translation>释放鼠标</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="189"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="182"/>
         <source>Paste Clipboard</source>
         <translation>粘贴剪贴板</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="191"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="184"/>
         <source>Pointer Region Lock</source>
         <translation>指针区域锁定</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="198"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="191"/>
         <source>1 Mbps</source>
         <translation>1 Mbps</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="200"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="193"/>
         <source>2 Mbps</source>
         <translation>2 Mbps</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="202"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="195"/>
         <source>5 Mbps</source>
         <translation>5 Mbps</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="204"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="197"/>
         <source>10 Mbps</source>
         <translation>10 Mbps</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="206"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="199"/>
         <source>20 Mbps</source>
         <translation>20 Mbps</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="208"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="201"/>
         <source>30 Mbps</source>
         <translation>30 Mbps</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="210"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="203"/>
         <source>50 Mbps</source>
         <translation>50 Mbps</translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="212"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="205"/>
         <source>100 Mbps</source>
         <translation>100 Mbps</translation>
     </message>
@@ -1586,205 +1558,204 @@
         <translation>单击帮助按钮以获取可能的解决方案。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="160"/>
+        <location filename="../gui/PcView.qml" line="110"/>
+        <source>Unable to open the app list for %1.</source>
+        <translation>无法打开 %1 的应用列表。</translation>
+    </message>
+    <message>
+        <location filename="../gui/PcView.qml" line="180"/>
         <source>Searching</source>
         <translation>正在搜索</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="160"/>
+        <location filename="../gui/PcView.qml" line="180"/>
         <source>No Computers</source>
         <translation>没有计算机</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="180"/>
+        <location filename="../gui/PcView.qml" line="200"/>
         <source>Searching for compatible hosts on your local network...</source>
         <translation>在你的本地网络中搜索兼容的主机...</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="181"/>
+        <location filename="../gui/PcView.qml" line="201"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>已禁用计算机自动发现。需要手动添加计算机。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="319"/>
+        <location filename="../gui/PcView.qml" line="374"/>
         <source>PC Status: %1</source>
         <translation>计算机状态: %1</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="319"/>
+        <location filename="../gui/PcView.qml" line="374"/>
         <source>Online</source>
         <translation>在线</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="319"/>
+        <location filename="../gui/PcView.qml" line="374"/>
         <source>Offline</source>
         <translation>离线</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="324"/>
+        <location filename="../gui/PcView.qml" line="379"/>
         <source>View All Apps</source>
         <translation>查看所有应用程序</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="336"/>
+        <location filename="../gui/PcView.qml" line="391"/>
         <source>Wake PC</source>
         <translation>唤醒主机</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="341"/>
+        <location filename="../gui/PcView.qml" line="396"/>
         <source>Test Network</source>
         <translation>网络测试</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="349"/>
+        <location filename="../gui/PcView.qml" line="404"/>
         <source>Rename PC</source>
         <translation>重命名计算机</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="357"/>
+        <location filename="../gui/PcView.qml" line="412"/>
         <source>Delete PC</source>
         <translation>删除计算机</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="365"/>
+        <location filename="../gui/PcView.qml" line="420"/>
         <source>View Details</source>
         <translation>查看详情</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="377"/>
+        <location filename="../gui/PcView.qml" line="432"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>此版本 Moonlight 不支持 %1 版本的 GeForce Experience，请更新 Moonlight 以支持从 %1 串流。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="447"/>
+        <location filename="../gui/PcView.qml" line="496"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
         <translation>请在你的主机上输入 %1 。配对完成后，此对话框将关闭。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="448"/>
+        <location filename="../gui/PcView.qml" line="497"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
         <translation>如果你的主机正在运行 Sunshine，那请前往Sunshine的网页界面输入PIN码。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="460"/>
+        <location filename="../gui/PcView.qml" line="509"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
         <translation>你确定需要移除 &apos;%1&apos;吗？</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="474"/>
+        <location filename="../gui/PcView.qml" line="523"/>
         <source>This may take a few seconds…</source>
         <translation>这可能需要几秒钟……</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="474"/>
+        <location filename="../gui/PcView.qml" line="523"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
         <translation>Moonlight 正在测试你的网络连接来确认是否有需要的端口被屏蔽。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="481"/>
+        <location filename="../gui/PcView.qml" line="530"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>无法执行网络测试，因为此计算机无法访问 Moonlight 的连接测试服务器。请检查你的互联网连接或稍后再试。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="485"/>
+        <location filename="../gui/PcView.qml" line="534"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
         <translation>此网络似乎没有阻止 Moonlight。如果仍然无法连接，请检查计算机的防火墙设置。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="485"/>
+        <location filename="../gui/PcView.qml" line="534"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
         <translation>如果你想通过互联网进行流式传输，请在你的主机上安装 Moonlight Internet Hosting 工具，并运行包含的互联网流式传输测试程序来检查你主机的互联网连接。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="489"/>
+        <location filename="../gui/PcView.qml" line="538"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>此计算机当前的网络连接似乎被阻塞了。当连接到此网络时，互联网上的流式传输可能无法工作。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="489"/>
+        <location filename="../gui/PcView.qml" line="538"/>
         <source>The following network ports were blocked:</source>
         <translation>下列网络端口被阻止:</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="501"/>
+        <location filename="../gui/PcView.qml" line="550"/>
         <source>Enter the new name for this PC:</source>
         <translation>输入这台计算机的新名称:</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="758"/>
+        <location filename="../gui/PcView.qml" line="746"/>
         <source>Unsupported image format</source>
         <translation>不支持的图片格式</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="785"/>
+        <location filename="../gui/PcView.qml" line="773"/>
         <source>Drop To Set Wallpaper</source>
         <translation>拖放图片设置背景</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="824"/>
+        <location filename="../gui/PcView.qml" line="812"/>
         <source>Save wallpaper</source>
         <translation>下载背景图片</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="833"/>
+        <location filename="../gui/PcView.qml" line="821"/>
         <source>Refresh wallpaper</source>
         <translation>刷新背景图片</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="837"/>
+        <location filename="../gui/PcView.qml" line="825"/>
         <source>Please wait at least 10 seconds between refreshes.</source>
         <translation>请稍等片刻再刷新（至少间隔 10 秒）</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="862"/>
+        <location filename="../gui/PcView.qml" line="850"/>
         <source>Choose where to save</source>
         <translation>选择保存位置</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="863"/>
+        <location filename="../gui/PcView.qml" line="851"/>
         <source>Image files (*.jpg *.jpeg *.png *.webp)</source>
         <translation>图片文件 (*.jpg *.jpeg *.png *.webp)</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="929"/>
+        <location filename="../gui/PcView.qml" line="926"/>
         <source>Image saved to: %1</source>
         <translation>图片已保存到：%1</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="933"/>
+        <location filename="../gui/PcView.qml" line="930"/>
         <source>Save failed: %1</source>
         <translation>保存失败：%1</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="941"/>
+        <location filename="../gui/PcView.qml" line="938"/>
         <source>Save result</source>
         <translation>保存结果</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="117"/>
+        <location filename="../gui/PcView.qml" line="148"/>
         <source>No connection IP addresses are available for %1.</source>
         <translation>%1 没有可用的连接 IP 地址。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="331"/>
-        <location filename="../gui/PcView.qml" line="556"/>
+        <location filename="../gui/PcView.qml" line="386"/>
         <source>Select Connection IP</source>
         <translation>选择连接 IP</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="579"/>
+        <location filename="../gui/PcView.qml" line="610"/>
         <source>Unable to switch the connection IP for %1.</source>
         <translation>无法切换 %1 的连接 IP。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="602"/>
+        <location filename="../gui/PcView.qml" line="166"/>
         <source>Choose the IP address to connect to %1:</source>
         <translation>请选择用于连接 %1 的 IP 地址：</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="623"/>
-        <source>Address type: %1</source>
-        <translation>地址类型：%1</translation>
     </message>
 </context>
 <context>
@@ -1946,10 +1917,6 @@
         <location filename="../backend/portableupdateinstaller.cpp" line="671"/>
         <source>Unable to launch the updater.</source>
         <translation>无法启动更新程序。</translation>
-    </message>
-    <message>
-        <source>The current Moonlight folder is not writable. Move the portable build to a writable location, run Moonlight with sufficient permissions, or download and install the update manually.</source>
-        <translation type="vanished">当前 Moonlight 所在文件夹不可写。请把便携版移动到可写位置、以足够的权限运行 Moonlight，或者手动下载安装更新。</translation>
     </message>
     <message>
         <location filename="../backend/portableupdateinstaller.cpp" line="570"/>
@@ -2167,27 +2134,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="930"/>
+        <location filename="../main.cpp" line="927"/>
         <source>&amp;Yes</source>
         <translation>是(&amp;Y)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="931"/>
+        <location filename="../main.cpp" line="928"/>
         <source>&amp;No</source>
         <translation>否(&amp;N)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="932"/>
+        <location filename="../main.cpp" line="929"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="933"/>
+        <location filename="../main.cpp" line="930"/>
         <source>Help</source>
         <translation>帮助</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="934"/>
+        <location filename="../main.cpp" line="931"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -2198,6 +2165,29 @@
         <location filename="../gui/QuitSegue.qml" line="17"/>
         <source>Quitting %1...</source>
         <translation>正在退出 %1...</translation>
+    </message>
+</context>
+<context>
+    <name>SelectAddressDialog</name>
+    <message>
+        <location filename="../gui/SelectAddressDialog.qml" line="51"/>
+        <source>Select Connection IP</source>
+        <translation>选择连接 IP</translation>
+    </message>
+    <message>
+        <location filename="../gui/SelectAddressDialog.qml" line="107"/>
+        <source>Type: %1</source>
+        <translation>类型：%1</translation>
+    </message>
+    <message>
+        <location filename="../gui/SelectAddressDialog.qml" line="121"/>
+        <source>Warning: This address has not been verified by polling yet.</source>
+        <translation>警告：这个地址还没有通过轮询验证。</translation>
+    </message>
+    <message>
+        <location filename="../gui/SelectAddressDialog.qml" line="131"/>
+        <source>&quot;Auto&quot; uses the default address selection with automatic fallback. Selecting a specific IP will pin the connection to that address.</source>
+        <translation>「自动」使用默认的地址选择并在失败时自动回退。选择某个具体 IP 会把连接固定到那个地址。</translation>
     </message>
 </context>
 <context>
@@ -2487,7 +2477,7 @@
         <translation>已重连</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="4061"/>
+        <location filename="../streaming/session.cpp" line="4066"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>无法初始化视频解码器。请检查你的流式传输设置，然后重试。</translation>
     </message>
@@ -2495,42 +2485,47 @@
 <context>
     <name>SettingsView</name>
     <message>
-        <location filename="../gui/SettingsView.qml" line="20"/>
+        <location filename="../gui/SettingsView.qml" line="24"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="32"/>
+        <location filename="../gui/SettingsView.qml" line="36"/>
         <source>Basic Settings</source>
         <translation>基本设置</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="33"/>
+        <location filename="../gui/SettingsView.qml" line="37"/>
+        <source>Display Settings</source>
+        <translation>显示设置</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="38"/>
         <source>Audio Settings</source>
         <translation>音频设置</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="35"/>
+        <location filename="../gui/SettingsView.qml" line="40"/>
         <source>UI Settings</source>
         <translation>界面设置</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="36"/>
+        <location filename="../gui/SettingsView.qml" line="41"/>
         <source>Input Settings</source>
         <translation>输入设置</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="37"/>
+        <location filename="../gui/SettingsView.qml" line="42"/>
         <source>Gamepad Settings</source>
         <translation>手柄设置</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="34"/>
+        <location filename="../gui/SettingsView.qml" line="39"/>
         <source>Host Settings</source>
         <translation>主机设置</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="38"/>
+        <location filename="../gui/SettingsView.qml" line="43"/>
         <source>Advanced Settings</source>
         <translation>高级设置</translation>
     </message>

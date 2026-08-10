@@ -41,6 +41,7 @@
         <file>gui/settings/SettingsScrollArea.qml</file>
         <file>gui/settings/HdrBrightnessCard.qml</file>
         <file>gui/settings/BasicSettingsPage.qml</file>
+        <file>gui/settings/DisplaySettingsPage.qml</file>
         <file>gui/settings/LegacySettingsPage.qml</file>
     </qresource>
 </RCC>

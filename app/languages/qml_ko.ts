@@ -29,12 +29,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/appmodel.cpp" line="282"/>
+        <location filename="../gui/appmodel.cpp" line="287"/>
         <source>Auto (default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/appmodel.cpp" line="283"/>
+        <location filename="../gui/appmodel.cpp" line="288"/>
         <source>Automatic selection with fallback</source>
         <translation type="unfinished"></translation>
     </message>
@@ -42,176 +42,146 @@
 <context>
     <name>AppView</name>
     <message>
-        <location filename="../gui/AppView.qml" line="109"/>
+        <location filename="../gui/AppView.qml" line="149"/>
         <source>Display Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="127"/>
+        <location filename="../gui/AppView.qml" line="188"/>
         <source>Select Display:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="185"/>
+        <location filename="../gui/AppView.qml" line="221"/>
         <source>VDD Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="222"/>
+        <location filename="../gui/AppView.qml" line="253"/>
         <source>VDD Combination Mode:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="222"/>
+        <location filename="../gui/AppView.qml" line="253"/>
         <source>Screen Combination Mode:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="259"/>
-        <location filename="../gui/AppView.qml" line="269"/>
+        <location filename="../gui/AppView.qml" line="295"/>
+        <location filename="../gui/AppView.qml" line="305"/>
         <source>Use host config (default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="260"/>
+        <location filename="../gui/AppView.qml" line="296"/>
         <source>Do not change</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="261"/>
+        <location filename="../gui/AppView.qml" line="297"/>
         <source>Ensure active</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="262"/>
+        <location filename="../gui/AppView.qml" line="298"/>
         <source>Ensure primary</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="263"/>
+        <location filename="../gui/AppView.qml" line="299"/>
         <source>Only display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="270"/>
+        <location filename="../gui/AppView.qml" line="306"/>
         <source>Keep current layout</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="271"/>
+        <location filename="../gui/AppView.qml" line="307"/>
         <source>VDD primary + Physical extended</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="272"/>
+        <location filename="../gui/AppView.qml" line="308"/>
         <source>Physical primary + VDD extended</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="273"/>
+        <location filename="../gui/AppView.qml" line="309"/>
         <source>VDD only (disable physical)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="585"/>
-        <location filename="../gui/AppView.qml" line="766"/>
+        <location filename="../gui/AppView.qml" line="610"/>
+        <location filename="../gui/AppView.qml" line="791"/>
         <source>Resume Game</source>
         <translation>게임 재개</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="606"/>
-        <location filename="../gui/AppView.qml" line="770"/>
+        <location filename="../gui/AppView.qml" line="631"/>
+        <location filename="../gui/AppView.qml" line="795"/>
         <source>Quit Game</source>
         <translation>게임 종료</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="645"/>
+        <location filename="../gui/AppView.qml" line="670"/>
         <source>Live</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="667"/>
+        <location filename="../gui/AppView.qml" line="692"/>
         <source>Hidden</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="766"/>
+        <location filename="../gui/AppView.qml" line="791"/>
         <source>Launch Game</source>
         <translation>게임 실행</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="539"/>
-        <location filename="../gui/AppView.qml" line="777"/>
+        <location filename="../gui/AppView.qml" line="564"/>
+        <location filename="../gui/AppView.qml" line="802"/>
         <source>Direct Launch</source>
         <translation>즉시 실행</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="781"/>
+        <location filename="../gui/AppView.qml" line="806"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
         <translation>호스트를 선택하였을 때, 앱 선택 없이 바로 이 앱을 시작합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="789"/>
+        <location filename="../gui/AppView.qml" line="814"/>
         <source>Hide Game</source>
         <translation>게임 숨기기</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="793"/>
+        <location filename="../gui/AppView.qml" line="818"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
         <translation>앱 목록에서 이 게임을 숨깁니다. 숨겨진 게임에 접근하려면, 호스트를 마우스 오른쪽 버튼으로 클릭하고 %1를 선택하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="793"/>
+        <location filename="../gui/AppView.qml" line="818"/>
         <source>View All Apps</source>
         <translation>모든 앱 보기</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="811"/>
+        <location filename="../gui/AppView.qml" line="836"/>
         <source>No Apps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="829"/>
+        <location filename="../gui/AppView.qml" line="854"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
         <translation>이 컴퓨터에는 앱이 없거나 숨겨져 있습니다</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="860"/>
-        <source>Connection IP Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="877"/>
+        <location filename="../gui/AppView.qml" line="868"/>
         <source>Select the IP address to connect to this PC:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="897"/>
-        <source>Type: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="909"/>
-        <source>Warning: This address has not been verified by polling yet.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="928"/>
-        <source>Apply</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="947"/>
-        <source>Cancel</source>
-        <translation>취소</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="953"/>
-        <source>&quot;Auto&quot; uses the default address selection with automatic fallback. Selecting a specific IP will pin the connection to that address.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="969"/>
+        <location filename="../gui/AppView.qml" line="888"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>%1을(를) 종료하시겠습니까? 저장하지 않은 모든 진행 상황은 손실됩니다.</translation>
     </message>
@@ -219,301 +189,206 @@
 <context>
     <name>BasicSettingsPage</name>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="30"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="27"/>
         <source>Video</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="31"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="28"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
         <translation>PC 또는 네트워크 연결보다 너무 높은 값을 설정하면 지연, 끊김 또는 오류가 발생할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="34"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="31"/>
         <source>Resolution and FPS</source>
         <translation>해상도 및 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="93"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="90"/>
         <source>Native</source>
         <translation>기본</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="94"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="91"/>
         <source>Native (Excluding Notch)</source>
         <translation>기본 (노치 제외)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="130"/>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="139"/>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="268"/>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="539"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="127"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="136"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="265"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="536"/>
         <source>Custom</source>
         <translation>사용자 정의</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="158"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="155"/>
         <source>720p</source>
         <translation>720p</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="164"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="161"/>
         <source>1080p</source>
         <translation>1080p</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="170"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="167"/>
         <source>1440p</source>
         <translation>1440p</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="176"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="173"/>
         <source>4K</source>
         <translation>4K</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="283"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="280"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
         <translation>사용자 지정 해상도는 GeForce Experience에서 공식적으로 지원되지 않으므로 해당 설정은 호스트 디스플레이의 해상도를 설정하지 않습니다. 게임 중에 수동으로 설정해야합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="284"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="281"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
         <translation>클라이언트 또는 호스트 PC에서 지원하지 않는 해상도로 인해 스트리밍 오류가 발생할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="290"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="287"/>
         <source>Enter a custom resolution:</source>
         <translation>사용자 정의 해상도 입력:</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="426"/>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="536"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="423"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="533"/>
         <source>Custom (%1 FPS)</source>
         <translation>사용자 정의 (%1 FPS)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="441"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="438"/>
         <source>Enter a custom frame rate:</source>
         <translation>사용자 정의 프레임 레이트 입력:</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="518"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="515"/>
         <source>%1 FPS</source>
         <translation>%1 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="557"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="554"/>
         <source>30 FPS</source>
         <translation>30 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="562"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="559"/>
         <source>60 FPS</source>
         <translation>60 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="583"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="580"/>
         <source>Video bitrate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="584"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="581"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
         <translation>느린 연결에서는 비트레이트를 낮추십시오. 이미지 품질을 높이려면 비트레이트를 높이십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="654"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="651"/>
         <source>Use Default (%1 Mbps)</source>
         <translation>기본값 사용 (%1 Mbps)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="693"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="690"/>
         <source>Smart bitrate with Sunshine</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="694"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="691"/>
         <source>Allows Sunshine to automatically adjust stream bitrate up to the selected video bitrate when the host supports ABR.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="702"/>
-        <source>Display</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="706"/>
-        <source>Display mode</source>
-        <translation>디스플레이 모드</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="707"/>
-        <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation>전체 화면은 일반적으로 최상의 성능을 제공하지만 테두리 없는 창은 macOS Spaces, Alt+Tab, 스크린샷 도구, 화면 오버레이 등과 같은 기능에서 더 잘 작동합니다.</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="720"/>
-        <source>Fullscreen</source>
-        <translation>전체 화면</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="725"/>
-        <source>Borderless windowed</source>
-        <translation>테두리 없는 창</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="730"/>
-        <source>Windowed</source>
-        <translation>창</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="738"/>
-        <source>(Recommended)</source>
-        <translation>(권장)</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="782"/>
-        <source>Stretch presentation</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="783"/>
-        <source>Ignores both client and host PC aspect ratios, which is required for displaying Half-SBS (Side-By-Side) 3D signals to AR/XR devices that only support Full-SBS (usually 1920x1080 per eye, meaning a total resolution of 3840x1080)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="790"/>
-        <source>V-Sync</source>
-        <translation>수직동기화</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="791"/>
-        <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation>수직동기화를 비활성화하면 서브프레임 렌더링 지연이 허용되지만 화면 찢김이 발생할 수 있습니다</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="797"/>
-        <source>Frame pacing</source>
-        <translation>프레임 조율</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="798"/>
-        <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation>프레임 조율은 너무 일찍 들어오는 프레임을 지연시켜 미세한 끊김 현상을 줄입니다</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="807"/>
-        <source>HDR</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="810"/>
-        <source>Enable HDR</source>
-        <translation>HDR 활성화</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="812"/>
-        <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation>이 스트림은 HDR을 지원하지만 일부 게임에서는 HDR 모드를 활성화하기 위해 호스트 PC에 HDR 모니터가 필요할 수 있습니다.</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="814"/>
-        <source>HDR streaming is not supported on this PC.</source>
-        <translation>이 PC에서는 HDR 스트리밍이 지원되지 않습니다.</translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="822"/>
-        <source>HDR format</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="823"/>
-        <source>HDR10 (PQ) is the standard HDR format. HLG offers better compatibility with SDR displays when HDR is not active on the host.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="877"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="699"/>
         <source>Enhancements</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="881"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="703"/>
         <source>Enhance video quality by utilizing the GPU&apos;s AI-Enhancement capabilities.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="882"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="704"/>
         <source>This feature effectively upscales, reduces compression artifacts and enhances the clarity of streamed content.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="883"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="705"/>
         <source>Note:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="884"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="706"/>
         <source>If available, ensure that appropriate settings (i.e. RTX Video enhancement) are enabled in your GPU driver configuration.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="885"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="707"/>
         <source>HDR rendering has diverse issues depending on the GPU used, we are working on it but we advise to currently use Non-HDR.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="886"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="708"/>
         <source>Be advised that using this feature on laptops running on battery power may lead to significant battery drain.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="893"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="715"/>
         <source>Video AI-Enhancement</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="905"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="727"/>
         <source>Video AI-Enhancement (Not supported by the GPU)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="910"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="732"/>
         <source>Video AI-Enhancement (Experimental)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="917"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="739"/>
         <source>Stream Resolution Scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="918"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="740"/>
         <source>Renders the stream below the selected resolution and upscales it on the client.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="961"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="783"/>
         <source>Remote overrides</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="962"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="784"/>
         <source>Used instead of the values above when streaming over the internet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="965"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="787"/>
         <source>Remote Resolution</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="1025"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="847"/>
         <source>Remote Frame Rate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="1059"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="881"/>
         <source>FPS</source>
         <translation type="unfinished"></translation>
     </message>
@@ -570,124 +445,197 @@
 <context>
     <name>ComputerModel</name>
     <message>
-        <location filename="../gui/computermodel.cpp" line="17"/>
-        <source>Local network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="20"/>
-        <source>Remote network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="23"/>
-        <source>Manual</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="26"/>
-        <source>IPv6 network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="29"/>
-        <source>Other network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="85"/>
+        <location filename="../gui/computermodel.cpp" line="56"/>
         <source>Online</source>
         <translation>온라인</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="88"/>
+        <location filename="../gui/computermodel.cpp" line="59"/>
         <source>Offline</source>
         <translation>오프라인</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="91"/>
-        <location filename="../gui/computermodel.cpp" line="103"/>
-        <location filename="../gui/computermodel.cpp" line="108"/>
-        <location filename="../gui/computermodel.cpp" line="119"/>
-        <location filename="../gui/computermodel.cpp" line="121"/>
-        <location filename="../gui/computermodel.cpp" line="122"/>
+        <location filename="../gui/computermodel.cpp" line="62"/>
+        <location filename="../gui/computermodel.cpp" line="74"/>
+        <location filename="../gui/computermodel.cpp" line="79"/>
+        <location filename="../gui/computermodel.cpp" line="90"/>
+        <location filename="../gui/computermodel.cpp" line="92"/>
+        <location filename="../gui/computermodel.cpp" line="93"/>
         <source>Unknown</source>
         <translation>알 수 없음</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="97"/>
+        <location filename="../gui/computermodel.cpp" line="68"/>
         <source>Paired</source>
         <translation>페어링 됨</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="100"/>
+        <location filename="../gui/computermodel.cpp" line="71"/>
         <source>Unpaired</source>
         <translation>페어링 되지 않음</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="110"/>
+        <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Name: %1</source>
         <translation>이름: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="111"/>
+        <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Status: %1</source>
         <translation>상태: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="112"/>
+        <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Active Address: %1</source>
         <translation>활성 주소: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="113"/>
+        <location filename="../gui/computermodel.cpp" line="84"/>
         <source>UUID: %1</source>
         <translation>UUID: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="114"/>
+        <location filename="../gui/computermodel.cpp" line="85"/>
         <source>Pair Name: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="115"/>
+        <location filename="../gui/computermodel.cpp" line="86"/>
         <source>Local Address: %1</source>
         <translation>로컬 주소: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="116"/>
+        <location filename="../gui/computermodel.cpp" line="87"/>
         <source>Remote Address: %1</source>
         <translation>원격 주소: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="117"/>
+        <location filename="../gui/computermodel.cpp" line="88"/>
         <source>IPv6 Address: %1</source>
         <translation>IPv6 주소: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="118"/>
+        <location filename="../gui/computermodel.cpp" line="89"/>
         <source>Manual Address: %1</source>
         <translation>수동 주소: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="119"/>
+        <location filename="../gui/computermodel.cpp" line="90"/>
         <source>MAC Address: %1</source>
         <translation>MAC 주소: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="120"/>
+        <location filename="../gui/computermodel.cpp" line="91"/>
         <source>Pair State: %1</source>
         <translation>페어링 상태: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="121"/>
+        <location filename="../gui/computermodel.cpp" line="92"/>
         <source>Running Game ID: %1</source>
         <translation>실행 중인 게임 ID: %1</translation>
     </message>
     <message>
-        <location filename="../gui/computermodel.cpp" line="122"/>
+        <location filename="../gui/computermodel.cpp" line="93"/>
         <source>HTTPS Port: %1</source>
         <translation>HTTPS 포트: %1</translation>
+    </message>
+</context>
+<context>
+    <name>DisplaySettingsPage</name>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="28"/>
+        <source>Display</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="32"/>
+        <source>Display mode</source>
+        <translation>디스플레이 모드</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="33"/>
+        <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
+        <translation>전체 화면은 일반적으로 최상의 성능을 제공하지만 테두리 없는 창은 macOS Spaces, Alt+Tab, 스크린샷 도구, 화면 오버레이 등과 같은 기능에서 더 잘 작동합니다.</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="46"/>
+        <source>Fullscreen</source>
+        <translation>전체 화면</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="51"/>
+        <source>Borderless windowed</source>
+        <translation>테두리 없는 창</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="56"/>
+        <source>Windowed</source>
+        <translation>창</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="64"/>
+        <source>(Recommended)</source>
+        <translation>(권장)</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="108"/>
+        <source>Stretch presentation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="109"/>
+        <source>Ignores both client and host PC aspect ratios, which is required for displaying Half-SBS (Side-By-Side) 3D signals to AR/XR devices that only support Full-SBS (usually 1920x1080 per eye, meaning a total resolution of 3840x1080)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="116"/>
+        <source>V-Sync</source>
+        <translation>수직동기화</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="117"/>
+        <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
+        <translation>수직동기화를 비활성화하면 서브프레임 렌더링 지연이 허용되지만 화면 찢김이 발생할 수 있습니다</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="123"/>
+        <source>Frame pacing</source>
+        <translation>프레임 조율</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="124"/>
+        <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
+        <translation>프레임 조율은 너무 일찍 들어오는 프레임을 지연시켜 미세한 끊김 현상을 줄입니다</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="133"/>
+        <source>HDR</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="136"/>
+        <source>Enable HDR</source>
+        <translation>HDR 활성화</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="138"/>
+        <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
+        <translation>이 스트림은 HDR을 지원하지만 일부 게임에서는 HDR 모드를 활성화하기 위해 호스트 PC에 HDR 모니터가 필요할 수 있습니다.</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="140"/>
+        <source>HDR streaming is not supported on this PC.</source>
+        <translation>이 PC에서는 HDR 스트리밍이 지원되지 않습니다.</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="148"/>
+        <source>HDR format</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/DisplaySettingsPage.qml" line="149"/>
+        <source>HDR10 (PQ) is the standard HDR format. HLG offers better compatibility with SDR displays when HDR is not active on the host.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -905,527 +853,551 @@
     </message>
 </context>
 <context>
+    <name>ImageUtils</name>
+    <message>
+        <location filename="../imageutils.cpp" line="48"/>
+        <location filename="../imageutils.cpp" line="52"/>
+        <source>Unable to write file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../imageutils.cpp" line="73"/>
+        <source>Invalid background image URL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../imageutils.cpp" line="118"/>
+        <source>Background server returned an empty response</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../imageutils.cpp" line="128"/>
+        <source>Unable to decode background image</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>LegacySettingsPage</name>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="45"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="37"/>
         <source>Audio Settings</source>
         <translation>오디오 설정</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="55"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="46"/>
         <source>Audio configuration</source>
         <translation>오디오 구성</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="80"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="71"/>
         <source>Stereo</source>
         <translation>스테레오</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="84"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="75"/>
         <source>5.1 surround sound</source>
         <translation>5.1 서라운드 사운드</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="88"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="79"/>
         <source>7.1 surround sound</source>
         <translation>7.1 서라운드 사운드</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="92"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="83"/>
         <source>7.1.4 surround sound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="106"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="97"/>
         <source>Mute host PC speakers while streaming</source>
         <translation>스트리밍하는 동안 호스트 PC 스피커를 음소거</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="116"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="107"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
         <translation>이 설정을 적용하려면 현재 진행중인 게임을 다시 시작해야합니다</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="122"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="113"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
         <translation>Moonlight가 활성 창이 아닌 경우 오디오 스트림을 음소거</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="133"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="124"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
         <translation>스트림에서 Alt+Tab을 누르거나 다른 창을 클릭하면 Moonlight의 오디오를 음소거합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="138"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="129"/>
         <source>Enable microphone streaming (test)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="153"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="144"/>
         <source>Host Settings</source>
         <translation>호스트 설정</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="164"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="154"/>
         <source>Custom Screen Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="191"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="181"/>
         <source>Nothing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="195"/>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="659"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="185"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="648"/>
         <source>Disabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="199"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="189"/>
         <source>Activate the display automatically</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="203"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="193"/>
         <source>Activate the display automatically and make it a primary display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="207"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="197"/>
         <source>Deactivate other displays and activate only the specified display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="223"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="213"/>
         <source>VDD Screen Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="249"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="239"/>
         <source>Use Sunshine host configuration (default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="253"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="243"/>
         <source>Keep current layout</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="257"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="247"/>
         <source>VDD primary + Physical extended</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="261"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="251"/>
         <source>Physical primary + VDD extended</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="265"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="255"/>
         <source>VDD only (disable physical displays)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="279"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="269"/>
         <source>Optimize game settings for streaming</source>
         <translation>게임 설정을 스트리밍을 위해 최적화</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="290"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="280"/>
         <source>Quit app on host PC after ending stream</source>
         <translation>스트리밍 종료 후 호스트 PC에서 앱 종료</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="300"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="290"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
         <translation>스트리밍을 종료하면 스트리밍 중인 앱이나 게임이 종료됩니다. 저장하지 않은 진행 상황을 잃게됩니다!</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="310"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="300"/>
         <source>UI Settings</source>
         <translation>UI 설정</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="320"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="309"/>
         <source>Language</source>
         <translation>언어</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="346"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="335"/>
         <source>Automatic</source>
         <translation>자동</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="481"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="470"/>
         <source>You must restart Moonlight for this change to take effect</source>
         <translation>이 변경 사항을 적용하려면 Moonlight를 다시 시작해야합니다</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="498"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="487"/>
         <source>GUI display mode</source>
         <translation>GUI 디스플레이 모드</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="533"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="522"/>
         <source>Windowed</source>
         <translation>창</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="537"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="526"/>
         <source>Maximized</source>
         <translation>최대화</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="541"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="530"/>
         <source>Fullscreen</source>
         <translation>전체 화면</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="554"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="543"/>
         <source>Show connection quality warnings</source>
         <translation>연결 품질 경고 표시</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="565"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="554"/>
         <source>Show configuration warnings</source>
         <translation>구성 경고 표시</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="577"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="566"/>
         <source>Discord Rich Presence integration</source>
         <translation>Discord Rich Presence 통합</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="587"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="576"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>스트리밍중인 게임의 이름을 표시하도록 Discord 상태를 업데이트합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="593"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="582"/>
         <source>Keep the display awake while streaming</source>
         <translation>스트리밍 중 화면 켜짐 유지</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="603"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="592"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
         <translation>스트리밍 도중 화면 보호기의 시작 또는 디스플레이 잠자기를 방지합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="609"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="598"/>
         <source>Automatically check for updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="619"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="608"/>
         <source>Check for new versions of Moonlight when the app starts.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="624"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="613"/>
         <source>Overlay menu position</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="647"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="636"/>
         <source>Right edge (default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="651"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="640"/>
         <source>Left edge</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="655"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="644"/>
         <source>Floating button</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="675"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="664"/>
         <source>Input Settings</source>
         <translation>입력 설정</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="686"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="674"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>게임 대신 원격 데스크톱에 맞게 마우스 최적화</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="696"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="684"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>클라이언트의 마우스 커서 캡처없이 원활한 마우스 제어가 가능합니다. 원격 데스크톱 사용에 이상적이지만 대부분의 게임에서는 작동하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="697"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="685"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>스트리밍 중에 Ctrl+Alt+Shift+M을 사용하여 전환 할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="698"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="686"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>참고: GeForce Experience의 버그로 인해 호스트 PC에 다중 모니터가 있는 경우 이 옵션이 제대로 작동하지 않을 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="705"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="693"/>
         <source>Show local cursor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="715"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="703"/>
         <source>This makes the client&apos;s mouse cursor visible in the stream.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="716"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="704"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+C.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="726"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="714"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>시스템 키보드 단축키 캡처</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="734"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="722"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>일반적으로 클라이언트 OS에서 처리하는 Alt+Tab과 같은 시스템 전체 키보드 단축키를 캡처합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="735"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="723"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>참고: Windows의 Ctrl+Alt+Del과 같은 특정 키보드 단축키는 Moonlight를 포함한 모든 응용 프로그램에서 가로챌 수 없습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="765"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="753"/>
         <source>in fullscreen</source>
         <translation>전체 화면에서</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="769"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="757"/>
         <source>always</source>
         <translation>항상</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="799"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="787"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>터치스크린을 가상 트랙패드로 사용</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="809"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="797"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>선택하면 터치스크린이 트랙패드처럼 작동합니다. 선택하지 않으면 터치스크린이 마우스 포인터를 직접 제어합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="816"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="804"/>
         <source>Use precision touchpad input when available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="826"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="814"/>
         <source>Sends native multi-touch trackpad contacts to compatible Sunshine hosts. Unsupported devices and hosts fall back to pointer input. Changes apply to the next stream.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="833"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="821"/>
         <source>Swap left and right mouse buttons</source>
         <translation>왼쪽과 오른쪽 마우스 버튼 전환</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="845"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="833"/>
         <source>Swap Alt and Win keys</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="857"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="845"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>마우스 스크롤 방향 반전</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="872"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="860"/>
         <source>Gamepad Settings</source>
         <translation>게임패드 설정</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="882"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="869"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>게임패드 버튼 A/B와 X/Y 전환</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="892"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="879"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>게임패드를 Nintendo 스타일의 레이아웃으로 전환합니다</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="898"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="885"/>
         <source>Force gamepad #1 always connected</source>
         <translation>게임패드 #1을 항상 연결</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="908"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="895"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>이 PC에 실제로 연결된 게임패드가 없는 경우에도 단일 게임패드가 항상 호스트에 연결되도록 합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="909"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="896"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>시작 후 연결되는 게임패드를 지원하지 않는 게임을 스트리밍할 때만 이 옵션을 활성화하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="916"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="903"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>&apos;Start&apos; 버튼을 누르는 동안 게임패드로 마우스 제어를 활성화</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="927"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="914"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>Moonlight가 백그라운드에 있을 때 게임패드 입력 처리</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="938"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="925"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>Moonlight가 현재 초점이 맞춰진 창이 아닌 경우에도 게임패드 입력을 캡처할 수 있습니다</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="943"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="930"/>
         <source>Gamepad quit combo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="966"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="953"/>
         <source>Start + Select + L1 + R1 (Default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="970"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="957"/>
         <source>Select + L1 + R1 + X</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="974"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="961"/>
         <source>Select + L1 + R1 + Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="978"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="965"/>
         <source>Start + L1 + R1 + A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="982"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="969"/>
         <source>Start + L1 + R1 + B</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="986"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="973"/>
         <source>L1 + R1 + X + Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="990"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="977"/>
         <source>L1 + R1 + A + B</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1002"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="989"/>
         <source>Choose which button combination exits streaming. Use alternatives if the default doesn&apos;t work on your device.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1012"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="999"/>
         <source>Advanced Settings</source>
         <translation>고급 설정</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1022"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1008"/>
         <source>Video decoder</source>
         <translation>비디오 디코더</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1047"/>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1114"/>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1172"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1033"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1100"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1158"/>
         <source>Automatic (Recommended)</source>
         <translation>자동 (권장)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1051"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1037"/>
         <source>Force software decoding</source>
         <translation>소프트웨어 디코딩 강제</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1055"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1041"/>
         <source>Force hardware decoding</source>
         <translation>하드웨어 디코딩 강제</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1084"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1070"/>
         <source>Video codec</source>
         <translation>비디오 코덱</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1118"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1104"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1122"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1108"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1126"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1112"/>
         <source>AV1</source>
         <translation>AV1</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1141"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1127"/>
         <source>Renderer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1197"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1183"/>
         <source>Enable YUV 4:4:4</source>
         <translation>YUV 4:4:4 활성화</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1221"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1207"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
         <translation>데스크탑이나 텍스트가 많은 게임의 스트리밍에는 적합하지만, 빠르게 진행되는 게임에는 권장하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1223"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1209"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
         <translation>이 PC에서는 YUV 4:4:4가 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1229"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1215"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>로컬 네트워크에서 자동으로 PC 찾기 (권장)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1250"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1236"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>차단된 연결 자동 감지 (권장)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1261"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1247"/>
         <source>Show performance stats while streaming</source>
         <translation>스트리밍 중 성능 지표 표시</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1271"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1257"/>
         <source>Display real-time stream performance information while streaming.</source>
         <translation>스트리밍 중 실시간 스트리밍 성능에 대한 정보를 표시합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1272"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1258"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
         <translation>스트리밍 중 Ctrl+Alt+Shift+S 또는 Select+L1+R1+X를 입력하여 변경할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1273"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1259"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
         <translation>Steam Link 또는 Raspberry Pi에서는 성능 오버레이가 지원되지 않습니다.</translation>
     </message>
@@ -1441,124 +1413,124 @@
 <context>
     <name>OverlayMenuPanel</name>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="18"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="19"/>
         <source>Checking</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="153"/>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="176"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="146"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="169"/>
         <source>Quick Actions</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="155"/>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="197"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="148"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="190"/>
         <source>Bitrate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="157"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="150"/>
         <source>Host Files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="161"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="154"/>
         <source>Toggle Fullscreen</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="163"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="156"/>
         <source>Microphone</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="167"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="160"/>
         <source>Gamepad Mouse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="170"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="163"/>
         <source>Disconnect</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="177"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="170"/>
         <source>Quit Moonlight</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="179"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="172"/>
         <source>Performance Stats</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="181"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="174"/>
         <source>Mouse Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="183"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="176"/>
         <source>Show/Hide Cursor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="185"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="178"/>
         <source>Minimize</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="187"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="180"/>
         <source>Ungrab Mouse</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="189"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="182"/>
         <source>Paste Clipboard</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="191"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="184"/>
         <source>Pointer Region Lock</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="198"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="191"/>
         <source>1 Mbps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="200"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="193"/>
         <source>2 Mbps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="202"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="195"/>
         <source>5 Mbps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="204"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="197"/>
         <source>10 Mbps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="206"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="199"/>
         <source>20 Mbps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="208"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="201"/>
         <source>30 Mbps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="210"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="203"/>
         <source>50 Mbps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/video/overlaymenupanel.cpp" line="212"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="205"/>
         <source>100 Mbps</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1586,203 +1558,202 @@
         <translation>가능한 해결 방법을 보려면 도움말 버튼을 클릭하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="181"/>
+        <location filename="../gui/PcView.qml" line="201"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>자동 PC 검색이 비활성화되었습니다. PC를 수동으로 추가하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="180"/>
+        <location filename="../gui/PcView.qml" line="200"/>
         <source>Searching for compatible hosts on your local network...</source>
         <translation>로컬 네트워크에서 호환되는 호스트를 검색하는 중...</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="117"/>
+        <location filename="../gui/PcView.qml" line="110"/>
+        <source>Unable to open the app list for %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/PcView.qml" line="148"/>
         <source>No connection IP addresses are available for %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="160"/>
+        <location filename="../gui/PcView.qml" line="180"/>
         <source>Searching</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="160"/>
+        <location filename="../gui/PcView.qml" line="180"/>
         <source>No Computers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="331"/>
-        <location filename="../gui/PcView.qml" line="556"/>
+        <location filename="../gui/PcView.qml" line="386"/>
         <source>Select Connection IP</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="336"/>
+        <location filename="../gui/PcView.qml" line="391"/>
         <source>Wake PC</source>
         <translation>PC 켜기</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="341"/>
+        <location filename="../gui/PcView.qml" line="396"/>
         <source>Test Network</source>
         <translation>네트워크 검사</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="349"/>
+        <location filename="../gui/PcView.qml" line="404"/>
         <source>Rename PC</source>
         <translation>PC 이름 변경</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="357"/>
+        <location filename="../gui/PcView.qml" line="412"/>
         <source>Delete PC</source>
         <translation>PC 삭제</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="365"/>
+        <location filename="../gui/PcView.qml" line="420"/>
         <source>View Details</source>
         <translation>세부사항 보기</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="377"/>
+        <location filename="../gui/PcView.qml" line="432"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>%1의 GeForce Experience 버전은 현재 빌드의 Moonlight에서 지원되지 않습니다. %1에서 스트리밍하려면 Moonlight를 업데이트 해야 합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="474"/>
+        <location filename="../gui/PcView.qml" line="523"/>
         <source>This may take a few seconds…</source>
         <translation>몇 초 정도 걸릴 수 있습니다…</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="485"/>
+        <location filename="../gui/PcView.qml" line="534"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
         <translation>이 네트워크는 Moonlight를 차단하지 않는 것 같습니다. 여전히 연결에 문제가 있으면 PC의 방화벽 설정을 확인하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="485"/>
+        <location filename="../gui/PcView.qml" line="534"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
         <translation>인터넷을 통해 스트리밍하려는 경우 게임 PC에 Moonlight Internet Hosting Tool을 설치하고 포함된 Internet Streaming Tester를 실행하여 게임 PC의 인터넷 연결을 확인하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="489"/>
+        <location filename="../gui/PcView.qml" line="538"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>PC의 현재 네트워크 연결이 Moonlight를 차단하는 것 같습니다. 이 네트워크에 연결되어 있으면 인터넷을 통한 스트리밍이 작동하지 않을 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="489"/>
+        <location filename="../gui/PcView.qml" line="538"/>
         <source>The following network ports were blocked:</source>
         <translation>다음 네트워크 포트가 차단되었습니다:</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="579"/>
+        <location filename="../gui/PcView.qml" line="610"/>
         <source>Unable to switch the connection IP for %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="602"/>
+        <location filename="../gui/PcView.qml" line="166"/>
         <source>Choose the IP address to connect to %1:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="623"/>
-        <source>Address type: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="758"/>
+        <location filename="../gui/PcView.qml" line="746"/>
         <source>Unsupported image format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="785"/>
+        <location filename="../gui/PcView.qml" line="773"/>
         <source>Drop To Set Wallpaper</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="824"/>
+        <location filename="../gui/PcView.qml" line="812"/>
         <source>Save wallpaper</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="833"/>
+        <location filename="../gui/PcView.qml" line="821"/>
         <source>Refresh wallpaper</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="837"/>
+        <location filename="../gui/PcView.qml" line="825"/>
         <source>Please wait at least 10 seconds between refreshes.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="862"/>
+        <location filename="../gui/PcView.qml" line="850"/>
         <source>Choose where to save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="863"/>
+        <location filename="../gui/PcView.qml" line="851"/>
         <source>Image files (*.jpg *.jpeg *.png *.webp)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="929"/>
+        <location filename="../gui/PcView.qml" line="926"/>
         <source>Image saved to: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="933"/>
+        <location filename="../gui/PcView.qml" line="930"/>
         <source>Save failed: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="941"/>
+        <location filename="../gui/PcView.qml" line="938"/>
         <source>Save result</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="481"/>
+        <location filename="../gui/PcView.qml" line="530"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>이 PC에서 Moonlight의 연결 테스트 서버에 연결할 수 없기 때문에 네트워크 검사를 수행할 수 없습니다. 인터넷 연결을 확인하거나 나중에 다시 시도하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="319"/>
+        <location filename="../gui/PcView.qml" line="374"/>
         <source>PC Status: %1</source>
         <translation>PC 상태: %1</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="319"/>
+        <location filename="../gui/PcView.qml" line="374"/>
         <source>Online</source>
         <translation>온라인</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="319"/>
+        <location filename="../gui/PcView.qml" line="374"/>
         <source>Offline</source>
         <translation>오프라인</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="324"/>
+        <location filename="../gui/PcView.qml" line="379"/>
         <source>View All Apps</source>
         <translation>모든 앱 보기</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="447"/>
+        <location filename="../gui/PcView.qml" line="496"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
         <translation>호스트 PC에 %1을(를) 입력하십시오. 페어링이 완료되면 이 대화 상자가 닫힙니다.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="448"/>
+        <location filename="../gui/PcView.qml" line="497"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
         <translation>호스트 PC에서 Sunshine을 실행 중인 경우 Sunshine 웹 UI로 이동하여 PIN을 입력합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="460"/>
+        <location filename="../gui/PcView.qml" line="509"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
         <translation>&apos;%1&apos;을(를) 제거하시겠습니까?</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="474"/>
+        <location filename="../gui/PcView.qml" line="523"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
         <translation>Moonlight는 필요한 포트가 차단되었는지 확인하기 위해 네트워크 연결을 테스트하고 있습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="501"/>
+        <location filename="../gui/PcView.qml" line="550"/>
         <source>Enter the new name for this PC:</source>
         <translation>이 PC의 새로운 이름 입력:</translation>
     </message>
@@ -2163,27 +2134,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="930"/>
+        <location filename="../main.cpp" line="927"/>
         <source>&amp;Yes</source>
         <translation>예(&amp;Y)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="931"/>
+        <location filename="../main.cpp" line="928"/>
         <source>&amp;No</source>
         <translation>아니요(&amp;N)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="932"/>
+        <location filename="../main.cpp" line="929"/>
         <source>OK</source>
         <translation>확인</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="933"/>
+        <location filename="../main.cpp" line="930"/>
         <source>Help</source>
         <translation>도움말</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="934"/>
+        <location filename="../main.cpp" line="931"/>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
@@ -2194,6 +2165,29 @@
         <location filename="../gui/QuitSegue.qml" line="17"/>
         <source>Quitting %1...</source>
         <translation>%1 종료 중...</translation>
+    </message>
+</context>
+<context>
+    <name>SelectAddressDialog</name>
+    <message>
+        <location filename="../gui/SelectAddressDialog.qml" line="51"/>
+        <source>Select Connection IP</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SelectAddressDialog.qml" line="107"/>
+        <source>Type: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SelectAddressDialog.qml" line="121"/>
+        <source>Warning: This address has not been verified by polling yet.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SelectAddressDialog.qml" line="131"/>
+        <source>&quot;Auto&quot; uses the default address selection with automatic fallback. Selecting a specific IP will pin the connection to that address.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2483,7 +2477,7 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="4061"/>
+        <location filename="../streaming/session.cpp" line="4066"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>비디오 디코더를 초기화 할 수 없습니다. 스트리밍 설정을 확인하고 다시 시도하십시오.</translation>
     </message>
@@ -2491,42 +2485,47 @@
 <context>
     <name>SettingsView</name>
     <message>
-        <location filename="../gui/SettingsView.qml" line="20"/>
+        <location filename="../gui/SettingsView.qml" line="24"/>
         <source>Settings</source>
         <translation>설정</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="32"/>
+        <location filename="../gui/SettingsView.qml" line="36"/>
         <source>Basic Settings</source>
         <translation>기본 설정</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="33"/>
+        <location filename="../gui/SettingsView.qml" line="37"/>
+        <source>Display Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="38"/>
         <source>Audio Settings</source>
         <translation>오디오 설정</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="35"/>
+        <location filename="../gui/SettingsView.qml" line="40"/>
         <source>UI Settings</source>
         <translation>UI 설정</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="36"/>
+        <location filename="../gui/SettingsView.qml" line="41"/>
         <source>Input Settings</source>
         <translation>입력 설정</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="37"/>
+        <location filename="../gui/SettingsView.qml" line="42"/>
         <source>Gamepad Settings</source>
         <translation>게임패드 설정</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="34"/>
+        <location filename="../gui/SettingsView.qml" line="39"/>
         <source>Host Settings</source>
         <translation>호스트 설정</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="38"/>
+        <location filename="../gui/SettingsView.qml" line="43"/>
         <source>Advanced Settings</source>
         <translation>고급 설정</translation>
     </message>
