@@ -95,14 +95,11 @@ void* SdlAudioRenderer::getAudioBuffer(int*)
 
 bool SdlAudioRenderer::submitAudio(int bytesWritten)
 {
-    if (bytesWritten == 0) {
-        // Nothing to do
-        return true;
+    if (SDL_GetAudioDeviceStatus(m_AudioDevice) == SDL_AUDIO_STOPPED) {
+        return false;
     }
 
-    // Don't queue if there's already more than 30 ms of audio data waiting
-    // in Moonlight's audio queue.
-    if (LiGetPendingAudioDuration() > 30) {
+    if (bytesWritten == 0) {
         return true;
     }
 
@@ -116,7 +113,6 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
             return false;
         }
 
-        // Only queue more samples where there is 50 ms or less in SDL's queue
         if (SDL_GetQueuedAudioSize(m_AudioDevice) / m_FrameSize * m_FrameDurationMs <= 50) {
             break;
         }
@@ -124,10 +120,21 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
         SDL_Delay(1);
     }
 
+    if (SDL_GetQueuedAudioSize(m_AudioDevice) / m_FrameSize * m_FrameDurationMs > 50) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL audio queue failed to drain");
+        return false;
+    }
+
+    if (LiGetPendingAudioDuration() > 30) {
+        return true;
+    }
+
     if (SDL_QueueAudio(m_AudioDevice, m_AudioBuffer, bytesWritten) < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to queue audio sample: %s",
                      SDL_GetError());
+        return false;
     }
 
     return true;
