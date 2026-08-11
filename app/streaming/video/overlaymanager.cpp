@@ -203,13 +203,27 @@ SDL_Surface* OverlayManager::RenderStatsPanel(TTF_Font* font, const char* text, 
         return nullptr;
     }
 
+    // The wrapped render surface can be as wide as wrapWidth; measure the widest
+    // actual line so the card hugs the text instead of painting the whole surface.
+    int textW = 0;
+    for (const QString& line : QString(text).split('\n')) {
+        int lineW = 0, lineH = 0;
+        if (!line.isEmpty() && TTF_SizeUTF8(font, line.toUtf8(), &lineW, &lineH) == 0) {
+            textW = qMax(textW, lineW);
+        }
+    }
+    if (textW == 0 || textW > textSurface->w) {
+        textW = textSurface->w;
+    }
+    int textH = textSurface->h;
+
     constexpr int kPadX = 14;
     constexpr int kPadY = 10;
     constexpr int kAccent = 3;   // width of the accent bar on the left edge
     constexpr int kRadius = 9;   // corner radius
 
-    int w = textSurface->w + kAccent + 2 * kPadX;
-    int h = textSurface->h + 2 * kPadY;
+    int w = textW + kAccent + 2 * kPadX;
+    int h = textH + 2 * kPadY;
 
     SDL_Surface* panel = SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_ARGB8888);
     if (panel == nullptr) {
@@ -242,8 +256,9 @@ SDL_Surface* OverlayManager::RenderStatsPanel(TTF_Font* font, const char* text, 
     }
     SDL_UnlockSurface(panel);
 
-    SDL_Rect dst = { kAccent + kPadX, kPadY, textSurface->w, textSurface->h };
-    SDL_BlitSurface(textSurface, nullptr, panel, &dst);
+    SDL_Rect src = { 0, 0, textW, textH };
+    SDL_Rect dst = { kAccent + kPadX, kPadY, textW, textH };
+    SDL_BlitSurface(textSurface, &src, panel, &dst);
     SDL_FreeSurface(textSurface);
 
     return panel;
