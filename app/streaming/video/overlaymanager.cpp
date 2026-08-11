@@ -1,6 +1,8 @@
 #include "overlaymanager.h"
 #include "path.h"
 
+#include <QFile>
+
 using namespace Overlay;
 
 OverlayManager::OverlayManager() :
@@ -9,8 +11,16 @@ OverlayManager::OverlayManager() :
 {
     memset(m_Overlays, 0, sizeof(m_Overlays));
 
-    m_Overlays[OverlayType::OverlayDebug].color = {0xD0, 0xD0, 0x00, 0xFF};
-    m_Overlays[OverlayType::OverlayDebug].fontSize = 20;
+#ifdef Q_OS_WIN32
+    // Prefer a clean system UI font for the stats panel when available
+    QFile segoeFont("C:/Windows/Fonts/segoeui.ttf");
+    if (segoeFont.open(QIODevice::ReadOnly)) {
+        m_DebugFontData = segoeFont.readAll();
+    }
+#endif
+
+    m_Overlays[OverlayType::OverlayDebug].color = {0xF0, 0xF3, 0xF8, 0xFF};
+    m_Overlays[OverlayType::OverlayDebug].fontSize = 17;
 
     m_Overlays[OverlayType::OverlayStatusUpdate].color = {0xCC, 0x00, 0x00, 0xFF};
     m_Overlays[OverlayType::OverlayStatusUpdate].fontSize = 36;
@@ -124,14 +134,18 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
 
     // Construct the required font to render the overlay
     if (m_Overlays[type].font == nullptr) {
-        if (m_FontData.isEmpty()) {
+        // The debug overlay prefers the system UI font when one was loaded
+        QByteArray& fontData = (type == OverlayType::OverlayDebug && !m_DebugFontData.isEmpty()) ?
+                    m_DebugFontData : m_FontData;
+
+        if (fontData.isEmpty()) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL overlay font failed to load");
             return;
         }
 
-        // m_FontData must stay around until the font is closed
-        m_Overlays[type].font = TTF_OpenFontRW(SDL_RWFromConstMem(m_FontData.constData(), m_FontData.size()),
+        // fontData must stay around until the font is closed
+        m_Overlays[type].font = TTF_OpenFontRW(SDL_RWFromConstMem(fontData.constData(), fontData.size()),
                                                1,
                                                m_Overlays[type].fontSize);
         if (m_Overlays[type].font == nullptr) {
@@ -145,17 +159,27 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
     }
 
     // Exchange the old surface with the new one
-    SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicSetPtr(
-        (void**)&m_Overlays[type].surface,
-        m_Overlays[type].enabled ?
+    SDL_Surface* newSurface = nullptr;
+    if (m_Overlays[type].enabled) {
+        if (type == OverlayType::OverlayDebug) {
+            // The stats overlay renders as a compact panel instead of outlined text
+            newSurface = RenderStatsPanel(m_Overlays[type].font,
+                                          m_Overlays[type].text,
+                                          m_Overlays[type].color,
+                                          1024);
+        }
+        else {
             // The _Wrapped variant is required for line breaks to work
-            RenderTextOutlinedWrapped(m_Overlays[type].font,
-                                      m_Overlays[type].text,
-                                      m_Overlays[type].color,
-                                      {0, 0, 0, 255},
-                                      4,
-                                      1024)
-            : nullptr);
+            newSurface = RenderTextOutlinedWrapped(m_Overlays[type].font,
+                                                   m_Overlays[type].text,
+                                                   m_Overlays[type].color,
+                                                   {0, 0, 0, 255},
+                                                   4,
+                                                   1024);
+        }
+    }
+    SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicSetPtr(
+        (void**)&m_Overlays[type].surface, newSurface);
 
     // Notify the renderer
     m_Renderer->notifyOverlayUpdated(type);
@@ -164,6 +188,65 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
     if (oldSurface != nullptr) {
         SDL_FreeSurface(oldSurface);
     }
+}
+
+// Render overlay text as a compact panel: translucent dark card with rounded
+// corners and an accent bar, in the style of typical performance HUDs.
+SDL_Surface* OverlayManager::RenderStatsPanel(TTF_Font* font, const char* text, SDL_Color textColor, int wrapWidth)
+{
+    if (text == nullptr || text[0] == '\0') {
+        return nullptr;
+    }
+
+    SDL_Surface* textSurface = TTF_RenderUTF8_Blended_Wrapped(font, text, textColor, wrapWidth);
+    if (textSurface == nullptr) {
+        return nullptr;
+    }
+
+    constexpr int kPadX = 14;
+    constexpr int kPadY = 10;
+    constexpr int kAccent = 3;   // width of the accent bar on the left edge
+    constexpr int kRadius = 9;   // corner radius
+
+    int w = textSurface->w + kAccent + 2 * kPadX;
+    int h = textSurface->h + 2 * kPadY;
+
+    SDL_Surface* panel = SDL_CreateRGBSurfaceWithFormat(0, w, h, 32, SDL_PIXELFORMAT_ARGB8888);
+    if (panel == nullptr) {
+        SDL_FreeSurface(textSurface);
+        return nullptr;
+    }
+
+    // Card background
+    SDL_FillRect(panel, nullptr, SDL_MapRGBA(panel->format, 0x0C, 0x0E, 0x14, 0xD0));
+
+    // Accent bar (left edge)
+    SDL_Rect accentRect = { 0, 0, kAccent, h };
+    SDL_FillRect(panel, &accentRect, SDL_MapRGBA(panel->format, 0x10, 0x89, 0x3E, 0xFF));
+
+    // Round the corners by clearing pixels outside each corner's arc
+    SDL_LockSurface(panel);
+    Uint32* pixels = (Uint32*)panel->pixels;
+    int pitch = panel->pitch / 4;
+    for (int cy = 0; cy < kRadius; cy++) {
+        for (int cx = 0; cx < kRadius; cx++) {
+            int dx = kRadius - 1 - cx;
+            int dy = kRadius - 1 - cy;
+            if (dx * dx + dy * dy > kRadius * kRadius) {
+                pixels[cy * pitch + cx] = 0;                          // top-left
+                pixels[cy * pitch + (w - 1 - cx)] = 0;                // top-right
+                pixels[(h - 1 - cy) * pitch + cx] = 0;                // bottom-left
+                pixels[(h - 1 - cy) * pitch + (w - 1 - cx)] = 0;      // bottom-right
+            }
+        }
+    }
+    SDL_UnlockSurface(panel);
+
+    SDL_Rect dst = { kAccent + kPadX, kPadY, textSurface->w, textSurface->h };
+    SDL_BlitSurface(textSurface, nullptr, panel, &dst);
+    SDL_FreeSurface(textSurface);
+
+    return panel;
 }
 
 SDL_Surface* OverlayManager::RenderTextOutlinedWrapped(TTF_Font* font, const char* text, SDL_Color textColor, SDL_Color outlineColor, int outlineWidth, int wrapWidth) {
