@@ -17,13 +17,17 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
+    # 跟 build.yml 的 Windows job 保持一致：发布版 aqtinstall 解析不了 Qt 6.11.1 的
+    # 仓库 XML（Failed to locate XML data for Qt version '6.11.1'），必须走 naqt。
     - name: Install Qt
-      uses: jurplel/install-qt-action@v4
+      uses: jdpurcell/install-qt-action@v5
       with:
+        arch: win64_msvc2022_64
+        host: windows
+        target: desktop
         version: '6.11.1'
-        arch: 'win64_msvc2022_64'
         modules: 'qtmultimedia'
-        cache: true
+        use-naqt: true
 
     - name: Get version
       shell: cmd
