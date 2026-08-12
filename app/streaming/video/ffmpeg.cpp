@@ -152,6 +152,15 @@ int FFmpegVideoDecoder::getDecoderCapabilities()
     // our operation.
     capabilities |= CAPABILITY_PULL_RENDERER;
 
+    // moonlight-common-c strips HEVC prefix SEI by default, because renderers that
+    // hand raw NALUs to a platform decoder have historically choked on NALUs
+    // arriving ahead of VPS/SPS/PPS. Every decoder this class can select consumes
+    // an FFmpeg AVPacket instead, and FFmpeg's HEVC parser is happy to skip SEI it
+    // does not understand, so we can opt back in. Keeping the SEI is what lets
+    // FFmpeg surface registered ITU-T T.35 payloads (HDR10+ among them) as frame
+    // side data.
+    capabilities |= CAPABILITY_PRESERVE_HEVC_SEI;
+
     return capabilities;
 }
 
