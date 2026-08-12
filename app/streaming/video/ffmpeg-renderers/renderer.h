@@ -155,6 +155,23 @@ public:
         VTMetal,
     };
 
+    // What the renderer is currently deriving its HDR tone mapping from.
+    //
+    // Purely diagnostic: it drives the performance overlay and the HDR10+ log
+    // message, so a user can tell "the host never sent dynamic metadata" apart
+    // from "it arrived and nothing used it".
+    //
+    // NB: Don't name an enumerator None here. X11's X.h defines None as a macro,
+    // and ffmpeg.cpp reaches it through vaapi.h -> va_x11.h -> Xlib.h before this
+    // header, so the qualified name expands to ToneMappingSource::0L on Linux.
+    enum class ToneMappingSource {
+        Unsupported,  // this renderer never tone maps HDR itself
+        Sdr,          // it does, but the current frame isn't HDR
+        Static,       // HDR10 static mastering metadata only
+        PeakDetect,   // per-frame peak detection
+        Hdr10Plus,    // ST 2094-40 dynamic metadata
+    };
+
     IFFmpegRenderer(RendererType type) : m_Type(type) {}
 
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
@@ -184,6 +201,11 @@ public:
 
     virtual InitFailureReason getInitFailureReason() {
         return m_InitFailureReason;
+    }
+
+    virtual ToneMappingSource getActiveToneMappingSource() {
+        // Renderers that don't tone map HDR themselves don't have an answer here
+        return ToneMappingSource::Unsupported;
     }
 
     // Called for threaded renderers to allow them to wait prior to us latching

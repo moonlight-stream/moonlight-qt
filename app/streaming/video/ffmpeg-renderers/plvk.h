@@ -2,6 +2,8 @@
 
 #include "renderer.h"
 
+#include <atomic>
+
 #ifdef Q_OS_WIN32
 #define VK_USE_PLATFORM_WIN32_KHR
 #endif
@@ -53,6 +55,7 @@ public:
     virtual int getDecoderCapabilities() override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
     virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
+    virtual ToneMappingSource getActiveToneMappingSource() override;
 
 private:
     static void lockQueue(AVHWDeviceContext *dev_ctx, uint32_t queue_family, uint32_t index);
@@ -105,6 +108,14 @@ private:
     pl_renderer m_Renderer = nullptr;
     pl_tex m_Textures[PL_MAX_PLANES] = {};
     pl_color_space m_LastColorspace = {};
+
+    // What the last rendered frame actually tone mapped against. Written on the render
+    // thread in renderFrame(), read on the receive thread by the stats overlay and the
+    // HDR10+ log, so it has to be atomic. Purely diagnostic, hence relaxed ordering.
+    //
+    // Starts at Sdr rather than Unsupported: once plvk is the frontend renderer it is
+    // a renderer that tone maps, even before the first frame goes through.
+    std::atomic<ToneMappingSource> m_ToneMappingSource { ToneMappingSource::Sdr };
 
 #ifdef PLVK_USE_EARLY_RENDER_TO_WAIT
     pl_overlay m_EmptyOverlay = {};

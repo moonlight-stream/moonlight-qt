@@ -813,10 +813,32 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     dst.renderedFps     = (double)dst.renderedFrames / timeDiffSecs;
 }
 
+// The dynamic range slot of the codec string in the performance overlay.
+//
+// "HDR10+" means the frontend renderer is actually tone mapping against ST 2094-40
+// this frame, not merely that the bitstream carried it: a renderer that ignores the
+// metadata, or a payload libplacebo couldn't map, both stay at "HDR".
+const char* FFmpegVideoDecoder::dynamicRangeLabel()
+{
+    if (!LiGetCurrentHostDisplayHdrMode()) {
+        return "SDR";
+    }
+
+    // NB: logVideoStats() runs during cleanup, after the renderers have been deleted
+    // and nulled, so this can legitimately be called with no renderer at all.
+    if (m_FrontendRenderer != nullptr &&
+            m_FrontendRenderer->getActiveToneMappingSource() == IFFmpegRenderer::ToneMappingSource::Hdr10Plus) {
+        return "HDR10+";
+    }
+
+    return "HDR";
+}
+
 void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS &stats, char *output, int length)
 {
     int offset = 0;
     const char *codecString;
+    char codecStringBuffer[32];
     int ret;
 
     // Start with an empty string
@@ -841,25 +863,13 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS &stats, char *output, i
         break;
 
     case VIDEO_FORMAT_H265_MAIN10:
-        if (LiGetCurrentHostDisplayHdrMode())
-        {
-            codecString = "HEVC 10-bit HDR";
-        }
-        else
-        {
-            codecString = "HEVC 10-bit SDR";
-        }
+        snprintf(codecStringBuffer, sizeof(codecStringBuffer), "HEVC 10-bit %s", dynamicRangeLabel());
+        codecString = codecStringBuffer;
         break;
 
     case VIDEO_FORMAT_H265_REXT10_444:
-        if (LiGetCurrentHostDisplayHdrMode())
-        {
-            codecString = "HEVC 10-bit HDR 4:4:4";
-        }
-        else
-        {
-            codecString = "HEVC 10-bit SDR 4:4:4";
-        }
+        snprintf(codecStringBuffer, sizeof(codecStringBuffer), "HEVC 10-bit %s 4:4:4", dynamicRangeLabel());
+        codecString = codecStringBuffer;
         break;
 
     case VIDEO_FORMAT_AV1_MAIN8:
@@ -871,25 +881,13 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS &stats, char *output, i
         break;
 
     case VIDEO_FORMAT_AV1_MAIN10:
-        if (LiGetCurrentHostDisplayHdrMode())
-        {
-            codecString = "AV1 10-bit HDR";
-        }
-        else
-        {
-            codecString = "AV1 10-bit SDR";
-        }
+        snprintf(codecStringBuffer, sizeof(codecStringBuffer), "AV1 10-bit %s", dynamicRangeLabel());
+        codecString = codecStringBuffer;
         break;
 
     case VIDEO_FORMAT_AV1_HIGH10_444:
-        if (LiGetCurrentHostDisplayHdrMode())
-        {
-            codecString = "AV1 10-bit HDR 4:4:4";
-        }
-        else
-        {
-            codecString = "AV1 10-bit SDR 4:4:4";
-        }
+        snprintf(codecStringBuffer, sizeof(codecStringBuffer), "AV1 10-bit %s 4:4:4", dynamicRangeLabel());
+        codecString = codecStringBuffer;
         break;
 
     default:
@@ -1922,12 +1920,19 @@ void FFmpegVideoDecoder::decoderThreadProc()
                     // Log the first frame that carries ST 2094-40, so a user reporting
                     // "HDR10+ does nothing" can be told apart from a host that never sent
                     // any. Once per session is enough; this is the decoder hot path.
+                    //
+                    // Also say whether anything downstream will use it: a renderer that
+                    // reports Unsupported never tone maps HDR itself, so the metadata
+                    // arriving is not the same as the metadata mattering.
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 25, 100)
                     if (!m_LoggedHdr10PlusMetadata &&
                             av_frame_get_side_data(frame, AV_FRAME_DATA_DYNAMIC_HDR_PLUS) != nullptr) {
+                        bool rendererUsesIt = m_FrontendRenderer != nullptr &&
+                                m_FrontendRenderer->getActiveToneMappingSource() != IFFmpegRenderer::ToneMappingSource::Unsupported;
                         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Received HDR10+ dynamic metadata from the %s bitstream",
-                                    (m_VideoFormat & VIDEO_FORMAT_MASK_AV1) ? "AV1" : "HEVC");
+                                    "Received HDR10+ dynamic metadata from the %s bitstream%s",
+                                    (m_VideoFormat & VIDEO_FORMAT_MASK_AV1) ? "AV1" : "HEVC",
+                                    rendererUsesIt ? "" : " (ignored: the current renderer does not tone map HDR)");
                         m_LoggedHdr10PlusMetadata = true;
                     }
 #endif

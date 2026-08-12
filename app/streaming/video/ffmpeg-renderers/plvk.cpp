@@ -1112,12 +1112,19 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         // HDR10PLUS there would tone map against nothing at all.
         colorMapParams.metadata = PL_HDR_METADATA_HDR10PLUS;
         renderParams.color_map_params = &colorMapParams;
+        m_ToneMappingSource.store(ToneMappingSource::Hdr10Plus, std::memory_order_relaxed);
     }
     else if (pl_color_transfer_is_hdr(mappedFrame.color.transfer)) {
         // No usable dynamic metadata. Measure the frame ourselves instead. libplacebo
         // needs compute shaders for this and silently skips it where they are
         // unavailable, which just leaves us at the previous behavior.
         renderParams.peak_detect_params = &pl_peak_detect_default_params;
+        m_ToneMappingSource.store(m_Vulkan->gpu->glsl.compute ? ToneMappingSource::PeakDetect
+                                                              : ToneMappingSource::Static,
+                                  std::memory_order_relaxed);
+    }
+    else {
+        m_ToneMappingSource.store(ToneMappingSource::Sdr, std::memory_order_relaxed);
     }
 
     // Render the video image and overlays into the swapchain buffer
@@ -1414,4 +1421,9 @@ AVPixelFormat PlVkRenderer::getPreferredPixelFormat(int videoFormat)
     else {
         return AV_PIX_FMT_VULKAN;
     }
+}
+
+IFFmpegRenderer::ToneMappingSource PlVkRenderer::getActiveToneMappingSource()
+{
+    return m_ToneMappingSource.load(std::memory_order_relaxed);
 }

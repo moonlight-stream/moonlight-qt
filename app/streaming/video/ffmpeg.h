@@ -52,6 +52,7 @@ private:
                                 bool useAlternateFrontend);
 
     void stringifyVideoStats(VIDEO_STATS& stats, char* output, int length);
+    const char* dynamicRangeLabel();
 
     void logVideoStats(VIDEO_STATS& stats, const char* title);
 
