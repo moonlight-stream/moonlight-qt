@@ -40,6 +40,7 @@
 #define SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS 105
 #define SDL_CODE_FLUSH_TOUCHPAD_FRAME 106
 #define SDL_CODE_CURSOR_UPDATE 107
+#define SDL_CODE_FLUSH_CURSOR_VISIBILITY 108
 
 #include <openssl/rand.h>
 
@@ -409,6 +410,16 @@ bool Session::queueTouchpadFrameFlush()
     SDL_Event flushEvent = {};
     flushEvent.type = SDL_USEREVENT;
     flushEvent.user.code = SDL_CODE_FLUSH_TOUCHPAD_FRAME;
+    return SDL_PushEvent(&flushEvent) > 0;
+}
+
+bool Session::queueCursorVisibilityFlush()
+{
+    // Called from SDL's timer thread. Cursor APIs must run on the main thread on
+    // macOS, so bounce back through the event loop.
+    SDL_Event flushEvent = {};
+    flushEvent.type = SDL_USEREVENT;
+    flushEvent.user.code = SDL_CODE_FLUSH_CURSOR_VISIBILITY;
     return SDL_PushEvent(&flushEvent) > 0;
 }
 
@@ -3845,6 +3856,11 @@ void Session::exec()
                 break;
             case SDL_CODE_FLUSH_TOUCHPAD_FRAME:
                 m_InputHandler->flushPendingTouchpadFrameEvent();
+                break;
+            case SDL_CODE_FLUSH_CURSOR_VISIBILITY:
+                if (m_InputHandler != nullptr) {
+                    m_InputHandler->flushPendingRemoteCursorHide();
+                }
                 break;
             case SDL_CODE_CURSOR_UPDATE:
             {

@@ -2,6 +2,7 @@
 
 #include "settings/streamingpreferences.h"
 #include "backend/computermanager.h"
+#include "cursorshapeclassifier.h"
 
 #include "SDL_compat.h"
 
@@ -90,6 +91,12 @@ struct DualSenseOutputReport{
 
 #define TOUCHPAD_SCROLL_SUPPRESSION_TIMEOUT_MS 500
 
+// 主机（至少 Sunshine + DXGI 桌面复制）会把"光标可见"这一位翻来翻去：实测每秒五到
+// 十次成对的 hidden → shown，形状和 shapeId 都没变。照做就是肉眼可见的闪烁。所以隐藏
+// 要等它稳定这么久才生效，显示立即生效 —— 真正的隐藏（游戏自己藏光标）会一直保持，
+// 只是晚这么点生效，看不出来；而成对的抖动会被整段吞掉。
+#define REMOTE_CURSOR_HIDE_DEBOUNCE_MS 150
+
 #ifdef HAVE_MACOS_NATIVE_TOUCHPAD
 // macOS reports trackpad contacts and promoted mouse clicks through separate
 // SDL event paths. Keep the click correlation window deliberately short to
@@ -168,6 +175,9 @@ public:
 
     void flushPendingTouchpadFrameEvent();
 
+    // 去抖窗口到期，把主机要求的隐藏落实下去
+    void flushPendingRemoteCursorHide();
+
     int getAttachedGamepadMask();
 
     void raiseAllKeys(bool clearKeys = true);
@@ -234,7 +244,6 @@ public:
 private:
     qreal getRemoteCursorScale() const;
 
-
     GamepadState*
     findStateForGamepad(SDL_JoystickID id);
 
@@ -269,6 +278,18 @@ private:
     void applyCapturedCursorState();
 
     void resetRemoteCursor();
+
+    // 换上新的远端光标并接手它的所有权，顺带放掉旧的那只
+    void installRemoteCursor(SDL_Cursor* cursor);
+
+    // 认位图里的标准形状，认出来就换成本机的系统光标。返回 false 表示没认出来，
+    // 调用方该回退去画主机位图。
+    bool tryUseNativeRemoteCursor(const RemoteCursorUpdate& update);
+
+    // 应用主机推来的显隐状态：显示立即生效，隐藏要等去抖窗口坐实。
+    void updateRemoteCursorVisibility(bool visible);
+
+    void cancelPendingRemoteCursorHide();
 
     struct NativeTouchpadContact {
         uint8_t eventType;
@@ -328,6 +349,9 @@ private:
     static
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
+    static
+    Uint32 remoteCursorHideTimerCallback(Uint32 interval, void* param);
+
     SDL_Window* m_Window;
     bool m_MultiController;
     bool m_GamepadMouse;
@@ -356,10 +380,16 @@ private:
     std::atomic<int> m_LocalCursorMode;
     bool m_RemoteCursorVisible;
     SDL_Cursor* m_RemoteCursor;
-    // 最后一份成功建出光标的形状，以及当时用的 backing 比例
+    // 上一次的识别结果。用来挡掉"主机重复推同一形状"时的无谓重建，也用来只在结果
+    // 变化时打一次未识别的度量日志。
+    NativeCursorShape m_LastCursorClass;
+    // 最后一份成功建出光标的位图形状，以及当时用的 backing 比例。换成系统光标时会
+    // 清掉 m_HasLastCursorShape —— 系统光标不受 backing 比例影响，不需要重建。
     RemoteCursorUpdate m_LastCursorShape;
     bool m_HasLastCursorShape;
     qreal m_RemoteCursorScale;
+    // 隐藏的去抖定时器。见 updateRemoteCursorVisibility()。
+    SDL_TimerID m_RemoteCursorHideTimer;
 
     struct {
         KeyCombo keyCombo;

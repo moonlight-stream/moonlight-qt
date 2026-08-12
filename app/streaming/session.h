@@ -209,6 +209,9 @@ private:
     static
     bool queueTouchpadFrameFlush();
 
+    static
+    bool queueCursorVisibilityFlush();
+
     void updateOptimalWindowDisplayMode();
 
     enum class DecoderAvailability {

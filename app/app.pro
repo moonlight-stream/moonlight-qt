@@ -214,6 +214,7 @@ SOURCES += \
     settings/mappingfetcher.cpp \
     settings/streamingpreferences.cpp \
     streaming/input/abstouch.cpp \
+    streaming/input/cursorshapeclassifier.cpp \
     streaming/input/gamepad.cpp \
     streaming/input/input.cpp \
     streaming/input/keyboard.cpp \
@@ -270,6 +271,7 @@ HEADERS += \
     cli/quitstream.h \
     cli/startstream.h \
     settings/streamingpreferences.h \
+    streaming/input/cursorshapeclassifier.h \
     streaming/input/input.h \
     streaming/session.h \
     streaming/filemappingclient.h \
