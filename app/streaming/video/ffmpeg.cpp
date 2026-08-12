@@ -1,5 +1,6 @@
 #include <Limelight.h>
 #include "ffmpeg.h"
+#include "av1obu.h"
 #include "utils.h"
 #include "streaming/session.h"
 #include "streaming/network/bandwidth.h"
@@ -243,6 +244,7 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_StreamFps(0),
       m_VideoFormat(0),
       m_NeedsSpsFixup(false),
+      m_NeedsAv1ObuRepack(false),
       m_LoggedHdr10PlusMetadata(false),
       m_TestOnly(testOnly),
       m_CurrentTestMode(TestMode::TestFrameOnly),
@@ -732,6 +734,20 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
         }
         else {
             m_NeedsSpsFixup = false;
+        }
+
+        // macOS VideoToolbox fails every frame with kVTVideoDecoderMalfunctionErr
+        // when NVENC splits an AV1 frame into OBU_FRAME_HEADER + OBU_TILE_GROUP,
+        // which it does for HDR (but not SDR). Merge them back into an OBU_FRAME
+        // before handing the packet to the decoder.
+        if ((params->videoFormat & VIDEO_FORMAT_MASK_AV1) && m_HwDecodeCfg != nullptr &&
+                m_HwDecodeCfg->device_type == AV_HWDEVICE_TYPE_VIDEOTOOLBOX) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using AV1 OBU repack for VideoToolbox");
+            m_NeedsAv1ObuRepack = true;
+        }
+        else {
+            m_NeedsAv1ObuRepack = false;
         }
 
         // Tell overlay manager to use this frontend renderer
@@ -2220,6 +2236,10 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     while (entry != nullptr) {
         writeBuffer(entry, offset);
         entry = entry->next;
+    }
+
+    if (m_NeedsAv1ObuRepack) {
+        offset = repackAv1TemporalUnit(reinterpret_cast<uint8_t*>(m_DecodeBuffer.data()), offset);
     }
 
     m_Pkt->data = reinterpret_cast<uint8_t*>(m_DecodeBuffer.data());
