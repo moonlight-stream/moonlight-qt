@@ -974,22 +974,35 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         return;
     }
 
-    // Adjust the swapchain if the colorspace of incoming frames has changed
-    if (!pl_color_space_equal(&mappedFrame.color, &m_LastColorspace)) {
-        m_LastColorspace = mappedFrame.color;
-        SDL_assert(pl_color_space_equal(&mappedFrame.color, &m_LastColorspace));
+    // Adjust the swapchain if the colorspace of incoming frames has changed.
+    //
+    // Only the primaries, transfer function, and static mastering luminance matter to
+    // the swapchain. pl_color_space_equal() also compares the dynamic sections of the
+    // HDR metadata, and HDR10+ moves scene_max/scene_avg on nearly every frame, so
+    // comparing the frame colorspace verbatim would re-hint the swapchain continuously
+    // once dynamic metadata starts arriving. Strip the dynamic sections first.
+    pl_color_space hintColorspace = mappedFrame.color;
+    hintColorspace.hdr = {};
+    hintColorspace.hdr.prim = mappedFrame.color.hdr.prim;
+    hintColorspace.hdr.min_luma = mappedFrame.color.hdr.min_luma;
+    hintColorspace.hdr.max_luma = mappedFrame.color.hdr.max_luma;
+    hintColorspace.hdr.max_cll = mappedFrame.color.hdr.max_cll;
+    hintColorspace.hdr.max_fall = mappedFrame.color.hdr.max_fall;
+
+    if (!pl_color_space_equal(&hintColorspace, &m_LastColorspace)) {
+        m_LastColorspace = hintColorspace;
 
 #ifdef Q_OS_DARWIN
         // There is a gamma mismatch on macOS between what libplacebo thinks BT.709
         // should use and what the Metal layer actually displays. Use sRGB for the
         // swapchain when the incoming frames are BT.709 as a workaround.
-        if (pl_color_space_equal(&mappedFrame.color, &pl_color_space_bt709)) {
+        if (pl_color_space_equal(&hintColorspace, &pl_color_space_bt709)) {
             pl_swapchain_colorspace_hint(m_Swapchain, &pl_color_space_srgb);
         }
         else
 #endif
         {
-            pl_swapchain_colorspace_hint(m_Swapchain, &mappedFrame.color);
+            pl_swapchain_colorspace_hint(m_Swapchain, &hintColorspace);
         }
     }
 
@@ -1080,10 +1093,37 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     beginRenderTiming();
 #endif
 
+    // Pick the tone mapping data source for this frame.
+    //
+    // pl_render_fast_params leaves peak_detect_params NULL, so out of the box an HDR
+    // stream is tone mapped purely against the static mastering metadata — numbers that
+    // describe the mastering display, not the picture. ST 2094-40 replaces that with
+    // real per-frame content statistics when the host sends them, and frame-by-frame
+    // peak detection approximates the same thing when it doesn't.
+    pl_render_params renderParams = pl_render_fast_params;
+    pl_color_map_params colorMapParams = *renderParams.color_map_params;
+
+    if (pl_hdr_metadata_contains(&mappedFrame.color.hdr, PL_HDR_METADATA_HDR10PLUS)) {
+        // Ask for ST 2094-40 by name. PL_HDR_METADATA_ANY would normally prefer it as
+        // well, but being explicit keeps static mastering data from winning when the
+        // bitstream carries both. Note the gate is on what libplacebo actually mapped,
+        // not on the mere presence of side data: an incomplete or unmappable payload
+        // (application_version >= 2, say) leaves the fields zeroed, and forcing
+        // HDR10PLUS there would tone map against nothing at all.
+        colorMapParams.metadata = PL_HDR_METADATA_HDR10PLUS;
+        renderParams.color_map_params = &colorMapParams;
+    }
+    else if (pl_color_transfer_is_hdr(mappedFrame.color.transfer)) {
+        // No usable dynamic metadata. Measure the frame ourselves instead. libplacebo
+        // needs compute shaders for this and silently skips it where they are
+        // unavailable, which just leaves us at the previous behavior.
+        renderParams.peak_detect_params = &pl_peak_detect_default_params;
+    }
+
     // Render the video image and overlays into the swapchain buffer
     targetFrame.num_overlays = (int)overlays.size();
     targetFrame.overlays = overlays.data();
-    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &pl_render_fast_params)) {
+    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &renderParams)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_render_image() failed");
         // NB: We must fallthrough to call pl_swapchain_submit_frame()

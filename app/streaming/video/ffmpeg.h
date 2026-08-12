@@ -129,6 +129,7 @@ private:
     int m_OriginalVideoHeight;
     int m_VideoFormat;
     bool m_NeedsSpsFixup;
+    bool m_LoggedHdr10PlusMetadata;
     bool m_TestOnly;
     TestMode m_CurrentTestMode;
     SDL_Thread* m_DecoderThread;
