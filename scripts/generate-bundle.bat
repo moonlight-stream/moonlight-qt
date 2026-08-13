@@ -73,9 +73,15 @@ cmd /c "set VERSION= && msbuild -Restore %SOURCE_ROOT%\wix\MoonlightSetup\Moonli
 if !ERRORLEVEL! NEQ 0 goto Error
 
 rem Rename the installer to match the publishing convention
-ren %INSTALLER_FOLDER%\MoonlightSetup.exe MoonlightSetup-%VERSION%.exe
+ren %INSTALLER_FOLDER%\MoonlightSetup.exe Moonlight-VPlus-Setup-%VERSION%.exe
+if !ERRORLEVEL! NEQ 0 goto Error
 
-echo Build successful for Moonlight v%VERSION% installer!
+rem Keep one legacy-named alias so installed pre-rebrand clients can find the
+rem first Moonlight V+ release asset.
+copy /Y %INSTALLER_FOLDER%\Moonlight-VPlus-Setup-%VERSION%.exe %INSTALLER_FOLDER%\MoonlightSetup-%VERSION%.exe
+if !ERRORLEVEL! NEQ 0 goto Error
+
+echo Build successful for Moonlight V+ for PC v%VERSION% installer!
 exit /b 0
 
 :Error

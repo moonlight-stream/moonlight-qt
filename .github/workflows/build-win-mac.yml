@@ -104,7 +104,7 @@ jobs:
         uses: actions/upload-artifact@v6
         if: runner.os == 'Windows'
         with:
-          name: Moonlight-${{ runner.os }}-x64-${{ env.CI_VERSION }}
+          name: Moonlight-VPlus-${{ runner.os }}-x64-${{ env.CI_VERSION }}
           path: build/deploy-x64-release/*
           if-no-files-found: error
 
@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v6
         if: runner.os == 'Windows'
         with:
-          name: Moonlight-${{ runner.os }}-arm64-${{ env.CI_VERSION }}
+          name: Moonlight-VPlus-${{ runner.os }}-arm64-${{ env.CI_VERSION }}
           path: build/deploy-arm64-release/*
           if-no-files-found: error
 
@@ -120,7 +120,7 @@ jobs:
         uses: actions/upload-artifact@v6
         if: runner.os == 'macOS'
         with:
-          name: Moonlight-${{ runner.os }}-${{ env.CI_VERSION }}
+          name: Moonlight-VPlus-${{ runner.os }}-${{ env.CI_VERSION }}
           path: build/installer-Release/*.dmg
           compression-level: 0
           if-no-files-found: error

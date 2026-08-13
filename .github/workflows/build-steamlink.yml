@@ -10,7 +10,7 @@ on:
     inputs:
       ci_version:
         required: false
-        default: manual
+        default: ''
         type: string
   workflow_call:
     inputs:
@@ -38,12 +38,27 @@ jobs:
           path: steamlink-sdk
           fetch-depth: 1
 
+      - name: Resolve artifact version
+        shell: bash
+        env:
+          INPUT_CI_VERSION: ${{ inputs.ci_version }}
+        run: |
+          version="$INPUT_CI_VERSION"
+          if [[ -z "$version" ]]; then
+            version=$(python3 scripts/derive-version.py --field artifact)
+          fi
+          if [[ ! "$version" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "::error::ci_version contains characters that are unsafe in an artifact name"
+            exit 1
+          fi
+          echo "CI_VERSION=$version" >> "$GITHUB_ENV"
+
       - name: Build binaries
         run: STEAMLINK_SDK_PATH=$PWD/steamlink-sdk scripts/build-steamlink-app.sh
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v6
         with:
-          name: Moonlight-SteamLink-${{ env.CI_VERSION }}
-          path: build/deploy-release/*
+          name: Moonlight-VPlus-SteamLink-${{ env.CI_VERSION }}
+          path: build/installer-release/Moonlight-VPlus-SteamLink-*.zip
           if-no-files-found: error

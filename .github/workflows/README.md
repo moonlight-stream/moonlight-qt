@@ -14,14 +14,17 @@
 **支持平台：**
 - Windows (x64/ARM64) - 使用 Qt 6.11.1
 - macOS - 使用 Qt 6.11.1
-- Linux (x86_64) - 使用 Qt 6.11.1
+- Linux (x86_64 / aarch64) - 使用 Qt 6.11.1
 - SteamLink - 交叉编译
 
 **构建产物：**
-- Windows: `MoonlightPortable-{arch}-r{build_number}.zip`
-- macOS: `Moonlight-r{build_number}.dmg`
-- Linux: `Moonlight-r{build_number}-x86_64.AppImage`
-- SteamLink: `Moonlight-SteamLink-r{build_number}.zip`
+- Windows: `Moonlight-VPlus-Portable-{arch}-r{build_number}.zip`
+- macOS: `Moonlight-VPlus-r{build_number}.dmg`
+- Linux: `Moonlight-VPlus-r{build_number}-{arch}.AppImage`
+- SteamLink: `Moonlight-VPlus-SteamLink-r{build_number}.zip`
+
+首个 V+ 品牌版本还会同时发布 `MoonlightPortable-*` 和 `MoonlightSetup-*`
+兼容别名，保证旧版 Windows 客户端能完成跨品牌升级。
 
 ## 平台特定配置
 

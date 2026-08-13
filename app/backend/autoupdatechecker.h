@@ -33,7 +33,7 @@ private:
     bool isPortableInstall() const;
     QString getExpectedAssetPrefix() const;
     QString getExpectedAssetSuffix() const;
-    // 同一个后缀里再优先挑本机架构的那个资产（macOS 的 DMG 带 -arm64 / -x86_64）
+    // 同一个后缀里再优先挑本机架构的资产（macOS DMG 和 Linux AppImage）。
     QString getPreferredAssetSuffix() const;
     QString getCurrentBuildArch() const;
 

@@ -1,27 +1,27 @@
-# Moonlight PC - Foundation 客户端 fork
+# Moonlight V+ for PC
 
 [English](README.en.md)
 
 [![Build](https://img.shields.io/github/actions/workflow/status/qiin2333/moonlight-qt/build.yml?branch=master)](https://github.com/qiin2333/moonlight-qt/actions/workflows/build.yml?query=branch%3Amaster)
 [![Downloads](https://img.shields.io/github/downloads/qiin2333/moonlight-qt/total)](https://github.com/qiin2333/moonlight-qt/releases)
 
-这是基于 [moonlight-stream/moonlight-qt](https://github.com/moonlight-stream/moonlight-qt) 维护的下游客户端 fork，面向搭配 [Foundation Sunshine](https://github.com/qiin2333/Sunshine) 使用的桌面串流场景。
+Moonlight V+ for PC 是基于 [moonlight-stream/moonlight-qt](https://github.com/moonlight-stream/moonlight-qt) 维护的增强版桌面客户端，面向搭配 [Foundation Sunshine](https://github.com/qiin2333/Sunshine) 使用的桌面串流场景。
 
-本项目继续兼容上游 Moonlight / 标准 Sunshine，同时进一步完善 Foundation Sunshine 的客户端体验：能力协商更明确，画质与性能控制更细，串流中的常用操作效率更高。
+它继续兼容上游 Moonlight / 标准 Sunshine，同时进一步完善 Foundation Sunshine 的客户端体验：能力协商更明确，画质与性能控制更细，串流中的常用操作效率更高。
 
 ## 下载
 
-推荐从本 fork 的 [GitHub Releases](https://github.com/qiin2333/moonlight-qt/releases) 下载 Windows、macOS、Linux AppImage 和 Steam Link 构建产物。
+推荐从 [GitHub Releases](https://github.com/qiin2333/moonlight-qt/releases) 下载 Windows、macOS、Linux AppImage 和 Steam Link 构建产物。
 
-> **macOS 目前只提供 Apple Silicon（arm64）构建**，资产名形如 `Moonlight-<版本>-arm64.dmg`。Intel Mac 需要自行按下面「从源码构建」的步骤编译。
+> **macOS 目前只提供 Apple Silicon（arm64）构建**，资产名形如 `Moonlight-VPlus-<版本>-arm64.dmg`。Intel Mac 需要自行按下面「从源码构建」的步骤编译。
 >
-> **Linux AppImage 提供 x86_64 和 aarch64 两份**，资产名形如 `Moonlight-<版本>-x86_64.AppImage` / `Moonlight-<版本>-aarch64.AppImage`。x86_64 在 Ubuntu 22.04 上构建（glibc >= 2.35），aarch64 在 Ubuntu 24.04 上构建（glibc >= 2.39，因此 Debian 12 / Raspberry Pi OS bookworm 用不了，需要 trixie 或更新）。
+> **Linux AppImage 提供 x86_64 和 aarch64 两份**，资产名形如 `Moonlight-VPlus-<版本>-x86_64.AppImage` / `Moonlight-VPlus-<版本>-aarch64.AppImage`。x86_64 在 Ubuntu 22.04 上构建（glibc >= 2.35），aarch64 在 Ubuntu 24.04 上构建（glibc >= 2.39，因此 Debian 12 / Raspberry Pi OS bookworm 用不了，需要 trixie 或更新）。
 
-如果你需要上游 Moonlight 的官方发行渠道、移动端客户端、Flatpak、Snap 或发行版软件源，请参考 [Moonlight 官方网站](https://moonlight-stream.org) 和 [上游仓库](https://github.com/moonlight-stream/moonlight-qt)。这些渠道不一定包含本 fork 与 Foundation Sunshine 配套的扩展能力。
+如果你需要上游 Moonlight 的官方发行渠道、移动端客户端、Flatpak、Snap 或发行版软件源，请参考 [Moonlight 官方网站](https://moonlight-stream.org) 和 [上游仓库](https://github.com/moonlight-stream/moonlight-qt)。这些渠道不一定包含 Moonlight V+ for PC 与 Foundation Sunshine 配套的扩展能力。
 
 ## Foundation Sunshine 协同
 
-Foundation Sunshine 是本 fork 的主要服务端配套项目。客户端会在连接时探测服务端能力；当服务端支持对应扩展时启用增强协议，不支持时回退到标准 Moonlight / Sunshine 行为。
+Foundation Sunshine 是 Moonlight V+ for PC 的主要服务端配套项目。客户端会在连接时探测服务端能力；当服务端支持对应扩展时启用增强协议，不支持时回退到标准 Moonlight / Sunshine 行为。
 
 这意味着你可以把它当作普通 Moonlight 客户端使用，也可以在 Foundation Sunshine 主机上获得更完整的剪贴板、音频输入、显示控制、码率控制和文件夹映射体验。扩展能力不可用时，客户端会回退到标准兼容行为。
 
@@ -54,7 +54,7 @@ Foundation Sunshine 是本 fork 的主要服务端配套项目。客户端会在
 
 ### 自动化与发布
 
-- **本 fork 更新检查**：客户端更新检查指向 `qiin2333/moonlight-qt` 的 GitHub Releases。
+- **Moonlight V+ 更新检查**：客户端更新检查指向 `qiin2333/moonlight-qt` 的 GitHub Releases。
 - **基于 Git tag 的版本号**：`scripts/derive-version.py` 支持 CI 与本地构建产物使用一致的版本命名。
 - **自动翻译构建**：`.github/workflows/build-translate.yml` 用于周期性更新 `.ts` / `.qm` 翻译资源。
 - **CI 构建矩阵**：Windows、macOS、Linux AppImage 和 Steam Link 均有独立工作流维护。
@@ -161,13 +161,13 @@ Steam Link 原始硬件限制：
 
 ## 贡献
 
-这个 fork 的改动优先围绕 Foundation Sunshine 协同能力、桌面客户端体验、中文本地化和跨平台构建稳定性展开。
+Moonlight V+ for PC 的改动优先围绕 Foundation Sunshine 协同能力、桌面客户端体验、中文本地化和跨平台构建稳定性展开。
 
 提交 issue 或 PR 时，请尽量说明：
 
 - 客户端系统和版本。
 - Foundation Sunshine 或标准 Sunshine 的版本。
-- 是否使用本 fork 的 release 构建。
+- 是否使用 Moonlight V+ for PC 的 release 构建。
 - 是否涉及扩展能力，例如剪贴板、HQ Mic、ABR、文件夹映射或远程分辨率。
 
 ## 上游与许可

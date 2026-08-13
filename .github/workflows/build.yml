@@ -1,4 +1,4 @@
-name: Build Moonlight Qt
+name: Build Moonlight V+ for PC
 
 on:
   push:
@@ -159,7 +159,7 @@ jobs:
         set "PATH=%Qt6_DIR%\bin;%PATH%"
         call scripts\build-arch.bat release arm64
         if errorlevel 1 exit /b %ERRORLEVEL%
-        for %%f in (build\installer-arm64-release\MoonlightPortable-arm64-*.zip) do powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify-pe-machine.ps1 -Path "%%f" -ExpectedMachine 0xAA64
+        for %%f in (build\installer-arm64-release\Moonlight-VPlus-Portable-arm64-*.zip) do powershell -NoProfile -ExecutionPolicy Bypass -File scripts\verify-pe-machine.ps1 -Path "%%f" -ExpectedMachine 0xAA64
         if errorlevel 1 exit /b %ERRORLEVEL%
 
     - name: Generate universal installer
@@ -171,20 +171,26 @@ jobs:
     - name: Upload portable artifact
       uses: actions/upload-artifact@v4
       with:
-        name: MoonlightPortable-x64-r${{ env.BUILD_NUMBER }}
-        path: build/installer-x64-release/MoonlightPortable-x64-*.zip
+        name: Moonlight-VPlus-Portable-x64-r${{ env.BUILD_NUMBER }}
+        path: |
+          build/installer-x64-release/Moonlight-VPlus-Portable-x64-*.zip
+          build/installer-x64-release/MoonlightPortable-x64-*.zip
 
     - name: Upload portable artifact arm64
       uses: actions/upload-artifact@v4
       with:
-        name: MoonlightPortable-arm64-r${{ env.BUILD_NUMBER }}
-        path: build/installer-arm64-release/MoonlightPortable-arm64-*.zip
+        name: Moonlight-VPlus-Portable-arm64-r${{ env.BUILD_NUMBER }}
+        path: |
+          build/installer-arm64-release/Moonlight-VPlus-Portable-arm64-*.zip
+          build/installer-arm64-release/MoonlightPortable-arm64-*.zip
 
     - name: Upload executable artifact
       uses: actions/upload-artifact@v4
       with:
-        name: moonlight-universal-setup-r${{ env.BUILD_NUMBER }}.exe
-        path: build/installer-Release/MoonlightSetup-*.exe
+        name: Moonlight-VPlus-Setup-r${{ env.BUILD_NUMBER }}.exe
+        path: |
+          build/installer-Release/Moonlight-VPlus-Setup-*.exe
+          build/installer-Release/MoonlightSetup-*.exe
 
   build-macos:
     runs-on: macos-15
@@ -222,8 +228,9 @@ jobs:
     - name: Upload DMG artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Moonlight-r${{ env.BUILD_NUMBER }}.dmg
-        path: build/installer-Release/Moonlight-*.dmg
+        name: Moonlight-VPlus-r${{ env.BUILD_NUMBER }}.dmg
+        path: build/installer-Release/Moonlight-VPlus-*.dmg
+        if-no-files-found: error
 
   build-linux:
     # x86_64 用标准 runner，aarch64 用 GitHub 的免费 ARM runner（公共仓库可用）。
@@ -520,8 +527,8 @@ jobs:
     - name: Upload AppImage artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Moonlight-r${{ env.BUILD_NUMBER }}-${{ matrix.arch }}.AppImage
-        path: build/installer-release/Moonlight-*-${{ matrix.arch }}.AppImage
+        name: Moonlight-VPlus-r${{ env.BUILD_NUMBER }}-${{ matrix.arch }}.AppImage
+        path: build/installer-release/Moonlight-VPlus-*-${{ matrix.arch }}.AppImage
 
   build-steamlink:
     runs-on: ubuntu-22.04
@@ -556,8 +563,8 @@ jobs:
     - name: Upload SteamLink artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Moonlight-SteamLink-r${{ env.BUILD_NUMBER }}
-        path: build/installer-release/Moonlight-SteamLink-*.zip
+        name: Moonlight-VPlus-SteamLink-r${{ env.BUILD_NUMBER }}
+        path: build/installer-release/Moonlight-VPlus-SteamLink-*.zip
 
   release:
     if: github.event_name == 'release'

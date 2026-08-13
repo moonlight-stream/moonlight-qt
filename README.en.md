@@ -1,23 +1,27 @@
-# Moonlight PC - Foundation Client Fork
+# Moonlight V+ for PC
 
 [中文](README.md)
 
 [![Build](https://img.shields.io/github/actions/workflow/status/qiin2333/moonlight-qt/build.yml?branch=master)](https://github.com/qiin2333/moonlight-qt/actions/workflows/build.yml?query=branch%3Amaster)
 [![Downloads](https://img.shields.io/github/downloads/qiin2333/moonlight-qt/total)](https://github.com/qiin2333/moonlight-qt/releases)
 
-This is a downstream desktop client fork based on [moonlight-stream/moonlight-qt](https://github.com/moonlight-stream/moonlight-qt), designed to work closely with [Foundation Sunshine](https://github.com/qiin2333/Sunshine).
+Moonlight V+ for PC is an enhanced desktop client based on [moonlight-stream/moonlight-qt](https://github.com/moonlight-stream/moonlight-qt), designed to work closely with [Foundation Sunshine](https://github.com/qiin2333/Sunshine).
 
-The fork remains compatible with upstream Moonlight and standard Sunshine hosts, while improving the Foundation Sunshine desktop experience with clearer capability negotiation, finer quality/performance controls, and more efficient in-stream actions.
+It remains compatible with upstream Moonlight and standard Sunshine hosts, while improving the Foundation Sunshine desktop experience with clearer capability negotiation, finer quality/performance controls, and more efficient in-stream actions.
 
 ## Downloads
 
-Download Windows, macOS, Linux AppImage, and Steam Link builds from this fork's [GitHub Releases](https://github.com/qiin2333/moonlight-qt/releases).
+Download Windows, macOS, Linux AppImage, and Steam Link builds from [GitHub Releases](https://github.com/qiin2333/moonlight-qt/releases).
 
-For upstream Moonlight distribution channels, mobile clients, Flatpak, Snap, or distro packages, see the [Moonlight website](https://moonlight-stream.org) and the [upstream repository](https://github.com/moonlight-stream/moonlight-qt). Those builds may not include the Foundation Sunshine extensions maintained in this fork.
+> **macOS currently ships Apple Silicon (arm64) builds only**, named like `Moonlight-VPlus-<version>-arm64.dmg`.
+>
+> **Linux AppImages are available for x86_64 and aarch64**, named like `Moonlight-VPlus-<version>-x86_64.AppImage` and `Moonlight-VPlus-<version>-aarch64.AppImage`.
+
+For upstream Moonlight distribution channels, mobile clients, Flatpak, Snap, or distro packages, see the [Moonlight website](https://moonlight-stream.org) and the [upstream repository](https://github.com/moonlight-stream/moonlight-qt). Those builds may not include the Foundation Sunshine extensions maintained in Moonlight V+ for PC.
 
 ## Foundation Sunshine Integration
 
-Foundation Sunshine is the primary server counterpart for this client fork. The client probes host capabilities during connection setup; enhanced protocols are enabled only when the server advertises support, and standard Moonlight / Sunshine behavior is used otherwise.
+Foundation Sunshine is the primary server counterpart for Moonlight V+ for PC. The client probes host capabilities during connection setup; enhanced protocols are enabled only when the server advertises support, and standard Moonlight / Sunshine behavior is used otherwise.
 
 You can use it like a regular Moonlight client, or pair it with a Foundation Sunshine host for richer clipboard, audio input, display control, bitrate control, and folder-mapping behavior. When an extension is unavailable, the client falls back to standard compatible behavior.
 
@@ -59,7 +63,7 @@ You can use it like a regular Moonlight client, or pair it with a Foundation Sun
 
 - The standard Moonlight / Sunshine protocol remains compatible, so regular hosts do not need extra setup.
 - When connected to standard Sunshine or another upstream-compatible host, Foundation extensions such as image clipboard, HQ Mic, ABR, and folder mapping gracefully downgrade or stay disabled.
-- NVIDIA GameStream compatibility is inherited from upstream Moonlight, but new development in this fork is primarily focused on the Sunshine ecosystem.
+- NVIDIA GameStream compatibility is inherited from upstream Moonlight, but new development in Moonlight V+ for PC is primarily focused on the Sunshine ecosystem.
 
 ## Building
 
@@ -157,13 +161,13 @@ Original Steam Link hardware limits:
 
 ## Contributing
 
-This fork prioritizes Foundation Sunshine integration, desktop client experience, Chinese localization, and cross-platform build stability.
+Moonlight V+ for PC prioritizes Foundation Sunshine integration, desktop client experience, Chinese localization, and cross-platform build stability.
 
 When opening an issue or pull request, please include:
 
 - Client operating system and version.
 - Foundation Sunshine or standard Sunshine version.
-- Whether you are using a release build from this fork.
+- Whether you are using a Moonlight V+ for PC release build.
 - Whether the report involves an extension such as clipboard sync, HQ Mic, ABR, folder mapping, or remote resolution handling.
 
 ## Upstream And License

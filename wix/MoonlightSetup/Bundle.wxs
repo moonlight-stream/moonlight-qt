@@ -11,17 +11,17 @@
 
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
-  <Bundle Name="Moonlight Game Streaming Client"
+  <Bundle Name="Moonlight V+ for PC Game Streaming Client"
           Version="!(bind.PackageVersion.Moonlight_x64)"
-          Manufacturer="Moonlight Game Streaming Project"
+          Manufacturer="Moonlight V+ Project"
           UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5"
           HelpUrl="https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
-          UpdateUrl="https://github.com/moonlight-stream/moonlight-qt/releases"
+          UpdateUrl="https://github.com/qiin2333/moonlight-qt/releases"
           DisableModify="yes"
           IconSourceFile="..\..\app\moonlight.ico">
 
-    <bal:Condition Message="This version of Moonlight requires Windows 10 or later." Condition="VersionNT &gt;= v10.0" />
-    <bal:Condition Message="This version of Moonlight requires a 64-bit version of Windows." Condition="NativeMachine &lt;&gt; 332" />
+    <bal:Condition Message="This version of Moonlight V+ for PC requires Windows 10 or later." Condition="VersionNT &gt;= v10.0" />
+    <bal:Condition Message="This version of Moonlight V+ for PC requires a 64-bit version of Windows." Condition="NativeMachine &lt;&gt; 332" />
 
     <Variable Name="InstallFolder" Type="formatted" Value="[ProgramFiles6432Folder]Moonlight Game Streaming" />
 

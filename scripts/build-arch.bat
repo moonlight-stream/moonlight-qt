@@ -303,10 +303,15 @@ if defined MOONLIGHT_PORTABLE_INACTIVE (
     if !ERRORLEVEL! NEQ 0 goto Error
 )
 
-7z a %INSTALLER_FOLDER%\MoonlightPortable-%ARCH%-%VERSION%.zip %DEPLOY_FOLDER%\*
+7z a %INSTALLER_FOLDER%\Moonlight-VPlus-Portable-%ARCH%-%VERSION%.zip %DEPLOY_FOLDER%\*
 if !ERRORLEVEL! NEQ 0 goto Error
 
-echo Build successful for Moonlight v%VERSION% %ARCH% binaries!
+rem Keep one legacy-named alias so pre-rebrand portable clients can install
+rem the first Moonlight V+ update in-app.
+copy /Y %INSTALLER_FOLDER%\Moonlight-VPlus-Portable-%ARCH%-%VERSION%.zip %INSTALLER_FOLDER%\MoonlightPortable-%ARCH%-%VERSION%.zip
+if !ERRORLEVEL! NEQ 0 goto Error
+
+echo Build successful for Moonlight V+ for PC v%VERSION% %ARCH% binaries!
 exit /b 0
 
 :Error

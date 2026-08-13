@@ -11,6 +11,7 @@ import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 
 import "theme"
+import "Brand.js" as Brand
 
 ApplicationWindow {
     property bool pollingActive: false
@@ -21,6 +22,7 @@ ApplicationWindow {
     property bool clearOnBack: false
 
     id: window
+    title: Qt.application.displayName
     width: 1280
     height: 640
 
@@ -459,7 +461,7 @@ ApplicationWindow {
             Text {
                 id: wordmark
                 visible: toolBar.width > 700
-                text: "MOONLIGHT"
+                text: "MOONLIGHT V+ FOR PC"
                 color: Theme.text
                 font.family: Theme.fontSans
                 font.pointSize: Theme.fontCardTitle
@@ -587,7 +589,7 @@ ApplicationWindow {
 
                 function updateAvailable(version, url)
                 {
-                    ToolTip.text = qsTr("Update available for Moonlight: Version %1").arg(version)
+                    ToolTip.text = Brand.text(qsTr("Update available for Moonlight: Version %1")).arg(version)
                     updateButton.browserUrl = url
                     updateButton.visible = true
                 }
@@ -774,8 +776,8 @@ ApplicationWindow {
 
     ErrorMessageDialog {
         id: noHwDecoderDialog
-        text: qsTr("No functioning hardware accelerated video decoder was detected by Moonlight. " +
-                   "Your streaming performance may be severely degraded in this configuration.")
+        text: Brand.text(qsTr("No functioning hardware accelerated video decoder was detected by Moonlight. " +
+                              "Your streaming performance may be severely degraded in this configuration."))
         helpText: qsTr("Click the Help button for more information on solving this problem.")
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems"
     }
@@ -804,7 +806,7 @@ ApplicationWindow {
     NavigableMessageDialog {
         id: wow64Dialog
         standardButtons: Dialog.Ok | Dialog.Cancel
-        text: qsTr("This version of Moonlight isn't optimized for your PC. Please download the '%1' version of Moonlight for the best streaming performance.").arg(SystemProperties.friendlyNativeArchName)
+        text: Brand.text(qsTr("This version of Moonlight isn't optimized for your PC. Please download the '%1' version of Moonlight for the best streaming performance.")).arg(SystemProperties.friendlyNativeArchName)
         onAccepted: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-qt/releases");
         }
@@ -813,7 +815,7 @@ ApplicationWindow {
     ErrorMessageDialog {
         id: unmappedGamepadDialog
         property string unmappedGamepads : ""
-        text: qsTr("Moonlight detected gamepads without a mapping:") + "\n" + unmappedGamepads
+        text: Brand.text(qsTr("Moonlight detected gamepads without a mapping:")) + "\n" + unmappedGamepads
         helpTextSeparator: "\n\n"
         helpText: qsTr("Click the Help button for information on how to map your gamepads.")
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Gamepad-Mapping"

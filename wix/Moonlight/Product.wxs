@@ -1,7 +1,7 @@
 ﻿<?define ShortName = "Moonlight" ?>
-<?define FullName = "Moonlight Game Streaming Client" ?>
+<?define FullName = "Moonlight V+ for PC Game Streaming Client" ?>
 
-<?define ShortcutName = "$(var.ShortName)" ?>
+<?define ShortcutName = "Moonlight V+ for PC" ?>
 <?define ShortcutDesc = "Stream games and other applications from another PC" ?>
 <?define InstallFolder = "Moonlight Game Streaming" ?>
 
@@ -10,7 +10,7 @@
   <Package Name="$(var.FullName)"
            Language="1033"
            Version="!(bind.fileVersion.MoonlightExe)"
-           Manufacturer="Moonlight Game Streaming Project"
+           Manufacturer="Moonlight V+ Project"
            UpgradeCode="5c09f94e-f809-4c6a-9b7b-597c99f041fe">
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." Schedule="afterInstallInitialize" />
     <MediaTemplate CompressionLevel="high" EmbedCab="yes" />

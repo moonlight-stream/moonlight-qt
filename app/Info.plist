@@ -41,9 +41,9 @@
 		<true/>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Moonlight uses the local network to connect to your gaming PC for streaming.</string>
+	<string>Moonlight V+ for PC uses the local network to connect to your gaming PC for streaming.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Moonlight needs access to the microphone to support microphone redirection to the host.</string>
+	<string>Moonlight V+ for PC needs access to the microphone to support microphone redirection to the host.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_nvstream._tcp</string>
@@ -53,7 +53,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>VERSION</string>
 	<key>CFBundleDisplayName</key>
-	<string>Moonlight</string>
+	<string>Moonlight V+ for PC</string>
     <key>LSApplicationCategoryType</key>
 	<string>public.app-category.games</string>
 </dict>

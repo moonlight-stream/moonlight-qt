@@ -13,7 +13,8 @@ DEPLOY_FOLDER=$BUILD_ROOT/deploy-$BUILD_CONFIG
 INSTALLER_FOLDER=$BUILD_ROOT/installer-$BUILD_CONFIG
 
 VERSION=$(python3 "$SOURCE_ROOT/scripts/derive-version.py" --source-root "$SOURCE_ROOT" --field artifact)
-LINUXDEPLOY=linuxdeploy-$(uname -m).AppImage
+APPIMAGE_ARCH=$(uname -m)
+LINUXDEPLOY=linuxdeploy-$APPIMAGE_ARCH.AppImage
 
 command -v qmake6 >/dev/null 2>&1 || fail "Unable to find 'qmake6' in your PATH!"
 command -v $LINUXDEPLOY >/dev/null 2>&1 || fail "Unable to find '$LINUXDEPLOY' in your PATH!"
@@ -86,7 +87,8 @@ if [ -n "$QT_PLUGIN_PATH" ] && [ -d "$QT_PLUGIN_PATH/multimedia" ]; then
   rm -f "$QT_PLUGIN_PATH/multimedia/libgstreamermediaplugin.so"
 fi
 pushd $INSTALLER_FOLDER
-VERSION=$VERSION $LINUXDEPLOY --appdir $DEPLOY_FOLDER \
+OUTPUT="$INSTALLER_FOLDER/Moonlight-VPlus-$VERSION-$APPIMAGE_ARCH.AppImage" \
+  VERSION=$VERSION $LINUXDEPLOY --appdir $DEPLOY_FOLDER \
   --library=/usr/local/lib/libSDL3.so.0 \
   --plugin qt --output appimage || fail "linuxdeploy failed!"
 popd

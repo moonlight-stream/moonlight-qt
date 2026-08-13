@@ -779,8 +779,8 @@ int main(int argc, char *argv[])
     // Set our app name for SDL to use with PulseAudio and PipeWire. This matches what we
     // provide as our app name to libsoundio too. On SDL 2.0.18+, SDL_APP_NAME is also used
     // for screensaver inhibitor reporting.
-    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_APP_NAME, "Moonlight");
-    SDL_SetHint(SDL_HINT_APP_NAME, "Moonlight");
+    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_APP_NAME, "Moonlight V+ for PC");
+    SDL_SetHint(SDL_HINT_APP_NAME, "Moonlight V+ for PC");
 
     // SDL will try to lock the mouse cursor on Wayland if it's not visible in order to
     // support applications that assume they can warp the cursor (which isn't possible
@@ -818,6 +818,7 @@ int main(int argc, char *argv[])
     }
 
     QGuiApplication app(argc, argv);
+    QGuiApplication::setApplicationDisplayName(QStringLiteral("Moonlight V+ for PC"));
 
 #ifdef Q_OS_DARWIN
     // macOS defaults "Keyboard navigation" to text fields and lists only, which

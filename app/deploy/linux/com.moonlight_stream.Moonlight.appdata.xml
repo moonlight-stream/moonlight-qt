@@ -3,11 +3,11 @@
 	<id>com.moonlight_stream.Moonlight</id>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-3.0+</project_license>
-	<name>Moonlight</name>
+	<name>Moonlight V+ for PC</name>
 	<summary>Stream games and other applications from another PC running Sunshine or GeForce Experience</summary>
 
 	<description>
-		<p>Moonlight can stream games and other applications from another PC with Sunshine or GeForce Experience software installed.</p>
+		<p>Moonlight V+ for PC can stream games and other applications from another PC with Sunshine or GeForce Experience software installed.</p>
 		<p>Features include:</p>
 		<ul>
 			<li>Hardware accelerated video decoding with VAAPI, VDPAU, and Vulkan Video support</li>
@@ -20,14 +20,13 @@
 		</ul>
 	</description>
 
-	<url type="homepage">https://moonlight-stream.org</url>
-	<url type="bugtracker">https://github.com/moonlight-stream/moonlight-qt/issues</url>
+	<url type="homepage">https://github.com/qiin2333/moonlight-qt</url>
+	<url type="bugtracker">https://github.com/qiin2333/moonlight-qt/issues</url>
 	<url type="help">https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide</url>
-	<url type="vcs-browser">https://github.com/moonlight-stream/moonlight-qt</url>
-	<developer id="org.moonlight-stream">
-		<name>Moonlight Game Streaming Team</name>
+	<url type="vcs-browser">https://github.com/qiin2333/moonlight-qt</url>
+	<developer id="io.github.qiin2333">
+		<name>Moonlight V+ Project</name>
 	</developer>
-	<update_contact>cameron@moonlight-stream.org</update_contact>
 	<launchable type="desktop-id">com.moonlight_stream.Moonlight.desktop</launchable>
 	<provides>
 		<binary>moonlight</binary>
