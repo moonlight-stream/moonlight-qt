@@ -76,6 +76,15 @@ if [ -n "$QT_PLUGIN_PATH" ] && [ -d "$QT_PLUGIN_PATH/sqldrivers" ]; then
   echo "Removing problematic SQL driver plugins..."
   rm -f "$QT_PLUGIN_PATH/sqldrivers/libqsqlmimer.so"
 fi
+# Same deal for Qt's GStreamer multimedia backend: linuxdeploy tries to bundle it and
+# dies on libgstplay-1.0.so.0 if the build host doesn't have gst-plugins-bad (the
+# x86_64 runner image happens to, the aarch64 one doesn't). We only ever use the
+# FFmpeg backend — it's Qt's default on Linux since 6.4 and it's what backs the
+# QMediaDevices/QAudioSource path in micstream.cpp — so just don't ship the GStreamer one.
+if [ -n "$QT_PLUGIN_PATH" ] && [ -d "$QT_PLUGIN_PATH/multimedia" ]; then
+  echo "Removing GStreamer multimedia backend..."
+  rm -f "$QT_PLUGIN_PATH/multimedia/libgstreamermediaplugin.so"
+fi
 pushd $INSTALLER_FOLDER
 VERSION=$VERSION $LINUXDEPLOY --appdir $DEPLOY_FOLDER \
   --library=/usr/local/lib/libSDL3.so.0 \

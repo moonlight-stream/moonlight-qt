@@ -226,8 +226,32 @@ jobs:
         path: build/installer-Release/Moonlight-*.dmg
 
   build-linux:
-    runs-on: ubuntu-22.04
-    
+    # x86_64 用标准 runner，aarch64 用 GitHub 的免费 ARM runner（公共仓库可用）。
+    #
+    # 两边的基线故意不一样：x86_64 留在 22.04 把 AppImage 的 glibc 下限压到 2.35，
+    # 而 aarch64 必须上 24.04 —— Qt 官方的 linux_arm64 二进制（含 moc 这些 host 工具）
+    # 是在 glibc 2.38 上编的，放到 jammy 上跑 moc 直接 `GLIBC_2.38 not found`。
+    # 代价是 arm64 的 AppImage 需要 glibc >= 2.39，Debian 12 / RPi OS bookworm 用不了，
+    # 得等 trixie。想再往下压只能自己编 Qt，不值。
+    name: build-linux (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      # 一边挂了不要连累另一边，方便单独看是哪个架构的问题。
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-22.04
+            qt_host: linux
+            qt_arch: linux_gcc_64
+            multiarch: x86_64-linux-gnu
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            qt_host: linux_arm64
+            qt_arch: linux_gcc_arm64
+            multiarch: aarch64-linux-gnu
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -245,6 +269,8 @@ jobs:
       uses: jurplel/install-qt-action@v4
       with:
         version: '6.11.1'
+        host: ${{ matrix.qt_host }}
+        arch: ${{ matrix.qt_arch }}
         modules: 'qtmultimedia qtimageformats'
         cache: true
 
@@ -252,7 +278,7 @@ jobs:
       run: |
         mkdir -p $HOME/local/{bin,include,lib}
         echo "$HOME/local/bin" >> $GITHUB_PATH
-        echo "PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig:$HOME/local/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
+        echo "PKG_CONFIG_PATH=$HOME/local/lib/pkgconfig:$HOME/local/lib/${{ matrix.multiarch }}/pkgconfig" >> $GITHUB_ENV
         echo "UBUNTU_RELEASE=$(lsb_release -rs)" >> $GITHUB_ENV
 
     # 注意顺序：上面的 install-qt-action 已经装好了 6.11.1 并把它的 qmake 放进 PATH，
@@ -260,11 +286,16 @@ jobs:
     # 6.2.x）不会被用到，装了只是白下载，还可能在 AppImage 打包阶段被扫进去。
     - name: Install packaged deps
       run: |
-        wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-        if [[ $UBUNTU_RELEASE == "20.04" ]]; then
-          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.3.280-focal.list https://packages.lunarg.com/vulkan/1.3.280/lunarg-vulkan-1.3.280-focal.list
-        else
-          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.3.280-jammy.list https://packages.lunarg.com/vulkan/1.3.280/lunarg-vulkan-1.3.280-jammy.list
+        # LunarG 的源只发 amd64/i386（dists/jammy/main 下就没有 binary-arm64），
+        # 所以 vulkan-sdk 这条路只有 x86_64 能走，arm64 用发行版的 loader，
+        # 头文件和 glslang 在下一步单独编。
+        if [[ "${{ matrix.arch }}" == "x86_64" ]]; then
+          wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          if [[ $UBUNTU_RELEASE == "20.04" ]]; then
+            sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.3.280-focal.list https://packages.lunarg.com/vulkan/1.3.280/lunarg-vulkan-1.3.280-focal.list
+          else
+            sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.3.280-jammy.list https://packages.lunarg.com/vulkan/1.3.280/lunarg-vulkan-1.3.280-jammy.list
+          fi
         fi
         sudo apt update || true
         sudo apt install -y \
@@ -274,17 +305,60 @@ jobs:
           libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxss-dev libxt-dev \
           libxv-dev libxxf86vm-dev libxcb-dri3-dev libx11-xcb-dev libwayland-dev wayland-protocols \
           libxfixes-dev libxtst-dev libpipewire-0.3-dev \
-          libopus-dev libvdpau-dev vulkan-sdk cmake
-        
+          libopus-dev libvdpau-dev cmake
+
+        if [[ "${{ matrix.arch }}" == "x86_64" ]]; then
+          sudo apt install -y vulkan-sdk
+        else
+          # libplacebo 需要一个 SPIR-V 编译器，否则 Vulkan 渲染器编得出来但跑不起来。
+          # x86_64 是从 LunarG SDK 里拿 shaderc 2023.8.1，noble 自带的 libshaderc-dev
+          # 正好也是 2023.8，两个架构走同一条代码路径。
+          # 别换成 glslang：libplacebo 那边是用 cxx.find_library('SPIRV') 找的，
+          # 装到 /usr/local 也认不出来（试过，summary 里 glslang 一样是 NO），
+          # 而 shaderc 走 pkg-config，稳。
+          sudo apt install -y libshaderc-dev
+        fi
+
         # Install XCB runtime libraries for Qt6 XCB platform plugin
         echo "Installing XCB runtime libraries..."
         sudo apt install -y libxcb1 libxcb-cursor0 libxcb-keysyms1 libxcb-image0 libxcb-shm0 libxcb-icccm4 libxcb-sync1 libxcb-xfixes0 libxcb-shape0 libxcb-randr0 libxcb-render0 libxcb-render-util0 libxcb-xinerama0 libxcb-xkb1 libxcb-util1
-        sudo pip3 install meson
+
+        # 24.04 起 pip 是 externally-managed，`pip3 install` 会直接被 PEP 668 拒掉；
+        # 好在 noble 自带的 meson 已经 1.3，够 libplacebo（>= 0.63）用。jammy 的是
+        # 0.61，太老，只能继续走 pip。
+        if [[ $UBUNTU_RELEASE == "24.04" ]]; then
+          sudo apt install -y meson
+        else
+          sudo pip3 install meson
+        fi
 
         if [[ $UBUNTU_RELEASE == "22.04" ]]; then
           # Needed for AppImage
           sudo apt install libfuse2
         fi
+
+    # arm64 上没有 LunarG 源，Vulkan 那套要手工补：noble 自带的 loader 是 1.3.275，
+    # 而 FFmpeg configure 卡的是 `vulkan >= 1.3.277`（pkg-config 版本号），差这么一点
+    # 也过不去，不补的话 *_vulkan hwaccel 直接把 configure 打挂。vulkan.pc 是 Loader
+    # 装的，只装 Headers 不够，所以两个都得编。
+    - name: Build Vulkan loader (aarch64)
+      if: matrix.arch == 'aarch64'
+      run: |
+        export VULKAN_VER=v1.4.313
+        git clone --branch $VULKAN_VER --depth 1 https://github.com/KhronosGroup/Vulkan-Headers.git
+        cmake -S Vulkan-Headers -B Vulkan-Headers/build
+        sudo cmake --install Vulkan-Headers/build
+
+        git clone --branch $VULKAN_VER --depth 1 https://github.com/KhronosGroup/Vulkan-Loader.git
+        cmake -S Vulkan-Loader -B Vulkan-Loader/build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_PREFIX_PATH=/usr/local \
+          -DBUILD_TESTS=OFF
+        cmake --build Vulkan-Loader/build -j$(nproc)
+        sudo cmake --install Vulkan-Loader/build
+        sudo ldconfig
+
+        pkg-config --modversion vulkan
     - name: Build SDL3
       run: |
         export SDL3_REV=3bde3e24069db59133bc1e8dbe3c693008821a93
@@ -364,6 +438,13 @@ jobs:
         fi
         git submodule update --init --recursive
         meson setup build -Dvulkan=enabled -Dopengl=disabled -Ddemos=false
+        # libplacebo 在两个 SPIR-V 编译器都找不到的情况下不会报错，只是在 summary 里
+        # 写 shaderc/glslang: NO，然后编出一个 Vulkan 渲染器跑不起来的库。arm64 第一版
+        # 就是这么静默退化的，所以在这儿拦一道。
+        if ! grep -qE "^ +(shaderc|glslang) +: +YES" build/meson-logs/meson-log.txt; then
+          echo "::error::libplacebo 没找到任何 SPIR-V 编译器（shaderc/glslang），Vulkan 渲染器会编得过但跑不起来"
+          exit 1
+        fi
         ninja -C build
         sudo ninja install -C build
         sudo ldconfig
@@ -385,8 +466,10 @@ jobs:
     - name: Install linuxdeploy
       run: |
         mkdir -p $HOME/bin
-        wget -O $HOME/bin/linuxdeploy-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-        wget -O $HOME/bin/linuxdeploy-plugin-qt-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+        # 文件名要和 build-appimage.sh 里的 linuxdeploy-$(uname -m).AppImage 对得上：
+        # uname -m 在两台 runner 上分别是 x86_64 / aarch64，正好是上游的资产名。
+        wget -O $HOME/bin/linuxdeploy-${{ matrix.arch }}.AppImage https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${{ matrix.arch }}.AppImage
+        wget -O $HOME/bin/linuxdeploy-plugin-qt-${{ matrix.arch }}.AppImage https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-${{ matrix.arch }}.AppImage
         chmod a+x $HOME/bin/linuxdeploy*.AppImage
 
     - name: Setup FUSE for AppImage
@@ -437,8 +520,8 @@ jobs:
     - name: Upload AppImage artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Moonlight-r${{ env.BUILD_NUMBER }}-x86_64.AppImage
-        path: build/installer-release/Moonlight-*-x86_64.AppImage
+        name: Moonlight-r${{ env.BUILD_NUMBER }}-${{ matrix.arch }}.AppImage
+        path: build/installer-release/Moonlight-*-${{ matrix.arch }}.AppImage
 
   build-steamlink:
     runs-on: ubuntu-22.04
