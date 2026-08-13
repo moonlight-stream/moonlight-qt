@@ -267,6 +267,7 @@ private:
 
     bool m_AsyncConnectionSuccess;
     int m_PortTestResults;
+    bool m_IsStreamingOverWifi;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;

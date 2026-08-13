@@ -61,7 +61,7 @@ public:
     };
 
     ReachabilityType
-    getActiveAddressReachability() const;
+    getActiveAddressReachability(bool* activeInterfaceIsWifi = nullptr) const;
 
     QVector<NvAddress>
     uniqueAddresses() const;
