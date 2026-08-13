@@ -11,6 +11,10 @@ import "theme"
 ComboBox {
     id: control
 
+    // 关掉 FluentWinUI3 那圈白色圆角双环，焦点由背景的 2px accent 边框表达。
+    // 详见 theme/FocusRing.qml 的注释。
+    readonly property Item __focusFrameTarget: null
+
     property int textWidth
 
     // 每一项文字之外还要留出：控件自身的左右 padding、下拉箭头，以及 contentItem
@@ -118,8 +122,11 @@ ComboBox {
 
         radius: 0
         color: control.pressed ? Theme.surface : Theme.surface2
-        border.width: 1
-        border.color: control.visualFocus || control.hovered ? Theme.accent : Theme.lineStrong
+        // hover 是 1px lineStrong，focus 是 2px accent —— 两个维度都不同，
+        // 免得「鼠标停在上面」和「焦点在这里」看起来一模一样。
+        border.width: control.visualFocus ? 2 : 1
+        border.color: control.visualFocus ? Theme.accent
+                                          : (control.hovered ? Theme.accent : Theme.lineStrong)
 
         Behavior on border.color {
             ColorAnimation { duration: Theme.durFast }

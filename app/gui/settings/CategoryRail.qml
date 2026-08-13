@@ -90,6 +90,10 @@ Item {
 
             readonly property bool current: modelData.key === rail.currentCategory
 
+            // 关掉 FluentWinUI3 那圈白色圆角双环，焦点由下面背景的 2px accent
+            // 描边表达。详见 theme/FocusRing.qml 的注释。
+            readonly property Item __focusFrameTarget: null
+
             width: rail.compact ? Math.max(96, label.implicitWidth + Theme.spaceXl + Theme.spaceLg) : list.width
             height: rail.compact ? list.height : 44
 
@@ -137,12 +141,15 @@ Item {
             // 「当前分类」和「焦点在哪」是两件事，必须分开表达：粗条 + 软填充表示
             // 当前分类，一圈亮描边表示焦点。只用键盘/手柄来的焦点才画描边
             // （visualFocus），鼠标点一下不该冒出个框。
+            //
+            // 描边用 2px accent，和全应用的焦点表达统一（以前这里是 1px 白，
+            // 各处焦点框粗细和颜色都不一样，看着像三套设计）。
             background: Rectangle {
                 radius: 0
                 color: item.current ? Theme.accentSoft
                                     : (item.hovered || item.visualFocus ? Theme.surface2 : "transparent")
-                border.width: item.visualFocus ? 1 : 0
-                border.color: Theme.text
+                border.width: item.visualFocus ? 2 : 0
+                border.color: Theme.accent
 
                 Rectangle {
                     anchors {

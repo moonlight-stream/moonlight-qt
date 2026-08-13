@@ -6,6 +6,9 @@ import "."
 Slider {
     id: control
 
+    // 关掉 FluentWinUI3 那圈白色圆角双环，焦点改用把手外面的方角 FocusRing。
+    readonly property Item __focusFrameTarget: null
+
     background: Rectangle {
         x: control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
@@ -46,8 +49,14 @@ Slider {
             radius: 0
             color: control.pressed ? Theme.accentStrong : Theme.accent
             border.width: 1
-            border.color: control.visualFocus ? Theme.text : Theme.ink
+            border.color: Theme.ink
             opacity: control.enabled ? 1.0 : 0.45
+        }
+
+        // 把手本身就是 accent 实心块，描边只用来把它从槽里剥出来，
+        // 表达不了焦点，所以焦点走外挂环（和 HardCheckBox / HardSwitch 一致）。
+        FocusRing {
+            visible: control.visualFocus
         }
     }
 }

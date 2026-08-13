@@ -34,8 +34,17 @@ Item {
     Accessible.role: Accessible.Slider
     Accessible.name: valueLabel
 
+    FocusRing {
+        visible: handle.activeFocus
+        inset: 1
+    }
+
     // 三个把手全部方角，配色跟着刻度条的三段：暗青 / 青 / 酸性绿。
-    // 焦点态统一用一圈亮描边，不再靠改颜色区分。
+    //
+    // 焦点不画在把手自己的描边上：三个把手的填充分别是 accentDim / accent / acid，
+    // 描边已经被「这是哪一段」占住了（中间那个还正好是 accent，accent 描 accent
+    // 等于看不见）。所以统一挂全应用那个方角 FocusRing，跟 CheckBox / Switch /
+    // Slider 把手一个规矩。
     Rectangle {
         anchors.centerIn: parent
         visible: handle.handleStyle === handle.minimumStyle
@@ -44,7 +53,7 @@ Item {
         radius: 0
         color: Theme.accentDim
         border.width: 2
-        border.color: handle.activeFocus ? Theme.text : Theme.ink
+        border.color: Theme.ink
     }
 
     Rectangle {
@@ -54,8 +63,7 @@ Item {
         height: handle.scaleItem ? handle.scaleItem.height + 12 : 26
         radius: 0
         color: Theme.accent
-        border.width: handle.activeFocus ? 1 : 0
-        border.color: Theme.text
+        border.width: 0
     }
 
     Rectangle {
@@ -66,7 +74,7 @@ Item {
         radius: 0
         color: Theme.acid
         border.width: 2
-        border.color: handle.activeFocus ? Theme.text : Theme.ink
+        border.color: Theme.ink
 
         // 峰值把手带一圈酸性绿光晕，替代参考站的 box-shadow: 0 0 12px
         Rectangle {

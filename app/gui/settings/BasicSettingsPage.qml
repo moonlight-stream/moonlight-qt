@@ -641,6 +641,10 @@ Column {
 
                     Button {
                         id: resetBitrateButton
+                        // 关掉 FluentWinUI3 那圈白色圆角双环，焦点由下面的 2px accent 边框表达。
+                        // 详见 theme/FocusRing.qml 的注释。
+                        readonly property Item __focusFrameTarget: null
+
 
                         anchors.right: parent.right
                         hoverEnabled: true
@@ -668,8 +672,11 @@ Column {
                             radius: 0
                             color: resetBitrateButton.down ? Theme.accentSoft
                                                            : (resetBitrateButton.hovered ? Theme.surface2 : "transparent")
-                            border.width: 1
-                            border.color: resetBitrateButton.activeFocus ? Theme.accent : Theme.lineStrong
+                            // 和 HardButton 一个规矩：hover / 按下 1px accent，focus 2px accent
+                            border.width: resetBitrateButton.visualFocus ? 2 : 1
+                            border.color: resetBitrateButton.down || resetBitrateButton.hovered
+                                          || resetBitrateButton.visualFocus
+                                        ? Theme.accent : Theme.lineStrong
 
                             Behavior on color {
                                 ColorAnimation { duration: Theme.durFast }

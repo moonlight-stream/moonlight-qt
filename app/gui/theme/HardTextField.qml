@@ -29,7 +29,9 @@ TextField {
 
         radius: 0
         color: Theme.ink
-        border.width: 1
+        // 输入框的焦点就是「光标在这里」，所以看 activeFocus 而不是 visualFocus。
+        // 粗细/颜色的规矩和其他控件一致：focus 2px accent，hover 1px lineStrong。
+        border.width: control.activeFocus ? 2 : 1
         border.color: control.activeFocus ? Theme.accent
                                           : (control.hovered ? Theme.lineStrong : Theme.line)
 

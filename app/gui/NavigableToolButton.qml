@@ -16,6 +16,10 @@ ToolButton {
 
     activeFocusOnTab: true
 
+    // 关掉 FluentWinUI3 那圈白色圆角双环，焦点由下面的 2px accent 边框表达。
+    // 详见 theme/FocusRing.qml 的注释。
+    readonly property Item __focusFrameTarget: null
+
     icon.source: iconSource
     icon.width: iconSize
     icon.height: iconSize
@@ -25,14 +29,15 @@ ToolButton {
     icon.color: (control.hovered || control.visualFocus || control.down)
                 ? Theme.text : Theme.textDim
 
-    // 方角化。FluentWinUI3 的 ToolButton 背景是圆角高亮块，换成方角 + 1px 描边；
+    // 方角化。FluentWinUI3 的 ToolButton 背景是圆角高亮块，换成方角 + 描边；
     // 按下时反过来用 accentSoft 填充，不做缩放也不做模糊。
+    // 静止无描边，hover 1px accent，focus 2px accent —— 和其他控件一个规矩。
     background: Rectangle {
         radius: 0
         color: control.down ? Theme.accentSoft
                             : (control.hovered ? Theme.surface2 : "transparent")
-        border.width: (control.visualFocus || control.hovered) ? 1 : 0
-        border.color: control.visualFocus ? Theme.accent : Theme.lineStrong
+        border.width: control.visualFocus ? 2 : (control.hovered ? 1 : 0)
+        border.color: Theme.accent
 
         Behavior on color {
             ColorAnimation { duration: Theme.durFast }

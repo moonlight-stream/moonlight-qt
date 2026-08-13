@@ -22,15 +22,29 @@ FocusScope {
     height: visible ? implicitHeight : 0
     implicitHeight: Math.max(textColumn.implicitHeight, controlSlot.implicitHeight) + Theme.spaceMd * 2
 
-    // 行背景：方角，hover 时填 surface2，focus 时描 1px accent。
-    // 底部那条 1px 细线是行与行之间的分隔（参考站靠这种细线分栏，不靠间距），
-    // 最后一行不画，避免和卡片下沿贴出双线。
+    // 行背景：方角，hover 时填 surface2；焦点落进这一行时填 surface2 并在左边
+    // 立一条 accent 粗条。
+    //
+    // 以前焦点是给整行描一圈 1px accent。问题是 Tab 进来时焦点其实落在行里的控件上，
+    // 于是控件自己的焦点框和整行的框套在一起，成了两个同色方框嵌套，很脏。
+    // 换成左侧粗条之后两者形态完全不同：粗条说「焦点在这一行」，控件的方框说
+    // 「具体在这个控件上」，叠在一起也读得清。粗条也是这套设计里 Panel 现成的语汇。
     Rectangle {
         anchors.fill: parent
         radius: 0
-        color: hoverArea.containsMouse ? Theme.surface2 : "transparent"
-        border.width: 1
-        border.color: row.activeFocus ? Theme.accent : "transparent"
+        color: (hoverArea.containsMouse || row.activeFocus) ? Theme.surface2 : "transparent"
+        border.width: 0
+
+        Rectangle {
+            anchors {
+                left: parent.left
+                top: parent.top
+                bottom: parent.bottom
+            }
+            width: row.activeFocus ? Theme.accentBar : 0
+            visible: width > 0
+            color: Theme.accent
+        }
 
         Rectangle {
             anchors {
@@ -40,15 +54,13 @@ FocusScope {
             }
             height: 1
             color: Theme.line
-            // 同一个 Column 里最后一行不画分隔线
+            // 行与行之间的 1px 分隔（这套设计靠细线分栏，不靠间距）。
+            // 同一个 Column 里最后一行不画，避免和卡片下沿贴出双线。
             visible: row.parent && row.parent.children
                      && row.parent.children[row.parent.children.length - 1] !== row
         }
 
         Behavior on color {
-            ColorAnimation { duration: Theme.durFast }
-        }
-        Behavior on border.color {
             ColorAnimation { duration: Theme.durFast }
         }
     }

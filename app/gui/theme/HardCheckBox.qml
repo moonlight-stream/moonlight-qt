@@ -9,6 +9,30 @@ CheckBox {
 
     font.family: Theme.fontSans
 
+    // 关掉 FluentWinUI3 那圈白色圆角双环，焦点改用下面的方角 FocusRing。
+    readonly property Item __focusFrameTarget: null
+
+    // 自管指针路径要走的切换。不用 AbstractButton.click()：那个方法是 Qt 6.8 才有的
+    // （QtQuick.Templates 的 qmltypes 里 click 标着 revision 1544 = 6×256+8），而
+    // README 里我们还留着「Qt 5.12 或更新版本仍保留兼容」，Steam Link 那条工具链的
+    // Qt 更早，调用它会直接是 TypeError。HardSwitch 早就绕开了，这里一直漏着。
+    //
+    // toggled() 只在真的换了状态时发，clicked() 照发 —— 让这条自管路径和基类点
+    // 标签文字时的那条路径行为一致（目前 25 个使用点全都只接 onCheckedChanged，
+    // 但别给以后的调用方留坑）。
+    function commitPointerToggle() {
+        if (!control.enabled) {
+            return
+        }
+
+        var previousChecked = control.checked
+        control.toggle()
+        if (control.checked !== previousChecked) {
+            control.toggled()
+        }
+        control.clicked()
+    }
+
     indicator: Rectangle {
         implicitWidth: 18
         implicitHeight: 18
@@ -20,8 +44,14 @@ CheckBox {
         border.width: 1
         border.color: !control.enabled ? Theme.line
                     : control.checked ? Theme.accent
-                    : (control.hovered || control.visualFocus ? Theme.accent : Theme.lineStrong)
+                    : (control.hovered ? Theme.accent : Theme.lineStrong)
         opacity: control.enabled ? 1.0 : 0.45
+
+        // 勾选态本身就是 accent 填充 + accent 描边，这圈边框腾不出来表达焦点，
+        // 所以焦点走外挂环。只有键盘/手柄带来的焦点才画，鼠标点一下不该冒出个框。
+        FocusRing {
+            visible: control.visualFocus
+        }
 
         // Own clicks on the painted box. FluentWinUI3 can ignore a stationary
         // release on a replaced indicator, which makes a normal click appear
@@ -35,7 +65,7 @@ CheckBox {
             cursorShape: Qt.PointingHandCursor
 
             onPressed: control.forceActiveFocus(Qt.MouseFocusReason)
-            onClicked: control.click()
+            onClicked: control.commitPointerToggle()
         }
 
         Behavior on color {

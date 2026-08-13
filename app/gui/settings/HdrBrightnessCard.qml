@@ -304,7 +304,7 @@ Item {
                 background: Rectangle {
                     radius: 0
                     color: Theme.ink
-                    border.width: 1
+                    border.width: hdrMaxBrightnessField.activeFocus ? 2 : 1
                     border.color: hdrMaxBrightnessField.activeFocus ? Theme.accent : Theme.lineStrong
                 }
 
@@ -352,7 +352,7 @@ Item {
                 background: Rectangle {
                     radius: 0
                     color: Theme.ink
-                    border.width: 1
+                    border.width: hdrMinBrightnessField.activeFocus ? 2 : 1
                     border.color: hdrMinBrightnessField.activeFocus ? Theme.accent : Theme.lineStrong
                 }
 
@@ -400,7 +400,7 @@ Item {
                 background: Rectangle {
                     radius: 0
                     color: Theme.ink
-                    border.width: 1
+                    border.width: hdrMaxAverageBrightnessField.activeFocus ? 2 : 1
                     border.color: hdrMaxAverageBrightnessField.activeFocus ? Theme.accent : Theme.lineStrong
                 }
 

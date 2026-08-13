@@ -75,10 +75,14 @@ CenteredGridView {
             radius: 0
             color: chip.selected ? chip.selectedFill
                                  : (chip.hovered ? Theme.surface : Theme.surface2)
-            // 焦点描边压过选中描边：选中与否已经靠填充色表达了，描边留给「焦点在哪」。
-            border.color: chip.visualFocus ? Theme.text
-                        : (chip.selected ? chip.selectedBorder : Theme.lineStrong)
-            border.width: chip.visualFocus ? 2 : 1
+            border.color: chip.selected ? chip.selectedBorder : Theme.lineStrong
+            border.width: 1
+
+            // 选中态是 accent 实心填充，描边腾不出来表达焦点（accent 描 accent 等于
+            // 看不见），所以焦点走统一的外挂方角环。
+            FocusRing {
+                visible: chip.visualFocus
+            }
 
             Behavior on color {
                 ColorAnimation { duration: Theme.durFast }

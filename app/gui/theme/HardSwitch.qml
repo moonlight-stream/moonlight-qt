@@ -12,6 +12,9 @@ Switch {
     padding: 0
     spacing: 0
 
+    // 关掉 FluentWinUI3 那圈白色圆角双环，焦点改用下面的方角 FocusRing。
+    readonly property Item __focusFrameTarget: null
+
     function commitPointerToggle() {
         if (!control.enabled) {
             return
@@ -37,8 +40,14 @@ Switch {
         border.width: 1
         border.color: !control.enabled ? Theme.line
                     : control.checked ? Theme.accent
-                    : (control.hovered || control.visualFocus ? Theme.accent : Theme.lineStrong)
+                    : (control.hovered ? Theme.accent : Theme.lineStrong)
         opacity: control.enabled ? 1.0 : 0.45
+
+        // 开启态是 accent 填充 + accent 描边，轨道边框腾不出来表达焦点，
+        // 所以焦点走外挂环（和 HardCheckBox 一致）。
+        FocusRing {
+            visible: control.visualFocus
+        }
 
         Behavior on color {
             ColorAnimation { duration: Theme.durFast }

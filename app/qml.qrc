@@ -25,6 +25,7 @@
         <file>gui/theme/qmldir</file>
         <file>gui/theme/Theme.qml</file>
         <file>gui/theme/Panel.qml</file>
+        <file>gui/theme/FocusRing.qml</file>
         <file>gui/theme/MicroLabel.qml</file>
         <file>gui/theme/HardButton.qml</file>
         <file>gui/theme/HardCheckBox.qml</file>
