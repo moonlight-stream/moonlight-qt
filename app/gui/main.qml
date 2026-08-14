@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
 import QtQuick.Controls.Material 2.2
 
+import BluetoothManager 1.0
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
 import StreamingPreferences 1.0
@@ -419,6 +420,26 @@ ApplicationWindow {
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
                 }
+            }
+
+            NavigableToolButton {
+                id: bluetoothButton
+
+                // Hidden when BlueZ is unreachable
+                visible: BluetoothManager.available
+
+                iconSource: "qrc:/res/bluetooth.svg"
+
+                onClicked: navigateTo("qrc:/gui/BluetoothView.qml", BluetoothView)
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("Bluetooth devices")
             }
 
             NavigableToolButton {

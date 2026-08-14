@@ -61,6 +61,18 @@ macx:!disable-prebuilts {
     LIBS += -L$$PWD/../libs/mac/lib
 }
 
+unix:!macx {
+    # BlueZ is controlled over D-Bus
+    !disable-bluez {
+        qtHaveModule(dbus) {
+            message(BlueZ Bluetooth device management enabled)
+
+            QT += dbus
+            DEFINES += HAVE_BLUEZ
+        }
+    }
+}
+
 unix:if(!macx|disable-prebuilts) {
     CONFIG += link_pkgconfig
     PKGCONFIG += openssl sdl2 SDL2_ttf
@@ -175,6 +187,7 @@ SOURCES += \
     backend/nvcomputer.cpp \
     backend/nvhttp.cpp \
     backend/nvpairingmanager.cpp \
+    backend/bluetoothmanager.cpp \
     backend/computermanager.cpp \
     backend/boxartmanager.cpp \
     backend/richpresencemanager.cpp \
@@ -194,6 +207,7 @@ SOURCES += \
     streaming/session.cpp \
     streaming/audio/audio.cpp \
     streaming/audio/renderers/sdlaud.cpp \
+    gui/bluetoothdevicemodel.cpp \
     gui/computermodel.cpp \
     gui/appmodel.cpp \
     streaming/bandwidth.cpp \
@@ -219,6 +233,7 @@ HEADERS += \
     backend/nvcomputer.h \
     backend/nvhttp.h \
     backend/nvpairingmanager.h \
+    backend/bluetoothmanager.h \
     backend/computermanager.h \
     backend/boxartmanager.h \
     backend/richpresencemanager.h \
@@ -231,6 +246,7 @@ HEADERS += \
     streaming/session.h \
     streaming/audio/renderers/renderer.h \
     streaming/audio/renderers/sdl.h \
+    gui/bluetoothdevicemodel.h \
     gui/computermodel.h \
     gui/appmodel.h \
     streaming/video/decoder.h \
