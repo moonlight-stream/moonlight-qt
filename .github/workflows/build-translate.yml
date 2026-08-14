@@ -76,9 +76,11 @@ jobs:
       run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
-        $modifiedFiles = $(git status --porcelain)
-        if ($modifiedFiles) {
-          git add .
+        # 只提交翻译产物。之前用 `git add .` 会把 aqtinstall.log 等
+        # 构建过程文件一并扫进来自动提交（重复发生了 60+ 次）。
+        git add -- app/languages/*.qm
+        $stagedFiles = $(git diff --cached --name-only)
+        if ($stagedFiles) {
           $date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
           git commit -m "chore: 自动构建翻译文件 $date"
           git push

@@ -1,6 +1,6 @@
 *pro.user
 
-
+*.log
 **/.vs/
 **/.vscode/
 build/
