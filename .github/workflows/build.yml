@@ -137,6 +137,20 @@ jobs:
         
         echo Build Windows x64 completed successfully!
 
+    - name: Test DualSense haptics rendering
+      shell: cmd
+      run: |
+        for /f "usebackq delims=" %%i in (`scripts\vswhere.exe -latest -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvarsall.bat" AMD64
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        pushd tests\ds5_ir_renderer
+        qmake ds5_ir_renderer.pro
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        ..\..\scripts\jom.exe release
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        release\ds5_ir_renderer_test.exe
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        popd
+
     - name: Install Qt arm64
       uses: jdpurcell/install-qt-action@v5
       with:

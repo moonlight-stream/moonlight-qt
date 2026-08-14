@@ -59,6 +59,8 @@ SOURCES += \
     $$COMMON_C_DIR/src/ConnectionTester.c \
     $$COMMON_C_DIR/src/ControlStream.c \
     $$COMMON_C_DIR/src/CursorStream.c \
+    $$COMMON_C_DIR/src/Ds5HapticsStream.c \
+    $$COMMON_C_DIR/src/Ds5HapticsIrStream.c \
     $$COMMON_C_DIR/src/FakeCallbacks.c \
     $$COMMON_C_DIR/src/InputStream.c \
     $$COMMON_C_DIR/src/MicrophoneStream.c \
@@ -77,6 +79,8 @@ SOURCES += \
     $$COMMON_C_DIR/src/VideoStream.c
 HEADERS += \
     $$COMMON_C_DIR/src/CursorStream.h \
+    $$COMMON_C_DIR/src/Ds5HapticsStream.h \
+    $$COMMON_C_DIR/src/Ds5HapticsIrStream.h \
     $$COMMON_C_DIR/src/Limelight.h
 INCLUDEPATH += \
     $$ENET_DIR/include \

@@ -67,7 +67,7 @@ win32 {
     }
 
     INCLUDEPATH += $$PWD/../libs/windows/include
-    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib
+    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib uuid.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib
 }
 macx:!disable-prebuilts {
     !exists($$PWD/../libs/mac) {
@@ -229,6 +229,7 @@ SOURCES += \
     streaming/clipboardhelperclient.cpp \
     streaming/clipboardipc.cpp \
     streaming/audio/audio.cpp \
+    streaming/audio/dualsensehaptics.cpp \
     streaming/audio/renderers/sdlaud.cpp \
     streaming/network/bandwidth.cpp \
     gui/computermodel.cpp \
@@ -281,6 +282,9 @@ HEADERS += \
     streaming/clipboardhelperclient.h \
     streaming/clipboardipc.h \
     streaming/audio/renderers/renderer.h \
+    streaming/audio/dualsensehaptics.h \
+    streaming/audio/dualsensehapticscalibration.h \
+    streaming/audio/dualsensehapticsstream.h \
     streaming/audio/renderers/sdl.h \
     gui/computermodel.h \
     gui/appmodel.h \

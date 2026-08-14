@@ -144,6 +144,13 @@ public:
     };
     Q_ENUM(HdrBrightnessMode);
 
+    enum DualSenseHapticsMode
+    {
+        DSHM_PHYSICAL = 0,
+        DSHM_EMULATED = 1,
+    };
+    Q_ENUM(DualSenseHapticsMode);
+
     enum GamepadQuitCombo
     {
         GQC_DEFAULT         = 0,  // Start + Select + L1 + R1 (original)
@@ -173,6 +180,7 @@ public:
     Q_PROPERTY(bool showLocalCursor MEMBER showLocalCursor NOTIFY showLocalCursorChanged)
     Q_PROPERTY(bool absoluteTouchMode MEMBER absoluteTouchMode NOTIFY absoluteTouchModeChanged)
     Q_PROPERTY(bool enableNativeTouchpad MEMBER enableNativeTouchpad NOTIFY enableNativeTouchpadChanged)
+    Q_PROPERTY(DualSenseHapticsMode dualSenseHapticsMode MEMBER dualSenseHapticsMode NOTIFY dualSenseHapticsModeChanged)
     Q_PROPERTY(bool framePacing MEMBER framePacing NOTIFY framePacingChanged)
     Q_PROPERTY(bool videoEnhancement MEMBER videoEnhancement NOTIFY videoEnhancementChanged)
     Q_PROPERTY(bool streamResolutionScale MEMBER streamResolutionScale NOTIFY streamResolutionScaleChanged)
@@ -238,6 +246,7 @@ public:
     bool showLocalCursor;
     bool absoluteTouchMode;
     bool enableNativeTouchpad;
+    DualSenseHapticsMode dualSenseHapticsMode;
     bool framePacing;
     bool videoEnhancement;
     bool streamResolutionScale;
@@ -301,6 +310,7 @@ signals:
     void showLocalCursorChanged();
     void absoluteTouchModeChanged();
     void enableNativeTouchpadChanged();
+    void dualSenseHapticsModeChanged();
     void audioConfigChanged();
     void videoCodecConfigChanged();
     void enableHdrChanged();

@@ -4,6 +4,8 @@
 #include "filemappingux.h"
 #include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
+#include "streaming/audio/dualsensehaptics.h"
+#include "streaming/audio/dualsensehapticscalibration.h"
 #include "backend/richpresencemanager.h"
 #include "backend/nvhttp.h"
 #include "backend/identitymanager.h"
@@ -89,7 +91,9 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clSetAdaptiveTriggers,
     nullptr, // resolutionChanged (unused on Qt client)
     Session::clClipboardData,
-    Session::clCursorUpdate
+    Session::clCursorUpdate,
+    nullptr,
+    nullptr
 };
 
 Session* Session::s_ActiveSession;
@@ -540,6 +544,28 @@ void Session::clCursorUpdate(const LI_CURSOR_UPDATE* update)
     }
 }
 
+void Session::clDs5HapticsPcm(const LI_DS5_HAPTICS_PCM_FRAME* frame)
+{
+    Session* session = s_ActiveSession;
+    if (session != nullptr && session->m_DualSenseHapticsRenderer != nullptr && frame != nullptr) {
+        // submit() copies into a bounded queue before this receive callback returns.
+        session->m_DualSenseHapticsRenderer->submit(*frame);
+    }
+}
+
+void Session::clDs5HapticsIrV2(const LI_DS5_HAPTICS_IR_FRAME_V2* frame)
+{
+    if (frame == nullptr) {
+        return;
+    }
+
+    // IR lanes preserve authored left/right intent, while SDL exposes the
+    // common low/high-frequency motor model. Fold both lanes into spectral
+    // energy here; device-specific renderers can replace this calibration.
+    const auto output = dualsense_haptics::renderIrV2(*frame);
+    clRumble(frame->controllerNumber, output.lowFrequency, output.highFrequency);
+}
+
 void Session::clRumbleTriggers(uint16_t controllerNumber, uint16_t leftTrigger, uint16_t rightTrigger)
 {
     // We push an event for the main thread to handle in order to properly synchronize
@@ -919,6 +945,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_PortTestResults(0),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
+      m_DualSenseHapticsRenderer(nullptr),
       m_AudioSampleCount(0),
       m_DropAudioEndTime(0),
       m_MenuPanel(nullptr),
@@ -954,6 +981,9 @@ Session::~Session()
         delete m_ClipboardHelper;
         m_ClipboardHelper = nullptr;
     }
+
+    delete m_DualSenseHapticsRenderer;
+    m_DualSenseHapticsRenderer = nullptr;
 
     SDL_DestroyMutex(m_DecoderLock);
 }
@@ -1679,6 +1709,8 @@ private:
         // Finish cleanup of the connection state
         QMetaObject::invokeMethod(m_Session, &Session::stopMicrophone, Qt::BlockingQueuedConnection);
         LiStopConnection();
+        delete m_Session->m_DualSenseHapticsRenderer;
+        m_Session->m_DualSenseHapticsRenderer = nullptr;
 
         // Perform a best-effort app quit
         if (shouldQuit) {
@@ -3292,9 +3324,31 @@ void Session::start()
     }
 #endif
 
-    // Initialize the gamepad code with our preferences
-    // NB: m_InputHandler must be initialize before starting the connection.
-    m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height);
+    bool enablePhysicalDualSenseHaptics = false;
+    k_ConnCallbacks.ds5HapticsPcm = nullptr;
+    k_ConnCallbacks.ds5HapticsIrV2 = nullptr;
+    if (m_Preferences->dualSenseHapticsMode == StreamingPreferences::DSHM_PHYSICAL) {
+#ifdef Q_OS_WIN32
+        enablePhysicalDualSenseHaptics = true;
+        k_ConnCallbacks.ds5HapticsPcm = Session::clDs5HapticsPcm;
+        if (m_DualSenseHapticsRenderer == nullptr) {
+            m_DualSenseHapticsRenderer = new DualSenseHapticsRenderer();
+        }
+        if (!DualSenseHapticsRenderer::isAvailable()) {
+            emitLaunchWarning(tr("Physical DualSense haptics was selected, but no active USB DualSense four-channel audio endpoint was found yet. Moonlight will keep checking during this stream."));
+        }
+#else
+        emitLaunchWarning(tr("Physical DualSense haptics is only available on Windows in this build."));
+#endif
+    }
+    else {
+        k_ConnCallbacks.ds5HapticsIrV2 = Session::clDs5HapticsIrV2;
+    }
+
+    // Initialize the gamepad code with the effective (post-preflight) capability.
+    // NB: m_InputHandler must be initialized before starting the connection.
+    m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width,
+                                         m_StreamConfig.height, enablePhysicalDualSenseHaptics);
 
     // Kick off the async connection thread then return to the caller to pump the event loop
     auto thread = new AsyncConnectionStartThread(this);

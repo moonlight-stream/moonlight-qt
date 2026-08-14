@@ -26,6 +26,8 @@ struct ProbeState;
 struct MountState;
 }
 
+class DualSenseHapticsRenderer;
+
 class SupportedVideoFormatList : public QList<int>
 {
 public:
@@ -273,6 +275,12 @@ private:
     void clCursorUpdate(const LI_CURSOR_UPDATE* update);
 
     static
+    void clDs5HapticsPcm(const LI_DS5_HAPTICS_PCM_FRAME* frame);
+
+    static
+    void clDs5HapticsIrV2(const LI_DS5_HAPTICS_IR_FRAME_V2* frame);
+
+    static
     int arInit(int audioConfiguration,
                const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                void* arContext, int arFlags);
@@ -343,6 +351,7 @@ private:
 
     OpusMSDecoder* m_OpusDecoder;
     IAudioRenderer* m_AudioRenderer;
+    DualSenseHapticsRenderer* m_DualSenseHapticsRenderer;
     OPUS_MULTISTREAM_CONFIGURATION m_ActiveAudioConfig;
     OPUS_MULTISTREAM_CONFIGURATION m_OriginalAudioConfig;
     int m_AudioSampleCount;

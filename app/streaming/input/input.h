@@ -127,7 +127,8 @@ struct RemoteCursorUpdate {
 class SdlInputHandler
 {
 public:
-    explicit SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight);
+    explicit SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight,
+                             bool enablePhysicalDualSenseHaptics);
 
     ~SdlInputHandler();
 
@@ -355,6 +356,7 @@ private:
     SDL_Window* m_Window;
     bool m_MultiController;
     bool m_GamepadMouse;
+    bool m_EnableDualSenseHaptics;
     bool m_SwapMouseButtons;
     bool m_SwapWinAltKeys;
     bool m_ReverseScrollDirection;

@@ -712,6 +712,12 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         if (SDL_GameControllerHasLED(state->controller)) {
             capabilities |= LI_CCAP_RGB_LED;
         }
+#ifdef Q_OS_WIN32
+        if (m_EnableDualSenseHaptics &&
+            SDL_GameControllerGetType(state->controller) == SDL_CONTROLLER_TYPE_PS5) {
+            capabilities |= LI_CCAP_DS5_HAPTICS_PCM;
+        }
+#endif
 
         uint8_t type;
         switch (SDL_GameControllerGetType(state->controller)) {
