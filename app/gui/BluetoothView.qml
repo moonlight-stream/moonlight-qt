@@ -14,15 +14,22 @@ Item {
 
     property BluetoothDeviceModel deviceModel : createModel()
 
+    // We hold no keys ourselves, so hand focus to a control
+    onActiveFocusChanged: {
+        if (activeFocus) {
+            focusDefaultControl()
+        }
+    }
+
     StackView.onActivated: {
         BluetoothManager.operationFailed.connect(handleOperationFailed)
         BluetoothManager.agentRequest.connect(handleAgentRequest)
         BluetoothManager.agentRequestCancelled.connect(handleAgentRequestCancelled)
 
-        // Highlight first device for gamepad users
-        if (deviceList.currentIndex === -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
-            deviceList.currentIndex = 0
-        }
+        // Arrow keys, like the other list views
+        SdlGamepadKeyNavigation.setUiNavMode(false)
+
+        focusDefaultControl()
     }
 
     StackView.onDeactivating: {
@@ -69,6 +76,35 @@ Item {
     }
 
     // Helper functions
+
+    // Focus whichever control the user can act on
+    function focusDefaultControl()
+    {
+        if (deviceList.count > 0) {
+            deviceList.forceActiveFocus(Qt.TabFocus)
+        }
+        else {
+            focusHeaderRow()
+        }
+    }
+
+    // Falls back when scanning is unavailable
+    function focusHeaderRow()
+    {
+        if (scanButton.enabled) {
+            scanButton.forceActiveFocus(Qt.TabFocus)
+        }
+        else {
+            powerSwitch.forceActiveFocus(Qt.TabFocus)
+        }
+    }
+
+    // Moves focus up into the window toolbar
+    function focusToolbar(item)
+    {
+        item.nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocus)
+    }
+
     // The action the user likely wants
     function activateDevice(device)
     {
@@ -109,6 +145,7 @@ Item {
             }
 
             Switch {
+                id: powerSwitch
                 text: qsTr("Bluetooth on")
                 enabled: BluetoothManager.available
                 checked: BluetoothManager.powered
@@ -124,7 +161,18 @@ Item {
 
                 Keys.onReturnPressed: requestPowerChange(!BluetoothManager.powered)
                 Keys.onEnterPressed: requestPowerChange(!BluetoothManager.powered)
-                Keys.onDownPressed: deviceList.forceActiveFocus(Qt.TabFocus)
+
+                Keys.onUpPressed: focusToolbar(powerSwitch)
+                Keys.onRightPressed: {
+                    if (scanButton.enabled) {
+                        scanButton.forceActiveFocus(Qt.TabFocus)
+                    }
+                }
+                Keys.onDownPressed: {
+                    if (deviceList.count > 0) {
+                        deviceList.forceActiveFocus(Qt.TabFocus)
+                    }
+                }
             }
 
             BusyIndicator {
@@ -135,6 +183,7 @@ Item {
             }
 
             Button {
+                id: scanButton
                 text: BluetoothManager.discovering ? qsTr("Stop scanning") : qsTr("Scan for devices")
                 enabled: BluetoothManager.available && BluetoothManager.powered
                 activeFocusOnTab: true
@@ -150,7 +199,14 @@ Item {
 
                 Keys.onReturnPressed: clicked()
                 Keys.onEnterPressed: clicked()
-                Keys.onDownPressed: deviceList.forceActiveFocus(Qt.TabFocus)
+
+                Keys.onUpPressed: focusToolbar(scanButton)
+                Keys.onLeftPressed: powerSwitch.forceActiveFocus(Qt.TabFocus)
+                Keys.onDownPressed: {
+                    if (deviceList.count > 0) {
+                        deviceList.forceActiveFocus(Qt.TabFocus)
+                    }
+                }
             }
         }
 
@@ -179,6 +235,13 @@ Item {
             Component.onCompleted: {
                 // Don't highlight until the user interacts
                 currentIndex = -1
+            }
+
+            // Key focus needs a visible highlight to land on
+            onActiveFocusChanged: {
+                if (activeFocus && currentIndex === -1 && count > 0) {
+                    currentIndex = 0
+                }
             }
 
             Label {
@@ -333,8 +396,8 @@ Item {
 
                 Keys.onUpPressed: {
                     if (deviceList.currentIndex === 0) {
-                        // Move focus to the toolbar
-                        deviceList.nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocus)
+                        // Leave the list for the controls above
+                        focusHeaderRow()
                     }
                     else {
                         deviceList.decrementCurrentIndex()
