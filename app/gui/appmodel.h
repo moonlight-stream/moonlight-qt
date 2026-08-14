@@ -29,6 +29,10 @@ public:
 
     Q_INVOKABLE Session* createSessionForApp(int appIndex);
 
+    // Streams the app in a second Moonlight process, allowing concurrent
+    // sessions to different hosts. Returns false if the process failed to start.
+    Q_INVOKABLE bool launchAppInNewInstance(int appIndex);
+
     Q_INVOKABLE int getDirectLaunchAppIndex();
 
     Q_INVOKABLE int getRunningAppId();
