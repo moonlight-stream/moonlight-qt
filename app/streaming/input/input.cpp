@@ -178,6 +178,12 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     // Opt-out of SDL's built-in Alt+Tab handling while keyboard grab is enabled
     SDL_SetHint(SDL_HINT_ALLOW_ALT_TAB_WHILE_GRABBED, "0");
 
+#ifdef Q_OS_WIN32
+    // Keep Alt+F4 in the keyboard input path for the entire streaming session,
+    // including when the stream is running in a window.
+    SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, "1");
+#endif
+
     // Allow clicks to pass through to us when focusing the window. If we're in
     // absolute mouse mode, this will avoid the user having to click twice to
     // trigger a click on the host if the Moonlight window is not focused. In
@@ -330,6 +336,11 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
 
 SdlInputHandler::~SdlInputHandler()
 {
+#ifdef Q_OS_WIN32
+    // Restore SDL's normal Alt+F4 handling outside the streaming session.
+    SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, "0");
+#endif
+
 #ifdef HAVE_WINDOWS_RAW_TOUCHPAD
     m_WindowsTouchpadInput.reset();
 #endif
@@ -872,9 +883,6 @@ void SdlInputHandler::updateKeyboardGrabState()
             shouldGrab = false;
         }
     }
-
-    // Don't close the window on Alt+F4 when keyboard grab is enabled
-    SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, shouldGrab ? "1" : "0");
 
 #if SDL_VERSION_ATLEAST(2, 0, 15)
     // On SDL 2.0.15+, we can get keyboard-only grab on Win32, X11, and Wayland.
