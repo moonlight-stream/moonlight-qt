@@ -65,7 +65,8 @@ mkdir %BUILD_FOLDER%
 mkdir %INSTALLER_FOLDER%
 
 rem Find Visual Studio and run vcvarsall.bat
-set VSWHERE="%SOURCE_ROOT%\scripts\vswhere.exe"
+call "%SOURCE_ROOT%\scripts\find-vswhere.bat"
+if !ERRORLEVEL! NEQ 0 goto Error
 for /f "usebackq delims=" %%i in (`%VSWHERE% -latest -property installationPath`) do (
     call "%%i\VC\Auxiliary\Build\vcvarsall.bat" x86
 )
