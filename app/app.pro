@@ -61,7 +61,8 @@ macx:!disable-prebuilts {
     LIBS += -L$$PWD/../libs/mac/lib
 }
 
-unix:!macx {
+# Bluetooth pairing targets single-purpose devices
+unix:!macx:embedded {
     # BlueZ is controlled over D-Bus
     !disable-bluez {
         qtHaveModule(dbus) {

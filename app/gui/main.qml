@@ -425,7 +425,7 @@ ApplicationWindow {
             NavigableToolButton {
                 id: bluetoothButton
 
-                // Hidden when BlueZ is unreachable
+                // Embedded builds with reachable BlueZ
                 visible: BluetoothManager.available
 
                 iconSource: "qrc:/res/bluetooth.svg"
