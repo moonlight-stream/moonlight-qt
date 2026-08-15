@@ -165,9 +165,30 @@ pushd %BUILD_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 popd
 
+rem Locate jom.exe or fall back to nmake.exe
+where /q jom.exe
+if !ERRORLEVEL! EQU 0 (
+    set JOM_CMD=jom.exe
+) else if exist "%QT_PATH%\..\..\..\Tools\QtCreator\bin\jom\jom.exe" (
+    set JOM_CMD="%QT_PATH%\..\..\..\Tools\QtCreator\bin\jom\jom.exe"
+) else if exist "%QT_PATH%\..\..\..\Tools\QtCreator\bin\jom.exe" (
+    set JOM_CMD="%QT_PATH%\..\..\..\Tools\QtCreator\bin\jom.exe"
+) else if exist "%QT_PATH%\..\..\..\Tools\jom\jom.exe" (
+    set JOM_CMD="%QT_PATH%\..\..\..\Tools\jom\jom.exe"
+) else (
+    where /q nmake.exe
+    if !ERRORLEVEL! EQU 0 (
+        echo jom.exe not found. Falling back to nmake.exe.
+        set JOM_CMD=nmake.exe
+    ) else (
+        echo Unable to find jom.exe or nmake.exe!
+        goto Error
+    )
+)
+
 echo Compiling Moonlight in %BUILD_CONFIG% configuration
 pushd %BUILD_FOLDER%
-%SOURCE_ROOT%\scripts\jom.exe %BUILD_CONFIG%
+!JOM_CMD! %BUILD_CONFIG%
 if !ERRORLEVEL! NEQ 0 goto Error
 popd
 

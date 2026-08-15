@@ -50,6 +50,7 @@ jobs:
           cache: true
           set-env: ${{ runner.os != 'Windows' }}
           add-tools-to-path: ${{ runner.os != 'Windows' }}
+          tools: ${{ runner.os == 'Windows' && 'tools_qtcreator_gui' || '' }}
           version: ${{ matrix.qt_version }}
           aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@073e34d7c2ab4ae6961ed7cca690b3abd5ba5a7e'
 
