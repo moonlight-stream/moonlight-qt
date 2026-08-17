@@ -701,7 +701,14 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             type = LI_CTYPE_NINTENDO;
             break;
         default:
-            type = LI_CTYPE_UNKNOWN;
+            // SDL has no gamepad type for Valve's Steam Controllers so tell the host it's an
+            // Xbox pad and let it emulate an X360/XInput device instead.
+            if (vendorId == 0x28de) {
+                type = LI_CTYPE_XBOX;
+            }
+            else {
+                type = LI_CTYPE_UNKNOWN;
+            }
             break;
         }
 
