@@ -216,8 +216,9 @@ NvHTTP::startApp(QString verb,
                  int gamepadMask,
                  bool persistGameControllersOnDisconnect,
                  QString& rtspSessionUrl,
-                 int customScreenMode,
-                 int customVddScreenMode,
+                 int screenCombinationMode,
+                 const std::optional<bool>& useVdd,
+                 const QString& displayName,
                  RemoteStreamConfig &remoteStreamConfig)
 {
     int riKeyId;
@@ -254,34 +255,45 @@ NvHTTP::startApp(QString verb,
         }
     }
 
-    QString response =
-            openConnectionToString(m_BaseUrlHttps,
-                                   verb,
-                                   "appid="+QString::number(appId)+
-                                   "&mode="+appWidth+"x"+
-                                   appHeight+"x"+
-                                   appFps +
-                                   "&additionalStates=1&sops="+QString::number(sops ? 1 : 0)+
-                                   "&rikey="+QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex()+
-                                   "&rikeyid="+QString::number(riKeyId)+
-                                   ((streamConfig->supportedVideoFormats & VIDEO_FORMAT_MASK_10BIT) ?
-                                       "&hdrMode="+QString::number(streamConfig->hdrMode)+
-                                       "&clientHdrCapVersion=0&clientHdrCapSupportedFlagsInUint32=0&clientHdrCapMetaDataId=NV_STATIC_METADATA_TYPE_1&clientHdrCapDisplayData=0x0x0x0x0x0x0x0x0x0x0" :
-                                        "")+
-                                   "&localAudioPlayMode="+QString::number(localAudio ? 1 : 0)+
-                                   "&surroundAudioInfo="+QString::number(SURROUNDAUDIOINFO_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration))+
-                                   "&remoteControllersBitmap="+QString::number(gamepadMask)+
-                                   "&gcmap="+QString::number(gamepadMask)+
-                                   "&gcpersist="+QString::number(persistGameControllersOnDisconnect ? 1 : 0)+
-                                   "&customScreenMode="+QString::number(customScreenMode)+
-                                   "&customVddScreenMode="+QString::number(customVddScreenMode)+
-                                   ((remoteStreamConfig.maxBrightness > 0) ?
-                                       "&maxBrightness="+QString::number(remoteStreamConfig.maxBrightness, 'f', 3)+
-                                       "&minBrightness="+QString::number(remoteStreamConfig.minBrightness, 'f', 6)+
-                                       "&maxAverageBrightness="+QString::number(remoteStreamConfig.maxAverageBrightness, 'f', 3) :
-                                        "")+
-                                   LiGetLaunchUrlQueryParameters(),
-                                   LAUNCH_TIMEOUT_MS);
+    QString query =
+            "appid="+QString::number(appId)+
+            "&mode="+appWidth+"x"+
+            appHeight+"x"+
+            appFps+
+            "&additionalStates=1&sops="+QString::number(sops ? 1 : 0)+
+            "&rikey="+QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex()+
+            "&rikeyid="+QString::number(riKeyId)+
+            ((streamConfig->supportedVideoFormats & VIDEO_FORMAT_MASK_10BIT) ?
+                "&hdrMode="+QString::number(streamConfig->hdrMode)+
+                "&clientHdrCapVersion=0&clientHdrCapSupportedFlagsInUint32=0&clientHdrCapMetaDataId=NV_STATIC_METADATA_TYPE_1&clientHdrCapDisplayData=0x0x0x0x0x0x0x0x0x0x0" :
+                 "")+
+            "&localAudioPlayMode="+QString::number(localAudio ? 1 : 0)+
+            "&surroundAudioInfo="+QString::number(SURROUNDAUDIOINFO_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration))+
+            "&remoteControllersBitmap="+QString::number(gamepadMask)+
+            "&gcmap="+QString::number(gamepadMask)+
+            "&gcpersist="+QString::number(persistGameControllersOnDisconnect ? 1 : 0);
+
+    if (screenCombinationMode != -1) {
+        query += "&customScreenMode="+QString::number(screenCombinationMode);
+    }
+    if (useVdd.has_value()) {
+        query += "&useVdd="+QString::number(*useVdd ? 1 : 0);
+    }
+    if (!displayName.isEmpty()) {
+        query += "&display_name="+QString::fromLatin1(QUrl::toPercentEncoding(displayName));
+    }
+    if (remoteStreamConfig.maxBrightness > 0) {
+        query += "&maxBrightness="+QString::number(remoteStreamConfig.maxBrightness, 'f', 3)+
+                 "&minBrightness="+QString::number(remoteStreamConfig.minBrightness, 'f', 6)+
+                 "&maxAverageBrightness="+QString::number(remoteStreamConfig.maxAverageBrightness, 'f', 3);
+    }
+
+    query += LiGetLaunchUrlQueryParameters();
+
+    QString response = openConnectionToString(m_BaseUrlHttps,
+                                              verb,
+                                              query,
+                                              LAUNCH_TIMEOUT_MS);
 
     qInfo() << "Launch response:" << response;
 
@@ -425,19 +437,24 @@ NvHTTP::getDisplays()
         for (int i = 0; i < displaysArray.size(); i++) {
             QJsonObject displayObj = displaysArray[i].toObject();
 
+            const QString displayName = displayObj.value("display_name").toString();
             QString friendlyName = displayObj.value("friendly_name").toString();
             if (friendlyName.isEmpty()) {
-                friendlyName = displayObj.value("display_name").toString();
+                friendlyName = displayName;
             }
             if (friendlyName.isEmpty()) {
                 friendlyName = QString("Display %1").arg(i + 1);
             }
 
-            QString guid = displayObj.value("device_id").toString();
+            QString displayTarget = displayObj.value("device_id").toString();
+            if (displayTarget.isEmpty()) {
+                displayTarget = displayName.isEmpty() ? friendlyName : displayName;
+            }
 
             QVariantMap display;
             display["name"] = friendlyName;
-            display["guid"] = guid;
+            display["id"] = QStringLiteral("physical:%1:%2").arg(i).arg(displayTarget);
+            display["target"] = displayTarget;
             display["index"] = i;
             displays.append(display);
         }

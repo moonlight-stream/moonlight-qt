@@ -922,11 +922,17 @@ bool Session::populateDecoderProperties(SDL_Window* window)
     return true;
 }
 
-Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
+Session::Session(NvComputer* computer,
+                 NvApp& app,
+                 StreamingPreferences *preferences,
+                 QString launchDisplayName,
+                 std::optional<bool> launchUseVdd)
     : m_Preferences(preferences ? preferences : StreamingPreferences::get()),
       m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
       m_Computer(computer),
       m_App(app),
+      m_LaunchDisplayName(std::move(launchDisplayName)),
+      m_LaunchUseVdd(launchUseVdd),
       m_Window(nullptr),
       m_VideoDecoder(nullptr),
       m_DecoderLock(SDL_CreateMutex()),
@@ -3157,8 +3163,9 @@ bool Session::startConnectionAsync()
                       m_InputHandler->getAttachedGamepadMask(),
                       !m_Preferences->multiController,
                       rtspSessionUrl,
-                      m_Preferences->customScreenMode,
-                      m_Preferences->customVddScreenMode,
+                      m_Preferences->screenCombinationMode,
+                      m_LaunchUseVdd,
+                      m_LaunchDisplayName,
                       remoteStreamConfig);
 
         try {

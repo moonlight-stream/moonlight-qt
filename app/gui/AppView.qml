@@ -38,8 +38,10 @@ CenteredGridView {
     bottomMargin: 5
     cellWidth: 230; cellHeight: 297;
 
-    // 当前选中显示器: "" = 未选, "vdd" = VDD, 其他 = 物理显示器 guid
+    // 当前选中显示器的界面 ID: "" = 未选, "vdd" = VDD, 其他 = 唯一的物理显示器 ID
     property string selectedDisplayId: ""
+    // 实际发送给 Sunshine 的显示器目标；与界面 ID 分开，避免同名显示器互相覆盖
+    property string selectedDisplayTarget: ""
     // 当前选中是否 VDD
     property bool isVddSelected: selectedDisplayId === "vdd"
     // 物理显示器列表
@@ -122,14 +124,26 @@ CenteredGridView {
     // 加载显示器列表
     function loadDisplays() {
         var displays = appModel.getDisplayList()
+        var selectedDisplayStillAvailable = selectedDisplayId === "" || selectedDisplayId === "vdd"
         displayList = displays
         displayListModel.clear()
         for (var i = 0; i < displays.length; i++) {
             displayListModel.append({
                 "displayName": displays[i].name,
-                "displayGuid": displays[i].guid,
+                "displayId": displays[i].id,
+                "displayTarget": displays[i].target,
                 "displayIndex": displays[i].index
             })
+
+            if (selectedDisplayId === displays[i].id &&
+                    selectedDisplayTarget === displays[i].target) {
+                selectedDisplayStillAvailable = true
+            }
+        }
+
+        if (!selectedDisplayStillAvailable) {
+            selectedDisplayId = ""
+            selectedDisplayTarget = ""
         }
     }
 
@@ -177,8 +191,7 @@ CenteredGridView {
                     return
                 }
             }
-            // 没有物理显示器被选中时至少落在 VDD 上：它是静态声明的，一直都在
-            vddChip.forceActiveFocus(Qt.TabFocusReason)
+            hostDefaultChip.forceActiveFocus(Qt.TabFocusReason)
         }
 
         Column {
@@ -197,24 +210,31 @@ CenteredGridView {
                 width: parent.width
                 spacing: Theme.spaceSm
 
+                DisplayChip {
+                    id: hostDefaultChip
+                    //: Display option that lets the host choose the display.
+                    text: qsTr("Default", "display selection")
+                    selected: selectedDisplayId === ""
+                    navDownItem: combinationModeSelector.firstItem
+
+                    onClicked: {
+                        selectedDisplayId = ""
+                        selectedDisplayTarget = ""
+                    }
+                }
+
                 // 动态物理显示器按钮
                 Repeater {
                     model: ListModel { id: displayListModel }
 
                     DisplayChip {
                         text: model.displayName
-                        selected: selectedDisplayId === model.displayGuid
-                        navDownItem: combinationModeCombo.visible ? combinationModeCombo : null
+                        selected: selectedDisplayId === model.displayId
+                        navDownItem: combinationModeSelector.firstItem
 
                         onClicked: {
-                            selectedDisplayId = model.displayGuid
-                            var saved = StreamingPreferences.customScreenMode
-                            for (var i = 0; i < physicalModeModel.count; i++) {
-                                if (physicalModeModel.get(i).val === saved) {
-                                    combinationModeCombo.currentIndex = i
-                                    break
-                                }
-                            }
+                            selectedDisplayId = model.displayId
+                            selectedDisplayTarget = model.displayTarget
                         }
                     }
                 }
@@ -226,26 +246,18 @@ CenteredGridView {
                     selected: isVddSelected
                     selectedFill: Theme.acid
                     selectedBorder: Theme.acid
-                    navDownItem: combinationModeCombo.visible ? combinationModeCombo : null
+                    navDownItem: combinationModeSelector.firstItem
 
                     onClicked: {
                         selectedDisplayId = "vdd"
-                        var saved = StreamingPreferences.customVddScreenMode
-                        for (var i = 0; i < vddModeModel.count; i++) {
-                            if (vddModeModel.get(i).val === saved) {
-                                combinationModeCombo.currentIndex = i
-                                break
-                            }
-                        }
+                        selectedDisplayTarget = "vdd"
                     }
                 }
             }
 
-            // 组合模式区（选中显示器后显示）
             Column {
                 width: parent.width
                 spacing: Theme.spaceSm
-                visible: selectedDisplayId !== ""
 
                 Rectangle {
                     width: parent.width
@@ -254,63 +266,18 @@ CenteredGridView {
                 }
 
                 MicroLabel {
-                    text: isVddSelected ? qsTr("VDD Combination Mode:") : qsTr("Screen Combination Mode:")
+                    text: qsTr("Screen Combination Mode:")
                 }
 
-                AutoResizingComboBox {
-                    id: combinationModeCombo
+                ScreenCombinationModeSelector {
+                    id: combinationModeSelector
                     width: parent.width
-                    maximumWidth: parent.width
-                    textRole: "text"
-                    model: isVddSelected ? vddModeModel : physicalModeModel
-
-                    // 收起状态下上下键改为导航：不然手柄落到这里就出不去了，
-                    // 而且一路把组合模式静默改掉。向上回到显示器按钮行的末尾；
-                    // 这是弹窗里最后一个控件，向下没有去处，吃掉即可。
+                    compact: true
+                    saveOnSelection: true
                     navUpItem: vddChip
-
-                    Component.onCompleted: {
-                        var saved = StreamingPreferences.customScreenMode
-                        for (var i = 0; i < physicalModeModel.count; i++) {
-                            if (physicalModeModel.get(i).val === saved) {
-                                currentIndex = i
-                                break
-                            }
-                        }
-                    }
-
-                    onActivated: {
-                        var val = combinationModeCombo.model.get(currentIndex).val
-                        if (isVddSelected) {
-                            StreamingPreferences.customVddScreenMode = val
-                        } else {
-                            StreamingPreferences.customScreenMode = val
-                        }
-                        StreamingPreferences.save()
-                    }
                 }
             }
         }
-    }
-
-    // 物理显示器组合模式
-    ListModel {
-        id: physicalModeModel
-        ListElement { text: qsTr("Use host config (default)"); val: -1 }
-        ListElement { text: qsTr("Do not change"); val: 0 }
-        ListElement { text: qsTr("Ensure active"); val: 1 }
-        ListElement { text: qsTr("Ensure primary"); val: 2 }
-        ListElement { text: qsTr("Only display"); val: 3 }
-    }
-
-    // VDD 显示器组合模式
-    ListModel {
-        id: vddModeModel
-        ListElement { text: qsTr("Use host config (default)"); val: -1 }
-        ListElement { text: qsTr("Keep current layout"); val: 0 }
-        ListElement { text: qsTr("VDD primary + Physical extended"); val: 1 }
-        ListElement { text: qsTr("Physical primary + VDD extended"); val: 2 }
-        ListElement { text: qsTr("VDD only (disable physical)"); val: 3 }
     }
 
     function computerLost()
@@ -717,7 +684,7 @@ CenteredGridView {
             var segue = component.createObject(stackView, {
                                                    "appName": model.name,
                                                    "boxArtUrl": model.boxart,
-                                                   "session": appModel.createSessionForApp(index),
+                                                   "session": appModel.createSessionForApp(index, selectedDisplayTarget),
                                                    "isResume": runningId === model.appid
                                                })
             stackView.push(segue)
@@ -900,7 +867,7 @@ CenteredGridView {
                 // successfully quitting the old app.
                 params.nextAppName = nextAppName
                 params.nextBoxArtUrl = appModel.data(appModel.index(nextAppIndex, 0), boxArtRole)
-                params.nextSession = appModel.createSessionForApp(nextAppIndex)
+                params.nextSession = appModel.createSessionForApp(nextAppIndex, selectedDisplayTarget)
             }
             else {
                 params.nextAppName = null

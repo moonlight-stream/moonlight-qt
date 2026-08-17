@@ -67,10 +67,17 @@ QString AppModel::getRunningAppName()
     return nullptr;
 }
 
-Session* AppModel::createSessionForApp(int appIndex)
+Session* AppModel::createSessionForApp(int appIndex, const QString& displayId)
 {
     Q_ASSERT(appIndex < m_VisibleApps.count());
     NvApp app = m_VisibleApps.at(appIndex);
+
+    if (displayId == QStringLiteral("vdd")) {
+        return new Session(m_Computer, app, nullptr, QString(), true);
+    }
+    if (!displayId.isEmpty()) {
+        return new Session(m_Computer, app, nullptr, displayId, false);
+    }
 
     return new Session(m_Computer, app);
 }

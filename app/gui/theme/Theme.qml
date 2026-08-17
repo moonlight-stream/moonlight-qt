@@ -20,8 +20,8 @@ QtObject {
 
     // ---- 文字 ----
     readonly property color text: "#EEF0EC"      // --cend-text，带一点暖调的灰白
-    readonly property color textDim: "#8B8F86"   // --cend-text-dim，副标题/说明
-    readonly property color textFaint: "#5C6169" // 禁用态、极次要信息
+    readonly property color textDim: "#AEB3AB"   // --cend-text-dim，副标题/说明
+    readonly property color textFaint: "#7E858E" // 禁用态、极次要信息
 
     // ---- 强调色 ----
     // 主色保留品牌青；酸性绿只留给「正在运行 / LIVE」这类抢眼状态标记，

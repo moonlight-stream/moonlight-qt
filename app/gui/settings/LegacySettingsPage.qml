@@ -148,120 +148,24 @@ Column {
                 anchors.fill: parent
                 spacing: 5
 
-                // 添加自定义屏幕模式选择器
                 Label {
-                    id: customScreenModeTitle
                     width: parent.width
-                    text: qsTr("Custom Screen Mode")
+                    text: qsTr("Screen Combination Mode")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
 
-                AutoResizingComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
-                        var saved_mode = (StreamingPreferences.customScreenMode !== undefined &&
-                                          StreamingPreferences.customScreenMode !== null) ?
-                                          StreamingPreferences.customScreenMode : -1
-                        currentIndex = 0
-                        for (var i = 0; i < customScreenModeListModel.count; i++) {
-                            var el_mode = customScreenModeListModel.get(i).val;
-                            if (saved_mode === el_mode) {
-                                currentIndex = i
-                                break
-                            }
-                        }
-                        activated(currentIndex)
-                    }
-
-                    id: customScreenModeComboBox
-                    textRole: "text"
-                    model: ListModel {
-                        id: customScreenModeListModel
-                        ListElement {
-                            text: qsTr("Nothing")
-                            val: -1
-                        }
-                        ListElement {
-                            text: qsTr("Disabled")
-                            val: 0
-                        }
-                        ListElement {
-                            text: qsTr("Activate the display automatically")
-                            val: 1
-                        }
-                        ListElement {
-                            text: qsTr("Activate the display automatically and make it a primary display")
-                            val: 2
-                        }
-                        ListElement {
-                            text: qsTr("Deactivate other displays and activate only the specified display")
-                            val: 3
-                        }
-                    }
-                    // ::onActivated must be used, as it only listens for when the index is changed by a human
-                    onActivated: {
-                        if (enabled) {
-                            StreamingPreferences.customScreenMode = customScreenModeListModel.get(currentIndex).val
-                        }
-                    }
-                }
-
-                // VDD 屏幕模式选择器
-                Label {
-                    id: customVddScreenModeTitle
+                Text {
                     width: parent.width
-                    text: qsTr("VDD Screen Mode")
-                    font.pointSize: 12
+                    text: qsTr("Sunshine Foundation display control")
+                    color: Theme.textDim
+                    font.family: Theme.fontMono
+                    font.pointSize: Theme.fontCaption
                     wrapMode: Text.Wrap
                 }
 
-                AutoResizingComboBox {
-                    Component.onCompleted: {
-                        var saved_mode = (StreamingPreferences.customVddScreenMode !== undefined &&
-                                          StreamingPreferences.customVddScreenMode !== null) ?
-                                          StreamingPreferences.customVddScreenMode : -1
-                        currentIndex = 0
-                        for (var i = 0; i < customVddScreenModeListModel.count; i++) {
-                            var el_mode = customVddScreenModeListModel.get(i).val;
-                            if (saved_mode === el_mode) {
-                                currentIndex = i
-                                break
-                            }
-                        }
-                        activated(currentIndex)
-                    }
-
-                    id: customVddScreenModeComboBox
-                    textRole: "text"
-                    model: ListModel {
-                        id: customVddScreenModeListModel
-                        ListElement {
-                            text: qsTr("Use Sunshine host configuration (default)")
-                            val: -1
-                        }
-                        ListElement {
-                            text: qsTr("Keep current layout")
-                            val: 0
-                        }
-                        ListElement {
-                            text: qsTr("VDD primary + Physical extended")
-                            val: 1
-                        }
-                        ListElement {
-                            text: qsTr("Physical primary + VDD extended")
-                            val: 2
-                        }
-                        ListElement {
-                            text: qsTr("VDD only (disable physical displays)")
-                            val: 3
-                        }
-                    }
-                    onActivated: {
-                        if (enabled) {
-                            StreamingPreferences.customVddScreenMode = customVddScreenModeListModel.get(currentIndex).val
-                        }
-                    }
+                ScreenCombinationModeSelector {
+                    width: parent.width
                 }
 
                 HardCheckBox {

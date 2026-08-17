@@ -13,6 +13,8 @@
 #include <QJsonObject>
 #include <QVariant>
 
+#include <optional>
+
 class NvComputer;
 
 class NvDisplayMode
@@ -193,8 +195,9 @@ public:
              int gamepadMask,
              bool persistGameControllersOnDisconnect,
              QString& rtspSessionUrl,
-             int customScreenMode,
-             int customVddScreenMode,
+             int screenCombinationMode,
+             const std::optional<bool>& useVdd,
+             const QString& displayName,
              RemoteStreamConfig &remoteStreamConfig);
 
     QVector<NvApp>

@@ -29,12 +29,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/appmodel.cpp" line="287"/>
+        <location filename="../gui/appmodel.cpp" line="294"/>
         <source>Auto (default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/appmodel.cpp" line="288"/>
+        <location filename="../gui/appmodel.cpp" line="295"/>
         <source>Automatic selection with fallback</source>
         <translation type="unfinished"></translation>
     </message>
@@ -42,146 +42,102 @@
 <context>
     <name>AppView</name>
     <message>
-        <location filename="../gui/AppView.qml" line="149"/>
+        <location filename="../gui/AppView.qml" line="156"/>
         <source>Display Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="188"/>
+        <location filename="../gui/AppView.qml" line="194"/>
         <source>Select Display:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="221"/>
+        <location filename="../gui/AppView.qml" line="234"/>
         <source>VDD Display</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="253"/>
-        <source>VDD Combination Mode:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="253"/>
+        <location filename="../gui/AppView.qml" line="258"/>
         <source>Screen Combination Mode:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="295"/>
-        <location filename="../gui/AppView.qml" line="305"/>
-        <source>Use host config (default)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="296"/>
-        <source>Do not change</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="297"/>
-        <source>Ensure active</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="298"/>
-        <source>Ensure primary</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="299"/>
-        <source>Only display</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="306"/>
-        <source>Keep current layout</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="307"/>
-        <source>VDD primary + Physical extended</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="308"/>
-        <source>Physical primary + VDD extended</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="309"/>
-        <source>VDD only (disable physical)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="610"/>
-        <location filename="../gui/AppView.qml" line="791"/>
+        <location filename="../gui/AppView.qml" line="570"/>
+        <location filename="../gui/AppView.qml" line="751"/>
         <source>Resume Game</source>
         <translation>Продължаване на играта</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="631"/>
-        <location filename="../gui/AppView.qml" line="795"/>
+        <location filename="../gui/AppView.qml" line="591"/>
+        <location filename="../gui/AppView.qml" line="755"/>
         <source>Quit Game</source>
         <translation>Изход от играта</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="670"/>
+        <location filename="../gui/AppView.qml" line="630"/>
         <source>Live</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="692"/>
+        <location filename="../gui/AppView.qml" line="652"/>
         <source>Hidden</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="791"/>
+        <location filename="../gui/AppView.qml" line="751"/>
         <source>Launch Game</source>
         <translation>Пускане на играта</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="564"/>
-        <location filename="../gui/AppView.qml" line="802"/>
+        <location filename="../gui/AppView.qml" line="524"/>
+        <location filename="../gui/AppView.qml" line="762"/>
         <source>Direct Launch</source>
         <translation>Директно пускане</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="806"/>
+        <location filename="../gui/AppView.qml" line="205"/>
+        <source>Default</source>
+        <comment>display selection</comment>
+        <extracomment>Display option that lets the host choose the display.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/AppView.qml" line="766"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
         <translation>Пускане на това приложение веднага щом бъде избран отдалечения компютър. Така ще се пропусне списъка за избор на приложение.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="814"/>
+        <location filename="../gui/AppView.qml" line="774"/>
         <source>Hide Game</source>
         <translation>Скриване на играта</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="818"/>
+        <location filename="../gui/AppView.qml" line="778"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
         <translation>Скриване на играта от списъка с приложения. За да видите скритите игри, натиснете с десния бутон на мишката върху отдалечения компютър и изберете %1.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="818"/>
+        <location filename="../gui/AppView.qml" line="778"/>
         <source>View All Apps</source>
         <translation>Преглед на всички приложения</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="836"/>
+        <location filename="../gui/AppView.qml" line="796"/>
         <source>No Apps</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="854"/>
+        <location filename="../gui/AppView.qml" line="814"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
         <translation>На този компютър изглежда няма никакви приложения, или може някои от тях да са скрити</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="868"/>
+        <location filename="../gui/AppView.qml" line="828"/>
         <source>Select the IP address to connect to this PC:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="888"/>
+        <location filename="../gui/AppView.qml" line="848"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>Наистина ли искате да затворите %1? Ако имате незапазен напредък, той ще бъде загубен.</translation>
     </message>
@@ -293,102 +249,102 @@
         <translation>Намалете побитовата скорост, ако мрежовата връзка е по-бавна. Увеличете я, за да подобрите качеството на картината.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="651"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="655"/>
         <source>Use Default (%1 Mbps)</source>
         <translation>По подразбиране (%1 Мбит/сек)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="690"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="697"/>
         <source>Smart bitrate with Sunshine</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="691"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="698"/>
         <source>Allows Sunshine to automatically adjust stream bitrate up to the selected video bitrate when the host supports ABR.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="699"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="706"/>
         <source>Enhancements</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="703"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="710"/>
         <source>Enhance video quality by utilizing the GPU&apos;s AI-Enhancement capabilities.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="704"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="711"/>
         <source>This feature effectively upscales, reduces compression artifacts and enhances the clarity of streamed content.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="705"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="712"/>
         <source>Note:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="706"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="713"/>
         <source>If available, ensure that appropriate settings (i.e. RTX Video enhancement) are enabled in your GPU driver configuration.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="707"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="714"/>
         <source>HDR rendering has diverse issues depending on the GPU used, we are working on it but we advise to currently use Non-HDR.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="708"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="715"/>
         <source>Be advised that using this feature on laptops running on battery power may lead to significant battery drain.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="715"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="722"/>
         <source>Video AI-Enhancement</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="727"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="734"/>
         <source>Video AI-Enhancement (Not supported by the GPU)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="732"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="739"/>
         <source>Video AI-Enhancement (Experimental)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="739"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="746"/>
         <source>Stream Resolution Scale</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="740"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="747"/>
         <source>Renders the stream below the selected resolution and upscales it on the client.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="783"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="790"/>
         <source>Remote overrides</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="784"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="791"/>
         <source>Used instead of the values above when streaming over the internet.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="787"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="794"/>
         <source>Remote Resolution</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="847"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="854"/>
         <source>Remote Frame Rate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/BasicSettingsPage.qml" line="881"/>
+        <location filename="../gui/settings/BasicSettingsPage.qml" line="888"/>
         <source>FPS</source>
         <translation type="unfinished"></translation>
     </message>
@@ -879,525 +835,504 @@
 <context>
     <name>LegacySettingsPage</name>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="37"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="38"/>
         <source>Audio Settings</source>
         <translation>Звукови настройки</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="46"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="47"/>
         <source>Audio configuration</source>
         <translation>Режим на звука</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="71"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="72"/>
         <source>Stereo</source>
         <translation>Стерео</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="75"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="76"/>
         <source>5.1 surround sound</source>
         <translation>5.1 обемен звук</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="79"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="80"/>
         <source>7.1 surround sound</source>
         <translation>7.1 обемен звук</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="83"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="84"/>
         <source>7.1.4 surround sound</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="97"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="98"/>
         <source>Mute host PC speakers while streaming</source>
         <translation>Заглушаване на говорителите на отдалечения компютър по време на излъчване</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="107"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="108"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
         <translation>Трябва да рестартирате пуснатата в момента игра (ако има такава), за да влезе в сила тази настройка</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="113"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="114"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
         <translation>Заглушаване на звука, когато прозорецът на Moonlight не е на фокус</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="124"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="125"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
         <translation>Заглушава звука от Moonlight, когато превключите към друг прозорец чрез Alt+Tab или по друг начин.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="129"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="130"/>
         <source>Enable microphone streaming (test)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="144"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="145"/>
         <source>Host Settings</source>
         <translation>Настройки на отдалечения компютър</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="154"/>
-        <source>Custom Screen Mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="181"/>
-        <source>Nothing</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="185"/>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="648"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="553"/>
         <source>Disabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="189"/>
-        <source>Activate the display automatically</source>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="153"/>
+        <source>Screen Combination Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="193"/>
-        <source>Activate the display automatically and make it a primary display</source>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="160"/>
+        <source>Sunshine Foundation display control</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="197"/>
-        <source>Deactivate other displays and activate only the specified display</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="213"/>
-        <source>VDD Screen Mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="239"/>
-        <source>Use Sunshine host configuration (default)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="243"/>
-        <source>Keep current layout</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="247"/>
-        <source>VDD primary + Physical extended</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="251"/>
-        <source>Physical primary + VDD extended</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="255"/>
-        <source>VDD only (disable physical displays)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="269"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="174"/>
         <source>Optimize game settings for streaming</source>
         <translation>Оптимизиране на игралните настройки за поточно предаване</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="280"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="185"/>
         <source>Quit app on host PC after ending stream</source>
         <translation>Затваряне на приложението на отдалечения компютър при приключване на излъчването</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="290"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="195"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
         <translation>Това ще затвори приложението или играта, която работи, когато прекратите излъчването. Всички незапазени данни ще бъдат загубени!</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="300"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="205"/>
         <source>UI Settings</source>
         <translation>Настройки на интерфейса</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="309"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="214"/>
         <source>Language</source>
         <translation>Език</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="335"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="240"/>
         <source>Automatic</source>
         <translation>Автоматично</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="470"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="375"/>
         <source>You must restart Moonlight for this change to take effect</source>
         <translation>Трябва да рестартирате Moonlight, за да влезе в сила тази промяна</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="487"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="392"/>
         <source>GUI display mode</source>
         <translation>Режим на показване на интерфейса</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="522"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="427"/>
         <source>Windowed</source>
         <translation>Прозорец</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="526"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="431"/>
         <source>Maximized</source>
         <translation>Увеличено</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="530"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="435"/>
         <source>Fullscreen</source>
         <translation>Цял екран</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="543"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="448"/>
         <source>Show connection quality warnings</source>
         <translation>Показване на предупредителни съобщения относно качеството на връзката</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="554"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="459"/>
         <source>Show configuration warnings</source>
         <translation>Показване на предупреждения относно настройките</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="566"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="471"/>
         <source>Discord Rich Presence integration</source>
         <translation>Интеграция с Discord</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="576"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="481"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>Задава състоянието в Discord, така че да показва името на пуснатата игра.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="582"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="487"/>
         <source>Keep the display awake while streaming</source>
         <translation>Поддържане на екрана включен по време на излъчване</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="592"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="497"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
         <translation>Предотвратява стартирането на предпазителя на екрана, както и изключването на му, докато трае поточното предаване.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="598"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="503"/>
         <source>Automatically check for updates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="608"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="513"/>
         <source>Check for new versions of Moonlight when the app starts.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="613"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="518"/>
         <source>Overlay menu position</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="636"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="541"/>
         <source>Right edge (default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="640"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="545"/>
         <source>Left edge</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="644"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="549"/>
         <source>Floating button</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="664"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="569"/>
         <source>Input Settings</source>
         <translation>Настройки за въвеждане</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="674"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="579"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>Оптимизиране на мишката за работен плот, вместо за игри</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="684"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="589"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>Това включва естественото управление на мишката без прихващане на клиентския курсор в рамките на програмата. Подходящо е за ползване на отдалечен работен плот, но може да не работи в много игри.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="685"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="590"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>Можете да превключите това по всяко време чрез Ctrl+Alt+Shift+M.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="686"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="591"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>ЗАБЕЛЕЖКА: Поради проблем в GeForce Experience, тази настройка може да не работи добре, ако отдалеченият компютър има повече от един монитор.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="693"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="598"/>
         <source>Show local cursor</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="703"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="608"/>
         <source>This makes the client&apos;s mouse cursor visible in the stream.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="704"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="609"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+C.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="714"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="619"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>Прихващане на системните клавишни комбинации</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="722"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="627"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>Това позволява да се прихващат системните клавишни комбинации, като Alt+Tab, които иначе биха били хванати от клиентската операционна система.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="723"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="628"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>ЗАБЕЛЕЖКА: Някои клавишни комбинации, като например Ctrl+Alt+Del под Уиндоус, не могат да бъдат прихващани от никое приложение, включително Moonlight.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="753"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="658"/>
         <source>in fullscreen</source>
         <translation>на цял екран</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="757"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="662"/>
         <source>always</source>
         <translation>винаги</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="787"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="692"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>Използване на сензорния екран като сензорен панел</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="797"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="702"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>Ако е включено, сензорният екран ще работи като сензорен панел. Ако е изключено, сензорният екран ще управлява директно курсора на мишката.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="804"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="709"/>
         <source>Use precision touchpad input when available</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="814"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="719"/>
         <source>Sends native multi-touch trackpad contacts to compatible Sunshine hosts. Unsupported devices and hosts fall back to pointer input. Changes apply to the next stream.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="821"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="727"/>
+        <source>DualSense haptics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="739"/>
+        <source>Physical DualSense (native HD haptics)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="743"/>
+        <source>Simulated DualSense (analyzed vibration)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="767"/>
+        <source>Sends the original authored PCM to channels 3 and 4 of a USB-connected DualSense. The endpoint is checked before connecting. Changes apply to the next stream.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="768"/>
+        <source>Receives a compact analyzed haptics signal and renders it through the connected controller&apos;s vibration motors. Changes apply to the next stream.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="776"/>
         <source>Swap left and right mouse buttons</source>
         <translation>Размяна на левия и десния бутон на мишката</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="833"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="788"/>
         <source>Swap Alt and Win keys</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="845"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="800"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>Обръщане на посоката на превъртане с колелцето на мишката</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="860"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="815"/>
         <source>Gamepad Settings</source>
         <translation>Настройки на контролера</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="869"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="824"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>Размяна на бутоните A/B и X/Y на контролера</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="879"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="834"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>Това разменя бутоните на контролера, така че да наподобяват разположението им при Нинтендо</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="885"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="840"/>
         <source>Force gamepad #1 always connected</source>
         <translation>Контролер №1 винаги да изглежда включен</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="895"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="850"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>Един контролер принудително ще изглежда, че е свързан към отдалечения компютър, дори ако на този компютър всъщност няма свързани контролери.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="896"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="851"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>Това е необходимо, само ако конкретна игра не поддържа включването на контролери след стартирането си.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="903"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="858"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>Управление на курсора на мишката с контролер, чрез задържане на бутона „Start“ в натиснато положение</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="914"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="869"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>Прихващане на командите от контролера дори когато Moonlight е на заден план</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="925"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="880"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>Позволява на Moonlight да получава и предава команди от контролера, дори когато прозорецът не е на фокус</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="930"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="885"/>
         <source>Gamepad quit combo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="953"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="908"/>
         <source>Start + Select + L1 + R1 (Default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="957"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="912"/>
         <source>Select + L1 + R1 + X</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="961"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="916"/>
         <source>Select + L1 + R1 + Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="965"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="920"/>
         <source>Start + L1 + R1 + A</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="969"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="924"/>
         <source>Start + L1 + R1 + B</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="973"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="928"/>
         <source>L1 + R1 + X + Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="977"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="932"/>
         <source>L1 + R1 + A + B</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="989"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="944"/>
         <source>Choose which button combination exits streaming. Use alternatives if the default doesn&apos;t work on your device.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="999"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="954"/>
         <source>Advanced Settings</source>
         <translation>Разширени настройки</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1008"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="963"/>
         <source>Video decoder</source>
         <translation>Видео декодер</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1033"/>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1100"/>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1158"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="988"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1055"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1113"/>
         <source>Automatic (Recommended)</source>
         <translation>Автоматично (препоръчително)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1037"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="992"/>
         <source>Force software decoding</source>
         <translation>Принудително софтуерно декодиране</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1041"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="996"/>
         <source>Force hardware decoding</source>
         <translation>Принудително хардуерно декодиране</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1070"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1025"/>
         <source>Video codec</source>
         <translation>Метод на кодиране на видеото</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1104"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1059"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1108"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1063"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1112"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1067"/>
         <source>AV1</source>
         <translation>AV1</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1127"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1082"/>
         <source>Renderer</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1183"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1138"/>
         <source>Enable YUV 4:4:4</source>
         <translation>Включване на YUV 4:4:4</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1207"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1162"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
         <translation>Подходящо за работен плот и игри богати на текст, но не се препоръчва за динамични игри.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1209"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1164"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
         <translation>YUV 4:4:4 не се поддържа на този компютър.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1215"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1170"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>Автоматично откриване на компютри в локалната мрежа (препоръчително)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1236"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1191"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>Автоматично разпознаване на блокирани връзки (препоръчително)</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1247"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1202"/>
         <source>Show performance stats while streaming</source>
         <translation>Показване на статистика за производителността</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1257"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1212"/>
         <source>Display real-time stream performance information while streaming.</source>
         <translation>Показване на информация относно производителността на поточното предаване в реално време.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1258"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1213"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
         <translation>Можете да превключите това по всяко време чрез Ctrl+Alt+Shift+S или Select+L1+R1+X.</translation>
     </message>
     <message>
-        <location filename="../gui/settings/LegacySettingsPage.qml" line="1259"/>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="1214"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
         <translation>Слоят за следене на производителността не се поддържа на Steam Link и Raspberry Pi.</translation>
     </message>
@@ -1405,7 +1340,7 @@
 <context>
     <name>NvHTTP</name>
     <message>
-        <location filename="../backend/nvhttp.cpp" line="480"/>
+        <location filename="../backend/nvhttp.cpp" line="497"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>Липсва устройство за запис на звук. Преинсталирането на GeForce Experience би трябвало да разреши този проблем.</translation>
     </message>
@@ -1538,222 +1473,222 @@
 <context>
     <name>PcView</name>
     <message>
-        <location filename="../gui/PcView.qml" line="38"/>
+        <location filename="../gui/PcView.qml" line="39"/>
         <source>Computers</source>
         <translation>Компютри</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="80"/>
+        <location filename="../gui/PcView.qml" line="81"/>
         <source>Unable to connect to the specified PC.</source>
         <translation>Не може да се установи връзка с избрания компютър.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="83"/>
+        <location filename="../gui/PcView.qml" line="84"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>Връзката с Интернет на този компютър блокира Moonlight. Излъчването по Интернет може да не работи, докато компютърът е свързан към тази мрежа.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="86"/>
+        <location filename="../gui/PcView.qml" line="87"/>
         <source>Click the Help button for possible solutions.</source>
         <translation>Натиснете бутона за Помощ, за да разгледате възможните решения.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="201"/>
+        <location filename="../gui/PcView.qml" line="202"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>Автоматичното откриване на компютри е изключено. Добавете компютъра си ръчно.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="200"/>
+        <location filename="../gui/PcView.qml" line="201"/>
         <source>Searching for compatible hosts on your local network...</source>
         <translation>Търсене на съвместими компютри в локалната мрежа…</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="110"/>
+        <location filename="../gui/PcView.qml" line="111"/>
         <source>Unable to open the app list for %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="148"/>
+        <location filename="../gui/PcView.qml" line="149"/>
         <source>No connection IP addresses are available for %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="180"/>
+        <location filename="../gui/PcView.qml" line="181"/>
         <source>Searching</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="180"/>
+        <location filename="../gui/PcView.qml" line="181"/>
         <source>No Computers</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="386"/>
+        <location filename="../gui/PcView.qml" line="387"/>
         <source>Select Connection IP</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="391"/>
+        <location filename="../gui/PcView.qml" line="392"/>
         <source>Wake PC</source>
         <translation>Събуждане на компютъра</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="396"/>
+        <location filename="../gui/PcView.qml" line="397"/>
         <source>Test Network</source>
         <translation>Тест на мрежата</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="404"/>
+        <location filename="../gui/PcView.qml" line="405"/>
         <source>Rename PC</source>
         <translation>Преименуване на компютъра</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="412"/>
+        <location filename="../gui/PcView.qml" line="413"/>
         <source>Delete PC</source>
         <translation>Изтриване на компютъра</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="420"/>
+        <location filename="../gui/PcView.qml" line="421"/>
         <source>View Details</source>
         <translation>Преглед на подробностите</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="432"/>
+        <location filename="../gui/PcView.qml" line="433"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>Версията на GeForce Experience на %1 не се поддържа от тази версия на Moonlight. Трябва да обновите Moonlight, ако искате да имате достъп до %1.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="523"/>
+        <location filename="../gui/PcView.qml" line="524"/>
         <source>This may take a few seconds…</source>
         <translation>Това може да отнеме няколко секунди…</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="534"/>
+        <location filename="../gui/PcView.qml" line="535"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
         <translation>Тази мрежа изглежда не блокира Moonlight. Ако все още имате проблеми с връзката, проверете настройките на защитната стена на компютъра си.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="534"/>
+        <location filename="../gui/PcView.qml" line="535"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
         <translation>Ако се опитвате да осъществите достъп през Интернет, инсталирайте „Moonlight Internet Hosting Tool“ на компютъра си и стартирайте включения тестер за достъп през Интернет, за да проверите връзката на компютъра си с Интернет.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="538"/>
+        <location filename="../gui/PcView.qml" line="539"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>Текущата мрежова връзка на компютъра блокира Moonlight. Достъпът през Интернет може да не работи, докато компютърът е свързан към тази мрежа.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="538"/>
+        <location filename="../gui/PcView.qml" line="539"/>
         <source>The following network ports were blocked:</source>
         <translation>Следните мрежови портове са блокирани:</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="610"/>
+        <location filename="../gui/PcView.qml" line="611"/>
         <source>Unable to switch the connection IP for %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="166"/>
+        <location filename="../gui/PcView.qml" line="167"/>
         <source>Choose the IP address to connect to %1:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="746"/>
+        <location filename="../gui/PcView.qml" line="747"/>
         <source>Unsupported image format</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="773"/>
+        <location filename="../gui/PcView.qml" line="774"/>
         <source>Drop To Set Wallpaper</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="812"/>
+        <location filename="../gui/PcView.qml" line="813"/>
         <source>Save wallpaper</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="821"/>
+        <location filename="../gui/PcView.qml" line="822"/>
         <source>Refresh wallpaper</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="825"/>
+        <location filename="../gui/PcView.qml" line="826"/>
         <source>Please wait at least 10 seconds between refreshes.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="850"/>
+        <location filename="../gui/PcView.qml" line="851"/>
         <source>Choose where to save</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="851"/>
+        <location filename="../gui/PcView.qml" line="852"/>
         <source>Image files (*.jpg *.jpeg *.png *.webp)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="926"/>
+        <location filename="../gui/PcView.qml" line="927"/>
         <source>Image saved to: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="930"/>
+        <location filename="../gui/PcView.qml" line="931"/>
         <source>Save failed: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="938"/>
+        <location filename="../gui/PcView.qml" line="939"/>
         <source>Save result</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="530"/>
+        <location filename="../gui/PcView.qml" line="531"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>Тестът на мрежата не може да бъде извършен, тъй като нито един от сървърите за тестване на връзката на Moonlight не е достъпен от този компютър. Проверете връзката си с Интернет или опитайте отново по-късно.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="374"/>
+        <location filename="../gui/PcView.qml" line="375"/>
         <source>PC Status: %1</source>
         <translation>Състояние на компютъра: %1</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="374"/>
+        <location filename="../gui/PcView.qml" line="375"/>
         <source>Online</source>
         <translation>На линия</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="374"/>
+        <location filename="../gui/PcView.qml" line="375"/>
         <source>Offline</source>
         <translation>Извън линия</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="379"/>
+        <location filename="../gui/PcView.qml" line="380"/>
         <source>View All Apps</source>
         <translation>Преглед на всички приложения</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="496"/>
+        <location filename="../gui/PcView.qml" line="497"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
         <translation>Моля, въведете %1 на отдалечения компютър. Този прозорец ще се затвори след като сдвояването завърши.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="497"/>
+        <location filename="../gui/PcView.qml" line="498"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
         <translation>Ако на отдалечения компютър работи Sunshine, отворете уеб интерфейса на Sunshine и въведете ПИН кода.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="509"/>
+        <location filename="../gui/PcView.qml" line="510"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
         <translation>Наистина ли искате да премахнете „%1“?</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="523"/>
+        <location filename="../gui/PcView.qml" line="524"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
         <translation>Moonlight тества мрежовата връзка, за да определи дали някой от необходимите портове не е блокиран.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="550"/>
+        <location filename="../gui/PcView.qml" line="551"/>
         <source>Enter the new name for this PC:</source>
         <translation>Въведете новото име за този компютър:</translation>
     </message>
@@ -2134,27 +2069,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="927"/>
+        <location filename="../main.cpp" line="928"/>
         <source>&amp;Yes</source>
         <translation>&amp;Да</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="928"/>
+        <location filename="../main.cpp" line="929"/>
         <source>&amp;No</source>
         <translation>&amp;Не</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="929"/>
+        <location filename="../main.cpp" line="930"/>
         <source>OK</source>
         <translation>Добре</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="930"/>
+        <location filename="../main.cpp" line="931"/>
         <source>Help</source>
         <translation>Помощ</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="931"/>
+        <location filename="../main.cpp" line="932"/>
         <source>Cancel</source>
         <translation>Отказ</translation>
     </message>
@@ -2165,6 +2100,74 @@
         <location filename="../gui/QuitSegue.qml" line="17"/>
         <source>Quitting %1...</source>
         <translation>Затваряне на %1…</translation>
+    </message>
+</context>
+<context>
+    <name>ScreenCombinationModeSelector</name>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="21"/>
+        <source>Follow host</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="22"/>
+        <source>Use the Sunshine host setting without overriding it.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="26"/>
+        <source>No operation mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="27"/>
+        <source>Send no-operation mode and keep the current display layout.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="31"/>
+        <source>Activate mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="32"/>
+        <source>Activate the selected display for streaming.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="36"/>
+        <source>Primary streaming mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="37"/>
+        <source>Activate the selected display and set it as primary.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="41"/>
+        <source>Secondary streaming mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="42"/>
+        <source>Keep the current primary display and use the selected display as secondary.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="46"/>
+        <source>Exclusive display streaming mode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="47"/>
+        <source>Use only the selected display and disable other displays.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/ScreenCombinationModeSelector.qml" line="166"/>
+        <source>Selected</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2193,291 +2196,301 @@
 <context>
     <name>Session</name>
     <message>
-        <location filename="../streaming/session.cpp" line="358"/>
+        <location filename="../streaming/session.cpp" line="363"/>
         <source>No video received from host.</source>
         <translation>От отдалечения компютър не се получава видео.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="359"/>
+        <location filename="../streaming/session.cpp" line="364"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>Проверете защитната стена и правилата за препращане на портове за следния порт или портове: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="365"/>
+        <location filename="../streaming/session.cpp" line="370"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
         <translation>Мрежовата връзка не работи добре. Намалете настройката за побитова скорост на видеото или опитайте с по-бърза връзка.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="371"/>
+        <location filename="../streaming/session.cpp" line="376"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>Нещо на отдалечения компютър се обърка при стартирането на потока.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="372"/>
+        <location filename="../streaming/session.cpp" line="377"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>Уверете се, че на отдалечения компютър няма отворено съдържание, защитено чрез DRM. Може да опитате и да рестартирате отдалечения компютър.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="377"/>
+        <location filename="../streaming/session.cpp" line="382"/>
         <source>The host PC reported a fatal video encoding error.</source>
         <translation>Отдалеченият компютър докладва критична грешка при кодиране на видеото.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="378"/>
+        <location filename="../streaming/session.cpp" line="383"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
         <translation>Опитайте да изключите режима HDR, да промените резолюцията на потока или резолюцията на екрана на отдалечения компютър.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="386"/>
+        <location filename="../streaming/session.cpp" line="391"/>
         <source>Connection terminated</source>
         <translation>Връзката е прекратена</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="387"/>
+        <location filename="../streaming/session.cpp" line="392"/>
         <source>Error code: %1</source>
         <translation>Код на грешката: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1352"/>
+        <location filename="../streaming/session.cpp" line="1399"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>Версията на GeForce Experience на %1 не се поддържа от тази версия на Moonlight. Трябва да обновите Moonlight, ако искате да имате достъп до %1.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1357"/>
+        <location filename="../streaming/session.cpp" line="1404"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>Изборът да включите режима на мишката за отдалечен работен плот може да предизвика проблеми в някои игри.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1361"/>
+        <location filename="../streaming/session.cpp" line="1408"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Избраната настройка за принудително софтуерно декодиране може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1397"/>
+        <location filename="../streaming/session.cpp" line="1444"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
         <translation>Отдалеченият компютър не поддържа кодиране чрез HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1415"/>
+        <location filename="../streaming/session.cpp" line="1462"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>Поради избраното принудително декодиране чрез HEVC, което видео картата не поддържа, ще се използва софтуерно декодиране. Това може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1367"/>
+        <location filename="../streaming/session.cpp" line="1414"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
         <translation>Софтуерът или видео картата на отдалечения компютър не поддържа кодиране чрез AV1.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1385"/>
+        <location filename="../streaming/session.cpp" line="1432"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
         <translation>Поради избраното принудително декодиране чрез AV1, което видео картата не поддържа, ще се използва софтуерно декодиране. Това може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1462"/>
+        <location filename="../streaming/session.cpp" line="1509"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
         <translation>Отдалеченият компютър не поддържа излъчването на HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1454"/>
+        <location filename="../streaming/session.cpp" line="1501"/>
         <source>HDR is not supported using the H.264 codec.</source>
         <translation>HDR не се поддържа при използване на кодиране H.264.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1477"/>
+        <location filename="../streaming/session.cpp" line="1524"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
         <translation>Видео картата на този компютър не поддържа декодиране чрез AV1 Main10 за потоци с HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1458"/>
+        <location filename="../streaming/session.cpp" line="1505"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
         <translation>Видео картата на този компютър не поддържа декодиране чрез 10-битов HEVC или AV1 за потоци с HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1510"/>
+        <location filename="../streaming/session.cpp" line="1557"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
         <translation>Отдалеченият компютър и клиентският такъв не поддържат едни и същи методи на кодиране на HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1603"/>
+        <location filename="../streaming/session.cpp" line="1650"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
         <translation>Резолюции на видеото над 4К не се поддържат при кодиране H.264.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="3139"/>
+        <location filename="../streaming/session.cpp" line="3189"/>
         <source>Host returned error: %1</source>
         <translation>Отдалеченият компютър върна грешка: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1434"/>
+        <location filename="../streaming/session.cpp" line="1481"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Поради избраното принудително декодиране на H.264, което видео картата не поддържа, ще се използва софтуерно декодиране. Това може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="922"/>
-        <location filename="../streaming/session.cpp" line="2438"/>
+        <location filename="../streaming/session.cpp" line="966"/>
+        <location filename="../streaming/session.cpp" line="2487"/>
         <source>Checking</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1444"/>
+        <location filename="../streaming/session.cpp" line="1491"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>Отдалеченият компютър и клиентският такъв не поддържат едни и същи методи на кодиране на видеото. Това може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1447"/>
+        <location filename="../streaming/session.cpp" line="1494"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>Видео картата на клиента не поддържа декодиране на H.264. Това може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1483"/>
-        <location filename="../streaming/session.cpp" line="1501"/>
+        <location filename="../streaming/session.cpp" line="1530"/>
+        <location filename="../streaming/session.cpp" line="1548"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
         <translation>Поради избраното принудително ползване на HDR, което видео картата не поддържа, ще се използва софтуерно декодиране. Това може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1495"/>
+        <location filename="../streaming/session.cpp" line="1542"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>Видео картата на този компютър не поддържа декодиране чрез HEVC Main10 за потоци с HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1517"/>
+        <location filename="../streaming/session.cpp" line="1564"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
         <translation>Отдалеченият компютър на поддържа излъчването на YUV 4:4:4.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1525"/>
+        <location filename="../streaming/session.cpp" line="1572"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
         <translation>Отдалеченият компютър на поддържа излъчването на YUV 4:4:4 за избрания вид кодиране на видеото.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1540"/>
+        <location filename="../streaming/session.cpp" line="1587"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
         <translation>Поради избраното принудително ползване на YUV 4:4:4, което видео картата не поддържа, ще се използва софтуерно декодиране. Това може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1546"/>
+        <location filename="../streaming/session.cpp" line="1593"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
         <translation>Този компютър на поддържа декодиране на YUV 4:4:4 за избрания вид кодиране на видеото.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1555"/>
+        <location filename="../streaming/session.cpp" line="1602"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>За излъчване в резолюция 4К е необходим GeForce Experience 3.0 или по-нова версия.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1570"/>
+        <location filename="../streaming/session.cpp" line="1617"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>Избраната настройка за обемен звук не се поддържа от текущото звуково устройство.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1576"/>
+        <location filename="../streaming/session.cpp" line="1623"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>Неуспешна връзка със звуковото устройство. По време на тази сесия няма да има звук.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1581"/>
+        <location filename="../streaming/session.cpp" line="1628"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>Включеният контролер няма настройка на бутоните и няма да може да се ползва. Прегледайте помощта на Moonlight, за да разрешите този проблем.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1599"/>
+        <location filename="../streaming/session.cpp" line="1646"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>Видео картата на отдалечения компютър не позволява поточно предаване на видео с резолюция по-голяма от 4К.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1617"/>
+        <location filename="../streaming/session.cpp" line="1664"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Избраното принудително хардуерно декодиране не е възможно, тъй като видео картата на този компютър не го поддържа.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1620"/>
+        <location filename="../streaming/session.cpp" line="1667"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Избраният вид кодиране и настройката за принудително хардуерно декодиране не са съвместими, тъй като видео картата на този компютър не поддържа декодиране на избрания вид кодиране.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2094"/>
-        <location filename="../streaming/session.cpp" line="2439"/>
+        <location filename="../streaming/session.cpp" line="2143"/>
+        <location filename="../streaming/session.cpp" line="2488"/>
         <source>Checking host file sharing...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2097"/>
-        <location filename="../streaming/session.cpp" line="2525"/>
-        <location filename="../streaming/session.cpp" line="2537"/>
+        <location filename="../streaming/session.cpp" line="2146"/>
+        <location filename="../streaming/session.cpp" line="2574"/>
+        <location filename="../streaming/session.cpp" line="2586"/>
         <source>Preparing host files...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2102"/>
-        <location filename="../streaming/session.cpp" line="2531"/>
+        <location filename="../streaming/session.cpp" line="2151"/>
+        <location filename="../streaming/session.cpp" line="2580"/>
         <source>Opening host files...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2110"/>
+        <location filename="../streaming/session.cpp" line="2159"/>
         <source>Host file sharing is not available. Retrying...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2111"/>
+        <location filename="../streaming/session.cpp" line="2160"/>
         <source> Retrying...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2116"/>
-        <location filename="../streaming/session.cpp" line="2446"/>
-        <location filename="../streaming/session.cpp" line="2545"/>
+        <location filename="../streaming/session.cpp" line="2165"/>
+        <location filename="../streaming/session.cpp" line="2495"/>
+        <location filename="../streaming/session.cpp" line="2594"/>
         <source>Host file sharing is not available.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2445"/>
-        <location filename="../streaming/session.cpp" line="2544"/>
+        <location filename="../streaming/session.cpp" line="2494"/>
+        <location filename="../streaming/session.cpp" line="2593"/>
         <source>Unavailable</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2536"/>
+        <location filename="../streaming/session.cpp" line="2585"/>
         <source>Preparing</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2607"/>
+        <location filename="../streaming/session.cpp" line="2656"/>
         <source>Open</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2608"/>
+        <location filename="../streaming/session.cpp" line="2657"/>
         <source>Host files are ready.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2613"/>
+        <location filename="../streaming/session.cpp" line="2662"/>
         <source>Host files are ready, but the folder did not open. Check %1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2619"/>
+        <location filename="../streaming/session.cpp" line="2668"/>
         <source>Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2620"/>
+        <location filename="../streaming/session.cpp" line="2669"/>
         <source>Host files could not be opened.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2831"/>
+        <location filename="../streaming/session.cpp" line="2880"/>
         <source>Connection interrupted. Reconnecting... (%1s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2914"/>
+        <location filename="../streaming/session.cpp" line="2963"/>
         <source>Reconnected</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="4066"/>
+        <location filename="../streaming/session.cpp" line="3345"/>
+        <source>Physical DualSense haptics was selected, but no active USB DualSense four-channel audio endpoint was found yet. Moonlight will keep checking during this stream.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="3348"/>
+        <source>Physical DualSense haptics is only available on Windows in this build.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="4143"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Декодерът на видео не може да бъде инициализиран. Проверете настройките за поточно предаване и опитайте отново.</translation>
     </message>
@@ -2533,48 +2546,48 @@
 <context>
     <name>StreamSegue</name>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="21"/>
+        <location filename="../gui/StreamSegue.qml" line="22"/>
         <source>Resuming %1...</source>
         <translation>Продължаване на %1…</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="22"/>
-        <location filename="../gui/StreamSegue.qml" line="29"/>
+        <location filename="../gui/StreamSegue.qml" line="23"/>
+        <location filename="../gui/StreamSegue.qml" line="30"/>
         <source>Starting %1...</source>
         <translation>Стартиране на %1…</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="35"/>
+        <location filename="../gui/StreamSegue.qml" line="36"/>
         <source>Starting %1 failed: Error %2</source>
         <translation>Стартирането на %1 беше неуспешно: Грешка %2</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="38"/>
+        <location filename="../gui/StreamSegue.qml" line="39"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>Проверете защитната стена и правилата за препращане на портове за следния порт или портове: %1</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="83"/>
+        <location filename="../gui/StreamSegue.qml" line="84"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>Връзката с Интернет на този компютър блокира Moonlight. Излъчването по Интернет може да не работи, докато компютърът е свързан към тази мрежа.</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="319"/>
+        <location filename="../gui/StreamSegue.qml" line="320"/>
         <source>Tip:</source>
         <translation>Съвет:</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="319"/>
+        <location filename="../gui/StreamSegue.qml" line="320"/>
         <source>Press %1 to disconnect your session</source>
         <translation>Натиснете %1, за да излезете от сесията</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="320"/>
+        <location filename="../gui/StreamSegue.qml" line="321"/>
         <source>Start+Select+L1+R1</source>
         <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="320"/>
+        <location filename="../gui/StreamSegue.qml" line="321"/>
         <source>Ctrl+Alt+Shift+Q</source>
         <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
@@ -2582,134 +2595,134 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../gui/main.qml" line="732"/>
+        <location filename="../gui/main.qml" line="734"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="503"/>
+        <location filename="../gui/main.qml" line="505"/>
         <source>Version %1</source>
         <translation>Версия %1</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="526"/>
+        <location filename="../gui/main.qml" line="528"/>
         <source>Join our QQ group</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="545"/>
+        <location filename="../gui/main.qml" line="547"/>
         <source>Add PC manually</source>
         <translation>Ръчно добавяне на компютър</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="590"/>
+        <location filename="../gui/main.qml" line="592"/>
         <source>Update available for Moonlight: Version %1</source>
         <translation>Има нова версия на Moonlight: %1</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="656"/>
+        <location filename="../gui/main.qml" line="658"/>
         <source>Gamepad Mapper</source>
         <translation>Настройка на бутоните на контролера</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="798"/>
+        <location filename="../gui/main.qml" line="800"/>
         <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
         <translation>Хардуерното ускорение не работи на XWayland. Ако продължите с XWayland, е възможно да имате проблеми с производителността. Опитайте да пуснете с QT_QPA_PLATFORM=wayland или превключете на X11.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="807"/>
+        <location filename="../gui/main.qml" line="809"/>
         <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
         <translation>Тази версия на Moonlight не е оптимизирана за този компютър. Моля, свалете версията на Moonlight за „%1“ за по-добра производителност на поточното предаване.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="816"/>
+        <location filename="../gui/main.qml" line="818"/>
         <source>Moonlight detected gamepads without a mapping:</source>
         <translation>Moonlight засече контролери без настройка на бутоните:</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="633"/>
+        <location filename="../gui/main.qml" line="635"/>
         <source>Help</source>
         <translation>Помощ</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="677"/>
+        <location filename="../gui/main.qml" line="679"/>
         <source>Connection IP</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="579"/>
-        <location filename="../gui/main.qml" line="788"/>
+        <location filename="../gui/main.qml" line="581"/>
+        <location filename="../gui/main.qml" line="790"/>
         <source>Preparing update...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="699"/>
+        <location filename="../gui/main.qml" line="701"/>
         <source>Display Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="746"/>
+        <location filename="../gui/main.qml" line="748"/>
         <source>Minimize</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="754"/>
+        <location filename="../gui/main.qml" line="756"/>
         <source>Restore</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="754"/>
+        <location filename="../gui/main.qml" line="756"/>
         <source>Maximize</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="768"/>
+        <location filename="../gui/main.qml" line="770"/>
         <source>Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="777"/>
+        <location filename="../gui/main.qml" line="779"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
         <translation>Moonlight установи, че не разполагате с работещ хардуерно ускорен декодер за видеото. Производителността на поточното предаване може да бъде значително намалена в тази конфигурация.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="779"/>
+        <location filename="../gui/main.qml" line="781"/>
         <source>Click the Help button for more information on solving this problem.</source>
         <translation>Натиснете бутона Помощ за повече информация как да решите този проблем.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="800"/>
+        <location filename="../gui/main.qml" line="802"/>
         <source>Click the Help button for more information.</source>
         <translation>Натиснете бутона Помощ за повече информация.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="818"/>
+        <location filename="../gui/main.qml" line="820"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
         <translation>Натиснете бутона за Помощ, за да разберете как да настроите контролерите си.</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="826"/>
+        <location filename="../gui/main.qml" line="828"/>
         <source>Are you sure you want to quit?</source>
         <translation>Наистина ли искате да излезете?</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="856"/>
+        <location filename="../gui/main.qml" line="858"/>
         <source>Enter the IP address of your host PC:</source>
         <translation>Въведете IP адреса на отдалечения компютър:</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="927"/>
+        <location filename="../gui/main.qml" line="933"/>
         <source>No host PC of your own?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="936"/>
+        <location filename="../gui/main.qml" line="942"/>
         <source>Procriva Cloud rents out cloud hosts that are ready to stream.</source>
         <extracomment>Procriva Cloud is a product name and must not be translated.</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="944"/>
+        <location filename="../gui/main.qml" line="950"/>
         <source>Learn more</source>
         <translation type="unfinished"></translation>
     </message>

@@ -6,6 +6,7 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <optional>
 
 #include <Limelight.h>
 #include <opus_multistream.h>
@@ -115,7 +116,11 @@ class Session : public QObject
     friend class AsyncConnectionStartThread;
 
 public:
-    explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
+    explicit Session(NvComputer* computer,
+                     NvApp& app,
+                     StreamingPreferences *preferences = nullptr,
+                     QString launchDisplayName = QString(),
+                     std::optional<bool> launchUseVdd = std::nullopt);
     virtual ~Session();
 
     Q_INVOKABLE bool initialize(QQuickWindow* qtWindow);
@@ -321,6 +326,8 @@ private:
     AUDIO_RENDERER_CALLBACKS m_AudioCallbacks;
     NvComputer* m_Computer;
     NvApp m_App;
+    QString m_LaunchDisplayName;
+    std::optional<bool> m_LaunchUseVdd;
     SDL_Window* m_Window;
     IVideoDecoder* m_VideoDecoder;
     SDL_mutex* m_DecoderLock;

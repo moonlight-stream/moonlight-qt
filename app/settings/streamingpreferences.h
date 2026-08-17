@@ -163,6 +163,17 @@ public:
     };
     Q_ENUM(GamepadQuitCombo);
 
+    enum ScreenCombinationMode
+    {
+        SCM_FOLLOW_HOST = -1,
+        SCM_NO_OPERATION = 0,
+        SCM_ENSURE_ACTIVE = 1,
+        SCM_ENSURE_PRIMARY = 2,
+        SCM_ENSURE_ONLY_DISPLAY = 3,
+        SCM_ENSURE_SECONDARY = 4,
+    };
+    Q_ENUM(ScreenCombinationMode);
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
@@ -220,8 +231,7 @@ public:
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged)
-    Q_PROPERTY(int customScreenMode MEMBER customScreenMode NOTIFY customScreenModeChanged)
-    Q_PROPERTY(int customVddScreenMode MEMBER customVddScreenMode NOTIFY customVddScreenModeChanged)
+    Q_PROPERTY(ScreenCombinationMode screenCombinationMode MEMBER screenCombinationMode NOTIFY screenCombinationModeChanged)
     Q_PROPERTY(bool enableMicrophone MEMBER enableMicrophone NOTIFY enableMicrophoneChanged)
     Q_PROPERTY(OverlayMenuPosition overlayMenuPosition MEMBER overlayMenuPosition NOTIFY overlayMenuPositionChanged)
     Q_PROPERTY(bool autoUpdateCheck MEMBER autoUpdateCheck NOTIFY autoUpdateCheckChanged)
@@ -286,8 +296,7 @@ public:
     UIDisplayMode uiDisplayMode;
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
-    int customScreenMode;
-    int customVddScreenMode;
+    ScreenCombinationMode screenCombinationMode;
     bool enableMicrophone;
     OverlayMenuPosition overlayMenuPosition;
     bool autoUpdateCheck;
@@ -346,8 +355,7 @@ signals:
     void captureSysKeysModeChanged();
     void keepAwakeChanged();
     void languageChanged();
-    void customScreenModeChanged();
-    void customVddScreenModeChanged();
+    void screenCombinationModeChanged();
     void enableMicrophoneChanged();
     void overlayMenuPositionChanged();
     void autoUpdateCheckChanged();
