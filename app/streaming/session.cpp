@@ -4144,6 +4144,11 @@ void Session::exec()
                     goto DispatchDeferredCleanup;
                 }
 
+                // SDL_CreateRenderer() may recreate the platform window while
+                // retaining the SDL_Window object. Refresh native input hooks
+                // after renderer creation so they follow the replacement HWND.
+                m_InputHandler->setWindow(m_Window);
+
                 // As of SDL 2.0.12, SDL_RecreateWindow() doesn't carry over mouse capture
                 // or mouse hiding state to the new window. By capturing after the decoder
                 // is set up, this ensures the window re-creation is already done.

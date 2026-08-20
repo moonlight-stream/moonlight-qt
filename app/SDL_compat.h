@@ -73,3 +73,13 @@ typedef struct SDL_FRect
 #ifndef SDL_HINT_TOUCH_MOUSE_EVENTS
 #define SDL_HINT_TOUCH_MOUSE_EVENTS "SDL_TOUCH_MOUSE_EVENTS"
 #endif
+
+// sdl2-compat forwards SDL3's synthetic pen device IDs, but SDL2 headers do not
+// define names for them.
+#ifndef SDL_PEN_MOUSEID
+#define SDL_PEN_MOUSEID ((Uint32)-2)
+#endif
+
+#ifndef SDL_PEN_TOUCHID
+#define SDL_PEN_TOUCHID ((SDL_TouchID)-2)
+#endif

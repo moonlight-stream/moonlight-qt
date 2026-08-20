@@ -111,6 +111,16 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_AbsoluteMouseMode(prefs.absoluteMouseMode),
       m_AbsoluteTouchMode(prefs.absoluteTouchMode),
       m_DisabledTouchFeedback(false),
+#ifdef HAVE_WINDOWS_PEN_INPUT
+      m_WindowsPenWindow(nullptr),
+      m_WindowsPenSubclassContext(nullptr),
+      m_WindowsPenPointerId(0),
+      m_WindowsPenFallbackPointerId(UINT32_MAX),
+      m_WindowsPenSuppressedPointerId(UINT32_MAX),
+      m_WindowsPenSubclassInstalled(false),
+      m_WindowsPenPointerTracked(false),
+      m_WindowsPenCancelPending(false),
+#endif
       m_NativeTouchpadEnabled(SDL_GetHintBoolean(SDL_HINT_TRACKPAD_IS_TOUCH_ONLY, SDL_FALSE) == SDL_TRUE),
       m_TouchpadFlushEventQueued(false),
       m_NativeTouchpadTransport(NTT_UNKNOWN),
@@ -336,6 +346,9 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
 
 SdlInputHandler::~SdlInputHandler()
 {
+#ifdef HAVE_WINDOWS_PEN_INPUT
+    shutdownWindowsPenInput();
+#endif
 #ifdef Q_OS_WIN32
     // Restore SDL's normal Alt+F4 handling outside the streaming session.
     SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, "0");
@@ -397,6 +410,11 @@ SdlInputHandler::~SdlInputHandler()
 void SdlInputHandler::setWindow(SDL_Window *window)
 {
     m_Window = window;
+    m_DisabledTouchFeedback = false;
+
+#ifdef HAVE_WINDOWS_PEN_INPUT
+    initializeWindowsPenInput();
+#endif
 
 #ifdef HAVE_WINDOWS_RAW_TOUCHPAD
     if (m_NativeTouchpadEnabled && !m_WindowsTouchpadInput) {
@@ -838,6 +856,10 @@ void SdlInputHandler::notifyFocusLost()
 
     cancelNativeTouchpadContacts();
 
+#ifdef HAVE_WINDOWS_PEN_INPUT
+    cancelWindowsPenInput(true);
+#endif
+
     // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
     // This lets user to interact with our window's title bar and with the buttons in it.
     // Doing this while the window is full-screen breaks the transition out of FS
@@ -963,6 +985,10 @@ void SdlInputHandler::setCaptureActive(bool active)
         // never retains contacts from the previous capture state.
         cancelNativeTouchpadContacts();
 
+#ifdef HAVE_WINDOWS_PEN_INPUT
+        cancelWindowsPenInput(true);
+#endif
+
         if (m_RemoteCursor != nullptr && SDL_GetCursor() == m_RemoteCursor) {
             SDL_SetCursor(SDL_GetDefaultCursor());
         }
@@ -986,6 +1012,13 @@ void SdlInputHandler::setCaptureActive(bool active)
 
 void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
 {
+    // A stylus is a direct pointing device regardless of whether ordinary
+    // touchscreen contacts are configured to emulate a trackpad.
+    if (isPenTouchDevice(event->touchId)) {
+        handleAbsoluteFingerEvent(event);
+        return;
+    }
+
 #if SDL_VERSION_ATLEAST(2, 0, 10)
     SDL_TouchDeviceType deviceType = SDL_GetTouchDeviceType(event->touchId);
     if (deviceType == SDL_TOUCH_DEVICE_INDIRECT_ABSOLUTE && m_NativeTouchpadEnabled) {

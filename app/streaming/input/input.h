@@ -174,6 +174,10 @@ public:
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 
+#ifdef HAVE_WINDOWS_PEN_INPUT
+    bool handleWindowsPenPointerMessage(unsigned int message, Uint64 wParam);
+#endif
+
     void flushPendingTouchpadFrameEvent();
 
     // 去抖窗口到期，把主机要求的隐藏落实下去
@@ -257,6 +261,15 @@ private:
     void emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
 
     void disableTouchFeedback();
+    static bool isPenTouchDevice(SDL_TouchID touchId);
+
+#ifdef HAVE_WINDOWS_PEN_INPUT
+    bool initializeWindowsPenInput();
+    bool trySendWindowsPenCancel();
+    void cancelWindowsPenInput(bool suppressPointer = false);
+    void routeWindowsPenPointerToSdl(Uint32 pointerId);
+    void shutdownWindowsPenInput(bool suppressPointer = false);
+#endif
 
     void handleRelativeFingerEvent(SDL_TouchFingerEvent* event);
 
@@ -408,6 +421,17 @@ private:
     bool m_AbsoluteMouseMode;
     bool m_AbsoluteTouchMode;
     bool m_DisabledTouchFeedback;
+
+#ifdef HAVE_WINDOWS_PEN_INPUT
+    void* m_WindowsPenWindow;
+    void* m_WindowsPenSubclassContext;
+    Uint32 m_WindowsPenPointerId;
+    Uint32 m_WindowsPenFallbackPointerId;
+    Uint32 m_WindowsPenSuppressedPointerId;
+    bool m_WindowsPenSubclassInstalled;
+    bool m_WindowsPenPointerTracked;
+    bool m_WindowsPenCancelPending;
+#endif
 
     enum NativeTouchpadTransport {
         NTT_UNKNOWN,
