@@ -182,6 +182,18 @@ PlVkRenderer::~PlVkRenderer()
         DrmMasterLocker locker;
 
         pl_renderer_destroy(&m_Renderer);
+
+        // The FSR hooks own GPU resources, so they must be released while the
+        // pl_gpu they were parsed on is still alive. m_FsrHookHDR stays null when
+        // only the SDR variant was parsed and m_RenderParamsHDR points at m_FsrHook.
+        if (m_FsrHookHDR != nullptr && m_FsrHookHDR != m_FsrHook) {
+            pl_mpv_user_shader_destroy(&m_FsrHookHDR);
+        }
+        m_FsrHookHDR = nullptr;
+        if (m_FsrHook != nullptr) {
+            pl_mpv_user_shader_destroy(&m_FsrHook);
+        }
+
         pl_swapchain_destroy(&m_Swapchain);
 #ifdef Q_OS_DARWIN
         m_MetalTextureFactory.reset();
@@ -199,15 +211,6 @@ PlVkRenderer::~PlVkRenderer()
 
     // m_Log must always be the last object destroyed
     pl_log_destroy(&m_Log);
-
-    if (m_FsrHook) {
-        pl_mpv_user_shader_destroy(&m_FsrHook);
-        m_FsrHook = nullptr;
-    }
-    if (m_FsrHookHDR) {
-        pl_mpv_user_shader_destroy(&m_FsrHookHDR);
-        m_FsrHookHDR = nullptr;
-    }
 }
 
 bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params, bool hdrOutputRequired)
@@ -650,23 +653,32 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         m_RenderParams.num_hooks = m_FsrHook ? 1 : 0;
 
         // FSR1 (HDR)
-        // The shader has been customized to set the sharpening at 0.75 and PQ at true for HDR
-        std::string FsrShaderHDR;
-        // Check if HDR is enabled by the user in the UI settings.
+        // The shader has been customized to set the sharpening at 0.75 and PQ at true for HDR.
+        // Only a 10-bit stream can carry PQ frames, so for anything else the SDR hook is reused
+        // rather than parsing and allocating GPU resources for a second identical copy of it.
         if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
-            FsrShaderHDR = loadGLSL(":/enhancer/FSR1_HDR.glsl");
-        } else {
-            FsrShaderHDR = loadGLSL(":/enhancer/FSR1.glsl");
+            std::string FsrShaderHDR = loadGLSL(":/enhancer/FSR1_HDR.glsl");
+            m_FsrHookHDR = pl_mpv_user_shader_parse(m_Vulkan->gpu, FsrShaderHDR.c_str(), FsrShaderHDR.size());
+            m_RenderParamsHDR.hooks     = &m_FsrHookHDR;
+            m_RenderParamsHDR.num_hooks = m_FsrHookHDR ? 1 : 0;
         }
-        m_FsrHookHDR = pl_mpv_user_shader_parse(m_Vulkan->gpu, FsrShaderHDR.c_str(), FsrShaderHDR.size());
-        m_RenderParamsHDR.hooks     = &m_FsrHookHDR;
-        m_RenderParamsHDR.num_hooks = m_FsrHookHDR ? 1 : 0;
+        else {
+            m_RenderParamsHDR.hooks     = &m_FsrHook;
+            m_RenderParamsHDR.num_hooks = m_FsrHook ? 1 : 0;
+        }
 
-        int drawableWidth, drawableHeight;
-        SDL_Vulkan_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
-        m_VideoEnhancement->setRatio(static_cast<float>(drawableHeight) / static_cast<float>(params->height));
+        if (m_RenderParams.num_hooks == 0 || m_RenderParamsHDR.num_hooks == 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to parse the FSR1 shader. Video enhancement is disabled for this session.");
+            m_VideoEnhancement->enableVideoEnhancement(false);
+        }
+        else {
+            int drawableWidth, drawableHeight;
+            SDL_Vulkan_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+            m_VideoEnhancement->setRatio(static_cast<float>(drawableHeight) / static_cast<float>(params->height));
 
-        m_VideoEnhancement->setAlgo("Shader FSR1");
+            m_VideoEnhancement->setAlgo("Shader FSR1");
+        }
     }
 
     return true;

@@ -300,9 +300,16 @@ bool SystemProperties::isVideoEnhancementSwitchable()
  *
  * Check if either Video Super-Resolution features can be used by the GPU.
  *
+ * isAvailable() only reflects that FFmpeg advertises a hwaccel able to carry the
+ * feature, which stays true on systems where the D3D12 device cannot actually be
+ * created. On Windows the upscaler lives in the D3D12 renderer (the Vulkan/FSR1
+ * path is not user-selectable there), so a D3D12 failure means the feature is out
+ * of reach and the setting must be greyed out.
+ *
  * \return bool Returns true if the GPU is capable
  */
 bool SystemProperties::isVideoEnhancementAvailable()
 {
-    return VideoEnhancement::getInstance().isAvailable();
+    return VideoEnhancement::getInstance().isAvailable() &&
+           VideoEnhancement::getInstance().isD3D12Available();
 }

@@ -1038,10 +1038,22 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 
     // Keep track of the Device Type selected
     VideoEnhancement::getInstance().setDeviceType(hwDecodeCfg->device_type);
-    
+
+    bool enableVideoEnhancement = params->enableVideoEnhancement;
+#ifdef Q_OS_WIN32
+    // D3D11VA is only reached with enhancement requested when the D3D12 renderer
+    // is unusable on this system. That renderer is the one providing the upscaler,
+    // so the session runs without enhancement rather than advertising a missing one.
+    if (enableVideoEnhancement &&
+            hwDecodeCfg->device_type == AV_HWDEVICE_TYPE_D3D11VA &&
+            !VideoEnhancement::getInstance().isD3D12Available()) {
+        enableVideoEnhancement = false;
+    }
+#endif
+
     // Reset Video enhancer enabler
-    VideoEnhancement::getInstance().enableVideoEnhancement(params->enableVideoEnhancement);
-    
+    VideoEnhancement::getInstance().enableVideoEnhancement(enableVideoEnhancement);
+
     // First pass using our top-tier hwaccel implementations
     if (pass == 0) {
         switch (hwDecodeCfg->device_type) {
@@ -1049,11 +1061,14 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
         // DXVA2 appears in the hwaccel list before D3D11VA, so we only check for D3D11VA
         // on the first pass to ensure we prefer D3D11VA over DXVA2.
         case AV_HWDEVICE_TYPE_D3D11VA:
-            if (!params->enableVideoEnhancement){
+            if (!params->enableVideoEnhancement || !VideoEnhancement::getInstance().isD3D12Available()){
                 return new D3D11VARenderer(pass);
             }
             // Do not break here
         case AV_HWDEVICE_TYPE_D3D12VA:
+            if (!VideoEnhancement::getInstance().isD3D12Available()){
+                return nullptr;
+            }
             // D3D12VARenderer is also able to receive frame from AV_HWDEVICE_TYPE_D3D11VA via Interop
             return new D3D12VARenderer(pass);
 #endif
@@ -1117,11 +1132,14 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
         case AV_HWDEVICE_TYPE_DXVA2:
             return new DXVA2Renderer(pass);
         case AV_HWDEVICE_TYPE_D3D11VA:
-            if (!params->enableVideoEnhancement){
+            if (!params->enableVideoEnhancement || !VideoEnhancement::getInstance().isD3D12Available()){
                 return new D3D11VARenderer(pass);
             }
             // Do not break here
         case AV_HWDEVICE_TYPE_D3D12VA:
+            if (!VideoEnhancement::getInstance().isD3D12Available()){
+                return nullptr;
+            }
             // D3D12VARenderer is also able to receive frame from AV_HWDEVICE_TYPE_D3D11VA via Interop
             return new D3D12VARenderer(pass);
 #endif

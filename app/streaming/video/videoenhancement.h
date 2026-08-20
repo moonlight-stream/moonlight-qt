@@ -17,6 +17,8 @@ private:
     bool m_Enabled = false;
     bool m_VSRcapable = false;
     bool m_HDRcapable = false;
+    // Set to false once the D3D12 renderer proved it cannot be created on this system
+    bool m_D3D12Available = true;
     float m_Ratio;
     std::string m_Algo;
     int m_DeviceType;
@@ -53,6 +55,8 @@ public:
     bool isVSRcapable();
     void setHDRcapable(bool capable);
     bool isHDRcapable();
+    void setD3D12Available(bool available);
+    bool isD3D12Available();
     bool isVideoEnhancementEnabled();
     bool enableVideoEnhancement(bool activate = true);
     void setAdapterIndex(int adapterIndex);

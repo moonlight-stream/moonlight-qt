@@ -2512,6 +2512,24 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    // Both of these are permanent for the lifetime of the process, so they latch
+    // the D3D12 renderer as unavailable to let D3D11VA take over. Setting
+    // D3D12VA_ENABLED=0 therefore reproduces exactly what a system without the
+    // required D3D12 interfaces does.
+    if (qgetenv("D3D12VA_ENABLED") == "0") {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "D3D12VA is disabled by environment variable");
+        m_VideoEnhancement->setD3D12Available(false);
+        return false;
+    } else if (!IsWindows10OrGreater()) {
+        // Use DXVA2 on anything older than Win10, so we don't have to handle a bunch
+        // of legacy Win7/Win8 codepaths in here.
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "D3D12VA renderer is only supported on Windows 10 or later.");
+        m_VideoEnhancement->setD3D12Available(false);
+        return false;
+    }
+
     // Device creation
     m_hr = D3D12CreateDevice(
         m_Adapter.Get(),
@@ -2519,24 +2537,17 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
         IID_PPV_ARGS(&m_Device)
         );
     if(!verifyHResult(m_hr, "D3D12CreateDevice(... m_Device)")){
+        // This system cannot host a D3D12 device at all, so there is no point
+        // retrying this renderer. Let D3D11VA take over instead of falling all
+        // the way through to the Vulkan renderer.
+        m_VideoEnhancement->setD3D12Available(false);
         return false;
     }
 
     // VideoDevice creation
     m_hr = m_Device.As(&m_VideoDevice);
     if(!verifyHResult(m_hr, "m_Device.As(&m_VideoDevice);")){
-        return false;
-    }
-
-    if (qgetenv("D3D12VA_ENABLED") == "0") {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "D3D12VA is disabled by environment variable");
-        return false;
-    } else if (!IsWindows10OrGreater()) {
-        // Use DXVA2 on anything older than Win10, so we don't have to handle a bunch
-        // of legacy Win7/Win8 codepaths in here.
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "D3D12VA renderer is only supported on Windows 10 or later.");
+        m_VideoEnhancement->setD3D12Available(false);
         return false;
     }
 
