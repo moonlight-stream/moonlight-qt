@@ -919,7 +919,11 @@ Flickable {
                     visible: SystemProperties.isVideoEnhancementSwitchable()
                     width: parent.width
                     id: resSuperResolutionModeTitle
-                    text: qsTr("Video Super Resolution Mode<br><i>(Dropdown available only in Debug mode)</br></i>")
+                    enabled: SystemProperties.isVideoEnhancementAvailable()
+                    text: SystemProperties.isVideoEnhancementAvailable() ?
+                              qsTr("Video Super Resolution Mode<br><i>(Dropdown available only in Debug mode)</br></i>")
+                            :
+                              qsTr("Video Super Resolution Mode (unavailable on this system)")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -928,6 +932,7 @@ Flickable {
                 AutoResizingComboBox {
 
                     visible: SystemProperties.isVideoEnhancementSwitchable()
+                    enabled: SystemProperties.isVideoEnhancementAvailable()
                     
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000

@@ -198,7 +198,7 @@ private:
     UINT m_AdapterIndex = 0;
     ComPtr<IDXGIFactory6> m_Factory;
     ComPtr<IDXGIAdapter1> m_Adapter;
-    ComPtr<ID3D12Device9> m_Device;
+    ComPtr<ID3D12Device> m_Device;
     ComPtr<ID3D12VideoDevice2> m_VideoDevice;
     decoder m_Decoder;
     bool m_SkipRenderStep2 = false;
@@ -269,13 +269,13 @@ private:
     std::vector<D3D12_VIDEO_PROCESS_OUTPUT_STREAM_ARGUMENTS> m_OutputArgsUpscalerConvert;
     
     ComPtr<ID3D12CommandAllocator> m_VideoProcessCommandAllocator;
-    ComPtr<ID3D12VideoProcessCommandList3> m_VideoProcessCommandList;
+    ComPtr<ID3D12VideoProcessCommandList1> m_VideoProcessCommandList;
     ComPtr<ID3D12CommandQueue> m_VideoProcessCommandQueue;
     ComPtr<ID3D12CommandAllocator> m_GraphicsCommandAllocator;
-    ComPtr<ID3D12GraphicsCommandList7> m_GraphicsCommandList;
+    ComPtr<ID3D12GraphicsCommandList> m_GraphicsCommandList;
     ComPtr<ID3D12CommandQueue> m_GraphicsCommandQueue;
     ComPtr<ID3D12CommandAllocator> m_OverlayCommandAllocator;
-    ComPtr<ID3D12GraphicsCommandList7> m_OverlayCommandList;
+    ComPtr<ID3D12GraphicsCommandList> m_OverlayCommandList;
     ComPtr<ID3D12CommandQueue> m_OverlayCommandQueue;
     D3D12_RESOURCE_BARRIER m_Barrier;
 
@@ -374,7 +374,7 @@ private:
     
     // Used for debug purpose only
     ComPtr<ID3D12CommandAllocator> m_PictureCommandAllocator;
-    ComPtr<ID3D12GraphicsCommandList7> m_PictureCommandList;
+    ComPtr<ID3D12GraphicsCommandList> m_PictureCommandList;
     ComPtr<ID3D12CommandQueue> m_PictureCommandQueue;
     void DebugExportToPNG(
         ID3D12Resource* srctexture,

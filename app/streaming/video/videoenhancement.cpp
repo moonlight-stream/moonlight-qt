@@ -160,6 +160,29 @@ bool VideoEnhancement::isHDRcapable(){
 }
 
 /**
+ * \brief Set the D3D12 renderer availability
+ *
+ * The D3D12 renderer needs interfaces that are missing on older Windows releases.
+ * Once its initialization has failed, there is no point retrying it for the rest
+ * of the process, and the D3D11 renderer must be allowed to take over.
+ *
+ * \param bool available
+ * \return void
+ */
+void VideoEnhancement::setD3D12Available(bool available){
+    m_D3D12Available = available;
+}
+
+/**
+ * \brief Check the D3D12 renderer availability
+ *
+ * \return bool Returns false if the D3D12 renderer already failed to initialize
+ */
+bool VideoEnhancement::isD3D12Available(){
+    return m_D3D12Available;
+}
+
+/**
  * \brief Check if Video Enhancement feature is enabled
  *
  * \return bool Returns true if the Video Enhancement feature is enabled

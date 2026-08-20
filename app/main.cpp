@@ -13,6 +13,7 @@
 #include <QElapsedTimer>
 #include <QTemporaryFile>
 #include <QRegularExpression>
+#include <QSysInfo>
 
 #ifdef Q_OS_UNIX
 #include <sys/socket.h>
@@ -822,6 +823,13 @@ int main(int argc, char *argv[])
     default:
         break;
     }
+
+    // Log the OS we're running on.
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Running on %s (%s %s)",
+                QSysInfo::prettyProductName().toUtf8().constData(),
+                QSysInfo::kernelType().toUtf8().constData(),
+                QSysInfo::kernelVersion().toUtf8().constData());
 
     SDL_version compileVersion;
     SDL_VERSION(&compileVersion);
