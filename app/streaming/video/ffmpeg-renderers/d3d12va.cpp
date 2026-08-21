@@ -731,6 +731,14 @@ void D3D12VARenderer::enhanceAutoSelection()
 
     // At true, RenderStep2 is not needed
     m_SkipRenderStep2 = m_RenderStep2 == RenderStep::NONE;
+
+    // The VideoProcess queue is only fed by the VideoProcessor steps
+    auto usesVideoProcessor = [](RenderStep step) {
+        return step == RenderStep::ALL_VIDEOPROCESSOR ||
+               step == RenderStep::CONVERT_VIDEOPROCESSOR ||
+               step == RenderStep::UPSCALE_VIDEOPROCESSOR;
+    };
+    m_UsesVideoProcessQueue = usesVideoProcessor(m_RenderStep1) || usesVideoProcessor(m_RenderStep2);
     
     // Add statistics information
     m_VideoEnhancement->setRatio(static_cast<float>(m_OutputTextureInfo.height) / static_cast<float>(m_DecoderParams.textureHeight));
@@ -4310,10 +4318,10 @@ void D3D12VARenderer::waitForVideoProcess(bool waitCPU)
     }
     m_VideoProcessAllocatorFence[m_CurrentFrameIndex] = fence;
     if (!waitCPU) {
-        if (m_Vsync) {
-            m_GraphicsCommandQueue->Wait(m_FenceVideoProcess.Get(), fence);
-            if(m_AmfCommandQueue) m_AmfCommandQueue->Wait(m_FenceVideoProcess.Get(), fence);
-        }
+        // The graphics queue is about to read what the VideoProcess queue just wrote,
+        // whether or not V-sync is on
+        m_GraphicsCommandQueue->Wait(m_FenceVideoProcess.Get(), fence);
+        if(m_AmfCommandQueue) m_AmfCommandQueue->Wait(m_FenceVideoProcess.Get(), fence);
     } else if (m_FenceVideoProcess->GetCompletedValue() < fence) {
         m_hr = m_FenceVideoProcess->SetEventOnCompletion(fence, m_FenceVideoProcessEvent);
         if(!verifyHResult(m_hr, "m_FenceVideoProcess->SetEventOnCompletion(fence, m_FenceVideoProcessEvent);")){
@@ -4345,10 +4353,12 @@ void D3D12VARenderer::waitForGraphics(bool waitCPU)
     }
     m_GraphicsAllocatorFence[m_CurrentFrameIndex] = fence;
     if (!waitCPU) {
-        if (m_Vsync) {
+        // Only a queue that actually runs work may be made to wait. Queuing a Wait on an
+        // idle queue piles up thousands of never drained waits over a session.
+        if (m_UsesVideoProcessQueue) {
             m_VideoProcessCommandQueue->Wait(m_FenceGraphics.Get(), fence);
-            if(m_AmfCommandQueue) m_AmfCommandQueue->Wait(m_FenceGraphics.Get(), fence);
         }
+        if(m_AmfCommandQueue) m_AmfCommandQueue->Wait(m_FenceGraphics.Get(), fence);
     } else if (m_FenceGraphics->GetCompletedValue() < fence) {
         m_hr = m_FenceGraphics->SetEventOnCompletion(fence, m_FenceGraphicsEvent);
         if(!verifyHResult(m_hr, "m_FenceGraphics->SetEventOnCompletion(fence, m_FenceGraphicsEvent);")){
@@ -4866,7 +4876,9 @@ void D3D12VARenderer::renderFrame(AVFrame* frame)
     m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_FrameCount;
 
     // Take ownership of this slot's command allocators
-    resetVideoProcessCommandList();
+    if (m_UsesVideoProcessQueue) {
+        resetVideoProcessCommandList();
+    }
     resetGraphicsCommandList();
 
     // Read back the GPU times that completed since the last frame and adapt the
@@ -5858,7 +5870,16 @@ Present:
         }
     }
 
-    // Reset allocator and command list to record new commands
+    // Wait for the GPU to be done with this frame before returning.
+    //
+    // This looks like it could be replaced by a fence and several command allocators to
+    // let frames overlap, but it cannot: the shader helpers rewrite their descriptors
+    // through updateShaderResourceView() on every frame, the NGX VSR feature is a single
+    // instance, and m_RGBTexture / m_OutputTexture are single buffered. Letting frame N+1
+    // record while frame N is still executing makes all three race, which the driver
+    // reports as DXGI_ERROR_DEVICE_HUNG, "invalid command passed by the calling
+    // application". Overlapping frames requires per-frame copies of every one of those
+    // resources first.
     {
         // VideoProcessor
         if(resetVideoProcessCommand){
@@ -5868,7 +5889,7 @@ Present:
 
         // Graphics
         if(resetGraphicsCommand){
-            waitForGraphics(true); // Force the CPU waiting (true), otherwise the tearing is too agressive
+            waitForGraphics(true);
             resetGraphicsCommandList();
         }
 

@@ -340,6 +340,9 @@ private:
     int m_VsrQualityStableCount = 0;
     // Set once there is nothing left to decide, which stops the GPU timing entirely
     bool m_EnhancerQualitySettled = false;
+    // True when the pipeline actually submits work on the VideoProcess queue. When it
+    // does not, the two queues have no dependency and must not wait on each other.
+    bool m_UsesVideoProcessQueue = false;
 
     int m_DecoderSelectionPass;
     UINT m_BackBufferIndex = 0;
