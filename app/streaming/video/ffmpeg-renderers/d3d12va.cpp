@@ -4423,6 +4423,66 @@ void D3D12VARenderer::resetGraphicsCommandList()
 }
 
 /**
+ * \brief Re-present the last frame that was successfully rendered
+ *
+ * Used when a frame cannot be produced. Presenting the current back buffer as-is
+ * would show either black or a stale image from m_FrameCount presents ago, which
+ * reads as a flash. Copying the previously presented back buffer instead simply
+ * repeats the last visible frame.
+ *
+ * \param UINT backBufferIndex, index of the back buffer to present
+ * \return void
+ */
+void D3D12VARenderer::repeatLastFrame(UINT backBufferIndex)
+{
+    const UINT previousIndex = (backBufferIndex + m_FrameCount - 1) % m_FrameCount;
+    if (previousIndex == backBufferIndex || !m_BackBuffers[previousIndex]) {
+        return;
+    }
+
+    resetGraphicsCommandList();
+
+    CD3DX12_RESOURCE_BARRIER barriers[2];
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_BackBuffers[previousIndex].Get(),
+        D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_COPY_SOURCE
+        );
+    barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_BackBuffers[backBufferIndex].Get(),
+        D3D12_RESOURCE_STATE_PRESENT,
+        D3D12_RESOURCE_STATE_COPY_DEST
+        );
+    m_GraphicsCommandList->ResourceBarrier(2, barriers);
+
+    m_GraphicsCommandList->CopyResource(m_BackBuffers[backBufferIndex].Get(),
+                                        m_BackBuffers[previousIndex].Get());
+
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_BackBuffers[previousIndex].Get(),
+        D3D12_RESOURCE_STATE_COPY_SOURCE,
+        D3D12_RESOURCE_STATE_PRESENT
+        );
+    barriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_BackBuffers[backBufferIndex].Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        D3D12_RESOURCE_STATE_PRESENT
+        );
+    m_GraphicsCommandList->ResourceBarrier(2, barriers);
+
+    if (FAILED(m_GraphicsCommandList->Close())) {
+        return;
+    }
+
+    ID3D12CommandList* cmdLists[] = { m_GraphicsCommandList.Get() };
+    m_GraphicsCommandQueue->ExecuteCommandLists(1, cmdLists);
+
+    // Publishes the fence guarding this slot's allocator. The command list is left
+    // closed, the next frame reopens it on its own slot.
+    waitForGraphics();
+}
+
+/**
  * \brief Read back the GPU time measured on the graphics queue
  *
  * renderFrame() waits for the GPU before returning, so by the time the next frame
@@ -4870,7 +4930,10 @@ void D3D12VARenderer::renderFrame(AVFrame* frame)
     bool detachRGBTextureUpscaled = false;
     bool detachYUVTextureUpscaled = false;
     bool detachOutputTexture = false;
-    
+
+    // Set once the back buffer holds the frame we are about to present
+    bool frameDrawn = false;
+
     SDL_AtomicLock(&m_OverlayLock);
 
     m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_FrameCount;
@@ -5825,6 +5888,8 @@ Draw:
             m_TimestampPending[m_CurrentFrameIndex] = true;
         }
 
+        frameDrawn = true;
+
         TimerInfo("(VP Copy m_OutputTexture -> m_BackBuffers)", true);
     }
     
@@ -5832,7 +5897,14 @@ Present:
     
     // Present the BackBuffer texture to the display
     {
-        // When vSync is enabled, we do Present(0, 0) instead of (1, 0) to leverage VRR capability of the screen if any.        
+        // This back buffer holds whatever was presented m_FrameCount frames ago, which
+        // shows up as a black or stale flash. We must still present to release the frame
+        // latency waitable object, so repeat the last visible frame instead.
+        if (!frameDrawn) {
+            repeatLastFrame(backBufferIndex);
+        }
+
+        // When vSync is enabled, we do Present(0, 0) instead of (1, 0) to leverage VRR capability of the screen if any.
         m_hr = m_SwapChain->Present(0, m_AllowTearing ? DXGI_PRESENT_ALLOW_TEARING : 0);
         
         TimerInfo("(Present)", true);
