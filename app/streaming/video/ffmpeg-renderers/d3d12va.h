@@ -145,6 +145,7 @@ private:
     void resetGraphicsCommandList();
     void collectGpuFrameTime();
     void adjustEnhancerQuality();
+    void repeatLastFrame(UINT backBufferIndex);
     void renderOverlay(Overlay::OverlayType type);
     VppSurface* findUnlockedSurface(std::vector<VppSurface>& pool);
 
