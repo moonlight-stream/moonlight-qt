@@ -16,6 +16,7 @@
 #include <QRegularExpression>
 #include <QFontDatabase>
 #include <QLocale>
+#include <QFile>
 #include <QFileInfo>
 #include <QStandardPaths>
 
@@ -330,6 +331,24 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 
 #endif
 
+#ifdef LOG_TO_FILE
+static QString prepareLogDirectory()
+{
+    QDir logDirectory(Path::getLogDir());
+    if (logDirectory.exists() || logDirectory.mkpath(".")) {
+        return logDirectory.absolutePath();
+    }
+
+    QDir fallbackDirectory(QDir(QDir::tempPath()).filePath(QCoreApplication::applicationName() + "/logs"));
+    if (!fallbackDirectory.exists() && !fallbackDirectory.mkpath(".")) {
+        fallbackDirectory = QDir(QDir::tempPath());
+    }
+    qWarning() << "Failed to create log directory:" << logDirectory.absolutePath()
+               << "Falling back to:" << fallbackDirectory.absolutePath();
+    return fallbackDirectory.absolutePath();
+}
+#endif
+
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -337,10 +356,11 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 #include <io.h>
 
 static volatile LONG s_HitUnhandledException = 0;
-static WCHAR s_CrashLogDirectory[MAX_PATH] = {};
+static WCHAR s_CrashDumpDirectory[MAX_PATH] = {};
 static WCHAR s_CrashLogFileName[MAX_PATH] = {};
 static WCHAR s_CrashBuildVersion[128] = {};
 static constexpr size_t CRASH_DIAGNOSTIC_MESSAGE_LENGTH = 2048;
+static constexpr int MAX_MINIDUMP_FILES = 3;
 static CHAR s_CrashUtf8Message[CRASH_DIAGNOSTIC_MESSAGE_LENGTH * 3 + 1] = {};
 static HANDLE s_CrashLogHandle = INVALID_HANDLE_VALUE;
 static HANDLE s_CrashFallbackHandle = INVALID_HANDLE_VALUE;
@@ -355,12 +375,12 @@ static void copyCrashDiagnosticString(WCHAR* destination, size_t destinationLeng
               _TRUNCATE);
 }
 
-static void initializeCrashDiagnostics(const QString& logDirectory,
-                                       const QString& logFileName,
-                                       HANDLE logHandle,
-                                       HANDLE fallbackHandle)
+static void initializeCrashDiagnostics(const QString& dumpDirectory,
+                                        const QString& logFileName,
+                                        HANDLE logHandle,
+                                        HANDLE fallbackHandle)
 {
-    copyCrashDiagnosticString(s_CrashLogDirectory, _countof(s_CrashLogDirectory), logDirectory);
+    copyCrashDiagnosticString(s_CrashDumpDirectory, _countof(s_CrashDumpDirectory), dumpDirectory);
     copyCrashDiagnosticString(s_CrashLogFileName, _countof(s_CrashLogFileName), logFileName);
     copyCrashDiagnosticString(s_CrashBuildVersion,
                               _countof(s_CrashBuildVersion),
@@ -373,6 +393,36 @@ static void initializeCrashDiagnostics(const QString& logDirectory,
     ULONG stackGuarantee = 64 * 1024;
     if (!SetThreadStackGuarantee(&stackGuarantee)) {
         s_CrashStackGuaranteeError = GetLastError();
+    }
+}
+
+static QString prepareCrashDumpDirectory(const QString& fallbackLogDirectory)
+{
+    QDir dumpDirectory(Path::getDumpDir());
+    if (dumpDirectory.exists() || dumpDirectory.mkpath(".")) {
+        return dumpDirectory.absolutePath();
+    }
+
+    qWarning() << "Failed to create minidump directory:" << dumpDirectory.absolutePath()
+               << "Falling back to:" << fallbackLogDirectory;
+    return fallbackLogDirectory;
+}
+
+static void pruneOldMinidumps(const QString& dumpDirectory)
+{
+    QDir directory(dumpDirectory);
+    const QStringList existingDumpNames = directory.entryList(
+            QStringList(QStringLiteral("Moonlight-*.dmp")),
+            QDir::Files,
+            QDir::Time);
+
+    // Keep one slot available for a crash in the current process. Pruning here
+    // avoids doing directory enumeration from the unhandled-exception handler.
+    for (int i = MAX_MINIDUMP_FILES - 1; i < existingDumpNames.size(); i++) {
+        const QString dumpName = existingDumpNames.at(i);
+        if (!QFile(directory.filePath(dumpName)).remove()) {
+            qWarning() << "Failed to remove old minidump:" << dumpName;
+        }
     }
 }
 
@@ -501,7 +551,7 @@ LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
                  _countof(dmpFileName),
                  _TRUNCATE,
                  L"%ls\\Moonlight-%I64u.dmp",
-                 s_CrashLogDirectory,
+                 s_CrashDumpDirectory,
                  currentUnixTimeSeconds());
     HANDLE dumpHandle = CreateFileW(dmpFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (dumpHandle != INVALID_HANDLE_VALUE) {
@@ -718,14 +768,15 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef LOG_TO_FILE
-    QDir tempDir(Path::getLogDir());
+    const QString logDirectory = prepareLogDirectory();
+    QDir logDir(logDirectory);
 
 #ifdef Q_OS_WIN32
     // Only log to a file if the user didn't redirect stderr somewhere else
     if (IS_UNSPECIFIED_HANDLE(oldConErr))
 #endif
     {
-        s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
+        s_LoggerFile = new QFile(logDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
         if (s_LoggerFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream(stderr) << "Redirecting log output to " << s_LoggerFile->fileName() << Qt::endl;
             s_LoggerStream.setDevice(s_LoggerFile);
@@ -734,7 +785,8 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef Q_OS_WIN32
-    initializeCrashDiagnostics(Path::getLogDir(),
+    const QString crashDumpDirectory = prepareCrashDumpDirectory(logDirectory);
+    initializeCrashDiagnostics(crashDumpDirectory,
                                s_LoggerFile && s_LoggerFile->isOpen()
                                        ? s_LoggerFile->fileName()
                                        : QString(),
@@ -770,15 +822,16 @@ int main(int argc, char *argv[])
 
 #ifdef Q_OS_WIN32
     // Create a crash dump when we crash on Windows
+    pruneOldMinidumps(crashDumpDirectory);
     SetUnhandledExceptionFilter(UnhandledExceptionHandler);
 #endif
 
 #ifdef LOG_TO_FILE
     // Prune the oldest existing logs if there are more than 10
-    QStringList existingLogNames = tempDir.entryList(QStringList("Moonlight-*.log"), QDir::NoFilter, QDir::SortFlag::Time);
+    QStringList existingLogNames = logDir.entryList(QStringList("Moonlight-*.log"), QDir::Files, QDir::SortFlag::Time);
     for (int i = 10; i < existingLogNames.size(); i++) {
         qInfo() << "Removing old log file:" << existingLogNames.at(i);
-        QFile(tempDir.filePath(existingLogNames.at(i))).remove();
+        QFile(logDir.filePath(existingLogNames.at(i))).remove();
     }
 #endif
 
