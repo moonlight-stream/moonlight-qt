@@ -100,11 +100,13 @@ D3D12VARenderer::~D3D12VARenderer()
 
     m_SwapChain.Reset();
 
-    m_VideoProcessCommandAllocator.Reset();
+    for (auto& allocator : m_VideoProcessCommandAllocators) allocator.Reset();
+    m_VideoProcessAllocatorFence = {};
     m_VideoProcessCommandList.Reset();
     m_VideoProcessCommandQueue.Reset();
 
-    m_GraphicsCommandAllocator.Reset();
+    for (auto& allocator : m_GraphicsCommandAllocators) allocator.Reset();
+    m_GraphicsAllocatorFence = {};
     m_TimestampReadbackBuffer.Reset();
     m_TimestampPending = {};
     m_GraphicsCommandList.Reset();
@@ -1260,8 +1262,7 @@ bool D3D12VARenderer::enableNvidiaVideoSuperResolution(bool activate, bool logIn
         return false;
     }
     
-    m_GraphicsCommandAllocator->Reset();
-    m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
+    resetGraphicsCommandList();
     
     // Create the VSR feature instance. The quality level has to be part of the
     // creation parameters: NGX sizes its internal resources from it, so evaluating
@@ -1280,8 +1281,7 @@ bool D3D12VARenderer::enableNvidiaVideoSuperResolution(bool activate, bool logIn
     m_GraphicsCommandQueue->ExecuteCommandLists(1, cmdLists);
     
     waitForGraphics();
-    m_GraphicsCommandAllocator->Reset();
-    m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
+    resetGraphicsCommandList();
     
     if (NVSDK_NGX_FAILED(ResultVSR)){
         if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "NVIDIA RTX Video Super Resolution failed.");
@@ -1385,8 +1385,7 @@ bool D3D12VARenderer::enableNvidiaHDR(bool activate, bool logInfo)
         return false;
     }
     
-    m_GraphicsCommandAllocator->Reset();
-    m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
+    resetGraphicsCommandList();
 
     // Create the TrueHDR feature instance 
     NVSDK_NGX_Feature_Create_Params TrueHDRCreateParams = {};
@@ -1402,8 +1401,7 @@ bool D3D12VARenderer::enableNvidiaHDR(bool activate, bool logInfo)
     m_GraphicsCommandQueue->ExecuteCommandLists(1, cmdLists);
     
     waitForGraphics();
-    m_GraphicsCommandAllocator->Reset();
-    m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
+    resetGraphicsCommandList();
     
     if (NVSDK_NGX_FAILED(ResultTrueHDR)){
         if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "NVIDIA RTX Video Super Resolution failed.");
@@ -2685,18 +2683,20 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
     // Command allocator and command list initialization
     {
         // PROCESS
-        m_hr = m_Device->CreateCommandAllocator(
-            D3D12_COMMAND_LIST_TYPE_VIDEO_PROCESS,
-            IID_PPV_ARGS(&m_VideoProcessCommandAllocator)
-            );
-        if(!verifyHResult(m_hr, "m_Device->CreateCommandAllocator(... m_VideoProcessCommandAllocator)")){
-            return false;
+        for (UINT n = 0; n < m_FrameCount; n++) {
+            m_hr = m_Device->CreateCommandAllocator(
+                D3D12_COMMAND_LIST_TYPE_VIDEO_PROCESS,
+                IID_PPV_ARGS(&m_VideoProcessCommandAllocators[n])
+                );
+            if(!verifyHResult(m_hr, "m_Device->CreateCommandAllocator(... m_VideoProcessCommandAllocators)")){
+                return false;
+            }
         }
-        
+
         m_hr = m_Device->CreateCommandList(
             0,
             D3D12_COMMAND_LIST_TYPE_VIDEO_PROCESS,
-            m_VideoProcessCommandAllocator.Get(),
+            m_VideoProcessCommandAllocators[0].Get(),
             nullptr,
             IID_PPV_ARGS(&m_VideoProcessCommandList)
             );
@@ -2721,18 +2721,20 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
         }
         
         // GRAPHICS
-        m_hr = m_Device->CreateCommandAllocator(
-            D3D12_COMMAND_LIST_TYPE_DIRECT,
-            IID_PPV_ARGS(&m_GraphicsCommandAllocator)
-            );
-        if(!verifyHResult(m_hr, "m_Device->CreateCommandAllocator(... m_GraphicsCommandAllocator)")){
-            return false;
+        for (UINT n = 0; n < m_FrameCount; n++) {
+            m_hr = m_Device->CreateCommandAllocator(
+                D3D12_COMMAND_LIST_TYPE_DIRECT,
+                IID_PPV_ARGS(&m_GraphicsCommandAllocators[n])
+                );
+            if(!verifyHResult(m_hr, "m_Device->CreateCommandAllocator(... m_GraphicsCommandAllocators)")){
+                return false;
+            }
         }
-        
+
         m_hr = m_Device->CreateCommandList(
             0,
             D3D12_COMMAND_LIST_TYPE_DIRECT,
-            m_GraphicsCommandAllocator.Get(),
+            m_GraphicsCommandAllocators[0].Get(),
             nullptr,
             IID_PPV_ARGS(&m_GraphicsCommandList)
             );
@@ -3945,11 +3947,12 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
         m_FenceGraphicsValue = m_FenceGraphics->GetCompletedValue();
         m_FenceOverlayValue = m_FenceOverlay->GetCompletedValue();
         m_FenceAMFValue = m_FenceAMF->GetCompletedValue();
+
+        m_VideoProcessAllocatorFence = {};
+        m_GraphicsAllocatorFence = {};
         
-        m_VideoProcessCommandAllocator->Reset();
-        m_VideoProcessCommandList->Reset(m_VideoProcessCommandAllocator.Get());
-        m_GraphicsCommandAllocator->Reset();
-        m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
+        resetVideoProcessCommandList();
+        resetGraphicsCommandList();
         m_OverlayCommandAllocator->Reset();
         m_OverlayCommandList->Reset(m_OverlayCommandAllocator.Get(), nullptr);
     }
@@ -4118,8 +4121,7 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
 
         waitForGraphics();
 
-        m_GraphicsCommandAllocator->Reset();
-        m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
+        resetGraphicsCommandList();
     }
 
     // Initialize Upscaler
@@ -4306,6 +4308,7 @@ void D3D12VARenderer::waitForVideoProcess(bool waitCPU)
     if(!verifyHResult(m_hr, "m_VideoProcessCommandQueue->Signal(m_FenceVideoProcess.Get(), fence);")){
         return;
     }
+    m_VideoProcessAllocatorFence[m_CurrentFrameIndex] = fence;
     if (!waitCPU) {
         if (m_Vsync) {
             m_GraphicsCommandQueue->Wait(m_FenceVideoProcess.Get(), fence);
@@ -4340,6 +4343,7 @@ void D3D12VARenderer::waitForGraphics(bool waitCPU)
     if(!verifyHResult(m_hr, "m_GraphicsCommandQueue->Signal(m_FenceGraphics.Get(), fence);")){
         return;
     }
+    m_GraphicsAllocatorFence[m_CurrentFrameIndex] = fence;
     if (!waitCPU) {
         if (m_Vsync) {
             m_VideoProcessCommandQueue->Wait(m_FenceGraphics.Get(), fence);
@@ -4352,6 +4356,60 @@ void D3D12VARenderer::waitForGraphics(bool waitCPU)
         }
         WaitForSingleObject(m_FenceGraphicsEvent, INFINITE);
     }
+}
+
+/**
+ * \brief Recycle the VideoProcess command list for the current frame slot
+ *
+ * Resetting a command allocator while the GPU still runs commands recorded from it is
+ * invalid, so each frame slot owns its own. The wait below is therefore only reached
+ * if the GPU fell more than m_FrameCount frames behind.
+ *
+ * \return void
+ */
+void D3D12VARenderer::resetVideoProcessCommandList()
+{
+    ID3D12CommandAllocator* allocator = m_VideoProcessCommandAllocators[m_CurrentFrameIndex].Get();
+    if (!allocator) {
+        return;
+    }
+
+    const UINT64 fence = m_VideoProcessAllocatorFence[m_CurrentFrameIndex];
+    if (fence > 0 && m_FenceVideoProcess && m_FenceVideoProcessEvent &&
+        m_FenceVideoProcess->GetCompletedValue() < fence) {
+        if (SUCCEEDED(m_FenceVideoProcess->SetEventOnCompletion(fence, m_FenceVideoProcessEvent))) {
+            WaitForSingleObject(m_FenceVideoProcessEvent, INFINITE);
+        }
+    }
+
+    allocator->Reset();
+    m_VideoProcessCommandList->Reset(allocator);
+}
+
+/**
+ * \brief Recycle the Graphics command list for the current frame slot
+ *
+ * See resetVideoProcessCommandList() for the rationale.
+ *
+ * \return void
+ */
+void D3D12VARenderer::resetGraphicsCommandList()
+{
+    ID3D12CommandAllocator* allocator = m_GraphicsCommandAllocators[m_CurrentFrameIndex].Get();
+    if (!allocator) {
+        return;
+    }
+
+    const UINT64 fence = m_GraphicsAllocatorFence[m_CurrentFrameIndex];
+    if (fence > 0 && m_FenceGraphics && m_FenceGraphicsEvent &&
+        m_FenceGraphics->GetCompletedValue() < fence) {
+        if (SUCCEEDED(m_FenceGraphics->SetEventOnCompletion(fence, m_FenceGraphicsEvent))) {
+            WaitForSingleObject(m_FenceGraphicsEvent, INFINITE);
+        }
+    }
+
+    allocator->Reset();
+    m_GraphicsCommandList->Reset(allocator, nullptr);
 }
 
 /**
@@ -4805,7 +4863,11 @@ void D3D12VARenderer::renderFrame(AVFrame* frame)
     
     SDL_AtomicLock(&m_OverlayLock);
 
-    m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % 3;
+    m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_FrameCount;
+
+    // Take ownership of this slot's command allocators
+    resetVideoProcessCommandList();
+    resetGraphicsCommandList();
 
     // Read back the GPU times that completed since the last frame and adapt the
     // enhancer quality if it does not fit in the frame budget
@@ -5041,8 +5103,7 @@ RenderStep1:
             m_GraphicsCommandQueue->ExecuteCommandLists(1, cmdLists);
 
             waitForGraphics();
-            m_GraphicsCommandAllocator->Reset();
-            m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
+            resetGraphicsCommandList();
 
             resetGraphicsCommand = false;
         }
@@ -5310,8 +5371,7 @@ RenderStep1:
                     
                     DebugExportToPNG(d3d12Tex, D3D12_RESOURCE_STATE_COMMON, "d3d12Tex.png");
                     
-                    m_GraphicsCommandAllocator->Reset();
-                    m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
+                    resetGraphicsCommandList();
                     
                     m_Barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(
                         d3d12Tex,
@@ -5373,8 +5433,7 @@ RenderStep1:
             
                     m_hr = m_GraphicsCommandList->Close();
                     if(!verifyHResult(m_hr, "m_GraphicsCommandList->Close();")){
-                        m_GraphicsCommandAllocator->Reset();
-                        m_GraphicsCommandList->Reset(m_VideoProcessCommandAllocator.Get(), nullptr);
+                        resetGraphicsCommandList();
                         if (m_OutputTexturePrevious) {
                             m_OutputTexture = m_OutputTexturePrevious;
                             goto Draw;
@@ -5388,8 +5447,7 @@ RenderStep1:
                     
                     waitForGraphics(true);
                     
-                    m_GraphicsCommandAllocator->Reset();
-                    m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
+                    resetGraphicsCommandList();
                 }
                 
             } else if (sts == MFX_ERR_GPU_HANG || sts == MFX_WRN_IN_EXECUTION) {
@@ -5426,8 +5484,7 @@ RenderStep2:
     if(m_RenderStep2 == RenderStep::UPSCALE_VIDEOPROCESSOR){
 
         if(resetVideoProcessCommand){
-            m_VideoProcessCommandAllocator->Reset();
-            m_VideoProcessCommandList->Reset(m_VideoProcessCommandAllocator.Get());
+            resetVideoProcessCommandList();
         }
         resetVideoProcessCommand = true;
 
@@ -5466,8 +5523,7 @@ RenderStep2:
 
         m_hr = m_VideoProcessCommandList->Close();
         if(!verifyHResult(m_hr, "m_VideoProcessCommandList->Close();")){
-            m_VideoProcessCommandAllocator->Reset();
-            m_VideoProcessCommandList->Reset(m_VideoProcessCommandAllocator.Get());
+            resetVideoProcessCommandList();
             if (m_OutputTexturePrevious) {
                 m_OutputTexture = m_OutputTexturePrevious;
                 goto Draw;
@@ -5807,15 +5863,13 @@ Present:
         // VideoProcessor
         if(resetVideoProcessCommand){
             waitForVideoProcess(true); // Force the CPU waiting (true), otherwise the tearing is too agressive
-            m_VideoProcessCommandAllocator->Reset();
-            m_VideoProcessCommandList->Reset(m_VideoProcessCommandAllocator.Get());
+            resetVideoProcessCommandList();
         }
 
         // Graphics
         if(resetGraphicsCommand){
             waitForGraphics(true); // Force the CPU waiting (true), otherwise the tearing is too agressive
-            m_GraphicsCommandAllocator->Reset();
-            m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
+            resetGraphicsCommandList();
         }
 
         TimerInfo("(Reinitialization)", true);

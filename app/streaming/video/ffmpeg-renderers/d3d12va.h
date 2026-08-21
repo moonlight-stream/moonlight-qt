@@ -141,6 +141,8 @@ private:
     void waitForVideoProcess(bool waitCPU = false);
     void waitForGraphics(bool waitCPU = false);
     void waitForOverlay(bool waitCPU = false);
+    void resetVideoProcessCommandList();
+    void resetGraphicsCommandList();
     void collectGpuFrameTime();
     void adjustEnhancerQuality();
     void renderOverlay(Overlay::OverlayType type);
@@ -266,10 +268,14 @@ private:
     std::vector<D3D12_VIDEO_PROCESS_INPUT_STREAM_ARGUMENTS1> m_InputArgsUpscalerConvert;
     std::vector<D3D12_VIDEO_PROCESS_OUTPUT_STREAM_ARGUMENTS> m_OutputArgsUpscalerConvert;
     
-    ComPtr<ID3D12CommandAllocator> m_VideoProcessCommandAllocator;
+    // One allocator per frame slot. Recycling the allocator of frame N then only ever
+    // has to wait on the frame that used that same slot, m_FrameCount frames earlier.
+    std::array<ComPtr<ID3D12CommandAllocator>, 3> m_VideoProcessCommandAllocators;
+    std::array<UINT64, 3> m_VideoProcessAllocatorFence = {};
     ComPtr<ID3D12VideoProcessCommandList1> m_VideoProcessCommandList;
     ComPtr<ID3D12CommandQueue> m_VideoProcessCommandQueue;
-    ComPtr<ID3D12CommandAllocator> m_GraphicsCommandAllocator;
+    std::array<ComPtr<ID3D12CommandAllocator>, 3> m_GraphicsCommandAllocators;
+    std::array<UINT64, 3> m_GraphicsAllocatorFence = {};
     ComPtr<ID3D12GraphicsCommandList> m_GraphicsCommandList;
     ComPtr<ID3D12CommandQueue> m_GraphicsCommandQueue;
     ComPtr<ID3D12CommandAllocator> m_OverlayCommandAllocator;
