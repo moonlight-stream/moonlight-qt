@@ -1058,6 +1058,11 @@
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="448"/>
+        <source>Remember window position and size</source>
+        <translation>记住窗口位置和大小</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="448"/>
         <source>Show connection quality warnings</source>
         <translation>显示连接质量警告</translation>
     </message>

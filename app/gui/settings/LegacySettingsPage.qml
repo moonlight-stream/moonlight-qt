@@ -442,6 +442,16 @@ Column {
                     }
                 }
 
+                ToggleRow {
+                    applicable: SystemProperties.hasDesktopEnvironment &&
+                                (!SystemProperties.isRunningWayland || SystemProperties.isRunningXWayland)
+                    title: qsTr("Remember window position and size")
+                    checked: StreamingPreferences.rememberWindowPosition
+                    onToggled: function(value) {
+                        StreamingPreferences.rememberWindowPosition = value
+                    }
+                }
+
                 HardCheckBox {
                     id: connectionWarningsCheck
                     width: parent.width

@@ -221,6 +221,7 @@ public:
     Q_PROPERTY(WindowMode windowMode MEMBER windowMode NOTIFY windowModeChanged)
     Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
     Q_PROPERTY(UIDisplayMode uiDisplayMode MEMBER uiDisplayMode NOTIFY uiDisplayModeChanged)
+    Q_PROPERTY(bool rememberWindowPosition MEMBER rememberWindowPosition NOTIFY rememberWindowPositionChanged)
     Q_PROPERTY(bool swapMouseButtons MEMBER swapMouseButtons NOTIFY mouseButtonsChanged)
     Q_PROPERTY(bool swapWinAltKeys MEMBER swapWinAltKeys NOTIFY swapWinAltKeysChanged)
     Q_PROPERTY(bool muteOnFocusLoss MEMBER muteOnFocusLoss NOTIFY muteOnFocusLossChanged)
@@ -294,6 +295,7 @@ public:
     WindowMode windowMode;
     WindowMode recommendedFullScreenMode;
     UIDisplayMode uiDisplayMode;
+    bool rememberWindowPosition;
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
     ScreenCombinationMode screenCombinationMode;
@@ -329,6 +331,7 @@ signals:
     void enableYUV444Changed();
     void videoDecoderSelectionChanged();
     void uiDisplayModeChanged();
+    void rememberWindowPositionChanged();
     void windowModeChanged();
     void framePacingChanged();
     void videoEnhancementChanged();

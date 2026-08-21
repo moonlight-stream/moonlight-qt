@@ -11,7 +11,7 @@ AbstractButton {
     property color highlightColor: Theme.accent
 
     width: 44
-    height: 40
+    height: 56
     focusPolicy: Qt.NoFocus
     hoverEnabled: true
 
