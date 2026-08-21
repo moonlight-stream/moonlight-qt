@@ -27,7 +27,7 @@ public:
     void setClickCallback(ClickCallback cb) { m_ClickCallback = std::move(cb); }
 
     /**
-     * Reposition the button relative to the given parent rect (SDL pixel coords).
+     * Reposition the button relative to the given Qt logical parent rect.
      * Places the button at the top-right corner of the streaming window.
      */
     void repositionTo(int parentX, int parentY, int parentW, int parentH);

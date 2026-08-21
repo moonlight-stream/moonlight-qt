@@ -24,16 +24,9 @@ OverlayMenuButton::~OverlayMenuButton()
 
 void OverlayMenuButton::repositionTo(int parentX, int parentY, int parentW, int /*parentH*/)
 {
-#ifdef Q_OS_MACOS
     int qpX = parentX;
     int qpY = parentY;
     int qpW = parentW;
-#else
-    qreal dpr = screen() ? screen()->devicePixelRatio() : 1.0;
-    int qpX = qRound(parentX / dpr);
-    int qpY = qRound(parentY / dpr);
-    int qpW = qRound(parentW / dpr);
-#endif
 
     // Position at top-right corner of the streaming window
     int x = qpX + qpW - kButtonSize - kMargin;

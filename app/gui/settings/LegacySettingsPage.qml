@@ -219,10 +219,10 @@ Column {
             onValueActivated: function(value) { StreamingPreferences.overlayMenuPosition = value }
 
             model: ListModel {
-                ListElement { text: qsTr("Right edge (default)"); val: StreamingPreferences.OMP_RIGHT_EDGE }
+                ListElement { text: qsTr("Right edge"); val: StreamingPreferences.OMP_RIGHT_EDGE }
                 ListElement { text: qsTr("Left edge"); val: StreamingPreferences.OMP_LEFT_EDGE }
                 ListElement { text: qsTr("Floating button"); val: StreamingPreferences.OMP_BUTTON }
-                ListElement { text: qsTr("Disabled"); val: StreamingPreferences.OMP_DISABLED }
+                ListElement { text: qsTr("Disabled (default)"); val: StreamingPreferences.OMP_DISABLED }
             }
         }
     }

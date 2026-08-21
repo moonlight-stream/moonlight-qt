@@ -188,7 +188,7 @@ void StreamingPreferences::reload()
     videoEnhancement = settings.value(SER_VIDEOENHANCEMENT, false).toBool();
     enableMicrophone = settings.value(SER_MICROPHONE, false).toBool();
     overlayMenuPosition = static_cast<OverlayMenuPosition>(settings.value(SER_OVERLAYMENUPOS,
-                                                           static_cast<int>(OverlayMenuPosition::OMP_RIGHT_EDGE)).toInt());
+                                                           static_cast<int>(OverlayMenuPosition::OMP_DISABLED)).toInt());
     autoUpdateCheck = settings.value(SER_AUTOUPDATECHECK, true).toBool();
 
     streamResolutionScale = settings.value(SER_STREAMRESOLUTIONSCALE, false).toBool();

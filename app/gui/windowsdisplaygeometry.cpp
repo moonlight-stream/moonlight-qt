@@ -181,6 +181,28 @@ bool monitorForWindow(QWindow* window, Monitor& monitor)
 #endif
 }
 
+bool monitorForRect(const QRect& rect, Monitor& monitor)
+{
+#if defined(Q_OS_WIN32)
+    if (!rect.isValid()) {
+        return false;
+    }
+
+    RECT nativeRect {
+        rect.left(),
+        rect.top(),
+        rect.right() + 1,
+        rect.bottom() + 1,
+    };
+    return populateMonitor(
+            MonitorFromRect(&nativeRect, MONITOR_DEFAULTTONEAREST), monitor);
+#else
+    Q_UNUSED(rect)
+    Q_UNUSED(monitor)
+    return false;
+#endif
+}
+
 QScreen* screenForMonitor(const Monitor& monitor)
 {
     if (!monitor.isValid()) {

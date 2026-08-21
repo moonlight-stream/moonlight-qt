@@ -7,6 +7,7 @@
 #include <QPainterPath>
 #include <QCursor>
 #include <QFontDatabase>
+#include <QFontMetrics>
 #include <memory>
 
 OverlayMenuPanel::OverlayMenuPanel(QWindow* parent)
@@ -18,11 +19,13 @@ OverlayMenuPanel::OverlayMenuPanel(QWindow* parent)
       m_FileMappingState(FileMappingState::Unknown),
       m_FileMappingDetail(tr("Checking")),
       m_ParentX(0), m_ParentY(0), m_ParentW(0), m_ParentH(0),
+      m_CloseWhenPointerOutside(false),
       m_ContentOffset(0),
       m_Closing(false),
       m_TargetX(0),
       m_AnchorMode(AnchorMode::RightEdge),
-      m_CursorX(0), m_CursorY(0)
+      m_CursorX(0), m_CursorY(0),
+      m_EdgePointerY(std::nullopt)
 {
     setFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint
              | Qt::WindowDoesNotAcceptFocus);
@@ -296,28 +299,34 @@ void OverlayMenuPanel::updateFileMappingState(FileMappingState state, const QStr
 // Show / hide / navigate
 // ---------------------------------------------------------------------------
 
-void OverlayMenuPanel::showAtRightEdge(int parentX, int parentY, int parentW, int parentH)
+void OverlayMenuPanel::showAtRightEdge(int parentX, int parentY, int parentW, int parentH,
+                                       std::optional<int> pointerGlobalY)
 {
     m_AnchorMode = AnchorMode::RightEdge;
     m_ParentX = parentX;
     m_ParentY = parentY;
     m_ParentW = parentW;
     m_ParentH = parentH;
+    m_EdgePointerY = pointerGlobalY;
+    m_CloseWhenPointerOutside = pointerGlobalY.has_value();
     showInternal();
 }
 
-void OverlayMenuPanel::showAtLeftEdge(int parentX, int parentY, int parentW, int parentH)
+void OverlayMenuPanel::showAtLeftEdge(int parentX, int parentY, int parentW, int parentH,
+                                      std::optional<int> pointerGlobalY)
 {
     m_AnchorMode = AnchorMode::LeftEdge;
     m_ParentX = parentX;
     m_ParentY = parentY;
     m_ParentW = parentW;
     m_ParentH = parentH;
+    m_EdgePointerY = pointerGlobalY;
+    m_CloseWhenPointerOutside = pointerGlobalY.has_value();
     showInternal();
 }
 
 void OverlayMenuPanel::showAtCursor(int parentX, int parentY, int parentW, int parentH,
-                                     int cursorX, int cursorY)
+                                    int cursorX, int cursorY, bool pointerTriggered)
 {
     m_AnchorMode = AnchorMode::AtCursor;
     m_ParentX = parentX;
@@ -326,6 +335,7 @@ void OverlayMenuPanel::showAtCursor(int parentX, int parentY, int parentW, int p
     m_ParentH = parentH;
     m_CursorX = cursorX;
     m_CursorY = cursorY;
+    m_CloseWhenPointerOutside = pointerTriggered;
     showInternal();
 }
 
@@ -374,51 +384,53 @@ void OverlayMenuPanel::showInternal()
     m_SlideAnim->start();
     m_OpacityAnim->start();
 
-    // Warp cursor into center of the content area (excluding shadow)
-    QRect contentRect(m_TargetX + m_ShadowMargin, y() + m_ShadowMargin,
-                       m_MenuWidth, height() - 2 * m_ShadowMargin);
-    QCursor::setPos(contentRect.center());
+    if (m_CloseWhenPointerOutside) {
+        schedulePointerOutsideCheck();
+    }
 
     forceRepaint();
 }
 
+void OverlayMenuPanel::schedulePointerOutsideCheck()
+{
+    if (!m_Visible) {
+        return;
+    }
+
+    constexpr qint64 LeaveGracePeriodMs = 300;
+    const qint64 remaining = LeaveGracePeriodMs - m_ShowTimer.elapsed();
+    m_LeaveTimer.start(static_cast<int>(qMax<qint64>(1, remaining)));
+}
+
 void OverlayMenuPanel::repositionWindow()
 {
-#ifdef Q_OS_MACOS
-    // On macOS, SDL and Qt both use points (logical coordinates)
     int qpX = m_ParentX;
     int qpY = m_ParentY;
     int qpW = m_ParentW;
     int qpH = m_ParentH;
-#else
-    // On other platforms, convert SDL pixel coordinates to Qt DIP
-    qreal dpr = screen() ? screen()->devicePixelRatio() : 1.0;
-    int qpX = qRound(m_ParentX / dpr);
-    int qpY = qRound(m_ParentY / dpr);
-    int qpW = qRound(m_ParentW / dpr);
-    int qpH = qRound(m_ParentH / dpr);
-#endif
 
     int itemCount  = (int)m_MenuLevels[m_CurrentLevel].items.size();
     int titleH     = (m_CurrentLevel > 0) ? m_TitleHeight : 0;
     int menuHeight = titleH + itemCount * m_ItemHeight + m_Padding * 2;
+
+    const int pointerY = m_EdgePointerY.value_or(0);
 
     int cx, cy; // content top-left position
 
     switch (m_AnchorMode) {
     case AnchorMode::LeftEdge:
         cx = qpX;
-        cy = qpY + (qpH - menuHeight) / 2;
+        if (m_EdgePointerY.has_value()) {
+            cy = pointerY - m_ItemHeight / 2;
+        }
+        else {
+            cy = qpY + (qpH - menuHeight) / 2;
+        }
         break;
 
     case AnchorMode::AtCursor: {
-#ifdef Q_OS_MACOS
         int qcX = m_CursorX;
         int qcY = m_CursorY;
-#else
-        int qcX = qRound(m_CursorX / dpr);
-        int qcY = qRound(m_CursorY / dpr);
-#endif
         // Position menu so cursor is near top-left corner
         cx = qcX;
         cy = qcY;
@@ -431,7 +443,12 @@ void OverlayMenuPanel::repositionWindow()
     case AnchorMode::RightEdge:
     default:
         cx = qpX + qpW - m_MenuWidth;
-        cy = qpY + (qpH - menuHeight) / 2;
+        if (m_EdgePointerY.has_value()) {
+            cy = pointerY - m_ItemHeight / 2;
+        }
+        else {
+            cy = qpY + (qpH - menuHeight) / 2;
+        }
         break;
     }
 
@@ -461,10 +478,8 @@ void OverlayMenuPanel::navigateToLevel(int level)
     // (the mouse may be outside the resized window after navigation)
     m_ShowTimer.start();
 
-    // Warp cursor into the new menu if it's now outside
-    QPoint globalPos = QCursor::pos();
-    if (!geometry().contains(globalPos)) {
-        QCursor::setPos(geometry().center());
+    if (m_CloseWhenPointerOutside) {
+        schedulePointerOutsideCheck();
     }
 
     if (goingForward) {
@@ -777,13 +792,24 @@ void OverlayMenuPanel::paintEvent(QPaintEvent*)
                 QRect sr(labelX, itemY + topH, cw - labelX - textPad, m_ItemHeight - topH);
                 p.drawText(sr, Qt::AlignLeft | Qt::AlignTop, item.detail);
             } else {
-                QRect lr(labelX, itemY, cw - labelX - textPad, m_ItemHeight);
+                int detailWidth = 0;
+                if (hasShortDetail) {
+                    const QFontMetrics detailMetrics(m_DetailFont);
+                    detailWidth = qMax(20, detailMetrics.horizontalAdvance(item.detail) + 8);
+                }
+
+                const int detailGap = hasShortDetail ? 8 : 0;
+                QRect lr(labelX, itemY,
+                         cw - labelX - textPad - detailWidth - detailGap,
+                         m_ItemHeight);
                 p.drawText(lr, Qt::AlignLeft | Qt::AlignVCenter, item.label);
 
                 if (hasShortDetail) {
-                    // Checkmark — Win11 accent color
+                    // Short status text or checkmark — Win11 accent color
+                    p.setFont(m_DetailFont);
                     p.setPen(QColor(110, 192, 232));
-                    QRect cr(cw - textPad - 20, itemY, 20, m_ItemHeight);
+                    QRect cr(cw - textPad - detailWidth, itemY,
+                             detailWidth, m_ItemHeight);
                     p.drawText(cr, Qt::AlignRight | Qt::AlignVCenter, item.detail);
                 }
             }
@@ -997,23 +1023,12 @@ void OverlayMenuPanel::gamepadBack()
 bool OverlayMenuPanel::event(QEvent* ev)
 {
     if (ev->type() == QEvent::Leave) {
-        if (m_Visible) {
+        if (m_Visible && m_CloseWhenPointerOutside) {
             // During the grace period, defer the outside check instead of
             // dropping the Leave event. Otherwise, leaving the panel quickly
             // after it opens would keep it visible until the cursor entered
             // and left the panel again.
-            constexpr qint64 LeaveGracePeriodMs = 300;
-            const qint64 elapsed = m_ShowTimer.elapsed();
-            if (elapsed < LeaveGracePeriodMs) {
-                m_LeaveTimer.start(static_cast<int>(LeaveGracePeriodMs - elapsed + 1));
-                return true;
-            }
-            // Verify cursor is actually outside (cursor warp may lag)
-            QPoint globalPos = QCursor::pos();
-            if (geometry().contains(globalPos)) {
-                return true;
-            }
-            closeMenu();
+            schedulePointerOutsideCheck();
         }
         return true;
     }

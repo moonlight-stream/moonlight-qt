@@ -26,6 +26,7 @@ QScreen* screenForMonitor(const Monitor& monitor);
 bool monitorForName(const QString& name, Monitor& monitor);
 bool monitorForScreen(QScreen* screen, Monitor& monitor);
 bool monitorForWindow(QWindow* window, Monitor& monitor);
+bool monitorForRect(const QRect& rect, Monitor& monitor);
 
 QRect windowRect(QWindow* window);
 bool clientRectForOverlappedWindow(QWindow* referenceWindow,

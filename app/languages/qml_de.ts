@@ -896,7 +896,7 @@
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="553"/>
-        <source>Disabled</source>
+        <source>Disabled (default)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1011,7 +1011,7 @@
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="541"/>
-        <source>Right edge (default)</source>
+        <source>Right edge</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

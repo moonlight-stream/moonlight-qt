@@ -122,9 +122,9 @@ public:
 
     enum OverlayMenuPosition
     {
-        OMP_RIGHT_EDGE = 0,  // Default: show on right edge of streaming window
+        OMP_RIGHT_EDGE = 0,  // Show on right edge of streaming window
         OMP_LEFT_EDGE  = 1,  // Show on left edge
-        OMP_DISABLED   = 3,  // Do not show overlay menu (keep old value for compat)
+        OMP_DISABLED   = 3,  // Default: do not show overlay menu (keep old value for compat)
         OMP_BUTTON     = 4,  // Show a floating button on the streaming window
     };
     Q_ENUM(OverlayMenuPosition);

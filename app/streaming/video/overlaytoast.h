@@ -24,7 +24,7 @@ public:
 
     /**
      * Show a toast message centered at the bottom of the given parent rect.
-     * @param parentX/Y/W/H  SDL pixel coordinates of the streaming window
+     * @param parentX/Y/W/H  Qt global logical geometry of the streaming window
      * @param message         Text to display
      * @param durationMs      How long to show before fading out (default 2000ms)
      */

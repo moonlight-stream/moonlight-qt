@@ -10,6 +10,7 @@
 #include <QPropertyAnimation>
 #include <QVariantAnimation>
 #include <functional>
+#include <optional>
 #include <vector>
 
 /**
@@ -84,15 +85,17 @@ public:
     void setActionCallback(ActionCallback cb) { m_ActionCallback = cb; }
     void setCloseCallback(CloseCallback cb)   { m_CloseCallback = cb; }
 
-    // Position the panel at the right edge of the given parent rect (SDL pixel coords)
-    void showAtRightEdge(int parentX, int parentY, int parentW, int parentH);
+    // Position the panel at the right edge of the given Qt logical parent rect.
+    void showAtRightEdge(int parentX, int parentY, int parentW, int parentH,
+                         std::optional<int> pointerGlobalY = std::nullopt);
 
-    // Position the panel at the left edge of the given parent rect (SDL pixel coords)
-    void showAtLeftEdge(int parentX, int parentY, int parentW, int parentH);
+    // Position the panel at the left edge of the given Qt logical parent rect.
+    void showAtLeftEdge(int parentX, int parentY, int parentW, int parentH,
+                        std::optional<int> pointerGlobalY = std::nullopt);
 
-    // Position the panel at a specific cursor position (SDL pixel coords)
+    // Position the panel at a specific Qt global logical position.
     void showAtCursor(int parentX, int parentY, int parentW, int parentH,
-                      int cursorX, int cursorY);
+                      int cursorX, int cursorY, bool pointerTriggered = true);
 
     void closeMenu();
     bool isMenuVisible() const { return m_Visible; }
@@ -146,6 +149,7 @@ private:
     void navigateToLevel(int level);
     void repositionWindow();
     void showInternal();     // shared show logic after geometry is set
+    void schedulePointerOutsideCheck();
     void forceRepaint();     // synchronous repaint (requestUpdate is async on Windows)
     int  itemAtPos(const QPoint& pos) const;
 
@@ -160,7 +164,7 @@ private:
     ActionCallback m_ActionCallback;
     CloseCallback  m_CloseCallback;
 
-    // Parent window rect (SDL pixel coords) for repositioning on level change
+    // Parent window rect in Qt global logical coordinates for level changes
     int m_ParentX, m_ParentY, m_ParentW, m_ParentH;
 
     // Layout constants (logical units, Qt 6 auto-scales)
@@ -181,6 +185,7 @@ private:
     // Anti-flicker: grace period after show
     QElapsedTimer m_ShowTimer;
     QTimer m_LeaveTimer;
+    bool m_CloseWhenPointerOutside;
 
     // Animations
     QPropertyAnimation* m_OpacityAnim;
@@ -190,7 +195,8 @@ private:
     bool   m_Closing;         // true while close animation is running
     int    m_TargetX;         // cached final x position for show animation
 
-    // Menu anchor mode and cursor position (for AtCursor mode)
+    // Menu anchor mode and pointer position in Qt global logical coordinates.
     AnchorMode m_AnchorMode;
-    int m_CursorX, m_CursorY; // SDL pixel coords for AtCursor mode
+    int m_CursorX, m_CursorY;
+    std::optional<int> m_EdgePointerY;
 };

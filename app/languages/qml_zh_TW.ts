@@ -896,8 +896,8 @@
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="553"/>
-        <source>Disabled</source>
-        <translation>停用</translation>
+        <source>Disabled (default)</source>
+        <translation>停用（預設）</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="153"/>
@@ -1011,8 +1011,8 @@
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="541"/>
-        <source>Right edge (default)</source>
-        <translation>右側邊緣（預設）</translation>
+        <source>Right edge</source>
+        <translation>右側邊緣</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="545"/>

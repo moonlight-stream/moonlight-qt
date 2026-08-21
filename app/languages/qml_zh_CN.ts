@@ -952,8 +952,8 @@
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="553"/>
-        <source>Disabled</source>
-        <translation>禁用</translation>
+        <source>Disabled (default)</source>
+        <translation>禁用（默认）</translation>
     </message>
     <message>
         <source>Activate the display automatically</source>
@@ -1108,8 +1108,8 @@
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="541"/>
-        <source>Right edge (default)</source>
-        <translation>右侧边缘（默认）</translation>
+        <source>Right edge</source>
+        <translation>右侧边缘</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="545"/>
