@@ -95,8 +95,8 @@ ApplicationWindow {
     Component.onCompleted: {
         // Always fit the initial window to the current screen. If the user opted
         // in, restore the last normal window geometry before showing it.
-        windowPlacement.restore()
         windowsWindowChrome.activate()
+        windowPlacement.restore()
 
         // Show the window according to the user's preferences
         if (SystemProperties.hasDesktopEnvironment) {

@@ -9,6 +9,7 @@
 #include "backend/richpresencemanager.h"
 #include "backend/nvhttp.h"
 #include "backend/identitymanager.h"
+#include "gui/windowsdisplaygeometry.h"
 
 #include <Limelight.h>
 #include "SDL_compat.h"
@@ -28,6 +29,7 @@
 #ifdef Q_OS_WIN32
 // Scaling the icon down on Win32 looks dreadful, so render at lower res
 #define ICON_SIZE 32
+#include <windows.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
 #else
@@ -68,6 +70,48 @@
 #include <QUrl>
 
 #include <utility>
+
+namespace {
+QRect qtWindowCreationGeometryForSdl(QWindow* window)
+{
+    if (!window) {
+        return {};
+    }
+
+#ifdef Q_OS_WIN32
+    const QRect nativeFrame = WindowsDisplayGeometry::windowRect(window);
+    QRect nativeClient;
+    if (WindowsDisplayGeometry::clientRectForOverlappedWindow(
+                window, nativeFrame, nativeClient)) {
+        return nativeClient;
+    }
+#endif
+
+    const QRect client = window->geometry();
+#ifdef Q_OS_DARWIN
+    return client;
+#else
+    const qreal scale = window->devicePixelRatio();
+    return QRect(qRound(client.x() * scale),
+                 qRound(client.y() * scale),
+                 qMax(1, qRound(client.width() * scale)),
+                 qMax(1, qRound(client.height() * scale)));
+#endif
+}
+
+#ifdef Q_OS_WIN32
+bool qtWindowNativeMonitorBounds(QWindow* window, QRect& bounds)
+{
+    WindowsDisplayGeometry::Monitor monitor;
+    if (!WindowsDisplayGeometry::monitorForWindow(window, monitor)) {
+        return false;
+    }
+
+    bounds = monitor.bounds;
+    return bounds.isValid();
+}
+#endif
+}
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QQuickOpenGLUtils>
@@ -1761,17 +1805,39 @@ void Session::getWindowDimensions(int& x, int& y,
         if (m_QtWindow != nullptr) {
             QScreen* screen = m_QtWindow->screen();
             if (screen != nullptr) {
+#ifdef Q_OS_WIN32
+                QRect displayRect;
+                const bool hasNativeDisplayRect =
+                        qtWindowNativeMonitorBounds(m_QtWindow, displayRect);
+                if (!hasNativeDisplayRect) {
+                    displayRect = screen->geometry();
+                }
+#else
                 QRect displayRect = screen->geometry();
+#endif
 
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Qt UI screen is at (%d,%d)",
-                            displayRect.x(), displayRect.y());
+                            "Qt UI screen is at (%d,%d) %dx%d",
+                            displayRect.x(), displayRect.y(),
+                            displayRect.width(), displayRect.height());
                 for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
                     SDL_Rect displayBounds;
 
                     if (SDL_GetDisplayBounds(i, &displayBounds) == 0) {
-                        if (displayBounds.x == displayRect.x() &&
-                            displayBounds.y == displayRect.y()) {
+#ifdef Q_OS_WIN32
+                        const bool matchesDisplay = hasNativeDisplayRect
+                                ? (displayBounds.x == displayRect.x() &&
+                                   displayBounds.y == displayRect.y() &&
+                                   displayBounds.w == displayRect.width() &&
+                                   displayBounds.h == displayRect.height())
+                                : (displayBounds.x == displayRect.x() &&
+                                   displayBounds.y == displayRect.y());
+#else
+                        const bool matchesDisplay =
+                                displayBounds.x == displayRect.x() &&
+                                displayBounds.y == displayRect.y();
+#endif
+                        if (matchesDisplay) {
                             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                         "SDL found matching display %d",
                                         i);
@@ -3481,17 +3547,12 @@ void Session::exec()
     // 这里只改初始创建；运行中 Ctrl+Alt+Shift+F 退出全屏时走的是 toggleFullscreen()
     // 里的那次 getWindowDimensions()，恢复的仍然是串流分辨率大小。
     if (m_IsFullScreen && m_QtWindow != nullptr) {
-        QRect guiFrame = m_QtWindow->geometry();
-        if (guiFrame.width() > 0 && guiFrame.height() > 0) {
-            qreal scale = 1.0;
-#ifndef Q_OS_DARWIN
-            // macOS 上 SDL 和 Qt 都用点（逻辑坐标）；其他平台 SDL 用物理像素，要折算
-            scale = m_QtWindow->devicePixelRatio();
-#endif
-            x = qRound(guiFrame.x() * scale);
-            y = qRound(guiFrame.y() * scale);
-            width = qRound(guiFrame.width() * scale);
-            height = qRound(guiFrame.height() * scale);
+        const QRect creationGeometry = qtWindowCreationGeometryForSdl(m_QtWindow);
+        if (creationGeometry.isValid()) {
+            x = creationGeometry.x();
+            y = creationGeometry.y();
+            width = creationGeometry.width();
+            height = creationGeometry.height();
         }
     }
 
