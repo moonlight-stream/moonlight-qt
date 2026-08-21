@@ -241,10 +241,6 @@ private:
     ComPtr<ID3D12RootSignature> m_OverlayRootSignature;
     ComPtr<ID3D12PipelineState> m_OverlayPSO;
     ComPtr<ID3D12DescriptorHeap> m_OverlaySrvHeap;
-    ComPtr<ID3D12Resource> m_NewTexture = nullptr;
-    ComPtr<ID3D12Resource> m_TextureUploadHeap = nullptr;
-    ComPtr<ID3D12Resource> m_NewVertexBuffer = nullptr;
-    VERTEX m_Verts[4];
 
     const UINT m_FrameCount = 3;
     UINT m_CurrentFrameIndex  = 0;

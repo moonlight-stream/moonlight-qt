@@ -4541,12 +4541,12 @@ void D3D12VARenderer::waitForOverlay(bool waitCPU)
  */
 void D3D12VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
-    if (m_OverlaySkip) {
+    // Re-entrancy guard only. The overlay currently on screen keeps being rendered
+    // while the new one is built, otherwise it visibly blinks out on every update.
+    if (m_OverlaySkip.exchange(true)) {
         return;
     }
-    
-    m_OverlaySkip = true;
-    
+
     SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
     bool overlayEnabled = Session::get()->getOverlayManager().isOverlayEnabled(type);
     if (newSurface == nullptr) {
@@ -4559,149 +4559,167 @@ void D3D12VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         m_OverlaySkip = false;
         return;
     }
-    
-    SDL_AtomicLock(&m_OverlayLock);
-    ComPtr<ID3D12Resource> oldTexture = std::move(m_OverlayTextures[type]);
-    ComPtr<ID3D12Resource> oldVertexBuffer = std::move(m_OverlayVertexBuffers[type]);
-    
-    if (!m_NewTexture) {
-        // Create texture resources
-        D3D12_RESOURCE_DESC texDesc = {};
-        texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        texDesc.Width = newSurface->w;
-        texDesc.Height = newSurface->h;
-        texDesc.MipLevels = 1;
-        texDesc.DepthOrArraySize = 1;
-        texDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-        texDesc.SampleDesc.Count = 1;
-        texDesc.SampleDesc.Quality = 0;
-        texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-        texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-    
-        CD3DX12_HEAP_PROPERTIES heapDefaultProps(D3D12_HEAP_TYPE_DEFAULT);
-    
-        m_hr = m_Device->CreateCommittedResource(
-            &heapDefaultProps,
-            D3D12_HEAP_FLAG_NONE,
-            &texDesc,
-            D3D12_RESOURCE_STATE_COPY_DEST,
-            nullptr,
-            IID_PPV_ARGS(&m_NewTexture));
-        if(!verifyHResult(m_hr, "m_Device->CreateCommittedResource(... m_NewTexture)")){
-            SDL_AtomicUnlock(&m_OverlayLock);
-            m_OverlaySkip = false;
-            return;
-        }
-    
-        // Create an upload heap to transfer texture data
-        UINT64 uploadBufferSize;
-        m_Device->GetCopyableFootprints(&texDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
-        CD3DX12_RESOURCE_DESC ubDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-        CD3DX12_HEAP_PROPERTIES heapUploadProps(D3D12_HEAP_TYPE_UPLOAD);
-    
-        m_hr = m_Device->CreateCommittedResource(
-            &heapUploadProps,
-            D3D12_HEAP_FLAG_NONE,
-            &ubDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_TextureUploadHeap));
-        if(!verifyHResult(m_hr, "m_Device->CreateCommittedResource(... m_TextureUploadHeap)")){
-            SDL_AtomicUnlock(&m_OverlayLock);
-            m_OverlaySkip = false;
-            return;
-        }
-        
-        // Create SRV in a descriptor heap
+
+    // Everything is built into locals and only published at the very end, so the
+    // renderer never observes a half updated overlay
+    ComPtr<ID3D12Resource> newTexture;
+    ComPtr<ID3D12Resource> newVertexBuffer;
+    ComPtr<ID3D12Resource> uploadHeap;
+
+    // Create texture resources
+    D3D12_RESOURCE_DESC texDesc = {};
+    texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    texDesc.Width = newSurface->w;
+    texDesc.Height = newSurface->h;
+    texDesc.MipLevels = 1;
+    texDesc.DepthOrArraySize = 1;
+    texDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    texDesc.SampleDesc.Count = 1;
+    texDesc.SampleDesc.Quality = 0;
+    texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    CD3DX12_HEAP_PROPERTIES heapDefaultProps(D3D12_HEAP_TYPE_DEFAULT);
+
+    m_hr = m_Device->CreateCommittedResource(
+        &heapDefaultProps,
+        D3D12_HEAP_FLAG_NONE,
+        &texDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&newTexture));
+    if(!verifyHResult(m_hr, "m_Device->CreateCommittedResource(... newTexture)")){
+        SDL_FreeSurface(newSurface);
+        m_OverlaySkip = false;
+        return;
+    }
+
+    // Create an upload heap to transfer texture data
+    UINT64 uploadBufferSize;
+    m_Device->GetCopyableFootprints(&texDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
+    CD3DX12_RESOURCE_DESC ubDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+    CD3DX12_HEAP_PROPERTIES heapUploadProps(D3D12_HEAP_TYPE_UPLOAD);
+
+    m_hr = m_Device->CreateCommittedResource(
+        &heapUploadProps,
+        D3D12_HEAP_FLAG_NONE,
+        &ubDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&uploadHeap));
+    if(!verifyHResult(m_hr, "m_Device->CreateCommittedResource(... uploadHeap)")){
+        SDL_FreeSurface(newSurface);
+        m_OverlaySkip = false;
+        return;
+    }
+
+    SDL_FRect renderRect = {};
+    if (type == Overlay::OverlayStatusUpdate) {
+        // Bottom Left
+        renderRect.x = 0;
+        renderRect.y = 0;
+    }
+    else if (type == Overlay::OverlayDebug) {
+        // Top left
+        renderRect.x = 0;
+        renderRect.y = m_OutputTextureInfo.height - newSurface->h;
+    }
+
+    // Offsets
+    renderRect.x += m_OutputTextureInfo.left;
+    renderRect.y -= m_OutputTextureInfo.top;
+
+    renderRect.w = newSurface->w;
+    renderRect.h = newSurface->h;
+
+    // Convert screen space to normalized device coordinates
+    StreamUtils::screenSpaceToNormalizedDeviceCoords(&renderRect, m_OutputTextureInfo.width, m_OutputTextureInfo.height);
+
+    // Create vertex buffer
+    VERTEX verts[4];
+    verts[0] = {renderRect.x, renderRect.y, 0, 1, 0, 0, 0, 0.0f};
+    verts[1] = {renderRect.x, renderRect.y+renderRect.h, 0, 0, 0, 0, 0, 0.0f};
+    verts[2] = {renderRect.x+renderRect.w, renderRect.y, 1, 1, 0, 0, 0, 0.0f};
+    verts[3] = {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 1, 0, 0, 0, 0, 0.0f};
+
+    CD3DX12_HEAP_PROPERTIES uploadHeapVB(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC vbDesc = CD3DX12_RESOURCE_DESC::Buffer(sizeof(verts));
+
+    m_hr = m_Device->CreateCommittedResource(
+        &uploadHeapVB,
+        D3D12_HEAP_FLAG_NONE,
+        &vbDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&newVertexBuffer)
+        );
+    if(!verifyHResult(m_hr, "m_Device->CreateCommittedResource(... newVertexBuffer)")){
+        SDL_FreeSurface(newSurface);
+        m_OverlaySkip = false;
+        return;
+    }
+
+    void* pMappedData = nullptr;
+    if (SUCCEEDED(newVertexBuffer->Map(0, nullptr, &pMappedData))) {
+        memcpy(pMappedData, verts, sizeof(verts));
+        newVertexBuffer->Unmap(0, nullptr);
+    }
+
+    // Copy data to the upload heap and then to the default texture
+    D3D12_SUBRESOURCE_DATA textureData = {};
+    textureData.pData = newSurface->pixels;
+    textureData.RowPitch = newSurface->pitch;
+    textureData.SlicePitch = (SIZE_T)newSurface->pitch * newSurface->h;
+
+    m_OverlayCommandAllocator->Reset();
+    m_OverlayCommandList->Reset(m_OverlayCommandAllocator.Get(), nullptr);
+
+    UpdateSubresources(m_OverlayCommandList.Get(), newTexture.Get(), uploadHeap.Get(), 0, 0, 1, &textureData);
+
+    // The surface is no longer required
+    SDL_FreeSurface(newSurface);
+    newSurface = nullptr;
+
+    D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        newTexture.Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+        );
+    m_OverlayCommandList->ResourceBarrier(1, &barrier);
+
+    m_OverlayCommandList->Close();
+    ID3D12CommandList* lists[] = { m_OverlayCommandList.Get() };
+    m_OverlayCommandQueue->ExecuteCommandLists(1, lists);
+
+    // Wait for the texture to be ready. This runs on the overlay thread, the render
+    // thread is not blocked by it.
+    waitForOverlay(true);
+
+    // Publish. The lock is only held for the swap, which is what the renderer reads.
+    {
+        SDL_AtomicLock(&m_OverlayLock);
+
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Format = texDesc.Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = 1;
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_OverlaySrvHeap->GetCPUDescriptorHandleForHeapStart());
-        m_Device->CreateShaderResourceView(m_NewTexture.Get(), &srvDesc, m_OverlaySrvHeap->GetCPUDescriptorHandleForHeapStart());
-        
-        SDL_FRect renderRect = {};
-        if (type == Overlay::OverlayStatusUpdate) {
-            // Bottom Left
-            renderRect.x = 0;
-            renderRect.y = 0;
-        }
-        else if (type == Overlay::OverlayDebug) {
-            // Top left
-            renderRect.x = 0;
-            renderRect.y = m_OutputTextureInfo.height - newSurface->h;
-        }
-        
-        // Offsets
-        renderRect.x += m_OutputTextureInfo.left;
-        renderRect.y -= m_OutputTextureInfo.top;
-    
-        renderRect.w = newSurface->w;
-        renderRect.h = newSurface->h;
-    
-        // Convert screen space to normalized device coordinates
-        StreamUtils::screenSpaceToNormalizedDeviceCoords(&renderRect, m_OutputTextureInfo.width, m_OutputTextureInfo.height);
-    
-        // Create vertex buffer
-        m_Verts[0] = {renderRect.x, renderRect.y, 0, 1, 0, 0, 0, 0.0f};
-        m_Verts[1] = {renderRect.x, renderRect.y+renderRect.h, 0, 0, 0, 0, 0, 0.0f};
-        m_Verts[2] = {renderRect.x+renderRect.w, renderRect.y, 1, 1, 0, 0, 0, 0.0f};
-        m_Verts[3] = {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 1, 0, 0, 0, 0, 0.0f};
-    
-        m_VbSize = sizeof(m_Verts);
-    
-        CD3DX12_HEAP_PROPERTIES uploadHeapVB(D3D12_HEAP_TYPE_UPLOAD);
-        CD3DX12_RESOURCE_DESC vbDesc = CD3DX12_RESOURCE_DESC::Buffer(m_VbSize);
-    
-        m_Device->CreateCommittedResource(
-            &uploadHeapVB,
-            D3D12_HEAP_FLAG_NONE,
-            &vbDesc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&m_NewVertexBuffer)
-            );
-    
-        void* pMappedData = nullptr;
-        m_NewVertexBuffer->Map(0, nullptr, &pMappedData);
-        memcpy(pMappedData, m_Verts, m_VbSize);
-        m_NewVertexBuffer->Unmap(0, nullptr);
-    }
-    
-    // Copy data to the upload heap and then to the default texture
-    D3D12_SUBRESOURCE_DATA textureData = {};
-    textureData.pData = newSurface->pixels;
-    textureData.RowPitch = newSurface->pitch;
-    textureData.SlicePitch = newSurface->pitch * newSurface->h;
-    
-    // The surface is no longer required
-    SDL_FreeSurface(newSurface);
-    newSurface = nullptr;
-    
-    m_OverlayCommandAllocator->Reset();
-    m_OverlayCommandList->Reset(m_OverlayCommandAllocator.Get(), nullptr);
-    
-    UpdateSubresources(m_OverlayCommandList.Get(), m_NewTexture.Get(), m_TextureUploadHeap.Get(), 0, 0, 1, &textureData);
-    
-    D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        m_NewTexture.Get(),
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-        );
-    m_OverlayCommandList->ResourceBarrier(1, &barrier);
-    
-    m_OverlayCommandList->Close();
-    ID3D12CommandList* lists[] = { m_OverlayCommandList.Get() };
-    m_OverlayCommandQueue->ExecuteCommandLists(1, lists);
-    
-    // Wait for the texture to be ready
-    waitForOverlay(true);
 
-    m_OverlayTextures[type] = std::move(m_NewTexture);
-    m_OverlayVertexBuffers[type] = std::move(m_NewVertexBuffer);
-    SDL_AtomicUnlock(&m_OverlayLock);
-    
+        // Each overlay type owns its own descriptor slot, matching the offset
+        // renderOverlay() applies when it binds the descriptor table
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(
+            m_OverlaySrvHeap->GetCPUDescriptorHandleForHeapStart(),
+            type,
+            m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+        m_Device->CreateShaderResourceView(newTexture.Get(), &srvDesc, srvHandle);
+
+        m_VbSize = sizeof(verts);
+        m_OverlayTextures[type] = std::move(newTexture);
+        m_OverlayVertexBuffers[type] = std::move(newVertexBuffer);
+
+        SDL_AtomicUnlock(&m_OverlayLock);
+    }
+
     m_OverlaySkip = false;
 }
 
@@ -5702,15 +5720,11 @@ Draw:
             );
         m_GraphicsCommandList->ResourceBarrier(2, m_Barriers);
         
-        // Render overlays stats on top of the video stream
-        // m_OverlaySkip is used to avoid race condition with overlay rendering
-        bool overlaySkip = false;
-        if (!m_OverlaySkip) {
-            m_OverlaySkip = true;
-            overlaySkip = true;
-            for (int i = 0; i < Overlay::OverlayMax; i++) {
-                renderOverlay((Overlay::OverlayType)i);
-            }
+        // Render overlays stats on top of the video stream. notifyOverlayUpdated()
+        // only swaps the textures in under m_OverlayLock, which we hold, so there is
+        // always a complete overlay to draw here.
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            renderOverlay((Overlay::OverlayType)i);
         }
         
         m_Barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -5734,9 +5748,6 @@ Draw:
 
         m_hr = m_GraphicsCommandList->Close();
         if(!verifyHResult(m_hr, "m_GraphicsCommandList->Close();")){
-            if (overlaySkip) {
-                m_OverlaySkip = false;
-            }
             goto Present;
         }
         ID3D12CommandList* cmdLists[] = { m_GraphicsCommandList.Get() };
@@ -5744,10 +5755,6 @@ Draw:
 
         if (m_QueryHeap && !m_EnhancerQualitySettled) {
             m_TimestampPending[m_CurrentFrameIndex] = true;
-        }
-
-        if (overlaySkip) {
-            m_OverlaySkip = false;
         }
 
         TimerInfo("(VP Copy m_OutputTexture -> m_BackBuffers)", true);
