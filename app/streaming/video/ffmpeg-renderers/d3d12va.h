@@ -141,6 +141,8 @@ private:
     void waitForVideoProcess(bool waitCPU = false);
     void waitForGraphics(bool waitCPU = false);
     void waitForOverlay(bool waitCPU = false);
+    void collectGpuFrameTime();
+    void adjustEnhancerQuality();
     void renderOverlay(Overlay::OverlayType type);
     VppSurface* findUnlockedSurface(std::vector<VppSurface>& pool);
 
@@ -312,7 +314,31 @@ private:
     D3D11_BOX m_D3D11OutputBox;
     D3D12_BOX m_OutputBox;
 
+    // GPU timing of the graphics queue, used to adapt the enhancer quality at runtime.
+    // Two timestamps (begin/end) per in-flight frame, read back without blocking the CPU.
     ComPtr<ID3D12QueryHeap> m_QueryHeap;
+    ComPtr<ID3D12Resource> m_TimestampReadbackBuffer;
+    UINT64 m_TimestampFrequency = 0;
+    std::array<bool, 3> m_TimestampPending = {};
+    // Exponential moving average of the GPU time spent on the graphics queue, in ms
+    double m_GpuFrameTimeMs = 0.0;
+    // Highest quality this GPU is allowed, derived from its VRAM. Recomputed identically
+    // at every initialization, so it does not need to survive a renderer reload.
+    int m_VsrQualityCeiling = NVSDK_NGX_VSR_Quality_High;
+    // Quality currently in use. NGX bakes the level into the feature at creation time,
+    // so changing it means reloading the renderer: both of these have to outlive the
+    // renderer instance. 0 means not decided yet.
+    static int m_VsrQualityLevel;
+    // Highest level still believed to be sustainable. It only ever ratchets down, which
+    // is what keeps the renderer from oscillating between two levels for a whole session.
+    static int m_VsrQualityCap;
+    QElapsedTimer m_VsrQualityTimer;
+    qint64 m_VsrQualityLastCheckMs = 0;
+    // Consecutive checks that found the quality already optimal
+    int m_VsrQualityStableCount = 0;
+    // Set once there is nothing left to decide, which stops the GPU timing entirely
+    bool m_EnhancerQualitySettled = false;
+
     int m_DecoderSelectionPass;
     UINT m_BackBufferIndex = 0;
 

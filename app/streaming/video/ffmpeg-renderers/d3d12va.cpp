@@ -6,6 +6,8 @@ DEFINE_GUID(k_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_444, 0x0dabeffa, 0x4458, 0x4
 
 bool D3D12VARenderer::m_IsFrameHDR = false;
 bool D3D12VARenderer::m_IsClientHDR = false;
+int D3D12VARenderer::m_VsrQualityLevel = 0;
+int D3D12VARenderer::m_VsrQualityCap = 0;
 
 /**
  * \brief Constructor
@@ -103,6 +105,8 @@ D3D12VARenderer::~D3D12VARenderer()
     m_VideoProcessCommandQueue.Reset();
 
     m_GraphicsCommandAllocator.Reset();
+    m_TimestampReadbackBuffer.Reset();
+    m_TimestampPending = {};
     m_GraphicsCommandList.Reset();
     m_GraphicsCommandQueue.Reset();
 
@@ -1259,7 +1263,10 @@ bool D3D12VARenderer::enableNvidiaVideoSuperResolution(bool activate, bool logIn
     m_GraphicsCommandAllocator->Reset();
     m_GraphicsCommandList->Reset(m_GraphicsCommandAllocator.Get(), nullptr);
     
-    // Create the VSR feature instance 
+    // Create the VSR feature instance. The quality level has to be part of the
+    // creation parameters: NGX sizes its internal resources from it, so evaluating
+    // later with a different level corrupts the feature and hangs the device.
+    NVSDK_NGX_Parameter_SetUI(m_VSRngxParameters, NVSDK_NGX_Parameter_VSR_QualityLevel, (unsigned int)m_VsrQualityLevel);
     NVSDK_NGX_Feature_Create_Params VSRCreateParams = {};
     ResultVSR = NGX_D3D12_CREATE_VSR_EXT(m_GraphicsCommandList.Get(), 1, 1, &m_VSRFeature, m_VSRngxParameters, &VSRCreateParams);
     
@@ -1822,6 +1829,22 @@ bool D3D12VARenderer::initialiazeAdapterInformation()
     // Low-end GPU are less than 4GB
     if(m_AdapterDesc.DedicatedVideoMemory <= (4096ull * 1024 * 1024)){
         m_IsLowEndGPU = true;
+    }
+
+    // Cap the enhancer quality with the amount of VRAM. The DNN based upscalers cost
+    // roughly a full frame budget at high refresh rate on mid-range GPUs, so anything
+    // up to 8 GB starts at Medium and anything below 4 GB starts at Low.
+    if (m_IsLowEndGPU) {
+        m_VsrQualityCeiling = NVSDK_NGX_VSR_Quality_Low;
+    } else if (m_AdapterDesc.DedicatedVideoMemory <= (8192ull * 1024 * 1024)) {
+        m_VsrQualityCeiling = NVSDK_NGX_VSR_Quality_Medium;
+    } else {
+        m_VsrQualityCeiling = NVSDK_NGX_VSR_Quality_High;
+    }
+
+    // Running on battery, stay on the cheapest quality
+    if (m_IsOnBattery) {
+        m_VsrQualityCeiling = NVSDK_NGX_VSR_Quality_Low;
     }
 
     m_VideoEnhancement->setAdapterIndex(m_AdapterIndex);
@@ -3863,6 +3886,55 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
+    // GPU timing of the graphics queue, used to adapt the enhancer quality at runtime.
+    // This is best effort: if it cannot be set up we simply keep a fixed quality.
+    {
+        D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
+        queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
+        queryHeapDesc.Count = m_FrameCount * 2;
+        queryHeapDesc.NodeMask = 0;
+
+        if (SUCCEEDED(m_Device->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&m_QueryHeap))) &&
+            SUCCEEDED(m_GraphicsCommandQueue->GetTimestampFrequency(&m_TimestampFrequency))) {
+
+            CD3DX12_HEAP_PROPERTIES readbackProps(D3D12_HEAP_TYPE_READBACK);
+            CD3DX12_RESOURCE_DESC readbackDesc =
+                CD3DX12_RESOURCE_DESC::Buffer(m_FrameCount * 2 * sizeof(UINT64));
+
+            if (FAILED(m_Device->CreateCommittedResource(
+                    &readbackProps,
+                    D3D12_HEAP_FLAG_NONE,
+                    &readbackDesc,
+                    D3D12_RESOURCE_STATE_COPY_DEST,
+                    nullptr,
+                    IID_PPV_ARGS(&m_TimestampReadbackBuffer)))) {
+                m_QueryHeap.Reset();
+            }
+        } else {
+            m_QueryHeap.Reset();
+            m_TimestampFrequency = 0;
+        }
+
+        m_TimestampPending = {};
+        m_GpuFrameTimeMs = 0.0;
+
+        // A previous instance may already have found that this GPU cannot sustain the
+        // top level. Keep its verdict, but never above what this GPU's VRAM allows.
+        if (m_VsrQualityCap == 0) {
+            m_VsrQualityCap = m_VsrQualityCeiling;
+        }
+        m_VsrQualityCap = qMin(m_VsrQualityCap, m_VsrQualityCeiling);
+        if (m_VsrQualityLevel == 0) {
+            m_VsrQualityLevel = m_VsrQualityCap;
+        }
+        m_VsrQualityLevel = qBound((int)NVSDK_NGX_VSR_Quality_Low, m_VsrQualityLevel, m_VsrQualityCap);
+
+        m_VsrQualityLastCheckMs = 0;
+        m_VsrQualityStableCount = 0;
+        m_EnhancerQualitySettled = false;
+        m_VsrQualityTimer.start();
+    }
+
     // Prepare for the first frame
     {
         waitForVideoProcess(true);
@@ -4283,6 +4355,150 @@ void D3D12VARenderer::waitForGraphics(bool waitCPU)
 }
 
 /**
+ * \brief Read back the GPU time measured on the graphics queue
+ *
+ * renderFrame() waits for the GPU before returning, so by the time the next frame
+ * starts the timestamps of every pending slot have been resolved into the readback
+ * buffer. This never blocks.
+ *
+ * \return void
+ */
+void D3D12VARenderer::collectGpuFrameTime()
+{
+    if (m_EnhancerQualitySettled || !m_QueryHeap || !m_TimestampReadbackBuffer ||
+        m_TimestampFrequency == 0) {
+        return;
+    }
+
+    for (UINT slot = 0; slot < m_FrameCount; slot++) {
+        if (!m_TimestampPending[slot]) {
+            continue;
+        }
+
+        m_TimestampPending[slot] = false;
+
+        D3D12_RANGE readRange = { slot * 2 * sizeof(UINT64), (slot * 2 + 2) * sizeof(UINT64) };
+        UINT64* mapped = nullptr;
+        if (FAILED(m_TimestampReadbackBuffer->Map(0, &readRange, reinterpret_cast<void**>(&mapped)))) {
+            continue;
+        }
+
+        const UINT64 begin = mapped[slot * 2];
+        const UINT64 end = mapped[slot * 2 + 1];
+
+        D3D12_RANGE writeRange = { 0, 0 };
+        m_TimestampReadbackBuffer->Unmap(0, &writeRange);
+
+        if (end <= begin) {
+            continue;
+        }
+
+        const double elapsedMs = (double)(end - begin) * 1000.0 / (double)m_TimestampFrequency;
+
+        // Exponential moving average to smooth out the occasional spike
+        if (m_GpuFrameTimeMs == 0.0) {
+            m_GpuFrameTimeMs = elapsedMs;
+        } else {
+            m_GpuFrameTimeMs = (m_GpuFrameTimeMs * 0.9) + (elapsedMs * 0.1);
+        }
+    }
+}
+
+/**
+ * \brief Adapt the enhancer quality to what the GPU can actually sustain
+ *
+ * The quality ceiling is picked from the amount of VRAM, then lowered further at
+ * runtime when the measured GPU time does not fit in the frame budget. Without this,
+ * a high frame rate stream on a mid-range GPU renders far below the stream rate
+ * (measured: 17 ms/frame for VSR High at 1440p on a RTX 3060 Ti, i.e. 53 FPS max).
+ *
+ * \return void
+ */
+void D3D12VARenderer::adjustEnhancerQuality()
+{
+    if (m_EnhancerQualitySettled) {
+        return;
+    }
+
+    // Only the VSR pipeline exposes a quality level, every other enhancer runs at a
+    // fixed cost. Settle immediately so we never pay for the GPU timing at all.
+    if (m_RenderStep2 != RenderStep::UPSCALE_VSR) {
+        m_EnhancerQualitySettled = true;
+        return;
+    }
+
+    if (m_GpuFrameTimeMs == 0.0) {
+        return;
+    }
+
+    // Only reconsider the quality every 2 seconds, so that a burst does not make it oscillate
+    const qint64 nowMs = m_VsrQualityTimer.isValid() ? m_VsrQualityTimer.elapsed() : 0;
+    if (nowMs - m_VsrQualityLastCheckMs < 2000) {
+        return;
+    }
+    m_VsrQualityLastCheckMs = nowMs;
+
+    // Time we are allowed to spend per frame to sustain the stream frame rate
+    const double budgetMs = 1000.0 / (double)qMax(1, m_DecoderParams.frameRate);
+
+    int quality = m_VsrQualityLevel;
+
+    if (m_GpuFrameTimeMs > budgetMs * 0.80 && quality > NVSDK_NGX_VSR_Quality_Low) {
+        quality--;
+    } else if (m_GpuFrameTimeMs < budgetMs * 0.40 && quality < m_VsrQualityCap) {
+        quality++;
+    }
+
+    static const char* names[] = { "Low", "Medium", "High" };
+
+    if (quality == m_VsrQualityLevel) {
+        // Already at the best quality this GPU is allowed and comfortably inside the
+        // frame budget: there is nothing left to decide. Stop timing the GPU until the
+        // renderer is reinitialized, which happens on any resolution, HDR or display
+        // change and re-arms the whole measurement.
+        if (m_VsrQualityLevel == m_VsrQualityCap && m_GpuFrameTimeMs < budgetMs * 0.40) {
+            if (++m_VsrQualityStableCount >= 2) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "NVIDIA RTX Video Super Resolution settled on quality %s (GPU %.2f ms, budget %.2f ms)",
+                            names[qBound(0, m_VsrQualityLevel - 1, 2)],
+                            m_GpuFrameTimeMs,
+                            budgetMs);
+                m_EnhancerQualitySettled = true;
+            }
+        } else {
+            m_VsrQualityStableCount = 0;
+        }
+        return;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "NVIDIA RTX Video Super Resolution quality %s -> %s (GPU %.2f ms, budget %.2f ms), reloading renderer",
+                names[qBound(0, m_VsrQualityLevel - 1, 2)],
+                names[qBound(0, quality - 1, 2)],
+                m_GpuFrameTimeMs,
+                budgetMs);
+
+    if (quality < m_VsrQualityLevel) {
+        // This level proved too expensive on this GPU, never climb back to it
+        m_VsrQualityCap = quality;
+    }
+
+    m_VsrQualityLevel = quality;
+
+    // NGX sizes the internal resources of the feature from the quality level given at
+    // creation time, so the level cannot be swapped on a live feature: evaluating with
+    // another one hangs the device. Reload the renderer instead, which rebuilds the
+    // feature through enableNvidiaVideoSuperResolution() at the new level.
+    m_EnhancerQualitySettled = true;
+
+    // Note: the session event loop only handles SDL_RENDER_DEVICE_RESET,
+    // SDL_RENDER_TARGETS_RESET goes through unhandled.
+    SDL_Event event;
+    event.type = SDL_RENDER_DEVICE_RESET;
+    SDL_PushEvent(&event);
+}
+
+/**
  * \brief Wait for the overlay to be ready
  *
  * Wait for the overlay to be ready before displaying it.
@@ -4572,6 +4788,17 @@ void D3D12VARenderer::renderFrame(AVFrame* frame)
     SDL_AtomicLock(&m_OverlayLock);
 
     m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % 3;
+
+    // Read back the GPU times that completed since the last frame and adapt the
+    // enhancer quality if it does not fit in the frame budget
+    collectGpuFrameTime();
+    adjustEnhancerQuality();
+
+    if (m_QueryHeap && !m_EnhancerQualitySettled) {
+        m_GraphicsCommandList->EndQuery(m_QueryHeap.Get(),
+                                        D3D12_QUERY_TYPE_TIMESTAMP,
+                                        m_CurrentFrameIndex * 2);
+    }
 
     // Wait for previous frame to be rendered
     WaitForSingleObjectEx(m_FrameLatencyWaitableObject, 1000, true);
@@ -5247,13 +5474,9 @@ RenderStep2:
         
         resetGraphicsCommand = true;
         
-        NVSDK_NGX_VSR_QualityLevel vsrQuality = NVSDK_NGX_VSR_Quality_High;
-        if(m_IsLowEndGPU) {
-            vsrQuality = NVSDK_NGX_VSR_Quality_Medium;
-        }
-        if(m_IsOnBattery) {
-            vsrQuality = NVSDK_NGX_VSR_Quality_Low;
-        }
+        // Must stay identical to the level the feature was created with, see
+        // adjustEnhancerQuality()
+        const NVSDK_NGX_VSR_QualityLevel vsrQuality = (NVSDK_NGX_VSR_QualityLevel)m_VsrQualityLevel;
         
         // Setup VSR params
         NVSDK_NGX_D3D12_VSR_Eval_Params vsrEvalParams = {};
@@ -5497,6 +5720,18 @@ Draw:
             );
         m_GraphicsCommandList->ResourceBarrier(1, m_Barriers);
 
+        if (m_QueryHeap && !m_EnhancerQualitySettled) {
+            m_GraphicsCommandList->EndQuery(m_QueryHeap.Get(),
+                                            D3D12_QUERY_TYPE_TIMESTAMP,
+                                            m_CurrentFrameIndex * 2 + 1);
+            m_GraphicsCommandList->ResolveQueryData(m_QueryHeap.Get(),
+                                                    D3D12_QUERY_TYPE_TIMESTAMP,
+                                                    m_CurrentFrameIndex * 2,
+                                                    2,
+                                                    m_TimestampReadbackBuffer.Get(),
+                                                    m_CurrentFrameIndex * 2 * sizeof(UINT64));
+        }
+
         m_hr = m_GraphicsCommandList->Close();
         if(!verifyHResult(m_hr, "m_GraphicsCommandList->Close();")){
             if (overlaySkip) {
@@ -5506,7 +5741,11 @@ Draw:
         }
         ID3D12CommandList* cmdLists[] = { m_GraphicsCommandList.Get() };
         m_GraphicsCommandQueue->ExecuteCommandLists(1, cmdLists);
-        
+
+        if (m_QueryHeap && !m_EnhancerQualitySettled) {
+            m_TimestampPending[m_CurrentFrameIndex] = true;
+        }
+
         if (overlaySkip) {
             m_OverlaySkip = false;
         }
