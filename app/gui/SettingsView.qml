@@ -11,8 +11,8 @@ import "settings"
 import "theme"
 
 // 设置页外壳：左侧分类 rail + 右侧卡片内容。
-// 「基本设置」「显示」已迁移到 settings/ 下的独立页面；
-// 其余 6 组仍走旧的 GroupBox 路径（settings/LegacySettingsPage.qml），逐步迁移。
+// 「基本设置」「显示」使用独立页面；其余 6 组保留在 LegacySettingsPage.qml
+// 中以维持翻译上下文，但内部也已经迁移到卡片和设置行。
 // 根用 FocusScope 而不是 Item：工具栏的 Keys.onDownPressed 走的是
 // stackView.currentItem.forceActiveFocus()，落在普通 Item 上会停在一个看不见的
 // 死点上（PcView / AppView 是 GridView + activeFocusOnTab，所以没这问题）。
@@ -102,7 +102,7 @@ FocusScope {
     }
 
     // 手柄 LB/RB 映射成 PageUp/PageDown，用来切分类
-    Keys.onPressed: {
+    Keys.onPressed: function(event) {
         if (event.key === Qt.Key_PageUp) {
             rail.step(-1)
             // 切完分类要把焦点收回分类栏：原来持焦的控件已经随着旧分类隐藏了，
@@ -175,7 +175,7 @@ FocusScope {
                 compact: settingsPage.compact
                 categories: settingsPage.categories
                 currentCategory: settingsPage.category
-                onCategoryPicked: {
+                onCategoryPicked: function(category) {
                     settingsPage.category = category
                     scrollArea.contentY = 0
                 }
@@ -218,16 +218,12 @@ FocusScope {
                 category: settingsPage.category
 
                 onLanguageChanged: settingsPage.languageChanged()
+                onBitratePreferenceChanged: basicPage.syncBitrateFromPreferences()
             }
         }
     }
 
     Component.onCompleted: {
-        // 高级设置组会回写码率滑条、被解码器下拉联动的画质增强开关，
-        // 这两个控件现在住在基本设置页里，启动时注入进去。
-        legacyPage.bitrateSlider = basicPage.bitrateSlider
-        legacyPage.videoEnhancementCheck = basicPage.videoEnhancementCheck
-
         // 语言切换需要重建若干下拉的模型
         settingsPage.languageChanged.connect(basicPage.languageChanged)
         settingsPage.languageChanged.connect(displayPage.languageChanged)

@@ -897,7 +897,7 @@
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="553"/>
         <source>Disabled</source>
-        <translation type="unfinished"></translation>
+        <translation>停用</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="153"/>
@@ -1007,22 +1007,22 @@
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="518"/>
         <source>Overlay menu position</source>
-        <translation type="unfinished"></translation>
+        <translation>懸浮選單位置</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="541"/>
         <source>Right edge (default)</source>
-        <translation type="unfinished"></translation>
+        <translation>右側邊緣（預設）</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="545"/>
         <source>Left edge</source>
-        <translation type="unfinished"></translation>
+        <translation>左側邊緣</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="549"/>
         <source>Floating button</source>
-        <translation type="unfinished"></translation>
+        <translation>懸浮按鈕</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="569"/>
@@ -1070,6 +1070,11 @@
         <translation>擷取系統鍵盤快速鍵</translation>
     </message>
     <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="295"/>
+        <source>Capture mode</source>
+        <translation>擷取模式</translation>
+    </message>
+    <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="627"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>這可以擷取系統範圍的鍵盤快速鍵，例如 Alt + Tab，這些快速鍵通常在串流時由用戶端系統處理。</translation>
@@ -1112,27 +1117,27 @@
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="727"/>
         <source>DualSense haptics</source>
-        <translation type="unfinished"></translation>
+        <translation>DualSense 觸覺回饋</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="739"/>
         <source>Physical DualSense (native HD haptics)</source>
-        <translation type="unfinished"></translation>
+        <translation>實體 DualSense（原生高畫質觸覺回饋）</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="743"/>
         <source>Simulated DualSense (analyzed vibration)</source>
-        <translation type="unfinished"></translation>
+        <translation>模擬 DualSense（分析後的震動）</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="767"/>
         <source>Sends the original authored PCM to channels 3 and 4 of a USB-connected DualSense. The endpoint is checked before connecting. Changes apply to the next stream.</source>
-        <translation type="unfinished"></translation>
+        <translation>將原始觸覺 PCM 資料傳送到透過 USB 連接的 DualSense 第 3 和第 4 聲道。連線前會檢查音訊端點。變更將在下次串流時生效。</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="768"/>
         <source>Receives a compact analyzed haptics signal and renders it through the connected controller&apos;s vibration motors. Changes apply to the next stream.</source>
-        <translation type="unfinished"></translation>
+        <translation>接收經過分析的精簡觸覺訊號，並透過已連接控制器的震動馬達提供回饋。變更將在下次串流時生效。</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="776"/>
@@ -1335,6 +1340,46 @@
         <location filename="../gui/settings/LegacySettingsPage.qml" line="1214"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
         <translation>Steam Link 或是 Raspberry Pi 不支援顯示效能資訊的覆蓋式介面。</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="179"/>
+        <source>Notifications and integrations</source>
+        <translation>通知與整合</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="237"/>
+        <source>Mouse</source>
+        <translation>滑鼠</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="277"/>
+        <source>Keyboard</source>
+        <translation>鍵盤</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="296"/>
+        <source>Choose when system keyboard shortcuts are captured.</source>
+        <translation>選擇何時擷取系統鍵盤快速鍵。</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="315"/>
+        <source>Touch input</source>
+        <translation>觸控輸入</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="413"/>
+        <source>Video pipeline</source>
+        <translation>視訊處理</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="478"/>
+        <source>Network</source>
+        <translation>網路</translation>
+    </message>
+    <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="505"/>
+        <source>Diagnostics</source>
+        <translation>診斷</translation>
     </message>
 </context>
 <context>
@@ -2482,12 +2527,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="3345"/>
         <source>Physical DualSense haptics was selected, but no active USB DualSense four-channel audio endpoint was found yet. Moonlight will keep checking during this stream.</source>
-        <translation type="unfinished"></translation>
+        <translation>已選擇實體 DualSense 觸覺回饋，但尚未找到使用中的 USB DualSense 四聲道音訊端點。Moonlight 將在本次串流期間繼續檢查。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="3348"/>
         <source>Physical DualSense haptics is only available on Windows in this build.</source>
-        <translation type="unfinished"></translation>
+        <translation>此版本僅在 Windows 上支援實體 DualSense 觸覺回饋。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="4143"/>

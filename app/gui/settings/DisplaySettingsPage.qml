@@ -1,6 +1,4 @@
 import QtQuick 2.9
-import QtQuick.Controls
-import QtQuick.Layouts 1.3
 import "."
 import "../theme"
 import ".."
@@ -90,7 +88,6 @@ Column {
                          }
                     }
 
-                    activated(currentIndex)
                 }
 
                 Component.onCompleted: {

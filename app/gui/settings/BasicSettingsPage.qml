@@ -15,12 +15,12 @@ Column {
 
     signal languageChanged()
 
-    // 供 LegacySettingsPage 的高级组跨页引用
-    property alias bitrateSlider: bitrateSlider
-    property alias videoEnhancementCheck: videoEnhancementSwitch
-
     width: parent ? parent.width : 0
     spacing: Theme.spaceLg
+
+    function syncBitrateFromPreferences() {
+        bitrateSlider.value = Math.log(StreamingPreferences.bitrateKbps)
+    }
 
     // ================= 画面 =================
     SettingsCard {
@@ -705,8 +705,16 @@ Column {
     SettingsCard {
         title: qsTr("Enhancements")
 
-        SettingsRow {
-            title: videoEnhancementSwitch.labelText
+        ToggleRow {
+            readonly property bool enhancementCapable: SystemProperties.isVideoEnhancementCapable()
+            readonly property bool softwareDecoderForced:
+                StreamingPreferences.videoDecoderSelection === StreamingPreferences.VDS_FORCE_SOFTWARE
+
+            title: !enhancementCapable
+                   ? qsTr("Video AI-Enhancement (Not supported by the GPU)")
+                   : (SystemProperties.isVideoEnhancementExperimental()
+                      ? qsTr("Video AI-Enhancement (Experimental)")
+                      : qsTr("Video AI-Enhancement"))
             description: qsTr("Enhance video quality by utilizing the GPU's AI-Enhancement capabilities.") + "\n" +
                          qsTr("This feature effectively upscales, reduces compression artifacts and enhances the clarity of streamed content.") + "\n" +
                          qsTr("Note:") + "\n" +
@@ -714,32 +722,9 @@ Column {
                          qsTr("HDR rendering has diverse issues depending on the GPU used, we are working on it but we advise to currently use Non-HDR.") + "\n" +
                          qsTr("Be advised that using this feature on laptops running on battery power may lead to significant battery drain.")
 
-            HardSwitch {
-                id: videoEnhancementSwitch
-
-                // 高级组的解码器下拉会读写 keepValue，别删
-                property bool keepValue: checked
-                property string labelText: qsTr("Video AI-Enhancement")
-
-                hoverEnabled: true
-                enabled: SystemProperties.isVideoEnhancementCapable()
-                checked: SystemProperties.isVideoEnhancementCapable() && StreamingPreferences.videoEnhancement
-                onCheckedChanged: {
-                    StreamingPreferences.videoEnhancement = checked
-                }
-
-                Component.onCompleted: {
-                    if (!SystemProperties.isVideoEnhancementCapable()){
-                        // VSR or SDR->HDR feature could not be initialized by any GPU available
-                        labelText = qsTr("Video AI-Enhancement (Not supported by the GPU)")
-                        enabled = false;
-                        checked = false;
-                    } else if(SystemProperties.isVideoEnhancementExperimental()){
-                        // Indicate if the feature is available but not officially deployed by the Vendor
-                        labelText = qsTr("Video AI-Enhancement (Experimental)")
-                    }
-                }
-            }
+            controlEnabled: enhancementCapable && !softwareDecoderForced
+            checked: controlEnabled && StreamingPreferences.videoEnhancement
+            onToggled: function(value) { StreamingPreferences.videoEnhancement = value }
         }
 
         SettingsRow {
@@ -753,7 +738,7 @@ Column {
                     id: streamResolutionScaleSwitch
                     anchors.verticalCenter: parent.verticalCenter
                     checked: StreamingPreferences.streamResolutionScale
-                    onCheckedChanged: {
+                    onToggled: {
                         StreamingPreferences.streamResolutionScale = checked
                     }
                 }
@@ -800,7 +785,7 @@ Column {
                     id: remoteResolutionSwitch
                     anchors.verticalCenter: parent.verticalCenter
                     checked: StreamingPreferences.remoteResolution
-                    onCheckedChanged: {
+                    onToggled: {
                         StreamingPreferences.remoteResolution = checked
                     }
                 }
@@ -860,7 +845,7 @@ Column {
                     id: remoteFpsSwitch
                     anchors.verticalCenter: parent.verticalCenter
                     checked: StreamingPreferences.remoteFps
-                    onCheckedChanged: {
+                    onToggled: {
                         StreamingPreferences.remoteFps = checked
                     }
                 }

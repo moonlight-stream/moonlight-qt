@@ -87,4 +87,6 @@ QtObject {
     readonly property int railWidth: 208
     // 低于这个宽度时 rail 塌缩成顶部横向 tab
     readonly property int compactBreakpoint: 860
+    // 低于这个内容宽度时，设置行把右侧控件移到说明文字下方。
+    readonly property int settingsRowStackBreakpoint: 520
 }

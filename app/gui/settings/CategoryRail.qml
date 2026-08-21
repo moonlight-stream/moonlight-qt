@@ -1,6 +1,5 @@
 import QtQuick 2.9
 import QtQuick.Controls
-import "."
 import "../theme"
 
 // 左侧分类导航。窄窗口时 compact 置真，变成横向 tab 条。
@@ -47,6 +46,20 @@ Item {
         return -1
     }
 
+    function ensureCurrentVisible() {
+        var index = indexOf(currentCategory)
+        if (index < 0) {
+            return
+        }
+
+        list.currentIndex = index
+        list.positionViewAtIndex(index, ListView.Contain)
+    }
+
+    onCurrentCategoryChanged: Qt.callLater(ensureCurrentVisible)
+    onCompactChanged: Qt.callLater(ensureCurrentVisible)
+    onCategoriesChanged: Qt.callLater(ensureCurrentVisible)
+
     // 把焦点放到当前分类那一项上。进入设置页、以及从内容区按 B 退回来时用。
     function focusCurrent() {
         var index = indexOf(currentCategory)
@@ -81,6 +94,12 @@ Item {
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         model: rail.categories
+
+        onWidthChanged: {
+            if (rail.compact) {
+                Qt.callLater(rail.ensureCurrentVisible)
+            }
+        }
 
         // 方向键由代理自己处理（要区分横竖两种排布），ListView 别再抢一遍
         keyNavigationEnabled: false

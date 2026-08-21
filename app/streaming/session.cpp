@@ -648,7 +648,10 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     params.window = window;
     params.enableVsync = enableVsync;
     params.enableFramePacing = enableFramePacing;
-    params.enableVideoEnhancement = enableVideoEnhancement;
+    // Preserve the saved preference while making the effective decoder state
+    // match the UI: video enhancement is unavailable with software decoding.
+    params.enableVideoEnhancement = enableVideoEnhancement &&
+                                    vds != StreamingPreferences::VDS_FORCE_SOFTWARE;
     params.ignoreAspectRatio = ignoreAspectRatio;
     params.testOnly = testOnly;
     params.vds = vds;

@@ -41,6 +41,7 @@
         <file>gui/settings/SettingsCard.qml</file>
         <file>gui/settings/SettingsRow.qml</file>
         <file>gui/settings/ToggleRow.qml</file>
+        <file>gui/settings/ChoiceRow.qml</file>
         <file>gui/settings/CategoryRail.qml</file>
         <file>gui/settings/SettingsScrollArea.qml</file>
         <file>gui/settings/HdrBrightnessCard.qml</file>
