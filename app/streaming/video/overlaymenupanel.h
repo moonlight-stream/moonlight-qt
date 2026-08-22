@@ -25,6 +25,7 @@
  *   Level 1 (Actions):  Quit, Performance Stats, Mouse Mode, Cursor, Minimize, ...
  *   Level 2 (Bitrate):  1/2/5/10/20/30/50/100 Mbps
  *   Level 3 (Position): Top, Right, Left, Floating button, Disabled
+ *   Developer builds may append a function-test panel entry.
  *
  * Sub-level navigation uses a title bar with back button (◂ Title).
  * Win11 dark theme with Segoe MDL2 Assets icons, drop shadow, and slide animations.
@@ -63,6 +64,9 @@ public:
         SetMenuPlacementLeft,
         SetMenuPlacementButton,
         SetMenuPlacementDisabled,
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+        OpenStylusReplayPanel,
+#endif
         MenuActionMax
     };
 

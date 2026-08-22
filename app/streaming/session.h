@@ -29,6 +29,9 @@ struct MountState;
 }
 
 class DualSenseHapticsRenderer;
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+class StylusReplayTest;
+#endif
 
 class SupportedVideoFormatList : public QList<int>
 {
@@ -209,6 +212,9 @@ private:
     void showStreamingToast(const QString& message, int durationMs = 2000);
     void updateFileMappingMenuState();
     bool openFileMappingMountPath();
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+    void restoreCaptureAfterStylusReplayPanel();
+#endif
 #ifdef Q_OS_WIN32
     void queryDisplayHdrBrightness(float& maxNits, float& minNits, float& maxFullNits);
 #endif
@@ -370,6 +376,12 @@ private:
     bool m_WasCapturedBeforeMenu;  // 菜单打开前鼠标是否处于捕获状态
     bool m_DeferCaptureRestore;    // 延迟恢复鼠标捕获（全屏切换等）
     bool m_PendingMicToggle;       // 延迟麦克风切换（避免堆损坏）
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+    // Developer-only test harness. All replay/UI behavior lives behind this
+    // boundary so production Session code keeps only integration hooks.
+    std::unique_ptr<StylusReplayTest> m_StylusReplayTest;
+    bool m_WasCapturedBeforeStylusReplayPanel;
+#endif
     bool m_SunshineAbrEnabled;
     Uint32 m_LastAbrFeedbackTicks;
     RTP_VIDEO_STATS m_LastAbrVideoStats;

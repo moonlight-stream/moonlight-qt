@@ -1652,6 +1652,71 @@
         <source>100 Mbps</source>
         <translation>100 Mbps</translation>
     </message>
+    <message>
+        <source>Function Tests</source>
+        <translation>功能测试</translation>
+    </message>
+    <message>
+        <source>Developer</source>
+        <translation>开发功能</translation>
+    </message>
+</context>
+<context>
+    <name>StylusReplayPanel</name>
+    <message>
+        <location filename="../streaming/video/stylusreplaypanel.cpp" line="52"/>
+        <source>No recording</source>
+        <translation>未选择录制文件</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/stylusreplaypanel.cpp" line="59"/>
+        <source>Stylus Test</source>
+        <translation>手写笔测试</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/stylusreplaypanel.cpp" line="59"/>
+        <source>Function Tests</source>
+        <translation>功能测试</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/stylusreplaypanel.cpp" line="259"/>
+        <source>Recording</source>
+        <translation>录制文件</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/stylusreplaypanel.cpp" line="264"/>
+        <source>The connected host does not support stylus input.</source>
+        <translation>当前主机不支持手写笔输入。</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/stylusreplaypanel.cpp" line="288"/>
+        <source>Choose Recording</source>
+        <translation>选择录制文件</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/stylusreplaypanel.cpp" line="289"/>
+        <source>Start Replay</source>
+        <translation>开始回放</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/stylusreplaypanel.cpp" line="290"/>
+        <source>Stop Replay</source>
+        <translation>停止回放</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/stylusreplaypanel.cpp" line="295"/>
+        <source>Playback Speed</source>
+        <translation>回放速度</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/stylusreplaypanel.cpp" line="305"/>
+        <source>Press Esc to close</source>
+        <translation>按 Esc 关闭</translation>
+    </message>
+    <message>
+        <source>Filter Local Mouse Input During Replay</source>
+        <translation>回放期间过滤本地鼠标输入</translation>
+    </message>
 </context>
 <context>
     <name>PcView</name>
@@ -2731,6 +2796,136 @@
         <location filename="../streaming/session.cpp" line="4143"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>无法初始化视频解码器。请检查你的流式传输设置，然后重试。</translation>
+    </message>
+</context>
+<context>
+    <name>StylusReplayTest</name>
+    <message>
+        <source>Stop stylus replay before importing another recording.</source>
+        <translation>请先停止手写笔回放，再导入其他录制文件。</translation>
+    </message>
+    <message>
+        <source>The connected host does not support stylus input.</source>
+        <translation>当前连接的主机不支持手写笔输入。</translation>
+    </message>
+    <message>
+        <source>Stylus replay is already running.</source>
+        <translation>手写笔回放已经在运行。</translation>
+    </message>
+    <message>
+        <source>The stylus input queue is not available.</source>
+        <translation>手写笔输入队列当前不可用。</translation>
+    </message>
+    <message>
+        <source>Stylus replay stopped.</source>
+        <translation>手写笔回放已停止。</translation>
+    </message>
+    <message>
+        <source>Stylus replay completed.</source>
+        <translation>手写笔回放已完成。</translation>
+    </message>
+    <message>
+        <source>Stylus replay stopped because the input queue rejected an event.</source>
+        <translation>输入队列拒绝了事件，手写笔回放已停止。</translation>
+    </message>
+    <message>
+        <source>No recording</source>
+        <translation>未导入录制文件</translation>
+    </message>
+    <message>
+        <source>%1 samples · %2 s</source>
+        <translation>%1 个样本 · %2 秒</translation>
+    </message>
+    <message>
+        <source>No recording was selected.</source>
+        <translation>未选择录制文件。</translation>
+    </message>
+    <message>
+        <source>Replaying %1 at %2x: %3 samples, %4 seconds</source>
+        <translation>正在以 %2 倍速回放 %1：%3 个样本，源时长 %4 秒</translation>
+    </message>
+    <message>
+        <source>Stylus recording loaded: %1 samples, %2 seconds</source>
+        <translation>已载入手写笔录制：%1 个样本，时长 %2 秒</translation>
+    </message>
+    <message>
+        <source>%1% · %2 s left</source>
+        <translation>%1% · 剩余 %2 秒</translation>
+    </message>
+    <message>
+        <source> (source recording is truncated)</source>
+        <translation>（源录制文件已截断）</translation>
+    </message>
+    <message>
+        <source>Unable to import stylus recording: %1</source>
+        <translation>无法导入手写笔录制文件：%1</translation>
+    </message>
+    <message>
+        <source>Unable to open the recording picker (error %1)</source>
+        <translation>无法打开录制文件选择窗口（错误 %1）</translation>
+    </message>
+    <message>
+        <source>Stylus recording files (*.dat)</source>
+        <translation>手写笔录制文件 (*.dat)</translation>
+    </message>
+    <message>
+        <source>All files (*.*)</source>
+        <translation>所有文件 (*.*)</translation>
+    </message>
+    <message>
+        <source>Import stylus recording file</source>
+        <translation>导入手写笔录制文件</translation>
+    </message>
+</context>
+<context>
+    <name>StylusReplayController</name>
+    <message>
+        <source>The recording file does not exist.</source>
+        <translation>录制文件不存在。</translation>
+    </message>
+    <message>
+        <source>The recording file exceeds the 64 MiB limit.</source>
+        <translation>录制文件超过 64 MiB 上限。</translation>
+    </message>
+    <message>
+        <source>The recording file could not be opened.</source>
+        <translation>无法打开录制文件。</translation>
+    </message>
+    <message>
+        <source>This is not a supported stylus recording.</source>
+        <translation>这不是受支持的手写笔录制文件。</translation>
+    </message>
+    <message>
+        <source>Line %1 has an invalid format.</source>
+        <translation>第 %1 行格式无效。</translation>
+    </message>
+    <message>
+        <source>Line %1 contains a value outside the supported range.</source>
+        <translation>第 %1 行包含超出支持范围的值。</translation>
+    </message>
+    <message>
+        <source>Line %1 has a timestamp earlier than the previous sample.</source>
+        <translation>第 %1 行的时间戳早于前一个样本。</translation>
+    </message>
+    <message>
+        <source>The recording exceeds the 200000 sample limit.</source>
+        <translation>录制文件超过 200000 个样本的上限。</translation>
+    </message>
+    <message>
+        <source>An error occurred while reading the recording file.</source>
+        <translation>读取录制文件时发生错误。</translation>
+    </message>
+    <message>
+        <source>The recording file does not contain stylus samples.</source>
+        <translation>录制文件不包含手写笔样本。</translation>
+    </message>
+    <message>
+        <source>Import a stylus recording before starting replay.</source>
+        <translation>请先导入手写笔录制文件再开始回放。</translation>
+    </message>
+    <message>
+        <source>The selected replay speed is not supported.</source>
+        <translation>不支持所选的回放速度。</translation>
     </message>
 </context>
 <context>

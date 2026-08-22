@@ -120,6 +120,9 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_WindowsPenSubclassInstalled(false),
       m_WindowsPenPointerTracked(false),
       m_WindowsPenCancelPending(false),
+      m_WindowsPenLastSentStateKey(0),
+      m_WindowsPenLastSentStateValid(false),
+      m_WindowsPenHistoryStats{},
 #endif
       m_NativeTouchpadEnabled(SDL_GetHintBoolean(SDL_HINT_TRACKPAD_IS_TOUCH_ONLY, SDL_FALSE) == SDL_TRUE),
       m_TouchpadFlushEventQueued(false),

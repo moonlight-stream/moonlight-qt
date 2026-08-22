@@ -6,6 +6,9 @@
 #include "streaming/streamutils.h"
 #include "streaming/audio/dualsensehaptics.h"
 #include "streaming/audio/dualsensehapticscalibration.h"
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+#include "streaming/input/stylusreplaytest.h"
+#endif
 #include "backend/richpresencemanager.h"
 #include "backend/nvhttp.h"
 #include "backend/identitymanager.h"
@@ -1162,6 +1165,10 @@ Session::Session(NvComputer* computer,
       m_MenuPanel(nullptr),
       m_DeferCaptureRestore(false),
       m_PendingMicToggle(false),
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+      m_StylusReplayTest(nullptr),
+      m_WasCapturedBeforeStylusReplayPanel(false),
+#endif
             m_SunshineAbrEnabled(false),
             m_LastAbrFeedbackTicks(0),
             m_AbrFeedbackInFlight(std::make_shared<std::atomic_bool>(false)),
@@ -2316,6 +2323,12 @@ void Session::syncQtOverlayWindowsWithSdlWindowState()
         if (m_MenuPanel && m_MenuPanel->isMenuVisible()) {
             m_MenuPanel->closeMenu();
         }
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+        if (m_StylusReplayTest) {
+            // This also cancels a deferred request that has not become visible yet.
+            m_StylusReplayTest->closePanel();
+        }
+#endif
         if (m_MenuButton) {
             m_MenuButton->hideButton();
         }
@@ -2473,6 +2486,28 @@ void Session::dispatchQtMenuAction(OverlayMenuPanel::MenuAction action)
         return;
     }
 
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+    case OverlayMenuPanel::MenuAction::OpenStylusReplayPanel:
+        // Developer-only integration boundary: transfer capture ownership,
+        // then delegate all test UI and replay behavior to StylusReplayTest.
+        m_WasCapturedBeforeStylusReplayPanel =
+                m_WasCapturedBeforeStylusReplayPanel || m_WasCapturedBeforeMenu;
+        m_WasCapturedBeforeMenu = false;
+        if (m_StylusReplayTest) {
+            const QRect parentRect = qtOverlayGeometryForSdlWindow(m_Window);
+            if (parentRect.isValid()) {
+                m_StylusReplayTest->requestShow(parentRect);
+            }
+            else {
+                restoreCaptureAfterStylusReplayPanel();
+            }
+        }
+        else {
+            restoreCaptureAfterStylusReplayPanel();
+        }
+        return;
+#endif
+
     default:
         return;
     }
@@ -2499,6 +2534,30 @@ void Session::dispatchQtMenuAction(OverlayMenuPanel::MenuAction action)
         }
     }
 }
+
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+void Session::restoreCaptureAfterStylusReplayPanel()
+{
+    if (!m_WasCapturedBeforeStylusReplayPanel) {
+        return;
+    }
+
+    m_WasCapturedBeforeStylusReplayPanel = false;
+    if (m_MenuPanel && (m_MenuPanel->isMenuVisible() || m_MenuPanel->isClosing())) {
+        // Let the overlay menu restore capture when it closes instead of
+        // recapturing input underneath a visible menu.
+        m_WasCapturedBeforeMenu = true;
+        return;
+    }
+
+    if (isStreamingWindowVisible()) {
+        SDL_RaiseWindow(m_Window);
+        SDL_FlushEvent(SDL_MOUSEMOTION);
+        m_InputHandler->setCaptureActive(true);
+    }
+}
+
+#endif
 
 void Session::showStreamingToast(const QString& message, int durationMs)
 {
@@ -3970,6 +4029,18 @@ void Session::exec()
     m_MenuPanel = new OverlayMenuPanel();
     m_MenuButton = nullptr;
     m_Toast = new OverlayToast();
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+    // Developer-only harness: Session supplies integration callbacks while
+    // the test class owns the panel, picker, replay scheduler, and cleanup.
+    m_StylusReplayTest = std::make_unique<StylusReplayTest>(
+            m_Window,
+            [this](const QString& message, int durationMs) {
+                showStreamingToast(message, durationMs);
+            },
+            [this]() {
+                restoreCaptureAfterStylusReplayPanel();
+            });
+#endif
     m_MenuPanel->setActionCallback([this](OverlayMenuPanel::MenuAction action) {
         dispatchQtMenuAction(action);
     });
@@ -4023,7 +4094,12 @@ void Session::exec()
     auto qtUiNeedsEventProcessing = [this]() {
         return (m_MenuPanel && m_MenuPanel->needsEventProcessing()) ||
                (m_MenuButton && m_MenuButton->isButtonVisible()) ||
-               (m_Toast && m_Toast->isVisible());
+               (m_Toast && m_Toast->isVisible()) ||
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+               (m_StylusReplayTest && m_StylusReplayTest->isPanelVisible());
+#else
+               false;
+#endif
     };
     auto processQtEventsDuringStream = [&lastQtEventPumpTicks,
                                         &qtUiNeedsEventProcessing](bool force = false) {
@@ -4077,6 +4153,11 @@ void Session::exec()
         processFileMappingUxProbeResult();
         processFileMappingMountResult();
         processClipboardHelperMessages();
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+        if (m_StylusReplayTest) {
+            m_StylusReplayTest->process();
+        }
+#endif
 
 #if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)
         // SDL 2.0.18 has a proper wait event implementation that uses platform
@@ -4092,6 +4173,13 @@ void Session::exec()
         if (qtUiNeedsEventProcessing()) {
             waitTimeoutMs = qMin(waitTimeoutMs, static_cast<int>(QT_UI_EVENT_PUMP_INTERVAL_MS));
         }
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+        if (const int replayDelayMs = m_StylusReplayTest ?
+                    m_StylusReplayTest->nextDelayMs() : -1;
+                replayDelayMs >= 0) {
+            waitTimeoutMs = qMin(waitTimeoutMs, replayDelayMs);
+        }
+#endif
         if (!SDL_WaitEventTimeout(&event, waitTimeoutMs)) {
             presence.runCallbacks();
             processClipboardHelperMessages();
@@ -4123,12 +4211,24 @@ void Session::exec()
             continue;
         }
 #endif
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+        // Developer-only replay isolation state, evaluated once per SDL event.
+        const bool filterLocalMouseForStylusReplay = m_StylusReplayTest &&
+                m_StylusReplayTest->shouldFilterLocalMouseInput();
+#endif
         switch (event.type) {
         case SDL_QUIT:
             // If the connection was interrupted by a transient network problem
             // (rather than a user-initiated quit), try to silently reconnect
             // before tearing the session down.
             if (m_ConnectionInterrupted && !m_ShouldExit) {
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+                // A replay timeline belongs to one protocol connection. Do not
+                // resume overdue samples against a newly established session.
+                if (m_StylusReplayTest) {
+                    m_StylusReplayTest->stop(false);
+                }
+#endif
                 m_ConnectionInterrupted = false;
                 if (tryReconnect()) {
                     // Streaming resumed; keep running the event loop
@@ -4456,6 +4556,15 @@ void Session::exec()
         {
             presence.runCallbacks();
 
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+            // Developer-only replay isolation. The .dat format contains only
+            // pen samples; this option suppresses concurrent local SDL mouse
+            // input so it cannot alter the remote result under test.
+            if (filterLocalMouseForStylusReplay) {
+                break;
+            }
+#endif
+
             // When Qt overlay menu is visible, consume all button events
             // to prevent SDL from re-capturing the mouse
             if (m_MenuPanel && m_MenuPanel->isMenuVisible()) {
@@ -4467,6 +4576,11 @@ void Session::exec()
         }
         case SDL_MOUSEMOTION:
         {
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+            if (filterLocalMouseForStylusReplay) {
+                break;
+            }
+#endif
             // Qt overlay menu: edge detection with debounce (500ms cooldown after close)
             // Disabled and button modes do not perform per-motion edge checks.
             if (m_MenuPanel &&
@@ -4510,6 +4624,11 @@ void Session::exec()
             break;
         }
         case SDL_MOUSEWHEEL:
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+            if (filterLocalMouseForStylusReplay) {
+                break;
+            }
+#endif
             m_InputHandler->handleMouseWheelEvent(&event.wheel);
             break;
         case SDL_CONTROLLERAXISMOTION:
@@ -4588,6 +4707,11 @@ void Session::exec()
         processFileMappingUxProbeResult();
         processFileMappingMountResult();
         processQtEventsDuringStream();
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+        if (m_StylusReplayTest) {
+            m_StylusReplayTest->process();
+        }
+#endif
 
         // Deferred microphone toggle — runs outside processEvents() to avoid
         // heap corruption when creating QAudioSource within nested event loops
@@ -4619,6 +4743,11 @@ DispatchDeferredCleanup:
         delete m_ClipboardHelper;
         m_ClipboardHelper = nullptr;
     }
+
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+    m_WasCapturedBeforeStylusReplayPanel = false;
+    m_StylusReplayTest.reset();
+#endif
 
     cleanupFileMappingMount();
 

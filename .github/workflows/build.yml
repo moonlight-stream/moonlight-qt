@@ -151,6 +151,34 @@ jobs:
         if errorlevel 1 exit /b %ERRORLEVEL%
         popd
 
+    - name: Test pen history selection
+      shell: cmd
+      run: |
+        for /f "usebackq delims=" %%i in (`scripts\vswhere.exe -latest -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvarsall.bat" AMD64
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        pushd tests\pen_history_selection
+        qmake pen_history_selection.pro
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        ..\..\scripts\jom.exe release
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        release\pen_history_selection_test.exe
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        popd
+
+    - name: Test stylus recording replay
+      shell: cmd
+      run: |
+        for /f "usebackq delims=" %%i in (`scripts\vswhere.exe -latest -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvarsall.bat" AMD64
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        pushd tests\stylus_replay
+        qmake stylus_replay.pro
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        ..\..\scripts\jom.exe release
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        release\stylus_replay_test.exe
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        popd
+
     - name: Install Qt arm64
       uses: jdpurcell/install-qt-action@v5
       with:

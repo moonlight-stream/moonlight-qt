@@ -179,6 +179,23 @@ win32:!winrt {
 
     CONFIG += discord-rpc
 }
+
+# Developer-only streaming diagnostics. The implementation and menu entries are
+# omitted unless the build environment explicitly enables them.
+MOONLIGHT_FUNCTION_TESTS_ENABLED = $$(MOONLIGHT_ENABLE_FUNCTION_TESTS)
+win32:!winrt:equals(MOONLIGHT_FUNCTION_TESTS_ENABLED, 1) {
+    DEFINES += MOONLIGHT_ENABLE_FUNCTION_TESTS
+    LIBS += comdlg32.lib
+    SOURCES += \
+        streaming/input/stylusreplay.cpp \
+        streaming/input/stylusreplaytest.cpp \
+        streaming/video/stylusreplaypanel.cpp
+    HEADERS += \
+        streaming/input/stylusreplay.h \
+        streaming/input/stylusreplaytest.h \
+        streaming/video/stylusreplaypanel.h
+}
+
 macx {
     DEFINES += HAVE_MACOS_NATIVE_TOUCHPAD
 
@@ -278,6 +295,7 @@ HEADERS += \
     cli/startstream.h \
     settings/streamingpreferences.h \
     streaming/input/cursorshapeclassifier.h \
+    streaming/input/penhistory.h \
     streaming/input/input.h \
     streaming/session.h \
     streaming/filemappingclient.h \

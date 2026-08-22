@@ -268,6 +268,7 @@ private:
     bool trySendWindowsPenCancel();
     void cancelWindowsPenInput(bool suppressPointer = false);
     void routeWindowsPenPointerToSdl(Uint32 pointerId);
+    void recordWindowsPenHistoryStats(Uint32 availableSamples, Uint32 replayedSamples);
     void shutdownWindowsPenInput(bool suppressPointer = false);
 #endif
 
@@ -423,6 +424,15 @@ private:
     bool m_DisabledTouchFeedback;
 
 #ifdef HAVE_WINDOWS_PEN_INPUT
+    struct WindowsPenHistoryStats {
+        Uint32 lastReportTicks;
+        Uint32 updateCount;
+        Uint32 availableSamples;
+        Uint32 replayedSamples;
+        Uint32 droppedSamples;
+        Uint32 maxDepth;
+    };
+
     void* m_WindowsPenWindow;
     void* m_WindowsPenSubclassContext;
     Uint32 m_WindowsPenPointerId;
@@ -431,6 +441,9 @@ private:
     bool m_WindowsPenSubclassInstalled;
     bool m_WindowsPenPointerTracked;
     bool m_WindowsPenCancelPending;
+    Uint32 m_WindowsPenLastSentStateKey;
+    bool m_WindowsPenLastSentStateValid;
+    WindowsPenHistoryStats m_WindowsPenHistoryStats;
 #endif
 
     enum NativeTouchpadTransport {

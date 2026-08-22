@@ -166,10 +166,23 @@ void OverlayMenuPanel::buildMenuLevels()
                          MenuAction::MenuActionMax, 3, true, false, false});
     top.items.push_back({tr("Bitrate"),       QString(),  MenuItemType::SubMenu,
                          MenuAction::MenuActionMax, 2, true, false, false});
+    constexpr bool separatorAfterHostFiles =
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+            false;
+#else
+            true;
+#endif
     top.items.push_back({tr("Host Files"),    m_FileMappingDetail, MenuItemType::Action,
                          MenuAction::ShowHostFiles, 0, true,
                          m_FileMappingState == FileMappingState::Available ||
-                         m_FileMappingState == FileMappingState::Open, true});   // separator
+                         m_FileMappingState == FileMappingState::Open,
+                         separatorAfterHostFiles});
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+    top.items.push_back({tr("Function Tests"),
+                         tr("Developer"),
+                         MenuItemType::Action,
+                         MenuAction::OpenStylusReplayPanel, 0, true, false, true});
+#endif
     top.items.push_back({tr("Toggle Fullscreen"), QString(), MenuItemType::Action,
                          MenuAction::ToggleFullScreen, 0, true, false, false});
     top.items.push_back({tr("Microphone"),    QString(),  MenuItemType::Toggle,
@@ -779,6 +792,9 @@ void OverlayMenuPanel::paintEvent(QPaintEvent*)
         case MenuAction::UngrabInput:       return QChar(0xE785); // Mouse back
         case MenuAction::PasteText:         return QChar(0xE77F); // Paste
         case MenuAction::TogglePointerRegionLock: return QChar(0xE72E); // Lock
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+        case MenuAction::OpenStylusReplayPanel: return QChar(0xE943); // Developer tools
+#endif
         default: return QChar();
         }
 #else
@@ -802,6 +818,9 @@ void OverlayMenuPanel::paintEvent(QPaintEvent*)
         case MenuAction::UngrabInput:       return QChar(0xE5C4); // arrow_back
         case MenuAction::PasteText:         return QChar(0xE14F); // content_paste
         case MenuAction::TogglePointerRegionLock: return QChar(0xE897); // lock
+#ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
+        case MenuAction::OpenStylusReplayPanel: return QChar(0xE869); // build
+#endif
         default: return QChar();
         }
 #endif

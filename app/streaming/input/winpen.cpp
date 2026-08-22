@@ -7,20 +7,39 @@
 #include <Windows.h>
 #include <CommCtrl.h>
 
+#include "penhistory.h"
 #include "streaming/streamutils.h"
 
 #include <QtMath>
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <mutex>
 #include <new>
-#include <vector>
 
 namespace {
 
 constexpr UINT_PTR WINDOWS_PEN_SUBCLASS_ID = 0x4D4C504E; // "MLPN"
-constexpr UINT32 MAX_PEN_HISTORY_SAMPLES = 128;
+constexpr Uint32 PEN_HISTORY_REPORT_INTERVAL_MS = 5000;
+
+Uint32 windowsPenStateKey(const POINTER_PEN_INFO& sample)
+{
+    Uint32 stateKey = 0;
+    if (sample.pointerInfo.pointerFlags & POINTER_FLAG_INCONTACT) {
+        stateKey |= 0x01;
+    }
+    if (sample.pointerInfo.pointerFlags & POINTER_FLAG_CANCELED) {
+        stateKey |= 0x02;
+    }
+    if (sample.penFlags & PEN_FLAG_BARREL) {
+        stateKey |= 0x04;
+    }
+    if (sample.penFlags & (PEN_FLAG_INVERTED | PEN_FLAG_ERASER)) {
+        stateKey |= 0x08;
+    }
+    return stateKey;
+}
 
 using SetWindowSubclassFn = BOOL (WINAPI *)(HWND, SUBCLASSPROC, UINT_PTR, DWORD_PTR);
 using RemoveWindowSubclassFn = BOOL (WINAPI *)(HWND, SUBCLASSPROC, UINT_PTR);
@@ -160,6 +179,9 @@ bool SdlInputHandler::trySendWindowsPenCancel()
             LI_TOUCH_EVENT_CANCEL_ALL, LI_TOOL_TYPE_UNKNOWN, 0,
             0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
             LI_ROT_UNKNOWN, LI_TILT_UNKNOWN) != 0;
+    if (!m_WindowsPenCancelPending) {
+        m_WindowsPenLastSentStateValid = false;
+    }
     return !m_WindowsPenCancelPending;
 }
 
@@ -177,6 +199,7 @@ void SdlInputHandler::cancelWindowsPenInput(bool suppressPointer)
     m_WindowsPenPointerId = 0;
     m_WindowsPenFallbackPointerId = UINT32_MAX;
     m_WindowsPenPointerTracked = false;
+    m_WindowsPenLastSentStateValid = false;
 
     if (suppressPointer) {
         if (pointerId != UINT32_MAX) {
@@ -195,6 +218,43 @@ void SdlInputHandler::routeWindowsPenPointerToSdl(Uint32 pointerId)
     m_WindowsPenPointerId = 0;
     m_WindowsPenPointerTracked = false;
     m_WindowsPenFallbackPointerId = pointerId;
+    m_WindowsPenLastSentStateValid = false;
+}
+
+void SdlInputHandler::recordWindowsPenHistoryStats(Uint32 availableSamples,
+                                                   Uint32 replayedSamples)
+{
+    const Uint32 droppedSamples =
+            availableSamples > replayedSamples ? availableSamples - replayedSamples : 0;
+    if (droppedSamples == 0) {
+        return;
+    }
+
+    const Uint32 now = SDL_GetTicks();
+    m_WindowsPenHistoryStats.updateCount++;
+    m_WindowsPenHistoryStats.availableSamples += availableSamples;
+    m_WindowsPenHistoryStats.replayedSamples += replayedSamples;
+    m_WindowsPenHistoryStats.droppedSamples += droppedSamples;
+    m_WindowsPenHistoryStats.maxDepth =
+            std::max(m_WindowsPenHistoryStats.maxDepth, availableSamples);
+
+    if (m_WindowsPenHistoryStats.lastReportTicks != 0 &&
+            now - m_WindowsPenHistoryStats.lastReportTicks <
+            PEN_HISTORY_REPORT_INTERVAL_MS) {
+        return;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Windows pen history: updates=%u available=%u replayed=%u "
+                "dropped=%u maxDepth=%u",
+                m_WindowsPenHistoryStats.updateCount,
+                m_WindowsPenHistoryStats.availableSamples,
+                m_WindowsPenHistoryStats.replayedSamples,
+                m_WindowsPenHistoryStats.droppedSamples,
+                m_WindowsPenHistoryStats.maxDepth);
+
+    m_WindowsPenHistoryStats = {};
+    m_WindowsPenHistoryStats.lastReportTicks = now;
 }
 
 void SdlInputHandler::shutdownWindowsPenInput(bool suppressPointer)
@@ -466,27 +526,55 @@ bool SdlInputHandler::handleWindowsPenPointerMessage(unsigned int message, Uint6
             transportFailed = true;
             return false;
         }
+        m_WindowsPenLastSentStateKey = windowsPenStateKey(sample);
+        m_WindowsPenLastSentStateValid = true;
         return true;
     };
 
     bool sentAllSamples = true;
     if (message == WM_POINTERUPDATE && currentInfo.pointerInfo.historyCount > 1) {
-        const UINT32 capacity = std::min(currentInfo.pointerInfo.historyCount,
-                                         MAX_PEN_HISTORY_SAMPLES);
-        std::vector<POINTER_PEN_INFO> history(capacity);
+        const UINT32 capacity = std::min(
+                currentInfo.pointerInfo.historyCount,
+                static_cast<UINT32>(PenHistory::MAX_HISTORY_SAMPLES));
+        std::array<POINTER_PEN_INFO, PenHistory::MAX_HISTORY_SAMPLES> history = {};
         UINT32 available = capacity;
         if (GetPointerPenInfoHistory(pointerId, &available, history.data())) {
             const UINT32 valid = std::min(capacity, available);
-            // Win32 returns newest-first. Send oldest-first to preserve stroke order.
-            for (UINT32 i = valid; i > 0; --i) {
-                if (!sendPenSample(history[i - 1])) {
-                    sentAllSamples = false;
-                    break;
+            if (valid == 0) {
+                sentAllSamples = sendPenSample(currentInfo);
+                recordWindowsPenHistoryStats(currentInfo.pointerInfo.historyCount,
+                                             sentAllSamples ? 1 : 0);
+            }
+            else {
+                std::array<std::uint32_t, PenHistory::MAX_HISTORY_SAMPLES> timestamps = {};
+                std::array<std::uint32_t, PenHistory::MAX_HISTORY_SAMPLES> stateKeys = {};
+                for (UINT32 i = 0; i < valid; i++) {
+                    timestamps[i] = history[i].pointerInfo.dwTime;
+                    stateKeys[i] = windowsPenStateKey(history[i]);
                 }
+
+                const PenHistory::ReplaySelection selection =
+                        PenHistory::selectReplaySamples(
+                                timestamps.data(), stateKeys.data(), valid, GetTickCount(),
+                                m_WindowsPenLastSentStateValid,
+                                m_WindowsPenLastSentStateKey);
+
+                UINT32 replayedSamples = 0;
+                for (std::size_t i = 0; i < selection.count; i++) {
+                    if (!sendPenSample(history[selection.oldestFirstIndices[i]])) {
+                        sentAllSamples = false;
+                        break;
+                    }
+                    replayedSamples++;
+                }
+                recordWindowsPenHistoryStats(currentInfo.pointerInfo.historyCount,
+                                             replayedSamples);
             }
         }
         else {
             sentAllSamples = sendPenSample(currentInfo);
+            recordWindowsPenHistoryStats(currentInfo.pointerInfo.historyCount,
+                                         sentAllSamples ? 1 : 0);
         }
     }
     else {
