@@ -71,7 +71,8 @@
 #define SER_LEGACY_CUSTOMVDDSCREENMODE "customvddscreenmode"
 #define SER_SHOWLOCALCURSOR "showLocalCursor"
 #define SER_MICROPHONE "microphone"
-#define SER_OVERLAYMENUPOS "overlaymenuposition"
+#define SER_OVERLAYMENUPLACEMENT "overlaymenuplacement"
+#define SER_LEGACY_OVERLAYMENUPOS "overlaymenuposition"
 #define SER_HDRMODE "hdrmode"
 #define SER_HDRBRIGHTNESSMODE "hdrbrightnessmode"
 #define SER_HDRMAXBRIGHTNESS "hdrmaxbrightness"
@@ -85,6 +86,60 @@
 static StreamingPreferences* s_GlobalPrefs;
 
 Q_GLOBAL_STATIC(QReadWriteLock, s_GlobalPrefsLock)
+
+static StreamingPreferences::OverlayMenuPosition decodeOverlayMenuPlacement(int value)
+{
+    switch (value) {
+    case StreamingPreferences::OMP_TOP_EDGE:
+    case StreamingPreferences::OMP_RIGHT_EDGE:
+    case StreamingPreferences::OMP_LEFT_EDGE:
+    case StreamingPreferences::OMP_BUTTON:
+    case StreamingPreferences::OMP_DISABLED:
+        return static_cast<StreamingPreferences::OverlayMenuPosition>(value);
+    default:
+        return StreamingPreferences::OMP_DISABLED;
+    }
+}
+
+static StreamingPreferences::OverlayMenuPosition migrateLegacyOverlayMenuPosition(int value)
+{
+    switch (value) {
+    case 0: // Right edge
+        return StreamingPreferences::OMP_RIGHT_EDGE;
+    case 1: // Left edge
+        return StreamingPreferences::OMP_LEFT_EDGE;
+    case 3: // Disabled
+        return StreamingPreferences::OMP_DISABLED;
+    case 4: // Floating button
+        return StreamingPreferences::OMP_BUTTON;
+    case 2: // Removed at-cursor mode already fell back to the right edge
+    default:
+        return StreamingPreferences::OMP_RIGHT_EDGE;
+    }
+}
+
+static StreamingPreferences::OverlayMenuPosition loadOverlayMenuPlacement(QSettings& settings)
+{
+    if (settings.contains(SER_OVERLAYMENUPLACEMENT)) {
+        settings.remove(SER_LEGACY_OVERLAYMENUPOS);
+        return decodeOverlayMenuPlacement(
+                settings.value(SER_OVERLAYMENUPLACEMENT).toInt());
+    }
+
+    if (!settings.contains(SER_LEGACY_OVERLAYMENUPOS)) {
+        return StreamingPreferences::OMP_DISABLED;
+    }
+
+    // Temporary compatibility bridge for versions that stored the old enum
+    // under overlaymenuposition. Remove this migration and the legacy key
+    // constant after support for upgrading from those versions is retired.
+    const auto migratedPosition = migrateLegacyOverlayMenuPosition(
+            settings.value(SER_LEGACY_OVERLAYMENUPOS).toInt());
+    settings.setValue(SER_OVERLAYMENUPLACEMENT,
+                      static_cast<int>(migratedPosition));
+    settings.remove(SER_LEGACY_OVERLAYMENUPOS);
+    return migratedPosition;
+}
 
 StreamingPreferences::StreamingPreferences(QQmlEngine *qmlEngine)
     : m_QmlEngine(qmlEngine)
@@ -187,8 +242,7 @@ void StreamingPreferences::reload()
     framePacing = settings.value(SER_FRAMEPACING, false).toBool();
     videoEnhancement = settings.value(SER_VIDEOENHANCEMENT, false).toBool();
     enableMicrophone = settings.value(SER_MICROPHONE, false).toBool();
-    overlayMenuPosition = static_cast<OverlayMenuPosition>(settings.value(SER_OVERLAYMENUPOS,
-                                                           static_cast<int>(OverlayMenuPosition::OMP_DISABLED)).toInt());
+    overlayMenuPosition = loadOverlayMenuPlacement(settings);
     autoUpdateCheck = settings.value(SER_AUTOUPDATECHECK, true).toBool();
 
     streamResolutionScale = settings.value(SER_STREAMRESOLUTIONSCALE, false).toBool();
@@ -306,6 +360,16 @@ void StreamingPreferences::reload()
         videoCodecConfig = VCC_AUTO;
         enableHdr = true;
     }
+}
+
+void StreamingPreferences::setOverlayMenuPosition(OverlayMenuPosition position)
+{
+    if (overlayMenuPosition == position) {
+        return;
+    }
+
+    overlayMenuPosition = position;
+    emit overlayMenuPositionChanged();
 }
 
 bool StreamingPreferences::retranslate()
@@ -499,7 +563,7 @@ void StreamingPreferences::save()
     settings.remove(SER_LEGACY_CUSTOMSCREENMODE);
     settings.remove(SER_LEGACY_CUSTOMVDDSCREENMODE);
     settings.setValue(SER_MICROPHONE, enableMicrophone);
-    settings.setValue(SER_OVERLAYMENUPOS, static_cast<int>(overlayMenuPosition));
+    settings.setValue(SER_OVERLAYMENUPLACEMENT, static_cast<int>(overlayMenuPosition));
     settings.setValue(SER_AUTOUPDATECHECK, autoUpdateCheck);
 }
 

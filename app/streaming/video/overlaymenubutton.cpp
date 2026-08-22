@@ -1,12 +1,41 @@
 #include "overlaymenubutton.h"
 
+#include <QGuiApplication>
 #include <QScreen>
 #include <QPainterPath>
+#include <QStyleHints>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QInputDevice>
+#endif
+
+namespace {
+QPoint globalMousePosition(QMouseEvent* event)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    return event->globalPosition().toPoint();
+#else
+    return event->globalPos();
+#endif
+}
+
+bool mouseEventComesFromTouch(QMouseEvent* event)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    return event->pointingDevice() &&
+           event->pointingDevice()->type() == QInputDevice::DeviceType::TouchScreen;
+#else
+    return event->source() != Qt::MouseEventNotSynthesized;
+#endif
+}
+}
 
 OverlayMenuButton::OverlayMenuButton(QWindow* parent)
     : QRasterWindow(parent),
       m_Hovered(false),
-      m_ButtonVisible(false)
+      m_ButtonVisible(false),
+      m_Dragging(false),
+      m_InputSource(InputSource::None),
+      m_TouchPointId(-1)
 {
     setFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint
              | Qt::WindowDoesNotAcceptFocus);
@@ -22,17 +51,22 @@ OverlayMenuButton::~OverlayMenuButton()
 {
 }
 
-void OverlayMenuButton::repositionTo(int parentX, int parentY, int parentW, int /*parentH*/)
+void OverlayMenuButton::repositionTo(int parentX, int parentY, int parentW, int parentH)
 {
-    int qpX = parentX;
-    int qpY = parentY;
-    int qpW = parentW;
+    const QRect newParentGeometry(parentX, parentY, parentW, parentH);
+    QPoint newPosition;
 
-    // Position at top-right corner of the streaming window
-    int x = qpX + qpW - kButtonSize - kMargin;
-    int y = qpY + kMargin;
+    if (m_ParentGeometry.isValid()) {
+        // Preserve the button's offset when the streaming window moves or resizes.
+        newPosition = newParentGeometry.topLeft() + (position() - m_ParentGeometry.topLeft());
+    }
+    else {
+        newPosition = QPoint(newParentGeometry.right() - kButtonSize - kMargin + 1,
+                             newParentGeometry.top() + kMargin);
+    }
 
-    setGeometry(x, y, kButtonSize, kButtonSize);
+    m_ParentGeometry = newParentGeometry;
+    setGeometry(QRect(clampToParent(newPosition), QSize(kButtonSize, kButtonSize)));
 }
 
 void OverlayMenuButton::showButton(int parentX, int parentY, int parentW, int parentH)
@@ -46,8 +80,96 @@ void OverlayMenuButton::showButton(int parentX, int parentY, int parentW, int pa
 
 void OverlayMenuButton::hideButton()
 {
+    cancelInteraction();
     m_ButtonVisible = false;
+    unsetCursor();
     hide();
+}
+
+QPoint OverlayMenuButton::clampToParent(const QPoint& position) const
+{
+    if (!m_ParentGeometry.isValid()) {
+        return position;
+    }
+
+    const int minX = m_ParentGeometry.left() + kMargin;
+    const int minY = m_ParentGeometry.top() + kMargin;
+    const int maxX = qMax(minX, m_ParentGeometry.right() - kButtonSize - kMargin + 1);
+    const int maxY = qMax(minY, m_ParentGeometry.bottom() - kButtonSize - kMargin + 1);
+    return QPoint(qBound(minX, position.x(), maxX),
+                  qBound(minY, position.y(), maxY));
+}
+
+void OverlayMenuButton::beginInteraction(InputSource source, const QPoint& globalPosition)
+{
+    if (m_InputSource != InputSource::None) {
+        return;
+    }
+
+    m_InputSource = source;
+    m_Dragging = false;
+    m_PressGlobalPosition = globalPosition;
+    m_WindowPositionAtPress = position();
+}
+
+void OverlayMenuButton::updateInteraction(const QPoint& globalPosition)
+{
+    if (m_InputSource == InputSource::None) {
+        return;
+    }
+
+    const QPoint delta = globalPosition - m_PressGlobalPosition;
+    if (!m_Dragging &&
+            delta.manhattanLength() >= QGuiApplication::styleHints()->startDragDistance()) {
+        m_Dragging = true;
+        setCursor(Qt::ClosedHandCursor);
+    }
+
+    if (m_Dragging) {
+        const QPoint targetPosition = clampToParent(m_WindowPositionAtPress + delta);
+        if (targetPosition != position()) {
+            setPosition(targetPosition);
+        }
+    }
+}
+
+void OverlayMenuButton::finishInteraction(const QPoint& globalPosition)
+{
+    if (m_InputSource == InputSource::None) {
+        return;
+    }
+
+    const InputSource source = m_InputSource;
+    const bool activate = !m_Dragging;
+    cancelInteraction();
+
+    if (activate && m_ClickCallback) {
+        // Touch input has no reliable QCursor position, so it must not use
+        // mouse-hover auto-close checks after opening the menu.
+        m_ClickCallback(globalPosition, source == InputSource::Mouse);
+    }
+}
+
+void OverlayMenuButton::cancelInteraction()
+{
+    const bool wasTouch = m_InputSource == InputSource::Touch;
+    m_InputSource = InputSource::None;
+    m_TouchPointId = -1;
+    m_Dragging = false;
+
+    if (wasTouch) {
+        // Touch input has no hover state after the finger is released.
+        m_Hovered = false;
+        setOpacity(0.35);
+        requestUpdate();
+    }
+
+    if (m_Hovered) {
+        setCursor(Qt::OpenHandCursor);
+    }
+    else {
+        unsetCursor();
+    }
 }
 
 void OverlayMenuButton::drawCrescentMoon(QPainter& p, qreal cx, qreal cy, qreal radius)
@@ -102,20 +224,137 @@ void OverlayMenuButton::paintEvent(QPaintEvent*)
 
 void OverlayMenuButton::mousePressEvent(QMouseEvent* event)
 {
-    if (event->button() == Qt::LeftButton) {
-        if (m_ClickCallback) {
-            m_ClickCallback();
-        }
+    if (event->button() == Qt::LeftButton && m_InputSource == InputSource::None) {
+        beginInteraction(mouseEventComesFromTouch(event) ? InputSource::Touch
+                                                        : InputSource::Mouse,
+                         globalMousePosition(event));
+        event->accept();
     }
 }
 
-void OverlayMenuButton::mouseMoveEvent(QMouseEvent*)
+void OverlayMenuButton::mouseMoveEvent(QMouseEvent* event)
 {
     if (!m_Hovered) {
         m_Hovered = true;
         setOpacity(0.95);
         requestUpdate();
     }
+
+    if (m_InputSource == InputSource::None) {
+        setCursor(Qt::OpenHandCursor);
+        return;
+    }
+
+    if (!(event->buttons() & Qt::LeftButton)) {
+        // A cancelled touch sequence may not produce a synthesized mouse
+        // release. Clear the state as soon as the button mask says it ended.
+        cancelInteraction();
+        return;
+    }
+
+    updateInteraction(globalMousePosition(event));
+    event->accept();
+}
+
+void OverlayMenuButton::mouseReleaseEvent(QMouseEvent* event)
+{
+    if (event->button() != Qt::LeftButton || m_InputSource == InputSource::None) {
+        return;
+    }
+
+    finishInteraction(globalMousePosition(event));
+    event->accept();
+}
+
+void OverlayMenuButton::touchEvent(QTouchEvent* event)
+{
+    if (event->type() == QEvent::TouchCancel) {
+        cancelInteraction();
+        event->accept();
+        return;
+    }
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    const auto points = event->points();
+    if (points.isEmpty()) {
+        if (event->type() == QEvent::TouchEnd && m_InputSource == InputSource::Touch) {
+            cancelInteraction();
+        }
+        event->accept();
+        return;
+    }
+
+    if (event->type() == QEvent::TouchBegin && m_InputSource == InputSource::None) {
+        m_TouchPointId = points.first().id();
+        beginInteraction(InputSource::Touch, points.first().globalPosition().toPoint());
+    }
+
+    bool foundTrackedPoint = false;
+    for (const auto& point : points) {
+        if (point.id() != m_TouchPointId) {
+            continue;
+        }
+
+        foundTrackedPoint = true;
+        const QPoint globalPosition = point.globalPosition().toPoint();
+        if (point.state() == QEventPoint::Released) {
+            finishInteraction(globalPosition);
+        }
+        else if (event->type() == QEvent::TouchUpdate) {
+            updateInteraction(globalPosition);
+        }
+        else if (event->type() == QEvent::TouchEnd) {
+            finishInteraction(globalPosition);
+        }
+        break;
+    }
+    if (event->type() == QEvent::TouchEnd &&
+            !foundTrackedPoint && m_InputSource == InputSource::Touch) {
+        cancelInteraction();
+    }
+#else
+    const auto points = event->touchPoints();
+    if (points.isEmpty()) {
+        if (event->type() == QEvent::TouchEnd && m_InputSource == InputSource::Touch) {
+            cancelInteraction();
+        }
+        event->accept();
+        return;
+    }
+
+    if (event->type() == QEvent::TouchBegin && m_InputSource == InputSource::None) {
+        m_TouchPointId = points.first().id();
+        beginInteraction(InputSource::Touch, points.first().screenPos().toPoint());
+    }
+
+    bool foundTrackedPoint = false;
+    for (const auto& point : points) {
+        if (point.id() != m_TouchPointId) {
+            continue;
+        }
+
+        foundTrackedPoint = true;
+        const QPoint globalPosition = point.screenPos().toPoint();
+        if (point.state() == Qt::TouchPointReleased) {
+            finishInteraction(globalPosition);
+        }
+        else if (event->type() == QEvent::TouchUpdate) {
+            updateInteraction(globalPosition);
+        }
+        else if (event->type() == QEvent::TouchEnd) {
+            finishInteraction(globalPosition);
+        }
+        break;
+    }
+    if (event->type() == QEvent::TouchEnd &&
+            !foundTrackedPoint && m_InputSource == InputSource::Touch) {
+        cancelInteraction();
+    }
+#endif
+
+    // Accepting the native touch sequence prevents Qt from also synthesizing
+    // a duplicate mouse interaction for the same finger.
+    event->accept();
 }
 
 bool OverlayMenuButton::event(QEvent* ev)
@@ -124,6 +363,9 @@ bool OverlayMenuButton::event(QEvent* ev)
         m_Hovered = false;
         setOpacity(0.35);
         requestUpdate();
+    }
+    else if (ev->type() == QEvent::UngrabMouse && m_InputSource == InputSource::Mouse) {
+        cancelInteraction();
     }
     return QRasterWindow::event(ev);
 }

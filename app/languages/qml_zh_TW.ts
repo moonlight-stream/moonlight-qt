@@ -1010,6 +1010,11 @@
         <translation>懸浮選單位置</translation>
     </message>
     <message>
+        <location filename="../gui/settings/LegacySettingsPage.qml" line="505"/>
+        <source>Top edge</source>
+        <translation>頂部邊緣</translation>
+    </message>
+    <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="541"/>
         <source>Right edge</source>
         <translation>右側邊緣</translation>
@@ -1392,6 +1397,42 @@
 </context>
 <context>
     <name>OverlayMenuPanel</name>
+    <message>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="159"/>
+        <source>Overlay Menu</source>
+        <translation>懸浮選單</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="162"/>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="227"/>
+        <source>Menu Position</source>
+        <translation>選單位置</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="228"/>
+        <source>Top edge</source>
+        <translation>頂部邊緣</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="230"/>
+        <source>Right edge</source>
+        <translation>右側邊緣</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="232"/>
+        <source>Left edge</source>
+        <translation>左側邊緣</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="234"/>
+        <source>Floating button</source>
+        <translation>懸浮按鈕</translation>
+    </message>
+    <message>
+        <location filename="../streaming/video/overlaymenupanel.cpp" line="236"/>
+        <source>Disabled</source>
+        <translation>停用</translation>
+    </message>
     <message>
         <location filename="../streaming/video/overlaymenupanel.cpp" line="19"/>
         <source>Checking</source>

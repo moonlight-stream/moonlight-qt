@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QSurfaceFormat>
+#include <QTouchEvent>
 #include <functional>
 
 /**
@@ -19,7 +20,8 @@ class OverlayMenuButton : public QRasterWindow {
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity)
 
 public:
-    using ClickCallback = std::function<void()>;
+    using ClickCallback = std::function<void(const QPoint& globalPosition,
+                                             bool closeWhenPointerOutside)>;
 
     explicit OverlayMenuButton(QWindow* parent = nullptr);
     ~OverlayMenuButton() override;
@@ -48,14 +50,29 @@ protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void touchEvent(QTouchEvent* event) override;
     bool event(QEvent* event) override;
 
 private:
+    enum class InputSource { None, Mouse, Touch };
+
     void drawCrescentMoon(QPainter& p, qreal cx, qreal cy, qreal radius);
+    QPoint clampToParent(const QPoint& position) const;
+    void beginInteraction(InputSource source, const QPoint& globalPosition);
+    void updateInteraction(const QPoint& globalPosition);
+    void finishInteraction(const QPoint& globalPosition);
+    void cancelInteraction();
 
     ClickCallback m_ClickCallback;
     bool m_Hovered;
     bool m_ButtonVisible;
+    bool m_Dragging;
+    InputSource m_InputSource;
+    int m_TouchPointId;
+    QPoint m_PressGlobalPosition;
+    QPoint m_WindowPositionAtPress;
+    QRect m_ParentGeometry;
 
     // Button size (logical pixels)
     static constexpr int kButtonSize = 36;

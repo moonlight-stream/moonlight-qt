@@ -209,24 +209,6 @@ Column {
         }
     }
 
-    SettingsCard {
-        visible: settingsPage.category === "ui" && hasVisibleContent
-        title: qsTr("Overlay menu position")
-
-        ChoiceRow {
-            title: qsTr("Overlay menu position")
-            selectedValue: StreamingPreferences.overlayMenuPosition
-            onValueActivated: function(value) { StreamingPreferences.overlayMenuPosition = value }
-
-            model: ListModel {
-                ListElement { text: qsTr("Right edge"); val: StreamingPreferences.OMP_RIGHT_EDGE }
-                ListElement { text: qsTr("Left edge"); val: StreamingPreferences.OMP_LEFT_EDGE }
-                ListElement { text: qsTr("Floating button"); val: StreamingPreferences.OMP_BUTTON }
-                ListElement { text: qsTr("Disabled (default)"); val: StreamingPreferences.OMP_DISABLED }
-            }
-        }
-    }
-
     // ================= 输入 =================
     SettingsCard {
         visible: settingsPage.category === "input" && hasVisibleContent
@@ -507,6 +489,25 @@ Column {
                          qsTr("The performance overlay is not supported on Steam Link or Raspberry Pi.")
             checked: StreamingPreferences.showPerformanceOverlay
             onToggled: function(value) { StreamingPreferences.showPerformanceOverlay = value }
+        }
+    }
+
+    SettingsCard {
+        visible: settingsPage.category === "advanced" && hasVisibleContent
+        title: qsTr("Overlay menu position")
+
+        ChoiceRow {
+            title: qsTr("Overlay menu position")
+            selectedValue: StreamingPreferences.overlayMenuPosition
+            onValueActivated: function(value) { StreamingPreferences.overlayMenuPosition = value }
+
+            model: ListModel {
+                ListElement { text: qsTr("Top edge"); val: StreamingPreferences.OMP_TOP_EDGE }
+                ListElement { text: qsTr("Right edge"); val: StreamingPreferences.OMP_RIGHT_EDGE }
+                ListElement { text: qsTr("Left edge"); val: StreamingPreferences.OMP_LEFT_EDGE }
+                ListElement { text: qsTr("Floating button"); val: StreamingPreferences.OMP_BUTTON }
+                ListElement { text: qsTr("Disabled (default)"); val: StreamingPreferences.OMP_DISABLED }
+            }
         }
     }
 

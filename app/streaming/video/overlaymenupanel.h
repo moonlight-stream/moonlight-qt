@@ -3,6 +3,7 @@
 #include <QRasterWindow>
 #include <QPainter>
 #include <QMouseEvent>
+#include <QPoint>
 #include <QFont>
 #include <QSurfaceFormat>
 #include <QElapsedTimer>
@@ -20,9 +21,10 @@
  * D3D11/SDL/EGL video rendering pipeline.
  *
  * Menu structure:
- *   Level 0 (Top):      Quick Actions >, Bitrate >, Fullscreen, Microphone [toggle], Disconnect
+ *   Level 0 (Top):      Quick Actions >, Menu Position >, Bitrate >, Fullscreen, Microphone [toggle], Disconnect
  *   Level 1 (Actions):  Quit, Performance Stats, Mouse Mode, Cursor, Minimize, ...
  *   Level 2 (Bitrate):  1/2/5/10/20/30/50/100 Mbps
+ *   Level 3 (Position): Top, Right, Left, Floating button, Disabled
  *
  * Sub-level navigation uses a title bar with back button (◂ Title).
  * Win11 dark theme with Segoe MDL2 Assets icons, drop shadow, and slide animations.
@@ -56,6 +58,11 @@ public:
         SetBitrate30000,
         SetBitrate50000,
         SetBitrate100000,
+        SetMenuPlacementTop,
+        SetMenuPlacementRight,
+        SetMenuPlacementLeft,
+        SetMenuPlacementButton,
+        SetMenuPlacementDisabled,
         MenuActionMax
     };
 
@@ -87,15 +94,22 @@ public:
 
     // Position the panel at the right edge of the given Qt logical parent rect.
     void showAtRightEdge(int parentX, int parentY, int parentW, int parentH,
-                         std::optional<int> pointerGlobalY = std::nullopt);
+                         std::optional<QPoint> pointerGlobalPosition = std::nullopt,
+                         bool closeWhenPointerOutside = true);
 
     // Position the panel at the left edge of the given Qt logical parent rect.
     void showAtLeftEdge(int parentX, int parentY, int parentW, int parentH,
-                        std::optional<int> pointerGlobalY = std::nullopt);
+                        std::optional<QPoint> pointerGlobalPosition = std::nullopt,
+                        bool closeWhenPointerOutside = true);
+
+    // Position the panel at the top edge of the given Qt logical parent rect.
+    void showAtTopEdge(int parentX, int parentY, int parentW, int parentH,
+                       std::optional<QPoint> pointerGlobalPosition = std::nullopt,
+                       bool closeWhenPointerOutside = true);
 
     // Position the panel at a specific Qt global logical position.
     void showAtCursor(int parentX, int parentY, int parentW, int parentH,
-                      int cursorX, int cursorY, bool pointerTriggered = true);
+                      const QPoint& cursorPosition, bool pointerTriggered = true);
 
     void closeMenu();
     bool isMenuVisible() const { return m_Visible; }
@@ -105,6 +119,7 @@ public:
     // Update dynamic state before showing the menu
     void updateMicrophoneState(bool enabled);
     void updateBitrateState(int bitrateKbps);
+    void updateMenuPositionState(MenuAction activePlacementAction);
     void updateGamepadMouseState(bool enabled);
     void updateFileMappingState(FileMappingState state, const QString& detail);
     void setHasGamepads(bool has) {
@@ -143,7 +158,7 @@ private:
         std::vector<MenuItem> items;
     };
 
-    enum class AnchorMode { RightEdge, LeftEdge, AtCursor };
+    enum class AnchorMode { RightEdge, LeftEdge, TopEdge, AtCursor };
 
     void buildMenuLevels();
     void navigateToLevel(int level);
@@ -189,14 +204,13 @@ private:
 
     // Animations
     QPropertyAnimation* m_OpacityAnim;
-    QPropertyAnimation* m_SlideAnim;    // animates x property for slide in/out
+    QPropertyAnimation* m_SlideAnim;    // animates x or y based on the anchor
     QVariantAnimation*  m_ContentSlideAnim; // animates content offset for level nav
     qreal  m_ContentOffset;   // horizontal paint offset during level transition
     bool   m_Closing;         // true while close animation is running
-    int    m_TargetX;         // cached final x position for show animation
+    QPoint m_TargetPosition;  // cached final position for show animation
 
     // Menu anchor mode and pointer position in Qt global logical coordinates.
     AnchorMode m_AnchorMode;
-    int m_CursorX, m_CursorY;
-    std::optional<int> m_EdgePointerY;
+    std::optional<QPoint> m_TriggerPosition;
 };
