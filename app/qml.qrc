@@ -23,6 +23,7 @@
         <file>gui/ErrorMessageDialog.qml</file>
         <file>gui/NavigableMessageDialog.qml</file>
         <file>gui/NavigableDialog.qml</file>
+        <file>gui/BackgroundSourceDialog.qml</file>
         <file>gui/CenteredGridView.qml</file>
         <file>gui/CliPair.qml</file>
         <file>gui/theme/qmldir</file>

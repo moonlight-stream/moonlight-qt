@@ -14,6 +14,9 @@ SettingsRow {
     property var selectedValue
     property bool controlEnabled: true
     property int maximumControlWidth: 320
+    // Set this when several rows should align to the same visual width. A value
+    // of 0 keeps the existing content-sized behavior.
+    property int controlWidth: 0
 
     signal valueActivated(var value)
 
@@ -38,6 +41,7 @@ SettingsRow {
         id: control
         maximumWidth: Math.min(row.maximumControlWidth,
                                Math.max(120, row.width - Theme.spaceMd * 2))
+        width: row.controlWidth > 0 ? Math.min(row.controlWidth, maximumWidth) : implicitWidth
         textRole: "text"
         enabled: row.controlEnabled
         hoverEnabled: true

@@ -5,6 +5,7 @@ import QtQuick.Window 2.2
 import SdlGamepadKeyNavigation 1.0
 import Session 1.0
 import SystemProperties 1.0
+import StreamingPreferences 1.0
 
 import "theme"
 import "Brand.js" as Brand
@@ -225,7 +226,8 @@ Item {
     // 压暗，保证进度条和文字在任何封面上都读得清
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.72)
+        color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b,
+                       StreamingPreferences.backgroundOverlayOpacity / 100.0)
         z: -1
     }
 

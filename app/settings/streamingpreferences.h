@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QRect>
 #include <QQmlEngine>
+#include <QString>
 
 class StreamingPreferences : public QObject
 {
@@ -72,6 +73,16 @@ public:
     };
     Q_ENUM(UIDisplayMode)
 
+    enum BackgroundSource
+    {
+        BGS_PHOTOGRAPHY,
+        BGS_ANIME,
+        BGS_API,
+        BGS_LOCAL,
+        BGS_NONE,
+    };
+    Q_ENUM(BackgroundSource)
+
     // New entries must go at the end of the enum
     // to avoid renumbering existing entries (which
     // would affect existing user preferences).
@@ -131,6 +142,18 @@ public:
     Q_ENUM(OverlayMenuPosition);
 
     void setOverlayMenuPosition(OverlayMenuPosition position);
+
+    BackgroundSource backgroundSource() const;
+    void setBackgroundSource(BackgroundSource source);
+    QString backgroundImageApi() const;
+    void setBackgroundImageApi(const QString &apiUrl);
+    QString backgroundImageLocalPath() const;
+    void setBackgroundImageLocalPath(const QString &path);
+    int backgroundOverlayOpacity() const;
+    void setBackgroundOverlayOpacity(int opacity);
+    bool backgroundSetupCompleted() const;
+    void setBackgroundSetupCompleted(bool completed);
+    Q_INVOKABLE void resetBackgroundConfiguration();
 
     enum HdrMode
     {
@@ -225,6 +248,11 @@ public:
     Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
     Q_PROPERTY(UIDisplayMode uiDisplayMode MEMBER uiDisplayMode NOTIFY uiDisplayModeChanged)
     Q_PROPERTY(bool rememberWindowPosition MEMBER rememberWindowPosition NOTIFY rememberWindowPositionChanged)
+    Q_PROPERTY(BackgroundSource backgroundSource READ backgroundSource WRITE setBackgroundSource NOTIFY backgroundConfigurationChanged)
+    Q_PROPERTY(QString backgroundImageApi READ backgroundImageApi WRITE setBackgroundImageApi NOTIFY backgroundConfigurationChanged)
+    Q_PROPERTY(QString backgroundImageLocalPath READ backgroundImageLocalPath WRITE setBackgroundImageLocalPath NOTIFY backgroundConfigurationChanged)
+    Q_PROPERTY(int backgroundOverlayOpacity READ backgroundOverlayOpacity WRITE setBackgroundOverlayOpacity NOTIFY backgroundOverlayOpacityChanged)
+    Q_PROPERTY(bool backgroundSetupCompleted READ backgroundSetupCompleted WRITE setBackgroundSetupCompleted NOTIFY backgroundSetupCompletedChanged)
     Q_PROPERTY(bool swapMouseButtons MEMBER swapMouseButtons NOTIFY mouseButtonsChanged)
     Q_PROPERTY(bool swapWinAltKeys MEMBER swapWinAltKeys NOTIFY swapWinAltKeysChanged)
     Q_PROPERTY(bool muteOnFocusLoss MEMBER muteOnFocusLoss NOTIFY muteOnFocusLossChanged)
@@ -335,6 +363,9 @@ signals:
     void videoDecoderSelectionChanged();
     void uiDisplayModeChanged();
     void rememberWindowPositionChanged();
+    void backgroundConfigurationChanged();
+    void backgroundOverlayOpacityChanged();
+    void backgroundSetupCompletedChanged();
     void windowModeChanged();
     void framePacingChanged();
     void videoEnhancementChanged();
@@ -371,6 +402,12 @@ private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);
 
     QString getSuffixFromLanguage(Language lang);
+
+    BackgroundSource m_BackgroundSource;
+    QString m_BackgroundImageApi;
+    QString m_BackgroundImageLocalPath;
+    int m_BackgroundOverlayOpacity;
+    bool m_BackgroundSetupCompleted;
 
     QQmlEngine* m_QmlEngine;
 };

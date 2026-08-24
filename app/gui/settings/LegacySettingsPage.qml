@@ -1,5 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls
+import Qt.labs.platform 1.1
 import "."
 import ".."
 import "../theme"
@@ -8,6 +9,7 @@ import "../Brand.js" as Brand
 import StreamingPreferences 1.0
 import ComputerManager 1.0
 import SystemProperties 1.0
+import ImageUtils 1.0
 
 // 这六个分类保留在同一文件中，以维持现有 LegacySettingsPage 翻译上下文。
 // 视觉和交互已经迁移到 SettingsCard / SettingsRow / ToggleRow。
@@ -20,6 +22,17 @@ Column {
     property string category: ""
     // 关闭捕获时保留用户上次选择的作用范围，重新开启后恢复原模式。
     property int captureSysKeysSelection: StreamingPreferences.CSK_FULLSCREEN
+
+    function applyLocalBackgroundImage(fileUrl) {
+        var validationError = localBackgroundImageUtils.validateLocalBackgroundImage(fileUrl)
+        if (validationError !== "") {
+            localBackgroundErrorDialog.text = validationError
+            localBackgroundErrorDialog.open()
+            return
+        }
+
+        StreamingPreferences.backgroundImageLocalPath = fileUrl
+    }
 
     width: parent ? parent.width : 0
     spacing: Theme.spaceLg
@@ -93,15 +106,16 @@ Column {
         }
     }
 
-    // ================= 界面 =================
+    // ================= 软件 =================
     SettingsCard {
         visible: settingsPage.category === "ui" && hasVisibleContent
-        title: qsTr("UI Settings")
+        title: qsTr("Software Settings")
 
         ChoiceRow {
             id: languageRow
             title: qsTr("Language")
             maximumControlWidth: 260
+            controlWidth: 260
             selectedValue: StreamingPreferences.language
             onValueActivated: function(value) {
                 if (StreamingPreferences.language === value) {
@@ -150,7 +164,10 @@ Column {
 
         ChoiceRow {
             applicable: SystemProperties.hasDesktopEnvironment
-            title: qsTr("GUI display mode")
+            title: qsTr("Window display mode")
+            description: qsTr("Choose how Moonlight opens when the application starts.")
+            maximumControlWidth: 260
+            controlWidth: 260
             selectedValue: StreamingPreferences.uiDisplayMode
             onValueActivated: function(value) { StreamingPreferences.uiDisplayMode = value }
 
@@ -165,9 +182,154 @@ Column {
             applicable: SystemProperties.hasDesktopEnvironment &&
                         (!SystemProperties.isRunningWayland || SystemProperties.isRunningXWayland)
             title: qsTr("Remember window position and size")
+            description: qsTr("Restore the previous window position and size the next time Moonlight starts.")
             checked: StreamingPreferences.rememberWindowPosition
             onToggled: function(value) { StreamingPreferences.rememberWindowPosition = value }
         }
+    }
+
+    SettingsCard {
+        visible: settingsPage.category === "ui" && hasVisibleContent
+        title: qsTr("Background image")
+        subtitle: qsTr("Choose the background shown on the computer list and shared application pages.")
+
+        ChoiceRow {
+            id: backgroundSourceRow
+            title: qsTr("Background source")
+            description: qsTr("Choose photography, Anime, a custom API, a local image, or no background.")
+            maximumControlWidth: 260
+            controlWidth: 260
+            selectedValue: StreamingPreferences.backgroundSource
+            onValueActivated: function(value) {
+                if (value === StreamingPreferences.BGS_LOCAL &&
+                        StreamingPreferences.backgroundImageLocalPath === "") {
+                    backgroundSourceRow.syncSelection()
+                    localBackgroundFileDialog.open()
+                    return
+                }
+                if (value === StreamingPreferences.BGS_API &&
+                        StreamingPreferences.backgroundImageApi.trim() === "") {
+                    backgroundSourceRow.syncSelection()
+                    Qt.callLater(function() {
+                        backgroundApiField.forceActiveFocus(Qt.TabFocusReason)
+                    })
+                    return
+                }
+                StreamingPreferences.backgroundSource = value
+            }
+
+            model: ListModel {
+                ListElement { text: qsTr("Photography (Lorem Picsum)"); val: StreamingPreferences.BGS_PHOTOGRAPHY }
+                ListElement { text: qsTr("Anime (Pipw)"); val: StreamingPreferences.BGS_ANIME }
+                ListElement { text: qsTr("Custom API"); val: StreamingPreferences.BGS_API }
+                ListElement { text: qsTr("Local image"); val: StreamingPreferences.BGS_LOCAL }
+                ListElement { text: qsTr("No background"); val: StreamingPreferences.BGS_NONE }
+            }
+        }
+
+        SettingsRow {
+            id: backgroundOpacityRow
+            title: qsTr("Background overlay opacity")
+            description: qsTr("Adjust the opacity of the dark overlay on background images. 0% keeps the image clear; 100% makes it fully dark.")
+
+            Row {
+                width: Math.min(360, Math.max(220, backgroundOpacityRow.width - Theme.spaceMd * 2))
+                height: Math.max(backgroundOpacitySlider.implicitHeight,
+                                 backgroundOpacityValue.implicitHeight)
+                spacing: Theme.spaceSm
+
+                HardSlider {
+                    id: backgroundOpacitySlider
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - backgroundOpacityValue.width - parent.spacing
+                    from: 0
+                    to: 100
+                    stepSize: 1
+                    snapMode: Slider.SnapAlways
+                    value: StreamingPreferences.backgroundOverlayOpacity
+                    Accessible.name: backgroundOpacityRow.title
+                    onMoved: StreamingPreferences.backgroundOverlayOpacity = Math.round(value)
+                }
+
+                Text {
+                    id: backgroundOpacityValue
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 52
+                    text: Math.round(backgroundOpacitySlider.value) + "%"
+                    color: Theme.accent
+                    font.family: Theme.fontMono
+                    font.pointSize: Theme.fontBody
+                    font.weight: Font.DemiBold
+                    horizontalAlignment: Text.AlignRight
+                }
+            }
+        }
+
+        SettingsRow {
+            id: backgroundApiRow
+            title: qsTr("Background image API")
+            description: qsTr("Enter an image API or a direct image URL. Leaving it empty restores Photography.")
+
+            HardTextField {
+                id: backgroundApiField
+                width: Math.min(360, Math.max(120, backgroundApiRow.width - Theme.spaceMd * 2))
+                placeholderText: "https://example.com/image"
+
+                Component.onCompleted: text = StreamingPreferences.backgroundImageApi
+                onEditingFinished: {
+                    StreamingPreferences.backgroundImageApi = text
+                    text = StreamingPreferences.backgroundImageApi
+                }
+
+                Connections {
+                    target: StreamingPreferences
+                    function onBackgroundConfigurationChanged() {
+                        if (!backgroundApiField.activeFocus) {
+                            backgroundApiField.text = StreamingPreferences.backgroundImageApi
+                        }
+                    }
+                }
+            }
+        }
+
+        SettingsRow {
+            title: qsTr("Local background image")
+            description: qsTr("Choose a JPG, PNG, WebP, or BMP image. You can also drag one image onto the computer list to replace the background.")
+
+            HardButton {
+                text: qsTr("Choose image")
+                onClicked: localBackgroundFileDialog.open()
+            }
+        }
+
+        SettingsRow {
+            title: qsTr("Restore default background")
+            description: qsTr("Clear the custom API and local image, then return to Photography.")
+
+            HardButton {
+                text: qsTr("Restore default")
+                onClicked: StreamingPreferences.resetBackgroundConfiguration()
+            }
+        }
+    }
+
+    FileDialog {
+        id: localBackgroundFileDialog
+        title: qsTr("Choose a background image")
+        fileMode: FileDialog.OpenFile
+        nameFilters: [qsTr("Image files (*.jpg *.jpeg *.png *.webp *.bmp)")]
+        onAccepted: {
+            settingsPage.applyLocalBackgroundImage(file.toString())
+        }
+    }
+
+    ImageUtils {
+        id: localBackgroundImageUtils
+    }
+
+    ErrorMessageDialog {
+        id: localBackgroundErrorDialog
+        text: ""
     }
 
     SettingsCard {

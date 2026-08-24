@@ -20,7 +20,24 @@ CenteredGridView {
     // 这一页自带壁纸，main.qml 不用再垫一层
     readonly property bool usesOwnBackground: true
     property ComputerModel computerModel : createModel()
-    property string currentBgUrl: backgroundImage.currentImageUrl  // 添加根组件属性用于外部访问
+    readonly property string currentBgUrl: backgroundImage.currentImageUrl
+
+    function reloadBackgroundFromPreferences(forceRefresh) {
+        backgroundImage.reloadFromPreferences(forceRefresh === true)
+    }
+
+    function applyLocalBackgroundImage(fileUrl) {
+        var validationError = imageUtils.validateLocalBackgroundImage(fileUrl)
+        if (validationError !== "") {
+            errorDialog.text = validationError
+            errorDialog.open()
+            return false
+        }
+
+        StreamingPreferences.backgroundImageLocalPath = fileUrl
+        StreamingPreferences.save()
+        return true
+    }
 
     // 壁纸由这一页负责抓取和刷新，但整个窗口都要用，所以每次变化都同步给 ApplicationWindow。
     // 这样离开这一页之后（连接进度页、退出页、设置页）背景不会突然变成一块纯色。
@@ -55,6 +72,15 @@ CenteredGridView {
         // Highlight the first item if a gamepad is connected
         if (currentIndex === -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
             currentIndex = 0
+        }
+
+        backgroundImage.reloadFromPreferences(false)
+    }
+
+    Connections {
+        target: StreamingPreferences
+        function onBackgroundConfigurationChanged() {
+            pcGrid.reloadBackgroundFromPreferences(true)
         }
     }
 
@@ -644,10 +670,13 @@ CenteredGridView {
         fillMode: Image.PreserveAspectCrop
         z: -2
         property string currentImageUrl: ""
+        property string activeRequestKey: ""
+        property bool lastRequestWasBusy: false
 
         Settings {
             id: settings
             property string cachedImagePath: ""
+            property string cachedSourceKey: ""
             property real lastRefreshTime: Date.now()
         }
 
@@ -658,55 +687,169 @@ CenteredGridView {
                 loadingIndicator.visible = false
             } else if (status === Image.Error) {
                 loadingIndicator.visible = false
-                getBackgroundImage() // 如果缓存图加载失败，尝试加载新图片
+                if (StreamingPreferences.backgroundSource === StreamingPreferences.BGS_LOCAL) {
+                    errorDialog.text = qsTr("The local background could not be loaded. Photography has been restored.")
+                    errorDialog.open()
+                    restorePhotographyFromInvalidLocalImage()
+                }
+                else if (usesNetworkSource()) {
+                    getBackgroundImage()
+                }
             }
         }
 
+        function usesNetworkSource() {
+            return StreamingPreferences.backgroundSource !== StreamingPreferences.BGS_LOCAL &&
+                   StreamingPreferences.backgroundSource !== StreamingPreferences.BGS_NONE
+        }
+
+        function configuredCacheKey() {
+            switch (StreamingPreferences.backgroundSource) {
+            case StreamingPreferences.BGS_PHOTOGRAPHY:
+                return "photography:picsum"
+            case StreamingPreferences.BGS_ANIME:
+                return "anime:pipw"
+            case StreamingPreferences.BGS_API:
+                var apiUrl = StreamingPreferences.backgroundImageApi.trim()
+                return apiUrl === "" ? "photography:picsum" : "api:" + apiUrl
+            case StreamingPreferences.BGS_LOCAL:
+                return "local:" + StreamingPreferences.backgroundImageLocalPath
+            case StreamingPreferences.BGS_NONE:
+                return "none"
+            default:
+                return "photography:picsum"
+            }
+        }
+
+        function configuredNetworkUrl() {
+            switch (StreamingPreferences.backgroundSource) {
+            case StreamingPreferences.BGS_PHOTOGRAPHY:
+                return "https://picsum.photos/1920/1080?random=" + Date.now()
+            case StreamingPreferences.BGS_API:
+                var apiUrl = StreamingPreferences.backgroundImageApi.trim()
+                return apiUrl === ""
+                       ? "https://picsum.photos/1920/1080?random=" + Date.now()
+                       : apiUrl
+            case StreamingPreferences.BGS_ANIME:
+                return "https://img-api.pipw.top"
+            default:
+                return ""
+            }
+        }
+
+        function cacheFileUrl(cachePath) {
+            return "file:///" + cachePath.replace(/\\/g, "/").replace(/^\/+/, "")
+        }
+
+        function showBackground(imageUrl) {
+            source = imageUrl
+            currentImageUrl = imageUrl
+        }
+
+        function clearBackground() {
+            loadNewImageTimer.stop()
+            loadingIndicator.visible = false
+            source = ""
+            currentImageUrl = ""
+        }
+
+        function restorePhotographyFromInvalidLocalImage() {
+            clearBackground()
+            // Clearing the local path also restores BGS_PHOTOGRAPHY in StreamingPreferences.
+            StreamingPreferences.backgroundImageLocalPath = ""
+            StreamingPreferences.save()
+        }
+
+        function reloadFromPreferences(forceRefresh) {
+            loadNewImageTimer.stop()
+
+            if (!StreamingPreferences.backgroundSetupCompleted) {
+                clearBackground()
+                return
+            }
+
+            if (StreamingPreferences.backgroundSource === StreamingPreferences.BGS_NONE) {
+                clearBackground()
+                return
+            }
+
+            if (StreamingPreferences.backgroundSource === StreamingPreferences.BGS_LOCAL) {
+                var localUrl = StreamingPreferences.backgroundImageLocalPath
+                var validationError = imageUtils.validateLocalBackgroundImage(localUrl)
+                if (localUrl !== "" && validationError === "") {
+                    loadingIndicator.visible = false
+                    showBackground(localUrl)
+                    return
+                }
+
+                if (validationError !== "") {
+                    errorDialog.text = validationError + "\n\n" + qsTr("Photography has been restored.")
+                    errorDialog.open()
+                }
+                restorePhotographyFromInvalidLocalImage()
+                return
+            }
+
+            var cacheKey = configuredCacheKey()
+            var canMigrateLegacyCache = settings.cachedSourceKey === "" &&
+                                        StreamingPreferences.backgroundSource === StreamingPreferences.BGS_ANIME
+            if (!forceRefresh && settings.cachedImagePath &&
+                    imageUtils.fileExists(settings.cachedImagePath) &&
+                    (settings.cachedSourceKey === cacheKey || canMigrateLegacyCache)) {
+                settings.cachedSourceKey = cacheKey
+                showBackground(cacheFileUrl(settings.cachedImagePath))
+
+                var oneWeek = 60 * 60 * 1000 * 24 * 7
+                if (Date.now() - settings.lastRefreshTime > oneWeek) {
+                    loadNewImageTimer.start()
+                }
+                return
+            }
+
+            getBackgroundImage()
+        }
+
         function getBackgroundImage() {
+            var requestUrl = configuredNetworkUrl()
+            if (requestUrl === "") {
+                reloadFromPreferences(false)
+                return
+            }
+
             loadingIndicator.visible = true
-            imageUtils.fetchAndSaveRandomBackground("https://img-api.pipw.top/")
+            var requestKey = configuredCacheKey()
+            lastRequestWasBusy = false
+            var requestStarted = imageUtils.fetchAndSaveRandomBackground(requestUrl)
+            if (requestStarted || !lastRequestWasBusy) {
+                activeRequestKey = requestKey
+            }
         }
 
         function handleImageResponse(cachePath) {
+            if (activeRequestKey !== configuredCacheKey()) {
+                reloadFromPreferences(true)
+                return
+            }
+
             settings.cachedImagePath = cachePath
-            console.log("handleImageResponse: " + cachePath)
-            var fileUrl = "file:///" + cachePath.replace(/\\/g, "/").replace(/^\/+/, "")
-            source = ""
-            source = fileUrl
-            currentImageUrl = fileUrl
-            pcGrid.currentBgUrl = fileUrl
+            settings.cachedSourceKey = activeRequestKey
+            showBackground(cacheFileUrl(cachePath))
             settings.lastRefreshTime = Date.now()
         }
 
         function handleImageError(errorMessage) {
             console.error("Background image load failed:", errorMessage)
-            if (!source.toString().startsWith("file://")) {
-                source = "qrc:/res/gura.png"
+            if (activeRequestKey !== configuredCacheKey()) {
+                reloadFromPreferences(true)
+                return
             }
-        }
 
-        Component.onCompleted: {
-            // 先检查缓存图是否存在
-            if (settings.cachedImagePath && imageUtils.fileExists(settings.cachedImagePath)) {
-                try {
-                    var fileUrl = "file:///" + settings.cachedImagePath.replace(/\\/g, "/").replace(/^\/+/, "");
-                    source = fileUrl;
-                    console.log("loadBackgroundImageFromCache: " + fileUrl);
-                    currentImageUrl = fileUrl;
-                    pcGrid.currentBgUrl = fileUrl;  // 初始化时同步属性
-
-                    // 检查是否需要刷新（如果上次刷新时间超过1小时）
-                    var oneHour = 60 * 60 * 1000 * 24 * 7;
-                    if (Date.now() - settings.lastRefreshTime > oneHour) {
-                        loadNewImageTimer.start();
-                    }
-                } catch (e) {
-                    console.log("fail loadBackgroundImageFromCache: " + e);
-                    getBackgroundImage();
-                }
-            } else {
-                // 如果没有缓存，立即获取新图片
-                getBackgroundImage();
+            var displayingActiveCache = settings.cachedImagePath !== "" &&
+                    settings.cachedSourceKey === activeRequestKey &&
+                    source.toString() === cacheFileUrl(settings.cachedImagePath)
+            if (!displayingActiveCache) {
+                source = "qrc:/res/gura.png"
+                currentImageUrl = ""
             }
         }
 
@@ -723,31 +866,21 @@ CenteredGridView {
     DropArea {
         anchors.fill: parent
         onEntered: function(drag) {
-            drag.accept(Qt.LinkAction)
-            dragBorder.visible = true
+            if (drag.hasUrls) {
+                drag.accept(Qt.LinkAction)
+                dragBorder.visible = true
+            }
         }
         onExited: dragBorder.visible = false
         onDropped: function(drop) {
             dragBorder.visible = false
-            if (drop.hasUrls) {
-                // 获取拖入的第一个文件路径
-                var filePath = drop.urls[0]
-                // 检查文件格式
-                var ext = filePath.toString().split('.').pop().toLowerCase()
-                if (["jpg", "jpeg", "png", "webp"].indexOf(ext) !== -1) {
-                    // 更新缓存路径和刷新时间
-                    settings.cachedImagePath = filePath.toString().substring(8)
-                    settings.lastRefreshTime = Date.now()
-
-                    // 更新背景图
-                    backgroundImage.source = filePath;
-                    currentImageUrl = filePath;
-                    pcGrid.currentBgUrl = filePath;  // 拖放时同步属性
-                } else {
-                    errorDialog.text = qsTr("Unsupported image format")
-                    errorDialog.open()
-                }
+            if (!drop.hasUrls || drop.urls.length !== 1) {
+                errorDialog.text = qsTr("Drop one local image at a time.")
+                errorDialog.open()
+                return
             }
+
+            pcGrid.applyLocalBackgroundImage(drop.urls[0].toString())
         }
     }
 
@@ -782,7 +915,7 @@ CenteredGridView {
 
         MicroLabel {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "JPG / PNG / WEBP"
+            text: "JPG / PNG / WEBP / BMP"
         }
     }
 
@@ -841,7 +974,7 @@ CenteredGridView {
         interval: 200  // 延迟200毫秒
         repeat: false
         onTriggered: {
-            backgroundImage.getBackgroundImage()
+            backgroundImage.reloadFromPreferences(true)
         }
     }
 
@@ -903,11 +1036,12 @@ CenteredGridView {
         visible: false
     }
 
-    // 壁纸遮罩。换成 ink 并压得更狠：卡片是不透明硬物件，底图越安静，
-    // 方角 + 硬投影的层次越清楚。
+    // 壁纸遮罩强度由软件设置统一控制，默认值仍是原来的 72%。
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b, 0.72)
+        visible: StreamingPreferences.backgroundSource !== StreamingPreferences.BGS_NONE
+        color: Qt.rgba(Theme.ink.r, Theme.ink.g, Theme.ink.b,
+                       StreamingPreferences.backgroundOverlayOpacity / 100.0)
         z: -1
     }
 
@@ -921,7 +1055,7 @@ CenteredGridView {
             loadingIndicator.visible = false
             backgroundImage.handleImageError(errorMessage)
         }
-        onBackgroundBusy: loadingIndicator.visible = false
+        onBackgroundBusy: backgroundImage.lastRequestWasBusy = true
         onSaveCompleted: function(success, message) {
             if (success) {
                 saveNotification.text = qsTr("Image saved to: %1").arg(message)

@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
+#include <QImageReader>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QStandardPaths>
@@ -15,6 +16,27 @@
 
 #include <limits>
 #include <memory>
+
+namespace {
+
+QString localPathFromUrlOrPath(const QString &value)
+{
+    const QUrl url(value);
+    if (url.isLocalFile()) {
+        return url.toLocalFile();
+    }
+
+    const QFileInfo fileInfo(value);
+    return fileInfo.isAbsolute() ? fileInfo.absoluteFilePath() : QString();
+}
+
+bool hasSupportedBackgroundExtension(const QString &filePath)
+{
+    static const QStringList allowedExtensions = {"jpg", "jpeg", "png", "webp", "bmp"};
+    return allowedExtensions.contains(QFileInfo(filePath).suffix().toLower());
+}
+
+}
 
 #ifdef Q_OS_WIN
 #include <wincodec.h>
@@ -61,22 +83,29 @@ void ImageUtils::saveImageToFile(const QString &imageUrl, const QUrl &localPath)
     });
 }
 
-void ImageUtils::fetchAndSaveRandomBackground(const QString &apiUrl)
+bool ImageUtils::fetchAndSaveRandomBackground(const QString &apiUrl)
 {
     if (m_backgroundFetchInProgress) {
         emit backgroundBusy();
-        return;
+        return false;
     }
 
     m_backgroundApiUrl = QUrl(apiUrl);
-    if (!m_backgroundApiUrl.isValid()) {
-        emit backgroundError(tr("Invalid background image URL"));
-        return;
+    if (!m_backgroundApiUrl.isValid() ||
+            (m_backgroundApiUrl.scheme() != QStringLiteral("http") &&
+             m_backgroundApiUrl.scheme() != QStringLiteral("https"))) {
+        // Keep signal delivery asynchronous like a real network failure. This
+        // lets QML record which source the failed request belonged to first.
+        QTimer::singleShot(0, this, [this]() {
+            emit backgroundError(tr("Invalid background image URL"));
+        });
+        return false;
     }
 
     m_backgroundAttempt = 0;
     m_backgroundFetchInProgress = true;
     startBackgroundRequest();
+    return true;
 }
 
 void ImageUtils::startBackgroundRequest()
@@ -281,7 +310,8 @@ cleanup:
 
 bool ImageUtils::fileExists(const QString &path)
 {
-    return QFileInfo::exists(path);
+    const QString localPath = localPathFromUrlOrPath(path);
+    return !localPath.isEmpty() && QFileInfo::exists(localPath);
 }
 
 bool ImageUtils::isValidCache(const QString &cachePath)
@@ -299,7 +329,32 @@ bool ImageUtils::isValidCache(const QString &cachePath)
 
 bool ImageUtils::validateExtension(const QString &filePath)
 {
-    static const QStringList allowedExtensions = {"jpg", "jpeg", "png", "bmp"};
-    const QString extension = QFileInfo(filePath).suffix().toLower();
-    return !extension.isEmpty() && allowedExtensions.contains(extension);
+    const QString localPath = localPathFromUrlOrPath(filePath);
+    return !localPath.isEmpty() && hasSupportedBackgroundExtension(localPath);
+}
+
+QString ImageUtils::validateLocalBackgroundImage(const QString &fileUrl)
+{
+    const QString localPath = localPathFromUrlOrPath(fileUrl);
+    if (localPath.isEmpty()) {
+        return tr("Only local image files can be used as backgrounds");
+    }
+
+    const QFileInfo fileInfo(localPath);
+    if (!fileInfo.exists() || !fileInfo.isFile() || !fileInfo.isReadable()) {
+        return tr("The selected image file is unavailable");
+    }
+
+    if (!hasSupportedBackgroundExtension(localPath)) {
+        return tr("Unsupported image format");
+    }
+
+    // Reading the header is enough to reject renamed or damaged non-images
+    // without decoding a potentially large image on the UI thread.
+    QImageReader reader(localPath);
+    if (!reader.canRead()) {
+        return tr("Unable to decode the selected image");
+    }
+
+    return QString();
 }

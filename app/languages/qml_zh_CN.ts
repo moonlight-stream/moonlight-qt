@@ -879,6 +879,49 @@
         <source>Unable to decode background image</source>
         <translation>无法解码背景图片</translation>
     </message>
+    <message>
+        <source>Only local image files can be used as backgrounds</source>
+        <translation>只能使用本地图片文件作为背景</translation>
+    </message>
+    <message>
+        <source>The selected image file is unavailable</source>
+        <translation>选择的图片文件不存在或无法读取</translation>
+    </message>
+    <message>
+        <source>Unsupported image format</source>
+        <translation>不支持的图片格式</translation>
+    </message>
+    <message>
+        <source>Unable to decode the selected image</source>
+        <translation>无法识别或读取选择的图片</translation>
+    </message>
+</context>
+<context>
+    <name>BackgroundSourceDialog</name>
+    <message>
+        <source>Choose a background style</source>
+        <translation>选择背景风格</translation>
+    </message>
+    <message>
+        <source>Photography</source>
+        <translation>摄影风景</translation>
+    </message>
+    <message>
+        <source>Anime</source>
+        <translation>二次元</translation>
+    </message>
+    <message>
+        <source>No background</source>
+        <translation>不显示背景</translation>
+    </message>
+    <message>
+        <source>Choose the style of random backgrounds shown on the computer list. You can change this at any time in Software Settings.</source>
+        <translation>选一种电脑列表随机背景的风格吧，之后可以随时在软件设置中调整。</translation>
+    </message>
+    <message>
+        <source>Decide later</source>
+        <translation>以后再说</translation>
+    </message>
 </context>
 <context>
     <name>LegacySettingsPage</name>
@@ -1018,8 +1061,8 @@
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="205"/>
-        <source>UI Settings</source>
-        <translation>界面设置</translation>
+        <source>Software Settings</source>
+        <translation>软件设置</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="214"/>
@@ -1038,8 +1081,12 @@
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="392"/>
-        <source>GUI display mode</source>
+        <source>Window display mode</source>
         <translation>窗口显示模式</translation>
+    </message>
+    <message>
+        <source>Choose how Moonlight opens when the application starts.</source>
+        <translation>选择Moonlight启动时使用窗口化、最大化或全屏显示。</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="427"/>
@@ -1060,6 +1107,94 @@
         <location filename="../gui/settings/LegacySettingsPage.qml" line="448"/>
         <source>Remember window position and size</source>
         <translation>记住窗口位置和大小</translation>
+    </message>
+    <message>
+        <source>Restore the previous window position and size the next time Moonlight starts.</source>
+        <translation>下次启动Moonlight时恢复上次使用的窗口位置和大小。</translation>
+    </message>
+    <message>
+        <source>Background image</source>
+        <translation>背景图片</translation>
+    </message>
+    <message>
+        <source>Choose the background shown on the computer list and shared application pages.</source>
+        <translation>设置电脑列表以及共用页面显示的背景图片。</translation>
+    </message>
+    <message>
+        <source>Background source</source>
+        <translation>背景图片来源</translation>
+    </message>
+    <message>
+        <source>Choose photography, Anime, a custom API, a local image, or no background.</source>
+        <translation>选择摄影风景、二次元、自定义API、本地图片或不显示背景。</translation>
+    </message>
+    <message>
+        <source>Photography (Lorem Picsum)</source>
+        <translation>摄影风景（Lorem Picsum）</translation>
+    </message>
+    <message>
+        <source>Anime (Pipw)</source>
+        <translation>二次元（Pipw）</translation>
+    </message>
+    <message>
+        <source>Custom API</source>
+        <translation>自定义API</translation>
+    </message>
+    <message>
+        <source>Local image</source>
+        <translation>本地图片</translation>
+    </message>
+    <message>
+        <source>No background</source>
+        <translation>不显示背景</translation>
+    </message>
+    <message>
+        <source>Background overlay opacity</source>
+        <translation>背景遮罩透明度</translation>
+    </message>
+    <message>
+        <source>Adjust the opacity of the dark overlay on background images. 0% keeps the image clear; 100% makes it fully dark.</source>
+        <translation>调整背景图片上方的深色遮罩。0%保持原图亮度，100%完全压暗。</translation>
+    </message>
+    <message>
+        <source>Background image API</source>
+        <translation>背景图片API</translation>
+    </message>
+    <message>
+        <source>Enter an image API or a direct image URL. Leaving it empty restores Photography.</source>
+        <translation>输入图片API或单张图片地址，留空将恢复为摄影风景。</translation>
+    </message>
+    <message>
+        <source>Local background image</source>
+        <translation>本地背景图片</translation>
+    </message>
+    <message>
+        <source>Choose a JPG, PNG, WebP, or BMP image. You can also drag one image onto the computer list to replace the background.</source>
+        <translation>选择JPG、PNG、WebP或BMP图片，也可以将一张图片拖入电脑列表直接替换背景。</translation>
+    </message>
+    <message>
+        <source>Choose image</source>
+        <translation>选择图片</translation>
+    </message>
+    <message>
+        <source>Restore default background</source>
+        <translation>恢复默认背景</translation>
+    </message>
+    <message>
+        <source>Clear the custom API and local image, then return to Photography.</source>
+        <translation>清除自定义API和本地图片，并恢复为摄影风景。</translation>
+    </message>
+    <message>
+        <source>Restore default</source>
+        <translation>恢复默认</translation>
+    </message>
+    <message>
+        <source>Choose a background image</source>
+        <translation>选择背景图片</translation>
+    </message>
+    <message>
+        <source>Image files (*.jpg *.jpeg *.png *.webp *.bmp)</source>
+        <translation>图片文件（*.jpg *.jpeg *.png *.webp *.bmp）</translation>
     </message>
     <message>
         <location filename="../gui/settings/LegacySettingsPage.qml" line="448"/>
@@ -1869,6 +2004,18 @@
         <location filename="../gui/PcView.qml" line="551"/>
         <source>Enter the new name for this PC:</source>
         <translation>输入这台计算机的新名称:</translation>
+    </message>
+    <message>
+        <source>The local background could not be loaded. Photography has been restored.</source>
+        <translation>无法加载本地背景，已恢复为摄影风景。</translation>
+    </message>
+    <message>
+        <source>Photography has been restored.</source>
+        <translation>已恢复为摄影风景。</translation>
+    </message>
+    <message>
+        <source>Drop one local image at a time.</source>
+        <translation>每次只能拖入一张本地图片。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="747"/>
@@ -2952,8 +3099,8 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="40"/>
-        <source>UI Settings</source>
-        <translation>界面设置</translation>
+        <source>Software Settings</source>
+        <translation>软件设置</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="41"/>

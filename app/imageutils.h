@@ -12,10 +12,15 @@ public:
     explicit ImageUtils(QObject *parent = nullptr);
     
     Q_INVOKABLE void saveImageToFile(const QString &imageUrl, const QUrl &localPath);
-    Q_INVOKABLE void fetchAndSaveRandomBackground(const QString &apiUrl);
+    // Returns false when another background request is already in flight. The
+    // caller can then coalesce the refresh and retry after the active request.
+    Q_INVOKABLE bool fetchAndSaveRandomBackground(const QString &apiUrl);
     Q_INVOKABLE bool fileExists(const QString &path);
     Q_INVOKABLE bool isValidCache(const QString &cachePath);
     Q_INVOKABLE bool validateExtension(const QString &filePath);
+    // Returns an empty string when the file is suitable for a local background,
+    // otherwise a translated explanation that can be shown directly by QML.
+    Q_INVOKABLE QString validateLocalBackgroundImage(const QString &fileUrl);
 
 private:
     void startBackgroundRequest();
