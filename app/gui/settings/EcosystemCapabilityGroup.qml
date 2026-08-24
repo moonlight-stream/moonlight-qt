@@ -10,7 +10,6 @@ Column {
     property string title: ""
     property string description: ""
     property var tags: []
-    property string tagTone: "accent"
     property bool showDivider: true
 
     width: parent ? parent.width : 0
@@ -29,27 +28,15 @@ Column {
     Text {
         width: parent.width
         text: group.description
-        color: Theme.textSettingsSubtitle
-        font.family: Theme.fontSans
-        font.pointSize: Theme.fontSettingsSubtitle
-        font.weight: Font.DemiBold
+        color: Theme.textDim
+        font.family: Theme.fontMono
+        font.pointSize: Theme.fontCaption
         wrapMode: Text.Wrap
     }
 
-    Flow {
+    SpecLine {
         width: parent.width
-        spacing: Theme.spaceSm
-
-        Repeater {
-            model: group.tags
-
-            SupportTag {
-                required property string modelData
-
-                text: modelData
-                tone: group.tagTone
-            }
-        }
+        tags: group.tags
     }
 
     Rectangle {

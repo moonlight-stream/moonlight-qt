@@ -10,7 +10,6 @@ FocusScope {
 
     property string title: ""
     property string description: ""
-    property real descriptionFontPointSize: Theme.fontSettingsSubtitle
     // 业务上是否该显示这一行（例如某功能在当前平台不可用）
     property bool applicable: true
     readonly property bool stacked: width < Theme.settingsRowStackBreakpoint
@@ -109,10 +108,9 @@ FocusScope {
                 width: parent.width
                 text: row.description
                 visible: text !== ""
-                color: Theme.textSettingsSubtitle
-                font.family: Theme.fontSans
-                font.pointSize: row.descriptionFontPointSize
-                font.weight: Font.Medium
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 wrapMode: Text.Wrap
             }
         }

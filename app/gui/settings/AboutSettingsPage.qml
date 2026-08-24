@@ -71,20 +71,30 @@ Column {
             width: parent.width
             spacing: Theme.spaceMd
 
-            Text {
+            Row {
                 width: parent.width
-                text: "Moonlight V+ for PC"
-                color: Theme.text
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontHeroTitle
-                font.weight: Font.ExtraBold
-                font.letterSpacing: Theme.trackingTight(Theme.fontHeroTitle)
-                wrapMode: Text.Wrap
-            }
+                spacing: Theme.spaceMd
 
-            SupportTag {
-                text: qsTr("Version %1").arg(SystemProperties.versionString)
-                tone: "accent"
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    // 窄窗口时标题收缩省略，版本号不被裁掉；极窄时钳到 0，
+                    // 避免负宽度把版本行顶到负坐标
+                    width: Math.max(0, parent.width - versionLine.implicitWidth - parent.spacing)
+                    text: "Moonlight V+ for PC"
+                    color: Theme.text
+                    font.family: Theme.fontSans
+                    font.pointSize: Theme.fontHeroTitle
+                    font.weight: Font.ExtraBold
+                    font.letterSpacing: Theme.trackingTight(Theme.fontHeroTitle)
+                    elide: Text.ElideRight
+                }
+
+                SpecLine {
+                    id: versionLine
+
+                    anchors.verticalCenter: parent.verticalCenter
+                    tags: [qsTr("Version %1").arg(SystemProperties.versionString)]
+                }
             }
 
             Text {
@@ -100,10 +110,9 @@ Column {
             Text {
                 width: parent.width
                 text: aboutPage.paragraphIndent + qsTr("Founded in 2024, AlkaidLab has brought together tens of thousands of users and maintained in-depth dialogue with thousands of them. Guided by extensive real-world feedback, we have developed a systematic understanding of networking and streaming as a whole and built a complete solution spanning video, audio, touch, controllers, networking, and multi-device experiences, with continuous improvements ahead. The ecosystem covers desktop PCs, Android handhelds, Windows handhelds, TVs and set-top boxes, projectors, VR devices, and more, aiming to deliver a more elegant and uncompromising streaming experience for gaming, media, creation, and remote collaboration.")
-                color: Theme.textSettingsSubtitle
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontSettingsSubtitle + 1
-                font.weight: Font.Medium
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 wrapMode: Text.Wrap
             }
 
@@ -113,28 +122,27 @@ Column {
             width: parent.width
             spacing: Theme.spaceSm
 
-            HardButton {
+            HardLink {
                 text: qsTr("Website")
-                primary: true
                 onClicked: aboutPage.openExternal(aboutPage.officialSiteUrl)
             }
 
-            HardButton {
+            HardLink {
                 text: qsTr("Bilibili")
                 onClicked: aboutPage.openExternal(aboutPage.bilibiliUrl)
             }
 
-            HardButton {
+            HardLink {
                 text: qsTr("QQ Group")
                 onClicked: aboutPage.openExternal(aboutPage.qqUrl)
             }
 
-            HardButton {
+            HardLink {
                 text: qsTr("Submit Issue")
                 onClicked: aboutPage.openExternal(aboutPage.issueUrl)
             }
 
-            HardButton {
+            HardLink {
                 text: qsTr("Legal notice")
                 onClicked: aboutPage.revealLegalNotice()
             }
@@ -149,21 +157,23 @@ Column {
 
             title: "Foundation Sunshine"
             description: aboutPage.paragraphIndent + qsTr("Foundation Sunshine is the core streaming server of the AlkaidLab ecosystem and is installed on the controlled device. It connects AlkaidLab clients with a wide range of devices to deliver stronger streaming capabilities for gaming, creation, media, remote control, and more.")
-            descriptionFontPointSize: Theme.fontSettingsSubtitle + 1
 
             Flow {
                 width: Math.min(260, Math.max(0, serverInfoRow.width - Theme.spaceMd * 2))
                 spacing: Theme.spaceSm
 
-                HardButton {
+                HardLink {
                     text: qsTr("Visit Now")
-                    variant: "link"
                     onClicked: aboutPage.openExternal(aboutPage.sunshineUrl)
                 }
 
                 HardButton {
                     text: qsTr("Download")
                     primary: true
+                    icon.source: "qrc:/res/fluent/download.svg"
+                    icon.color: Theme.ink
+                    icon.width: 16
+                    icon.height: 16
                     onClicked: aboutPage.openExternal(aboutPage.sunshineDownloadUrl)
                 }
             }
@@ -172,7 +182,6 @@ Column {
         EcosystemCapabilityGroup {
             width: parent.width
             title: qsTr("Picture and Streaming")
-            tagTone: "accent"
             description: qsTr("Our exclusive end-to-end HDR technology brings together HDR10, HDR10+, HLG, HDR Vivid, and SDR-to-HDR, alongside in-house capture technology that delivers a smoother experience than WGC, enhanced hardware encoding, and precise frame synchronization.")
             tags: [
                 qsTr("In-house Capture Technology"),
@@ -190,7 +199,6 @@ Column {
         EcosystemCapabilityGroup {
             width: parent.width
             title: qsTr("Input and Interaction")
-            tagTone: "input"
             description: qsTr("A stronger input system covers touch, pen, touchpad, mouse, controllers, and stream-side assistance for both gaming and productivity.")
             tags: [
                 qsTr("Native Touch"),
@@ -206,7 +214,6 @@ Column {
         EcosystemCapabilityGroup {
             width: parent.width
             title: qsTr("Audio and Collaboration")
-            tagTone: "audio"
             showDivider: false
             description: qsTr("Immersive audio, audio haptics, remote microphone, clipboard, and folder sharing extend streaming into entertainment, creation, and collaboration.")
             tags: [
@@ -245,9 +252,8 @@ Column {
             title: qsTr("Moonlight Android Crown")
             description: qsTr("A community-enhanced Android client with an alternative take on mobile input, controller support, and interface features.")
 
-            HardButton {
+            HardLink {
                 text: qsTr("Visit Now")
-                variant: "link"
                 onClicked: aboutPage.openExternal(aboutPage.crownUrl)
             }
         }
@@ -256,9 +262,8 @@ Column {
             title: "moonlight-ohos"
             description: qsTr("The first Moonlight client built for HarmonyOS NEXT, pioneering Moonlight on HarmonyOS and compatible with the AlkaidLab ecosystem.")
 
-            HardButton {
+            HardLink {
                 text: qsTr("Visit Now")
-                variant: "link"
                 onClicked: aboutPage.openExternal(aboutPage.ohosUrl)
             }
         }
@@ -267,9 +272,8 @@ Column {
             title: qsTr("Natpierce")
             description: qsTr("A virtual networking tool that connects Moonlight clients to Sunshine servers over the public Internet when they are not on the same LAN.")
 
-            HardButton {
+            HardLink {
                 text: qsTr("Visit Now")
-                variant: "link"
                 onClicked: aboutPage.openExternal(aboutPage.natpierceUrl)
             }
         }
@@ -288,12 +292,12 @@ Column {
                 width: Math.min(300, Math.max(0, legalInfoRow.width - Theme.spaceMd * 2))
                 spacing: Theme.spaceSm
 
-                HardButton {
+                HardLink {
                     text: qsTr("License agreement")
                     onClicked: aboutPage.openExternal(aboutPage.licenseUrl)
                 }
 
-                HardButton {
+                HardLink {
                     text: qsTr("Third-party notice")
                     onClicked: aboutPage.openExternal(aboutPage.noticeUrl)
                 }

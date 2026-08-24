@@ -11,6 +11,6 @@ LegacySettingsPage 1.0 LegacySettingsPage.qml
 AboutSettingsPage 1.0 AboutSettingsPage.qml
 EcosystemPlatformCatalog 1.0 EcosystemPlatformCatalog.qml
 PlatformNavButton 1.0 PlatformNavButton.qml
-SupportTag 1.0 SupportTag.qml
+SpecLine 1.0 SpecLine.qml
 EcosystemCapabilityGroup 1.0 EcosystemCapabilityGroup.qml
 CommunityLicenseNotice 1.0 CommunityLicenseNotice.qml

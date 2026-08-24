@@ -10,3 +10,4 @@ HardSlider 1.0 HardSlider.qml
 HardGroupBox 1.0 HardGroupBox.qml
 HardTextField 1.0 HardTextField.qml
 HardProgress 1.0 HardProgress.qml
+HardLink 1.0 HardLink.qml

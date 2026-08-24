@@ -132,20 +132,20 @@ Item {
     function officialLinks(key) {
         switch (key) {
         case "pc": return [
-            { label: qsTr("Visit Now"), url: pcUrl, primary: false, variant: "link" },
+            { label: qsTr("Visit Now"), url: pcUrl, primary: false },
             { label: qsTr("Download"), url: pcDownloadUrl, primary: true }
         ]
         case "android": return [
-            { label: qsTr("Visit Now"), url: androidUrl, primary: false, variant: "link" },
+            { label: qsTr("Visit Now"), url: androidUrl, primary: false },
             { label: qsTr("Download"), url: androidDownloadUrl, primary: true }
         ]
         case "harmony": return [
-            { label: qsTr("Visit Now"), url: harmonyUrl, primary: false, variant: "link" },
+            { label: qsTr("Visit Now"), url: harmonyUrl, primary: false },
             { label: qsTr("Download"), url: harmonyStoreUrl, primary: true }
         ]
         case "ios": return [{ label: qsTr("Download"), url: iosUrl, primary: true }]
         case "macosEnhanced": return [
-            { label: qsTr("Visit Now"), url: macosUrl, primary: false, variant: "link" },
+            { label: qsTr("Visit Now"), url: macosUrl, primary: false },
             { label: qsTr("Download"), url: macosDownloadUrl, primary: true }
         ]
         default: return []
@@ -271,65 +271,42 @@ Item {
                         width: parent.width
                         text: catalog.clientDescription(catalog.selectedPlatformKey)
                         visible: text !== ""
-                        color: Theme.textSettingsSubtitle
-                        font.family: Theme.fontSans
-                        font.pointSize: Theme.fontSettingsSubtitle
-                        font.weight: Font.DemiBold
+                        color: Theme.textDim
+                        font.family: Theme.fontMono
+                        font.pointSize: Theme.fontCaption
                         wrapMode: Text.Wrap
                     }
                 }
 
                 Text {
                     text: qsTr("Supported platforms")
-                    color: Theme.textSettingsSubtitle
+                    color: Theme.textDim
                     font.family: Theme.fontSans
                     font.pointSize: Theme.fontBody
                     font.weight: Font.DemiBold
                 }
 
-                Flow {
+                SpecLine {
                     width: parent.width
-                    spacing: Theme.spaceSm
-
-                    Repeater {
-                        model: catalog.supportTags(catalog.selectedPlatformKey)
-
-                        SupportTag {
-                            required property string modelData
-
-                            text: modelData
-                            tone: "platform"
-                        }
-                    }
+                    tags: catalog.supportTags(catalog.selectedPlatformKey)
                 }
 
                 Text {
                     text: qsTr("Featured capabilities")
-                    color: Theme.textSettingsSubtitle
+                    color: Theme.textDim
                     font.family: Theme.fontSans
                     font.pointSize: Theme.fontBody
                     font.weight: Font.DemiBold
                 }
 
-                Flow {
+                SpecLine {
                     width: parent.width
-                    spacing: Theme.spaceSm
-
-                    Repeater {
-                        model: catalog.capabilityTags(catalog.selectedPlatformKey)
-
-                        SupportTag {
-                            required property string modelData
-
-                            text: modelData
-                            tone: "accent"
-                        }
-                    }
+                    tags: catalog.capabilityTags(catalog.selectedPlatformKey)
                 }
 
                 Text {
                     text: qsTr("Official links")
-                    color: Theme.textSettingsSubtitle
+                    color: Theme.textDim
                     font.family: Theme.fontSans
                     font.pointSize: Theme.fontBody
                     font.weight: Font.DemiBold
@@ -341,13 +318,30 @@ Item {
 
                     Repeater {
                         model: catalog.officialLinks(catalog.selectedPlatformKey)
+                               .filter(function(link) { return !link.primary })
+
+                        HardLink {
+                            required property var modelData
+
+                            text: modelData.label
+                            enabled: modelData.url !== ""
+                            onClicked: catalog.openRequested(modelData.url)
+                        }
+                    }
+
+                    Repeater {
+                        model: catalog.officialLinks(catalog.selectedPlatformKey)
+                               .filter(function(link) { return link.primary })
 
                         HardButton {
                             required property var modelData
 
                             text: modelData.label
                             primary: modelData.primary
-                            variant: modelData.variant || "default"
+                            icon.source: "qrc:/res/fluent/download.svg"
+                            icon.color: Theme.ink
+                            icon.width: 16
+                            icon.height: 16
                             enabled: modelData.url !== ""
                             onClicked: catalog.openRequested(modelData.url)
                         }

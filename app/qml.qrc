@@ -31,6 +31,7 @@
         <file>gui/theme/FocusRing.qml</file>
         <file>gui/theme/MicroLabel.qml</file>
         <file>gui/theme/HardButton.qml</file>
+        <file>gui/theme/HardLink.qml</file>
         <file>gui/theme/HardCheckBox.qml</file>
         <file>gui/theme/HardSwitch.qml</file>
         <file>gui/theme/HardSlider.qml</file>
@@ -51,7 +52,7 @@
         <file>gui/settings/AboutSettingsPage.qml</file>
         <file>gui/settings/EcosystemPlatformCatalog.qml</file>
         <file>gui/settings/PlatformNavButton.qml</file>
-        <file>gui/settings/SupportTag.qml</file>
+        <file>gui/settings/SpecLine.qml</file>
         <file>gui/settings/EcosystemCapabilityGroup.qml</file>
         <file>gui/settings/CommunityLicenseNotice.qml</file>
     </qresource>

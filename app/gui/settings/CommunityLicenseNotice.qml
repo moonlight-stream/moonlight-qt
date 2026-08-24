@@ -14,7 +14,7 @@ Column {
 
         required property var items
         property color bulletColor: Theme.accent
-        property color textColor: Theme.textSettingsSubtitle
+        property color textColor: Theme.textDim
 
         width: parent ? parent.width : 0
         spacing: Theme.spaceSm
@@ -44,9 +44,8 @@ Column {
                     width: parent.width - bullet.width - parent.spacing
                     text: parent.modelData
                     color: noticeList.textColor
-                    font.family: Theme.fontSans
-                    font.pointSize: Theme.fontSettingsSubtitle
-                    font.weight: Font.Medium
+                    font.family: Theme.fontMono
+                    font.pointSize: Theme.fontCaption
                     wrapMode: Text.Wrap
                 }
             }
@@ -85,10 +84,9 @@ Column {
             Text {
                 width: parent.width
                 text: qsTr("We know open source is not easy. Every feature, test, answer, and maintenance update represents real time and effort from real people. AlkaidLab follows GPLv3 so that every user can access the source, understand the software, modify it freely, and pass those freedoms on.")
-                color: Theme.textSettingsSubtitle
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontSettingsSubtitle
-                font.weight: Font.Medium
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 wrapMode: Text.Wrap
             }
 
@@ -105,10 +103,9 @@ Column {
             Text {
                 width: parent.width
                 text: qsTr("GPLv3 gives everyone the freedom to run this software. When you copy, modify, or distribute it, please help preserve that freedom:")
-                color: Theme.textSettingsSubtitle
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontSettingsSubtitle
-                font.weight: Font.Medium
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 wrapMode: Text.Wrap
             }
 
@@ -135,7 +132,7 @@ Column {
                 width: parent.width
                 height: warningText.implicitHeight + Theme.spaceMd * 2
                 radius: 0
-                color: Theme.dangerSurface
+                color: Theme.surface2Layer
                 border.width: 1
                 border.color: Theme.danger
 
@@ -162,7 +159,7 @@ Column {
                     text: qsTr("For software confirmed to violate the GPL and whose distributors refuse to correct the violation, AlkaidLab will not provide dedicated compatibility work, recommendations, promotion, or bundling.")
                     color: Theme.danger
                     font.family: Theme.fontSans
-                    font.pointSize: Theme.fontSettingsSubtitle
+                    font.pointSize: Theme.fontCaption
                     font.weight: Font.ExtraBold
                     wrapMode: Text.Wrap
                 }
@@ -171,20 +168,18 @@ Column {
             Text {
                 width: parent.width
                 text: qsTr("This is not about creating conflict. It protects the work of contributors and each user's right to obtain, inspect, and modify the source.")
-                color: Theme.textSettingsSubtitle
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontSettingsSubtitle
-                font.weight: Font.Medium
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 wrapMode: Text.Wrap
             }
 
             Text {
                 width: parent.width
                 text: qsTr("If a project's authorization, source availability, or license status cannot yet be verified, the community will remain cautious and welcomes clarification from its developers. We will not label a project as infringing without evidence.")
-                color: Theme.textSettingsSubtitle
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontSettingsSubtitle
-                font.weight: Font.Medium
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 wrapMode: Text.Wrap
             }
 
@@ -229,10 +224,9 @@ Column {
             Text {
                 width: parent.width
                 text: qsTr("Software freedom does not sustain itself. It depends on every developer's persistence and every user's choice to respect and protect it. Thank you for helping us keep the open-source community free, transparent, and welcoming, and for giving the people who build it the respect they deserve.")
-                color: Theme.textSettingsSubtitle
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontSettingsSubtitle
-                font.weight: Font.Medium
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 wrapMode: Text.Wrap
             }
 
@@ -241,7 +235,7 @@ Column {
                 text: qsTr("— AlkaidLab Open Source Community Maintainers")
                 color: Theme.accentStrong
                 font.family: Theme.fontSans
-                font.pointSize: Theme.fontSettingsSubtitle
+                font.pointSize: Theme.fontCaption
                 font.weight: Font.DemiBold
                 wrapMode: Text.Wrap
             }
@@ -249,10 +243,9 @@ Column {
             Text {
                 width: parent.width
                 text: qsTr("This notice describes AlkaidLab's maintenance and compatibility policy and is not legal advice. Specific rights and obligations are governed by the GNU GPLv3 license text.")
-                color: Theme.textSettingsSubtitle
-                font.family: Theme.fontSans
-                font.pointSize: Theme.fontSettingsSubtitle
-                font.weight: Font.Medium
+                color: Theme.textDim
+                font.family: Theme.fontMono
+                font.pointSize: Theme.fontCaption
                 wrapMode: Text.Wrap
             }
         }

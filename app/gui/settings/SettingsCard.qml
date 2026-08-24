@@ -76,10 +76,9 @@ Item {
                     width: parent.width
                     text: card.subtitle
                     visible: text !== ""
-                    color: Theme.textSettingsSubtitle
-                    font.family: Theme.fontSans
-                    font.pointSize: Theme.fontSettingsSubtitle
-                    font.weight: Font.Medium
+                    color: Theme.textDim
+                    font.family: Theme.fontMono
+                    font.pointSize: Theme.fontCaption
                     wrapMode: Text.Wrap
                 }
             }
