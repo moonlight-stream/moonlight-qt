@@ -1,7 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls
 import QtQuick.Window 2.2
-import "."
 import "../theme"
 
 // 内容滚动区。搬运了旧 SettingsView 的焦点自动滚动逻辑，
@@ -40,6 +39,15 @@ Flickable {
             item = item.parent
         }
         return false
+    }
+
+    // 供页面内的快捷入口直接定位到内容末尾。目标位置由滚动区统一计算，
+    // 页面组件不需要知道外层 Flickable 的可滚动范围。
+    function scrollToEnd() {
+        autoScrollAnimation.stop()
+        autoScrollAnimation.from = contentY
+        autoScrollAnimation.to = Math.max(0, contentHeight - height)
+        autoScrollAnimation.start()
     }
 
     Window.onActiveFocusItemChanged: {

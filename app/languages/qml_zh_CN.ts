@@ -2975,6 +2975,492 @@
         <source>Advanced Settings</source>
         <translation>高级设置</translation>
     </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="44"/>
+        <source>About</source>
+        <translation>关于</translation>
+    </message>
+</context>
+<context>
+    <name>AboutSettingsPage</name>
+    <message>
+        <source>About</source>
+        <translation>关于</translation>
+    </message>
+    <message>
+        <source>AlkaidLab Open Source Community</source>
+        <translation>基地开源社区</translation>
+    </message>
+    <message>
+        <source>Founded in 2024, AlkaidLab has brought together tens of thousands of users and maintained in-depth dialogue with thousands of them. Guided by extensive real-world feedback, we have developed a systematic understanding of networking and streaming as a whole and built a complete solution spanning video, audio, touch, controllers, networking, and multi-device experiences, with continuous improvements ahead. The ecosystem covers desktop PCs, Android handhelds, Windows handhelds, TVs and set-top boxes, projectors, VR devices, and more, aiming to deliver a more elegant and uncompromising streaming experience for gaming, media, creation, and remote collaboration.</source>
+        <translation>基地开源社区成立于2024年，已汇聚数万名用户，并与数千名用户保持深入交流。基于大量真实反馈，我们已经形成对网络与串流全貌的系统认知，构建覆盖画面、音频、触控、手柄、网络与多终端场景的完整解决方案，并将持续优化。基地生态覆盖桌面电脑、安卓掌机、Windows掌机、电视与电视盒子、投影仪、VR设备等终端，致力于为游戏、影音、创作和远程协作带来更优雅、更极致的串流体验。</translation>
+    </message>
+    <message>
+        <source>Version %1</source>
+        <translation>版本 %1</translation>
+    </message>
+    <message>
+        <source>Website</source>
+        <translation>官网</translation>
+    </message>
+    <message>
+        <source>Bilibili</source>
+        <translation>B站</translation>
+    </message>
+    <message>
+        <source>QQ Group</source>
+        <translation>QQ群</translation>
+    </message>
+    <message>
+        <source>Submit Issue</source>
+        <translation>提交Issue</translation>
+    </message>
+    <message>
+        <source>Server</source>
+        <translation>服务端</translation>
+    </message>
+    <message>
+        <source>Foundation Sunshine is the core streaming server of the AlkaidLab ecosystem and is installed on the controlled device. It connects AlkaidLab clients with a wide range of devices to deliver stronger streaming capabilities for gaming, creation, media, remote control, and more.</source>
+        <translation>Foundation Sunshine是基地生态的核心串流服务端，需要安装在被控端。它面向游戏、创作、影音与远程控制等场景，连接基地客户端和不同终端设备，提供更强大的串流能力。</translation>
+    </message>
+    <message>
+        <source>Visit Now</source>
+        <translation>立即访问</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>获取下载</translation>
+    </message>
+    <message>
+        <source>Picture and Streaming</source>
+        <translation>画面与串流</translation>
+    </message>
+    <message>
+        <source>Our exclusive end-to-end HDR technology brings together HDR10, HDR10+, HLG, HDR Vivid, and SDR-to-HDR, alongside in-house capture technology that delivers a smoother experience than WGC, enhanced hardware encoding, and precise frame synchronization.</source>
+        <translation>独家全链路HDR技术覆盖HDR10、HDR10+、HLG、HDR Vivid与SDR转HDR，并结合比WGC更丝滑的自研采集技术、硬件编码增强与精准帧同步，打造更强大的画面与串流体验。</translation>
+    </message>
+    <message>
+        <source>In-house Capture Technology</source>
+        <translation>自研采集技术</translation>
+    </message>
+    <message>
+        <source>Enhanced WGC</source>
+        <translation>增强版WGC</translation>
+    </message>
+    <message>
+        <source>Enhanced AMD Encoding</source>
+        <translation>AMD编码增强</translation>
+    </message>
+    <message>
+        <source>Sliced Encoding</source>
+        <translation>分帧编码</translation>
+    </message>
+    <message>
+        <source>Low-latency Mode</source>
+        <translation>低延迟模式</translation>
+    </message>
+    <message>
+        <source>HDR10</source>
+        <translation>HDR10</translation>
+    </message>
+    <message>
+        <source>HDR10+</source>
+        <translation>HDR10+</translation>
+    </message>
+    <message>
+        <source>HLG</source>
+        <translation>HLG</translation>
+    </message>
+    <message>
+        <source>HDR Vivid</source>
+        <translation>HDR Vivid</translation>
+    </message>
+    <message>
+        <source>Input and Interaction</source>
+        <translation>输入与交互</translation>
+    </message>
+    <message>
+        <source>A stronger input system covers touch, pen, touchpad, mouse, controllers, and stream-side assistance for both gaming and productivity.</source>
+        <translation>更强大的输入体系覆盖触控、手写笔、触控板、鼠标、手柄和串流辅助，让游戏与生产力场景都更自然。</translation>
+    </message>
+    <message>
+        <source>Native Touch</source>
+        <translation>原生触控</translation>
+    </message>
+    <message>
+        <source>Native Pen</source>
+        <translation>原生手写笔</translation>
+    </message>
+    <message>
+        <source>Precision Touchpad</source>
+        <translation>精密触控板</translation>
+    </message>
+    <message>
+        <source>Virtual Mouse</source>
+        <translation>虚拟鼠标</translation>
+    </message>
+    <message>
+        <source>DualSense Controller</source>
+        <translation>DualSense手柄</translation>
+    </message>
+    <message>
+        <source>HD Haptics</source>
+        <translation>HD触觉反馈</translation>
+    </message>
+    <message>
+        <source>Super Menu</source>
+        <translation>超级菜单</translation>
+    </message>
+    <message>
+        <source>Immersive audio, audio haptics, remote microphone, clipboard, and folder sharing extend streaming into entertainment, creation, and collaboration.</source>
+        <translation>沉浸式音频、音频振动、远程麦克风、剪贴板和文件夹共享，将串流延伸到娱乐、创作与协作。</translation>
+    </message>
+    <message>
+        <source>Immersive Audio</source>
+        <translation>沉浸式音频</translation>
+    </message>
+    <message>
+        <source>Audio Haptics</source>
+        <translation>音频振动</translation>
+    </message>
+    <message>
+        <source>Remote Microphone</source>
+        <translation>远程麦克风</translation>
+    </message>
+    <message>
+        <source>Clipboard Sync</source>
+        <translation>剪贴板同步</translation>
+    </message>
+    <message>
+        <source>Folder Sharing</source>
+        <translation>文件夹共享</translation>
+    </message>
+    <message>
+        <source>Audio and Collaboration</source>
+        <translation>音频与协作</translation>
+    </message>
+    <message>
+        <source>Clients</source>
+        <translation>客户端</translation>
+    </message>
+    <message>
+        <source>Client applications act as the controller for the streaming server.</source>
+        <translation>客户端作为控制端，用于操作串流服务端。</translation>
+    </message>
+    <message>
+        <source>Friendly links</source>
+        <translation>友情链接</translation>
+    </message>
+    <message>
+        <source>Moonlight Android Crown</source>
+        <translation>Moonlight Android王冠版</translation>
+    </message>
+    <message>
+        <source>A community-enhanced Android client with an alternative take on mobile input, controller support, and interface features.</source>
+        <translation>Android社区增强客户端，在移动输入、手柄支持和界面功能上提供另一种选择。</translation>
+    </message>
+    <message>
+        <source>The first Moonlight client built for HarmonyOS NEXT, pioneering Moonlight on HarmonyOS and compatible with the AlkaidLab ecosystem.</source>
+        <translation>首个面向HarmonyOS NEXT实现的Moonlight客户端，是鸿蒙Moonlight的先驱者，并兼容基地生态。</translation>
+    </message>
+    <message>
+        <source>Natpierce</source>
+        <translation>皎月连</translation>
+    </message>
+    <message>
+        <source>A virtual networking tool that connects Moonlight clients to Sunshine servers over the public Internet when they are not on the same LAN.</source>
+        <translation>用于异地组网的工具，让Moonlight客户端可以通过公网连接不在同一局域网内的Sunshine服务端。</translation>
+    </message>
+    <message>
+        <source>Legal notice</source>
+        <translation>法律声明</translation>
+    </message>
+    <message>
+        <source>This software is released under GNU GPLv3. The full license and third-party component information are provided below.</source>
+        <translation>本软件依据GNU GPLv3发布，许可证全文及第三方组件信息如下。</translation>
+    </message>
+    <message>
+        <source>License agreement</source>
+        <translation>许可协议</translation>
+    </message>
+    <message>
+        <source>Third-party notice</source>
+        <translation>第三方通知</translation>
+    </message>
+    <message>
+        <source>No external browser is available.</source>
+        <translation>未找到可用的外部浏览器。</translation>
+    </message>
+</context>
+<context>
+    <name>EcosystemPlatformCatalog</name>
+    <message>
+        <source>PC</source>
+        <translation>PC端</translation>
+    </message>
+    <message>
+        <source>Android</source>
+        <translation>安卓</translation>
+    </message>
+    <message>
+        <source>HarmonyOS</source>
+        <translation>鸿蒙</translation>
+    </message>
+    <message>
+        <source>iOS</source>
+        <translation>iOS</translation>
+    </message>
+    <message>
+        <source>macOS Enhanced</source>
+        <translation>macOS增强版</translation>
+    </message>
+    <message>
+        <source>Moonlight V+ for HarmonyOS</source>
+        <translation>Moonlight V+鸿蒙版</translation>
+    </message>
+    <message>
+        <source>AlkaidLab's cross-platform desktop client for Windows, Linux, macOS, and Steam Link</source>
+        <translation>基地跨平台桌面客户端，覆盖Windows、Linux、macOS和Steam Link</translation>
+    </message>
+    <message>
+        <source>AlkaidLab's Android client for phones, tablets, TVs, head units, and Meta Quest devices</source>
+        <translation>基地Android客户端，覆盖手机、平板、电视、车机和Meta Quest设备</translation>
+    </message>
+    <message>
+        <source>AlkaidLab's native HarmonyOS NEXT client for phones, tablets, and 2-in-1 devices</source>
+        <translation>基地原生HarmonyOS NEXT客户端，覆盖手机、平板和二合一设备</translation>
+    </message>
+    <message>
+        <source>Touch-oriented and controller-friendly VoidLink client for iPhone and iPad</source>
+        <translation>面向iPhone和iPad的VoidLink客户端，针对触控操作设计并兼顾手柄体验</translation>
+    </message>
+    <message>
+        <source>AlkaidLab's native macOS client with enhanced HDR, audio, clipboard, and input paths</source>
+        <translation>基地原生macOS增强客户端，强化HDR、音频、剪贴板和输入链路</translation>
+    </message>
+    <message>
+        <source>Windows x64 / ARM64</source>
+        <translation>Windows x64 / ARM64</translation>
+    </message>
+    <message>
+        <source>Android Phone</source>
+        <translation>安卓手机</translation>
+    </message>
+    <message>
+        <source>Android Tablet</source>
+        <translation>安卓平板</translation>
+    </message>
+    <message>
+        <source>Android TV / TV Box</source>
+        <translation>安卓电视/电视盒子</translation>
+    </message>
+    <message>
+        <source>Android Head Unit</source>
+        <translation>安卓车机</translation>
+    </message>
+    <message>
+        <source>HarmonyOS Phone</source>
+        <translation>鸿蒙手机</translation>
+    </message>
+    <message>
+        <source>HarmonyOS Tablet</source>
+        <translation>鸿蒙平板</translation>
+    </message>
+    <message>
+        <source>HarmonyOS 2-in-1</source>
+        <translation>鸿蒙二合一设备</translation>
+    </message>
+    <message>
+        <source>Visit Now</source>
+        <translation>立即访问</translation>
+    </message>
+    <message>
+        <source>Download</source>
+        <translation>获取下载</translation>
+    </message>
+    <message>
+        <source>Supported platforms</source>
+        <translation>支持平台</translation>
+    </message>
+    <message>
+        <source>Featured capabilities</source>
+        <translation>特色能力</translation>
+    </message>
+    <message>
+        <source>Advanced HDR</source>
+        <translation>极致HDR</translation>
+    </message>
+    <message>
+        <source>Clipboard Sync</source>
+        <translation>剪贴板同步</translation>
+    </message>
+    <message>
+        <source>Desktop Collaboration</source>
+        <translation>桌面协作</translation>
+    </message>
+    <message>
+        <source>DualSense Haptics</source>
+        <translation>DualSense触觉反馈</translation>
+    </message>
+    <message>
+        <source>Precise Frame Sync</source>
+        <translation>精准帧同步</translation>
+    </message>
+    <message>
+        <source>Audio Haptics</source>
+        <translation>音频振动</translation>
+    </message>
+    <message>
+        <source>Super Menu</source>
+        <translation>超级菜单</translation>
+    </message>
+    <message>
+        <source>Native Touch</source>
+        <translation>原生触控</translation>
+    </message>
+    <message>
+        <source>Native Pen</source>
+        <translation>原生手写笔</translation>
+    </message>
+    <message>
+        <source>Smart Bitrate</source>
+        <translation>智能码率</translation>
+    </message>
+    <message>
+        <source>HDR Vivid</source>
+        <translation>HDR Vivid</translation>
+    </message>
+    <message>
+        <source>Remote Microphone</source>
+        <translation>远程麦克风</translation>
+    </message>
+    <message>
+        <source>Gyro Aim</source>
+        <translation>体感瞄准</translation>
+    </message>
+    <message>
+        <source>Touch-oriented Interface</source>
+        <translation>触控优先界面</translation>
+    </message>
+    <message>
+        <source>Controller Friendly</source>
+        <translation>手柄友好</translation>
+    </message>
+    <message>
+        <source>In-stream Widgets</source>
+        <translation>串流内小组件</translation>
+    </message>
+    <message>
+        <source>Image Enhancement</source>
+        <translation>画质增强</translation>
+    </message>
+    <message>
+        <source>Immersive Audio</source>
+        <translation>沉浸式音频</translation>
+    </message>
+    <message>
+        <source>Low-latency Input</source>
+        <translation>低延迟输入</translation>
+    </message>
+    <message>
+        <source>Official links</source>
+        <translation>官方入口</translation>
+    </message>
+</context>
+<context>
+    <name>CommunityLicenseNotice</name>
+    <message>
+        <source>Open Source and Compatibility Notice</source>
+        <translation>开源与兼容性声明</translation>
+    </message>
+    <message>
+        <source>We know open source is not easy. Every feature, test, answer, and maintenance update represents real time and effort from real people. AlkaidLab follows GPLv3 so that every user can access the source, understand the software, modify it freely, and pass those freedoms on.</source>
+        <translation>我们知道，开源并不容易。每一次开发、测试、答疑和维护，背后都是真实的人投入的时间与精力。基地开源社区选择坚持GPLv3，是希望每一位用户都能获得源码、理解软件、自由修改，并把这些权利继续传递下去。</translation>
+    </message>
+    <message>
+        <source>Freedom and Responsibility</source>
+        <translation>自由与责任</translation>
+    </message>
+    <message>
+        <source>GPLv3 gives everyone the freedom to run this software. When you copy, modify, or distribute it, please help preserve that freedom:</source>
+        <translation>GPLv3允许所有人自由运行本软件。当你复制、修改或向他人分发本软件时，也需要共同维护这份自由：</translation>
+    </message>
+    <message>
+        <source>Keep the original copyright and license notices.</source>
+        <translation>保留原有的版权和许可证声明。</translation>
+    </message>
+    <message>
+        <source>Clearly state what you changed.</source>
+        <translation>明确说明自己修改过哪些内容。</translation>
+    </message>
+    <message>
+        <source>When distributing modified or binary versions, provide the corresponding source as required by GPLv3.</source>
+        <translation>分发修改版或二进制版本时，按照GPLv3提供对应源码。</translation>
+    </message>
+    <message>
+        <source>Do not impose additional terms that restrict downstream use, study, modification, or redistribution.</source>
+        <translation>不添加限制下游使用、研究、修改和继续分享的附加条件。</translation>
+    </message>
+    <message>
+        <source>We Will Not Endorse Violations</source>
+        <translation>我们不会为违规行为背书</translation>
+    </message>
+    <message>
+        <source>For software confirmed to violate the GPL and whose distributors refuse to correct the violation, AlkaidLab will not provide dedicated compatibility work, recommendations, promotion, or bundling.</source>
+        <translation>对于已经确认存在GPL违规且拒绝整改的软件，基地开源社区不提供专项适配、推荐、宣传或捆绑。</translation>
+    </message>
+    <message>
+        <source>This is not about creating conflict. It protects the work of contributors and each user&apos;s right to obtain, inspect, and modify the source.</source>
+        <translation>这不是为了制造对立，而是为了保护每一位贡献者的劳动，也为了保护用户继续获得源码、检查软件和修改软件的权利。</translation>
+    </message>
+    <message>
+        <source>If a project&apos;s authorization, source availability, or license status cannot yet be verified, the community will remain cautious and welcomes clarification from its developers. We will not label a project as infringing without evidence.</source>
+        <translation>如果某个项目的授权来源、源码提供情况或许可证状态暂时无法确认，社区会保持审慎，也欢迎开发者主动沟通和澄清。我们不会在缺少事实依据时直接认定某个项目侵权。</translation>
+    </message>
+    <message>
+        <source>Community Agreement</source>
+        <translation>社区约定</translation>
+    </message>
+    <message>
+        <source>Within AlkaidLab community spaces, using this software for illegal activities, game cheating, the development or distribution of cheats, or conduct that infringes the rights of others is prohibited and will not receive community support.</source>
+        <translation>基地开源社区禁止在社区范围内利用本软件从事违法活动、游戏作弊、外挂制作或传播，以及侵害他人权益的行为，相关行为不会获得社区支持。</translation>
+    </message>
+    <message>
+        <source>Respect open-source licenses and the copyrights of original authors.</source>
+        <translation>尊重开源许可证和原作者的版权。</translation>
+    </message>
+    <message>
+        <source>Do not promote software confirmed to have unresolved license violations in the community.</source>
+        <translation>不在社区内推广已经确认存在许可违规的软件。</translation>
+    </message>
+    <message>
+        <source>When sharing software, include its project source and license information whenever possible.</source>
+        <translation>分享软件时尽量同时提供项目来源和许可证信息。</translation>
+    </message>
+    <message>
+        <source>Use, improve, and contribute to genuinely free and open-source alternatives.</source>
+        <translation>鼓励使用、改进和贡献真正自由开源的替代方案。</translation>
+    </message>
+    <message>
+        <source>If a program&apos;s license status is unclear, ask the community before promoting it.</source>
+        <translation>对许可证状态有疑问时，可以先向社区咨询。</translation>
+    </message>
+    <message>
+        <source>A Final Note</source>
+        <translation>写在最后</translation>
+    </message>
+    <message>
+        <source>Software freedom does not sustain itself. It depends on every developer&apos;s persistence and every user&apos;s choice to respect and protect it. Thank you for helping us keep the open-source community free, transparent, and welcoming, and for giving the people who build it the respect they deserve.</source>
+        <translation>自由不是免费得来的。它依靠每一位开发者的坚持，也依靠每一位用户主动尊重和保护。感谢大家与我们一起，让开源社区保持自由、透明、友善，也让认真投入开源的人得到应有的尊重。</translation>
+    </message>
+    <message>
+        <source>— AlkaidLab Open Source Community Maintainers</source>
+        <translation>—— 基地开源社区维护组</translation>
+    </message>
+    <message>
+        <source>This notice describes AlkaidLab&apos;s maintenance and compatibility policy and is not legal advice. Specific rights and obligations are governed by the GNU GPLv3 license text.</source>
+        <translation>本声明用于说明基地开源社区的维护与兼容性政策，不构成法律意见。具体权利与义务以GNU GPLv3许可证原文为准。</translation>
+    </message>
 </context>
 <context>
     <name>StreamSegue</name>

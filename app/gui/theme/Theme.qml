@@ -22,6 +22,7 @@ QtObject {
     readonly property color text: "#EEF0EC"      // --cend-text，带一点暖调的灰白
     readonly property color textDim: "#AEB3AB"   // --cend-text-dim，副标题/说明
     readonly property color textFaint: "#7E858E" // 禁用态、极次要信息
+    readonly property color textSettingsSubtitle: "#D7DBD5" // 设置页副标题，比普通次要文字更清晰
 
     // ---- 强调色 ----
     // 主色保留品牌青；酸性绿只留给「正在运行 / LIVE」这类抢眼状态标记，
@@ -33,6 +34,31 @@ QtObject {
     readonly property color acid: "#C8FF4D"          // --cend-acid
     readonly property color acidGlow: "#66C8FF4D"    // --cend-glow-acid
     readonly property color danger: "#FF876F"        // --cend-coral
+    readonly property color dangerSurface: "#2B1A1B" // 警示块的不透明深红表面
+
+    // ---- 只读标签 ----
+    // 标签使用低饱和深色表面和高对比文字，通过颜色区分能力类别。
+    // 它们不表达运行状态，因此不使用预留给 LIVE 状态的酸性绿。
+    readonly property color tagAccentSurface: "#17302F"
+    readonly property color tagAccentBorder: "#2BA39A"
+    readonly property color tagAccentText: "#8EE8E1"
+    readonly property color tagInputSurface: "#29243A"
+    readonly property color tagInputBorder: "#7563B5"
+    readonly property color tagInputText: "#D3C8FF"
+    readonly property color tagAudioSurface: "#332A18"
+    readonly property color tagAudioBorder: "#A77B24"
+    readonly property color tagAudioText: "#F4D48A"
+    readonly property color tagPlatformSurface: "#1B293A"
+    readonly property color tagPlatformBorder: "#4A75A8"
+    readonly property color tagPlatformText: "#A9CEFF"
+
+    // 访问类次级按钮。蓝色与青色主按钮形成明确区分：蓝色负责跳转，
+    // 品牌青仍保留给下载等主要动作。
+    readonly property color linkSurface: "#1B293A"
+    readonly property color linkSurfaceHover: "#243750"
+    readonly property color linkSurfacePressed: "#182536"
+    readonly property color linkBorder: "#5B8FCB"
+    readonly property color linkText: "#B8D7FF"
 
     // ---- 形状 ----
     // 全方角。参考站是 --cend-radius: 0 配上一堆 !important 去压 Naive UI 的圆角，
@@ -73,9 +99,13 @@ QtObject {
 
     // ---- 字号 ----
     readonly property int fontCardTitle: 13
+    readonly property int fontHeroTitle: 18
     readonly property int fontRowTitle: 11
     readonly property int fontBody: 10
     readonly property int fontCaption: 9
+    // 设置页的副标题和选项说明需要比普通微标签更易读。
+    // 保留 fontCaption 给标签、按钮等紧凑元素，避免它们跟着整体膨胀。
+    readonly property int fontSettingsSubtitle: fontCaption + 1
 
     // ---- 动效 ----
     // neo-brutalism 的动效更短更机械：不要弹、不要缓慢收尾，OutQuad 就够了。

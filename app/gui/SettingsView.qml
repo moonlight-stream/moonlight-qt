@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Window 2.2
 
 import StreamingPreferences 1.0
-import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 import SystemProperties 1.0
 
@@ -40,7 +39,8 @@ FocusScope {
         { key: "ui",       icon: "qrc:/res/fluent/cat-ui.svg",       title: qsTr("UI Settings") },
         { key: "input",    icon: "qrc:/res/fluent/cat-input.svg",    title: qsTr("Input Settings") },
         { key: "gamepad",  icon: "qrc:/res/fluent/cat-gamepad.svg",  title: qsTr("Gamepad Settings") },
-        { key: "advanced", icon: "qrc:/res/fluent/cat-advanced.svg", title: qsTr("Advanced Settings") }
+        { key: "advanced", icon: "qrc:/res/fluent/cat-advanced.svg", title: qsTr("Advanced Settings") },
+        { key: "about",    icon: "qrc:/res/fluent/cat-about.svg",    title: qsTr("About") }
     ]
 
     StackView.onActivated: {
@@ -219,6 +219,15 @@ FocusScope {
 
                 onLanguageChanged: settingsPage.languageChanged()
                 onBitratePreferenceChanged: basicPage.syncBitrateFromPreferences()
+            }
+
+            AboutSettingsPage {
+                id: aboutPage
+                y: basicPage.height + displayPage.height + legacyPage.height
+                width: parent.width
+                visible: settingsPage.category === "about"
+                height: visible ? implicitHeight : 0
+                onScrollToEndRequested: scrollArea.scrollToEnd()
             }
         }
     }

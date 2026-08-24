@@ -1,6 +1,4 @@
 import QtQuick 2.9
-import QtQuick.Controls
-import "."
 import "../theme"
 
 // 一张设置卡片：方角硬投影面板 + 左侧强调粗条 + 宽字距标题，内容走默认属性。
@@ -78,9 +76,10 @@ Item {
                     width: parent.width
                     text: card.subtitle
                     visible: text !== ""
-                    color: Theme.textDim
-                    font.family: Theme.fontMono
-                    font.pointSize: Theme.fontCaption
+                    color: Theme.textSettingsSubtitle
+                    font.family: Theme.fontSans
+                    font.pointSize: Theme.fontSettingsSubtitle
+                    font.weight: Font.Medium
                     wrapMode: Text.Wrap
                 }
             }

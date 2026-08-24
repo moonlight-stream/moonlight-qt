@@ -48,5 +48,11 @@
         <file>gui/settings/BasicSettingsPage.qml</file>
         <file>gui/settings/DisplaySettingsPage.qml</file>
         <file>gui/settings/LegacySettingsPage.qml</file>
+        <file>gui/settings/AboutSettingsPage.qml</file>
+        <file>gui/settings/EcosystemPlatformCatalog.qml</file>
+        <file>gui/settings/PlatformNavButton.qml</file>
+        <file>gui/settings/SupportTag.qml</file>
+        <file>gui/settings/EcosystemCapabilityGroup.qml</file>
+        <file>gui/settings/CommunityLicenseNotice.qml</file>
     </qresource>
 </RCC>

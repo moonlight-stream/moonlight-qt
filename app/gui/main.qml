@@ -754,6 +754,8 @@ ApplicationWindow {
             NavigableToolButton {
                 id: settingsButton
 
+                visible: !(stackView.currentItem instanceof SettingsView)
+
                 iconSource:  "qrc:/res/fluent/tb-settings.svg"
 
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", SettingsView)
@@ -765,6 +767,8 @@ ApplicationWindow {
                 Shortcut {
                     id: settingsShortcut
                     sequence: StandardKey.Preferences
+                    // 设置页隐藏入口时同步停用快捷键，避免重复压入 SettingsView。
+                    enabled: settingsButton.visible
                     onActivated: settingsButton.clicked()
                 }
 
