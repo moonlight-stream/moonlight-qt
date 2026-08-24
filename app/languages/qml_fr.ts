@@ -740,7 +740,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="672"/>
         <source>Video bitrate:</source>
-        <translation>Bitrate vidéo :</translation>
+        <translation>Débit vidéo&#xa0;:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="680"/>
@@ -750,7 +750,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="702"/>
         <source>Video bitrate: %1 Mbps</source>
-        <translation>Bitrate vidéo : %1 Mbps</translation>
+        <translation>Débit vidéo&#xa0;: %1 Mbps</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="732"/>
