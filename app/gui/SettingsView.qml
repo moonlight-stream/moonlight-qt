@@ -40,6 +40,7 @@ FocusScope {
         { key: "gamepad",  icon: "qrc:/res/fluent/cat-gamepad.svg",  title: qsTr("Gamepad Settings") },
         { key: "advanced", icon: "qrc:/res/fluent/cat-advanced.svg", title: qsTr("Advanced Settings") },
         { key: "ui",       icon: "qrc:/res/fluent/cat-ui.svg",       title: qsTr("Software Settings") },
+        { key: "ecosystem",icon: "qrc:/res/fluent/cat-ecosystem.svg",title: qsTr("AlkaidLab Ecosystem") },
         { key: "about",    icon: "qrc:/res/fluent/cat-about.svg",    title: qsTr("About") }
     ]
 
@@ -221,9 +222,22 @@ FocusScope {
                 onBitratePreferenceChanged: basicPage.syncBitrateFromPreferences()
             }
 
+            EcosystemSettingsPage {
+                id: ecosystemPage
+                y: basicPage.height + displayPage.height + legacyPage.height
+                width: parent.width
+                visible: settingsPage.category === "ecosystem"
+                height: visible ? implicitHeight : 0
+                onAboutRequested: {
+                    settingsPage.category = "about"
+                    rail.focusCurrent()
+                    scrollArea.contentY = 0
+                }
+            }
+
             AboutSettingsPage {
                 id: aboutPage
-                y: basicPage.height + displayPage.height + legacyPage.height
+                y: basicPage.height + displayPage.height + legacyPage.height + ecosystemPage.height
                 width: parent.width
                 visible: settingsPage.category === "about"
                 height: visible ? implicitHeight : 0

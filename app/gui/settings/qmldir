@@ -8,9 +8,12 @@ HdrBrightnessCard 1.0 HdrBrightnessCard.qml
 BasicSettingsPage 1.0 BasicSettingsPage.qml
 DisplaySettingsPage 1.0 DisplaySettingsPage.qml
 LegacySettingsPage 1.0 LegacySettingsPage.qml
+EcosystemSettingsPage 1.0 EcosystemSettingsPage.qml
 AboutSettingsPage 1.0 AboutSettingsPage.qml
 EcosystemPlatformCatalog 1.0 EcosystemPlatformCatalog.qml
 PlatformNavButton 1.0 PlatformNavButton.qml
-SpecLine 1.0 SpecLine.qml
+TechTag 1.0 TechTag.qml
+TechTagCloud 1.0 TechTagCloud.qml
+TechPhrase 1.0 TechPhrase.qml
 EcosystemCapabilityGroup 1.0 EcosystemCapabilityGroup.qml
 CommunityLicenseNotice 1.0 CommunityLicenseNotice.qml

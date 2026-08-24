@@ -9,6 +9,7 @@ Button {
     id: control
 
     readonly property Item __focusFrameTarget: null
+    property bool prominent: false
 
     implicitHeight: 34
     padding: Theme.spaceXs
@@ -20,8 +21,8 @@ Button {
         text: "[ " + control.text + " ]"
         color: control.hovered || control.visualFocus ? Theme.accentStrong : Theme.accent
         font.family: Theme.fontMono
-        font.pointSize: Theme.fontBody
-        font.underline: control.hovered || control.visualFocus
+        font.pointSize: Theme.fontBody + (control.prominent ? 1 : 0)
+        font.underline: control.prominent || control.hovered || control.visualFocus
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }

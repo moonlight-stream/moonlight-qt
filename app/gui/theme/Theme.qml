@@ -22,6 +22,8 @@ QtObject {
     readonly property color text: "#EEF0EC"      // --cend-text，带一点暖调的灰白
     readonly property color textDim: "#AEB3AB"   // --cend-text-dim，副标题/说明
     readonly property color textFaint: "#7E858E" // 禁用态、极次要信息
+    // 长说明比微标签更亮，避免在高 DPI 和复杂背景上退成一层灰雾。
+    readonly property color textSettingsSubtitle: "#D7DBD5"
 
     // ---- 强调色 ----
     // 主色保留品牌青；酸性绿只留给「正在运行 / LIVE」这类抢眼状态标记，
@@ -77,6 +79,7 @@ QtObject {
     readonly property int fontRowTitle: 11
     readonly property int fontBody: 10
     readonly property int fontCaption: 9
+    readonly property int fontSettingsSubtitle: fontBody
 
     // ---- 动效 ----
     // neo-brutalism 的动效更短更机械：不要弹、不要缓慢收尾，OutQuad 就够了。

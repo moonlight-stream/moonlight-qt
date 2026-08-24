@@ -3123,9 +3123,45 @@
         <translation>高级设置</translation>
     </message>
     <message>
+        <location filename="../gui/SettingsView.qml" line="43"/>
+        <source>AlkaidLab Ecosystem</source>
+        <translation>基地生态</translation>
+    </message>
+    <message>
         <location filename="../gui/SettingsView.qml" line="44"/>
         <source>About</source>
         <translation>关于</translation>
+    </message>
+</context>
+<context>
+    <name>EcosystemSettingsPage</name>
+    <message>
+        <source>About AlkaidLab Open Source Community</source>
+        <translation>关于基地开源社区</translation>
+    </message>
+    <message>
+        <source>Built around</source>
+        <translation>围绕</translation>
+    </message>
+    <message>
+        <source>to combine low-latency streaming, precise synchronization, and comprehensive HDR presentation.</source>
+        <translation>构建低延迟串流、精准同步与完整HDR呈现。</translation>
+    </message>
+    <message>
+        <source>Connect</source>
+        <translation>串联</translation>
+    </message>
+    <message>
+        <source>into one input path for gaming, creation, and remote control.</source>
+        <translation>形成面向游戏、创作与远程控制的一体化输入链路。</translation>
+    </message>
+    <message>
+        <source>Bring together</source>
+        <translation>汇聚</translation>
+    </message>
+    <message>
+        <source>to extend streaming from entertainment to creation and collaboration.</source>
+        <translation>让串流从娱乐延伸到创作与协作。</translation>
     </message>
 </context>
 <context>
@@ -3160,7 +3196,7 @@
     </message>
     <message>
         <source>Submit Issue</source>
-        <translation>提交Issue</translation>
+        <translation>提交建议</translation>
     </message>
     <message>
         <source>Server</source>

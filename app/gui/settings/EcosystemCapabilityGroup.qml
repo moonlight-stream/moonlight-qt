@@ -8,8 +8,7 @@ Column {
     id: group
 
     property string title: ""
-    property string description: ""
-    property var tags: []
+    property var segments: []
     property bool showDivider: true
 
     width: parent ? parent.width : 0
@@ -25,18 +24,9 @@ Column {
         wrapMode: Text.Wrap
     }
 
-    Text {
+    TechPhrase {
         width: parent.width
-        text: group.description
-        color: Theme.textDim
-        font.family: Theme.fontMono
-        font.pointSize: Theme.fontCaption
-        wrapMode: Text.Wrap
-    }
-
-    SpecLine {
-        width: parent.width
-        tags: group.tags
+        segments: group.segments
     }
 
     Rectangle {

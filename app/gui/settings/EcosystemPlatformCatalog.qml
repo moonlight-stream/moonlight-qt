@@ -271,9 +271,10 @@ Item {
                         width: parent.width
                         text: catalog.clientDescription(catalog.selectedPlatformKey)
                         visible: text !== ""
-                        color: Theme.textDim
-                        font.family: Theme.fontMono
-                        font.pointSize: Theme.fontCaption
+                        color: Theme.textSettingsSubtitle
+                        font.family: Theme.fontSans
+                        font.pointSize: Theme.fontSettingsSubtitle
+                        font.weight: Font.Medium
                         wrapMode: Text.Wrap
                     }
                 }
@@ -286,7 +287,7 @@ Item {
                     font.weight: Font.DemiBold
                 }
 
-                SpecLine {
+                TechTagCloud {
                     width: parent.width
                     tags: catalog.supportTags(catalog.selectedPlatformKey)
                 }
@@ -299,7 +300,7 @@ Item {
                     font.weight: Font.DemiBold
                 }
 
-                SpecLine {
+                TechTagCloud {
                     width: parent.width
                     tags: catalog.capabilityTags(catalog.selectedPlatformKey)
                 }

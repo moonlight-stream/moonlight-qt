@@ -50,10 +50,13 @@
         <file>gui/settings/BasicSettingsPage.qml</file>
         <file>gui/settings/DisplaySettingsPage.qml</file>
         <file>gui/settings/LegacySettingsPage.qml</file>
+        <file>gui/settings/EcosystemSettingsPage.qml</file>
         <file>gui/settings/AboutSettingsPage.qml</file>
         <file>gui/settings/EcosystemPlatformCatalog.qml</file>
         <file>gui/settings/PlatformNavButton.qml</file>
-        <file>gui/settings/SpecLine.qml</file>
+        <file>gui/settings/TechTag.qml</file>
+        <file>gui/settings/TechTagCloud.qml</file>
+        <file>gui/settings/TechPhrase.qml</file>
         <file>gui/settings/EcosystemCapabilityGroup.qml</file>
         <file>gui/settings/CommunityLicenseNotice.qml</file>
     </qresource>
