@@ -79,7 +79,7 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Connexion au PC...</translation>
+        <translation>Établissement de la connexion au PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
@@ -328,7 +328,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="297"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation>Veuillez saisir %1 sur votre PC hôte. Cette boîte de dialogue se ferme lorsque l&apos;appairage est terminé.</translation>
+        <translation>Veuillez saisir %1 sur votre PC hôte. Cette boîte de dialogue se ferme lorsque le jumelage est terminé.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="298"/>
