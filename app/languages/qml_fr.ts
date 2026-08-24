@@ -674,7 +674,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="116"/>
         <source>Resolution and FPS</source>
-        <translation>Résolution et FPS</translation>
+        <translation>Résolution et IPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="124"/>
