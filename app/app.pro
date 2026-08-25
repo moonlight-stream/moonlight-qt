@@ -329,6 +329,7 @@ HEADERS += \
     streaming/video/overlaymanager.h \
     streaming/video/overlaymenupanel.h \
     streaming/video/overlaybuttonposition.h \
+    streaming/video/overlayeventwakestate.h \
     streaming/video/overlaymenubutton.h \
     streaming/video/overlaytoast.h \
     backend/systemproperties.h \

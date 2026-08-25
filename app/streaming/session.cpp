@@ -48,6 +48,9 @@
 #define SDL_CODE_FLUSH_TOUCHPAD_FRAME 106
 #define SDL_CODE_CURSOR_UPDATE 107
 #define SDL_CODE_FLUSH_CURSOR_VISIBILITY 108
+#ifdef Q_OS_WIN32
+#define SDL_CODE_PROCESS_QT_OVERLAY_EVENTS 109
+#endif
 
 #include <openssl/rand.h>
 
@@ -4069,6 +4072,14 @@ void Session::exec()
     // Keep a hidden button ready so placement can switch during a stream
     // without creating a window from inside an input callback.
     m_MenuButton = new OverlayMenuButton();
+#ifdef Q_OS_WIN32
+    m_MenuButton->setEventWakeCallback([]() {
+        SDL_Event wakeEvent = {};
+        wakeEvent.type = SDL_USEREVENT;
+        wakeEvent.user.code = SDL_CODE_PROCESS_QT_OVERLAY_EVENTS;
+        SDL_PushEvent(&wakeEvent);
+    });
+#endif
     m_MenuButton->setClickCallback([this](const QPoint& globalPosition,
                                           bool closeWhenPointerOutside) {
         showQtOverlayMenu(globalPosition, closeWhenPointerOutside);
@@ -4086,14 +4097,18 @@ void Session::exec()
     // Switch to async logging mode when we enter the SDL loop
     StreamUtils::enterAsyncLoggingMode();
 
-    // Hijack this thread to be the SDL main thread. Pump Qt only for visible
-    // streaming UI; clipboard sync runs in a helper process with its own Qt
-    // event loop and is serviced via pipe polling below.
+    // Hijack this thread to be the SDL main thread. Pump Qt periodically only
+    // while transient streaming UI is active; clipboard sync runs in a helper
+    // process with its own Qt event loop and is serviced via pipe polling below.
     constexpr Uint32 QT_UI_EVENT_PUMP_INTERVAL_MS = 10;
     Uint32 lastQtEventPumpTicks = 0;
     auto qtUiNeedsEventProcessing = [this]() {
+        // The floating button remains visible for the entire stream. Treating
+        // visibility as active Qt work forces this SDL loop to wake and drain
+        // all Qt events every 10 ms even while the button is idle, which can
+        // delay input and video processing.
         return (m_MenuPanel && m_MenuPanel->needsEventProcessing()) ||
-               (m_MenuButton && m_MenuButton->isButtonVisible()) ||
+               (m_MenuButton && m_MenuButton->needsEventProcessing()) ||
                (m_Toast && m_Toast->isVisible()) ||
 #ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
                (m_StylusReplayTest && m_StylusReplayTest->isPanelVisible());
@@ -4101,7 +4116,7 @@ void Session::exec()
                false;
 #endif
     };
-    auto processQtEventsDuringStream = [&lastQtEventPumpTicks,
+    auto processQtEventsDuringStream = [this, &lastQtEventPumpTicks,
                                         &qtUiNeedsEventProcessing](bool force = false) {
         if (!qtUiNeedsEventProcessing()) {
             return;
@@ -4112,6 +4127,11 @@ void Session::exec()
             return;
         }
         lastQtEventPumpTicks = now;
+        if (m_MenuButton) {
+            // Clear before processing so an update requested from inside a Qt
+            // handler remains pending and schedules a second pass.
+            m_MenuButton->beginEventProcessing();
+        }
         QCoreApplication::processEvents(QEventLoop::AllEvents);
     };
 
@@ -4302,6 +4322,13 @@ void Session::exec()
                 }
                 break;
             }
+#ifdef Q_OS_WIN32
+            case SDL_CODE_PROCESS_QT_OVERLAY_EVENTS:
+                // The actual Qt processing happens after SDL dispatch below.
+                // Keeping this event side-effect free also coalesces bursts of
+                // native button messages without re-entering Qt from Win32.
+                break;
+#endif
             default:
                 SDL_assert(false);
             }
@@ -4760,6 +4787,9 @@ DispatchDeferredCleanup:
 
     // Destroy the Qt overlay menu button
     if (m_MenuButton) {
+#ifdef Q_OS_WIN32
+        m_MenuButton->setEventWakeCallback({});
+#endif
         m_MenuButton->hideButton();
         delete m_MenuButton;
         m_MenuButton = nullptr;

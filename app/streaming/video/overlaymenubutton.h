@@ -6,9 +6,11 @@
 #include <QSurfaceFormat>
 #include <QTouchEvent>
 #include <functional>
+#include <memory>
 #include <optional>
 
 #include "overlaybuttonposition.h"
+#include "overlayeventwakestate.h"
 
 /**
  * OverlayMenuButton - A small floating button rendered by the OS compositor,
@@ -26,11 +28,13 @@ class OverlayMenuButton : public QRasterWindow {
 public:
     using ClickCallback = std::function<void(const QPoint& globalPosition,
                                              bool closeWhenPointerOutside)>;
+    using EventWakeCallback = std::function<void()>;
 
     explicit OverlayMenuButton(QWindow* parent = nullptr);
     ~OverlayMenuButton() override;
 
     void setClickCallback(ClickCallback cb) { m_ClickCallback = std::move(cb); }
+    void setEventWakeCallback(EventWakeCallback cb) { m_EventWakeCallback = std::move(cb); }
 
     /**
      * Reposition the button relative to the given Qt logical parent rect,
@@ -50,6 +54,11 @@ public:
 
     bool isButtonVisible() const { return m_ButtonVisible; }
 
+    // Windows can wake the SDL loop from the button's native window procedure,
+    // so an idle visible button does not need a continuous Qt event pump.
+    bool needsEventProcessing() const;
+    void beginEventProcessing();
+
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
@@ -59,6 +68,10 @@ protected:
     bool event(QEvent* event) override;
 
 private:
+#ifdef Q_OS_WIN32
+    struct NativeEventMonitor;
+#endif
+
     enum class InputSource { None, Mouse, Touch };
 
     void drawCrescentMoon(QPainter& p, qreal cx, qreal cy, qreal radius);
@@ -67,8 +80,15 @@ private:
     void updateInteraction(const QPoint& globalPosition);
     void finishInteraction(const QPoint& globalPosition);
     void cancelInteraction();
+    void requestEventProcessing();
+    void requestButtonUpdate();
+#ifdef Q_OS_WIN32
+    void ensureNativeEventMonitor();
+#endif
 
     ClickCallback m_ClickCallback;
+    EventWakeCallback m_EventWakeCallback;
+    OverlayEventWakeState m_EventWakeState;
     bool m_Hovered;
     bool m_ButtonVisible;
     bool m_Dragging;
@@ -79,6 +99,9 @@ private:
     QRect m_ParentGeometry;
     OverlayButtonPositionStore m_PositionStore;
     std::optional<QPointF> m_NormalizedPosition;
+#ifdef Q_OS_WIN32
+    std::unique_ptr<NativeEventMonitor> m_NativeEventMonitor;
+#endif
 
     // Button size (logical pixels)
     static constexpr int kButtonSize = 36;
