@@ -230,6 +230,7 @@ SOURCES += \
     cli/quitstream.cpp \
     cli/startstream.cpp \
     settings/compatfetcher.cpp \
+    settings/devicelocalsettings.cpp \
     settings/mappingfetcher.cpp \
     settings/streamingpreferences.cpp \
     streaming/input/abstouch.cpp \
@@ -265,6 +266,7 @@ SOURCES += \
     gui/windowswindowchrome.cpp \
     streaming/video/overlaymanager.cpp \
     streaming/video/overlaymenupanel.cpp \
+    streaming/video/overlaybuttonposition.cpp \
     streaming/video/overlaymenubutton.cpp \
     streaming/video/overlaytoast.cpp \
     backend/systemproperties.cpp \
@@ -278,6 +280,7 @@ HEADERS += \
     backend/nvapp.h \
     cli/pair.h \
     settings/compatfetcher.h \
+    settings/devicelocalsettings.h \
     settings/mappingfetcher.h \
     streaming/video/videoenhancement.h \
     utils.h \
@@ -325,6 +328,7 @@ HEADERS += \
     gui/windowswindowchrome.h \
     streaming/video/overlaymanager.h \
     streaming/video/overlaymenupanel.h \
+    streaming/video/overlaybuttonposition.h \
     streaming/video/overlaymenubutton.h \
     streaming/video/overlaytoast.h \
     backend/systemproperties.h \

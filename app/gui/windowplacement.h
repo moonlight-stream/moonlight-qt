@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QPointer>
 #include <QRect>
+#include <QSettings>
 #include <QTimer>
 #include <QWindow>
 
@@ -23,7 +24,7 @@ public:
     bool isEnabled() const;
     void setEnabled(bool enabled);
 
-    Q_INVOKABLE void restore();
+    Q_INVOKABLE bool restore(bool defaultMaximized);
     Q_INVOKABLE void flush();
 
 signals:
@@ -35,8 +36,10 @@ private:
     static QRect constrainGeometry(const QRect& geometry, const QRect& availableGeometry);
 
     void scheduleSave();
+    void saveWindowState(QWindow::Visibility visibility);
     void saveNow();
 
+    QSettings m_PlacementSettings;
     QPointer<QWindow> m_Window;
     QTimer m_SaveTimer;
     bool m_Enabled = false;

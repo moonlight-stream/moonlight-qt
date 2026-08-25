@@ -46,7 +46,9 @@ ApplicationWindow {
     WindowPlacement {
         id: windowPlacement
         window: window
-        enabled: StreamingPreferences.rememberWindowPosition
+        enabled: StreamingPreferences.rememberWindowPosition &&
+                 SystemProperties.hasDesktopEnvironment &&
+                 (!SystemProperties.isRunningWayland || SystemProperties.isRunningXWayland)
     }
 
     WindowsWindowChrome {
@@ -127,23 +129,24 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
-        // Always fit the initial window to the current screen. If the user opted
-        // in, restore the last normal window geometry before showing it.
+        // Always fit the initial window to the current screen. When the preference
+        // is enabled, restore the last normal window geometry before showing it.
         windowsWindowChrome.activate()
-        windowPlacement.restore()
+        var startMaximized = windowPlacement.restore(
+                    StreamingPreferences.uiDisplayMode === StreamingPreferences.UI_MAXIMIZED)
 
         // Show the window according to the user's preferences
         if (SystemProperties.hasDesktopEnvironment) {
-            if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_MAXIMIZED) {
+            if (StreamingPreferences.uiDisplayMode === StreamingPreferences.UI_FULLSCREEN) {
+                window.showFullScreen()
+            }
+            else if (startMaximized) {
                 if (Qt.platform.os === "windows") {
                     window.opacity = 0
                     window.revealAfterFirstFrame = true
                     revealFallbackTimer.start()
                 }
                 window.showMaximized()
-            }
-            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) {
-                window.showFullScreen()
             }
             else {
                 window.show()

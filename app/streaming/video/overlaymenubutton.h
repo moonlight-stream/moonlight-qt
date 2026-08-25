@@ -6,10 +6,14 @@
 #include <QSurfaceFormat>
 #include <QTouchEvent>
 #include <functional>
+#include <optional>
+
+#include "overlaybuttonposition.h"
 
 /**
  * OverlayMenuButton - A small floating button rendered by the OS compositor,
- * positioned at the top-right corner of the streaming window.
+ * positioned inside the streaming window. It defaults to the top-right and
+ * remembers a device-local relative position after the user drags it.
  *
  * When clicked, triggers a callback to open the overlay menu.
  * Semi-transparent when idle, fully opaque on hover.
@@ -29,13 +33,13 @@ public:
     void setClickCallback(ClickCallback cb) { m_ClickCallback = std::move(cb); }
 
     /**
-     * Reposition the button relative to the given Qt logical parent rect.
-     * Places the button at the top-right corner of the streaming window.
+     * Reposition the button relative to the given Qt logical parent rect,
+     * resolving a remembered relative position against the latest bounds.
      */
     void repositionTo(int parentX, int parentY, int parentW, int parentH);
 
     /**
-     * Show the button at the top-right corner of the given parent rect.
+     * Show the button inside the given parent rect.
      */
     void showButton(int parentX, int parentY, int parentW, int parentH);
 
@@ -73,6 +77,8 @@ private:
     QPoint m_PressGlobalPosition;
     QPoint m_WindowPositionAtPress;
     QRect m_ParentGeometry;
+    OverlayButtonPositionStore m_PositionStore;
+    std::optional<QPointF> m_NormalizedPosition;
 
     // Button size (logical pixels)
     static constexpr int kButtonSize = 36;

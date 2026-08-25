@@ -35,7 +35,8 @@ OverlayMenuButton::OverlayMenuButton(QWindow* parent)
       m_ButtonVisible(false),
       m_Dragging(false),
       m_InputSource(InputSource::None),
-      m_TouchPointId(-1)
+      m_TouchPointId(-1),
+      m_NormalizedPosition(m_PositionStore.load())
 {
     setFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint
              | Qt::WindowDoesNotAcceptFocus);
@@ -54,18 +55,36 @@ OverlayMenuButton::~OverlayMenuButton()
 void OverlayMenuButton::repositionTo(int parentX, int parentY, int parentW, int parentH)
 {
     const QRect newParentGeometry(parentX, parentY, parentW, parentH);
-    QPoint newPosition;
+    const QRect previousParentGeometry = m_ParentGeometry;
+    const QPoint previousPosition = position();
+    m_ParentGeometry = newParentGeometry;
 
-    if (m_ParentGeometry.isValid()) {
-        // Preserve the button's offset when the streaming window moves or resizes.
-        newPosition = newParentGeometry.topLeft() + (position() - m_ParentGeometry.topLeft());
+    QPoint newPosition;
+    if (m_InputSource != InputSource::None) {
+        const QPoint parentTranslation = previousParentGeometry.isValid()
+                ? m_ParentGeometry.topLeft() - previousParentGeometry.topLeft()
+                : QPoint();
+        newPosition = OverlayButtonPlacement::clamp(
+                previousPosition + parentTranslation,
+                m_ParentGeometry,
+                QSize(kButtonSize, kButtonSize),
+                kMargin);
+        // Keep the active drag origin aligned with any parent movement or
+        // resize so the next pointer event cannot jump back to stale bounds.
+        m_WindowPositionAtPress += newPosition - previousPosition;
+    }
+    else if (m_NormalizedPosition) {
+        newPosition = OverlayButtonPlacement::resolve(
+                *m_NormalizedPosition,
+                m_ParentGeometry,
+                QSize(kButtonSize, kButtonSize),
+                kMargin);
     }
     else {
-        newPosition = QPoint(newParentGeometry.right() - kButtonSize - kMargin + 1,
-                             newParentGeometry.top() + kMargin);
+        newPosition = OverlayButtonPlacement::defaultPosition(
+                m_ParentGeometry, QSize(kButtonSize, kButtonSize), kMargin);
     }
 
-    m_ParentGeometry = newParentGeometry;
     setGeometry(QRect(clampToParent(newPosition), QSize(kButtonSize, kButtonSize)));
 }
 
@@ -88,16 +107,8 @@ void OverlayMenuButton::hideButton()
 
 QPoint OverlayMenuButton::clampToParent(const QPoint& position) const
 {
-    if (!m_ParentGeometry.isValid()) {
-        return position;
-    }
-
-    const int minX = m_ParentGeometry.left() + kMargin;
-    const int minY = m_ParentGeometry.top() + kMargin;
-    const int maxX = qMax(minX, m_ParentGeometry.right() - kButtonSize - kMargin + 1);
-    const int maxY = qMax(minY, m_ParentGeometry.bottom() - kButtonSize - kMargin + 1);
-    return QPoint(qBound(minX, position.x(), maxX),
-                  qBound(minY, position.y(), maxY));
+    return OverlayButtonPlacement::clamp(
+            position, m_ParentGeometry, QSize(kButtonSize, kButtonSize), kMargin);
 }
 
 void OverlayMenuButton::beginInteraction(InputSource source, const QPoint& globalPosition)
@@ -140,7 +151,17 @@ void OverlayMenuButton::finishInteraction(const QPoint& globalPosition)
     }
 
     const InputSource source = m_InputSource;
+    const bool dragged = m_Dragging;
     const bool activate = !m_Dragging;
+
+    if (dragged && m_ParentGeometry.isValid()) {
+        m_NormalizedPosition = OverlayButtonPlacement::normalize(
+                position(), m_ParentGeometry, QSize(kButtonSize, kButtonSize), kMargin);
+        if (!m_PositionStore.save(*m_NormalizedPosition)) {
+            qWarning("Failed to save the device-local overlay button position");
+        }
+    }
+
     cancelInteraction();
 
     if (activate && m_ClickCallback) {

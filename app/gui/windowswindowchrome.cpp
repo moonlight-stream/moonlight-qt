@@ -3,6 +3,9 @@
 #include <QCoreApplication>
 #include <QScreen>
 #include <QTimer>
+#include <QtMath>
+
+#include <limits>
 
 #ifdef Q_OS_WIN32
 #include <windows.h>
@@ -38,6 +41,55 @@ QString qtRectText(const QRect& rect)
             .arg(rect.y())
             .arg(rect.width())
             .arg(rect.height());
+}
+
+LONG nativeMaximumTrackLength(int logicalMaximum, qreal scale)
+{
+    const qint64 nativeMaximum = qCeil(qMax(1, logicalMaximum) * scale);
+    return static_cast<LONG>(qMin<qint64>(
+            nativeMaximum, (std::numeric_limits<LONG>::max)()));
+}
+
+void constrainMaximizedDragRestoreSize(HWND window)
+{
+    WINDOWPLACEMENT placement = { sizeof(placement) };
+    if (!GetWindowPlacement(window, &placement)) {
+        return;
+    }
+
+    const HMONITOR monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO monitorInfo = { sizeof(monitorInfo) };
+    if (!monitor || !GetMonitorInfoW(monitor, &monitorInfo)) {
+        return;
+    }
+
+    const LONG workWidth = monitorInfo.rcWork.right - monitorInfo.rcWork.left;
+    const LONG workHeight = monitorInfo.rcWork.bottom - monitorInfo.rcWork.top;
+    const LONG normalWidth = placement.rcNormalPosition.right -
+                             placement.rcNormalPosition.left;
+    const LONG normalHeight = placement.rcNormalPosition.bottom -
+                              placement.rcNormalPosition.top;
+    if (workWidth <= 0 || workHeight <= 0 || normalWidth <= 0 || normalHeight <= 0) {
+        return;
+    }
+    const LONG restoredWidth = qMin(normalWidth, workWidth);
+    const LONG restoredHeight = qMin(normalHeight, workHeight);
+    if (restoredWidth == normalWidth && restoredHeight == normalHeight) {
+        return;
+    }
+
+    const RECT previousNormalPosition = placement.rcNormalPosition;
+    placement.rcNormalPosition.right = placement.rcNormalPosition.left + restoredWidth;
+    placement.rcNormalPosition.bottom = placement.rcNormalPosition.top + restoredHeight;
+    if (!SetWindowPlacement(window, &placement)) {
+        qWarning() << "Failed to constrain the maximized drag restore size:" << GetLastError();
+        return;
+    }
+
+    qInfo().noquote()
+            << QStringLiteral("Window drag restore constrained normal size from %1 to %2")
+                       .arg(nativeRectText(previousNormalPosition),
+                            nativeRectText(placement.rcNormalPosition));
 }
 }
 #endif
@@ -326,9 +378,28 @@ bool WindowsWindowChrome::nativeEventFilter(const QByteArray& eventType,
             minMaxInfo->ptMaxPosition.y = monitorInfo.rcWork.top - monitorInfo.rcMonitor.top;
             minMaxInfo->ptMaxSize.x = monitorInfo.rcWork.right - monitorInfo.rcWork.left;
             minMaxInfo->ptMaxSize.y = monitorInfo.rcWork.bottom - monitorInfo.rcWork.top;
+            // Keep maximize constrained to the monitor work area, but don't
+            // inherit Windows' screen-sized tracking cap for manual resizing.
+            // Startup restoration applies its own safety constraints when a
+            // saved window no longer fits the current display.
+            const qreal scale = m_Window->devicePixelRatio();
+            minMaxInfo->ptMaxTrackSize.x = nativeMaximumTrackLength(
+                    m_Window->maximumWidth(), scale);
+            minMaxInfo->ptMaxTrackSize.y = nativeMaximumTrackLength(
+                    m_Window->maximumHeight(), scale);
             *result = 0;
             return true;
         }
+    }
+
+    if (nativeMessage->message == WM_NCLBUTTONDOWN &&
+            nativeMessage->wParam == HTCAPTION &&
+            IsZoomed(nativeMessage->hwnd)) {
+        // Windows restores rcNormalPosition before beginning a caption drag.
+        // Keep explicit restore-button behavior intact, but prevent a normal
+        // rectangle larger than the current display from reappearing during
+        // drag-to-restore.
+        constrainMaximizedDragRestoreSize(nativeMessage->hwnd);
     }
 
     if (nativeMessage->message != WM_NCHITTEST ||
