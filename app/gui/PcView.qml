@@ -233,6 +233,7 @@ CenteredGridView {
             if (wakeAndOpenPending && onlineRole) {
                 wakeAndOpenPending = false
                 wakeOpenTimeout.stop()
+                wakeOpenDialog.stop()
                 activatePc()
             }
         }
@@ -242,6 +243,7 @@ CenteredGridView {
             interval: 120000
             onTriggered: {
                 wakeAndOpenPending = false
+                wakeOpenDialog.stop()
                 errorDialog.text = qsTr("Timed out waiting for %1 to wake up.").arg(model.name)
                 errorDialog.helpText = ""
                 errorDialog.open()
@@ -252,6 +254,7 @@ CenteredGridView {
             wakeAndOpenPending = true
             wakeOpenTimeout.restart()
             computerModel.wakeComputer(index)
+            wakeOpenDialog.start(model.name)
         }
 
         function activatePc() {
@@ -325,6 +328,26 @@ CenteredGridView {
         // Using Setup-Guide here instead of Troubleshooting because it's likely that users
         // will arrive here by forgetting to enable GameStream or not forwarding ports.
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
+    }
+
+    // Shows while a Wake and Open is in progress so the user knows we're just
+    // waiting for the PC to come online. It stays up until the PC wakes or the
+    // timeout fires, at which point we close it explicitly (see wakeOpenTimeout
+    // and onOnlineRoleChanged). NoAutoClose keeps it from dismissing on a stray
+    // click or Escape.
+    NavigableMessageDialog {
+        id: wakeOpenDialog
+        closePolicy: Popup.NoAutoClose
+        showSpinner: true
+
+        function start(pcName) {
+            text = qsTr("Waking up %1...").arg(pcName) + "\n\n" + qsTr("This may take a while.")
+            open()
+        }
+
+        function stop() {
+            close()
+        }
     }
 
     NavigableMessageDialog {
