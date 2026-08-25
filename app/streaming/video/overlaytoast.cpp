@@ -42,9 +42,6 @@ OverlayToast::OverlayToast(QWindow* parent)
     m_Font.setWeight(QFont::DemiBold);
     m_Font.setStyleHint(QFont::SansSerif);
 
-    m_DismissTimer.setSingleShot(true);
-    connect(&m_DismissTimer, &QTimer::timeout, this, &OverlayToast::startFadeOut);
-
     m_FadeAnimation = new QPropertyAnimation(this, "opacity", this);
     // 淡出跟着 Theme 的动效时长走：这套风格的动效更短更机械
     m_FadeAnimation->setDuration(240);
@@ -52,10 +49,38 @@ OverlayToast::OverlayToast(QWindow* parent)
     m_FadeAnimation->setEndValue(0.0);
     connect(m_FadeAnimation, &QPropertyAnimation::finished,
             this, &OverlayToast::onFadeFinished);
+
+    m_Clock.start();
 }
 
 OverlayToast::~OverlayToast()
 {
+    dismissImmediately();
+}
+
+bool OverlayToast::needsEventProcessing() const
+{
+    return m_EventState.needsEventProcessing(m_Clock.elapsed());
+}
+
+int OverlayToast::nextEventDelayMs() const
+{
+    return m_EventState.nextEventDelayMs(m_Clock.elapsed());
+}
+
+void OverlayToast::beginEventProcessing()
+{
+    if (m_EventState.beginEventProcessing(m_Clock.elapsed())) {
+        startFadeOut();
+    }
+}
+
+void OverlayToast::dismissImmediately()
+{
+    m_FadeAnimation->stop();
+    m_EventState.cancel();
+    hide();
+    setOpacity(1.0);
 }
 
 void OverlayToast::showToast(int parentX, int parentY, int parentW, int parentH,
@@ -63,9 +88,10 @@ void OverlayToast::showToast(int parentX, int parentY, int parentW, int parentH,
 {
     m_Message = message;
 
-    // Stop any ongoing fade / dismiss
-    m_DismissTimer.stop();
+    // Stop any ongoing fade before replacing the toast. The state deadline is
+    // reset below, so an expired older toast cannot dismiss the new message.
     m_FadeAnimation->stop();
+    m_EventState.show(m_Clock.elapsed(), durationMs);
     setOpacity(1.0);
 
     // Calculate dimensions
@@ -93,17 +119,19 @@ void OverlayToast::showToast(int parentX, int parentY, int parentW, int parentH,
     show();
     raise();
     requestUpdate();
-
-    m_DismissTimer.start(durationMs);
 }
 
 void OverlayToast::startFadeOut()
 {
+    if (!m_EventState.isFading()) {
+        return;
+    }
     m_FadeAnimation->start();
 }
 
 void OverlayToast::onFadeFinished()
 {
+    m_EventState.finishFade();
     hide();
     setOpacity(1.0);
 }

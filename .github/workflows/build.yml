@@ -200,6 +200,14 @@ jobs:
         release\overlay_button_native_wake.exe
         if errorlevel 1 exit /b %ERRORLEVEL%
         popd
+        pushd tests\overlay_toast_event_state
+        qmake overlay_toast_event_state.pro
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        ..\..\scripts\jom.exe release
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        release\overlay_toast_event_state.exe
+        if errorlevel 1 exit /b %ERRORLEVEL%
+        popd
 
     - name: Install Qt arm64
       uses: jdpurcell/install-qt-action@v5

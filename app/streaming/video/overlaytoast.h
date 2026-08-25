@@ -3,9 +3,11 @@
 #include <QRasterWindow>
 #include <QPainter>
 #include <QFont>
-#include <QTimer>
+#include <QElapsedTimer>
 #include <QSurfaceFormat>
 #include <QPropertyAnimation>
+
+#include "overlaytoasteventstate.h"
 
 /**
  * OverlayToast - lightweight, auto-dismissing toast notification
@@ -31,6 +33,14 @@ public:
     void showToast(int parentX, int parentY, int parentW, int parentH,
                    const QString& message, int durationMs = 2000);
 
+    // Static toast contents do not require a continuously running Qt event
+    // loop. Session uses these methods to wake only for initial paint,
+    // dismissal deadline, and the short fade animation.
+    bool needsEventProcessing() const;
+    int nextEventDelayMs() const;
+    void beginEventProcessing();
+    void dismissImmediately();
+
 protected:
     void paintEvent(QPaintEvent* event) override;
 
@@ -41,7 +51,8 @@ private slots:
 private:
     QString m_Message;
     QFont   m_Font;
-    QTimer  m_DismissTimer;
+    QElapsedTimer m_Clock;
+    OverlayToastEventState m_EventState;
     QPropertyAnimation* m_FadeAnimation;
     int m_ToastHeight;
     int m_HorizPadding;

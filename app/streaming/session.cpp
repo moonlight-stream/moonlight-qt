@@ -2283,9 +2283,6 @@ void Session::showQtOverlayMenu(std::optional<QPoint> pointerGlobalPosition,
         break;
     }
 
-    // Pump Qt events immediately to trigger first paint
-    QCoreApplication::processEvents(QEventLoop::AllEvents);
-
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Qt overlay menu shown at (%d,%d) %dx%d",
                 parentRect.x(), parentRect.y(), parentRect.width(), parentRect.height());
@@ -2335,8 +2332,8 @@ void Session::syncQtOverlayWindowsWithSdlWindowState()
         if (m_MenuButton) {
             m_MenuButton->hideButton();
         }
-        if (m_Toast && m_Toast->isVisible()) {
-            m_Toast->hide();
+        if (m_Toast) {
+            m_Toast->dismissImmediately();
         }
         return;
     }
@@ -2573,7 +2570,6 @@ void Session::showStreamingToast(const QString& message, int durationMs)
     m_Toast->showToast(parentRect.x(), parentRect.y(),
                        parentRect.width(), parentRect.height(),
                        message, durationMs);
-    QCoreApplication::processEvents();
 }
 
 void Session::updateFileMappingMenuState()
@@ -3196,6 +3192,13 @@ bool Session::tryReconnect()
         return false;
     };
 
+    auto processReconnectQtEvents = [this]() {
+        if (m_Toast) {
+            m_Toast->beginEventProcessing();
+        }
+        QCoreApplication::processEvents();
+    };
+
     while (!cancelled && SDL_GetTicks() - startTicks < graceMs) {
         // Update the on-screen indicator (re-shown each attempt so it stays up)
         Uint32 remainingMs = graceMs - (SDL_GetTicks() - startTicks);
@@ -3220,7 +3223,7 @@ bool Session::tryReconnect()
                 // Abort the in-progress connection attempt
                 LiInterruptConnection();
             }
-            QCoreApplication::processEvents();
+            processReconnectQtEvents();
             SDL_Delay(10);
         }
         thread.wait();
@@ -3256,7 +3259,7 @@ bool Session::tryReconnect()
             if (cancelled) {
                 break;
             }
-            QCoreApplication::processEvents();
+            processReconnectQtEvents();
             SDL_Delay(10);
         }
 
@@ -4109,7 +4112,7 @@ void Session::exec()
         // delay input and video processing.
         return (m_MenuPanel && m_MenuPanel->needsEventProcessing()) ||
                (m_MenuButton && m_MenuButton->needsEventProcessing()) ||
-               (m_Toast && m_Toast->isVisible()) ||
+               (m_Toast && m_Toast->needsEventProcessing()) ||
 #ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
                (m_StylusReplayTest && m_StylusReplayTest->isPanelVisible());
 #else
@@ -4131,6 +4134,9 @@ void Session::exec()
             // Clear before processing so an update requested from inside a Qt
             // handler remains pending and schedules a second pass.
             m_MenuButton->beginEventProcessing();
+        }
+        if (m_Toast) {
+            m_Toast->beginEventProcessing();
         }
         QCoreApplication::processEvents(QEventLoop::AllEvents);
     };
@@ -4192,6 +4198,13 @@ void Session::exec()
         int waitTimeoutMs = (m_ClipboardHelper != nullptr && m_ClipboardHelper->isRunning()) ? 100 : 1000;
         if (qtUiNeedsEventProcessing()) {
             waitTimeoutMs = qMin(waitTimeoutMs, static_cast<int>(QT_UI_EVENT_PUMP_INTERVAL_MS));
+        }
+        if (const int toastDelayMs = m_Toast ? m_Toast->nextEventDelayMs() : -1;
+                toastDelayMs >= 0) {
+            // Avoid relying on platform-specific zero-timeout behavior. Once
+            // due, a 1 ms wake is sufficient and prevents a busy loop if the
+            // native dispatcher needs one more turn to deliver the update.
+            waitTimeoutMs = qMin(waitTimeoutMs, qMax(toastDelayMs, 1));
         }
 #ifdef MOONLIGHT_ENABLE_FUNCTION_TESTS
         if (const int replayDelayMs = m_StylusReplayTest ?
@@ -4797,7 +4810,7 @@ DispatchDeferredCleanup:
 
     // Destroy the Qt overlay toast
     if (m_Toast) {
-        m_Toast->close();
+        m_Toast->dismissImmediately();
         delete m_Toast;
         m_Toast = nullptr;
     }
