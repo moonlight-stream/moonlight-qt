@@ -1,7 +1,9 @@
 #include "streaming/clipboardsync.h"
 
 #include <QCoreApplication>
+#include <QMimeData>
 #include <QTextStream>
+#include <QUrl>
 
 namespace {
 bool require(bool condition, const QString& message, QTextStream& err)
@@ -28,6 +30,41 @@ int main(int argc, char* argv[])
                   QStringLiteral("70 KiB payload did not use blob transfer"), err);
     ok &= require(ClipboardSync::MAX_BLOB_BYTES == 64LL * 1024 * 1024,
                   QStringLiteral("blob size cap changed unexpectedly"), err);
+
+    QMimeData localFile;
+    localFile.setUrls({QUrl::fromLocalFile(QStringLiteral("/tmp/report.tex"))});
+    localFile.setData(QStringLiteral("image/tiff"), QByteArrayLiteral("finder-icon"));
+    ok &= require(ClipboardSync::hasFileReferences(&localFile),
+                  QStringLiteral("local file URL with image fallback was not protected"), err);
+
+    QMimeData macFile;
+    macFile.setData(QStringLiteral("application/x-qt-mac-pasteboard-mime;value=\"public.file-url\""),
+                    QByteArrayLiteral("file:///tmp/report.tex"));
+    ok &= require(ClipboardSync::hasFileReferences(&macFile),
+                  QStringLiteral("macOS public.file-url format was not protected"), err);
+
+    QMimeData promisedFile;
+    promisedFile.setData(QStringLiteral("com.apple.pasteboard.promised-file-url"),
+                         QByteArrayLiteral("file:///tmp/future-file"));
+    ok &= require(ClipboardSync::hasFileReferences(&promisedFile),
+                  QStringLiteral("macOS promised file format was not protected"), err);
+
+    QMimeData windowsFile;
+    windowsFile.setData(QStringLiteral("application/x-qt-windows-mime;value=\"FileGroupDescriptorW\""),
+                        QByteArrayLiteral("descriptor"));
+    ok &= require(ClipboardSync::hasFileReferences(&windowsFile),
+                  QStringLiteral("Windows file descriptor format was not protected"), err);
+
+    QMimeData webImage;
+    webImage.setUrls({QUrl(QStringLiteral("https://example.com/image.png"))});
+    webImage.setData(QStringLiteral("image/png"), QByteArrayLiteral("png"));
+    ok &= require(!ClipboardSync::hasFileReferences(&webImage),
+                  QStringLiteral("remote image URL was misclassified as a file clipboard"), err);
+
+    QMimeData plainImage;
+    plainImage.setData(QStringLiteral("image/png"), QByteArrayLiteral("png"));
+    ok &= require(!ClipboardSync::hasFileReferences(&plainImage),
+                  QStringLiteral("plain image clipboard was misclassified as a file clipboard"), err);
 
     if (!ok) {
         return 1;

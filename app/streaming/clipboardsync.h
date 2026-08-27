@@ -82,6 +82,11 @@ public:
         return payloadBytes >= INLINE_THRESHOLD;
     }
 
+    // File copy/paste is not part of the clipboard sync protocol. Native file
+    // clipboards often also expose a thumbnail or application icon as an image,
+    // so callers must reject file references before considering image formats.
+    static bool hasFileReferences(const QMimeData* mime);
+
     explicit ClipboardSync(const ClipboardSyncHostContext& hostContext = ClipboardSyncHostContext(),
                            QObject* parent = nullptr);
     ~ClipboardSync() override;

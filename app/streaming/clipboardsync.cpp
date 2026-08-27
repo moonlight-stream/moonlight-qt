@@ -88,6 +88,49 @@ ClipboardSync::~ClipboardSync()
     stop();
 }
 
+bool ClipboardSync::hasFileReferences(const QMimeData* mime)
+{
+    if (mime == nullptr) {
+        return false;
+    }
+
+    // Qt normalizes ordinary Finder and Explorer file copies to local URLs.
+    // Do not treat remote web URLs as file clipboard data: browsers commonly
+    // attach those to otherwise valid copied images.
+    if (mime->hasUrls()) {
+        const QList<QUrl> urls = mime->urls();
+        for (const QUrl& url : urls) {
+            if (url.isLocalFile()) {
+                return true;
+            }
+        }
+    }
+
+    // Some native and promised-file providers expose only a platform format,
+    // without a URL that QMimeData can normalize. Match the identifying part
+    // so this also covers Qt's application/x-qt-*-mime wrappers.
+    static const QStringList fileFormatMarkers {
+        QStringLiteral("public.file-url"),
+        QStringLiteral("NSFilenamesPboardType"),
+        QStringLiteral("promised-file"),
+        QStringLiteral("FileNameW"),
+        QStringLiteral("FileGroupDescriptor"),
+        QStringLiteral("FileContents"),
+        QStringLiteral("Shell IDList Array")
+    };
+
+    const QStringList formats = mime->formats();
+    for (const QString& format : formats) {
+        for (const QString& marker : fileFormatMarkers) {
+            if (format.contains(marker, Qt::CaseInsensitive)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 void ClipboardSync::setHostContext(const ClipboardSyncHostContext& hostContext)
 {
     m_HostContext = hostContext;
@@ -269,6 +312,11 @@ void ClipboardSync::applyInboundText(const QByteArray& payload)
         return;
     }
 
+    if (hasFileReferences(cb->mimeData())) {
+        ClipboardLog::debug("ClipboardSync: preserving local file clipboard; inbound text ignored");
+        return;
+    }
+
     // Record hash *before* writing so the dataChanged echo we're about to
     // trigger is suppressed.
     uint64_t hash = hashBytes(payload);
@@ -288,6 +336,11 @@ void ClipboardSync::applyInboundPng(const QByteArray& payload)
 
     QClipboard* cb = QGuiApplication::clipboard();
     if (cb == nullptr) {
+        return;
+    }
+
+    if (hasFileReferences(cb->mimeData())) {
+        ClipboardLog::debug("ClipboardSync: preserving local file clipboard; inbound PNG ignored");
         return;
     }
 
@@ -623,6 +676,14 @@ void ClipboardSync::onLocalClipboardChanged()
     }
 
     const QMimeData* mime = cb->mimeData();
+
+    // Finder and Explorer file copies may include icon/thumbnail image data.
+    // The protocol cannot carry file references, and sending that fallback
+    // image allows the host echo to replace the original local file clipboard.
+    if (hasFileReferences(mime)) {
+        ClipboardLog::debug("ClipboardSync: local file clipboard detected; sync skipped");
+        return;
+    }
 
     // Image takes precedence — some applications attach a fallback text label
     // (file path, alt text) alongside the bitmap; we want the picture, not the
