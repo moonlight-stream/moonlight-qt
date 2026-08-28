@@ -204,7 +204,10 @@ macx {
         CONFIG += discord-rpc libplacebo
     }
 
-    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework UniformTypeIdentifiers -framework Metal -framework MetalFx -framework QuartzCore
+    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework UniformTypeIdentifiers -framework Metal -framework MetalFx -framework QuartzCore -framework GameController -framework CoreHaptics
+
+    SOURCES += streaming/audio/dualsensehapticsmac.mm
+    HEADERS += streaming/audio/dualsensehapticsmac.h
 
     # For libsoundio
     LIBS += -framework CoreAudio -framework AudioUnit
@@ -310,6 +313,7 @@ HEADERS += \
     streaming/audio/renderers/renderer.h \
     streaming/audio/dualsensehaptics.h \
     streaming/audio/dualsensehapticscalibration.h \
+    streaming/audio/dualsensehapticsrouting.h \
     streaming/audio/dualsensehapticsstream.h \
     streaming/audio/renderers/sdl.h \
     gui/computermodel.h \

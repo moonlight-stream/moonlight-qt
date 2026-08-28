@@ -362,6 +362,7 @@ SdlInputHandler::~SdlInputHandler()
 #endif
     cancelNativeTouchpadContacts();
     resetRemoteCursor();
+    stopAllRumble();
 
     for (int i = 0; i < MAX_GAMEPADS; i++) {
         if (m_GamepadState[i].mouseEmulationTimer != 0) {

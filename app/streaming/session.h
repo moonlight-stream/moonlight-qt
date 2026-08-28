@@ -178,6 +178,10 @@ private:
     // unexpected network interruption. Returns true if streaming resumed.
     bool tryReconnect();
 
+    void handleSdlUserEvent(const SDL_UserEvent& event);
+
+    void updateDualSenseHapticsControllerTarget();
+
     // Emit the appropriate error dialog for a connection termination code.
     void displayTerminationError(int errorCode);
 

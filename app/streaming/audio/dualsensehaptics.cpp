@@ -33,6 +33,8 @@
 #include <QString>
 
 using Microsoft::WRL::ComPtr;
+#elif defined(Q_OS_MACOS)
+#include "dualsensehapticsmac.h"
 #endif
 
 namespace {
@@ -364,8 +366,17 @@ struct DualSenseHapticsRenderer::Impl
         CoUninitialize();
     }
 #else
-    Impl() = default;
+    Impl()
+    {
+#ifdef Q_OS_MACOS
+        macRenderer = std::make_unique<MacDualSenseHapticsRenderer>();
+#endif
+    }
     ~Impl() = default;
+
+#ifdef Q_OS_MACOS
+    std::unique_ptr<MacDualSenseHapticsRenderer> macRenderer;
+#endif
 #endif
 };
 
@@ -458,5 +469,38 @@ void DualSenseHapticsRenderer::submit(const LI_DS5_HAPTICS_PCM_FRAME& frame)
     m_Impl->condition.notify_one();
 #else
     (void)frame;
+#endif
+}
+
+void DualSenseHapticsRenderer::setControllerTarget(int controllerNumber)
+{
+#ifdef Q_OS_MACOS
+    if (m_Impl->macRenderer != nullptr) {
+        m_Impl->macRenderer->setControllerTarget(controllerNumber);
+    }
+#else
+    (void)controllerNumber;
+#endif
+}
+
+void DualSenseHapticsRenderer::reset()
+{
+#ifdef Q_OS_MACOS
+    if (m_Impl->macRenderer != nullptr) {
+        m_Impl->macRenderer->reset();
+    }
+#endif
+}
+
+bool DualSenseHapticsRenderer::submit(const LI_DS5_HAPTICS_IR_FRAME_V2& frame,
+                                      bool& startedNative)
+{
+#ifdef Q_OS_MACOS
+    return m_Impl->macRenderer != nullptr &&
+           m_Impl->macRenderer->submit(frame, startedNative);
+#else
+    (void)frame;
+    startedNative = false;
+    return false;
 #endif
 }

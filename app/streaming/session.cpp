@@ -78,6 +78,22 @@
 #include <utility>
 
 namespace {
+
+int SDLCALL keepNonRumbleEvent(void*, SDL_Event* event)
+{
+    return event->type != SDL_USEREVENT ||
+           (event->user.code != SDL_CODE_GAMECONTROLLER_RUMBLE &&
+            event->user.code != SDL_CODE_GAMECONTROLLER_RUMBLE_TRIGGERS);
+}
+
+void stopControllerRumbleAtConnectionBoundary(SdlInputHandler* inputHandler)
+{
+    SDL_FilterEvents(keepNonRumbleEvent, nullptr);
+    if (inputHandler != nullptr) {
+        inputHandler->stopAllRumble();
+    }
+}
+
 QRect qtWindowCreationGeometryForSdl(QWindow* window)
 {
     if (!window) {
@@ -767,6 +783,16 @@ void Session::clDs5HapticsIrV2(const LI_DS5_HAPTICS_IR_FRAME_V2* frame)
         return;
     }
 
+    Session* session = s_ActiveSession;
+    bool startedNative = false;
+    if (session != nullptr && session->m_DualSenseHapticsRenderer != nullptr &&
+        session->m_DualSenseHapticsRenderer->submit(*frame, startedNative)) {
+        if (startedNative) {
+            clRumble(frame->controllerNumber, 0, 0);
+        }
+        return;
+    }
+
     // IR lanes preserve authored left/right intent, while SDL exposes the
     // common low/high-frequency motor model. Fold both lanes into spectral
     // energy here; device-specific renderers can replace this calibration.
@@ -825,6 +851,11 @@ void Session::clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlag
     // Based on the following SDL code:
     // https://github.com/libsdl-org/SDL/blob/120c76c84bbce4c1bfed4e9eb74e10678bd83120/test/testgamecontroller.c#L286-L307
     DualSenseOutputReport *state = (DualSenseOutputReport *) SDL_malloc(sizeof(DualSenseOutputReport));
+    if (state == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_INPUT,
+                     "Unable to allocate DualSense adaptive trigger report");
+        return;
+    }
     SDL_zero(*state);
     state->validFlag0 = (eventFlags & DS_EFFECT_RIGHT_TRIGGER) | (eventFlags & DS_EFFECT_LEFT_TRIGGER);
     state->rightTriggerEffectType = typeRight;
@@ -833,7 +864,12 @@ void Session::clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlag
     SDL_memcpy(state->leftTriggerEffect, left, sizeof(state->leftTriggerEffect));
 
     setControllerLEDEvent.user.data2 = (void *) state;
-    SDL_PushEvent(&setControllerLEDEvent);
+    if (SDL_PushEvent(&setControllerLEDEvent) <= 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_INPUT,
+                     "Unable to queue DualSense adaptive trigger effect: %s",
+                     SDL_GetError());
+        SDL_free(state);
+    }
 }
 
 
@@ -1929,7 +1965,11 @@ private:
 
         // Finish cleanup of the connection state
         QMetaObject::invokeMethod(m_Session, &Session::stopMicrophone, Qt::BlockingQueuedConnection);
+        if (m_Session->m_DualSenseHapticsRenderer != nullptr) {
+            m_Session->m_DualSenseHapticsRenderer->setControllerTarget(-1);
+        }
         LiStopConnection();
+        stopControllerRumbleAtConnectionBoundary(nullptr);
         delete m_Session->m_DualSenseHapticsRenderer;
         m_Session->m_DualSenseHapticsRenderer = nullptr;
 
@@ -3129,6 +3169,84 @@ void Session::notifyMouseEmulationMode(bool enabled)
     }
 }
 
+void Session::updateDualSenseHapticsControllerTarget()
+{
+    if (m_DualSenseHapticsRenderer != nullptr) {
+        m_DualSenseHapticsRenderer->setControllerTarget(
+            m_InputHandler != nullptr ?
+                m_InputHandler->getNativeDualSenseControllerNumber() : -1);
+    }
+}
+
+void Session::handleSdlUserEvent(const SDL_UserEvent& event)
+{
+    switch (event.code) {
+    case SDL_CODE_FRAME_READY:
+        if (m_VideoDecoder != nullptr) {
+            m_VideoDecoder->renderFrameOnMainThread();
+        }
+        break;
+    case SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER:
+        m_FlushingWindowEventsRef--;
+        break;
+    case SDL_CODE_GAMECONTROLLER_RUMBLE:
+        m_InputHandler->rumble((uint16_t)(uintptr_t)event.data1,
+                               (uint16_t)((uintptr_t)event.data2 >> 16),
+                               (uint16_t)((uintptr_t)event.data2 & 0xFFFF));
+        break;
+    case SDL_CODE_GAMECONTROLLER_RUMBLE_TRIGGERS:
+        m_InputHandler->rumbleTriggers((uint16_t)(uintptr_t)event.data1,
+                                       (uint16_t)((uintptr_t)event.data2 >> 16),
+                                       (uint16_t)((uintptr_t)event.data2 & 0xFFFF));
+        break;
+    case SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE:
+        m_InputHandler->setMotionEventState((uint16_t)(uintptr_t)event.data1,
+                                            (uint8_t)((uintptr_t)event.data2 >> 16),
+                                            (uint16_t)((uintptr_t)event.data2 & 0xFFFF));
+        break;
+    case SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED:
+        m_InputHandler->setControllerLED((uint16_t)(uintptr_t)event.data1,
+                                         (uint8_t)((uintptr_t)event.data2 >> 16),
+                                         (uint8_t)((uintptr_t)event.data2 >> 8),
+                                         (uint8_t)((uintptr_t)event.data2));
+        break;
+    case SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS:
+        m_InputHandler->setAdaptiveTriggers((uint16_t)(uintptr_t)event.data1,
+                                            (DualSenseOutputReport *)event.data2);
+        break;
+    case SDL_CODE_FLUSH_TOUCHPAD_FRAME:
+        m_InputHandler->flushPendingTouchpadFrameEvent();
+        break;
+    case SDL_CODE_FLUSH_CURSOR_VISIBILITY:
+        if (m_InputHandler != nullptr) {
+            m_InputHandler->flushPendingRemoteCursorHide();
+        }
+        break;
+    case SDL_CODE_CURSOR_UPDATE:
+    {
+        std::shared_ptr<RemoteCursorUpdate> cursorUpdate;
+        {
+            std::lock_guard<std::mutex> lock(m_CursorUpdateMutex);
+            cursorUpdate.swap(m_PendingCursorUpdate);
+            m_CursorUpdateEventQueued = false;
+        }
+        if (cursorUpdate != nullptr && m_InputHandler != nullptr) {
+            m_InputHandler->updateRemoteCursor(*cursorUpdate);
+        }
+        break;
+    }
+#ifdef Q_OS_WIN32
+    case SDL_CODE_PROCESS_QT_OVERLAY_EVENTS:
+        // The actual Qt processing happens after SDL dispatch below.
+        // Keeping this event side-effect free also coalesces bursts of
+        // native button messages without re-entering Qt from Win32.
+        break;
+#endif
+    default:
+        SDL_assert(false);
+    }
+}
+
 class AsyncConnectionStartThread : public QThread
 {
 public:
@@ -3165,7 +3283,15 @@ bool Session::tryReconnect()
 
     // Stop ABR feedback (startConnectionAsync() restarts it) and the dead connection
     stopSunshineAbr();
+    stopControllerRumbleAtConnectionBoundary(m_InputHandler);
+    if (m_DualSenseHapticsRenderer != nullptr) {
+        m_DualSenseHapticsRenderer->setControllerTarget(-1);
+    }
     LiStopConnection();
+    stopControllerRumbleAtConnectionBoundary(m_InputHandler);
+    if (m_DualSenseHapticsRenderer != nullptr) {
+        m_DualSenseHapticsRenderer->reset();
+    }
 
     // Total time budget for reconnect attempts before giving up
     const Uint32 graceMs = 60 * 1000;
@@ -3192,6 +3318,25 @@ bool Session::tryReconnect()
         return false;
     };
 
+    auto handleReconnectEvent = [this, &isCancelEvent](SDL_Event& ev) -> bool {
+        if (isCancelEvent(ev)) {
+            return true;
+        }
+
+        if (ev.type == SDL_USEREVENT) {
+            handleSdlUserEvent(ev.user);
+            return false;
+        }
+
+        if (m_InputHandler != nullptr &&
+            (ev.type == SDL_CONTROLLERDEVICEADDED ||
+             ev.type == SDL_CONTROLLERDEVICEREMOVED)) {
+            m_InputHandler->handleControllerDeviceEvent(&ev.cdevice, false);
+            updateDualSenseHapticsControllerTarget();
+        }
+        return false;
+    };
+
     auto processReconnectQtEvents = [this]() {
         if (m_Toast) {
             m_Toast->beginEventProcessing();
@@ -3209,13 +3354,14 @@ bool Session::tryReconnect()
         // Run the connection start on a worker thread and pump events while we wait
         m_AsyncConnectionSuccess = false;
         m_HasReceivedVideo = false;
+        updateDualSenseHapticsControllerTarget();
         AsyncConnectionStartThread thread(this);
         thread.start();
 
         while (thread.isRunning()) {
             SDL_Event ev;
             while (SDL_PollEvent(&ev)) {
-                if (isCancelEvent(ev)) {
+                if (handleReconnectEvent(ev)) {
                     cancelled = true;
                 }
             }
@@ -3238,20 +3384,29 @@ bool Session::tryReconnect()
                 m_ClipboardHelper->updateHostContext();
             }
             if (m_InputHandler != nullptr) {
+                m_InputHandler->notifyHostOfConnectedGamepads();
                 m_InputHandler->raiseAllKeys();
             }
             break;
         }
 
         // Failed: clean up the partial attempt and back off before retrying
+        stopControllerRumbleAtConnectionBoundary(m_InputHandler);
+        if (m_DualSenseHapticsRenderer != nullptr) {
+            m_DualSenseHapticsRenderer->setControllerTarget(-1);
+        }
         LiStopConnection();
+        stopControllerRumbleAtConnectionBoundary(m_InputHandler);
+        if (m_DualSenseHapticsRenderer != nullptr) {
+            m_DualSenseHapticsRenderer->reset();
+        }
 
         Uint32 backoffUntil = SDL_GetTicks() + backoffMs;
         while (SDL_GetTicks() < backoffUntil &&
                SDL_GetTicks() - startTicks < graceMs) {
             SDL_Event ev;
             while (SDL_PollEvent(&ev)) {
-                if (isCancelEvent(ev)) {
+                if (handleReconnectEvent(ev)) {
                     cancelled = true;
                     break;
                 }
@@ -3674,6 +3829,11 @@ void Session::start()
 #endif
     }
     else {
+#ifdef Q_OS_MACOS
+        if (m_DualSenseHapticsRenderer == nullptr) {
+            m_DualSenseHapticsRenderer = new DualSenseHapticsRenderer();
+        }
+#endif
         k_ConnCallbacks.ds5HapticsIrV2 = Session::clDs5HapticsIrV2;
     }
 
@@ -3681,6 +3841,7 @@ void Session::start()
     // NB: m_InputHandler must be initialized before starting the connection.
     m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width,
                                          m_StreamConfig.height, enablePhysicalDualSenseHaptics);
+    updateDualSenseHapticsControllerTarget();
 
     // Kick off the async connection thread then return to the caller to pump the event loop
     auto thread = new AsyncConnectionStartThread(this);
@@ -3773,6 +3934,10 @@ void Session::exec()
             delete m_ClipboardHelper;
             m_ClipboardHelper = nullptr;
         }
+        if (m_DualSenseHapticsRenderer != nullptr) {
+            m_DualSenseHapticsRenderer->setControllerTarget(-1);
+        }
+        stopControllerRumbleAtConnectionBoundary(m_InputHandler);
         delete m_InputHandler;
         m_InputHandler = nullptr;
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -3905,6 +4070,10 @@ void Session::exec()
                 delete m_ClipboardHelper;
                 m_ClipboardHelper = nullptr;
             }
+            if (m_DualSenseHapticsRenderer != nullptr) {
+                m_DualSenseHapticsRenderer->setControllerTarget(-1);
+            }
+            stopControllerRumbleAtConnectionBoundary(m_InputHandler);
             delete m_InputHandler;
             m_InputHandler = nullptr;
             SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -4280,71 +4449,7 @@ void Session::exec()
             goto DispatchDeferredCleanup;
 
         case SDL_USEREVENT:
-            switch (event.user.code) {
-            case SDL_CODE_FRAME_READY:
-                if (m_VideoDecoder != nullptr) {
-                    m_VideoDecoder->renderFrameOnMainThread();
-                }
-                break;
-            case SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER:
-                m_FlushingWindowEventsRef--;
-                break;
-            case SDL_CODE_GAMECONTROLLER_RUMBLE:
-                m_InputHandler->rumble((uint16_t)(uintptr_t)event.user.data1,
-                                       (uint16_t)((uintptr_t)event.user.data2 >> 16),
-                                       (uint16_t)((uintptr_t)event.user.data2 & 0xFFFF));
-                break;
-            case SDL_CODE_GAMECONTROLLER_RUMBLE_TRIGGERS:
-                m_InputHandler->rumbleTriggers((uint16_t)(uintptr_t)event.user.data1,
-                                               (uint16_t)((uintptr_t)event.user.data2 >> 16),
-                                               (uint16_t)((uintptr_t)event.user.data2 & 0xFFFF));
-                break;
-            case SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE:
-                m_InputHandler->setMotionEventState((uint16_t)(uintptr_t)event.user.data1,
-                                                    (uint8_t)((uintptr_t)event.user.data2 >> 16),
-                                                    (uint16_t)((uintptr_t)event.user.data2 & 0xFFFF));
-                break;
-            case SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED:
-                m_InputHandler->setControllerLED((uint16_t)(uintptr_t)event.user.data1,
-                                                 (uint8_t)((uintptr_t)event.user.data2 >> 16),
-                                                 (uint8_t)((uintptr_t)event.user.data2 >> 8),
-                                                 (uint8_t)((uintptr_t)event.user.data2));
-                break;
-            case SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS:
-                m_InputHandler->setAdaptiveTriggers((uint16_t)(uintptr_t)event.user.data1,
-                                                    (DualSenseOutputReport *)event.user.data2);
-                break;
-            case SDL_CODE_FLUSH_TOUCHPAD_FRAME:
-                m_InputHandler->flushPendingTouchpadFrameEvent();
-                break;
-            case SDL_CODE_FLUSH_CURSOR_VISIBILITY:
-                if (m_InputHandler != nullptr) {
-                    m_InputHandler->flushPendingRemoteCursorHide();
-                }
-                break;
-            case SDL_CODE_CURSOR_UPDATE:
-            {
-                std::shared_ptr<RemoteCursorUpdate> cursorUpdate;
-                {
-                    std::lock_guard<std::mutex> lock(m_CursorUpdateMutex);
-                    cursorUpdate.swap(m_PendingCursorUpdate);
-                    m_CursorUpdateEventQueued = false;
-                }
-                if (cursorUpdate != nullptr && m_InputHandler != nullptr) {
-                    m_InputHandler->updateRemoteCursor(*cursorUpdate);
-                }
-                break;
-            }
-#ifdef Q_OS_WIN32
-            case SDL_CODE_PROCESS_QT_OVERLAY_EVENTS:
-                // The actual Qt processing happens after SDL dispatch below.
-                // Keeping this event side-effect free also coalesces bursts of
-                // native button messages without re-entering Qt from Win32.
-                break;
-#endif
-            default:
-                SDL_assert(false);
-            }
+            handleSdlUserEvent(event.user);
             break;
 
         case SDL_WINDOWEVENT:
@@ -4724,6 +4829,7 @@ void Session::exec()
         case SDL_CONTROLLERDEVICEADDED:
         case SDL_CONTROLLERDEVICEREMOVED:
             m_InputHandler->handleControllerDeviceEvent(&event.cdevice);
+            updateDualSenseHapticsControllerTarget();
             break;
         case SDL_JOYDEVICEADDED:
             m_InputHandler->handleJoystickArrivalEvent(&event.jdevice);
@@ -4830,6 +4936,10 @@ DispatchDeferredCleanup:
     // Destroy the input handler now. This must be destroyed
     // before allowwing the UI to continue execution or it could
     // interfere with SDLGamepadKeyNavigation.
+    if (m_DualSenseHapticsRenderer != nullptr) {
+        m_DualSenseHapticsRenderer->setControllerTarget(-1);
+    }
+    stopControllerRumbleAtConnectionBoundary(m_InputHandler);
     delete m_InputHandler;
     m_InputHandler = nullptr;
 

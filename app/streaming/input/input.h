@@ -23,6 +23,12 @@ struct GamepadState {
     SDL_JoystickID jsId;
     short index;
 
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+    uint32_t supportedButtonFlags;
+    uint32_t capabilities;
+    uint8_t type;
+#endif
+
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_Haptic* haptic;
     int hapticMethod;
@@ -146,7 +152,9 @@ public:
 
     void handleControllerButtonEvent(SDL_ControllerButtonEvent* event);
 
-    void handleControllerDeviceEvent(SDL_ControllerDeviceEvent* event);
+    void handleControllerDeviceEvent(SDL_ControllerDeviceEvent* event, bool notifyHost = true);
+
+    void notifyHostOfConnectedGamepads();
 
 #if SDL_VERSION_ATLEAST(2, 0, 14)
     void handleControllerSensorEvent(SDL_ControllerSensorEvent* event);
@@ -166,11 +174,15 @@ public:
 
     void rumbleTriggers(uint16_t controllerNumber, uint16_t leftTrigger, uint16_t rightTrigger);
 
+    void stopAllRumble();
+
     void setMotionEventState(uint16_t controllerNumber, uint8_t motionType, uint16_t reportRateHz);
 
     void setControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, uint8_t b);
 
     void setAdaptiveTriggers(uint16_t controllerNumber, DualSenseOutputReport *report);
+
+    int getNativeDualSenseControllerNumber() const;
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 
@@ -255,6 +267,8 @@ private:
     void sendGamepadState(GamepadState* state);
 
     void sendGamepadBatteryState(GamepadState* state, SDL_JoystickPowerLevel level);
+
+    void sendGamepadArrival(GamepadState* state, SDL_JoystickPowerLevel powerLevel);
 
     void handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
 
