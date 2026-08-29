@@ -287,6 +287,14 @@ NvHTTP::startApp(QString verb,
                  "&minBrightness="+QString::number(remoteStreamConfig.minBrightness, 'f', 6)+
                  "&maxAverageBrightness="+QString::number(remoteStreamConfig.maxAverageBrightness, 'f', 3);
     }
+    if (remoteStreamConfig.sdrWhiteBrightness >= 50.0f &&
+            remoteStreamConfig.sdrWhiteBrightness <= 1000.0f) {
+        // Foundation Sunshine parses this extension as an integer number of
+        // nits. It uses the value to re-anchor SDR-referred content before
+        // converting the host's scRGB desktop to the negotiated HDR transfer.
+        query += "&sdrBrightness="+
+                 QString::number(qRound(remoteStreamConfig.sdrWhiteBrightness));
+    }
 
     query += LiGetLaunchUrlQueryParameters();
 

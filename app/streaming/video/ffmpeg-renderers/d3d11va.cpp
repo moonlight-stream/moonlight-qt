@@ -2168,13 +2168,46 @@ bool D3D11VARenderer::needsTestFrame()
 
 void D3D11VARenderer::setHdrMode(bool enabled)
 {
-    // m_VideoProcessor needs to be available to be set,
-    // and it makes sense only when HDR is enabled from the UI
-    if (!enabled || !m_VideoProcessor || !(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT))
-        return;
+    auto clearVideoProcessorOutputHdrMetadata = [this]() {
+        if (m_VideoProcessor && m_VideoContext) {
+            m_VideoContext->VideoProcessorSetOutputHDRMetaData(
+                m_VideoProcessor.Get(),
+                DXGI_HDR_METADATA_TYPE_NONE,
+                0,
+                nullptr);
+        }
+    };
 
-    DXGI_HDR_METADATA_HDR10 streamHDRMetaData;
-    DXGI_HDR_METADATA_HDR10 outputHDRMetaData;
+    auto clearHdrMetadata = [this, &clearVideoProcessorOutputHdrMetadata]() {
+        if (m_VideoProcessor && m_VideoContext) {
+            m_VideoContext->VideoProcessorSetStreamHDRMetaData(
+                m_VideoProcessor.Get(),
+                0,
+                DXGI_HDR_METADATA_TYPE_NONE,
+                0,
+                nullptr);
+        }
+        clearVideoProcessorOutputHdrMetadata();
+
+        if (!m_SwapChain) {
+            return;
+        }
+
+        HRESULT hr = m_SwapChain->SetHDRMetaData(
+            DXGI_HDR_METADATA_TYPE_NONE, 0, nullptr);
+        if (FAILED(hr)) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "IDXGISwapChain4::SetHDRMetaData(NONE) failed: %x", hr);
+        }
+    };
+
+    if (!enabled || !(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT)) {
+        clearHdrMetadata();
+        return;
+    }
+
+    DXGI_HDR_METADATA_HDR10 streamHDRMetaData = {};
+    DXGI_HDR_METADATA_HDR10 outputHDRMetaData = {};
 
     // Prepare HDR Meta Data for Streamed content
     bool streamSet = false;
@@ -2190,21 +2223,53 @@ void D3D11VARenderer::setHdrMode(bool enabled)
         streamHDRMetaData.WhitePoint[1] = hdrMetadata.whitePoint.y;
         streamHDRMetaData.MaxMasteringLuminance = hdrMetadata.maxDisplayLuminance;
         streamHDRMetaData.MinMasteringLuminance = hdrMetadata.minDisplayLuminance;
-        streamHDRMetaData.MaxContentLightLevel = 0;
-        streamHDRMetaData.MaxFrameAverageLightLevel = 0;
+        streamHDRMetaData.MaxContentLightLevel = hdrMetadata.maxContentLightLevel;
+        streamHDRMetaData.MaxFrameAverageLightLevel = hdrMetadata.maxFrameAverageLightLevel;
 
-        m_VideoContext->VideoProcessorSetStreamHDRMetaData(
-            m_VideoProcessor.Get(),
-            0,
-            DXGI_HDR_METADATA_TYPE_HDR10,
-            sizeof(DXGI_HDR_METADATA_HDR10),
-            &streamHDRMetaData
-            );
+        if (m_VideoProcessor && m_VideoContext) {
+            m_VideoContext->VideoProcessorSetStreamHDRMetaData(
+                m_VideoProcessor.Get(),
+                0,
+                DXGI_HDR_METADATA_TYPE_HDR10,
+                sizeof(DXGI_HDR_METADATA_HDR10),
+                &streamHDRMetaData
+                );
+        }
+
+        // The direct shader path bypasses the video processor, so publishing
+        // HDR10 metadata only on the VP is insufficient. Attach it to the
+        // swapchain too, allowing DWM/the display driver to map PQ content with
+        // the actual mastering and content-light information.
+        if (m_SwapChain) {
+            HRESULT swapChainHr = m_SwapChain->SetHDRMetaData(
+                DXGI_HDR_METADATA_TYPE_HDR10,
+                sizeof(DXGI_HDR_METADATA_HDR10),
+                &streamHDRMetaData);
+            if (FAILED(swapChainHr)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "IDXGISwapChain4::SetHDRMetaData(HDR10) failed: %x",
+                            swapChainHr);
+            }
+        }
 
         streamSet = true;
     }
+    else {
+        clearHdrMetadata();
+    }
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Set stream HDR mode: %s", streamSet ? "enabled" : "disabled");
+
+    // Swapchain metadata is also used by the direct shader path. Everything
+    // below is video-processor-specific and can be skipped when VP creation
+    // failed without disabling the renderer.
+    if (!m_VideoProcessor || !m_VideoContext) {
+        return;
+    }
+
+    // The display may have changed since the last call. Clear the previous
+    // output metadata before probing so lookup failures cannot retain it.
+    clearVideoProcessorOutputHdrMetadata();
 
     // Prepare HDR Meta Data to match the monitor HDR specifications
     int appAdapterIndex = 0;

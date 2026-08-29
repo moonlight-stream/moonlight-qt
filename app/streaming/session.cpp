@@ -76,6 +76,7 @@
 #include <QUrl>
 
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -121,7 +122,14 @@ QRect qtWindowCreationGeometryForSdl(QWindow* window)
 #endif
 }
 
-QScreen* qtScreenForSdlDisplay(int displayIndex)
+enum class SdlDisplayMatchPolicy
+{
+    AllowFallback,
+    ExactOnly,
+};
+
+QScreen* qtScreenForSdlDisplay(int displayIndex,
+                               SdlDisplayMatchPolicy matchPolicy = SdlDisplayMatchPolicy::AllowFallback)
 {
     if (displayIndex < 0) {
         return nullptr;
@@ -167,14 +175,20 @@ QScreen* qtScreenForSdlDisplay(int displayIndex)
             }
         }
 
-        if (QScreen* cursorScreen = QGuiApplication::screenAt(QCursor::pos())) {
-            if (sizeMatches.contains(cursorScreen)) {
-                return cursorScreen;
-            }
-        }
         if (sizeMatches.size() == 1) {
             return sizeMatches.first();
         }
+        if (matchPolicy == SdlDisplayMatchPolicy::AllowFallback) {
+            if (QScreen* cursorScreen = QGuiApplication::screenAt(QCursor::pos())) {
+                if (sizeMatches.contains(cursorScreen)) {
+                    return cursorScreen;
+                }
+            }
+        }
+    }
+
+    if (matchPolicy == SdlDisplayMatchPolicy::ExactOnly) {
+        return nullptr;
     }
 
     if (QScreen* cursorScreen = QGuiApplication::screenAt(QCursor::pos())) {
@@ -1195,6 +1209,7 @@ Session::Session(NvComputer* computer,
       m_HasReceivedVideo(false),
       m_LastTerminationErrorCode(0),
       m_AsyncConnectionSuccess(false),
+      m_LastClientSdrWhiteNits(0.0f),
       m_PortTestResults(0),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
@@ -1248,6 +1263,13 @@ Session::~Session()
 bool Session::initialize(QQuickWindow* qtWindow)
 {
     m_QtWindow = qtWindow;
+#ifdef Q_OS_WIN32
+    // Capture this on the Qt thread. The launch request is assembled later on
+    // a worker thread, where reading QWindow/QScreen state would be unsafe.
+    if (m_QtWindow != nullptr && m_QtWindow->screen() != nullptr) {
+        m_ClientDisplayName = m_QtWindow->screen()->name();
+    }
+#endif
 
     // SDL reads this hint when the video subsystem initializes. Configure it for
     // each session so preference changes take effect on the next stream without
@@ -3594,8 +3616,22 @@ bool Session::startConnectionAsync()
 
     QString rtspSessionUrl;
 
-    // Resolve the HDR brightness profile for Foundation Sunshine.
+    // Resolve the HDR brightness profile for Foundation Sunshine. SDR white
+    // is independent from the mastering-luminance tuple: the host needs it
+    // even when peak/min/full-frame brightness uses host defaults or a manual
+    // profile.
     float maxBrightness = 0, minBrightness = 0, maxAverageBrightness = 0;
+    float detectedMaxBrightness = 0, detectedMinBrightness = 0;
+    float detectedMaxAverageBrightness = 0, sdrWhiteBrightness = 0;
+#ifdef Q_OS_WIN32
+    if (m_StreamConfig.hdrMode != 0) {
+        queryDisplayHdrBrightness(m_ClientDisplayName,
+                                  detectedMaxBrightness,
+                                  detectedMinBrightness,
+                                  detectedMaxAverageBrightness,
+                                  sdrWhiteBrightness);
+    }
+#endif
     switch (m_Preferences->hdrBrightnessMode) {
     case StreamingPreferences::HBM_MANUAL:
         maxBrightness = static_cast<float>(m_Preferences->hdrMaxBrightness);
@@ -3613,7 +3649,9 @@ bool Session::startConnectionAsync()
         break;
     case StreamingPreferences::HBM_AUTO:
 #ifdef Q_OS_WIN32
-        queryDisplayHdrBrightness(maxBrightness, minBrightness, maxAverageBrightness);
+        maxBrightness = detectedMaxBrightness;
+        minBrightness = detectedMinBrightness;
+        maxAverageBrightness = detectedMaxAverageBrightness;
 #endif
         break;
     case StreamingPreferences::HBM_HOST_DEFAULT:
@@ -3633,8 +3671,10 @@ bool Session::startConnectionAsync()
             m_Preferences->height,
             maxBrightness,
             minBrightness,
-            maxAverageBrightness
+            maxAverageBrightness,
+            sdrWhiteBrightness
         );
+        m_LastClientSdrWhiteNits = sdrWhiteBrightness;
         http.startApp(resumingSession ? "resume" : "launch",
                       m_Computer->isNvidiaServerSoftware,
                       m_App.id, &m_StreamConfig,
@@ -3863,13 +3903,118 @@ void Session::interrupt()
 }
 
 #ifdef Q_OS_WIN32
-void Session::queryDisplayHdrBrightness(float& maxNits, float& minNits, float& maxFullNits)
+float Session::queryDisplaySdrWhiteNits(const QString& displayName, bool logFailures)
+{
+    if (displayName.isEmpty()) {
+        return 0.0f;
+    }
+
+    UINT32 pathCount = 0;
+    UINT32 modeCount = 0;
+    LONG status = GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS,
+                                               &pathCount, &modeCount);
+    if (status != ERROR_SUCCESS) {
+        if (!logFailures) {
+            return 0.0f;
+        }
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "GetDisplayConfigBufferSizes() failed for SDR white query: %ld",
+                    status);
+        return 0.0f;
+    }
+
+    // The topology can change between sizing and querying. Retry once with
+    // fresh buffer sizes if Windows reports an insufficient buffer.
+    for (int attempt = 0; attempt < 2; attempt++) {
+        std::vector<DISPLAYCONFIG_PATH_INFO> paths(pathCount);
+        std::vector<DISPLAYCONFIG_MODE_INFO> modes(modeCount);
+        UINT32 queriedPathCount = pathCount;
+        UINT32 queriedModeCount = modeCount;
+        status = QueryDisplayConfig(QDC_ONLY_ACTIVE_PATHS,
+                                    &queriedPathCount, paths.data(),
+                                    &queriedModeCount, modes.data(), nullptr);
+        if (status == ERROR_INSUFFICIENT_BUFFER) {
+            status = GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS,
+                                                  &pathCount, &modeCount);
+            if (status == ERROR_SUCCESS) {
+                continue;
+            }
+        }
+        if (status != ERROR_SUCCESS) {
+            if (!logFailures) {
+                return 0.0f;
+            }
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "QueryDisplayConfig() failed for SDR white query: %ld",
+                        status);
+            return 0.0f;
+        }
+
+        paths.resize(queriedPathCount);
+        for (const DISPLAYCONFIG_PATH_INFO& path : paths) {
+            DISPLAYCONFIG_SOURCE_DEVICE_NAME sourceName = {};
+            sourceName.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+            sourceName.header.size = sizeof(sourceName);
+            sourceName.header.adapterId = path.sourceInfo.adapterId;
+            sourceName.header.id = path.sourceInfo.id;
+            if (DisplayConfigGetDeviceInfo(&sourceName.header) != ERROR_SUCCESS ||
+                    displayName.compare(QString::fromWCharArray(sourceName.viewGdiDeviceName),
+                                        Qt::CaseInsensitive) != 0) {
+                continue;
+            }
+
+            DISPLAYCONFIG_SDR_WHITE_LEVEL whiteLevel = {};
+            whiteLevel.header.type = DISPLAYCONFIG_DEVICE_INFO_GET_SDR_WHITE_LEVEL;
+            whiteLevel.header.size = sizeof(whiteLevel);
+            whiteLevel.header.adapterId = path.targetInfo.adapterId;
+            whiteLevel.header.id = path.targetInfo.id;
+            status = DisplayConfigGetDeviceInfo(&whiteLevel.header);
+            if (status != ERROR_SUCCESS) {
+                if (!logFailures) {
+                    return 0.0f;
+                }
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "DisplayConfigGetDeviceInfo(SDR_WHITE_LEVEL) failed for %s: %ld",
+                            qPrintable(displayName), status);
+                return 0.0f;
+            }
+
+            // Windows stores this as a fixed-point multiplier where 1000 is
+            // the standard 80-nit SDR white level.
+            const float nits = static_cast<float>(whiteLevel.SDRWhiteLevel) * 80.0f / 1000.0f;
+            if (nits < 50.0f || nits > 1000.0f) {
+                if (!logFailures) {
+                    return 0.0f;
+                }
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Ignoring out-of-range SDR white level for %s: %.1f nits",
+                            qPrintable(displayName), nits);
+                return 0.0f;
+            }
+            return nits;
+        }
+
+        if (logFailures) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to map display %s to an active DisplayConfig path",
+                        qPrintable(displayName));
+        }
+        return 0.0f;
+    }
+
+    return 0.0f;
+}
+
+void Session::queryDisplayHdrBrightness(const QString& preferredDisplayName,
+                                        float& maxNits, float& minNits,
+                                        float& maxFullNits, float& sdrWhiteNits)
 {
     using Microsoft::WRL::ComPtr;
 
     maxNits = 0;
     minNits = 0;
     maxFullNits = 0;
+    sdrWhiteNits = 0;
 
     ComPtr<IDXGIFactory1> factory;
     if (FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&factory))) {
@@ -3877,7 +4022,18 @@ void Session::queryDisplayHdrBrightness(float& maxNits, float& minNits, float& m
         return;
     }
 
-    // Enumerate adapters and outputs to find HDR-capable display
+    struct DisplayBrightness {
+        QString name;
+        float maxNits = 0;
+        float minNits = 0;
+        float maxFullNits = 0;
+        bool hdr = false;
+
+        bool isValid() const { return !name.isEmpty(); }
+    } preferred, firstHdr, firstDisplay;
+
+    // Prefer the display that owns the launch UI. If it cannot be matched,
+    // retain the previous behavior of selecting the first HDR display.
     ComPtr<IDXGIAdapter1> adapter;
     for (UINT adapterIdx = 0; SUCCEEDED(factory->EnumAdapters1(adapterIdx, &adapter)); adapterIdx++) {
         ComPtr<IDXGIOutput> output;
@@ -3886,30 +4042,42 @@ void Session::queryDisplayHdrBrightness(float& maxNits, float& minNits, float& m
             if (SUCCEEDED(output->QueryInterface(__uuidof(IDXGIOutput6), (void**)&output6))) {
                 DXGI_OUTPUT_DESC1 desc1;
                 if (SUCCEEDED(output6->GetDesc1(&desc1))) {
-                    // Use the first display with HDR support, or the first display if none support HDR
-                    if (maxNits == 0 || desc1.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) {
-                        maxNits = desc1.MaxLuminance;
-                        minNits = desc1.MinLuminance;
-                        maxFullNits = desc1.MaxFullFrameLuminance;
+                    DisplayBrightness candidate;
+                    candidate.name = QString::fromWCharArray(desc1.DeviceName);
+                    candidate.maxNits = desc1.MaxLuminance;
+                    candidate.minNits = desc1.MinLuminance;
+                    candidate.maxFullNits = desc1.MaxFullFrameLuminance;
+                    candidate.hdr = desc1.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
 
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Display HDR brightness: max=%.1f nits, min=%.4f nits, maxFull=%.1f nits (HDR: %s)",
-                                    maxNits, minNits, maxFullNits,
-                                    desc1.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 ? "yes" : "no");
-
-                        if (desc1.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) {
-                            return; // Found an HDR display, use it
-                        }
+                    if (!firstDisplay.isValid()) {
+                        firstDisplay = candidate;
+                    }
+                    if (candidate.hdr && !firstHdr.isValid()) {
+                        firstHdr = candidate;
+                    }
+                    if (!preferredDisplayName.isEmpty() &&
+                            candidate.name.compare(preferredDisplayName,
+                                                   Qt::CaseInsensitive) == 0) {
+                        preferred = candidate;
                     }
                 }
             }
+            output.Reset();
         }
+        adapter.Reset();
     }
 
-    if (maxNits > 0) {
+    const DisplayBrightness selected = preferred.isValid() ? preferred :
+                                       (firstHdr.isValid() ? firstHdr : firstDisplay);
+    if (selected.isValid()) {
+        maxNits = selected.maxNits;
+        minNits = selected.minNits;
+        maxFullNits = selected.maxFullNits;
+        sdrWhiteNits = queryDisplaySdrWhiteNits(selected.name);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using SDR display brightness: max=%.1f, min=%.4f, maxFull=%.1f",
-                    maxNits, minNits, maxFullNits);
+                    "Client display brightness (%s): max=%.1f nits, min=%.4f nits, maxFull=%.1f nits, SDR white=%.1f nits (HDR: %s)",
+                    qPrintable(selected.name), maxNits, minNits, maxFullNits,
+                    sdrWhiteNits, selected.hdr ? "yes" : "no");
     } else {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "No display brightness information available");
@@ -4329,6 +4497,49 @@ void Session::exec()
         }
     };
 
+#ifdef Q_OS_WIN32
+    constexpr Uint32 SDR_WHITE_CHECK_INTERVAL_MS = 1000;
+    Uint32 lastSdrWhiteCheckTicks = 0;
+    auto processClientSdrWhiteUpdate = [this, &lastSdrWhiteCheckTicks]() {
+        if (m_StreamConfig.hdrMode == 0 ||
+                (LiGetHostFeatureFlags() & LI_FF_DYNAMIC_SDR_WHITE) == 0) {
+            return;
+        }
+
+        const Uint32 now = SDL_GetTicks();
+        if (now - lastSdrWhiteCheckTicks < SDR_WHITE_CHECK_INTERVAL_MS) {
+            return;
+        }
+        lastSdrWhiteCheckTicks = now;
+
+        const int displayIndex = SDL_GetWindowDisplayIndex(m_Window);
+        QScreen* clientScreen = qtScreenForSdlDisplay(
+            displayIndex, SdlDisplayMatchPolicy::ExactOnly);
+        if (clientScreen == nullptr || clientScreen->name().isEmpty()) {
+            return;
+        }
+
+        // SDL exposes a friendly monitor name on Windows, while DisplayConfig
+        // source paths use the GDI device name (for example, \\.\DISPLAY1).
+        // QScreen::name() is the latter, so resolve the SDL display first.
+        const float nits = queryDisplaySdrWhiteNits(clientScreen->name(), false);
+        if (nits < 50.0f || qAbs(nits - m_LastClientSdrWhiteNits) < 0.5f) {
+            return;
+        }
+
+        const int result = LiSendClientSdrWhiteNits(nits);
+        if (result == LI_DYNAMIC_SDR_WHITE_OK) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Updated host client SDR white level: %.1f nits", nits);
+            m_LastClientSdrWhiteNits = nits;
+        }
+        else if (result != LI_DYNAMIC_SDR_WHITE_ERR_UNSUPPORTED) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to update host client SDR white level: %d", result);
+        }
+    };
+#endif
+
     // 见上面 qtWindowHideDeadline 处的注释：串流窗口真的落定了（或者等超时了）
     // 再把界面窗口藏掉。
     auto hideGuiWindowWhenSettled = [&](bool settled) {
@@ -4345,6 +4556,9 @@ void Session::exec()
     for (;;) {
         hideGuiWindowWhenSettled(false);
         processSunshineAbrFeedback();
+#ifdef Q_OS_WIN32
+        processClientSdrWhiteUpdate();
+#endif
         processFileMappingUxProbeResult();
         processFileMappingMountResult();
         processClipboardHelperMessages();
