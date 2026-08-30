@@ -20,9 +20,10 @@ import subprocess
 from pathlib import Path
 
 
-SEMVER_RE = re.compile(
+GIT_DESCRIBE_RE = re.compile(
     r"^v?(?P<base>\d+\.\d+\.\d+)"
-    r"(?:-(?P<count>\d+)-g(?P<sha>[0-9a-fA-F]+))?"
+    r"(?P<prerelease>(?:[.-][0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?)"
+    r"-(?P<count>\d+)-g(?P<sha>[0-9a-fA-F]+)"
     r"(?P<dirty>-dirty)?$"
 )
 
@@ -58,17 +59,24 @@ def clamp_u16(value: int) -> int:
     return max(0, min(value, 65535))
 
 
+def normalize_explicit_version(version: str) -> str:
+    if re.match(r"^v\d", version):
+        return version[1:]
+    return version
+
+
 def derive(source_root: Path) -> dict[str, str]:
     ci_version = os.environ.get("CI_VERSION", "").strip()
     fallback = read_fallback_version(source_root)
 
     if ci_version:
-        base = ".".join(str(part) for part in split_numeric_base(ci_version))
+        display = normalize_explicit_version(ci_version)
+        base = ".".join(str(part) for part in split_numeric_base(display))
         major, minor, patch = split_numeric_base(base)
         return {
             "base": base,
-            "display": ci_version,
-            "artifact": ci_version.replace("+", "-"),
+            "display": display,
+            "artifact": display.replace("+", "-"),
             "numeric": f"{major}.{minor}.{patch}.0",
             "describe": ci_version,
             "commit": run_git(source_root, "rev-parse", "--short=8", "HEAD") or "unknown",
@@ -88,18 +96,19 @@ def derive(source_root: Path) -> dict[str, str]:
     commit = run_git(source_root, "rev-parse", "--short=8", "HEAD") or "unknown"
 
     if describe:
-        match = SEMVER_RE.match(describe)
+        match = GIT_DESCRIBE_RE.fullmatch(describe)
         if match:
             base = match.group("base")
-            count = int(match.group("count") or 0)
-            sha = match.group("sha") or commit
+            version = base + (match.group("prerelease") or "")
+            count = int(match.group("count"))
+            sha = match.group("sha")
             dirty = bool(match.group("dirty"))
             major, minor, patch = split_numeric_base(base)
 
             if count == 0 and not dirty:
-                display = base
+                display = version
             else:
-                display = f"{base}+{count}.g{sha[:8]}"
+                display = f"{version}+{count}.g{sha[:8]}"
                 if dirty:
                     display += ".dirty"
 

@@ -12,9 +12,21 @@ on:
         required: false
         default: manual
         type: string
+      appimage_update_tag:
+        description: AppImage update channel
+        required: true
+        default: latest
+        type: choice
+        options:
+          - latest
+          - latest-pre
   workflow_call:
     inputs:
       ci_version:
+        required: true
+        type: string
+      appimage_update_tag:
+        description: AppImage update channel
         required: true
         type: string
 
@@ -22,9 +34,22 @@ jobs:
   build:
     env:
       CI_VERSION: ${{ inputs.ci_version }}
+      APPIMAGE_UPDATE_TAG: ${{ inputs.appimage_update_tag }}
     runs-on: ubuntu-22.04
 
     steps:
+      - name: Validate Inputs
+        run: |
+          if [[ ! "$CI_VERSION" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "::error::CI_VERSION must contain only letters, numbers, dots, underscores, or hyphens"
+            exit 1
+          fi
+
+          if [[ "$APPIMAGE_UPDATE_TAG" != "latest" && "$APPIMAGE_UPDATE_TAG" != "latest-pre" ]]; then
+            echo "::error::APPIMAGE_UPDATE_TAG must be either 'latest' or 'latest-pre'"
+            exit 1
+          fi
+
       - name: Checkout Repository
         uses: actions/checkout@v5
         with:
@@ -36,7 +61,7 @@ jobs:
           wget -qO - https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
           sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-1.4.313-jammy.list https://packages.lunarg.com/vulkan/1.4.313/lunarg-vulkan-1.4.313-jammy.list
           sudo apt update
-          sudo apt install -y qt6-base-dev qt6-declarative-dev libqt6svg6-dev qt6-image-formats-plugins qml6-module-qtquick-controls qml6-module-qtquick-templates qml6-module-qtquick-layouts \
+          sudo apt install -y qt6-base-dev qt6-declarative-dev qt6-multimedia-dev libqt6svg6-dev qt6-image-formats-plugins qml6-module-qtquick-controls qml6-module-qtquick-templates qml6-module-qtquick-layouts \
             qml6-module-qtqml-workerscript qml6-module-qtquick-window qml6-module-qtquick python3-pip nasm libgbm-dev libdrm-dev libfreetype-dev libasound2-dev \
             libdbus-1-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libglu1-mesa-dev libibus-1.0-dev libpulse-dev libudev-dev libx11-dev libxcursor-dev \
             libxext-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxss-dev libxt-dev libxv-dev libxxf86vm-dev libxcb-dri3-dev libx11-xcb-dev \
@@ -165,10 +190,26 @@ jobs:
           sudo ldconfig
           scripts/build-appimage.sh
 
+      - name: Verify Binaries
+        run: |
+          appimage="build/installer-release/Moonlight-VPlus-${CI_VERSION}-x86_64.AppImage"
+
+          if [[ ! -s "$appimage" ]]; then
+            echo "::error file=$appimage::AppImage is missing or empty"
+            exit 1
+          fi
+
+          if [[ ! -s "${appimage}.zsync" ]]; then
+            echo "::error file=${appimage}.zsync::zsync is missing or empty"
+            exit 1
+          fi
+
       - name: Upload Binaries
         uses: actions/upload-artifact@v6
         with:
           name: Moonlight-VPlus-LinuxAppImage-${{ env.CI_VERSION }}
-          path: build/installer-release/Moonlight-VPlus-${{ env.CI_VERSION }}-x86_64.AppImage
+          path: |
+            build/installer-release/Moonlight-VPlus-${{ env.CI_VERSION }}-x86_64.AppImage
+            build/installer-release/Moonlight-VPlus-${{ env.CI_VERSION }}-x86_64.AppImage.zsync
           compression-level: 0
           if-no-files-found: error

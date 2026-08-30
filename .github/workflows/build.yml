@@ -50,6 +50,20 @@ jobs:
     - name: Check QML type resolution
       run: scripts/qmllint-check.sh
 
+  version-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: false
+
+    - name: Test version derivation
+      run: python3 -m unittest discover -s tests/derive_version -p 'test_*.py'
+
   build-windows:
     runs-on: windows-2022
     steps:
@@ -125,16 +139,16 @@ jobs:
       shell: cmd
       run: |
         echo Starting CI-optimized build...
-        
+
         rem Clear any problematic environment variables
         set MAKEFLAGS=
         set _CL_=
-        
+
         rem Build with standard configuration and correct architecture
         echo Building with CI optimizations...
         call scripts\build-arch.bat release x64
         if errorlevel 1 exit /b %ERRORLEVEL%
-        
+
         echo Build Windows x64 completed successfully!
 
     - name: Test DualSense haptics rendering
@@ -266,7 +280,7 @@ jobs:
 
   build-macos:
     runs-on: macos-15
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -314,6 +328,8 @@ jobs:
     # 得等 trixie。想再往下压只能自己编 Qt，不值。
     name: build-linux (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
+    env:
+      APPIMAGE_UPDATE_TAG: ${{ github.event_name == 'release' && github.event.release.prerelease && 'latest-pre' || 'latest' }}
 
     strategy:
       # 一边挂了不要连累另一边，方便单独看是哪个架构的问题。
@@ -479,7 +495,7 @@ jobs:
         git clone --branch $LIBVA_VER --depth 1 https://github.com/intel/libva.git
         cd libva
         ./autogen.sh
-        
+
         # Configure with conditional Wayland support
         echo "Configuring libva..."
         if pkg-config --exists wayland-client; then
@@ -489,7 +505,7 @@ jobs:
           echo "Configuring libva without Wayland support"
           ./configure --enable-x11 --disable-wayland
         fi
-        
+
         make -j$(nproc)
         sudo make install
         sudo ldconfig
@@ -555,7 +571,7 @@ jobs:
       run: |
         # Configure FUSE for AppImage in CI environment
         echo "Setting up FUSE environment for AppImage..."
-        
+
         # Check if FUSE is available
         if [ -f /dev/fuse ]; then
           echo "✅ /dev/fuse is available"
@@ -564,10 +580,10 @@ jobs:
           sudo mknod /dev/fuse c 10 229 || echo "Failed to create /dev/fuse"
           sudo chmod 666 /dev/fuse || echo "Failed to set permissions on /dev/fuse"
         fi
-        
+
         # Check FUSE library
         ldconfig -p | grep fuse || echo "FUSE library not found in ldconfig"
-        
+
         # Set environment variable for AppImage extraction mode if FUSE fails
         echo "APPIMAGE_EXTRACT_AND_RUN=1" >> $GITHUB_ENV
 
@@ -585,26 +601,44 @@ jobs:
         # export QT_SELECT=5
         # export PATH=/usr/lib/qt5/bin:$PATH
         # export QT_QPA_PLATFORM_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/qt5/plugins
-        
+
         # Add linuxdeploy to PATH
         export PATH=$PATH:$HOME/bin
-        
+
         echo "Building AppImage with CI-optimized settings..."
         echo "APPIMAGE_EXTRACT_AND_RUN=$APPIMAGE_EXTRACT_AND_RUN"
         echo "PATH includes: $HOME/bin"
-        
+
         # Run the build script
         scripts/build-appimage.sh
+
+    - name: Verify AppImage
+      run: |
+        appimage="build/installer-release/Moonlight-VPlus-${VERSION}-${{ matrix.arch }}.AppImage"
+
+        if [[ ! -s "$appimage" ]]; then
+          echo "::error file=$appimage::AppImage is missing or empty"
+          exit 1
+        fi
+
+        if [[ ! -s "${appimage}.zsync" ]]; then
+          echo "::error file=${appimage}.zsync::zsync is missing or empty"
+          exit 1
+        fi
 
     - name: Upload AppImage artifact
       uses: actions/upload-artifact@v4
       with:
         name: Moonlight-VPlus-r${{ env.BUILD_NUMBER }}-${{ matrix.arch }}.AppImage
-        path: build/installer-release/Moonlight-VPlus-*-${{ matrix.arch }}.AppImage
+        path: |
+          build/installer-release/Moonlight-VPlus-*-${{ matrix.arch }}.AppImage
+          build/installer-release/Moonlight-VPlus-*-${{ matrix.arch }}.AppImage.zsync
+        if-no-files-found: error
+
 
   build-steamlink:
     runs-on: ubuntu-22.04
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -640,9 +674,9 @@ jobs:
 
   release:
     if: github.event_name == 'release'
-    needs: [qml-lint, build-windows, build-macos, build-linux, build-steamlink]
+    needs: [qml-lint, version-tests, build-windows, build-macos, build-linux, build-steamlink]
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
@@ -655,5 +689,6 @@ jobs:
           **/*.zip
           **/*.dmg
           **/*.AppImage
+          **/*.AppImage.zsync
       env:
         GITHUB_TOKEN: ${{ secrets.GH_BOT_TOKEN }}
