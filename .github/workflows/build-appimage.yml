@@ -101,7 +101,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: haasn/libplacebo
-          ref: 4d82c6898551068d4ae6a6b5538efcddc2c7cf64
+          ref: 41ac2980e1a898f41d7c2e07999f9862ee89d99f
           path: deps/libplacebo
           submodules: 'recursive'
 
