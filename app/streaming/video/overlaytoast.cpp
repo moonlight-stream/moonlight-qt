@@ -1,6 +1,7 @@
 #include "overlaytoast.h"
 #include "uifont.h"
 
+#include <QGuiApplication>
 #include <QScreen>
 #include <QFontMetrics>
 
@@ -38,7 +39,10 @@ OverlayToast::OverlayToast(QWindow* parent)
     // Manrope 由 main.cpp 注册进 QFontDatabase，进程内哪儿都能用；它没有中文字形，
     // 所以后面按平台补 CJK 回退（提示文案是会被翻译的）。
     m_Font.setFamilies(UiFont::familyChain(QStringLiteral("Manrope")));
-    m_Font.setPointSize(11);
+    // Use a fixed logical pixel size. Point sizes are resolved through the
+    // platform's font DPI, which is not the same thing as Qt's UI scale on
+    // Linux and can make this standalone window unexpectedly large.
+    m_Font.setPixelSize(15); // approximately equivalent to 11pt at 96 DPI
     m_Font.setWeight(QFont::DemiBold);
     m_Font.setStyleHint(QFont::SansSerif);
 
@@ -87,6 +91,16 @@ void OverlayToast::showToast(int parentX, int parentY, int parentW, int parentH,
                              const QString& message, int durationMs)
 {
     m_Message = message;
+
+    // This is an independent top-level window, so make its font/rendering
+    // context follow the stream window's monitor before measuring text.
+    QScreen* targetScreen = QGuiApplication::screenAt(QPoint(parentX, parentY));
+    if (targetScreen == nullptr) {
+        targetScreen = QGuiApplication::primaryScreen();
+    }
+    if (targetScreen != nullptr && screen() != targetScreen) {
+        setScreen(targetScreen);
+    }
 
     // Stop any ongoing fade before replacing the toast. The state deadline is
     // reset below, so an expired older toast cannot dismiss the new message.
