@@ -350,8 +350,12 @@ HEADERS += \
 
 # 把红绿灯沉到我们自己那条 bar 的中线上，顺带让 AppKit 的标题栏拖动区覆盖整条 bar
 macx {
-    HEADERS += gui/macwindowchrome.h
-    SOURCES += gui/macwindowchrome.mm
+    HEADERS += \
+        gui/macwindowchrome.h \
+        streaming/video/overlayeventmonitor_mac.h
+    SOURCES += \
+        gui/macwindowchrome.mm \
+        streaming/video/overlayeventmonitor_mac.mm
 }
 
 # Platform-specific renderers and decoders

@@ -48,7 +48,7 @@
 #define SDL_CODE_FLUSH_TOUCHPAD_FRAME 106
 #define SDL_CODE_CURSOR_UPDATE 107
 #define SDL_CODE_FLUSH_CURSOR_VISIBILITY 108
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
 #define SDL_CODE_PROCESS_QT_OVERLAY_EVENTS 109
 #endif
 
@@ -3257,7 +3257,7 @@ void Session::handleSdlUserEvent(const SDL_UserEvent& event)
         }
         break;
     }
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
     case SDL_CODE_PROCESS_QT_OVERLAY_EVENTS:
         // The actual Qt processing happens after SDL dispatch below.
         // Keeping this event side-effect free also coalesces bursts of
@@ -4412,7 +4412,7 @@ void Session::exec()
     // Keep a hidden button ready so placement can switch during a stream
     // without creating a window from inside an input callback.
     m_MenuButton = new OverlayMenuButton();
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
     m_MenuButton->setEventWakeCallback([]() {
         SDL_Event wakeEvent = {};
         wakeEvent.type = SDL_USEREVENT;
@@ -5120,7 +5120,7 @@ DispatchDeferredCleanup:
 
     // Destroy the Qt overlay menu button
     if (m_MenuButton) {
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
         m_MenuButton->setEventWakeCallback({});
 #endif
         m_MenuButton->hideButton();

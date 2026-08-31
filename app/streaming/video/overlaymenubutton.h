@@ -12,6 +12,10 @@
 #include "overlaybuttonposition.h"
 #include "overlayeventwakestate.h"
 
+#ifdef Q_OS_DARWIN
+class MacOverlayEventMonitor;
+#endif
+
 /**
  * OverlayMenuButton - A small floating button rendered by the OS compositor,
  * positioned inside the streaming window. It defaults to the top-right and
@@ -54,8 +58,8 @@ public:
 
     bool isButtonVisible() const { return m_ButtonVisible; }
 
-    // Windows can wake the SDL loop from the button's native window procedure,
-    // so an idle visible button does not need a continuous Qt event pump.
+    // Windows and macOS wake the SDL loop from native pointer events, so an
+    // idle visible button does not need a continuous Qt event pump.
     bool needsEventProcessing() const;
     void beginEventProcessing();
 
@@ -82,7 +86,7 @@ private:
     void cancelInteraction();
     void requestEventProcessing();
     void requestButtonUpdate();
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
     void ensureNativeEventMonitor();
 #endif
 
@@ -101,6 +105,8 @@ private:
     std::optional<QPointF> m_NormalizedPosition;
 #ifdef Q_OS_WIN32
     std::unique_ptr<NativeEventMonitor> m_NativeEventMonitor;
+#elif defined(Q_OS_DARWIN)
+    std::unique_ptr<MacOverlayEventMonitor> m_NativeEventMonitor;
 #endif
 
     // Button size (logical pixels)

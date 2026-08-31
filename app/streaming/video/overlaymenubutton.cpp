@@ -8,6 +8,10 @@
 #include <QInputDevice>
 #endif
 
+#ifdef Q_OS_DARWIN
+#include "overlayeventmonitor_mac.h"
+#endif
+
 #ifdef Q_OS_WIN32
 #include <windows.h>
 #include <commctrl.h>
@@ -181,7 +185,7 @@ OverlayMenuButton::OverlayMenuButton(QWindow* parent)
 
 OverlayMenuButton::~OverlayMenuButton()
 {
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
     m_NativeEventMonitor.reset();
 #endif
 }
@@ -192,7 +196,7 @@ bool OverlayMenuButton::needsEventProcessing() const
         return false;
     }
 
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
     // If native monitoring is unavailable, retain the old continuous-pump
     // behavior so the button never becomes unusable on an unusual system.
     return !m_NativeEventMonitor || !m_NativeEventMonitor->isAttached() ||
@@ -224,14 +228,25 @@ void OverlayMenuButton::requestButtonUpdate()
     requestUpdate();
 }
 
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
 void OverlayMenuButton::ensureNativeEventMonitor()
 {
     if (!m_NativeEventMonitor) {
+#ifdef Q_OS_WIN32
         m_NativeEventMonitor = std::make_unique<NativeEventMonitor>(this);
+#else
+        m_NativeEventMonitor = std::make_unique<MacOverlayEventMonitor>([this]() {
+            requestEventProcessing();
+        });
+#endif
     }
 
-    if (!m_NativeEventMonitor->attach(reinterpret_cast<HWND>(winId()))) {
+#ifdef Q_OS_WIN32
+    const auto nativeWindow = reinterpret_cast<HWND>(winId());
+#else
+    void* nativeWindow = reinterpret_cast<void*>(winId());
+#endif
+    if (!m_NativeEventMonitor->attach(nativeWindow)) {
         qWarning("Failed to monitor native overlay button events; using continuous Qt event processing");
     }
 }
@@ -281,7 +296,7 @@ void OverlayMenuButton::showButton(int parentX, int parentY, int parentW, int pa
     repositionTo(parentX, parentY, parentW, parentH);
     m_ButtonVisible = true;
     show();
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
     ensureNativeEventMonitor();
 #endif
     raise();

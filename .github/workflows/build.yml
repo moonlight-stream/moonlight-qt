@@ -307,6 +307,14 @@ jobs:
         cache: true
         aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@073e34d7c2ab4ae6961ed7cca690b3abd5ba5a7e'
 
+    - name: Test macOS overlay event wakeups
+      run: |
+        pushd tests/overlay_button_native_wake
+        qmake overlay_button_native_wake.pro
+        make -j"$(sysctl -n hw.ncpu)"
+        ./overlay_button_native_wake
+        popd
+
     - name: Build and generate DMG
       run: |
         scripts/generate-dmg.sh Release
