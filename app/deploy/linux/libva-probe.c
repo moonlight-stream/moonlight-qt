@@ -26,6 +26,7 @@
  * volatile keeps the table (and its relocations) alive through -O2. */
 static void *volatile requirements[] = {
     (void *)vaCreateSurfaces, /* libva.so.2, VA_API_0.33.0 */
+    (void *)vaMapBuffers2,    /* libva.so.2, 2.21+ */
     (void *)vaGetDisplay,     /* libva-x11.so.2 */
 };
 
