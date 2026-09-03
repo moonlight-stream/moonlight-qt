@@ -108,7 +108,7 @@ cat > $APP_RUN <<'APPRUN_EOF'
 # dynamic loader can start it, the host libva works; if not (no libva installed,
 # or one too old to link), we make the staged build-environment copy visible
 # via LD_LIBRARY_PATH, matching the pre-existing bundled behavior.
-APPDIR="${APPDIR:-$(dirname "$(dirname "$(readlink -f "$0")")")}"
+APPDIR="${APPDIR:-$(dirname "$(readlink -f "$0")")}"
 LIBVA_FALLBACK="$APPDIR/opt/libva-fallback"
 
 if [ -d "$LIBVA_FALLBACK" ] && ! "$LIBVA_FALLBACK/libva-probe" 2>/dev/null; then
