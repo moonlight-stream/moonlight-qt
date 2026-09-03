@@ -61,6 +61,7 @@ D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
       m_DevicesWithFL11Support(0),
       m_DevicesWithCodecSupport(0),
       m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
+      m_LastVertexBufferPanY(-1),
       m_AllowTearing(false),
       m_OverlayLock(0),
       m_HwDeviceContext(nullptr)
@@ -868,7 +869,13 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
 
 void D3D11VARenderer::bindVideoVertexBuffer(bool frameChanged, AVFrame* frame)
 {
-    if (frameChanged || !m_VideoVertexBuffer) {
+    // The vertex buffer encodes the video's destination rect. In fit-width-pan-Y
+    // mode that rect's y origin tracks the cursor every frame, so rebuild whenever
+    // the pan offset changes - otherwise the cached buffer locks the view in place.
+    int currentPanY = StreamUtils::getFitWidthPanYOffset();
+    if (frameChanged || !m_VideoVertexBuffer || currentPanY != m_LastVertexBufferPanY) {
+        m_LastVertexBufferPanY = currentPanY;
+
         // Scale video to the window size while preserving aspect ratio
         SDL_Rect src, dst;
         src.x = src.y = 0;
@@ -879,9 +886,20 @@ void D3D11VARenderer::bindVideoVertexBuffer(bool frameChanged, AVFrame* frame)
         dst.h = m_DisplayHeight;
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
+        // scaleSourceToDestinationSurface produces dst.y in screen-y convention
+        // (y=0 at top, growing down) - that's what SDL_RenderSetViewport wants.
+        // screenSpaceToNormalizedDeviceCoords expects math-y convention (y=0 at
+        // bottom, growing up). For symmetric letterbox rects the two coincide
+        // so this was never noticed, but for fit-width-pan-Y the rect extends
+        // past the window vertically and the conventions diverge: D3D11 ends
+        // up rendering the opposite half of the stream from what SDL renders.
+        // Flip y before NDC conversion so D3D11 sees the same rect SDL would.
+        SDL_Rect mathDst = dst;
+        mathDst.y = m_DisplayHeight - dst.y - dst.h;
+
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
-        StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, m_DisplayWidth, m_DisplayHeight);
+        StreamUtils::screenSpaceToNormalizedDeviceCoords(&mathDst, &renderRect, m_DisplayWidth, m_DisplayHeight);
 
         // Don't sample from the alignment padding area
         auto framesContext = (AVHWFramesContext*)frame->hw_frames_ctx->data;
