@@ -9,7 +9,7 @@ ComputerSeeker::ComputerSeeker(ComputerManager *manager, QString computerName, Q
     // If we know this computer, send a WOL packet to wake it up in case it is asleep.
     NvComputer* matchingComputer = findMatchingComputer();
     if (matchingComputer) {
-        matchingComputer->wake();
+        matchingComputer->wake(m_ComputerManager->getWolProxyAddresses());
     }
 
     m_TimeoutTimer->setSingleShot(true);
