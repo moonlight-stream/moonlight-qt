@@ -113,6 +113,7 @@ LIBVA_FALLBACK="$APPDIR/opt/libva-fallback"
 
 if [ -d "$LIBVA_FALLBACK" ] && ! "$LIBVA_FALLBACK/libva-probe" 2>/dev/null; then
     export LD_LIBRARY_PATH="$LIBVA_FALLBACK${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    export VAAPI_USE_FALLBACK_PATHS=1
 fi
 
 exec "$APPDIR/usr/bin/moonlight" "$@"
