@@ -7,7 +7,7 @@ import shutil
 
 ORGANIZATION = "moonlight-stream"
 PREBUILT_REPO = "moonlight-qt-deps"
-TAG = "v14"
+TAG = "v15"
 
 def get_platform_config():
     system = platform.system()
