@@ -158,6 +158,20 @@ void StreamUtils::screenSpaceToNormalizedDeviceCoords(SDL_Rect* src, SDL_FRect* 
 
 int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
 {
+    int refreshHz;
+    if (tryGetDisplayRefreshRate(window, refreshHz)) {
+        return refreshHz;
+    }
+
+    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                "Refresh rate unknown; assuming 60 Hz");
+    return 60;
+}
+
+bool StreamUtils::tryGetDisplayRefreshRate(SDL_Window* window, int& outHz)
+{
+    outHz = 0;
+
     int displayIndex = SDL_GetWindowDisplayIndex(window);
     if (displayIndex < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -175,9 +189,7 @@ int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_GetWindowDisplayMode() failed: %s",
                          SDL_GetError());
-
-            // Assume 60 Hz
-            return 60;
+            return false;
         }
     }
     else {
@@ -186,20 +198,18 @@ int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_GetCurrentDisplayMode() failed: %s",
                          SDL_GetError());
-
-            // Assume 60 Hz
-            return 60;
+            return false;
         }
     }
 
-    // May be zero if undefined
-    if (mode.refresh_rate == 0) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Refresh rate unknown; assuming 60 Hz");
-        mode.refresh_rate = 60;
+    // SDL uses zero for an undefined refresh rate. A strict caller must be able
+    // to reject that state instead of silently qualifying VRR at 60 Hz.
+    if (mode.refresh_rate <= 0) {
+        return false;
     }
 
-    return mode.refresh_rate;
+    outHz = mode.refresh_rate;
+    return true;
 }
 
 bool StreamUtils::hasFastAes()
