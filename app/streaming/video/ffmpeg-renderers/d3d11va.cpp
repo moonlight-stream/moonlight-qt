@@ -371,20 +371,17 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         separateDevices = SUCCEEDED(hr) && d3d11Options.ExtendedResourceSharing && m_FenceType != SupportedFenceType::None;
 
         if (separateDevices) {
-            // The Radon HD 5570 GPU drivers deadlock when decoding into shared texture arrays, so let's
-            // limit usage of separate devices to FL 11.1+ GPUs to try to exclude old GPU drivers. We'll
-            // exempt Intel GPUs because those have been confirmed to work properly (and the extra fence
-            // that this device separation uses acts as a workaround for a bug in their old drivers where
-            // they don't properly synchronize between decoder output usage and SRV usage).
-            if (featureLevel < D3D_FEATURE_LEVEL_11_1 && adapterDesc.VendorId != 0x8086) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Avoiding texture sharing for old pre-FL11.1 GPU");
-                separateDevices = false;
-            }
-            else if (adapterDesc.VendorId == 0x1ED5 || // Moore Threads (texture is all zero/green)
-                     adapterDesc.VendorId == 0x4D4F4351) { // Qualcomm (decoding is unstable/slow on QC710)
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Avoiding texture sharing on known broken GPU vendor");
+            // This texture array sharing codepath is quite prone to driver bugs.
+            //
+            // Broken GPU vendors/cards/drivers include:
+            // - Moore Threads (texture is all zero/green)
+            // - Qualcomm (decoding is unstable/slow on QC710)
+            // - AMD (Polaris cards display corrupt output - see #2003,
+            //        HD 5570 drivers deadlock with shared texture arrays)
+            //
+            // Due to all these issues, we will only use this path for Intel and NVIDIA where we know it
+            // provides tangible benefits (performance for the former and VRR support for the latter).
+            if (adapterDesc.VendorId != 0x8086 && adapterDesc.VendorId != 0x10DE && adapterDesc.VendorId != 'ADVN') {
                 separateDevices = false;
             }
         }
@@ -406,12 +403,11 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         // significant performance impact of the extra copy. See:
         // https://github.com/moonlight-stream/moonlight-qt/issues/1304
         //
-        // Also bind SRVs when using separate decoding and rendering
-        // devices as this improves render times by about 2x on my
-        // Ryzen 3300U system. The fences we use between decoding
-        // and rendering contexts should hopefully avoid any of the
-        // synchronization issues we've seen between decoder and SRVs.
-        m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086 || separateDevices;
+        // Also bind SRVs as this improves render times by about 2x on
+        // my Ryzen 3300U system.
+        m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086 ||
+                                      (adapterDesc.VendorId == 0x1002 && featureLevel >= D3D_FEATURE_LEVEL_11_1) ||
+                                      separateDevices;
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
