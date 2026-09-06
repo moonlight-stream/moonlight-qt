@@ -6,6 +6,14 @@
 #define VK_0 0x30
 #define VK_A 0x41
 
+#ifndef VK_ABNT_C1
+#define VK_ABNT_C1 0xC1
+#endif
+
+#ifndef VK_ABNT_C2
+#define VK_ABNT_C2 0xC2
+#endif
+
 // These are real Windows VK_* codes
 #ifndef VK_F1
 #define VK_F1 0x70
@@ -337,7 +345,8 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 keyCode = 0x6B;
                 break;
             case SDL_SCANCODE_KP_COMMA:
-                keyCode = 0x6C;
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = VK_ABNT_C2;
                 break;
             case SDL_SCANCODE_KP_MINUS:
                 keyCode = 0x6D;
@@ -446,7 +455,8 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 break;
             case SDL_SCANCODE_INTERNATIONAL1:
                 shouldNotConvertToScanCodeOnServer = true;
-                Q_FALLTHROUGH();
+                keyCode = VK_ABNT_C1;
+                break;
             case SDL_SCANCODE_NONUSBACKSLASH:
                 keyCode = 0xE2;
                 break;
