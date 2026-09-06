@@ -1,15 +1,19 @@
 #include "computerseeker.h"
 #include "computermanager.h"
 #include <QTimer>
+#include <QThreadPool>
 
 ComputerSeeker::ComputerSeeker(ComputerManager *manager, QString computerName, QObject *parent)
     : QObject(parent), m_ComputerManager(manager), m_ComputerName(computerName),
       m_TimeoutTimer(new QTimer(this))
 {
     // If we know this computer, send a WOL packet to wake it up in case it is asleep.
+    // Run on thread pool since HTTP wake may block for up to 10 seconds.
     NvComputer* matchingComputer = findMatchingComputer();
     if (matchingComputer) {
-        matchingComputer->wake();
+        QThreadPool::globalInstance()->start(QRunnable::create([matchingComputer]() {
+            matchingComputer->wake();
+        }));
     }
 
     m_TimeoutTimer->setSingleShot(true);
