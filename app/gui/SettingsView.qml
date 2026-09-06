@@ -1462,6 +1462,28 @@ Flickable {
                         StreamingPreferences.reverseScrollDirection = checked
                     }
                 }
+
+                CheckBox {
+                    id: bossKeyCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Enable boss key (Ctrl+`) to hide and restore Moonlight")
+                    font.pointSize: 12
+                    visible: SystemProperties.isWindows
+                    checked: StreamingPreferences.bossKeyEnabled
+                    onCheckedChanged: {
+                        StreamingPreferences.bossKeyEnabled = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 10000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Pressing Ctrl+` instantly hides all Moonlight windows, including their taskbar buttons. Press it again to bring them back.") + " " +
+                                  qsTr("Your stream keeps running while hidden, but its audio is muted.") + "
+
+" +
+                                  qsTr("NOTE: Ctrl+` is captured system-wide while Moonlight is running, so it will not reach your host PC or any other application.")
+                }
             }
         }
 

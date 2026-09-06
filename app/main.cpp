@@ -4,6 +4,7 @@
 #include <QQmlContext>
 #include <QIcon>
 #include <QQuickStyle>
+#include <QQuickWindow>
 #include <QMutex>
 #include <QtDebug>
 #include <QNetworkProxyFactory>
@@ -31,6 +32,7 @@
 
 #if defined(Q_OS_WIN32)
 #include "antihookingprotection.h"
+#include "bosskey.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -1040,6 +1042,11 @@ int main(int argc, char *argv[])
         engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
         if (engine.rootObjects().isEmpty())
             return -1;
+
+#ifdef Q_OS_WIN32
+        // Set up the global Ctrl+` boss key hotkey now that we have a window to hide
+        BossKey::get()->initialize(qobject_cast<QQuickWindow*>(engine.rootObjects().first()));
+#endif
     }
 
     int err = app.exec();
