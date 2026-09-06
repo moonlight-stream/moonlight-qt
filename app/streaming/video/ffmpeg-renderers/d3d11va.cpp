@@ -371,19 +371,28 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         separateDevices = SUCCEEDED(hr) && d3d11Options.ExtendedResourceSharing && m_FenceType != SupportedFenceType::None;
 
         if (separateDevices) {
+            // Use minimum precision support to differentiate Vega and later from Polaris and earlier
+            D3D11_FEATURE_DATA_SHADER_MIN_PRECISION_SUPPORT minPrecSupport;
+            hr = m_RenderDevice->CheckFeatureSupport(D3D11_FEATURE_SHADER_MIN_PRECISION_SUPPORT, &minPrecSupport, sizeof(minPrecSupport));
+            if (FAILED(hr)) {
+                minPrecSupport = {};
+            }
+
             // This texture array sharing codepath is quite prone to driver bugs.
             //
             // Broken GPU vendors/cards/drivers include:
             // - Moore Threads (texture is all zero/green)
             // - Qualcomm (decoding is unstable/slow on QC710)
-            // - AMD (Polaris cards display corrupt output - see #2003,
-            //        HD 5570 drivers deadlock with shared texture arrays)
+            // - AMD prior to Vega (Polaris cards display corrupt output - see #2003,
+            //                      HD 5570 drivers deadlock with shared texture arrays)
+            // - Nvidia prior to Maxwell 2? (Fermi cards display all zero/green)
             //
-            // Due to all these issues, we will only use this path for Intel and NVIDIA where we know it
+            // Due to all these issues, we will only use this path for Intel/AMD and NVIDIA where we know it
             // provides tangible benefits (performance for the former and VRR support for the latter).
-            if (adapterDesc.VendorId != 0x8086 && adapterDesc.VendorId != 0x10DE && adapterDesc.VendorId != 'ADVN') {
-                separateDevices = false;
-            }
+            separateDevices = adapterDesc.VendorId == 0x8086 || // Intel
+                              (adapterDesc.VendorId == 0x10DE && featureLevel >= D3D_FEATURE_LEVEL_11_1) || // NVIDIA Maxwell 2+ (PCI ID)
+                              adapterDesc.VendorId == 'ADVN' || // NVIDIA (WoA)
+                              (adapterDesc.VendorId == 0x1002 && minPrecSupport.PixelShaderMinPrecision == D3D11_SHADER_MIN_PRECISION_16_BIT); // AMD Vega+
         }
     }
 
@@ -406,7 +415,6 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         // Also bind SRVs as this improves render times by about 2x on
         // my Ryzen 3300U system.
         m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086 ||
-                                      (adapterDesc.VendorId == 0x1002 && featureLevel >= D3D_FEATURE_LEVEL_11_1) ||
                                       separateDevices;
     }
 
