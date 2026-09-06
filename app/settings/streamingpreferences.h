@@ -119,12 +119,22 @@ public:
     };
     Q_ENUM(CaptureSysKeysMode);
 
+    enum AbrMode
+    {
+        ABR_QUALITY,
+        ABR_BALANCED,
+        ABR_LOW_LATENCY,
+    };
+    Q_ENUM(AbrMode);
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
     Q_PROPERTY(int bitrateKbps MEMBER bitrateKbps NOTIFY bitrateChanged)
     Q_PROPERTY(bool unlockBitrate MEMBER unlockBitrate NOTIFY unlockBitrateChanged)
     Q_PROPERTY(bool autoAdjustBitrate MEMBER autoAdjustBitrate NOTIFY autoAdjustBitrateChanged)
+    Q_PROPERTY(bool enableAdaptiveBitrate MEMBER enableAdaptiveBitrate NOTIFY enableAdaptiveBitrateChanged)
+    Q_PROPERTY(AbrMode abrMode MEMBER abrMode NOTIFY abrModeChanged)
     Q_PROPERTY(bool enableVsync MEMBER enableVsync NOTIFY enableVsyncChanged)
     Q_PROPERTY(bool gameOptimizations MEMBER gameOptimizations NOTIFY gameOptimizationsChanged)
     Q_PROPERTY(bool playAudioOnHost MEMBER playAudioOnHost NOTIFY playAudioOnHostChanged)
@@ -167,6 +177,8 @@ public:
     int bitrateKbps;
     bool unlockBitrate;
     bool autoAdjustBitrate;
+    bool enableAdaptiveBitrate;
+    AbrMode abrMode;
     bool enableVsync;
     bool gameOptimizations;
     bool playAudioOnHost;
@@ -206,6 +218,8 @@ signals:
     void bitrateChanged();
     void unlockBitrateChanged();
     void autoAdjustBitrateChanged();
+    void enableAdaptiveBitrateChanged();
+    void abrModeChanged();
     void enableVsyncChanged();
     void gameOptimizationsChanged();
     void playAudioOnHostChanged();
