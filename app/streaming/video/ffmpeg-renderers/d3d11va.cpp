@@ -256,6 +256,7 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
     HRESULT hr;
     ComPtr<ID3D11Device> device;
     ComPtr<ID3D11DeviceContext> deviceContext;
+    LARGE_INTEGER umdVersion;
 
     SDL_assert(!m_RenderDevice);
     SDL_assert(!m_RenderDeviceContext);
@@ -287,12 +288,25 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         goto Exit;
     }
 
+    // Query the GPU driver version
+    hr = adapter->CheckInterfaceSupport(__uuidof(IDXGIDevice), &umdVersion);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "IDXGIAdapter::CheckInterfaceSupport() failed: %x",
+                     hr);
+        goto Exit;
+    }
+
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Detected GPU %d: %S (%x:%x)",
+                "Detected GPU %d: %S (%x:%x) (driver: %u.%u.%u.%u)",
                 adapterIndex,
                 adapterDesc.Description,
                 adapterDesc.VendorId,
-                adapterDesc.DeviceId);
+                adapterDesc.DeviceId,
+                HIWORD(umdVersion.HighPart),
+                LOWORD(umdVersion.HighPart),
+                HIWORD(umdVersion.LowPart),
+                LOWORD(umdVersion.LowPart));
 
     hr = D3D11CreateDevice(adapter.Get(),
                            D3D_DRIVER_TYPE_UNKNOWN,
