@@ -399,12 +399,13 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
             // - Qualcomm (decoding is unstable/slow on QC710)
             // - AMD prior to Vega (Polaris cards display corrupt output - see #2003,
             //                      HD 5570 drivers deadlock with shared texture arrays)
-            // - Nvidia prior to Maxwell 2? (Fermi cards display all zero/green)
+            // - Nvidia drivers prior to ~471.11 (Earlier drivers display all zero/green,
+            //                                    We approximate by requiring WDDM 3.0+)
             //
             // Due to all these issues, we will only use this path for Intel/AMD and NVIDIA where we know it
             // provides tangible benefits (performance for the former and VRR support for the latter).
             separateDevices = adapterDesc.VendorId == 0x8086 || // Intel
-                              (adapterDesc.VendorId == 0x10DE && featureLevel >= D3D_FEATURE_LEVEL_11_1) || // NVIDIA Maxwell 2+ (PCI ID)
+                              (adapterDesc.VendorId == 0x10DE && HIWORD(umdVersion.HighPart) >= 30) || // NVIDIA WDDM 3.0+ (PCI ID)
                               adapterDesc.VendorId == 'ADVN' || // NVIDIA (WoA)
                               (adapterDesc.VendorId == 0x1002 && minPrecSupport.PixelShaderMinPrecision == D3D11_SHADER_MIN_PRECISION_16_BIT); // AMD Vega+
         }
