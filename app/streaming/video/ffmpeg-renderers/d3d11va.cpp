@@ -407,7 +407,7 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
             separateDevices = adapterDesc.VendorId == 0x8086 || // Intel
                               (adapterDesc.VendorId == 0x10DE && HIWORD(umdVersion.HighPart) >= 30) || // NVIDIA WDDM 3.0+ (PCI ID)
                               adapterDesc.VendorId == 'ADVN' || // NVIDIA (WoA)
-                              (adapterDesc.VendorId == 0x1002 && minPrecSupport.PixelShaderMinPrecision == D3D11_SHADER_MIN_PRECISION_16_BIT); // AMD Vega+
+                              (adapterDesc.VendorId == 0x1002 && (minPrecSupport.PixelShaderMinPrecision & D3D11_SHADER_MIN_PRECISION_16_BIT)); // AMD Vega+
         }
     }
 
