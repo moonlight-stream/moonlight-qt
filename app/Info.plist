@@ -5,7 +5,7 @@
 	<key>GCSupportsGameMode</key>
 	<true/>
 	<key>CFBundleExecutable</key>
-	<string>Moonlight</string>
+	<string>GilStreaming</string>
 	<key>LSSupportsGameMode</key>
 	<true/>
 	<key>CFBundleGetInfoString</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleIconFile</key>
 	<string>moonlight</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.moonlight-stream.Moonlight</string>
+	<string>local.gilstreaming.client</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>CFBundlePackageType</key>
@@ -41,7 +41,7 @@
 		<true/>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Moonlight uses the local network to connect to your gaming PC for streaming.</string>
+	<string>GilStreaming uses the network to connect to your assigned gaming VM.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_nvstream._tcp</string>
@@ -51,7 +51,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>VERSION</string>
 	<key>CFBundleDisplayName</key>
-	<string>Moonlight</string>
+	<string>GilStreaming</string>
     <key>LSApplicationCategoryType</key>
 	<string>public.app-category.games</string>
 </dict>

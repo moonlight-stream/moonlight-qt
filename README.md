@@ -1,14 +1,41 @@
-# Moonlight PC
+# GilStreaming
 
-[Moonlight PC](https://moonlight-stream.org) is an open source PC client for NVIDIA GameStream and [Sunshine](https://github.com/LizardByte/Sunshine).
+GilStreaming is a private, coordinator-driven game streaming client derived
+from [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt). It is
+intended to connect users only to Windows gaming VMs assigned from a private
+pool. Sunshine provides the GameStream-compatible host inside each VM.
 
-Moonlight also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and [iOS](https://github.com/moonlight-stream/moonlight-ios).
+The first deployment target is one GPU-P enabled Windows host with two Windows
+VMs. Each VM represents one streaming slot, so the deployment can serve at most
+two concurrent users.
 
-You can follow development on our [Discord server](https://moonlight-stream.org/discord) and help translate Moonlight into your language on [Weblate](https://hosted.weblate.org/projects/moonlight/moonlight-qt/).
+## GilStreaming architecture
 
- [![Build](https://img.shields.io/github/actions/workflow/status/moonlight-stream/moonlight-qt/build.yml?branch=master)](https://github.com/moonlight-stream/moonlight-qt/actions/workflows/build.yml?query=branch%3Amaster)
- [![Downloads](https://img.shields.io/github/downloads/moonlight-stream/moonlight-qt/total)](https://github.com/moonlight-stream/moonlight-qt/releases)
- [![Translation Status](https://hosted.weblate.org/widgets/moonlight/-/moonlight-qt/svg-badge.svg)](https://hosted.weblate.org/projects/moonlight/moonlight-qt/)
+GilStreaming does not discover hosts or select a VM itself. A small coordinator
+owns the pool and grants a time-limited lease for one available VM:
+
+1. The client authenticates to the coordinator.
+2. The client requests a streaming session.
+3. The coordinator atomically reserves an available, healthy VM.
+4. The coordinator returns only the assigned Sunshine endpoint.
+5. The client pairs (when required), connects, and renews the lease.
+6. The client releases the lease when the session ends. Expired leases are
+   reclaimed automatically.
+
+See [docs/architecture.md](docs/architecture.md) and
+[docs/coordinator-api.md](docs/coordinator-api.md) for the initial design.
+
+## Current status
+
+- Upstream Moonlight Qt source is imported on the `gilstreaming` branch.
+- The application identity has been separated from Moonlight so settings and
+  paired-host state are stored under GilStreaming.
+- A dependency-free Go coordinator prototype now provides authenticated,
+  persistent, atomic VM leases with heartbeats and expiry.
+- Sunshine pairing automation and the client lease UI are the next vertical
+  slice.
+
+## Upstream Moonlight features
 
 ## Features
  - Hardware accelerated video decoding on Windows, Mac, and Linux

@@ -1,0 +1,24 @@
+{
+  "listen": "127.0.0.1:8080",
+  "leaseTTLSeconds": 90,
+  "stateFile": "coordinator-state.json",
+  "tokenHashes": {
+    "gil": "replace-with-sha256-from-go-run-dot-hash-token"
+  },
+  "vms": [
+    {
+      "id": "vm-1",
+      "displayName": "Gaming VM 1",
+      "streamAddress": "vm1.gilstreaming.internal",
+      "streamPort": 47989,
+      "enabled": true
+    },
+    {
+      "id": "vm-2",
+      "displayName": "Gaming VM 2",
+      "streamAddress": "vm2.gilstreaming.internal",
+      "streamPort": 47989,
+      "enabled": true
+    }
+  ]
+}

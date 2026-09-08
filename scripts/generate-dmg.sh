@@ -58,7 +58,7 @@ popd
 
 echo Saving dSYM file
 pushd $BUILD_FOLDER
-dsymutil app/Moonlight.app/Contents/MacOS/Moonlight -o Moonlight-$VERSION.dsym || fail "dSYM creation failed!"
+dsymutil app/GilStreaming.app/Contents/MacOS/GilStreaming -o GilStreaming-$VERSION.dsym || fail "dSYM creation failed!"
 cp -R Moonlight-$VERSION.dsym $INSTALLER_FOLDER || fail "dSYM copy failed!"
 popd
 
@@ -66,21 +66,21 @@ echo Creating app bundle
 EXTRA_ARGS=
 if [ "$BUILD_CONFIG" == "Debug" ]; then EXTRA_ARGS="$EXTRA_ARGS -use-debug-libs"; fi
 echo Extra deployment arguments: $EXTRA_ARGS
-macdeployqt $BUILD_FOLDER/app/Moonlight.app $EXTRA_ARGS -qmldir=$SOURCE_ROOT/app/gui -appstore-compliant || fail "macdeployqt failed!"
+macdeployqt $BUILD_FOLDER/app/GilStreaming.app $EXTRA_ARGS -qmldir=$SOURCE_ROOT/app/gui -appstore-compliant || fail "macdeployqt failed!"
 
 echo Removing dSYM files from app bundle
-find $BUILD_FOLDER/app/Moonlight.app/ -name '*.dSYM' | xargs rm -rf
+find $BUILD_FOLDER/app/GilStreaming.app/ -name '*.dSYM' | xargs rm -rf
 
 if [ "$SIGNING_IDENTITY" != "" ]; then
   echo Signing app bundle
-  codesign --force --deep --options runtime --timestamp --sign "$SIGNING_IDENTITY" $BUILD_FOLDER/app/Moonlight.app || fail "Signing failed!"
+  codesign --force --deep --options runtime --timestamp --sign "$SIGNING_IDENTITY" $BUILD_FOLDER/app/GilStreaming.app || fail "Signing failed!"
 fi
 
 echo Creating DMG
 if [ "$SIGNING_IDENTITY" != "" ]; then
-  create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER --identity="$SIGNING_IDENTITY" --no-version-in-filename || fail "create-dmg failed!"
+  create-dmg $BUILD_FOLDER/app/GilStreaming.app $INSTALLER_FOLDER --identity="$SIGNING_IDENTITY" --no-version-in-filename || fail "create-dmg failed!"
 else
-  create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER --no-version-in-filename
+  create-dmg $BUILD_FOLDER/app/GilStreaming.app $INSTALLER_FOLDER --no-version-in-filename
   case $? in
     0) ;;
     2) ;;

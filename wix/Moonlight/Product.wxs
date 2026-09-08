@@ -87,7 +87,7 @@
         <File Id="MoonlightExe"
               KeyPath="yes"
               Checksum="yes"
-              Source="$(var.BuildDir)\app\$(var.Configuration)\Moonlight.exe">
+              Source="$(var.BuildDir)\app\$(var.Configuration)\GilStreaming.exe">
           <fire:FirewallException Id="MoonlightFirewallException"
                                   Scope="any"
                                   IgnoreFailure="yes"

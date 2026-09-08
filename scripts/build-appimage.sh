@@ -82,7 +82,7 @@ if [ -n "$SYSTEM_LIBVA" ]; then
   # binaries shipped in the AppImage require, otherwise a host libva could pass the
   # probe and still fail to load Moonlight or the bundled FFmpeg.
   va_nodes() { LC_ALL=C readelf -V "$1" 2>/dev/null | grep -oE 'VA_API_[0-9]+\.[0-9]+\.[0-9]+' | sort -u; }
-  NEEDED_NODES=$(for b in $DEPLOY_FOLDER/usr/bin/moonlight \
+  NEEDED_NODES=$(for b in $DEPLOY_FOLDER/usr/bin/gilstreaming \
                           /usr/local/lib*/libav*.so* /usr/local/lib*/libsw*.so* \
                           /usr/lib/x86_64-linux-gnu/libav*.so* /usr/lib/x86_64-linux-gnu/libsw*.so*; do
                    [ -f "$b" ] && va_nodes "$b"; done | sort -u)
@@ -116,7 +116,7 @@ if [ -d "$LIBVA_FALLBACK" ] && ! "$LIBVA_FALLBACK/libva-probe" 2>/dev/null; then
     export VAAPI_USE_FALLBACK_PATHS=1
 fi
 
-exec "$APPDIR/usr/bin/moonlight" "$@"
+exec "$APPDIR/usr/bin/gilstreaming" "$@"
 APPRUN_EOF
 chmod +x $APP_RUN
 

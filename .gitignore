@@ -4,6 +4,9 @@
 **/.vs/
 .vscode/
 build/
+coordinator/config.json
+coordinator/coordinator-state.json
+coordinator/*.tmp
 libs/
 config.tests/*/.qmake.stash
 config.tests/*/Makefile

@@ -49,7 +49,7 @@
       <bal:WixStandardBootstrapperApplication ShowVersion="yes"
                                               LicenseFile="license.rtf"
                                               LogoFile="..\..\app\moonlight_wix.png"
-                                              LaunchTarget="[InstallFolder]\Moonlight.exe"
+                                              LaunchTarget="[InstallFolder]\GilStreaming.exe"
                                               ThemeFile="RtfTheme.xml"
                                               Theme="rtfLicense" />
       <Payload Name="Moonlight.ico" SourceFile="..\..\app\moonlight.ico" Compressed="yes" />
