@@ -257,11 +257,29 @@ bool StreamUtils::hasFastAes()
 bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, SDL_Rect* safeArea)
 {
 #ifdef Q_OS_DARWIN
-#define MAX_DISPLAYS 16
-    CGDirectDisplayID displayIds[MAX_DISPLAYS];
-    uint32_t displayCount = 0;
-    CGGetActiveDisplayList(MAX_DISPLAYS, displayIds, &displayCount);
-    if (displayIndex >= (int)displayCount) {
+    SDL_assert(SDL_WasInit(SDL_INIT_VIDEO));
+
+    // Callers pass SDL display indices, but CoreGraphics doesn't enumerate
+    // displays in SDL's order (SDL puts the main display first and skips
+    // mirrored displays), so an SDL index can't be used to index a CG display
+    // list. Ask CoreGraphics which display contains the center of the SDL
+    // display instead, since both use the same global coordinate space.
+    SDL_Rect sdlBounds;
+    if (SDL_GetDisplayBounds(displayIndex, &sdlBounds) != 0) {
+        // This is also how callers detect the end of the display list
+        return false;
+    }
+
+    CGPoint center = CGPointMake(sdlBounds.x + sdlBounds.w / 2.0,
+                                 sdlBounds.y + sdlBounds.h / 2.0);
+
+    CGDirectDisplayID displayId;
+    uint32_t matchingDisplayCount = 0;
+    if (CGGetDisplaysWithPoint(center, 1, &displayId, &matchingDisplayCount) != kCGErrorSuccess ||
+            matchingDisplayCount == 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "No CoreGraphics display found for display %d at (%d,%d) %dx%d",
+                    displayIndex, sdlBounds.x, sdlBounds.y, sdlBounds.w, sdlBounds.h);
         return false;
     }
 
@@ -271,7 +289,7 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
     // native resolution, so it's impossible for us to figure out what's actually
     // native on macOS using the SDL API alone. We'll talk to CoreGraphics to
     // find the correct resolution and match it in our SDL list.
-    CFArrayRef modeList = CGDisplayCopyAllDisplayModes(displayIds[displayIndex], nullptr);
+    CFArrayRef modeList = CGDisplayCopyAllDisplayModes(displayId, nullptr);
     CFIndex count = CFArrayGetCount(modeList);
     for (CFIndex i = 0; i < count; i++) {
         auto cgMode = (CGDisplayModeRef)(CFArrayGetValueAtIndex(modeList, i));
@@ -297,7 +315,7 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
     // To avoid potential false positives, let's avoid checking for external displays, since
     // we might have scenarios like a 1920x1200 display with an alternate 1920x1080 mode
     // which would falsely trigger our notch detection here.
-    if (CGDisplayIsBuiltin(displayIds[displayIndex])) {
+    if (CGDisplayIsBuiltin(displayId)) {
         for (CFIndex i = 0; i < count; i++) {
             auto cgMode = (CGDisplayModeRef)(CFArrayGetValueAtIndex(modeList, i));
             auto cgModeWidth = static_cast<int>(CGDisplayModeGetWidth(cgMode));
