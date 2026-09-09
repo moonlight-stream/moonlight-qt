@@ -112,6 +112,7 @@ CMake is available as an alternative to qmake for Windows, macOS, and Linux (Ste
 * macOS: `cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"` then `cmake --build build --config Release`.
 * The `EMBEDDED`, `GPUSLOW`, `GLSLOW`, and `VKSLOW` qmake `CONFIG` options are available as CMake options of the same name, e.g. `-DEMBEDDED=ON`.
 * The `disable-*`/`enable-*` qmake `CONFIG` options for Linux renderer backends (Wayland, DRM, VAAPI, VDPAU, X11, MMAL, libplacebo) are available as `DISABLE_*`/`ENABLE_*` CMake options, e.g. `-DDISABLE_WAYLAND=ON`.
+* `CMakePresets.json` provides a `linux`/`macos`/`windows` preset for each platform (`cmake --preset <name>` / `cmake --build --preset <name>`), and is also picked up automatically by IDEs with CMake Presets support (Visual Studio, VS Code, CLion).
 
 ## Contribute
 1. Fork us
