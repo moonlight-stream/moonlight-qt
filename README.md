@@ -106,6 +106,13 @@ for different architectures, which handle building deps and extra linking for yo
         * This build will lack windowed mode, Discord/Help links, and other features that don't make sense on an embedded device.
         * For platforms with poor GPU performance, add `"CONFIG+=gpuslow"` to prefer direct KMSDRM rendering over GL/Vulkan renderers. Direct KMSDRM rendering can use dedicated YUV/RGB conversion and scaling hardware rather than slower GPU shaders for these operations.
 
+### Building with CMake
+CMake is available as an alternative to qmake for Windows, macOS, and Linux (Steam Link continues to build exclusively with qmake). Complete steps 1 and 2 of the qmake build setup above first, then:
+* Windows and Linux: `cmake -B build -DCMAKE_BUILD_TYPE=Release` then `cmake --build build --config Release`.
+* macOS: `cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"` then `cmake --build build --config Release`.
+* The `EMBEDDED`, `GPUSLOW`, `GLSLOW`, and `VKSLOW` qmake `CONFIG` options are available as CMake options of the same name, e.g. `-DEMBEDDED=ON`.
+* The `disable-*`/`enable-*` qmake `CONFIG` options for Linux renderer backends (Wayland, DRM, VAAPI, VDPAU, X11, MMAL, libplacebo) are available as `DISABLE_*`/`ENABLE_*` CMake options, e.g. `-DDISABLE_WAYLAND=ON`.
+
 ## Contribute
 1. Fork us
 2. Write code
