@@ -132,6 +132,50 @@ target_link_libraries(${APP_TARGET} PRIVATE
     h264bitstream
 )
 
+if(WIN32)
+    target_include_directories(${APP_TARGET} PRIVATE
+        ${CMAKE_SOURCE_DIR}/libs/windows/include
+        ${CMAKE_SOURCE_DIR}/libs/windows/include/${MOONLIGHT_WIN_ARCH}
+        ${CMAKE_SOURCE_DIR}/libs/windows/include/${MOONLIGHT_WIN_ARCH}/SDL2
+        ${CMAKE_SOURCE_DIR}/AntiHooking
+    )
+    target_link_directories(${APP_TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/libs/windows/lib/${MOONLIGHT_WIN_ARCH})
+    target_link_libraries(${APP_TARGET} PRIVATE
+        ws2_32 winmm dxva2 ole32 gdi32 user32 d3d9 dwmapi dbghelp
+        SDL2 SDL2_ttf avcodec avutil swscale opus dxgi d3d11 libplacebo
+        discord-rpc AntiHooking
+    )
+    target_compile_definitions(${APP_TARGET} PRIVATE HAVE_FFMPEG HAVE_LIBPLACEBO_VULKAN HAVE_DISCORD)
+    target_sources(${APP_TARGET} PRIVATE
+        streaming/video/ffmpeg.cpp
+        streaming/video/ffmpeg-renderers/genhwaccel.cpp
+        streaming/video/ffmpeg-renderers/sdlvid.cpp
+        streaming/video/ffmpeg-renderers/swframemapper.cpp
+        streaming/video/ffmpeg-renderers/pacer/pacer.cpp
+        streaming/video/ffmpeg-renderers/plvk.cpp
+        streaming/video/ffmpeg-renderers/plvk_c.c
+        streaming/video/ffmpeg-renderers/dxva2.cpp
+        streaming/video/ffmpeg-renderers/d3d11va.cpp
+        streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.cpp
+        streaming/video/ffmpeg.h
+        streaming/video/ffmpeg-renderers/renderer.h
+        streaming/video/ffmpeg-renderers/genhwaccel.h
+        streaming/video/ffmpeg-renderers/sdlvid.h
+        streaming/video/ffmpeg-renderers/swframemapper.h
+        streaming/video/ffmpeg-renderers/pacer/pacer.h
+        streaming/video/ffmpeg-renderers/plvk.h
+        streaming/video/ffmpeg-renderers/dxutil.h
+        streaming/video/ffmpeg-renderers/dxva2.h
+        streaming/video/ffmpeg-renderers/d3d11va.h
+        streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.h
+        moonlight.rc
+    )
+
+    if(MSVC)
+        target_link_options(${APP_TARGET} PRIVATE /MANIFEST:EMBED /MANIFESTINPUT:${CMAKE_CURRENT_SOURCE_DIR}/Moonlight.exe.manifest)
+    endif()
+endif()
+
 if(UNIX AND NOT APPLE)
     pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
     pkg_check_modules(SDL2_TTF REQUIRED IMPORTED_TARGET SDL2_ttf)

@@ -19,6 +19,8 @@ if(NOT DEFINED CACHE{BUILD_SHARED_LIBS})
 endif()
 
 if(WIN32)
+    enable_language(RC)
+
     if(NOT EXISTS ${CMAKE_SOURCE_DIR}/libs/windows)
         message(FATAL_ERROR "Missing dependencies. Please run 'powershell .\\setup-deps.ps1' to fetch prebuilt libraries.")
     endif()
