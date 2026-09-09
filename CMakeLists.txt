@@ -35,6 +35,8 @@ if(WIN32)
     set(OPENSSL_CRYPTO_LIBRARY ${CMAKE_SOURCE_DIR}/libs/windows/lib/${MOONLIGHT_WIN_ARCH}/libcrypto.lib CACHE FILEPATH "" FORCE)
     set(OPENSSL_SSL_LIBRARY ${CMAKE_SOURCE_DIR}/libs/windows/lib/${MOONLIGHT_WIN_ARCH}/libssl.lib CACHE FILEPATH "" FORCE)
 elseif(APPLE)
+    enable_language(OBJCXX)
+
     if(NOT EXISTS ${CMAKE_SOURCE_DIR}/libs/mac)
         message(FATAL_ERROR "Missing dependencies. Please run 'python3 setup-deps.py' to fetch prebuilt libraries.")
     endif()

@@ -176,6 +176,74 @@ if(WIN32)
     endif()
 endif()
 
+if(APPLE)
+    if(NOT DISABLE_PREBUILTS)
+        target_include_directories(${APP_TARGET} PRIVATE
+            ${CMAKE_SOURCE_DIR}/libs/mac/include
+            ${CMAKE_SOURCE_DIR}/libs/mac/include/SDL2
+        )
+        target_link_directories(${APP_TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/libs/mac/lib)
+        target_link_libraries(${APP_TARGET} PRIVATE
+            ssl.3 crypto.3 avcodec.63 avutil.61 swscale.10 opus.0 SDL2 SDL2_ttf placebo discord-rpc
+        )
+        target_compile_definitions(${APP_TARGET} PRIVATE HAVE_DISCORD HAVE_LIBPLACEBO_VULKAN)
+        target_sources(${APP_TARGET} PRIVATE
+            streaming/video/ffmpeg-renderers/plvk.cpp
+            streaming/video/ffmpeg-renderers/plvk_c.c
+            streaming/video/ffmpeg-renderers/plvk_objc.mm
+            streaming/video/ffmpeg-renderers/plvk.h
+        )
+
+        file(GLOB MOONLIGHT_MAC_FRAMEWORKS ${CMAKE_SOURCE_DIR}/libs/mac/Frameworks/*.framework)
+        file(GLOB MOONLIGHT_MAC_DYLIBS ${CMAKE_SOURCE_DIR}/libs/mac/lib/*.dylib)
+        set_source_files_properties(${MOONLIGHT_MAC_FRAMEWORKS} ${MOONLIGHT_MAC_DYLIBS}
+            PROPERTIES MACOSX_PACKAGE_LOCATION Contents/Frameworks
+        )
+        target_sources(${APP_TARGET} PRIVATE ${MOONLIGHT_MAC_FRAMEWORKS} ${MOONLIGHT_MAC_DYLIBS})
+        set_target_properties(${APP_TARGET} PROPERTIES
+            BUILD_RPATH "@executable_path/../Frameworks"
+            INSTALL_RPATH "@executable_path/../Frameworks"
+        )
+    endif()
+
+    target_link_libraries(${APP_TARGET} PRIVATE
+        objc
+        "-framework VideoToolbox" "-framework AVFoundation" "-framework CoreVideo"
+        "-framework CoreGraphics" "-framework CoreMedia" "-framework AppKit"
+        "-framework Metal" "-framework QuartzCore"
+    )
+    target_compile_definitions(${APP_TARGET} PRIVATE HAVE_FFMPEG)
+    target_sources(${APP_TARGET} PRIVATE
+        streaming/video/ffmpeg.cpp
+        streaming/video/ffmpeg-renderers/genhwaccel.cpp
+        streaming/video/ffmpeg-renderers/sdlvid.cpp
+        streaming/video/ffmpeg-renderers/swframemapper.cpp
+        streaming/video/ffmpeg-renderers/pacer/pacer.cpp
+        streaming/video/ffmpeg-renderers/vt_base.mm
+        streaming/video/ffmpeg-renderers/vt_avsamplelayer.mm
+        streaming/video/ffmpeg-renderers/vt_metal.mm
+        streaming/video/ffmpeg.h
+        streaming/video/ffmpeg-renderers/renderer.h
+        streaming/video/ffmpeg-renderers/genhwaccel.h
+        streaming/video/ffmpeg-renderers/sdlvid.h
+        streaming/video/ffmpeg-renderers/swframemapper.h
+        streaming/video/ffmpeg-renderers/pacer/pacer.h
+        streaming/video/ffmpeg-renderers/vt.h
+    )
+
+    file(READ ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist MOONLIGHT_INFO_PLIST)
+    string(REPLACE "VERSION" "${MOONLIGHT_VERSION}" MOONLIGHT_INFO_PLIST "${MOONLIGHT_INFO_PLIST}")
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/Info.plist "${MOONLIGHT_INFO_PLIST}")
+
+    set_source_files_properties(moonlight.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    target_sources(${APP_TARGET} PRIVATE moonlight.icns)
+    set_target_properties(${APP_TARGET} PROPERTIES
+        MACOSX_BUNDLE TRUE
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_BINARY_DIR}/Info.plist
+        MACOSX_BUNDLE_ICON_FILE moonlight.icns
+    )
+endif()
+
 if(UNIX AND NOT APPLE)
     pkg_check_modules(SDL2 REQUIRED IMPORTED_TARGET sdl2)
     pkg_check_modules(SDL2_TTF REQUIRED IMPORTED_TARGET SDL2_ttf)
