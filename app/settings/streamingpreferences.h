@@ -14,6 +14,9 @@ public:
     Q_INVOKABLE static int
     getDefaultBitrate(int width, int height, int fps, bool yuv444);
 
+    Q_INVOKABLE static int
+    getMaxBitrate(bool unlockBitrate);
+
     Q_INVOKABLE void save();
 
     void reload();
@@ -122,6 +125,8 @@ public:
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
+    Q_PROPERTY(bool autoResolution MEMBER autoResolution NOTIFY displayModeChanged)
+    Q_PROPERTY(bool autoFps MEMBER autoFps NOTIFY displayModeChanged)
     Q_PROPERTY(int bitrateKbps MEMBER bitrateKbps NOTIFY bitrateChanged)
     Q_PROPERTY(bool unlockBitrate MEMBER unlockBitrate NOTIFY unlockBitrateChanged)
     Q_PROPERTY(bool autoAdjustBitrate MEMBER autoAdjustBitrate NOTIFY autoAdjustBitrateChanged)
@@ -164,6 +169,11 @@ public:
     int width;
     int height;
     int fps;
+    // When set, width/height and/or fps are overridden at stream start with the
+    // native mode of the display that the stream will be shown on. The saved
+    // width/height/fps values are used as a fallback if detection fails.
+    bool autoResolution;
+    bool autoFps;
     int bitrateKbps;
     bool unlockBitrate;
     bool autoAdjustBitrate;
