@@ -49,3 +49,5 @@ add_subdirectory(qmdnsengine/qmdnsengine)
 if(WIN32)
     add_subdirectory(AntiHooking)
 endif()
+
+add_subdirectory(app)
