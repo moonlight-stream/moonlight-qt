@@ -2,15 +2,16 @@
 
 ## Deployment boundary
 
-The first deployment has one physical Windows host, GPU-P enabled, and two
-Windows guest VMs. Each guest runs Sunshine and can serve one interactive user
-at a time. The coordinator is the authority for VM assignment.
+The first deployment has one physical Windows host, GPU-P enabled, and one
+Windows guest VM at `192.168.1.21`. The pool configuration remains a list so
+more guest VMs can be added without changing the client. Each guest runs
+Sunshine and can serve one interactive user at a time. The coordinator is the
+authority for VM assignment.
 
 ```text
 GilStreaming client ──HTTPS──> Coordinator
         │                            │
-        │ GameStream                 ├── health/pairing ──> Sunshine VM 1
-        └────────────────────────────└── health/pairing ──> Sunshine VM 2
+        └── GameStream ──────────────└── health/pairing ──> Sunshine VM(s)
 ```
 
 The streaming path goes directly from the client to its assigned VM. The
@@ -33,8 +34,22 @@ offline -> available -> reserved -> in_use -> cleaning -> available
 - `cleaning`: the previous user's processes and profile data are being reset.
 - `expired`: a reservation or heartbeat timed out and must be reclaimed.
 
-SQLite is sufficient for a two-VM private deployment. Assignment must occur in
-one transaction (`BEGIN IMMEDIATE`) so two requests cannot reserve the same VM.
+The prototype uses a mutex plus atomically replaced JSON state, which is
+sufficient for one coordinator process. Assignment remains atomic so concurrent
+requests cannot reserve the same VM. Move to SQLite or PostgreSQL before running
+multiple coordinator replicas.
+
+## GILid authentication
+
+GilServers currently requires a confidential OAuth authorization-code exchange.
+The desktop opens the GILid authorization page, while the coordinator receives
+the HTTPS callback and performs the token exchange. This ensures the GILid
+client secret is never shipped in the open-source desktop executable.
+
+The client polls a random, one-time login request ID. After GILid authentication,
+the coordinator retrieves `/auth/me`, creates its own 12-hour bearer session,
+and discards the GILid access token. OAuth state and authorization codes are
+single-use.
 
 ## Client behavior
 

@@ -17,6 +17,7 @@
 #include <QTimer>
 #include <QMutex>
 #include <QWaitCondition>
+#include <QSet>
 
 class ComputerManager;
 
@@ -227,6 +228,10 @@ public:
 
     Q_INVOKABLE void addNewHostManually(QString address);
 
+    Q_INVOKABLE void addAssignedHost(QString address, int port);
+
+    Q_INVOKABLE void clearAssignedHosts();
+
     void addNewHost(NvAddress address, bool mdns, QString name = QString(), NvAddress mdnsIpv6Address = NvAddress());
 
     QString generatePinString();
@@ -269,6 +274,8 @@ private:
 
     void startPollingComputer(NvComputer* computer);
 
+    bool isAuthorizedAddress(const NvAddress& address) const;
+
     StreamingPreferences* m_Prefs;
     int m_PollingRef;
     QReadWriteLock m_Lock;
@@ -283,4 +290,5 @@ private:
     QMutex m_DelayedFlushMutex; // Lock ordering: Must never be acquired while holding NvComputer lock
     QWaitCondition m_DelayedFlushCondition;
     bool m_NeedsDelayedFlush;
+    QSet<QString> m_AuthorizedAddresses;
 };

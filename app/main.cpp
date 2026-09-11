@@ -50,6 +50,7 @@
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
 #include "backend/computermanager.h"
+#include "backend/gilcoordinator.h"
 #include "backend/systemproperties.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
@@ -941,6 +942,11 @@ int main(int argc, char *argv[])
                                               [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
                                                   return new ComputerManager(StreamingPreferences::get(qmlEngine));
                                               });
+    qmlRegisterSingletonType<GilCoordinator>("GilCoordinator", 1, 0,
+                                             "GilCoordinator",
+                                             [](QQmlEngine*, QJSEngine*) -> QObject* {
+                                                 return new GilCoordinator();
+                                             });
     qmlRegisterSingletonType<AutoUpdateChecker>("AutoUpdateChecker", 1, 0,
                                                 "AutoUpdateChecker",
                                                 [](QQmlEngine*, QJSEngine*) -> QObject* {
@@ -991,47 +997,14 @@ int main(int argc, char *argv[])
 
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::NormalStartRequested:
-        initialView = "qrc:/gui/PcView.qml";
+        initialView = "qrc:/gui/LoginView.qml";
         break;
     case GlobalCommandLineParser::StreamRequested:
-        {
-            initialView = "qrc:/gui/CliStartStreamSegue.qml";
-            StreamingPreferences* preferences = StreamingPreferences::get();
-            StreamCommandLineParser streamParser;
-            streamParser.parse(app.arguments(), preferences);
-            QString host    = streamParser.getHost();
-            QString appName = streamParser.getAppName();
-            auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
-            engine.rootContext()->setContextProperty("launcher", launcher);
-            break;
-        }
     case GlobalCommandLineParser::QuitRequested:
-        {
-            initialView = "qrc:/gui/CliQuitStreamSegue.qml";
-            QuitCommandLineParser quitParser;
-            quitParser.parse(app.arguments());
-            auto launcher = new CliQuitStream::Launcher(quitParser.getHost(), &app);
-            engine.rootContext()->setContextProperty("launcher", launcher);
-            break;
-        }
     case GlobalCommandLineParser::PairRequested:
-        {
-            initialView = "qrc:/gui/CliPair.qml";
-            PairCommandLineParser pairParser;
-            pairParser.parse(app.arguments());
-            auto launcher = new CliPair::Launcher(pairParser.getHost(), pairParser.getPredefinedPin(), &app);
-            engine.rootContext()->setContextProperty("launcher", launcher);
-            break;
-        }
     case GlobalCommandLineParser::ListRequested:
-        {
-            ListCommandLineParser listParser;
-            listParser.parse(app.arguments());
-            auto launcher = new CliListApps::Launcher(listParser.getHost(), listParser, &app);
-            launcher->execute(new ComputerManager(StreamingPreferences::get()));
-            hasGUI = false;
-            break;
-        }
+        qCritical() << "Direct host command-line operations are disabled in GilStreaming";
+        return -1;
     }
 
     if (hasGUI) {

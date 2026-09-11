@@ -5,6 +5,7 @@ import QtQuick.Window 2.2
 import QtQuick.Controls.Material 2.2
 
 import ComputerManager 1.0
+import GilCoordinator 1.0
 import AutoUpdateChecker 1.0
 import StreamingPreferences 1.0
 import SystemProperties 1.0
@@ -21,6 +22,16 @@ ApplicationWindow {
     id: window
     width: 1280
     height: 600
+
+    Connections {
+        target: GilCoordinator
+        function onAssignmentRevoked() {
+            ComputerManager.clearAssignedHosts()
+            if (!(stackView.currentItem instanceof LoginView)) {
+                stackView.replace("qrc:/gui/LoginView.qml")
+            }
+        }
+    }
 
     // This function runs prior to creation of the initial StackView item
     function doEarlyInit() {
@@ -316,7 +327,7 @@ ApplicationWindow {
 
             NavigableToolButton {
                 id: addPcButton
-                visible: stackView.currentItem instanceof PcView
+                visible: false
 
                 iconSource:  "qrc:/res/ic_add_to_queue_white_48px.svg"
 
@@ -370,7 +381,8 @@ ApplicationWindow {
 
                 Component.onCompleted: {
                     AutoUpdateChecker.onUpdateAvailable.connect(updateAvailable)
-                    AutoUpdateChecker.start()
+                    // GilStreaming will use its own signed update feed. Do not
+                    // offer upstream Moonlight binaries from this fork.
                 }
 
                 Keys.onDownPressed: {

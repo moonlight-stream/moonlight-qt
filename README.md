@@ -5,9 +5,9 @@ from [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt). It is
 intended to connect users only to Windows gaming VMs assigned from a private
 pool. Sunshine provides the GameStream-compatible host inside each VM.
 
-The first deployment target is one GPU-P enabled Windows host with two Windows
-VMs. Each VM represents one streaming slot, so the deployment can serve at most
-two concurrent users.
+The first deployment target is one GPU-P enabled Windows host with a Sunshine VM
+at `192.168.1.21`. Each VM represents one streaming slot. The coordinator keeps
+the pool as a list so more VMs can be added later without changing the client.
 
 ## GilStreaming architecture
 
@@ -25,15 +25,22 @@ owns the pool and grants a time-limited lease for one available VM:
 See [docs/architecture.md](docs/architecture.md) and
 [docs/coordinator-api.md](docs/coordinator-api.md) for the initial design.
 
+For public streaming, the coordinator endpoint is
+`https://gilstreaming.gilservers.com:6766`, while clients connect directly to
+`stream.gilservers.com` on the UPnP-published Sunshine port. Private discovered
+VM addresses and the Sunshine Web UI remain coordinator-only.
+
 ## Current status
 
 - Upstream Moonlight Qt source is imported on the `gilstreaming` branch.
 - The application identity has been separated from Moonlight so settings and
   paired-host state are stored under GilStreaming.
-- A dependency-free Go coordinator prototype now provides authenticated,
-  persistent, atomic VM leases with heartbeats and expiry.
-- Sunshine pairing automation and the client lease UI are the next vertical
-  slice.
+- A Go coordinator provides brokered GILid authentication, Sunshine mDNS IP
+  discovery, and persistent atomic VM leases with heartbeats and expiry.
+- The desktop has a GILid login screen, a debug-only login skip, coordinator VM
+  assignment, lease heartbeats, and coordinator-only host entry.
+- Automatic Sunshine pairing is implemented; VM health/cleanup is the next
+  vertical slice.
 
 ## Upstream Moonlight features
 

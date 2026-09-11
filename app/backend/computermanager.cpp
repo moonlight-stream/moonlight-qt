@@ -14,6 +14,11 @@
 #define SER_HOSTS "hosts"
 #define SER_HOSTS_BACKUP "hostsbackup"
 
+static QString authorizedAddressKey(const NvAddress& address)
+{
+    return address.address().trimmed().toLower() + ':' + QString::number(address.port());
+}
+
 class PcMonitorThread : public QThread
 {
     Q_OBJECT
@@ -22,8 +27,9 @@ class PcMonitorThread : public QThread
 #define POLLS_PER_APPLIST_FETCH 10
 
 public:
-    PcMonitorThread(NvComputer* computer)
-        : m_Computer(computer)
+    PcMonitorThread(NvComputer* computer, NvAddress authorizedAddress)
+        : m_Computer(computer),
+          m_AuthorizedAddress(authorizedAddress)
     {
         setObjectName("Polling thread for " + computer->name);
     }
@@ -96,18 +102,15 @@ private:
             bool online = false;
             bool wasOnline = m_Computer->state == NvComputer::CS_ONLINE;
             for (int i = 0; i < (wasOnline ? TRIES_BEFORE_OFFLINING : 1) && !online; i++) {
-                for (auto& address : m_Computer->uniqueAddresses()) {
-                    if (isInterruptionRequested()) {
-                        return;
-                    }
+                if (isInterruptionRequested()) {
+                    return;
+                }
 
-                    if (tryPollComputer(&nam, address, stateChanged)) {
-                        if (!wasOnline) {
-                            qInfo() << m_Computer->name << "is now online at" << m_Computer->activeAddress.toString();
-                        }
-                        online = true;
-                        break;
+                if (tryPollComputer(&nam, m_AuthorizedAddress, stateChanged)) {
+                    if (!wasOnline) {
+                        qInfo() << m_Computer->name << "is now online at" << m_Computer->activeAddress.toString();
                     }
+                    online = true;
                 }
             }
 
@@ -156,6 +159,7 @@ signals:
 
 private:
     NvComputer* m_Computer;
+    NvAddress m_AuthorizedAddress;
 };
 
 ComputerManager::ComputerManager(StreamingPreferences* prefs)
@@ -366,23 +370,9 @@ void ComputerManager::startPolling()
         return;
     }
 
-    if (m_Prefs->enableMdns) {
-        // Start an MDNS query for GameStream hosts
-        m_MdnsServer.reset(new QMdnsEngine::Server());
-        m_MdnsBrowser = new QMdnsEngine::Browser(m_MdnsServer.data(), "_nvstream._tcp.local.");
-        connect(m_MdnsBrowser, &QMdnsEngine::Browser::serviceAdded,
-                this, [this](const QMdnsEngine::Service& service) {
-            qInfo() << "Discovered mDNS host:" << service.hostname();
-
-            MdnsPendingComputer* pendingComputer = new MdnsPendingComputer(m_MdnsServer, service);
-            connect(pendingComputer, &MdnsPendingComputer::resolvedHost,
-                    this, &ComputerManager::handleMdnsServiceResolved);
-            m_PendingResolution.append(pendingComputer);
-        });
-    }
-    else {
-        qWarning() << "mDNS is disabled by user preference";
-    }
+    // GilStreaming receives exactly one assigned host from the coordinator.
+    // Local discovery would bypass pool capacity and authorization decisions.
+    qInfo() << "mDNS discovery is disabled in GilStreaming";
 
     // Start polling threads for each known host
     QMapIterator<QString, NvComputer*> i(m_KnownHosts);
@@ -399,6 +389,10 @@ void ComputerManager::startPollingComputer(NvComputer* computer)
         return;
     }
 
+    if (!isAuthorizedAddress(computer->manualAddress)) {
+        return;
+    }
+
     ComputerPollingEntry* pollingEntry;
 
     if (!m_PollEntries.contains(computer->uuid)) {
@@ -409,7 +403,7 @@ void ComputerManager::startPollingComputer(NvComputer* computer)
     }
 
     if (!pollingEntry->isActive()) {
-        PcMonitorThread* thread = new PcMonitorThread(computer);
+        PcMonitorThread* thread = new PcMonitorThread(computer, computer->manualAddress);
         connect(thread, &PcMonitorThread::computerStateChanged,
                 this, &ComputerManager::handleComputerStateChanged);
         pollingEntry->setActiveThread(thread);
@@ -489,8 +483,13 @@ QVector<NvComputer*> ComputerManager::getComputers()
 {
     QReadLocker lock(&m_Lock);
 
-    // Return a sorted host list
-    auto hosts = QVector<NvComputer*>::fromList(m_KnownHosts.values());
+    // Never expose stale saved hosts that were not granted by the current lease.
+    QVector<NvComputer*> hosts;
+    for (NvComputer* host : std::as_const(m_KnownHosts)) {
+        if (isAuthorizedAddress(host->manualAddress)) {
+            hosts.append(host);
+        }
+    }
     std::stable_sort(hosts.begin(), hosts.end(), [](const NvComputer* host1, const NvComputer* host2) {
         return host1->name.toLower() < host2->name.toLower();
     });
@@ -586,10 +585,15 @@ public:
     {
         connect(this, &PendingPairingTask::pairingCompleted,
                 computerManager, &ComputerManager::pairingCompleted);
+        connect(this, &PendingPairingTask::computerStateChanged,
+                computerManager, &ComputerManager::handleComputerStateChanged,
+                Qt::QueuedConnection);
     }
 
 signals:
     void pairingCompleted(NvComputer* computer, QString error);
+
+    void computerStateChanged(NvComputer* computer);
 
 private:
     void run()
@@ -615,8 +619,14 @@ private:
                emit pairingCompleted(m_Computer, tr("Another pairing attempt is already in progress."));
                break;
            case NvPairingManager::PairState::PAIRED:
-               // Persist the newly pinned server certificate for this host
-               m_ComputerManager->saveHost(m_Computer);
+               // Pairing pins the server certificate, but no poll is guaranteed
+               // to run immediately afterward. Update the live model now so the
+               // UI can enter the app view as soon as pairing completes.
+               {
+                   QWriteLocker lock(&m_Computer->lock);
+                   m_Computer->pairState = NvComputer::PS_PAIRED;
+               }
+               emit computerStateChanged(m_Computer);
 
                emit pairingCompleted(m_Computer, nullptr);
                break;
@@ -728,17 +738,48 @@ void ComputerManager::stopPollingAsync()
 
 void ComputerManager::addNewHostManually(QString address)
 {
-    QUrl url = QUrl::fromUserInput("moonlight://" + address);
-    if (url.isValid() && !url.host().isEmpty() && url.scheme() == "moonlight") {
-        // If there wasn't a port specified, use the default
-        addNewHost(NvAddress(url.host(), url.port(DEFAULT_HTTP_PORT)), false);
-    }
-    else if (QHostAddress(address).protocol() == QAbstractSocket::IPv6Protocol) {
-        // The user specified an IPv6 literal without URL escaping, so use the default port
-        addNewHost(NvAddress(address, DEFAULT_HTTP_PORT), false);
-    }
-    else {
+    Q_UNUSED(address);
+    qWarning() << "Manual host entry is disabled in GilStreaming";
+    emit computerAddCompleted(false, false);
+}
+
+void ComputerManager::addAssignedHost(QString address, int port)
+{
+    if (address.isEmpty() || port < 1 || port > 65535) {
         emit computerAddCompleted(false, false);
+        return;
+    }
+    const NvAddress assignedAddress(address, static_cast<uint16_t>(port));
+    {
+        QWriteLocker lock(&m_Lock);
+        m_AuthorizedAddresses.clear();
+        m_AuthorizedAddresses.insert(authorizedAddressKey(assignedAddress));
+
+        // Stop polling a previously leased VM before accepting a new one, and
+        // start polling a saved host that matches the newly assigned address.
+        // startPolling() may have run before the coordinator returned a lease,
+        // in which case the saved host was intentionally skipped at startup.
+        for (NvComputer* computer : std::as_const(m_KnownHosts)) {
+            if (!isAuthorizedAddress(computer->manualAddress)) {
+                ComputerPollingEntry* entry = m_PollEntries.value(computer->uuid);
+                if (entry != nullptr) {
+                    entry->interrupt();
+                }
+            }
+            else {
+                startPollingComputer(computer);
+            }
+        }
+    }
+    addNewHost(assignedAddress, false, tr("Assigned Gaming VM"));
+}
+
+void ComputerManager::clearAssignedHosts()
+{
+    QWriteLocker lock(&m_Lock);
+    m_AuthorizedAddresses.clear();
+    for (ComputerPollingEntry* entry : std::as_const(m_PollEntries)) {
+        entry->interrupt();
     }
 }
 
@@ -916,28 +957,20 @@ private:
                 hostAddress.isInSubnet(QHostAddress("192.168.0.0"), 16);
 
         {
-            // Check if this PC already exists using opportunistic read lock
-            m_ComputerManager->m_Lock.lockForRead();
+            // Use a write lock because an existing saved PC may need a new
+            // polling thread after its coordinator-discovered IP changed.
+            m_ComputerManager->m_Lock.lockForWrite();
             NvComputer* existingComputer = m_ComputerManager->m_KnownHosts.value(newComputer->uuid);
-
-            // If it doesn't already exist, convert to a write lock in preparation for updating.
-            //
-            // NB: ComputerManager's lock protects the host map itself, not the elements inside.
-            // Those are protected by their individual locks. Since we only mutate the map itself
-            // when the PC doesn't exist, we need the lock in write-mode for that case only.
-            if (existingComputer == nullptr) {
-                m_ComputerManager->m_Lock.unlock();
-                m_ComputerManager->m_Lock.lockForWrite();
-
-                // Since we had to unlock to lock for write, someone could have raced and added
-                // this PC before us. We have to check again whether it already exists.
-                existingComputer = m_ComputerManager->m_KnownHosts.value(newComputer->uuid);
-            }
 
             if (existingComputer != nullptr) {
                 // Fold it into the existing PC
                 bool changed = existingComputer->update(*newComputer);
                 delete newComputer;
+
+                // This is a no-op if polling is already active. If the assigned
+                // address changed, addAssignedHost() interrupted the old thread
+                // and this starts its replacement at the discovered endpoint.
+                m_ComputerManager->startPollingComputer(existingComputer);
 
                 // Drop the lock before notifying
                 m_ComputerManager->m_Lock.unlock();
@@ -997,10 +1030,26 @@ private:
 
 void ComputerManager::addNewHost(NvAddress address, bool mdns, QString name, NvAddress mdnsIpv6Address)
 {
+    {
+        QReadLocker lock(&m_Lock);
+        if (!isAuthorizedAddress(address)) {
+            qWarning() << "Rejected host not assigned by the GilStreaming coordinator:" << address.toString();
+            if (!mdns) {
+                emit computerAddCompleted(false, false);
+            }
+            return;
+        }
+    }
+
     // Punt to a worker thread to avoid stalling the
     // UI while waiting for serverinfo query to complete
     PendingAddTask* addTask = new PendingAddTask(this, name, address, mdnsIpv6Address, mdns);
     QThreadPool::globalInstance()->start(addTask);
+}
+
+bool ComputerManager::isAuthorizedAddress(const NvAddress& address) const
+{
+    return !address.isNull() && m_AuthorizedAddresses.contains(authorizedAddressKey(address));
 }
 
 QString ComputerManager::generatePinString()

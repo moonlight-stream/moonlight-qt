@@ -7,6 +7,7 @@ build/
 coordinator/config.json
 coordinator/coordinator-state.json
 coordinator/*.tmp
+coordinator/.env
 libs/
 config.tests/*/.qmake.stash
 config.tests/*/Makefile

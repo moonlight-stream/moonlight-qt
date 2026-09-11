@@ -171,6 +171,7 @@ SOURCES += \
     cli/pair.cpp \
     main.cpp \
     backend/computerseeker.cpp \
+    backend/gilcoordinator.cpp \
     backend/identitymanager.cpp \
     backend/nvcomputer.cpp \
     backend/nvhttp.cpp \
@@ -215,6 +216,7 @@ HEADERS += \
     settings/mappingfetcher.h \
     utils.h \
     backend/computerseeker.h \
+    backend/gilcoordinator.h \
     backend/identitymanager.h \
     backend/nvcomputer.h \
     backend/nvhttp.h \

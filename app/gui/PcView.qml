@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.3
 import ComputerModel 1.0
 
 import ComputerManager 1.0
+import GilCoordinator 1.0
 import StreamingPreferences 1.0
 import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
@@ -89,15 +90,14 @@ CenteredGridView {
 
         BusyIndicator {
             id: searchSpinner
-            visible: StreamingPreferences.enableMdns
+            visible: false
             running: visible
         }
 
         Label {
             height: searchSpinner.height
             elide: Label.ElideRight
-            text: StreamingPreferences.enableMdns ? qsTr("Searching for compatible hosts on your local network...")
-                                                  : qsTr("Automatic PC discovery is disabled. Add your PC manually.")
+            text: qsTr("Connecting to your assigned gaming VM...")
             font.pointSize: 20
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.Wrap
@@ -111,6 +111,24 @@ CenteredGridView {
         grid: pcGrid
 
         property alias pcContextMenu : pcContextMenuLoader.item
+        property bool autoPairStarted: false
+
+        function startAutomaticPairing() {
+            if (autoPairStarted || !model.online || model.statusUnknown || model.paired) {
+                return
+            }
+            autoPairStarted = true
+            var pin = computerModel.generatePinString()
+            computerModel.pairComputer(index, pin)
+            GilCoordinator.approvePairing(pin)
+        }
+
+        Timer {
+            interval: 250
+            repeat: true
+            running: !model.paired && !parent.autoPairStarted
+            onTriggered: parent.startAutomaticPairing()
+        }
 
         Image {
             id: pcIcon
@@ -233,14 +251,7 @@ CenteredGridView {
                     stackView.push(appView)
                 }
                 else {
-                    var pin = computerModel.generatePinString()
-
-                    // Kick off pairing in the background
-                    computerModel.pairComputer(index, pin)
-
-                    // Display the pairing dialog
-                    pairDialog.pin = pin
-                    pairDialog.open()
+                    startAutomaticPairing()
                 }
             } else if (!model.online) {
                 // Using open() here because it may be activated by keyboard

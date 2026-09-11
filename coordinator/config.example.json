@@ -1,23 +1,18 @@
 {
-  "listen": "127.0.0.1:8080",
+  "listen": "127.0.0.1:6766",
   "leaseTTLSeconds": 90,
   "stateFile": "coordinator-state.json",
-  "tokenHashes": {
-    "gil": "replace-with-sha256-from-go-run-dot-hash-token"
-  },
+  "devAuthEnabled": true,
   "vms": [
     {
       "id": "vm-1",
       "displayName": "Gaming VM 1",
-      "streamAddress": "vm1.gilstreaming.internal",
+      "discoveryName": "v1",
+      "streamAddress": "192.168.1.21",
       "streamPort": 47989,
-      "enabled": true
-    },
-    {
-      "id": "vm-2",
-      "displayName": "Gaming VM 2",
-      "streamAddress": "vm2.gilstreaming.internal",
-      "streamPort": 47989,
+      "publicAddress": "stream.gilservers.com",
+      "publicStreamPort": 47989,
+      "sunshineApiUrl": "https://192.168.1.21:47990",
       "enabled": true
     }
   ]

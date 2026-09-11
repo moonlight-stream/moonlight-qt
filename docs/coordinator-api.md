@@ -3,6 +3,22 @@
 All endpoints use HTTPS and JSON. Client endpoints require
 `Authorization: Bearer <token>`. Lease IDs are opaque random values.
 
+## Start GILid login
+
+`POST /v1/auth/start`
+
+The response contains a one-time `requestId` and GILid `authorizeUrl`. The
+desktop opens the URL in the system browser and polls
+`GET /v1/auth/status/{requestId}`. The registered redirect URI points to
+`GET /auth/callback` on this coordinator, where the server performs the
+confidential token exchange.
+
+Once complete, the status endpoint returns a GilStreaming access token and
+basic profile. It can return that token only once.
+
+Debug clients may call `POST /v1/auth/dev` when `devAuthEnabled` is explicitly
+enabled on the coordinator. This endpoint must be disabled in production.
+
 ## Create or recover a lease
 
 `POST /v1/leases`
@@ -48,13 +64,14 @@ contains the renewed `expiresAt`. A missing, expired, or revoked lease returns
 ```json
 {
   "pin": "1234",
-  "clientName": "GilStreaming - Gil's laptop",
-  "pairingRequestId": "sunshine-pending-request-id"
+  "deviceName": "Gil's laptop"
 }
 ```
 
 The coordinator verifies lease ownership and submits the PIN only to the
-assigned VM. Sunshine credentials never appear in this response.
+assigned VM. It discovers the pending pairing ID when required by current
+Sunshine releases and also supports the legacy PIN endpoint. Sunshine
+credentials never appear in this response.
 
 ## Release a lease
 
@@ -72,12 +89,22 @@ The coordinator keeps these fields for each VM:
 {
   "id": "vm-1",
   "displayName": "Gaming VM 1",
-  "streamAddress": "vm1.gilstreaming.internal",
+  "discoveryName": "v1",
+  "streamAddress": "192.168.1.23",
   "streamPort": 47989,
-  "sunshineAdminUrl": "https://vm1.gilstreaming.internal:47990",
+  "publicAddress": "stream.gilservers.com",
+  "publicStreamPort": 47989,
+  "sunshineApiUrl": "https://192.168.1.23:47990",
   "enabled": true
 }
 ```
 
-Sunshine credentials are secret references, not fields returned by an API.
+`discoveryName` is the stable, unique Windows/Sunshine hostname advertised over
+mDNS. The coordinator refreshes the private stream and management IP addresses
+from `_nvstream._tcp.local` before creating or recovering a lease. The explicit
+private addresses are retained as a fallback. Only `publicAddress` and
+`publicStreamPort` are returned to the client when they are configured.
+
+All VMs use the coordinator-only `SUNSHINE_USERNAME` and `SUNSHINE_PASSWORD`.
+Sunshine credentials are never fields returned by an API.
 Health, lease owner, lease expiry, and cleanup state are coordinator-owned.

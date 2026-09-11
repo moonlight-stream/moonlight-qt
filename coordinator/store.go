@@ -18,11 +18,42 @@ var (
 )
 
 type VM struct {
-	ID            string `json:"id"`
-	DisplayName   string `json:"displayName"`
-	StreamAddress string `json:"streamAddress"`
-	StreamPort    int    `json:"streamPort"`
-	Enabled       bool   `json:"enabled"`
+	ID             string `json:"id"`
+	DisplayName    string `json:"displayName"`
+	DiscoveryName  string `json:"discoveryName,omitempty"`
+	StreamAddress  string `json:"streamAddress"`
+	StreamPort     int    `json:"streamPort"`
+	PublicAddress  string `json:"publicAddress,omitempty"`
+	PublicPort     int    `json:"publicStreamPort,omitempty"`
+	SunshineAPIURL string `json:"sunshineApiUrl"`
+	Enabled        bool   `json:"enabled"`
+}
+
+func (vm VM) ClientEndpoint() (string, int) {
+	if vm.PublicAddress == "" {
+		return vm.StreamAddress, vm.StreamPort
+	}
+	port := vm.PublicPort
+	if port == 0 {
+		port = vm.StreamPort
+	}
+	return vm.PublicAddress, port
+}
+
+func (s *Store) VMs() []VM {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return append([]VM(nil), s.vms...)
+}
+
+func (s *Store) UpdateVMs(updates map[string]VM) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for index, vm := range s.vms {
+		if updated, ok := updates[vm.ID]; ok {
+			s.vms[index] = updated
+		}
+	}
 }
 
 type Lease struct {
@@ -162,6 +193,26 @@ func (s *Store) Release(id, owner string) error {
 	}
 	delete(s.leases, id)
 	return s.persistLocked()
+}
+
+func (s *Store) LeaseVM(id, owner string) (*Lease, VM, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	now := s.now().UTC()
+	s.reapLocked(now)
+	lease, ok := s.leases[id]
+	if !ok {
+		return nil, VM{}, errLeaseNotFound
+	}
+	if lease.Owner != owner {
+		return nil, VM{}, errLeaseForbidden
+	}
+	vm, ok := s.vmByIDLocked(lease.VMID)
+	if !ok || !vm.Enabled {
+		return nil, VM{}, errLeaseNotFound
+	}
+	return cloneLease(lease), vm, nil
 }
 
 func (s *Store) reapLocked(now time.Time) {

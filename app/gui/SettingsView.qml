@@ -1763,6 +1763,7 @@ Flickable {
 
                 CheckBox {
                     id: enableMdns
+                    visible: false
                     width: parent.width
                     text: qsTr("Automatically find PCs on the local network (Recommended)")
                     font.pointSize: 12
