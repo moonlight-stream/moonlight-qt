@@ -392,6 +392,10 @@ win32 {
     HEADERS += streaming/video/ffmpeg-renderers/dxutil.h
 }
 win32:!winrt {
+    SOURCES += bosskey.cpp
+    HEADERS += bosskey.h
+}
+win32:!winrt {
     message(DXVA2 and D3D11VA renderers selected)
 
     SOURCES += \

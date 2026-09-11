@@ -21,6 +21,8 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_PointerRegionLockToggledByUser(false),
       m_FakeMouseCaptureActive(false),
       m_KeyboardCaptureActive(false),
+      m_BossKeyHidden(false),
+      m_BossKeyRestoreCapture(false),
       m_CaptureSystemKeysMode(prefs.captureSysKeysMode),
       m_MouseCursorCapturedVisibilityState(SDL_DISABLE),
       m_LongPressTimer(0),
@@ -328,6 +330,41 @@ void SdlInputHandler::notifyFocusGained()
 {
 }
 
+void SdlInputHandler::notifyBossKeyHidden(bool hidden)
+{
+    m_BossKeyHidden = hidden;
+
+    if (hidden) {
+        // Remember whether we had the mouse so we can take it back on restore,
+        // rather than making the user click into the window like they would
+        // after an Alt+Tab.
+        m_BossKeyRestoreCapture = isCaptureActive();
+
+        // Release the mouse and keyboard so the user can interact with their
+        // desktop normally while we're invisible.
+        setCaptureActive(false);
+
+        // Raise all keys that are currently pressed, since we won't get their
+        // key up events while hidden.
+        raiseAllKeys();
+
+        // setCaptureActive(false) already ran this, but run it again to be sure
+        // the grab is dropped now that m_BossKeyHidden is set.
+        updateKeyboardGrabState();
+    }
+    else if (m_BossKeyRestoreCapture) {
+        m_BossKeyRestoreCapture = false;
+
+        // This restores the keyboard grab and pointer region lock too
+        setCaptureActive(true);
+    }
+    else {
+        // Restore whatever grab state our current capture settings call for
+        updateKeyboardGrabState();
+        updatePointerRegionLock();
+    }
+}
+
 bool SdlInputHandler::isCaptureActive()
 {
     if (SDL_GetRelativeMouseMode()) {
@@ -340,7 +377,11 @@ bool SdlInputHandler::isCaptureActive()
 
 void SdlInputHandler::updateKeyboardGrabState()
 {
-    bool shouldGrab = m_CaptureSystemKeysMode != StreamingPreferences::CSK_OFF && isCaptureActive();
+    // Never grab the keyboard while the boss key has us hidden. An invisible window
+    // holding a keyboard grab would swallow the keystrokes the user is typing into
+    // whatever they switched to.
+    bool shouldGrab = !m_BossKeyHidden &&
+                      m_CaptureSystemKeysMode != StreamingPreferences::CSK_OFF && isCaptureActive();
     if (shouldGrab) {
         Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
         if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN &&
@@ -391,6 +432,11 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
 
 void SdlInputHandler::setCaptureActive(bool active)
 {
+    // Refuse to capture the mouse while the boss key has us hidden
+    if (active && m_BossKeyHidden) {
+        return;
+    }
+
     if (active) {
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {

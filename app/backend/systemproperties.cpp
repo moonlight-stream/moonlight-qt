@@ -58,6 +58,12 @@ SystemProperties::SystemProperties()
     isDarwin = false;
 #endif
 
+#ifdef Q_OS_WIN32
+    isWindows = true;
+#else
+    isWindows = false;
+#endif
+
     QString nativeArch = QSysInfo::currentCpuArchitecture();
 
 #ifdef Q_OS_WIN32
