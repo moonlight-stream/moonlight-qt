@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ivrrframepresenter.h"
 #include "renderer.h"
 
 #ifdef Q_OS_WIN32
@@ -9,6 +10,8 @@
 #include <libplacebo/log.h>
 #include <libplacebo/renderer.h>
 #include <libplacebo/vulkan.h>
+
+#include <atomic>
 
 #ifdef Q_OS_DARWIN
 class MetalVulkanTextureFactory {
@@ -35,13 +38,21 @@ private:
 
 #endif
 
-class PlVkRenderer : public IFFmpegRenderer {
+class PlVkRenderer : public IFFmpegRenderer, public IVrrFramePresenter {
 public:
     PlVkRenderer(AVHWDeviceType hwDeviceType = AV_HWDEVICE_TYPE_NONE, IFFmpegRenderer *backendRenderer = nullptr);
     virtual ~PlVkRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void renderFrame(AVFrame* frame) override;
+    virtual IVrrFramePresenter* getVrrFramePresenter() override;
+    virtual VrrFallbackReason checkSupport() const override;
+    virtual VrrPrepareResult prepareFrame(AVFrame* frame) override;
+    virtual VrrPresentFeedback presentAdaptive(
+        const VrrPresentRequest& request) override;
+    virtual VrrPresentFeedback cancelFrame() override;
+    virtual void setSuspended(bool suspended) override;
+    virtual bool restoreFixedPresentation(VrrFallbackReason reason) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual void waitToRender() override;
     virtual void cleanupRenderContext() override;
@@ -61,6 +72,12 @@ private:
 
     void beginRenderTiming();
     void endRenderTiming();
+    void selectPresentationMode(PDECODER_PARAMETERS params);
+    void selectLegacyPresentMode(PDECODER_PARAMETERS params);
+    bool acquirePendingSwapchainFrame();
+    bool submitPendingSwapchainFrame();
+    bool cancelVrrFrame();
+    void queueRenderDeviceReset();
 
     bool createSwapchain(int depth);
     bool createOverlay(pl_overlay* overlay, SDL_Surface* surface);
@@ -92,14 +109,14 @@ private:
     SDL_Window* m_Window = nullptr;
 
     // Stream state
-    int m_MaxVideoFps;
+    int m_MaxVideoFps = 0;
 
     // The libplacebo rendering state
     pl_log m_Log = nullptr;
     pl_vk_inst m_PlVkInstance = nullptr;
     VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
     int m_SwapchainDepth = 0;
-    VkPresentModeKHR m_VkPresentMode;
+    VkPresentModeKHR m_VkPresentMode = VK_PRESENT_MODE_FIFO_KHR;
     pl_vulkan m_Vulkan = nullptr;
     pl_swapchain m_Swapchain = nullptr;
     pl_renderer m_Renderer = nullptr;
@@ -111,9 +128,23 @@ private:
     pl_overlay_part m_EmptyOverlayPart = {};
 #endif
 
-    // Pending swapchain state shared between waitToRender(), renderFrame(), and cleanupRenderContext()
+    // Pending swapchain state shared between the legacy wait/render path and
+    // the VRR preparation/presentation path. A successfully started frame
+    // must always be submitted before it is resized, destroyed, or replaced.
     pl_swapchain_frame m_SwapchainFrame = {};
     bool m_HasPendingSwapchainFrame = false;
+
+    // VRR presentation state. The pacing worker is the only thread that
+    // touches the non-atomic fields after initialization. Window callbacks on
+    // the main thread only mark the atomic resize flag; the worker then safely
+    // abandons a prepared image before resizing the swapchain.
+    bool m_VrrRequested = false;
+    bool m_VrrSuspended = false;
+    VrrFallbackReason m_VrrFallbackReason = VrrFallbackReason::InitializationFailed;
+    std::atomic<bool> m_VrrWindowChangePending { false };
+    bool m_VrrPreparingFrame = false;
+    bool m_VrrFramePrepared = false;
+    bool m_VrrRenderSucceeded = false;
 
     // Overlay state
     SDL_SpinLock m_OverlayLock = 0;

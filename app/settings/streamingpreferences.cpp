@@ -1,14 +1,20 @@
 #include "streamingpreferences.h"
 #include "utils.h"
+#include "streaming/vrrratepolicy.h"
 
 #include <QSettings>
 #include <QTranslator>
 #include <QCoreApplication>
 #include <QLocale>
 #include <QReadWriteLock>
+#include <QVariantMap>
 #include <QtMath>
 
 #include <QtDebug>
+
+#include <algorithm>
+#include <map>
+#include <vector>
 
 #define SER_STREAMSETTINGS "streamsettings"
 #define SER_WIDTH "width"
@@ -19,6 +25,7 @@
 #define SER_AUTOADJUSTBITRATE "autoadjustbitrate"
 #define SER_FULLSCREEN "fullscreen"
 #define SER_VSYNC "vsync"
+#define SER_ENABLEVRR "enablevrr"
 #define SER_GAMEOPTS "gameopts"
 #define SER_HOSTAUDIO "hostaudio"
 #define SER_MULTICONT "multicontroller"
@@ -130,6 +137,7 @@ void StreamingPreferences::reload()
     unlockBitrate = settings.value(SER_UNLOCK_BITRATE, false).toBool();
     autoAdjustBitrate = settings.value(SER_AUTOADJUSTBITRATE, true).toBool();
     enableVsync = settings.value(SER_VSYNC, true).toBool();
+    enableVrr = settings.value(SER_ENABLEVRR, false).toBool();
     gameOptimizations = settings.value(SER_GAMEOPTS, true).toBool();
     playAudioOnHost = settings.value(SER_HOSTAUDIO, false).toBool();
     multiController = settings.value(SER_MULTICONT, true).toBool();
@@ -330,6 +338,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_UNLOCK_BITRATE, unlockBitrate);
     settings.setValue(SER_AUTOADJUSTBITRATE, autoAdjustBitrate);
     settings.setValue(SER_VSYNC, enableVsync);
+    settings.setValue(SER_ENABLEVRR, enableVrr);
     settings.setValue(SER_GAMEOPTS, gameOptimizations);
     settings.setValue(SER_HOSTAUDIO, playAudioOnHost);
     settings.setValue(SER_MULTICONT, multiController);
@@ -362,6 +371,64 @@ void StreamingPreferences::save()
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
+}
+
+QVariantList StreamingPreferences::getFpsChoices(const QVariantList& refreshRates) const
+{
+    const bool vrrEnabled = enableVsync && enableVrr;
+
+    std::vector<int> rates;
+    rates.reserve(refreshRates.size());
+    for (const QVariant& value : refreshRates) {
+        bool ok = false;
+        const int refreshHz = value.toInt(&ok);
+        if (ok && refreshHz > 1) {
+            rates.push_back(refreshHz);
+        }
+    }
+
+    // Sorted by rate, and the first semantic role for a duplicate rate wins so
+    // a baseline choice is never relabeled by a coincident calculated rate.
+    std::map<int, QString> choices;
+    auto addChoice = [&choices](int rate, const char* kind) {
+        if (rate > 0) {
+            choices.emplace(rate, QLatin1String(kind));
+        }
+    };
+
+    // Always useful streaming rates, including on a 60 Hz display.
+    addChoice(30, "fixed");
+    addChoice(60, "fixed");
+
+    for (const int refreshHz : rates) {
+        if (vrrEnabled) {
+            // Exact native rates are deliberately omitted while VRR is on:
+            // they leave no adaptive-refresh headroom.
+            addChoice(VrrRatePolicy::vrrRateForRefresh(refreshHz), "vrr");
+            addChoice(VrrRatePolicy::lowLatencyRateForRefresh(refreshHz), "low-latency-vrr");
+        }
+        else {
+            addChoice(refreshHz, "fixed");
+        }
+    }
+
+    // A manually saved value must remain selectable, but a native rate is not
+    // reintroduced that way while VRR is enabled.
+    if (fps > 0 && (!vrrEnabled ||
+                    std::find(rates.cbegin(), rates.cend(), fps) == rates.cend())) {
+        addChoice(fps, "custom");
+    }
+
+    QVariantList result;
+    for (const auto& choice : choices) {
+        QVariantMap item;
+        item.insert("video_fps", QString::number(choice.first));
+        item.insert("is_custom", choice.second == QLatin1String("custom"));
+        item.insert("kind", choice.second);
+        result.append(item);
+    }
+
+    return result;
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps, bool yuv444)

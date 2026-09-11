@@ -154,6 +154,8 @@ private:
 
     bool populateDecoderProperties(SDL_Window* window);
 
+    void snapshotPresentationSettings(SDL_Window* window);
+
     IAudioRenderer* createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATION opusConfig);
 
     bool initializeAudioRenderer();
@@ -187,8 +189,9 @@ private:
                        StreamingPreferences::RendererSelection renderer,
                        SDL_Window* window, int videoFormat, int width, int height,
                        int frameRate, bool enableVsync, bool enableFramePacing,
-                       bool testOnly,
-                       IVideoDecoder*& chosenDecoder);
+                       bool testOnly, IVideoDecoder*& chosenDecoder,
+                       bool enableVrr = false, int vrrDisplayRefreshHz = 0,
+                       bool* effectiveVrr = nullptr);
 
     static
     void clStageStarting(int stage);
@@ -243,7 +246,16 @@ private:
     static
     int drSubmitDecodeUnit(PDECODE_UNIT du);
 
+    // VRR qualification is decided once at session start. The refresh rate is
+    // baked into the renderer's immutable presentation mode, so it must not be
+    // re-derived from a mutable settings object mid-stream.
+    struct PresentationSettings {
+        bool enableVrr = false;
+        int refreshRate = 0;
+    };
+
     StreamingPreferences* m_Preferences;
+    PresentationSettings m_PresentationSettings;
     bool m_IsFullScreen;
     SupportedVideoFormatList m_SupportedVideoFormats; // Sorted in order of descending priority
     STREAM_CONFIGURATION m_StreamConfig;

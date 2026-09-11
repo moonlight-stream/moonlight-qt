@@ -1,6 +1,7 @@
 #include "session.h"
 #include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
+#include "streaming/vrrratepolicy.h"
 #include "backend/richpresencemanager.h"
 
 #include <Limelight.h>
@@ -278,7 +279,10 @@ void Session::clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlag
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             StreamingPreferences::RendererSelection renderer,
                             SDL_Window* window, int videoFormat, int width, int height,
-                            int frameRate, bool enableVsync, bool enableFramePacing, bool testOnly, IVideoDecoder*& chosenDecoder)
+                            int frameRate, bool enableVsync, bool enableFramePacing,
+                            bool testOnly, IVideoDecoder*& chosenDecoder,
+                            bool enableVrr, int vrrDisplayRefreshHz,
+                            [[maybe_unused]] bool* effectiveVrr)
 {
     DECODER_PARAMETERS params;
 
@@ -294,6 +298,8 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     params.window = window;
     params.enableVsync = enableVsync;
     params.enableFramePacing = enableFramePacing;
+    params.enableVrr = enableVrr;
+    params.vrrDisplayRefreshHz = vrrDisplayRefreshHz;
     params.testOnly = testOnly;
     params.vds = vds;
     params.renderer = renderer;
@@ -303,8 +309,18 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                 enableVsync ? "enabled" : "disabled");
 
 #ifdef HAVE_SLVIDEO
+    // SLVideo has no VRR backend, so don't hand it an active VRR request. If
+    // it fails below, FFmpeg still receives the original parameters.
+    DECODER_PARAMETERS slVideoParams = params;
+    slVideoParams.enableVrr = false;
+    slVideoParams.vrrDisplayRefreshHz = 0;
     chosenDecoder = new SLVideoDecoder(testOnly);
-    if (chosenDecoder->initialize(&params)) {
+    if (chosenDecoder->initialize(&slVideoParams)) {
+        // Keep the session snapshot aligned with the decoder that was
+        // actually selected without changing the stored preference.
+        if (effectiveVrr != nullptr) {
+            *effectiveVrr = false;
+        }
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "SLVideo video decoder chosen");
         return true;
@@ -596,6 +612,39 @@ Session::~Session()
     SDL_DestroyMutex(m_DecoderLock);
 }
 
+void Session::snapshotPresentationSettings(SDL_Window* window)
+{
+    if (!m_Preferences->enableVrr) {
+        return;
+    }
+
+    // VRR must never qualify against an invented refresh rate, so this uses
+    // the strict query rather than getDisplayRefreshRate()'s 60 Hz guess.
+    // Requiring adaptive headroom also implies the stream rate stays below the
+    // refresh rate, which is the condition that would force V-sync off later.
+    int refreshRate = 0;
+    if (!m_Preferences->enableVsync ||
+            !StreamUtils::tryGetDisplayRefreshRate(window, refreshRate) ||
+            !VrrRatePolicy::hasAdaptiveHeadroom(m_StreamConfig.fps, refreshRate)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "VRR disabled: V-sync %s, %d FPS at %d Hz",
+                    m_Preferences->enableVsync ? "enabled" : "disabled",
+                    m_StreamConfig.fps, refreshRate);
+        return;
+    }
+
+    m_PresentationSettings.enableVrr = true;
+    m_PresentationSettings.refreshRate = refreshRate;
+
+    // Adaptive presentation requires borderless (non-exclusive) fullscreen.
+    // This is session-local state: the stored window-mode preference is never
+    // rewritten, so a later non-VRR session returns to that choice.
+    m_IsFullScreen = true;
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "VRR enabled at %d Hz; forcing borderless fullscreen for this session",
+                refreshRate);
+}
+
 bool Session::initialize(QQuickWindow* qtWindow)
 {
     m_QtWindow = qtWindow;
@@ -672,6 +721,12 @@ bool Session::initialize(QQuickWindow* qtWindow)
         return false;
     }
 
+    // createTestWindow() normally starts on display zero.  Move it to the
+    // display selected for the real streaming window before snapshotting the
+    // refresh rate, otherwise a multi-monitor session could qualify VRR using
+    // the wrong panel's refresh.
+    SDL_SetWindowPosition(testWindow, x, y);
+
     qInfo() << "Server GPU:" << m_Computer->gpuModel;
     qInfo() << "Server GFE version:" << m_Computer->gfeVersion;
 
@@ -679,6 +734,7 @@ bool Session::initialize(QQuickWindow* qtWindow)
     m_VideoCallbacks.setup = drSetup;
 
     m_StreamConfig.fps = m_Preferences->fps;
+    snapshotPresentationSettings(testWindow);
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
 
 #ifndef STEAM_LINK
@@ -924,6 +980,12 @@ bool Session::initialize(QQuickWindow* qtWindow)
         m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
 #endif
         break;
+    }
+
+    if (m_PresentationSettings.enableVrr) {
+        // Adaptive presentation requires borderless fullscreen. The saved
+        // window-mode preference is intentionally left untouched.
+        m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
     }
 
 #if !SDL_VERSION_ATLEAST(2, 0, 11)
@@ -1963,6 +2025,20 @@ void Session::exec()
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
+    auto notifyDecoderWindowState = [this](uint32_t stateChangeFlags) {
+        if (m_VideoDecoder == nullptr) {
+            return;
+        }
+
+        WINDOW_STATE_CHANGE_INFO windowChangeInfo = {};
+        windowChangeInfo.window = m_Window;
+        windowChangeInfo.stateChangeFlags = stateChangeFlags;
+
+        // State-only notifications are advisory.  Legacy renderers may return
+        // false for these new flags, but they must never force a renderer reset.
+        m_VideoDecoder->notifyWindowChanged(&windowChangeInfo);
+    };
+
     for (;;) {
 #if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)
         // SDL 2.0.18 has a proper wait event implementation that uses platform
@@ -2042,6 +2118,17 @@ void Session::exec()
             break;
 
         case SDL_WINDOWEVENT:
+            switch (event.window.event) {
+            case SDL_WINDOWEVENT_MINIMIZED:
+            case SDL_WINDOWEVENT_HIDDEN:
+                notifyDecoderWindowState(WINDOW_STATE_CHANGE_MINIMIZED);
+                break;
+            case SDL_WINDOWEVENT_RESTORED:
+            case SDL_WINDOWEVENT_SHOWN:
+                notifyDecoderWindowState(WINDOW_STATE_CHANGE_RESTORED);
+                break;
+            }
+
             // Early handling of some events
             switch (event.window.event) {
             case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -2124,6 +2211,24 @@ void Session::exec()
                 }
 
                 int newDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+
+                // A VRR session's display period is snapshotted at startup and
+                // baked into the renderer's immutable presentation mode, so any
+                // refresh change (including a mode switch on the same monitor)
+                // must drop back to fixed pacing rather than pace against a
+                // stale period.
+                if (m_PresentationSettings.enableVrr) {
+                    int currentRefreshRate = 0;
+                    if (!StreamUtils::tryGetDisplayRefreshRate(m_Window,
+                                                               currentRefreshRate) ||
+                            currentRefreshRate != m_PresentationSettings.refreshRate) {
+                        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                    "VRR disabled for this session after display refresh changed or became unavailable");
+                        m_PresentationSettings.enableVrr = false;
+                        forceRecreation = true;
+                    }
+                }
+
                 if (newDisplayIndex != currentDisplayIndex) {
                     windowChangeInfo.stateChangeFlags |= WINDOW_STATE_CHANGE_DISPLAY;
 
@@ -2206,6 +2311,13 @@ void Session::exec()
                     enableVsync = false;
                 }
 
+                // A VRR request that was rejected still runs on the fixed
+                // V-sync fallback, so keep that fallback paced even if the
+                // separate frame pacing option is off.
+                bool enableFramePacing = enableVsync &&
+                        (m_Preferences->framePacing ||
+                         (m_Preferences->enableVrr && !m_PresentationSettings.enableVrr));
+
                 // Choose a new decoder (hopefully the same one, but possibly
                 // not if a GPU was removed or something).
                 if (!chooseDecoder(m_Preferences->videoDecoderSelection,
@@ -2213,9 +2325,12 @@ void Session::exec()
                                    m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
                                    m_ActiveVideoHeight, m_ActiveVideoFrameRate,
                                    enableVsync,
-                                   enableVsync && m_Preferences->framePacing,
+                                   enableFramePacing,
                                    false,
-                                   s_ActiveSession->m_VideoDecoder)) {
+                                   s_ActiveSession->m_VideoDecoder,
+                                   m_PresentationSettings.enableVrr,
+                                   m_PresentationSettings.refreshRate,
+                                   &m_PresentationSettings.enableVrr)) {
                     SDL_UnlockMutex(m_DecoderLock);
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                  "Failed to recreate decoder after reset");
