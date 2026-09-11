@@ -408,6 +408,22 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             case SDL_SCANCODE_AC_HOME:
                 keyCode = 0xAC;
                 break;
+            case SDL_SCANCODE_UNDO:
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x0100;
+                break;
+            case SDL_SCANCODE_CUT:
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x0101;
+                break;
+            case SDL_SCANCODE_COPY:
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x0102;
+                break;
+            case SDL_SCANCODE_PASTE:
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x0103;
+                break;
             case SDL_SCANCODE_SEMICOLON:
                 keyCode = 0xBA;
                 break;
@@ -472,7 +488,9 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         m_KeysDown.remove(keyCode);
     }
 
-    LiSendKeyboardEvent2(0x8000 | keyCode,
+    // Non-normalized keycodes are interpreted as-is by Sunshine, so don't add
+    // the legacy 0x8000 prefix used by normalized VK-based keycodes.
+    LiSendKeyboardEvent2((shouldNotConvertToScanCodeOnServer ? keyCode : (0x8000 | keyCode)),
                         event->state == SDL_PRESSED ?
                             KEY_ACTION_DOWN : KEY_ACTION_UP,
                         modifiers,
