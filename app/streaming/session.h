@@ -162,6 +162,10 @@ private:
 
     int getAudioRendererCapabilities(int audioConfiguration);
 
+    int getStreamDisplayIndex();
+
+    void overrideStreamConfigForClientDisplay(SDL_Window* testWindow);
+
     void getWindowDimensions(int& x, int& y,
                              int& width, int& height);
 
@@ -285,4 +289,11 @@ private:
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
     static Session* s_ActiveSession;
     static QSemaphore s_ActiveSessionSemaphore;
+
+    // Decoder resolution limit recorded by getDecoderInfo(). Empty if the
+    // decoder reported no limit. The probed flag distinguishes that from
+    // getDecoderInfo() never having run, which is the case when streaming
+    // from the command line.
+    static QSize s_DecoderMaxResolution;
+    static bool s_DecoderMaxResolutionProbed;
 };
