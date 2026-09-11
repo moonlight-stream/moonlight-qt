@@ -441,33 +441,43 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // This will load OpenGL ES and convert our window to SDL_WINDOW_OPENGL if necessary
-    SDL_Renderer* dummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED);
-    if (dummyRenderer) {
-        SDL_DestroyRenderer(dummyRenderer);
-        dummyRenderer = nullptr;
-    }
-    else {
-        // Print the error here (before it gets clobbered), but ensure that we flush window
-        // events just in case SDL re-created the window before eventually failing.
-        EGL_LOG(Error, "SDL_CreateRenderer() failed: %s", SDL_GetError());
-    }
+    // Check if we are running on Wayland.
+    // On Wayland (especially with Panfrost drivers), creating and immediately destroying
+    // a renderer can corrupt the window surface state, causing subsequent EGL context
+    // creation or usage to fail. The dummy renderer hack below is primarily intended
+    // for older platforms or X11, so we safe to skip it on Wayland.
+    const char* currentVideoDriver = SDL_GetCurrentVideoDriver();
+    bool isWayland = (currentVideoDriver && strcmp(currentVideoDriver, "wayland") == 0);
 
-    // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
-    // to ensure it's compatible with the renderer's OpenGL context. If that happens, we
-    // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
-    // renderer. This can lead to an infinite to renderer recreation, so discard all
-    // SDL_WINDOWEVENT events after SDL_CreateRenderer().
-    Session* session = Session::get();
-    if (session != nullptr) {
-        // If we get here during a session, we need to synchronize with the event loop
-        // to ensure we don't drop any important events.
-        session->flushWindowEvents();
-    }
-    else if (!params->testOnly) {
-        // If we get here prior to the start of a session, just pump and flush ourselves.
-        SDL_PumpEvents();
-        SDL_FlushEvent(SDL_WINDOWEVENT);
+    if (!isWayland) {
+        // This will load OpenGL ES and convert our window to SDL_WINDOW_OPENGL if necessary
+        SDL_Renderer* dummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED);
+        if (dummyRenderer) {
+            SDL_DestroyRenderer(dummyRenderer);
+            dummyRenderer = nullptr;
+        }
+        else {
+            // Print the error here (before it gets clobbered), but ensure that we flush window
+            // events just in case SDL re-created the window before eventually failing.
+            EGL_LOG(Error, "SDL_CreateRenderer() failed: %s", SDL_GetError());
+        }
+
+        // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
+        // to ensure it's compatible with the renderer's OpenGL context. If that happens, we
+        // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
+        // renderer. This can lead to an infinite to renderer recreation, so discard all
+        // SDL_WINDOWEVENT events after SDL_CreateRenderer().
+        Session* session = Session::get();
+        if (session != nullptr) {
+            // If we get here during a session, we need to synchronize with the event loop
+            // to ensure we don't drop any important events.
+            session->flushWindowEvents();
+        }
+        else if (!params->testOnly) {
+            // If we get here prior to the start of a session, just pump and flush ourselves.
+            SDL_PumpEvents();
+            SDL_FlushEvent(SDL_WINDOWEVENT);
+        }
     }
 
     SDL_SysWMinfo info;
