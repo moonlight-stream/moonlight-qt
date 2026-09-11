@@ -7,3 +7,14 @@ build/
 libs/
 config.tests/*/.qmake.stash
 config.tests/*/Makefile
+
+.qmake.cache
+.qmake.stash
+config.log
+Makefile
+Makefile.Debug
+Makefile.Release
+debug/
+release/
+app/Moonlight_resource.rc
+app/qml_qmlcache.qrc
