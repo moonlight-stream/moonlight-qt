@@ -694,10 +694,6 @@ bool Session::initialize(QQuickWindow* qtWindow)
     }
 #endif
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Video bitrate: %d kbps",
-                m_StreamConfig.bitrate);
-
     RAND_bytes(reinterpret_cast<unsigned char*>(m_StreamConfig.remoteInputAesKey),
                sizeof(m_StreamConfig.remoteInputAesKey));
 
@@ -1651,6 +1647,43 @@ bool Session::startConnectionAsync()
         hostInfo.rtspSessionUrl = rtspSessionUrlStr.data();
     }
 
+    NvComputer::ActiveAddressRoute activeAddressRoute = {
+        NvComputer::ReachabilityType::RI_UNKNOWN,
+        NvComputer::NetworkType::NT_UNKNOWN,
+    };
+
+    // Route detection does network I/O, so only perform it after we've already
+    // contacted the PC successfully. Reuse the result for packet-size selection.
+    if (m_Preferences->useWifiBitrate || m_Preferences->packetSize == 0) {
+        activeAddressRoute = m_Computer->getActiveAddressRoute();
+    }
+
+    if (m_Preferences->useWifiBitrate) {
+        if (activeAddressRoute.networkType == NvComputer::NetworkType::NT_ETHERNET &&
+                activeAddressRoute.reachability != NvComputer::ReachabilityType::RI_VPN) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Ethernet route detected; using configured Ethernet bitrate");
+        }
+        else {
+            m_StreamConfig.bitrate = m_Preferences->wifiBitrateKbps;
+
+            if (activeAddressRoute.networkType == NvComputer::NetworkType::NT_WIFI) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Wi-Fi route detected; using configured Wi-Fi bitrate");
+            }
+            else if (activeAddressRoute.reachability == NvComputer::ReachabilityType::RI_VPN) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "VPN route detected; using configured Wi-Fi bitrate");
+            }
+            else {
+                // Only permit the potentially very high primary bitrate when the
+                // route is positively identified as Ethernet.
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Non-Ethernet or unknown route detected; using configured Wi-Fi bitrate");
+            }
+        }
+    }
+
     if (m_Preferences->packetSize != 0) {
         // Override default packet size and remote streaming detection
         // NB: Using STREAM_CFG_AUTO will cap our packet size at 1024 for remote hosts.
@@ -1664,9 +1697,7 @@ bool Session::startConnectionAsync()
         // Use 1392 byte video packets by default
         m_StreamConfig.packetSize = 1392;
 
-        // getActiveAddressReachability() does network I/O, so we only attempt to check
-        // reachability if we've already contacted the PC successfully.
-        switch (m_Computer->getActiveAddressReachability()) {
+        switch (activeAddressRoute.reachability) {
         case NvComputer::RI_LAN:
             // This address is on-link, so treat it as a local address
             // even if it's not in RFC 1918 space or it's an IPv6 address.
@@ -1702,6 +1733,10 @@ bool Session::startConnectionAsync()
                                                                          m_StreamConfig.fps,
                                                                          false);
     }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Video bitrate: %d kbps",
+                m_StreamConfig.bitrate);
 
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks, &m_AudioCallbacks,

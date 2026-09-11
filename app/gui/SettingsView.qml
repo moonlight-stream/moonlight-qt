@@ -669,7 +669,9 @@ Flickable {
                 Label {
                     width: parent.width
                     id: bitrateTitle
-                    text: qsTr("Video bitrate:")
+                    text: StreamingPreferences.useWifiBitrate ?
+                              qsTr("Ethernet video bitrate: %1 Mbps").arg(slider.value / 1000.0) :
+                              qsTr("Video bitrate: %1 Mbps").arg(slider.value / 1000.0)
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -699,7 +701,6 @@ Flickable {
                         width: Math.min(bitrateDesc.implicitWidth, parent.width - (resetBitrateButton.visible ? resetBitrateButton.width + parent.spacing : 0))
 
                         onValueChanged: {
-                            bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(value / 1000.0)
                             StreamingPreferences.bitrateKbps = value
                         }
 
@@ -723,6 +724,61 @@ Flickable {
                             StreamingPreferences.autoAdjustBitrate = true
                             slider.value = defaultBitrate
                         }
+                    }
+                }
+
+                CheckBox {
+                    id: useWifiBitrate
+                    width: parent.width
+                    text: qsTr("Use a separate bitrate for Wi-Fi")
+                    font.pointSize: 12
+
+                    checked: StreamingPreferences.useWifiBitrate
+                    onCheckedChanged: {
+                        if (StreamingPreferences.useWifiBitrate !== checked) {
+                            StreamingPreferences.useWifiBitrate = checked
+                        }
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("The primary bitrate is used only when the route to the host is detected as Ethernet. Wi-Fi, VPN, and unknown connection types use the safer Wi-Fi bitrate.")
+                }
+
+                Label {
+                    width: parent.width
+                    id: wifiBitrateTitle
+                    text: qsTr("Wi-Fi video bitrate: %1 Mbps").arg(wifiBitrateSlider.value / 1000.0)
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                    visible: useWifiBitrate.checked
+                }
+
+                Label {
+                    width: parent.width
+                    id: wifiBitrateDesc
+                    text: qsTr("Used for Wi-Fi and whenever an Ethernet route cannot be confirmed.")
+                    font.pointSize: 9
+                    wrapMode: Text.Wrap
+                    visible: useWifiBitrate.checked
+                }
+
+                Slider {
+                    id: wifiBitrateSlider
+                    width: Math.min(wifiBitrateDesc.implicitWidth, parent.width)
+                    visible: useWifiBitrate.checked
+
+                    value: StreamingPreferences.wifiBitrateKbps
+
+                    stepSize: 500
+                    from: 500
+                    to: StreamingPreferences.unlockBitrate ? 500000 : 150000
+
+                    snapMode: "SnapOnRelease"
+
+                    onValueChanged: {
+                        StreamingPreferences.wifiBitrateKbps = value
                     }
                 }
 
@@ -1752,7 +1808,9 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.unlockBitrate = checked
                         StreamingPreferences.bitrateKbps = Math.min(StreamingPreferences.bitrateKbps, slider.to)
+                        StreamingPreferences.wifiBitrateKbps = Math.min(StreamingPreferences.wifiBitrateKbps, wifiBitrateSlider.to)
                         slider.value = StreamingPreferences.bitrateKbps
+                        wifiBitrateSlider.value = StreamingPreferences.wifiBitrateKbps
                     }
 
                     ToolTip.delay: 1000

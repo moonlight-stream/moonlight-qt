@@ -60,6 +60,22 @@ public:
         RI_VPN,
     };
 
+    enum NetworkType
+    {
+        NT_UNKNOWN,
+        NT_ETHERNET,
+        NT_WIFI,
+    };
+
+    struct ActiveAddressRoute
+    {
+        ReachabilityType reachability;
+        NetworkType networkType;
+    };
+
+    ActiveAddressRoute
+    getActiveAddressRoute() const;
+
     ReachabilityType
     getActiveAddressReachability() const;
 
