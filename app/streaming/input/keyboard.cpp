@@ -13,6 +13,73 @@
 #define VK_NUMPAD0 0x60
 #endif
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
+/**
+ * @brief Detect whether the client is using a Japanese (JIS) keyboard layout.
+ */
+static bool isJapaneseKeyboardLayout()
+{
+    static int cached = -1;
+    if (cached >= 0) {
+        return cached != 0;
+    }
+
+    bool japanese = SDL_GetKeyFromScancode(SDL_SCANCODE_RIGHTBRACKET) == SDLK_LEFTBRACKET;
+
+#ifdef _WIN32
+    if (!japanese) {
+        WCHAR layoutName[KL_NAMELENGTH];
+        if (GetKeyboardLayoutNameW(layoutName)) {
+            for (int i = 0; layoutName[i] != L'\0'; ++i) {
+                if (layoutName[i] == L'4' && layoutName[i + 1] == L'1' && layoutName[i + 2] == L'1') {
+                    japanese = true;
+                    break;
+                }
+            }
+        }
+    }
+#endif
+
+    cached = japanese ? 1 : 0;
+    return japanese;
+}
+
+/**
+ * @brief Detect whether SDL_SCANCODE_BACKSLASH is the JIS ろ (\ / _) key.
+ *
+ * Linux often reports the ro key as BACKSLASH instead of INTERNATIONAL1. JIS ro
+ * produces '_' with Shift; US backslash produces '|' with Shift.
+ */
+static bool isJapaneseRoBackslashKey()
+{
+    static int cached = -1;
+    if (cached >= 0) {
+        return cached != 0;
+    }
+
+    bool isRo = isJapaneseKeyboardLayout();
+
+#if defined(SDL_VERSION_ATLEAST) && SDL_VERSION_ATLEAST(3, 0, 0)
+    if (!isRo) {
+        isRo = SDL_GetKeyFromScancode(SDL_SCANCODE_BACKSLASH, SDL_KMOD_SHIFT, false) == SDLK_UNDERSCORE;
+    }
+#endif
+
+#ifndef _WIN32
+    if (!isRo) {
+        if (const char *layout = SDL_getenv("XKB_DEFAULT_LAYOUT")) {
+            isRo = SDL_strstr(layout, "jp") != nullptr || SDL_strstr(layout, "ja") != nullptr;
+        }
+    }
+#endif
+
+    cached = isRo ? 1 : 0;
+    return isRo;
+}
+
 void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 {
     switch (combo) {
@@ -433,10 +500,18 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 keyCode = 0xDB;
                 break;
             case SDL_SCANCODE_INTERNATIONAL3:
+                // JIS yen (¥ / |) key
                 shouldNotConvertToScanCodeOnServer = true;
-                Q_FALLTHROUGH();
-            case SDL_SCANCODE_BACKSLASH:
                 keyCode = 0xDC;
+                break;
+            case SDL_SCANCODE_BACKSLASH:
+                if (isJapaneseRoBackslashKey()) {
+                    // JIS ろ (\ / _) key - Linux reports this as BACKSLASH, not INTERNATIONAL1
+                    shouldNotConvertToScanCodeOnServer = true;
+                    keyCode = 0xE2;
+                } else {
+                    keyCode = 0xDC;
+                }
                 break;
             case SDL_SCANCODE_RIGHTBRACKET:
                 keyCode = 0xDD;
@@ -445,15 +520,34 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 keyCode = 0xDE;
                 break;
             case SDL_SCANCODE_INTERNATIONAL1:
-                shouldNotConvertToScanCodeOnServer = true;
-                Q_FALLTHROUGH();
             case SDL_SCANCODE_NONUSBACKSLASH:
+                // JIS backslash/underscore (ろ) key
+                shouldNotConvertToScanCodeOnServer = true;
                 keyCode = 0xE2;
                 break;
+            case SDL_SCANCODE_INTERNATIONAL2:
+                // JIS hiragana/katakana key
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x15;
+                break;
+            case SDL_SCANCODE_INTERNATIONAL4:
+                // JIS henkan (変換) key on Windows
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x1C;
+                break;
+            case SDL_SCANCODE_INTERNATIONAL5:
+                // JIS muhenkan (無変換) key on Windows
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x1D;
+                break;
             case SDL_SCANCODE_LANG1:
+                // Henkan on some non-Windows clients
+                shouldNotConvertToScanCodeOnServer = true;
                 keyCode = 0x1C;
                 break;
             case SDL_SCANCODE_LANG2:
+                // Muhenkan on some non-Windows clients
+                shouldNotConvertToScanCodeOnServer = true;
                 keyCode = 0x1D;
                 break;
             default:
