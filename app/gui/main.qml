@@ -288,7 +288,9 @@ ApplicationWindow {
             Label {
                 id: versionLabel
                 visible: stackView.currentItem instanceof SettingsView
-                text: qsTr("Version %1").arg(SystemProperties.versionString)
+                text: SystemProperties.buildInfoString.length > 0 ?
+                        qsTr("Version %1 (%2)").arg(SystemProperties.versionString).arg(SystemProperties.buildInfoString) :
+                        qsTr("Version %1").arg(SystemProperties.versionString)
                 font.pointSize: 12
                 horizontalAlignment: Qt.AlignRight
                 verticalAlignment: Qt.AlignVCenter
