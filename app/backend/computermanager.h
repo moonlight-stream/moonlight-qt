@@ -237,6 +237,8 @@ public:
 
     QVector<NvComputer*> getComputers();
 
+    QList<QHostAddress> getWolProxyAddresses() const;
+
     // computer is deleted inside this call
     void deleteHost(NvComputer* computer);
 

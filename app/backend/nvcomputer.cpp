@@ -6,6 +6,7 @@
 #include <QHostInfo>
 #include <QNetworkInterface>
 #include <QNetworkProxy>
+#include <QSet>
 
 #define SER_NAME "hostname"
 #define SER_UUID "uuid"
@@ -213,7 +214,7 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
     this->isSupportedServerVersion = CompatFetcher::isGfeVersionSupported(this->gfeVersion);
 }
 
-bool NvComputer::wake() const
+bool NvComputer::wake(const QList<QHostAddress>& wolProxyAddresses) const
 {
     QByteArray wolPayload;
 
@@ -248,6 +249,34 @@ bool NvComputer::wake() const
     const quint16 DYNAMIC_WOL_PORTS[] = {
         47998, 47999, 48000, 48002, 48010, // Ports opened by GFE
     };
+
+    bool success = false;
+    QSet<QString> sentEndpoints;
+
+    auto sendWolPacket = [&](QUdpSocket& sock, const QHostAddress& address, quint16 port, bool isProxy) {
+        const qint64 bytesWritten = sock.writeDatagram(wolPayload, address, port);
+        if (bytesWritten == wolPayload.size()) {
+            qInfo().nospace().noquote()
+                    << "Sent WoL packet to " << name
+                    << (isProxy ? " via proxy " : " via ")
+                    << address.toString() << ":" << port;
+            sentEndpoints.insert(QStringLiteral("[%1]:%2").arg(address.toString()).arg(port));
+            success = true;
+            return;
+        }
+
+        qWarning().nospace().noquote()
+                << "Failed to send WoL packet to "
+                << address.toString() << ":" << port
+                << ": " << sock.errorString();
+    };
+
+    // Send to configured proxies in the order provided. Proxy addresses are
+    // already validated and deduplicated by WolProxySettings.
+    for (const QHostAddress& proxyAddress : wolProxyAddresses) {
+        QUdpSocket proxySocket;
+        sendWolPacket(proxySocket, proxyAddress, 9, true);
+    }
 
     // Add the addresses that we know this host to be
     // and broadcast addresses for this link just in
@@ -290,7 +319,6 @@ bool NvComputer::wake() const
     }
 
     // Try all unique address strings or host names
-    bool success = false;
     for (auto i = addressMap.constBegin(); i != addressMap.constEnd(); i++) {
         QHostAddress literalAddress;
         QList<QHostAddress> addressList;
@@ -316,12 +344,9 @@ bool NvComputer::wake() const
 
             // Send to all static ports
             for (quint16 port : STATIC_WOL_PORTS) {
-                if (sock.writeDatagram(wolPayload, address, port)) {
-                    qInfo().nospace().noquote() << "Sent WoL packet to " << name << " via " << address.toString() << ":" << port;
-                    success = true;
-                }
-                else {
-                    qWarning() << "Send failed:" << sock.error();
+                const QString endpoint = QStringLiteral("[%1]:%2").arg(address.toString()).arg(port);
+                if (!sentEndpoints.contains(endpoint)) {
+                    sendWolPacket(sock, address, port, false);
                 }
             }
 
@@ -340,12 +365,9 @@ bool NvComputer::wake() const
                 for (quint16 port : DYNAMIC_WOL_PORTS) {
                     port = (port - 47989) + basePort;
 
-                    if (sock.writeDatagram(wolPayload, address, port)) {
-                        qInfo().nospace().noquote() << "Sent WoL packet to " << name << " via " << address.toString() << ":" << port;
-                        success = true;
-                    }
-                    else {
-                        qWarning() << "Send failed:" << sock.error();
+                    const QString endpoint = QStringLiteral("[%1]:%2").arg(address.toString()).arg(port);
+                    if (!sentEndpoints.contains(endpoint)) {
+                        sendWolPacket(sock, address, port, false);
                     }
                 }
             }
