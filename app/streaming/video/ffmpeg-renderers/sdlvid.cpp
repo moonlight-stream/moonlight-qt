@@ -17,7 +17,12 @@ SdlRenderer::SdlRenderer()
       m_VideoFormat(0),
       m_Renderer(nullptr),
       m_Texture(nullptr),
+      m_ScalingTexture(nullptr),
       m_NeedsYuvToRgbConversion(false),
+      m_CanUseRenderTargets(false),
+      m_VideoScalingMode(StreamingPreferences::VSM_AUTO),
+      m_ScalingTextureWidth(0),
+      m_ScalingTextureHeight(0),
       m_SwsContext(nullptr),
       m_RgbFrame(av_frame_alloc()),
       m_SwFrameMapper(this)
@@ -48,6 +53,10 @@ SdlRenderer::~SdlRenderer()
 
     if (m_Texture != nullptr) {
         SDL_DestroyTexture(m_Texture);
+    }
+
+    if (m_ScalingTexture != nullptr) {
+        SDL_DestroyTexture(m_ScalingTexture);
     }
 
     if (m_Renderer != nullptr) {
@@ -135,6 +144,7 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;
 
     m_VideoFormat = params->videoFormat;
+    m_VideoScalingMode = params->videoScalingMode;
     m_SwFrameMapper.setVideoFormat(m_VideoFormat);
 
     if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
@@ -219,6 +229,11 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    SDL_RendererInfo rendererInfo;
+    if (SDL_GetRendererInfo(m_Renderer, &rendererInfo) == 0) {
+        m_CanUseRenderTargets = rendererInfo.flags & SDL_RENDERER_TARGETTEXTURE;
+    }
+
     return true;
 }
 
@@ -275,6 +290,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
 {
     int err;
     AVFrame* swFrame = nullptr;
+    bool nearestNeighbor = false;
 
     if (frame->hw_frames_ctx != nullptr && frame->format != AV_PIX_FMT_CUDA) {
 #ifdef HAVE_CUDA
@@ -578,8 +594,54 @@ ReadbackRetry:
     // Ensure the viewport is set to the desired video region
     SDL_RenderSetViewport(m_Renderer, &dst);
 
-    // Draw the video content itself
-    SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);
+    nearestNeighbor = shouldUseNearestNeighborScaling(m_VideoScalingMode, &src, &dst);
+    if (nearestNeighbor && !m_NeedsYuvToRgbConversion && m_CanUseRenderTargets) {
+        // SDL applies a texture's scale mode to its YUV planes too. Convert into
+        // a source-resolution RGB texture with linear sampling first, then scale
+        // that RGB result with nearest-neighbor sampling.
+        if (m_ScalingTexture == nullptr ||
+                m_ScalingTextureWidth != frame->width ||
+                m_ScalingTextureHeight != frame->height) {
+            if (m_ScalingTexture != nullptr) {
+                SDL_DestroyTexture(m_ScalingTexture);
+            }
+
+            m_ScalingTexture = SDL_CreateTexture(m_Renderer,
+                                                 SDL_PIXELFORMAT_ARGB8888,
+                                                 SDL_TEXTUREACCESS_TARGET,
+                                                 frame->width,
+                                                 frame->height);
+            if (m_ScalingTexture != nullptr) {
+                SDL_SetTextureBlendMode(m_ScalingTexture, SDL_BLENDMODE_NONE);
+                SDL_SetTextureScaleMode(m_ScalingTexture, SDL_ScaleModeNearest);
+                m_ScalingTextureWidth = frame->width;
+                m_ScalingTextureHeight = frame->height;
+            }
+        }
+
+        if (m_ScalingTexture != nullptr && SDL_SetRenderTarget(m_Renderer, m_ScalingTexture) == 0) {
+            SDL_RenderSetViewport(m_Renderer, nullptr);
+            SDL_SetTextureScaleMode(m_Texture, SDL_ScaleModeLinear);
+            SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);
+            SDL_SetRenderTarget(m_Renderer, nullptr);
+            SDL_RenderSetViewport(m_Renderer, &dst);
+            SDL_RenderCopy(m_Renderer, m_ScalingTexture, nullptr, nullptr);
+        }
+        else {
+            SDL_SetRenderTarget(m_Renderer, nullptr);
+            SDL_RenderSetViewport(m_Renderer, &dst);
+            SDL_SetTextureScaleMode(m_Texture, SDL_ScaleModeLinear);
+            SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);
+        }
+    }
+    else {
+        // RGB textures can be sampled directly. Keep native SDL YUV textures
+        // linear when render targets are unavailable to preserve chroma quality.
+        SDL_SetTextureScaleMode(m_Texture,
+                                nearestNeighbor && m_NeedsYuvToRgbConversion ?
+                                    SDL_ScaleModeNearest : SDL_ScaleModeLinear);
+        SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);
+    }
 
     // Reset the viewport to the full window for overlay rendering
     SDL_RenderSetViewport(m_Renderer, nullptr);

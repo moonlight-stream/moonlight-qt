@@ -140,6 +140,17 @@ void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst)
     }
 }
 
+bool StreamUtils::isIntegerScale(const SDL_Rect* src, const SDL_Rect* dst)
+{
+    if (src->w <= 0 || src->h <= 0 || dst->w < src->w || dst->h < src->h) {
+        return false;
+    }
+
+    return dst->w % src->w == 0 &&
+           dst->h % src->h == 0 &&
+           dst->w / src->w == dst->h / src->h;
+}
+
 void StreamUtils::screenSpaceToNormalizedDeviceCoords(SDL_FRect* rect, int viewportWidth, int viewportHeight)
 {
     rect->x = (rect->x / (viewportWidth / 2.0f)) - 1.0f;
