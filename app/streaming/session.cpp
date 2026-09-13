@@ -297,6 +297,7 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     params.testOnly = testOnly;
     params.vds = vds;
     params.renderer = renderer;
+    params.videoScalingMode = StreamingPreferences::get()->videoScalingMode;
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "V-sync %s",

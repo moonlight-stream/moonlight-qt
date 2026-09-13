@@ -57,14 +57,19 @@ private:
     int m_GlesMajorVersion;
     int m_GlesMinorVersion;
     bool m_HasExtUnpackSubimage;
+    StreamingPreferences::VideoScalingMode m_VideoScalingMode;
 
 #define NV12_PARAM_YUVMAT 0
 #define NV12_PARAM_OFFSET 1
 #define NV12_PARAM_CHROMA_OFFSET 2
 #define NV12_PARAM_PLANE1 3
 #define NV12_PARAM_PLANE2 4
+#define NV12_PARAM_VIDEO_SIZE 5
+#define NV12_PARAM_NEAREST_NEIGHBOR 6
 #define OPAQUE_PARAM_TEXTURE 0
-    int m_ShaderProgramParams[5];
+#define OPAQUE_PARAM_VIDEO_SIZE 1
+#define OPAQUE_PARAM_NEAREST_NEIGHBOR 2
+    int m_ShaderProgramParams[7];
 
 #define OVERLAY_PARAM_TEXTURE 0
     int m_OverlayShaderProgramParams[1];
