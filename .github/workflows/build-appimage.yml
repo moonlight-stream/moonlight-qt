@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL
-          ref: release-3.4.16
+          ref: ddba673cddfa79ce798eca5ba402e0f1a2a2a243
           path: deps/SDL
 
       - name: Build SDL3
