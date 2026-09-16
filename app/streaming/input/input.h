@@ -150,6 +150,8 @@ public:
 
     void updateKeyboardGrabState();
 
+    void notifyBossKeyHidden(bool hidden);
+
     void updatePointerRegionLock();
 
     static
@@ -221,6 +223,8 @@ private:
     QSet<short> m_KeysDown;
     bool m_FakeMouseCaptureActive;
     bool m_KeyboardCaptureActive;
+    bool m_BossKeyHidden;
+    bool m_BossKeyRestoreCapture;
     QString m_OldIgnoreDevices;
     QString m_OldIgnoreDevicesExcept;
     QStringList m_IgnoreDeviceGuids;
