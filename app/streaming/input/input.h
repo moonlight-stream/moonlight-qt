@@ -5,6 +5,8 @@
 
 #include "SDL_compat.h"
 
+struct MoonlightPenRawEvent;
+
 struct GamepadState {
     SDL_GameController* controller;
     SDL_JoystickID jsId;
@@ -130,6 +132,13 @@ public:
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 
+    // SDL3 pen capture via sdl2-compat event-filter wrap
+    void startSdl3PenCapture();
+    void stopSdl3PenCapture();
+    void ensureSdl3PenFilter();
+    void handleSdl3PenEvent(const struct MoonlightPenRawEvent* event);
+    static bool isSyntheticPenMouseId(Uint32 which);
+
     int getAttachedGamepadMask();
 
     void raiseAllKeys();
@@ -242,6 +251,7 @@ private:
     bool m_AbsoluteMouseMode;
     bool m_AbsoluteTouchMode;
     bool m_DisabledTouchFeedback;
+    bool m_Sdl3PenCaptureActive;
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
     SDL_TimerID m_LeftButtonReleaseTimer;
