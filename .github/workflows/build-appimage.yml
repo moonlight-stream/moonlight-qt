@@ -101,7 +101,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: haasn/libplacebo
-          ref: 41ac2980e1a898f41d7c2e07999f9862ee89d99f
+          ref: e2972fdd09adacd383656738d7d280f0cd84a761
           path: deps/libplacebo
           submodules: 'recursive'
 
@@ -129,7 +129,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: FFmpeg/FFmpeg
-          ref: n9.0
+          ref: n9.0.2
           path: deps/FFmpeg
 
       - name: Build FFmpeg
