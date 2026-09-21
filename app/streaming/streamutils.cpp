@@ -367,6 +367,36 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
     return true;
 }
 
+// Try to normalize values around our our standard refresh rates.
+// Some displays/OSes report values that are slightly off.
+int StreamUtils::normalizeRefreshRate(int refreshRate)
+{
+    if (refreshRate >= 58 && refreshRate <= 62) {
+        return 60;
+    }
+    else if (refreshRate >= 28 && refreshRate <= 32) {
+        return 30;
+    }
+    else {
+        return refreshRate;
+    }
+}
+
+int StreamUtils::getCurrentRefreshRate(int displayIndex)
+{
+    SDL_assert(SDL_WasInit(SDL_INIT_VIDEO));
+
+    SDL_DisplayMode mode;
+    if (SDL_GetCurrentDisplayMode(displayIndex, &mode) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_GetCurrentDisplayMode() failed: %s",
+                     SDL_GetError());
+        return 0;
+    }
+
+    return normalizeRefreshRate(mode.refresh_rate);
+}
+
 int StreamUtils::getDrmFdForWindow(SDL_Window* window, bool* mustClose)
 {
     *mustClose = false;

@@ -346,8 +346,10 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addFlagOption("1440", "2560x1440 resolution");
     parser.addFlagOption("4K", "3840x2160 resolution");
     parser.addValueOption("resolution", "custom <width>x<height> resolution");
+    parser.addToggleOption("auto-resolution", "the client display's resolution");
     parser.addToggleOption("vsync", "V-Sync");
     parser.addValueOption("fps", "FPS");
+    parser.addToggleOption("auto-fps", "the client display's frame rate");
     parser.addValueOption("bitrate", "bitrate in Kbps");
     parser.addValueOption("packet-size", "video packet size");
     parser.addChoiceOption("display-mode", "display mode", m_WindowModeMap.keys());
@@ -379,7 +381,8 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.handleUnknownOptions();
 
     // Resolve display's width and height
-    static QRegularExpression resolutionRexExp("^(720|1080|1440|4K|resolution)$");
+#define RESOLUTION_OPTION_NAMES "720|1080|1440|4K|resolution"
+    static QRegularExpression resolutionRexExp("^(" RESOLUTION_OPTION_NAMES ")$");
     QStringList resoOptions = parser.optionNames().filter(resolutionRexExp);
     bool displaySet = !resoOptions.isEmpty();
     if (displaySet) {
@@ -403,6 +406,14 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
         }
     }
 
+    // Resolve --auto-resolution and --no-auto-resolution options. An explicit
+    // resolution also turns matching off, so whichever of these came last wins.
+    static QRegularExpression autoResolutionRexExp("^(" RESOLUTION_OPTION_NAMES "|auto-resolution|no-auto-resolution)$");
+    QStringList autoResOptions = parser.optionNames().filter(autoResolutionRexExp);
+    if (!autoResOptions.isEmpty()) {
+        preferences->autoResolution = autoResOptions.last() == "auto-resolution";
+    }
+
     // Resolve --fps option
     if (parser.isSet("fps")) {
         preferences->fps = parser.getIntOption("fps");
@@ -411,15 +422,27 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
         }
     }
 
+    // Resolve --auto-fps and --no-auto-fps options. An explicit frame rate also
+    // turns matching off, so whichever of these came last wins.
+    static QRegularExpression autoFpsRexExp("^(fps|auto-fps|no-auto-fps)$");
+    QStringList autoFpsOptions = parser.optionNames().filter(autoFpsRexExp);
+    if (!autoFpsOptions.isEmpty()) {
+        preferences->autoFps = autoFpsOptions.last() == "auto-fps";
+    }
+
     // Resolve --bitrate option
     if (parser.isSet("bitrate")) {
         preferences->bitrateKbps = parser.getIntOption("bitrate");
         if (!inRange(preferences->bitrateKbps, 500, 500000)) {
             fprintf(stderr, "Warning: Bitrate is out of the supported range (500 - 500000 Kbps). Performance may suffer!\n");
         }
+
+        // An explicit bitrate must not be adjusted for the display mode
+        preferences->autoAdjustBitrate = false;
     } else if (displaySet || parser.isSet("fps")) {
         preferences->bitrateKbps = preferences->getDefaultBitrate(
             preferences->width, preferences->height, preferences->fps, preferences->enableYUV444);
+        preferences->autoAdjustBitrate = true;
     }
 
     // Resolve --packet-size option
