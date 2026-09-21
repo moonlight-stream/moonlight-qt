@@ -9,11 +9,25 @@ on:
       ci_version:
         required: true
         type: string
+      build_system:
+        required: false
+        type: string
+        default: qmake
+  workflow_dispatch:
+    inputs:
+      build_system:
+        required: false
+        type: choice
+        options:
+          - qmake
+          - cmake
+        default: qmake
 
 jobs:
   build:
     env:
       CI_VERSION: ${{ inputs.ci_version }}
+      BUILD_SYSTEM: ${{ inputs.build_system }}
     runs-on: ubuntu-22.04
 
     steps:

@@ -4,6 +4,7 @@ setlocal enableDelayedExpansion
 rem Run from Qt command prompt with working directory set to root of repo
 
 set BUILD_CONFIG=%1
+if not defined BUILD_SYSTEM set BUILD_SYSTEM=qmake
 
 rem Convert to lower case for windeployqt
 if /I "%BUILD_CONFIG%"=="debug" (
@@ -163,8 +164,17 @@ set LDFLAGS=/LTCG
 
 echo Configuring the project
 pushd %BUILD_FOLDER%
-%QMAKE_CMD% %SOURCE_ROOT%\moonlight-qt.pro
-if !ERRORLEVEL! NEQ 0 goto Error
+if /I "%BUILD_SYSTEM%"=="cmake" (
+    rem NMake Makefiles is a single-config generator, so it won't create a %BUILD_CONFIG% subdirectory
+    rem on its own like qmake/jom does. Force one via CMAKE_RUNTIME_OUTPUT_DIRECTORY so the WiX harvest
+    rem path (app\%BUILD_CONFIG%\Moonlight.exe) and the rest of this script don't need to know which
+    rem build system produced the binaries.
+    cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=%BUILD_CONFIG% -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=%BUILD_FOLDER%\app\%BUILD_CONFIG% %SOURCE_ROOT%
+    if !ERRORLEVEL! NEQ 0 goto Error
+) else (
+    %QMAKE_CMD% %SOURCE_ROOT%\moonlight-qt.pro
+    if !ERRORLEVEL! NEQ 0 goto Error
+)
 popd
 
 rem Locate jom.exe or fall back to nmake.exe
@@ -190,8 +200,13 @@ if !ERRORLEVEL! EQU 0 (
 
 echo Compiling Moonlight in %BUILD_CONFIG% configuration
 pushd %BUILD_FOLDER%
-!JOM_CMD! %BUILD_CONFIG%
-if !ERRORLEVEL! NEQ 0 goto Error
+if /I "%BUILD_SYSTEM%"=="cmake" (
+    cmake --build .
+    if !ERRORLEVEL! NEQ 0 goto Error
+) else (
+    !JOM_CMD! %BUILD_CONFIG%
+    if !ERRORLEVEL! NEQ 0 goto Error
+)
 popd
 
 echo Saving PDBs
@@ -231,7 +246,12 @@ copy %SOURCE_ROOT%\libs\windows\lib\%ARCH%\*.dll %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Copying AntiHooking.dll
-copy %BUILD_FOLDER%\AntiHooking\%BUILD_CONFIG%\AntiHooking.dll %DEPLOY_FOLDER%
+if /I "%BUILD_SYSTEM%"=="cmake" (
+    rem CMAKE_RUNTIME_OUTPUT_DIRECTORY above sends every target's binaries to the same folder as Moonlight.exe.
+    copy %BUILD_FOLDER%\app\%BUILD_CONFIG%\AntiHooking.dll %DEPLOY_FOLDER%
+) else (
+    copy %BUILD_FOLDER%\AntiHooking\%BUILD_CONFIG%\AntiHooking.dll %DEPLOY_FOLDER%
+)
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Copying GC mapping list
