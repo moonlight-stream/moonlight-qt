@@ -103,7 +103,9 @@ for different architectures, which handle building deps and extra linking for yo
     * To build from the command line for development use on macOS or Linux, run `qmake6 moonlight-qt.pro` then `make debug` or `make release`.
         * The final binary will be placed in `app/moonlight`.
     * To create an embedded build for a single-purpose device, use `qmake6 "CONFIG+=embedded" moonlight-qt.pro` and build normally.
-        * This build will lack windowed mode, Discord/Help links, and other features that don't make sense on an embedded device.
+        * This build will lack windowed mode, Discord/Help links, and other features that don't make sense on an embedded device. 
+        * On Linux, it additionally gains a BlueZ-backed Bluetooth pairing view for devices with no desktop environment to pair a controller from. 
+        Add `"CONFIG+=disable-bluez"` to leave it out.
         * For platforms with poor GPU performance, add `"CONFIG+=gpuslow"` to prefer direct KMSDRM rendering over GL/Vulkan renderers. Direct KMSDRM rendering can use dedicated YUV/RGB conversion and scaling hardware rather than slower GPU shaders for these operations.
 
 ## Contribute
