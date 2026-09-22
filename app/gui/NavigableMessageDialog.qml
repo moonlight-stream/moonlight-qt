@@ -32,8 +32,8 @@ NavigableDialog {
         Image {
             id: dialogImage
             source: (standardButtons & Dialog.Yes) ?
-                        "qrc:/res/baseline-help_outline-24px.svg" :
-                        "qrc:/res/baseline-error_outline-24px.svg"
+                        "qrc:/res/help_FILL0_wght700_GRAD200_opsz48.svg" :
+                        "qrc:/res/error_FILL0_wght700_GRAD200_opsz48.svg"
             sourceSize {
                 // The icon should be square so use the height as the width too
                 width: 50
