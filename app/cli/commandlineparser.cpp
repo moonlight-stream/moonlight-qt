@@ -349,6 +349,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("vsync", "V-Sync");
     parser.addValueOption("fps", "FPS");
     parser.addValueOption("bitrate", "bitrate in Kbps");
+    parser.addValueOption("wifi-bitrate", "bitrate in Kbps for Wi-Fi and other non-Ethernet connections");
     parser.addValueOption("packet-size", "video packet size");
     parser.addChoiceOption("display-mode", "display mode", m_WindowModeMap.keys());
     parser.addChoiceOption("audio-config", "audio config", m_AudioConfigMap.keys());
@@ -417,9 +418,23 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
         if (!inRange(preferences->bitrateKbps, 500, 500000)) {
             fprintf(stderr, "Warning: Bitrate is out of the supported range (500 - 500000 Kbps). Performance may suffer!\n");
         }
+
+        // An explicit fixed bitrate should take precedence over the saved
+        // network-aware setting unless --wifi-bitrate is also provided.
+        preferences->useWifiBitrate = false;
     } else if (displaySet || parser.isSet("fps")) {
         preferences->bitrateKbps = preferences->getDefaultBitrate(
             preferences->width, preferences->height, preferences->fps, preferences->enableYUV444);
+    }
+
+    // Resolve --wifi-bitrate option
+    if (parser.isSet("wifi-bitrate")) {
+        preferences->wifiBitrateKbps = parser.getIntOption("wifi-bitrate");
+        if (!inRange(preferences->wifiBitrateKbps, 500, 500000)) {
+            fprintf(stderr, "Warning: Wi-Fi bitrate is out of the supported range (500 - 500000 Kbps). Performance may suffer!\n");
+        }
+
+        preferences->useWifiBitrate = true;
     }
 
     // Resolve --packet-size option
