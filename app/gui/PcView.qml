@@ -172,6 +172,11 @@ CenteredGridView {
                     enabled: false
                 }
                 NavigableMenuItem {
+                    text: qsTr("Wake and Open")
+                    onTriggered: wakeAndOpen()
+                    visible: !model.online && model.wakeable
+                }
+                NavigableMenuItem {
                     text: qsTr("View All Apps")
                     onTriggered: {
                         var component = Qt.createComponent("AppView.qml")
@@ -219,29 +224,66 @@ CenteredGridView {
             }
         }
 
+        // Set when the user chose "Wake and Open"; we open the PC
+        // automatically once it comes online.
+        property bool wakeAndOpenPending: false
+        property bool onlineRole: model.online
+
+        onOnlineRoleChanged: {
+            if (wakeAndOpenPending && onlineRole) {
+                wakeAndOpenPending = false
+                wakeOpenTimeout.stop()
+                wakeOpenDialog.stop()
+                activatePc()
+            }
+        }
+
+        Timer {
+            id: wakeOpenTimeout
+            interval: 120000
+            onTriggered: {
+                wakeAndOpenPending = false
+                wakeOpenDialog.stop()
+                errorDialog.text = qsTr("Timed out waiting for %1 to wake up.").arg(model.name)
+                errorDialog.helpText = ""
+                errorDialog.open()
+            }
+        }
+
+        function wakeAndOpen() {
+            wakeAndOpenPending = true
+            wakeOpenTimeout.restart()
+            computerModel.wakeComputer(index)
+            wakeOpenDialog.start(model.name)
+        }
+
+        function activatePc() {
+            if (!model.serverSupported) {
+                errorDialog.text = qsTr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(model.name)
+                errorDialog.helpText = ""
+                errorDialog.open()
+            }
+            else if (model.paired) {
+                // go to game view
+                var component = Qt.createComponent("AppView.qml")
+                var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
+                stackView.push(appView)
+            }
+            else {
+                var pin = computerModel.generatePinString()
+
+                // Kick off pairing in the background
+                computerModel.pairComputer(index, pin)
+
+                // Display the pairing dialog
+                pairDialog.pin = pin
+                pairDialog.open()
+            }
+        }
+
         onClicked: {
             if (model.online) {
-                if (!model.serverSupported) {
-                    errorDialog.text = qsTr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(model.name)
-                    errorDialog.helpText = ""
-                    errorDialog.open()
-                }
-                else if (model.paired) {
-                    // go to game view
-                    var component = Qt.createComponent("AppView.qml")
-                    var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
-                    stackView.push(appView)
-                }
-                else {
-                    var pin = computerModel.generatePinString()
-
-                    // Kick off pairing in the background
-                    computerModel.pairComputer(index, pin)
-
-                    // Display the pairing dialog
-                    pairDialog.pin = pin
-                    pairDialog.open()
-                }
+                activatePc()
             } else if (!model.online) {
                 // Using open() here because it may be activated by keyboard
                 pcContextMenu.open()
@@ -286,6 +328,26 @@ CenteredGridView {
         // Using Setup-Guide here instead of Troubleshooting because it's likely that users
         // will arrive here by forgetting to enable GameStream or not forwarding ports.
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
+    }
+
+    // Shows while a Wake and Open is in progress so the user knows we're just
+    // waiting for the PC to come online. It stays up until the PC wakes or the
+    // timeout fires, at which point we close it explicitly (see wakeOpenTimeout
+    // and onOnlineRoleChanged). NoAutoClose keeps it from dismissing on a stray
+    // click or Escape.
+    NavigableMessageDialog {
+        id: wakeOpenDialog
+        closePolicy: Popup.NoAutoClose
+        showSpinner: true
+
+        function start(pcName) {
+            text = qsTr("Waking up %1...").arg(pcName) + "\n\n" + qsTr("This may take a while.")
+            open()
+        }
+
+        function stop() {
+            close()
+        }
     }
 
     NavigableMessageDialog {
