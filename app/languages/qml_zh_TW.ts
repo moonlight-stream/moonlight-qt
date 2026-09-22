@@ -768,6 +768,16 @@
         <translation>無邊框視窗</translation>
     </message>
     <message>
+        <location filename="../gui/SettingsView.qml" line="820"/>
+        <source>Extend stream content into the title bar</source>
+        <translation>將串流畫面延伸至標題列</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="830"/>
+        <source>Keeps the macOS window controls and extends the stream content behind the transparent title bar.</source>
+        <translation>保留 macOS 視窗控制按鈕，並讓串流畫面延伸至透明標題列後方。</translation>
+    </message>
+    <message>
         <location filename="../gui/SettingsView.qml" line="182"/>
         <source>Native</source>
         <translation>原生</translation>
