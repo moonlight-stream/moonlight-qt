@@ -11,6 +11,8 @@
 #include "audio/renderers/renderer.h"
 #include "video/overlaymanager.h"
 
+class AdaptiveBitrateService;
+
 class SupportedVideoFormatList : public QList<int>
 {
 public:
@@ -171,6 +173,10 @@ private:
 
     void updateOptimalWindowDisplayMode();
 
+    void startAdaptiveBitrateIfEnabled();
+
+    void stopAdaptiveBitrate();
+
     enum class DecoderAvailability {
         None,
         Software,
@@ -281,6 +287,8 @@ private:
     Uint32 m_DropAudioEndTime;
 
     Overlay::OverlayManager m_OverlayManager;
+
+    AdaptiveBitrateService* m_AdaptiveBitrateService;
 
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
     static Session* s_ActiveSession;
