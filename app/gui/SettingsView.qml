@@ -1712,6 +1712,52 @@ Flickable {
                     }
                 }
 
+                Label {
+                    width: parent.width
+                    text: qsTr("Video scaling")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                AutoResizingComboBox {
+                    Component.onCompleted: {
+                        var savedMode = StreamingPreferences.videoScalingMode
+                        currentIndex = 0
+                        for (var i = 0; i < videoScalingModeModel.count; i++) {
+                            if (savedMode === videoScalingModeModel.get(i).val) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+                        activated(currentIndex)
+                    }
+
+                    textRole: "text"
+                    model: ListModel {
+                        id: videoScalingModeModel
+                        ListElement {
+                            text: qsTr("Automatic (Recommended)")
+                            val: StreamingPreferences.VSM_AUTO
+                        }
+                        ListElement {
+                            text: qsTr("Smooth")
+                            val: StreamingPreferences.VSM_LINEAR
+                        }
+                        ListElement {
+                            text: qsTr("Nearest neighbor")
+                            val: StreamingPreferences.VSM_NEAREST
+                        }
+                    }
+                    onActivated: {
+                        StreamingPreferences.videoScalingMode = videoScalingModeModel.get(currentIndex).val
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Automatic uses nearest-neighbor scaling for exact integer multiples and smooth scaling otherwise.")
+                }
+
                 CheckBox {
                     id: enableYUV444
                     width: parent.width

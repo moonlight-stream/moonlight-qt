@@ -13,6 +13,8 @@ public:
 
     static
     void scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst);
+    static
+    bool isIntegerScale(const SDL_Rect* src, const SDL_Rect* dst);
 
     static
     void screenSpaceToNormalizedDeviceCoords(SDL_FRect* rect, int viewportWidth, int viewportHeight);

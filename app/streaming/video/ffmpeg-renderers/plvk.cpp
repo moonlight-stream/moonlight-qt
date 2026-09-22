@@ -154,6 +154,7 @@ PlVkRenderer::PlVkRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backend
     }
 
     m_Log = pl_log_create(PL_API_VER, &logParams);
+    m_RenderOptions = pl_options_alloc(m_Log);
 }
 
 PlVkRenderer::~PlVkRenderer()
@@ -195,6 +196,8 @@ PlVkRenderer::~PlVkRenderer()
         av_buffer_unref(&m_HwDeviceCtx);
         pl_vk_inst_destroy(&m_PlVkInstance);
     }
+
+    pl_options_free(&m_RenderOptions);
 
     // m_Log must always be the last object destroyed
     pl_log_destroy(&m_Log);
@@ -425,8 +428,13 @@ bool PlVkRenderer::isExtensionSupportedByPhysicalDevice(VkPhysicalDevice device,
 
 bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 {
+    if (m_RenderOptions == nullptr) {
+        return false;
+    }
+
     m_Window = params->window;
     m_MaxVideoFps = params->frameRate;
+    m_VideoScalingMode = params->videoScalingMode;
 
     unsigned int instanceExtensionCount = 0;
     if (!SDL_Vulkan_GetInstanceExtensions(params->window, &instanceExtensionCount, nullptr)) {
@@ -1064,6 +1072,18 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     // Scale the video to the surface size while preserving the aspect ratio
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
+    struct pl_render_params* renderParams = &m_RenderOptions->params;
+    renderParams->upscaler = &pl_filter_bilinear;
+    renderParams->downscaler = &pl_filter_bilinear;
+    renderParams->plane_upscaler = &pl_filter_bilinear;
+    renderParams->plane_downscaler = &pl_filter_bilinear;
+    if (shouldUseNearestNeighborScaling(m_VideoScalingMode, &src, &dst)) {
+        // Keep chroma reconstruction smooth while applying nearest-neighbor
+        // sampling to the final, full-resolution image.
+        renderParams->upscaler = &pl_filter_nearest;
+        renderParams->downscaler = &pl_filter_nearest;
+    }
+
     targetFrame.crop.x0 = dst.x;
     targetFrame.crop.y0 = dst.y;
     targetFrame.crop.x1 = dst.x + dst.w;
@@ -1077,7 +1097,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     // Render the video image and overlays into the swapchain buffer
     targetFrame.num_overlays = (int)overlays.size();
     targetFrame.overlays = overlays.data();
-    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &pl_render_fast_params)) {
+    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, renderParams)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_render_image() failed");
         // NB: We must fallthrough to call pl_swapchain_submit_frame()

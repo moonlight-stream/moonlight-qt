@@ -78,7 +78,9 @@ public:
           m_LastFrameWidth(-1),
           m_LastFrameHeight(-1),
           m_LastDrawableWidth(-1),
-          m_LastDrawableHeight(-1)
+          m_LastDrawableHeight(-1),
+          m_VideoScalingMode(StreamingPreferences::VSM_AUTO),
+          m_UseNearestNeighbor(false)
     {
     }
 
@@ -161,6 +163,7 @@ public:
         dst.w = drawableWidth;
         dst.h = drawableHeight;
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+        m_UseNearestNeighbor = shouldUseNearestNeighborScaling(m_VideoScalingMode, &src, &dst);
 
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
@@ -514,6 +517,8 @@ public:
             }
         }
         [renderEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
+        uint32_t nearestNeighbor = m_UseNearestNeighbor;
+        [renderEncoder setFragmentBytes:&nearestNeighbor length:sizeof(nearestNeighbor) atIndex:1];
         [renderEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:4];
 
@@ -662,6 +667,7 @@ public:
         int err;
 
         m_Window = params->window;
+        m_VideoScalingMode = params->videoScalingMode;
         m_FrameRateRange = CAFrameRateRangeMake(params->frameRate, params->frameRate, params->frameRate);
 
         id<MTLDevice> device = getMetalDevice();
@@ -961,6 +967,8 @@ private:
     int m_LastFrameHeight;
     int m_LastDrawableWidth;
     int m_LastDrawableHeight;
+    StreamingPreferences::VideoScalingMode m_VideoScalingMode;
+    bool m_UseNearestNeighbor;
 };
 
 @implementation DisplayLinkDelegate {
