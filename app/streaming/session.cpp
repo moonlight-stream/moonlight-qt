@@ -28,6 +28,7 @@
 #define SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE 103
 #define SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED 104
 #define SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS 105
+#define SDL_CODE_CLIPBOARD_TEXT 106
 
 #include <openssl/rand.h>
 
@@ -60,7 +61,8 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clRumbleTriggers,
     Session::clSetMotionEventState,
     Session::clSetControllerLED,
-    Session::clSetAdaptiveTriggers
+    Session::clSetAdaptiveTriggers,
+    Session::clClipboardText
 };
 
 Session* Session::s_ActiveSession;
@@ -272,6 +274,51 @@ void Session::clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlag
 
     setControllerLEDEvent.user.data2 = (void *) state;
     SDL_PushEvent(&setControllerLEDEvent);
+}
+
+void Session::clClipboardText(uint32_t, const char *text, unsigned int length)
+{
+    if (s_ActiveSession == nullptr || !s_ActiveSession->m_Preferences->syncClipboard) {
+        return;
+    }
+
+    QByteArray *copy = new QByteArray(text, static_cast<int>(length));
+    SDL_Event clipboardEvent = {};
+    clipboardEvent.type = SDL_USEREVENT;
+    clipboardEvent.user.code = SDL_CODE_CLIPBOARD_TEXT;
+    clipboardEvent.user.data1 = copy;
+    if (SDL_PushEvent(&clipboardEvent) < 0) {
+        delete copy;
+    }
+}
+
+void Session::sendClipboardToHost(const char *text)
+{
+    if (!m_Preferences->syncClipboard || text == nullptr) {
+        return;
+    }
+
+    QByteArray incoming(text);
+    if (incoming == m_ClipboardEcho) {
+        return;
+    }
+    if (incoming.size() > SS_CLIPBOARD_TEXT_MAX) {
+        incoming.truncate(SS_CLIPBOARD_TEXT_MAX);
+    }
+
+    m_ClipboardEcho = incoming;
+    LiSendClipboardText(incoming.constData(), static_cast<unsigned int>(incoming.size()));
+}
+
+void Session::applyClipboardFromHost(const char *text, unsigned int length)
+{
+    QByteArray incoming(text, static_cast<int>(length));
+    if (incoming == m_ClipboardEcho) {
+        return;
+    }
+
+    m_ClipboardEcho = incoming;
+    SDL_SetClipboardText(incoming.constData());
 }
 
 
@@ -1954,6 +2001,13 @@ void Session::exec()
     // Start rich presence to indicate we're in game
     RichPresenceManager presence(*m_Preferences, m_App.name);
 
+    if (m_Preferences->syncClipboard) {
+#if SDL_VERSION_ATLEAST(2, 0, 22)
+        SDL_EventState(SDL_CLIPBOARDUPDATE, SDL_ENABLE);
+#endif
+        LiSendClipboardText(nullptr, 0);
+    }
+
     // Toggle the stats overlay if requested by the user
     m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
 
@@ -2021,6 +2075,14 @@ void Session::exec()
                                                (uint16_t)((uintptr_t)event.user.data2 >> 16),
                                                (uint16_t)((uintptr_t)event.user.data2 & 0xFFFF));
                 break;
+            case SDL_CODE_CLIPBOARD_TEXT: {
+                auto *text = static_cast<QByteArray *>(event.user.data1);
+                if (text != nullptr) {
+                    applyClipboardFromHost(text->constData(), static_cast<unsigned int>(text->size()));
+                    delete text;
+                }
+                break;
+            }
             case SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE:
                 m_InputHandler->setMotionEventState((uint16_t)(uintptr_t)event.user.data1,
                                                     (uint8_t)((uintptr_t)event.user.data2 >> 16),
@@ -2250,6 +2312,17 @@ void Session::exec()
             presence.runCallbacks();
             m_InputHandler->handleKeyEvent(&event.key);
             break;
+#if SDL_VERSION_ATLEAST(2, 0, 22)
+        case SDL_CLIPBOARDUPDATE:
+            if (m_Preferences->syncClipboard && SDL_HasClipboardText()) {
+                char *text = SDL_GetClipboardText();
+                if (text != nullptr) {
+                    sendClipboardToHost(text);
+                    SDL_free(text);
+                }
+            }
+            break;
+#endif
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
             presence.runCallbacks();
