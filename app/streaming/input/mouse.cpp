@@ -8,8 +8,8 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
 {
     int button;
 
-    if (event->which == SDL_TOUCH_MOUSEID) {
-        // Ignore synthetic mouse events
+    if (event->which == SDL_TOUCH_MOUSEID || isSyntheticPenMouseId(event->which)) {
+        // Ignore synthetic touch/pen mouse events
         return;
     }
     else if (!isCaptureActive()) {
@@ -74,8 +74,8 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         // Not capturing
         return;
     }
-    else if (event->which == SDL_TOUCH_MOUSEID) {
-        // Ignore synthetic mouse events
+    else if (event->which == SDL_TOUCH_MOUSEID || isSyntheticPenMouseId(event->which)) {
+        // Ignore synthetic touch/pen mouse events
         return;
     }
 
@@ -86,7 +86,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         event = &nextEvent.motion;
 
         // Ignore synthetic mouse events
-        if (event->which != SDL_TOUCH_MOUSEID) {
+        if (event->which != SDL_TOUCH_MOUSEID && !isSyntheticPenMouseId(event->which)) {
             x = event->x;
             y = event->y;
             xrel += event->xrel;
@@ -162,8 +162,8 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         // Not capturing
         return;
     }
-    else if (event->which == SDL_TOUCH_MOUSEID) {
-        // Ignore synthetic mouse events
+    else if (event->which == SDL_TOUCH_MOUSEID || isSyntheticPenMouseId(event->which)) {
+        // Ignore synthetic touch/pen mouse events
         return;
     }
 
