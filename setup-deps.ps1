@@ -28,4 +28,19 @@ foreach ($AssetName in $Assets) {
     Remove-Item $ArchivePath
 }
 
-Write-Host "Dependencies successfully deployed" -ForegroundColor Green
+# OpenSSL MASM assembly routines lack CFG metadata, causing 0xc0000409 crashes on Windows 11 24H2.
+# Strip IMAGE_DLLCHARACTERISTICS_GUARD_CF (0x4000) from libcrypto DLLs to fix CFG violation on AES_encrypt.
+Get-ChildItem -Path "$TargetDir\lib" -Filter "libcrypto*.dll" -Recurse | ForEach-Object {
+    $bytes = [System.IO.File]::ReadAllBytes($_.FullName)
+    $peOffset = [BitConverter]::ToInt32($bytes, 0x3C)
+    $dllCharOffset = $peOffset + 4 + 20 + 70 # PE32+ OptionalHeader DllCharacteristics
+    $val = [BitConverter]::ToUInt16($bytes, $dllCharOffset)
+    if ($val -band 0x4000) {
+        $newVal = $val -band (-bnot 0x4000)
+        [BitConverter]::GetBytes([uint16]$newVal).CopyTo($bytes, $dllCharOffset)
+        [System.IO.File]::WriteAllBytes($_.FullName, $bytes)
+        Write-Host "Patched CFG flag on $($_.Name) (0x$("{0:X4}" -f $val) -> 0x$("{0:X4}" -f $newVal))" -ForegroundColor Yellow
+    }
+}
+
+Write-Host "Dependencies successfully deployed and patched" -ForegroundColor Green
