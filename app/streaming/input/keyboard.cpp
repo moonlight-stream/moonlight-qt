@@ -478,3 +478,20 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                         modifiers,
                         shouldNotConvertToScanCodeOnServer ? SS_KBE_FLAG_NON_NORMALIZED : 0);
 }
+
+void SdlInputHandler::raiseAllKeys()
+{
+    if (m_KeysDown.isEmpty()) {
+        return;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Raising %d keys",
+                (int)m_KeysDown.count());
+
+    for (auto keyDown : std::as_const(m_KeysDown)) {
+        LiSendKeyboardEvent(keyDown, KEY_ACTION_UP, 0);
+    }
+
+    m_KeysDown.clear();
+}
