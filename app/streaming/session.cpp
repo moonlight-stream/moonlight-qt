@@ -3,6 +3,10 @@
 #include "streaming/streamutils.h"
 #include "backend/richpresencemanager.h"
 
+#ifdef Q_OS_DARWIN
+#include "streaming/macosnetwork.h"
+#endif
+
 #include <Limelight.h>
 #include "SDL_compat.h"
 #include "utils.h"
@@ -187,6 +191,14 @@ void Session::clConnectionStatusUpdate(int connectionStatus)
     switch (connectionStatus)
     {
     case CONN_STATUS_POOR:
+#if defined(Q_OS_DARWIN)
+        if (s_ActiveSession->m_IsStreamingOverWifi && isAirDropDiscoverable()) {
+            s_ActiveSession->m_OverlayManager.updateOverlayText(Overlay::OverlayStatusUpdate,
+                                                                "Poor Wi-Fi connection to PC\nAirDrop may interfere; set it to No One");
+            s_ActiveSession->m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, true);
+            break;
+        }
+#endif
         s_ActiveSession->m_OverlayManager.updateOverlayText(Overlay::OverlayStatusUpdate,
                                                             s_ActiveSession->m_StreamConfig.bitrate > 5000 ?
                                                                 "Slow connection to PC\nReduce your bitrate" : "Poor connection to PC");
@@ -581,6 +593,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_ShouldExit(false),
       m_AsyncConnectionSuccess(false),
       m_PortTestResults(0),
+      m_IsStreamingOverWifi(false),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0),
@@ -1666,7 +1679,12 @@ bool Session::startConnectionAsync()
 
         // getActiveAddressReachability() does network I/O, so we only attempt to check
         // reachability if we've already contacted the PC successfully.
-        switch (m_Computer->getActiveAddressReachability()) {
+#ifdef Q_OS_DARWIN
+        NvComputer::ReachabilityType reachability = m_Computer->getActiveAddressReachability(&m_IsStreamingOverWifi);
+#else
+        NvComputer::ReachabilityType reachability = m_Computer->getActiveAddressReachability();
+#endif
+        switch (reachability) {
         case NvComputer::RI_LAN:
             // This address is on-link, so treat it as a local address
             // even if it's not in RFC 1918 space or it's an IPv6 address.
@@ -1684,6 +1702,13 @@ bool Session::startConnectionAsync()
             break;
         }
     }
+
+#ifdef Q_OS_DARWIN
+    if (m_Preferences->packetSize != 0) {
+        // Cache this before starting the stream so the connection status callback never blocks on route lookup.
+        m_Computer->getActiveAddressReachability(&m_IsStreamingOverWifi);
+    }
+#endif
 
     // If the user has chosen YUV444 without adjusting the bitrate but the host doesn't
     // support YUV444 streaming, use the default non-444 bitrate for the stream instead.
