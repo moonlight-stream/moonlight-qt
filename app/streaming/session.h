@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QByteArray>
 #include <QSemaphore>
 #include <QQuickWindow>
 
@@ -224,6 +225,12 @@ private:
     void clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlags, uint8_t typeLeft, uint8_t typeRight, uint8_t *left, uint8_t *right);
 
     static
+    void clClipboardText(uint32_t token, const char *text, unsigned int length);
+
+    void sendClipboardToHost(const char *text);
+    void applyClipboardFromHost(const char *text, unsigned int length);
+
+    static
     int arInit(int audioConfiguration,
                const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                void* arContext, int arFlags);
@@ -244,6 +251,7 @@ private:
     int drSubmitDecodeUnit(PDECODE_UNIT du);
 
     StreamingPreferences* m_Preferences;
+    QByteArray m_ClipboardEcho;
     bool m_IsFullScreen;
     SupportedVideoFormatList m_SupportedVideoFormats; // Sorted in order of descending priority
     STREAM_CONFIGURATION m_StreamConfig;
