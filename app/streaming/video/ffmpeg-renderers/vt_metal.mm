@@ -162,9 +162,17 @@ public:
         dst.h = drawableHeight;
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
+        // Flip y from screen-y (what scaleSourceToDestinationSurface produces)
+        // to math-y (what screenSpaceToNormalizedDeviceCoords expects). For the
+        // symmetric letterbox case both produce the same value, but fit-width
+        // -pan-Y produces an asymmetric rect that diverges - same fix as
+        // d3d11va.cpp.
+        SDL_Rect mathDst = dst;
+        mathDst.y = drawableHeight - dst.y - dst.h;
+
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
-        StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, drawableWidth, drawableHeight);
+        StreamUtils::screenSpaceToNormalizedDeviceCoords(&mathDst, &renderRect, drawableWidth, drawableHeight);
 
         Vertex verts[] =
         {
