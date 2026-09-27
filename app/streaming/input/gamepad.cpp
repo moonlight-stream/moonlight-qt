@@ -3,6 +3,7 @@
 #include <Limelight.h>
 #include "SDL_compat.h"
 #include "settings/mappingmanager.h"
+#include "utils.h"
 
 #include <QtMath>
 
@@ -188,6 +189,26 @@ Uint32 SdlInputHandler::mouseEmulationTimerCallback(Uint32 interval, void *param
     return interval;
 }
 
+static void updateAnalogStickAxis(short& value, short newValue, bool& dirty)
+{
+#ifdef STEAM_LINK
+    // Use a deadzone on Steam Link to reduce CPU usage from idle joysticks
+    newValue = abs(newValue) < 1500 ? 0 : newValue;
+#endif
+    dirty |= (newValue != value);
+    value = newValue;
+}
+
+static void updateTriggerAxis(unsigned char& value, unsigned char newValue, bool& dirty)
+{
+#ifdef STEAM_LINK
+    // Use a deadzone on Steam Link to reduce CPU usage from idle joysticks
+    newValue = newValue < 10 ? 0 : newValue;
+#endif
+    dirty |= (newValue != value);
+    value = newValue;
+}
+
 void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
 {
     SDL_JoystickID gameControllerId = event->which;
@@ -198,11 +219,12 @@ void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
 
     // Batch all pending axis motion events for this gamepad to save CPU time
     SDL_Event nextEvent;
+    bool dirty = false;
     for (;;) {
         switch (event->axis)
         {
             case SDL_CONTROLLER_AXIS_LEFTX:
-                state->lsX = event->value;
+                updateAnalogStickAxis(state->lsX, event->value, dirty);
                 break;
             case SDL_CONTROLLER_AXIS_LEFTY:
                 // Signed values have one more negative value than
@@ -210,19 +232,19 @@ void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
                 // could actually cause the value to overflow and
                 // wrap around to be negative again. Avoid that by
                 // capping the value at 32767.
-                state->lsY = -qMax(event->value, (short)-32767);
+                updateAnalogStickAxis(state->lsY, -qMax(event->value, (short)-32767), dirty);
                 break;
             case SDL_CONTROLLER_AXIS_RIGHTX:
-                state->rsX = event->value;
+                updateAnalogStickAxis(state->rsX, event->value, dirty);
                 break;
             case SDL_CONTROLLER_AXIS_RIGHTY:
-                state->rsY = -qMax(event->value, (short)-32767);
+                updateAnalogStickAxis(state->rsY, -qMax(event->value, (short)-32767), dirty);
                 break;
             case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
-                state->lt = (unsigned char)(event->value * 255UL / 32767);
+                updateTriggerAxis(state->lt, (unsigned char)(event->value * 255UL / 32767), dirty);
                 break;
             case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
-                state->rt = (unsigned char)(event->value * 255UL / 32767);
+                updateTriggerAxis(state->rt, (unsigned char)(event->value * 255UL / 32767), dirty);
                 break;
             default:
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -247,7 +269,7 @@ void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
     }
 
     // Only send the gamepad state to the host if it's not in mouse emulation mode
-    if (state->mouseEmulationTimer == 0) {
+    if (state->mouseEmulationTimer == 0 && dirty) {
         sendGamepadState(state);
     }
 }
@@ -895,6 +917,15 @@ void SdlInputHandler::setMotionEventState(uint16_t controllerNumber, uint8_t mot
     // Make sure the controller number is within our supported count
     if (controllerNumber >= MAX_GAMEPADS) {
         return;
+    }
+
+    uint16_t reportRateHzLimit;
+    if (Utils::getEnvironmentVariableOverride("SENSOR_REPORT_RATE_LIMIT_HZ", &reportRateHzLimit) &&
+        reportRateHz > reportRateHzLimit) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Sensor report rate limited to %u Hz by environment variable",
+                    reportRateHzLimit);
+        reportRateHz = reportRateHzLimit;
     }
 
 #if SDL_VERSION_ATLEAST(2, 0, 14)
