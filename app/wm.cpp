@@ -36,10 +36,10 @@
 bool WMUtils::isRunningX11()
 {
 #ifdef HAS_X11
-    static SDL_atomic_t isRunningOnX11;
+    static SDL_AtomicInt isRunningOnX11;
 
     // If the value is not set yet, populate it now.
-    int val = SDL_AtomicGet(&isRunningOnX11);
+    int val = SDL_GetAtomicInt(&isRunningOnX11);
     if (!(val & VALUE_SET)) {
         Display* display = XOpenDisplay(nullptr);
         if (display != nullptr) {
@@ -50,7 +50,7 @@ bool WMUtils::isRunningX11()
         // This can race with another thread populating the same data,
         // but that's no big deal.
         val = VALUE_SET | ((display != nullptr) ? VALUE_TRUE : 0);
-        SDL_AtomicSet(&isRunningOnX11, val);
+        SDL_SetAtomicInt(&isRunningOnX11, val);
     }
 
     return !!(val & VALUE_TRUE);
@@ -62,10 +62,10 @@ bool WMUtils::isRunningX11()
 bool WMUtils::isRunningNvidiaProprietaryDriverX11()
 {
 #ifdef HAVE_EGL
-    static SDL_atomic_t isRunningOnNvidiaDriver;
+    static SDL_AtomicInt isRunningOnNvidiaDriver;
 
     // If the value is not set yet, populate it now.
-    int val = SDL_AtomicGet(&isRunningOnNvidiaDriver);
+    int val = SDL_GetAtomicInt(&isRunningOnNvidiaDriver);
     if (!(val & VALUE_SET)) {
         bool nvidiaDriver = false;
 
@@ -83,7 +83,7 @@ bool WMUtils::isRunningNvidiaProprietaryDriverX11()
         // This can race with another thread populating the same data,
         // but that's no big deal.
         val = VALUE_SET | (nvidiaDriver ? VALUE_TRUE : 0);
-        SDL_AtomicSet(&isRunningOnNvidiaDriver, val);
+        SDL_SetAtomicInt(&isRunningOnNvidiaDriver, val);
     }
 
     return !!(val & VALUE_TRUE);
@@ -95,10 +95,10 @@ bool WMUtils::isRunningNvidiaProprietaryDriverX11()
 bool WMUtils::supportsDesktopGLWithEGL()
 {
 #ifdef HAVE_EGL
-    static SDL_atomic_t supportsDesktopGL;
+    static SDL_AtomicInt supportsDesktopGL;
 
     // If the value is not set yet, populate it now.
-    int val = SDL_AtomicGet(&supportsDesktopGL);
+    int val = SDL_GetAtomicInt(&supportsDesktopGL);
     if (!(val & VALUE_SET)) {
         // Assume it does if we can't confirm
         bool desktopGL = true;
@@ -127,7 +127,7 @@ bool WMUtils::supportsDesktopGLWithEGL()
         // This can race with another thread populating the same data,
         // but that's no big deal.
         val = VALUE_SET | (desktopGL ? VALUE_TRUE : 0);
-        SDL_AtomicSet(&supportsDesktopGL, val);
+        SDL_SetAtomicInt(&supportsDesktopGL, val);
     }
 
     return !!(val & VALUE_TRUE);
@@ -140,10 +140,10 @@ bool WMUtils::supportsDesktopGLWithEGL()
 bool WMUtils::isRunningWayland()
 {
 #ifdef HAS_WAYLAND
-    static SDL_atomic_t isRunningOnWayland;
+    static SDL_AtomicInt isRunningOnWayland;
 
     // If the value is not set yet, populate it now.
-    int val = SDL_AtomicGet(&isRunningOnWayland);
+    int val = SDL_GetAtomicInt(&isRunningOnWayland);
     if (!(val & VALUE_SET)) {
         struct wl_display* display = nullptr;
 
@@ -165,7 +165,7 @@ bool WMUtils::isRunningWayland()
         // This can race with another thread populating the same data,
         // but that's no big deal.
         val = VALUE_SET | ((display != nullptr) ? VALUE_TRUE : 0);
-        SDL_AtomicSet(&isRunningOnWayland, val);
+        SDL_SetAtomicInt(&isRunningOnWayland, val);
     }
 
     return !!(val & VALUE_TRUE);

@@ -41,8 +41,8 @@ jobs:
       - name: Checkout SDL3
         uses: actions/checkout@v5
         with:
-          repository: libsdl-org/SDL
-          ref: ddba673cddfa79ce798eca5ba402e0f1a2a2a243
+          repository: ReenigneArcher/SDL
+          ref: 86729dc5c5396502764ce94a7dcd4fb5eafb15f3
           path: deps/SDL
 
       - name: Build SDL3
@@ -52,35 +52,20 @@ jobs:
           cmake --build build -j
           sudo cmake --install build
 
-      - name: Checkout sdl2-compat
-        uses: actions/checkout@v5
-        with:
-          repository: libsdl-org/sdl2-compat
-          ref: release-2.32.70
-          path: deps/sdl2-compat
-
-      - name: Build sdl2-compat
-        working-directory: deps/sdl2-compat
-        run: |
-          cmake -DSDL2COMPAT_TESTS=OFF -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -S . -B build
-          cmake --build build -j
-          sudo cmake --install build
-
       - name: Checkout SDL_ttf
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL_ttf
-          ref: a883e490e30fb44a5336ea3dcb990c6982c5216f
+          ref: release-3.2.2
           path: deps/SDL_ttf
           submodules: 'recursive'
 
       - name: Build SDL_ttf
         working-directory: deps/SDL_ttf
         run: |
-          ./autogen.sh
-          ./configure
-          make -j$(nproc)
-          sudo make install
+          cmake -DSDLTTF_VENDORED=ON -DSDLTTF_SAMPLES=OFF -DSDLTTF_TESTS=OFF -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -S . -B build
+          cmake --build build -j
+          sudo cmake --install build
 
       - name: Checkout libva
         uses: actions/checkout@v5

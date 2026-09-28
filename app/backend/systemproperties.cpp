@@ -181,7 +181,7 @@ void SystemProperties::startAsyncLoad()
     // We initialize the video subsystem and test window on the main thread
     // because some platforms (macOS) do not support window creation on
     // non-main threads.
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_VIDEO))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
                      SDL_GetError());
@@ -217,7 +217,7 @@ void SystemProperties::waitForAsyncLoad()
 
 void SystemProperties::refreshDisplays()
 {
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_VIDEO))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
                      SDL_GetError());
@@ -228,12 +228,15 @@ void SystemProperties::refreshDisplays()
     monitorSafeAreaResolutions.clear();
     monitorRefreshRates.clear();
 
+    int numDisplays = 0;
+    SDL_DisplayID *displays = SDL_GetDisplays(&numDisplays);
+
     SDL_DisplayMode bestMode;
-    for (int displayIndex = 0; displayIndex < SDL_GetNumVideoDisplays(); displayIndex++) {
+    for (int i = 0; i < numDisplays; i++) {
         SDL_DisplayMode desktopMode;
         SDL_Rect safeArea;
 
-        if (StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea)) {
+        if (StreamUtils::getNativeDesktopMode(displays[i], &desktopMode, &safeArea)) {
             if (desktopMode.w <= 8192 && desktopMode.h <= 8192) {
                 // Keep these lists compact because their QML consumers iterate until
                 // the first empty entry. Inserting by SDL display index is invalid if
@@ -249,17 +252,17 @@ void SystemProperties::refreshDisplays()
 
             // Start at desktop mode and work our way up
             bestMode = desktopMode;
-            int numDisplayModes = SDL_GetNumDisplayModes(displayIndex);
-            for (int i = 0; i < numDisplayModes; i++) {
-                SDL_DisplayMode mode;
-                if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
-                    if (mode.w == desktopMode.w && mode.h == desktopMode.h) {
-                        if (mode.refresh_rate > bestMode.refresh_rate) {
-                            bestMode = mode;
-                        }
+            int numDisplayModes = 0;
+            SDL_DisplayMode** displayModes = SDL_GetFullscreenDisplayModes(displays[i], &numDisplayModes);
+            for (int modeIndex = 0; modeIndex < numDisplayModes; modeIndex++) {
+                const SDL_DisplayMode& mode = *displayModes[modeIndex];
+                if (mode.w == desktopMode.w && mode.h == desktopMode.h) {
+                    if (mode.refresh_rate > bestMode.refresh_rate) {
+                        bestMode = mode;
                     }
                 }
             }
+            SDL_free(displayModes);
 
             // Try to normalize values around our our standard refresh rates.
             // Some displays/OSes report values that are slightly off.
@@ -275,5 +278,6 @@ void SystemProperties::refreshDisplays()
         }
     }
 
+    SDL_free(displays);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }

@@ -9,7 +9,7 @@
 #include "streaming/streamutils.h"
 #include "streaming/session.h"
 
-#include <SDL_syswm.h>
+#include <VersionHelpers.h>
 
 #include <dwmapi.h>
 
@@ -504,10 +504,10 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
-    if (!SDL_DXGIGetOutputInfo(SDL_GetWindowDisplayIndex(params->window),
-                               &m_AdapterIndex, &outputIndex)) {
+    if (!SDL_GetDXGIOutputInfo(SDL_GetDisplayForWindow(params->window),
+                              &m_AdapterIndex, &outputIndex)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_DXGIGetOutputInfo() failed: %s",
+                     "SDL_GetDXGIOutputInfo() failed: %s",
                      SDL_GetError());
         return false;
     }
@@ -617,23 +617,20 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         // DXVA2 may let us take over for FSE V-sync off cases. However, if we don't have DXGI_FEATURE_PRESENT_ALLOW_TEARING
         // then we should not attempt to do this unless there's no other option (HDR, DXVA2 failed in pass 1, etc).
         if (!m_AllowTearing && m_DecoderSelectionPass == 0 && !(params->videoFormat & VIDEO_FORMAT_MASK_10BIT) &&
-                (SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+                SDLC_IsFullscreenExclusive(params->window)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Defaulting to DXVA2 for FSE without DXGI_FEATURE_PRESENT_ALLOW_TEARING support");
             return false;
         }
     }
 
-    SDL_SysWMinfo info;
-    SDL_VERSION(&info.version);
-    SDL_GetWindowWMInfo(params->window, &info);
-    SDL_assert(info.subsystem == SDL_SYSWM_WINDOWS);
+    HWND window = (HWND)SDLC_Win32_GetHwnd(params->window);
 
-    // Always use windowed or borderless windowed mode.. SDL does mode-setting for us in
-    // full-screen exclusive mode (SDL_WINDOW_FULLSCREEN), so this actually works out okay.
+    // Always use windowed or borderless windowed mode. SDL does mode-setting for us in
+    // full-screen exclusive mode, so this actually works out okay.
     ComPtr<IDXGISwapChain1> swapChain;
     hr = m_Factory->CreateSwapChainForHwnd(m_RenderDevice.Get(),
-                                           info.info.win.window,
+                                           window,
                                            &swapChainDesc,
                                            nullptr,
                                            nullptr,
@@ -657,7 +654,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     // Disable Alt+Enter, PrintScreen, and window message snooping. This makes
     // it safe to run the renderer on a separate rendering thread rather than
     // requiring the main (message loop) thread.
-    hr = m_Factory->MakeWindowAssociation(info.info.win.window, DXGI_MWA_NO_WINDOW_CHANGES);
+    hr = m_Factory->MakeWindowAssociation(window, DXGI_MWA_NO_WINDOW_CHANGES);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "IDXGIFactory::MakeWindowAssociation() failed: %x",
@@ -838,7 +835,7 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
 
         // The card may have been removed or crashed. Reset the decoder.
         SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
+        event.type = SDL_EVENT_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         return;
     }
@@ -851,7 +848,7 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
     }
 
     // If the overlay is being updated, just skip rendering it this frame
-    if (!SDL_AtomicTryLock(&m_OverlayLock)) {
+    if (!SDL_TryLockSpinlock(&m_OverlayLock)) {
         return;
     }
 
@@ -860,7 +857,7 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
     ComPtr<ID3D11Texture2D> overlayTexture = m_OverlayTextures[type];
     ComPtr<ID3D11Buffer> overlayVertexBuffer = m_OverlayVertexBuffers[type];
     ComPtr<ID3D11ShaderResourceView> overlayTextureResourceView = m_OverlayTextureResourceViews[type];
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 
     if (!overlayTexture) {
         return;
@@ -1108,21 +1105,21 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    SDL_AtomicLock(&m_OverlayLock);
+    SDL_LockSpinlock(&m_OverlayLock);
     ComPtr<ID3D11Texture2D> oldTexture = std::move(m_OverlayTextures[type]);
     ComPtr<ID3D11Buffer> oldVertexBuffer = std::move(m_OverlayVertexBuffers[type]);
     ComPtr<ID3D11ShaderResourceView> oldTextureResourceView = std::move(m_OverlayTextureResourceViews[type]);
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 
     // If the overlay is disabled, we're done
     if (!overlayEnabled) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         return;
     }
 
     // Create a texture with our pixel data
     SDL_assert(!SDL_MUSTLOCK(newSurface));
-    SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
+    SDL_assert(newSurface->format == SDL_PIXELFORMAT_ARGB8888);
 
     D3D11_TEXTURE2D_DESC texDesc = {};
     texDesc.Width = newSurface->w;
@@ -1144,7 +1141,7 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     ComPtr<ID3D11Texture2D> newTexture;
     hr = m_RenderDevice->CreateTexture2D(&texDesc, &texData, &newTexture);
     if (FAILED(hr)) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateTexture2D() failed: %x",
                      hr);
@@ -1154,7 +1151,7 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     ComPtr<ID3D11ShaderResourceView> newTextureResourceView;
     hr = m_RenderDevice->CreateShaderResourceView((ID3D11Resource*)newTexture.Get(), nullptr, &newTextureResourceView);
     if (FAILED(hr)) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateShaderResourceView() failed: %x",
                      hr);
@@ -1163,19 +1160,19 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
     ComPtr<ID3D11Buffer> newVertexBuffer;
     if (!createOverlayVertexBuffer(type, newSurface->w, newSurface->h, newVertexBuffer)) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         return;
     }
 
     // The surface is no longer required
-    SDL_FreeSurface(newSurface);
+    SDL_DestroySurface(newSurface);
     newSurface = nullptr;
 
-    SDL_AtomicLock(&m_OverlayLock);
+    SDL_LockSpinlock(&m_OverlayLock);
     m_OverlayVertexBuffers[type] = std::move(newVertexBuffer);
     m_OverlayTextures[type] = std::move(newTexture);
     m_OverlayTextureResourceViews[type] = std::move(newTextureResourceView);
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 }
 
 bool D3D11VARenderer::createOverlayVertexBuffer(Overlay::OverlayType type, int width, int height, ComPtr<ID3D11Buffer>& newVertexBuffer)
@@ -1233,10 +1230,10 @@ bool D3D11VARenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo)
 {
     if (stateInfo->stateChangeFlags & WINDOW_STATE_CHANGE_DISPLAY) {
         int adapterIndex, outputIndex;
-        if (!SDL_DXGIGetOutputInfo(stateInfo->displayIndex,
+        if (!SDL_GetDXGIOutputInfo(stateInfo->displayId,
                                    &adapterIndex, &outputIndex)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_DXGIGetOutputInfo() failed: %s",
+                         "SDL_GetDXGIOutputInfo() failed: %s",
                          SDL_GetError());
             return false;
         }
@@ -1273,7 +1270,7 @@ bool D3D11VARenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo)
         m_VideoVertexBuffer.Reset();
 
         // Create new vertex buffers for active overlays
-        SDL_AtomicLock(&m_OverlayLock);
+        SDL_LockSpinlock(&m_OverlayLock);
         for (size_t i = 0; i < m_OverlayVertexBuffers.size(); i++) {
             if (!m_OverlayTextures[i]) {
                 continue;
@@ -1283,7 +1280,7 @@ bool D3D11VARenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo)
             m_OverlayTextures[i]->GetDesc(&textureDesc);
             createOverlayVertexBuffer((Overlay::OverlayType)i, textureDesc.Width, textureDesc.Height, m_OverlayVertexBuffers[i]);
         }
-        SDL_AtomicUnlock(&m_OverlayLock);
+        SDL_UnlockSpinlock(&m_OverlayLock);
 
         // We must release all references to the back buffer
         m_RenderTargetView.Reset();
@@ -1489,7 +1486,7 @@ int D3D11VARenderer::getRendererAttributes()
     // In windowed mode, we will render as fast we can and DWM will grab whatever is latest at the
     // time unless the user opts for pacing. We will use pacing in full-screen mode and normal DWM
     // sequencing in full-screen desktop mode to behave similarly to the DXVA2 renderer.
-    if ((SDL_GetWindowFlags(m_DecoderParams.window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+    if (SDLC_IsFullscreenExclusive(m_DecoderParams.window)) {
         attributes |= RENDERER_ATTRIBUTE_FORCE_PACING;
     }
 

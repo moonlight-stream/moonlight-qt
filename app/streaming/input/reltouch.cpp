@@ -14,19 +14,19 @@
 // How far the finger can move before it cancels a drag or tap
 #define DEAD_ZONE_DELTA 0.01f
 
-Uint32 SdlInputHandler::releaseLeftButtonTimerCallback(Uint32, void*)
+Uint32 SdlInputHandler::releaseLeftButtonTimerCallback(void*, SDL_TimerID, Uint32)
 {
     LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
     return 0;
 }
 
-Uint32 SdlInputHandler::releaseRightButtonTimerCallback(Uint32, void*)
+Uint32 SdlInputHandler::releaseRightButtonTimerCallback(void*, SDL_TimerID, Uint32)
 {
     LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
     return 0;
 }
 
-Uint32 SdlInputHandler::dragTimerCallback(Uint32, void *param)
+Uint32 SdlInputHandler::dragTimerCallback(void* param, SDL_TimerID, Uint32)
 {
     auto me = reinterpret_cast<SdlInputHandler*>(param);
 
@@ -59,9 +59,9 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
     // This is also required to handle finger up which
     // where the finger will not be in SDL_GetTouchFinger()
     // anymore.
-    if (event->type != SDL_FINGERDOWN) {
+    if (event->type != SDL_EVENT_FINGER_DOWN) {
         for (int i = 0; i < MAX_FINGERS; i++) {
-            if (event->fingerId == m_TouchDownEvent[i].fingerId) {
+            if (event->fingerID == m_TouchDownEvent[i].fingerID) {
                 fingerIndex = i;
                 break;
             }
@@ -70,17 +70,19 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
     else {
         // Resolve the new finger by determining the ID of each
         // finger on the display.
-        int numTouchFingers = SDL_GetNumTouchFingers(event->touchId);
+        int numTouchFingers = 0;
+        SDL_Finger** fingers = SDL_GetTouchFingers(event->touchID, &numTouchFingers);
         for (int i = 0; i < numTouchFingers; i++) {
-            SDL_Finger* finger = SDL_GetTouchFinger(event->touchId, i);
+            SDL_Finger* finger = fingers[i];
             SDL_assert(finger != nullptr);
             if (finger != nullptr) {
-                if (finger->id == event->fingerId) {
+                if (finger->id == event->fingerID) {
                     fingerIndex = i;
                     break;
                 }
             }
         }
+        SDL_free(fingers);
     }
 
     if (fingerIndex < 0 || fingerIndex >= MAX_FINGERS) {
@@ -106,7 +108,7 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
 
     // Start a drag timer when primary or secondary
     // fingers go down
-    if (event->type == SDL_FINGERDOWN &&
+    if (event->type == SDL_EVENT_FINGER_DOWN &&
             (fingerIndex == 0 || fingerIndex == 1)) {
         SDL_RemoveTimer(m_DragTimer);
         m_DragTimer = SDL_AddTimer(DRAG_ACTIVATION_DELAY,
@@ -114,7 +116,7 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
                                    this);
     }
 
-    if (event->type == SDL_FINGERMOTION) {
+    if (event->type == SDL_EVENT_FINGER_MOTION) {
         // If it's outside the deadzone delta, cancel drags and taps
         if (qSqrt(qPow(event->x - m_TouchDownEvent[fingerIndex].x, 2) +
                   qPow(event->y - m_TouchDownEvent[fingerIndex].y, 2)) > DEAD_ZONE_DELTA) {
@@ -126,7 +128,7 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
         }
     }
 
-    if (event->type == SDL_FINGERUP) {
+    if (event->type == SDL_EVENT_FINGER_UP) {
         // Cancel the drag timer on finger up
         SDL_RemoveTimer(m_DragTimer);
         m_DragTimer = 0;
@@ -164,12 +166,13 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
         }
     }
 
-    m_NumFingersDown = SDL_GetNumTouchFingers(event->touchId);
+    SDL_Finger** fingers = SDL_GetTouchFingers(event->touchID, &m_NumFingersDown);
+    SDL_free(fingers);
 
-    if (event->type == SDL_FINGERDOWN) {
+    if (event->type == SDL_EVENT_FINGER_DOWN) {
         m_TouchDownEvent[fingerIndex] = *event;
     }
-    else if (event->type == SDL_FINGERUP) {
+    else if (event->type == SDL_EVENT_FINGER_UP) {
         m_TouchDownEvent[fingerIndex] = {};
     }
 }

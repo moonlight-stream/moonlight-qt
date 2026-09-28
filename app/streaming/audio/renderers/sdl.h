@@ -20,6 +20,7 @@ public:
 
 private:
     SDL_AudioDeviceID m_AudioDevice;
+    SDL_AudioStream* m_AudioStream;
     void* m_AudioBuffer;
     Uint32 m_FrameSize;
     Uint32 m_FrameDurationMs;
