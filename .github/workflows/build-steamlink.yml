@@ -30,6 +30,21 @@ jobs:
           path: steamlink-sdk
           fetch-depth: 1
 
+      - name: Checkout SDL3
+        uses: actions/checkout@v5
+        with:
+          repository: ReenigneArcher/SDL
+          ref: 86729dc5c5396502764ce94a7dcd4fb5eafb15f3
+          path: deps/SDL
+
+      - name: Checkout SDL_ttf
+        uses: actions/checkout@v5
+        with:
+          repository: libsdl-org/SDL_ttf
+          ref: release-3.2.2
+          path: deps/SDL_ttf
+          submodules: 'recursive'
+
       - name: Build binaries
         run: STEAMLINK_SDK_PATH=$PWD/steamlink-sdk scripts/build-steamlink-app.sh
 
