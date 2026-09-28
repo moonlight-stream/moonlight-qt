@@ -1009,6 +1009,65 @@ Flickable {
         }
 
         GroupBox {
+            id: wolProxySettingsGroupBox
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
+            padding: 12
+            title: "<font color=\"skyblue\">" + qsTr("Wake-on-LAN Proxy Settings") + "</font>"
+            font.pointSize: 12
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                Label {
+                    width: parent.width
+                    text: qsTr("Proxy IP addresses")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                Label {
+                    width: parent.width
+                    text: qsTr("Enter IPv4 or IPv6 addresses separated by commas. The Magic Packet is sent to each proxy on UDP port 9 before the normal Wake-on-LAN broadcast.")
+                    font.pointSize: 9
+                    wrapMode: Text.Wrap
+                }
+
+                TextField {
+                    id: wolProxyAddressesField
+                    width: parent.width
+                    placeholderText: "192.168.1.10, 10.0.0.5"
+                    selectByMouse: true
+                    text: StreamingPreferences.wolProxyAddresses
+                    property bool inputValid: StreamingPreferences.isValidWolProxyList(text)
+
+                    onTextChanged: {
+                        if (inputValid) {
+                            StreamingPreferences.wolProxyAddresses = text
+                        }
+                    }
+
+                    onEditingFinished: {
+                        if (inputValid) {
+                            var normalizedAddresses = StreamingPreferences.normalizeWolProxyList(text)
+                            StreamingPreferences.wolProxyAddresses = normalizedAddresses
+                            text = normalizedAddresses
+                        }
+                    }
+                }
+
+                Label {
+                    width: parent.width
+                    visible: !wolProxyAddressesField.inputValid
+                    text: qsTr("Enter only valid IPv4 or IPv6 addresses. Hostnames, port numbers, and empty list entries are not supported.")
+                    color: "tomato"
+                    font.pointSize: 9
+                    wrapMode: Text.Wrap
+                }
+            }
+        }
+
+        GroupBox {
             id: uiSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
