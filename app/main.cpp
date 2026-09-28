@@ -420,8 +420,6 @@ void configureSignalHandlers()
 
 int main(int argc, char *argv[])
 {
-    SDL_SetMainReady();
-
     // Set the app version for the QCommandLineParser's showVersion() command
     QCoreApplication::setApplicationVersion(VERSION_STR);
 
@@ -593,16 +591,17 @@ int main(int argc, char *argv[])
     // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
     // on all platforms for both SDL and Qt. This also avoids GLX-EGL interop issues
     // when trying to use EGL on the main thread after Qt uses GLX.
-    SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
+    SDL_SetHint(SDL_HINT_VIDEO_FORCE_EGL, "1");
     qputenv("QT_XCB_GL_INTEGRATION", "xcb_egl");
 
 #ifdef Q_OS_WIN32
     // Let us see the true VBlank rather than DWM's approximation. We do this here
     // because this API must be called before the first swapchain (which Qt will
     // create when the window is displayed). This is supported on Win11 22H2+.
+    using DXGIDisableVBlankVirtualizationFn = HRESULT(WINAPI*)();
     auto fnDXGIDisableVBlankVirtualization =
-        (decltype(DXGIDisableVBlankVirtualization)*)GetProcAddress(GetModuleHandleW(L"dxgi.dll"),
-                                                                   "DXGIDisableVBlankVirtualization");
+        reinterpret_cast<DXGIDisableVBlankVirtualizationFn>(GetProcAddress(GetModuleHandleW(L"dxgi.dll"),
+                                                                           "DXGIDisableVBlankVirtualization"));
     if (fnDXGIDisableVBlankVirtualization) {
         fnDXGIDisableVBlankVirtualization();
     }
@@ -669,13 +668,6 @@ int main(int argc, char *argv[])
     // The DXVA2 renderer uses Direct3D 9Ex itself directly.
     SDL_SetHint(SDL_HINT_WINDOWS_USE_D3D9EX, "1");
 
-    if (SDLC_FAILURE(SDL_InitSubSystem(SDL_INIT_TIMER))) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_TIMER) failed: %s",
-                     SDL_GetError());
-        return -1;
-    }
-
 #if defined(STEAM_LINK) || defined(Q_OS_WIN32)
     // Steam Link requires that we initialize video before creating our
     // QGuiApplication in order to configure the framebuffer correctly.
@@ -703,34 +695,13 @@ int main(int argc, char *argv[])
     // Disable minimize on focus loss by default. Users seem to want this off by default.
     SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
-    // SDL 2.0.12 changes the default behavior to use the button label rather than the button
-    // position as most other software does. Set this back to 0 to stay consistent with prior
-    // releases of Moonlight.
-    SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
+    // Disable system acceleration for relative mouse motion. We want to send the
+    // mouse motion exactly how it was given to us.
+    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_SYSTEM_SCALE, "0");
 
-    // Disable relative mouse scaling to renderer size or logical DPI. We want to send
-    // the mouse motion exactly how it was given to us.
-    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_SCALING, "0");
-
-    // Set our app name for SDL to use with PulseAudio and PipeWire. This matches what we
-    // provide as our app name to libsoundio too. On SDL 2.0.18+, SDL_APP_NAME is also used
-    // for screensaver inhibitor reporting.
-    SDL_SetHint(SDL_HINT_AUDIO_DEVICE_APP_NAME, "Moonlight");
+    // Set our app name for SDL to use with audio and screensaver integration. This
+    // matches what we provide as our app name to libsoundio too.
     SDL_SetHint(SDL_HINT_APP_NAME, "Moonlight");
-
-    // SDL will try to lock the mouse cursor on Wayland if it's not visible in order to
-    // support applications that assume they can warp the cursor (which isn't possible
-    // on Wayland). We don't want this behavior because it interferes with seamless mouse
-    // mode when toggling between windowed and fullscreen modes by unexpectedly locking
-    // the mouse cursor.
-    SDL_SetHint(SDL_HINT_VIDEO_WAYLAND_EMULATE_MOUSE_WARP, "0");
-
-#ifdef QT_DEBUG
-    // Allow thread naming using exceptions on debug builds. SDL doesn't use SEH
-    // when throwing the exceptions, so we don't enable it for release builds out
-    // of caution.
-    SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "0");
-#endif
 
     // Enable fast parameter checks on SDL 3.4.0+. We don't abuse the API by passing
     // incorrect objects, so we don't need additional expensive parameter checks.
@@ -814,44 +785,27 @@ int main(int argc, char *argv[])
         break;
     }
 
-    SDL_version compileVersion;
-    SDL_VERSION(&compileVersion);
+    int compileVersion = SDL_VERSION;
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Compiled with SDL %d.%d.%d",
-                compileVersion.major, compileVersion.minor, compileVersion.patch);
+                SDL_VERSIONNUM_MAJOR(compileVersion),
+                SDL_VERSIONNUM_MINOR(compileVersion),
+                SDL_VERSIONNUM_MICRO(compileVersion));
 
-    SDL_version runtimeVersion;
-    SDL_GetVersion(&runtimeVersion);
+    int runtimeVersion = SDL_GetVersion();
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Running with SDL %d.%d.%d",
-                runtimeVersion.major, runtimeVersion.minor, runtimeVersion.patch);
-
-    // If we're running under sdl2-compat, it may tell us the underlying SDL3 version
-    const char* sdl3Version = SDL_GetHint("SDL3_VERSION");
-    int sdl3VersionInt = 0;
-    if (sdl3Version) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "SDL3 version: %s",
-                    sdl3Version);
-
-        // Parse the version into integer form
-        QStringList list = QString(sdl3Version).split('.');
-        Q_ASSERT(list.size() == 3);
-        if (list.size() == 3) {
-            sdl3VersionInt = SDL_VERSIONNUM(list.at(0).toInt(), list.at(1).toInt(), list.at(2).toInt());
-        }
-    }
+                SDL_VERSIONNUM_MAJOR(runtimeVersion),
+                SDL_VERSIONNUM_MINOR(runtimeVersion),
+                SDL_VERSIONNUM_MICRO(runtimeVersion));
 
     // SDL 3.4.0 and 3.4.2 have bugs in atomic KMSDRM support that break us,
-    // so disable atomic on the affected SDL3 versions. Since not all versions
-    // of sdl2-compat will set the SDL3_VERSION hint, we assume that versions
-    // prior to 2.32.66 are affected (since that was released at the same time
-    // as SDL 3.4.4 with the atomic fixes).
-    if ((sdl3VersionInt != 0 && sdl3VersionInt < SDL_VERSIONNUM(3, 4, 4)) ||
-            (runtimeVersion.patch >= 50 && runtimeVersion.patch < 66)) {
+    // so disable atomic on the affected SDL3 versions.
+    if (runtimeVersion >= SDL_VERSIONNUM(3, 4, 0) &&
+            runtimeVersion < SDL_VERSIONNUM(3, 4, 4)) {
 #if !defined(Q_OS_WIN32) && !defined(Q_OS_DARWIN)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Setting SDL_KMSDRM_ATOMIC=0 for older sdl2-compat/SDL3 version");
+                    "Setting SDL_KMSDRM_ATOMIC=0 for affected SDL3 version");
         SDL_SetHint("SDL_KMSDRM_ATOMIC", "0");
 #endif
     }

@@ -35,18 +35,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-win32 {
+win32:!disable-prebuilts {
     !exists($$PWD/../libs/windows) {
         error("Missing dependencies. Please run 'powershell .\setup-deps.ps1' to fetch prebuilt libraries.")
     }
 
     contains(QT_ARCH, x86_64) {
         LIBS += -L$$PWD/../libs/windows/lib/x64
-        INCLUDEPATH += $$PWD/../libs/windows/include/x64 $$PWD/../libs/windows/include/x64/SDL2
+        INCLUDEPATH += $$PWD/../libs/windows/include/x64
     }
     contains(QT_ARCH, arm64) {
         LIBS += -L$$PWD/../libs/windows/lib/arm64
-        INCLUDEPATH += $$PWD/../libs/windows/include/arm64 $$PWD/../libs/windows/include/arm64/SDL2
+        INCLUDEPATH += $$PWD/../libs/windows/include/arm64
     }
 
     INCLUDEPATH += $$PWD/../libs/windows/include
@@ -57,13 +57,22 @@ macx:!disable-prebuilts {
         error("Missing dependencies. Please run 'python3 setup-deps.py' to fetch prebuilt libraries.")
     }
 
-    INCLUDEPATH += $$PWD/../libs/mac/include $$PWD/../libs/mac/include/SDL2
+    INCLUDEPATH += $$PWD/../libs/mac/include
     LIBS += -L$$PWD/../libs/mac/lib
 }
 
 unix:if(!macx|disable-prebuilts) {
     CONFIG += link_pkgconfig
-    PKGCONFIG += openssl sdl2 SDL2_ttf
+    PKGCONFIG += openssl
+
+    config_SL {
+        STEAMLINK_SDL3_PREFIX = $$(STEAMLINK_SDL3_PREFIX)
+        isEmpty(STEAMLINK_SDL3_PREFIX): error("Missing Steam Link SDL3 build prefix")
+        INCLUDEPATH += $$STEAMLINK_SDL3_PREFIX/include
+        LIBS += -L$$STEAMLINK_SDL3_PREFIX/lib -lSDL3_ttf -lSDL3
+    } else {
+        PKGCONFIG += sdl3 sdl3-ttf
+    }
 
     # We have our own optimized libopus.a for Steam Link
     if(!config_SL|disable-prebuilts) {
@@ -148,16 +157,21 @@ unix:if(!macx|disable-prebuilts) {
         }
     }
 }
-win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lswscale -lopus -ldxgi -ld3d11 -llibplacebo
+win32:!disable-prebuilts {
+    LIBS += -llibssl -llibcrypto -lSDL3 -lSDL3_ttf -lavcodec -lavutil -lswscale -lopus -ldxgi -ld3d11 -llibplacebo
     CONFIG += ffmpeg libplacebo
 }
-win32:!winrt {
+win32:disable-prebuilts {
+    CONFIG += link_pkgconfig ffmpeg libplacebo
+    PKGCONFIG += openssl sdl3 sdl3-ttf libavcodec libavutil libswscale opus libplacebo
+    LIBS += -lws2_32 -lwinmm -ldxva2 -lole32 -lgdi32 -luser32 -ld3d9 -ldwmapi -ldbghelp -ldxgi -ld3d11
+}
+win32:!winrt:!disable-prebuilts {
     CONFIG += discord-rpc
 }
 macx {
     !disable-prebuilts {
-        LIBS += -lssl.3 -lcrypto.3 -lavcodec.63 -lavutil.61 -lswscale.10 -lopus.0 -lSDL2 -lSDL2_ttf -lplacebo
+        LIBS += -lssl.3 -lcrypto.3 -lavcodec.63 -lavutil.61 -lswscale.10 -lopus.0 -lSDL3 -lSDL3_ttf -lplacebo
         CONFIG += discord-rpc libplacebo
     }
 
@@ -550,7 +564,9 @@ win32 {
     QMAKE_TARGET_COMPANY = Moonlight Game Streaming Project
     QMAKE_TARGET_DESCRIPTION = Moonlight Game Streaming Client
     QMAKE_TARGET_PRODUCT = Moonlight
+}
 
+win32:msvc {
     CONFIG -= embed_manifest_exe
     QMAKE_LFLAGS += /MANIFEST:embed /MANIFESTINPUT:$${PWD}/Moonlight.exe.manifest
 }

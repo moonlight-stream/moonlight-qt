@@ -403,7 +403,7 @@ void DrmRenderer::cleanupRenderContext()
     // If we have a composition surface, unmap it before disabling planes
     if (m_OverlayCompositionSurface) {
         munmap(m_OverlayCompositionSurface->pixels, (uintptr_t)m_OverlayCompositionSurface->userdata);
-        SDL_FreeSurface(m_OverlayCompositionSurface);
+        SDL_DestroySurface(m_OverlayCompositionSurface);
         m_OverlayCompositionSurface = nullptr;
     }
 
@@ -1369,7 +1369,7 @@ bool DrmRenderer::uploadSurfaceToFb(SDL_Surface *surface, uint32_t* handle, uint
     }
 
     // Convert and copy the surface pixels into the dumb buffer with premultiplied alpha
-    SDL_PremultiplyAlpha(surface->w, surface->h, surface->format->format, surface->pixels, surface->pitch,
+    SDL_PremultiplyAlpha(surface->w, surface->h, surface->format, surface->pixels, surface->pitch,
                          SDL_PIXELFORMAT_ARGB8888, mapping, createBuf.pitch);
 
     munmap(mapping, createBuf.size);
@@ -1472,20 +1472,20 @@ void DrmRenderer::blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL
         // Premultiply alpha in place, so we can blit directly into the composition surface
         // without having to read anything (which may be very costly due to UC/WC memory)
         SDL_PremultiplyAlpha(newSurface->w, newSurface->h,
-                             newSurface->format->format, newSurface->pixels, newSurface->pitch,
-                             newSurface->format->format, newSurface->pixels, newSurface->pitch);
+                             newSurface->format, newSurface->pixels, newSurface->pitch,
+                             newSurface->format, newSurface->pixels, newSurface->pitch);
 
         // Compute the union of the current and previous overlay rects. Our draw operation
         // will need to cover this entire area to ensure the old dirty area is covered.
         SDL_Rect overlayUnionRect;
-        SDL_UnionRect(overlayRect, &m_OverlayRects[type], &overlayUnionRect);
+        SDL_GetRectUnion(overlayRect, &m_OverlayRects[type], &overlayUnionRect);
 
         // If the new overlay completely covers the old overlay, blit it all at once
-        if (SDL_RectEquals(&overlayUnionRect, overlayRect)) {
+        if (SDL_RectsEqual(&overlayUnionRect, overlayRect)) {
             SDL_BlitSurface(newSurface, nullptr, m_OverlayCompositionSurface, overlayRect);
         }
         else {
-            SDL_assert(newSurface->format->format == m_OverlayCompositionSurface->format->format);
+            SDL_assert(newSurface->format == m_OverlayCompositionSurface->format);
 
             // Draw the surface row-by-row to ensure we clear the dirty area from the previous surface
             // without causing flickering, which would be noticeable if we cleared the whole area first.
@@ -1493,7 +1493,7 @@ void DrmRenderer::blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL
                 auto dstPixelRow =
                     (uint8_t*)m_OverlayCompositionSurface->pixels +
                     (y * m_OverlayCompositionSurface->pitch);
-                auto bpp = m_OverlayCompositionSurface->format->BytesPerPixel;
+                auto bpp = SDL_BYTESPERPIXEL(m_OverlayCompositionSurface->format);
 
                 if (y < overlayRect->y || y > overlayRect->y + overlayRect->h) {
                     // Clear the whole row if the overlay doesn't intersect this row
@@ -1529,7 +1529,7 @@ void DrmRenderer::blitOverlayToCompositionSurface(Overlay::OverlayType type, SDL
     }
     else {
         // Clear the pixels where this overlay was drawn before
-        SDL_FillRect(m_OverlayCompositionSurface, &m_OverlayRects[type], 0);
+        SDL_FillSurfaceRect(m_OverlayCompositionSurface, &m_OverlayRects[type], 0);
 
         // Dirty the modified portion of the plane
         m_PropSetter.damagePlane(m_OverlayPlanes[0], m_OverlayRects[type]);
@@ -1589,7 +1589,7 @@ void DrmRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         // Try to let the display controller composite for us
         if (!m_OverlayCompositionSurface) {
             if (!uploadSurfaceToFb(newSurface, &dumbBuffer, &fbId)) {
-                SDL_FreeSurface(newSurface);
+                SDL_DestroySurface(newSurface);
                 return;
             }
 
@@ -1634,7 +1634,7 @@ void DrmRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
         memcpy(&m_OverlayRects[type], &overlayRect, sizeof(overlayRect));
 
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
     }
 }
 

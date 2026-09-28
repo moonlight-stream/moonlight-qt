@@ -88,11 +88,6 @@ SDL_Window* StreamUtils::createTestWindow()
     SDL_Window* testWindow;
     Uint32 baseFlags = 0;
 
-    // Stop text input before creating the test window to avoid sdl2-compat
-    // starting text input on the new window. This might trigger the IME to
-    // be displayed.
-    SDL_StopTextInput();
-
     // Test windows are always hidden
     baseFlags |= SDL_WINDOW_HIDDEN;
 
@@ -103,22 +98,26 @@ SDL_Window* StreamUtils::createTestWindow()
     // desktop mode ensures the window size exactly matches the display mode
     // which prevents false Vulkan renderer failures during decoder probing.
     if (QString(SDL_GetCurrentVideoDriver()) == "KMSDRM") {
-        baseFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+        baseFlags |= SDL_WINDOW_FULLSCREEN;
     }
 
     // Try to add the platform-specific flags first and fall back if that fails
-    testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+    testWindow = SDL_CreateWindow("", 1280, 720,
                                   baseFlags | StreamUtils::getPlatformWindowFlags());
     if (!testWindow) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Failed to create test window with platform flags: %s",
                     SDL_GetError());
 
-        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, baseFlags);
+        testWindow = SDL_CreateWindow("", 1280, 720, baseFlags);
         if (!testWindow) {
             return nullptr;
         }
     }
+
+    // SDL 3 enables text input by default for each new window. Disable it for
+    // this hidden decoder-probing window.
+    SDL_StopTextInput(testWindow);
 
     return testWindow;
 }
@@ -171,7 +170,8 @@ int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
     }
     else {
         // Use the current display mode for windowed and borderless
-        if (SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(window), &mode) != 0) {
+        const SDL_DisplayMode* currentMode = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(window));
+        if (currentMode == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_GetCurrentDisplayMode() failed: %s",
                          SDL_GetError());
@@ -179,6 +179,7 @@ int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
             // Assume 60 Hz
             return 60;
         }
+        mode = *currentMode;
     }
 
     // May be zero if undefined
@@ -247,10 +248,24 @@ bool StreamUtils::getNativeDesktopMode(SDL_DisplayID display, SDL_DisplayMode* m
 {
 #ifdef Q_OS_DARWIN
 #define MAX_DISPLAYS 16
+    int displayIndex = static_cast<int>(display);
+    if (SDL_WasInit(SDL_INIT_VIDEO)) {
+        int sdlDisplayCount = 0;
+        SDL_DisplayID* sdlDisplays = SDL_GetDisplays(&sdlDisplayCount);
+        displayIndex = -1;
+        for (int i = 0; i < sdlDisplayCount; i++) {
+            if (sdlDisplays[i] == display) {
+                displayIndex = i;
+                break;
+            }
+        }
+        SDL_free(sdlDisplays);
+    }
+
     CGDirectDisplayID displayIds[MAX_DISPLAYS];
     uint32_t displayCount = 0;
     CGGetActiveDisplayList(MAX_DISPLAYS, displayIds, &displayCount);
-    if (displayIndex >= (int)displayCount) {
+    if (displayIndex < 0 || displayIndex >= (int)displayCount) {
         return false;
     }
 
@@ -307,16 +322,17 @@ bool StreamUtils::getNativeDesktopMode(SDL_DisplayID display, SDL_DisplayMode* m
     // in Session::initialize() for Darwin only!
     if (SDL_WasInit(SDL_INIT_VIDEO)) {
         // Now find the SDL mode that matches the CG native mode
-        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
-            SDL_DisplayMode thisMode;
-            if (SDL_GetDisplayMode(displayIndex, i, &thisMode) == 0) {
-                if (thisMode.w == mode->w && thisMode.h == mode->h &&
-                    thisMode.refresh_rate >= mode->refresh_rate) {
-                    *mode = thisMode;
-                    break;
-                }
+        int modeCount = 0;
+        SDL_DisplayMode** displayModes = SDL_GetFullscreenDisplayModes(display, &modeCount);
+        for (int i = 0; i < modeCount; i++) {
+            const SDL_DisplayMode& thisMode = *displayModes[i];
+            if (thisMode.w == mode->w && thisMode.h == mode->h &&
+                thisMode.refresh_rate >= mode->refresh_rate) {
+                *mode = thisMode;
+                break;
             }
         }
+        SDL_free(displayModes);
     }
 #else
     SDL_assert(SDL_WasInit(SDL_INIT_VIDEO));
@@ -327,20 +343,27 @@ bool StreamUtils::getNativeDesktopMode(SDL_DisplayID display, SDL_DisplayMode* m
     // the first mode on Wayland will get the native resolution without the scaling factor
     // (and macOS is handled in the #ifdef above).
     if (!strcmp(SDL_GetCurrentVideoDriver(), "wayland")) {
-        if (SDL_GetDisplayMode(display, 0, mode) != 0) {
+        int modeCount = 0;
+        SDL_DisplayMode** displayModes = SDL_GetFullscreenDisplayModes(display, &modeCount);
+        if (displayModes == nullptr || modeCount == 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_GetDisplayMode() failed: %s",
+                         "SDL_GetFullscreenDisplayModes() failed: %s",
                          SDL_GetError());
+            SDL_free(displayModes);
             return false;
         }
+        *mode = *displayModes[0];
+        SDL_free(displayModes);
     }
     else {
-        if (SDL_GetDesktopDisplayMode(display, mode) != 0) {
+        const SDL_DisplayMode* desktopMode = SDL_GetDesktopDisplayMode(display);
+        if (desktopMode == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_GetDesktopDisplayMode() failed: %s",
                          SDL_GetError());
             return false;
         }
+        *mode = *desktopMode;
     }
 
     safeArea->x = 0;

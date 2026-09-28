@@ -167,7 +167,7 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
 
     // See if we need to drop this sample
     if (s_ActiveSession->m_DropAudioEndTime != 0) {
-        if (SDL_TICKS_PASSED(SDL_GetTicks(), s_ActiveSession->m_DropAudioEndTime)) {
+        if (SDL_GetTicks() >= s_ActiveSession->m_DropAudioEndTime) {
             // Avoid calling SDL_GetTicks() now
             s_ActiveSession->m_DropAudioEndTime = 0;
 

@@ -9,12 +9,7 @@ struct GamepadState {
     SDL_Gamepad * controller;
     SDL_JoystickID jsId;
     short index;
-
-#if !SDL_VERSION_ATLEAST(2, 0, 9)
-    SDL_Haptic* haptic;
-    int hapticMethod;
-    int hapticEffectId;
-#endif
+    bool isSteamController;
 
     SDL_TimerID mouseEmulationTimer;
     uint32_t lastStartDownTime;
@@ -22,17 +17,17 @@ struct GamepadState {
     bool clickpadButtonEmulationEnabled;
     bool emulatedClickpadButtonDown;
 
-#if SDL_VERSION_ATLEAST(2, 0, 14)
     uint8_t gyroReportPeriodMs;
     float lastGyroEventData[SDL_arraysize(SDL_GamepadSensorEvent::data)];
-    uint32_t lastGyroEventTime;
+    Uint64 lastGyroEventTime;
+    Uint64 lastGyroDebugTime;
+    Uint64 lastTouchpadDebugTime;
 
     uint8_t accelReportPeriodMs;
     float lastAccelEventData[SDL_arraysize(SDL_GamepadSensorEvent::data)];
-    uint32_t lastAccelEventTime;
-#endif
+    Uint64 lastAccelEventTime;
 
-    int buttons;
+    uint32_t buttons;
     short lsX, lsY;
     short rsX, rsY;
     unsigned char lt, rt;
@@ -74,13 +69,6 @@ struct DualSenseOutputReport{
 
 #define MAX_FINGERS 2
 
-#define GAMEPAD_HAPTIC_METHOD_NONE 0
-#define GAMEPAD_HAPTIC_METHOD_LEFTRIGHT 1
-#define GAMEPAD_HAPTIC_METHOD_SIMPLERUMBLE 2
-
-#define GAMEPAD_HAPTIC_SIMPLE_HIFREQ_MOTOR_WEIGHT 0.33
-#define GAMEPAD_HAPTIC_SIMPLE_LOWFREQ_MOTOR_WEIGHT 0.8
-
 class SdlInputHandler
 {
 public:
@@ -104,15 +92,15 @@ public:
 
     void handleControllerDeviceEvent(SDL_GamepadDeviceEvent* event);
 
-#if SDL_VERSION_ATLEAST(2, 0, 14)
     void handleControllerSensorEvent(SDL_GamepadSensorEvent* event);
 
     void handleControllerTouchpadEvent(SDL_GamepadTouchpadEvent* event);
+
+#if SDL_VERSION_ATLEAST(3, 5, 0)
+    void handleControllerCapSenseEvent(SDL_GamepadCapSenseEvent* event);
 #endif
 
-#if SDL_VERSION_ATLEAST(2, 24, 0)
     void handleJoystickBatteryEvent(SDL_JoyBatteryEvent* event);
-#endif
 
     void handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event);
 
@@ -127,6 +115,8 @@ public:
     void setControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, uint8_t b);
 
     void setAdaptiveTriggers(uint16_t controllerNumber, DualSenseOutputReport *report);
+
+    void setControllerHaptics(uint16_t controllerNumber, LI_CONTROLLER_HAPTIC_EFFECT* effect);
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 
@@ -174,9 +164,12 @@ private:
     GamepadState*
     findStateForGamepad(SDL_JoystickID id);
 
+    static
+    uint32_t getButtonFlag(const GamepadState* state, SDL_GamepadButton button);
+
     void sendGamepadState(GamepadState* state);
 
-    void sendGamepadBatteryState(GamepadState* state, SDL_JoystickPowerLevel level);
+    void sendGamepadBatteryState(GamepadState* state, SDL_PowerState powerState, int percentage);
 
     void handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
 
@@ -189,19 +182,19 @@ private:
     void performSpecialKeyCombo(KeyCombo combo);
 
     static
-    Uint32 longPressTimerCallback(Uint32 interval, void* param);
+    Uint32 longPressTimerCallback(void* param, SDL_TimerID timerId, Uint32 interval);
 
     static
-    Uint32 mouseEmulationTimerCallback(Uint32 interval, void* param);
+    Uint32 mouseEmulationTimerCallback(void* param, SDL_TimerID timerId, Uint32 interval);
 
     static
-    Uint32 releaseLeftButtonTimerCallback(Uint32 interval, void* param);
+    Uint32 releaseLeftButtonTimerCallback(void* param, SDL_TimerID timerId, Uint32 interval);
 
     static
-    Uint32 releaseRightButtonTimerCallback(Uint32 interval, void* param);
+    Uint32 releaseRightButtonTimerCallback(void* param, SDL_TimerID timerId, Uint32 interval);
 
     static
-    Uint32 dragTimerCallback(Uint32 interval, void* param);
+    Uint32 dragTimerCallback(void* param, SDL_TimerID timerId, Uint32 interval);
 
     SDL_Window* m_Window;
     bool m_MultiController;
@@ -225,7 +218,7 @@ private:
     QString m_OldIgnoreDevicesExcept;
     QStringList m_IgnoreDeviceGuids;
     StreamingPreferences::CaptureSysKeysMode m_CaptureSystemKeysMode;
-    int m_MouseCursorCapturedVisibilityState;
+    bool m_MouseCursorCapturedVisibilityState;
 
     struct {
         KeyCombo keyCombo;
@@ -250,5 +243,5 @@ private:
     char m_DragButton;
     int m_NumFingersDown;
 
-    static const int k_ButtonMap[];
+    static const uint32_t k_ButtonMap[];
 };

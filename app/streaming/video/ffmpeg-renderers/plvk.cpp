@@ -7,7 +7,7 @@
 #define PL_LIBAV_IMPLEMENTATION 0
 #include <libplacebo/utils/libav.h>
 
-#include <SDL_vulkan.h>
+#include <SDL3/SDL_vulkan.h>
 
 extern "C" {
 #include <libavutil/hwcontext_drm.h>
@@ -429,30 +429,17 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     m_MaxVideoFps = params->frameRate;
 
     unsigned int instanceExtensionCount = 0;
-#if SDL_VERSION_ATLEAST(3, 0, 0)
-    if (!SDL_Vulkan_GetInstanceExtensions(&instanceExtensionCount, nullptr)) {
-#else
-    if (!SDL_Vulkan_GetInstanceExtensions(params->window, &instanceExtensionCount, nullptr)) {
-#endif
+    const char* const* sdlInstanceExtensions = SDL_Vulkan_GetInstanceExtensions(&instanceExtensionCount);
+    if (sdlInstanceExtensions == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_Vulkan_GetInstanceExtensions() #1 failed: %s",
+                     "SDL_Vulkan_GetInstanceExtensions() failed: %s",
                      SDL_GetError());
         m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
-    std::vector<const char*> instanceExtensions(instanceExtensionCount);
-#if SDL_VERSION_ATLEAST(3, 0, 0)
-    if (!SDL_Vulkan_GetInstanceExtensions(&instanceExtensionCount, instanceExtensions.data())) {
-#else
-    if (!SDL_Vulkan_GetInstanceExtensions(params->window, &instanceExtensionCount, instanceExtensions.data())) {
-#endif
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_Vulkan_GetInstanceExtensions() #2 failed: %s",
-                     SDL_GetError());
-        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
-        return false;
-    }
+    std::vector<const char*> instanceExtensions(sdlInstanceExtensions,
+                                                sdlInstanceExtensions + instanceExtensionCount);
 
     pl_vk_inst_params vkInstParams = pl_vk_inst_default_params;
     {
@@ -552,10 +539,10 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
 #ifdef PLVK_USE_EARLY_RENDER_TO_WAIT
-    SDL_Surface *emptySurface = SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 0, SDL_PIXELFORMAT_ARGB8888);
+    SDL_Surface *emptySurface = SDL_CreateSurface(1, 1, SDL_PIXELFORMAT_ARGB8888);
     if (emptySurface == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateRGBSurfaceWithFormat() failed: %s", SDL_GetError());
+                     "SDL_CreateSurface() failed: %s", SDL_GetError());
         return false;
     }
 
@@ -1012,7 +999,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     pl_frame_from_swapchain(&targetFrame, &m_SwapchainFrame);
 
     // We perform minimal processing under the overlay lock to avoid blocking threads updating the overlay
-    SDL_AtomicLock(&m_OverlayLock);
+    SDL_LockSpinlock(&m_OverlayLock);
     for (int i = 0; i < Overlay::OverlayMax; i++) {
         // If we have a staging overlay, we need to transfer ownership to us
         if (m_Overlays[i].hasStagingOverlay) {
@@ -1059,7 +1046,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
             overlays.push_back(m_Overlays[i].overlay);
         }
     }
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 
     SDL_Rect src;
     src.x = mappedFrame.crop.x0;
@@ -1103,7 +1090,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
 
         // Recreate the renderer
         SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
+        event.type = SDL_EVENT_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         goto UnmapExit;
     }
@@ -1119,7 +1106,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         if (!createSwapchain(2)) {
             // Recreate the renderer
             SDL_Event event;
-            event.type = SDL_RENDER_DEVICE_RESET;
+            event.type = SDL_EVENT_RENDER_DEVICE_RESET;
             SDL_PushEvent(&event);
             goto UnmapExit;
         }

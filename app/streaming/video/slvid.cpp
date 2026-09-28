@@ -212,7 +212,7 @@ void SLVideoDecoder::notifyOverlayUpdated(Overlay::OverlayType type)
     SLVideo_GetOverlayPixels(m_Overlay, &pixels, &pitch);
 
     // Copy surface pixels into the new overlay
-    SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format->format, newSurface->pixels, newSurface->pitch,
+    SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format, newSurface->pixels, newSurface->pitch,
                       SDL_PIXELFORMAT_ARGB8888, pixels, pitch);
 
     // Position the status overlay at the bottom left corner

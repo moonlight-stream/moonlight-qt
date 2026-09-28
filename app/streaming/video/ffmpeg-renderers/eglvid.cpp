@@ -11,7 +11,7 @@
 #include <Limelight.h>
 #include <unistd.h>
 
-#include <SDL_render.h>
+#include <SDL3/SDL_render.h>
 
 // These are extensions, so some platform headers may not provide them
 #ifndef GL_UNPACK_ROW_LENGTH_EXT
@@ -108,7 +108,7 @@ EGLRenderer::~EGLRenderer()
             m_glDeleteVertexArraysOES(Overlay::OverlayMax, m_OverlayVAOs);
         }
 
-        SDL_GL_DeleteContext(m_Context);
+        SDL_GL_DestroyContext(m_Context);
     }
 }
 
@@ -181,7 +181,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
                 // and copy our pixels there.
                 packedPixelData = malloc(newSurface->w * newSurface->h * bytesPerPixel);
                 if (!packedPixelData) {
-                    SDL_FreeSurface(newSurface);
+                    SDL_DestroySurface(newSurface);
                     return;
                 }
 

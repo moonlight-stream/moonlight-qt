@@ -23,7 +23,7 @@
 // How far the finger can move before it can override the double tap deadzone
 #define DOUBLE_TAP_DEAD_ZONE_DELTA 0.025f
 
-Uint32 SdlInputHandler::longPressTimerCallback(Uint32, void*)
+Uint32 SdlInputHandler::longPressTimerCallback(void*, SDL_TimerID, Uint32)
 {
     // Raise the left click and start a right click
     LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
@@ -112,28 +112,18 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
 
     // Try to send it as a native pen/touch event, otherwise fall back to our touch emulation
     if (LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS) {
-#if SDL_VERSION_ATLEAST(2, 0, 22)
         bool isPen = false;
+        const char* touchName = SDL_GetTouchDeviceName(event->touchID);
 
-        int numTouchDevices = SDL_GetNumTouchDevices();
-        for (int i = 0; i < numTouchDevices; i++) {
-            if (event->touchID == SDL_GetTouchDevice(i)) {
-                const char* touchName = SDL_GetTouchName(i);
-
-                // SDL will report "pen" as the name of pen input devices on Windows.
-                // https://github.com/libsdl-org/SDL/pull/5926
-                isPen = touchName && SDL_strcmp(touchName, "pen") == 0;
-                break;
-            }
-        }
+        // SDL will report "pen" as the name of pen input devices on Windows.
+        // https://github.com/libsdl-org/SDL/pull/5926
+        isPen = touchName && SDL_strcmp(touchName, "pen") == 0;
 
         if (isPen) {
             LiSendPenEvent(eventType, LI_TOOL_TYPE_PEN, 0, vidrelx / dst.w, vidrely / dst.h, event->pressure,
                            0.0f, 0.0f, LI_ROT_UNKNOWN, LI_TILT_UNKNOWN);
         }
-        else
-#endif
-        {
+        else {
             LiSendTouchEvent(eventType, pointerId, vidrelx / dst.w, vidrely / dst.h, event->pressure,
                              0.0f, 0.0f, LI_ROT_UNKNOWN);
         }
@@ -158,8 +148,13 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
     // dx and dy are deltas from the last touch event, not the first touch down.
 
     // Ignore touch down events with more than one finger
-    if (event->type == SDL_EVENT_FINGER_DOWN && SDL_GetNumTouchFingers(event->touchID) > 1) {
-        return;
+    if (event->type == SDL_EVENT_FINGER_DOWN) {
+        int fingerCount = 0;
+        SDL_Finger** fingers = SDL_GetTouchFingers(event->touchID, &fingerCount);
+        SDL_free(fingers);
+        if (fingerCount > 1) {
+            return;
+        }
     }
 
     // Ignore touch move and touch up events from the non-primary finger
