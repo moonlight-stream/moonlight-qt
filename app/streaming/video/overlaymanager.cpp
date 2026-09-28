@@ -3,6 +3,24 @@
 
 using namespace Overlay;
 
+namespace {
+
+bool textRequiresWrapping(TTF_Font* font, const QByteArray& text, int wrapWidth)
+{
+    int extent;
+#if SDL_TTF_VERSION_ATLEAST(3, 2, 0)
+    size_t count;
+    return TTF_MeasureString(font, text.constData(), text.size(), wrapWidth, &extent, &count) &&
+           count < static_cast<size_t>(text.size());
+#else
+    int count;
+    return TTF_MeasureText(font, text.constData(), text.size(), wrapWidth, &extent, &count) &&
+           count < text.size();
+#endif
+}
+
+}
+
 OverlayManager::OverlayManager() :
     m_Renderer(nullptr),
     m_FontData(Path::readDataFile("ModeSeven.ttf"))
@@ -20,10 +38,10 @@ OverlayManager::OverlayManager() :
     // the lifetime of a new Session object.
     //SDL_assert(TTF_WasInit() == 0);
 
-    if (TTF_Init() != 0) {
+    if (!TTF_Init()) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "TTF_Init() failed: %s",
-                    TTF_GetError());
+                    SDL_GetError());
         return;
     }
 }
@@ -32,7 +50,7 @@ OverlayManager::~OverlayManager()
 {
     for (int i = 0; i < OverlayType::OverlayMax; i++) {
         if (m_Overlays[i].surface != nullptr) {
-            SDL_FreeSurface(m_Overlays[i].surface);
+            SDL_DestroySurface(m_Overlays[i].surface);
         }
         if (m_Overlays[i].font != nullptr) {
             TTF_CloseFont(m_Overlays[i].font);
@@ -78,7 +96,7 @@ SDL_Surface* OverlayManager::getUpdatedOverlaySurface(OverlayType type)
 {
     // If a new surface is available, return it. If not, return nullptr.
     // Caller must free the surface on success.
-    return (SDL_Surface*)SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, nullptr);
+    return (SDL_Surface*)SDL_SetAtomicPointer((void**)&m_Overlays[type].surface, nullptr);
 }
 
 void OverlayManager::setOverlayTextUpdated(OverlayType type)
@@ -131,13 +149,13 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
         }
 
         // m_FontData must stay around until the font is closed
-        m_Overlays[type].font = TTF_OpenFontRW(SDL_IOFromConstMem(m_FontData.constData(), m_FontData.size()),
-                                               1,
+        m_Overlays[type].font = TTF_OpenFontIO(SDL_IOFromConstMem(m_FontData.constData(), m_FontData.size()),
+                                               true,
                                                m_Overlays[type].fontSize);
         if (m_Overlays[type].font == nullptr) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "TTF_OpenFont() failed: %s",
-                        TTF_GetError());
+                        SDL_GetError());
 
             // Can't proceed without a font
             return;
@@ -180,23 +198,23 @@ SDL_Surface* OverlayManager::RenderTextOutlinedWrapped(TTF_Font* font, const cha
     // FIXME: We do this rather than just disabling wrapping entirely (wrapWidth = 0) because we
     // need further testing to ensure that all renderers can handle non-NPOT overlay textures.
     for (const QString& line : QString(text).split('\n')) {
-        int extent, count;
-        if (TTF_MeasureUTF8(font, line.toUtf8(), wrapWidth, &extent, &count) == 0 && count < line.size()) {
+        const QByteArray utf8Line = line.toUtf8();
+        if (textRequiresWrapping(font, utf8Line, wrapWidth)) {
             // If it requires wrapping, render it without the outline
             TTF_SetFontOutline(font, oldOutline);
-            return TTF_RenderUTF8_Blended_Wrapped(font, text, textColor, wrapWidth);
+            return TTF_RenderText_Blended_Wrapped(font, text, 0, textColor, wrapWidth);
         }
     }
 
     // Draw text twice, but outline is a bit bigger
-    auto outlineSurface = TTF_RenderUTF8_Blended_Wrapped(font, text, outlineColor, wrapWidth);
+    auto outlineSurface = TTF_RenderText_Blended_Wrapped(font, text, 0, outlineColor, wrapWidth);
     TTF_SetFontOutline(font, 0);
-    auto textSurface = TTF_RenderUTF8_Blended_Wrapped(font, text, textColor, wrapWidth);
+    auto textSurface = TTF_RenderText_Blended_Wrapped(font, text, 0, textColor, wrapWidth);
     TTF_SetFontOutline(font, oldOutline);
 
     if (outlineSurface == nullptr || textSurface == nullptr) {
-        SDL_FreeSurface(outlineSurface);
-        SDL_FreeSurface(textSurface);
+        SDL_DestroySurface(outlineSurface);
+        SDL_DestroySurface(textSurface);
         return nullptr;
     }
 
@@ -204,7 +222,7 @@ SDL_Surface* OverlayManager::RenderTextOutlinedWrapped(TTF_Font* font, const cha
     SDL_Rect dst = { outlineWidth, outlineWidth, textSurface->w, textSurface->h };
     SDL_BlitSurface(textSurface, nullptr, outlineSurface, &dst);
 
-    SDL_FreeSurface(textSurface);
+    SDL_DestroySurface(textSurface);
     return outlineSurface;
 }
 

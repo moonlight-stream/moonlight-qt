@@ -228,6 +228,9 @@ private:
     void clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlags, uint8_t typeLeft, uint8_t typeRight, uint8_t *left, uint8_t *right);
 
     static
+    void clSetControllerHaptics(uint16_t controllerNumber, const LI_CONTROLLER_HAPTIC_EFFECT* effect);
+
+    static
     int arInit(int audioConfiguration,
                const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                void* arContext, int arFlags);
@@ -257,7 +260,7 @@ private:
     NvApp m_App;
     SDL_Window* m_Window;
     IVideoDecoder* m_VideoDecoder;
-    SDL_mutex* m_DecoderLock;
+    SDL_Mutex* m_DecoderLock;
     bool m_AudioDisabled;
     bool m_AudioMuted;
     bool m_FullScreenExclusiveMode;
@@ -286,7 +289,7 @@ private:
     OPUS_MULTISTREAM_CONFIGURATION m_ActiveAudioConfig;
     OPUS_MULTISTREAM_CONFIGURATION m_OriginalAudioConfig;
     int m_AudioSampleCount;
-    Uint32 m_DropAudioEndTime;
+    Uint64 m_DropAudioEndTime;
 
     Overlay::OverlayManager m_OverlayManager;
 

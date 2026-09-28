@@ -55,7 +55,7 @@ void SdlGamepadKeyNavigation::enable()
     // NB: We use SDL_JoystickUpdate() instead of SDL_PumpEvents() because
     // the latter can do a bit more work that we want (like handling video
     // events that we intentionally do not want to process yet).
-    SDL_JoystickUpdate();
+    SDL_UpdateJoysticks();
     SDL_FlushEvent(SDL_EVENT_GAMEPAD_ADDED);
 
     // Open all currently attached game controllers
@@ -104,7 +104,7 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
     SDL_Event event;
 
     // Update joystick state without pumping other events (see enable() comment)
-    SDL_JoystickUpdate();
+    SDL_UpdateJoysticks();
 
     // Discard any pending button events on the first poll to avoid picking up
     // stale input data from the stream session (like the quit combo).
@@ -115,7 +115,7 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
     }
 
     // Peep events rather than polling to avoid calling SDL_PumpEvents()
-    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) == 1) {
+    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_EVENT_FIRST, SDL_EVENT_LAST) == 1) {
         switch (event.type) {
         case SDL_EVENT_QUIT :
             // SDL may send us a quit event since we initialize
@@ -199,28 +199,11 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
             break;
         }
         case SDL_EVENT_GAMEPAD_ADDED :
-#if SDL_VERSION_ATLEAST(3, 0, 0)
             SDL_Gamepad* gc = SDL_OpenGamepad(event.gdevice.which);
             if (gc != nullptr) {
                 SDL_assert(!m_Gamepads.contains(gc));
                 m_Gamepads.append(gc);
             }
-#else
-            SDL_Gamepad* gc = SDL_GameControllerOpen(event.cdevice.which);
-            if (gc != nullptr) {
-                // SDL_CONTROLLERDEVICEADDED can be reported multiple times for the same
-                // gamepad in rare cases, because SDL2 doesn't fixup the device index in
-                // the SDL_CONTROLLERDEVICEADDED event if an unopened gamepad disappears
-                // before we've processed the add event.
-                if (!m_Gamepads.contains(gc)) {
-                    m_Gamepads.append(gc);
-                }
-                else {
-                    // We already have this game controller open
-                    SDL_CloseGamepad(gc);
-                }
-            }
-#endif
             break;
         }
     }

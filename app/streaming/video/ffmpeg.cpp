@@ -242,7 +242,7 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
     SDL_zero(m_LastWndVideoStats);
     SDL_zero(m_GlobalVideoStats);
 
-    SDL_AtomicSet(&m_DecoderThreadShouldQuit, 0);
+    SDL_SetAtomicInt(&m_DecoderThreadShouldQuit, 0);
 }
 
 FFmpegVideoDecoder::~FFmpegVideoDecoder()
