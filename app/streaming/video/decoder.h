@@ -59,7 +59,7 @@ typedef struct _WINDOW_STATE_CHANGE_INFO {
     int height;
 
     // Populated if WINDOW_STATE_CHANGE_DISPLAY is set
-    int displayIndex;
+    SDL_DisplayID displayId;
 } WINDOW_STATE_CHANGE_INFO, *PWINDOW_STATE_CHANGE_INFO;
 
 class IVideoDecoder {

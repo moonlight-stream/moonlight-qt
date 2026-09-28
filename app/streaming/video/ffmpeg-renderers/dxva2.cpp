@@ -405,7 +405,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         return false;
     }
 
-    int adapterIndex = SDL_Direct3D9GetAdapterIndex(SDL_GetWindowDisplayIndex(window));
+    int adapterIndex = SDL_GetDirect3D9AdapterIndex(SDL_GetDisplayForWindow(window));
 
     // Initialize quirks *before* calling CreateDeviceEx() to allow our below
     // logic to avoid a hang with NahimicOSD.dll's broken full-screen handling.
@@ -602,14 +602,14 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    SDL_AtomicLock(&m_OverlayLock);
+    SDL_LockSpinlock(&m_OverlayLock);
     ComPtr<IDirect3DTexture9> oldTexture = std::move(m_OverlayTextures[type]);
     ComPtr<IDirect3DVertexBuffer9> oldVertexBuffer = std::move(m_OverlayVertexBuffers[type]);
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 
     // If the overlay is disabled, we're done
     if (!overlayEnabled) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         return;
     }
 
@@ -625,7 +625,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
                                  &newTexture,
                                  nullptr);
     if (FAILED(hr)) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "CreateTexture() failed: %x",
                      hr);
@@ -635,7 +635,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     D3DLOCKED_RECT lockedRect;
     hr = newTexture->LockRect(0, &lockedRect, nullptr, D3DLOCK_DISCARD);
     if (FAILED(hr)) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "IDirect3DTexture9::LockRect() failed: %x",
                      hr);
@@ -643,7 +643,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
     // Copy (and convert, if necessary) the surface pixels to the texture
-    SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format->format, newSurface->pixels,
+    SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format, newSurface->pixels,
                       newSurface->pitch, SDL_PIXELFORMAT_ARGB8888, lockedRect.pBits, lockedRect.Pitch);
 
     newTexture->UnlockRect(0);
@@ -665,7 +665,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     renderRect.h = newSurface->h;
 
     // The surface is no longer required
-    SDL_FreeSurface(newSurface);
+    SDL_DestroySurface(newSurface);
     newSurface = nullptr;
 
     // Compensate for D3D9's half pixel offset
@@ -704,10 +704,10 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
     newVertexBuffer->Unlock();
 
-    SDL_AtomicLock(&m_OverlayLock);
+    SDL_LockSpinlock(&m_OverlayLock);
     m_OverlayVertexBuffers[type] = std::move(newVertexBuffer);
     m_OverlayTextures[type] = std::move(newTexture);
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 }
 
 void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
@@ -719,7 +719,7 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
     }
 
     // If the overlay is being updated, just skip rendering it this frame
-    if (!SDL_AtomicTryLock(&m_OverlayLock)) {
+    if (!SDL_TryLockSpinlock(&m_OverlayLock)) {
         return;
     }
 
@@ -727,7 +727,7 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
     // overlay update thread tries to release them.
     ComPtr<IDirect3DTexture9> overlayTexture = m_OverlayTextures[type];
     ComPtr<IDirect3DVertexBuffer9> overlayVertexBuffer = m_OverlayVertexBuffers[type];
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 
     if (overlayTexture == nullptr) {
         return;

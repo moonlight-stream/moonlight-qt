@@ -62,11 +62,11 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 * FFmpeg 4.0 or later
 * Install the required packages:
   * Debian/Ubuntu:
-    * Base Requirements: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libsdl2-dev libsdl2-ttf-dev libssl-dev libavcodec-dev libavformat-dev libswscale-dev libva-dev libvdpau-dev libxkbcommon-dev wayland-protocols libdrm-dev`
+    * Base Requirements: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libsdl3-dev libsdl3-ttf-dev libssl-dev libavcodec-dev libavformat-dev libswscale-dev libva-dev libvdpau-dev libxkbcommon-dev wayland-protocols libdrm-dev`
     * Qt 6 (Recommended): `qt6-base-dev qt6-declarative-dev libqt6svg6-dev qt6-wayland qml6-module-qtquick-controls qml6-module-qtquick-templates qml6-module-qtquick-layouts qml6-module-qtqml-workerscript qml6-module-qtquick-window qml6-module-qtquick`
     * Qt 5: `qtbase5-dev qt5-qmake qtdeclarative5-dev qtquickcontrols2-5-dev qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2 qtwayland5`
   * RedHat/Fedora (RPM Fusion repo required):
-    * Base Requirements: `openssl-devel SDL2-devel SDL2_ttf-devel ffmpeg-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel libdrm-devel`
+    * Base Requirements: `openssl-devel SDL3-devel SDL3_ttf-devel ffmpeg-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel libdrm-devel`
     * Qt 6 (Recommended): `qt6-qtsvg-devel qt6-qtdeclarative-devel`
     * Qt 5: `qt5-qtsvg-devel qt5-qtquickcontrols2-devel`
 * Building the Vulkan renderer requires a `libplacebo-dev`/`libplacebo-devel` version of at least v7.349.0 and FFmpeg 6.1 or later.

@@ -733,7 +733,7 @@ void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         }
 
         // Convert the surface to the proper format for the VAImage
-        SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format->format,
+        SDL_ConvertPixels(newSurface->w, newSurface->h, static_cast<SDL_PixelFormat>(newSurface->format),
                           newSurface->pixels, newSurface->pitch, m_OverlaySdlPixelFormat,
                           imagePixels, (int)newImage.pitches[0]);
 
