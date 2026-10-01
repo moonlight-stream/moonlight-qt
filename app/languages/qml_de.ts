@@ -791,12 +791,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="819"/>
         <source>V-Sync</source>
-        <translation>VSync</translation>
+        <translation>V-Sync</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="829"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation>Die Deaktivierung von VSync ermöglicht eine Sub-Frame-Rendering-Latenz, aber es kann zu sichtbarem Verzerrungen (Tearing) kommen</translation>
+        <translation>Die Deaktivierung von V-Sync ermöglicht eine Sub-Frame-Rendering-Latenz, aber es kann zu sichtbarem Verzerrungen (Tearing) kommen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="836"/>
@@ -881,7 +881,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
         <source>Show configuration warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>Konfigurationswarnungen anzeigen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1298"/>
@@ -891,7 +891,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1319"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation>Dies ermöglicht eine nahtlose Maussteuerung, ohne den Mauszeiger des PCs zu erfassen. Es ist ideal für die Remote-Desktop-Nutzung, funktioniert aber bei den meisten Spielen nicht.</translation>
+        <translation>Dies ermöglicht eine nahtlose Maussteuerung, ohne den Mauszeiger des PC-Clients zu übernehmen. Die Funktion eignet sich ideal für die Remote-Desktop-Nutzung, funktioniert jedoch in den meisten Spielen nicht.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1321"/>
