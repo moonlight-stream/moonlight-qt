@@ -556,52 +556,46 @@ Flickable {
                             }
                         }
 
-                        function addRefreshRateOrdered(fpsListModel, refreshRate, description, custom) {
-                            var indexToAdd = 0
-                            for (var j = 0; j < fpsListModel.count; j++) {
-                                var existing_fps = parseInt(fpsListModel.get(j).video_fps);
-
-                                if (refreshRate === existing_fps || (custom && fpsListModel.get(j).is_custom)) {
-                                    // Duplicate entry, skip
-                                    indexToAdd = -1
+                        function getRefreshRates() {
+                            var refreshRates = []
+                            for (var displayIndex = 0; ; displayIndex++) {
+                                var refreshRate = SystemProperties.getRefreshRate(displayIndex)
+                                if (refreshRate === 0) {
                                     break
                                 }
-                                else if (refreshRate > existing_fps) {
-                                    // Candidate entrypoint after this entry
-                                    indexToAdd = j + 1
-                                }
+
+                                refreshRates.push(refreshRate)
                             }
 
-                            // Insert this frame rate if it's not a duplicate
-                            if (indexToAdd >= 0) {
-                                // Custom values always go at the end of the list
-                                if (custom) {
-                                    indexToAdd = fpsListModel.count
-                                }
+                            return refreshRates
+                        }
 
-                                fpsListModel.insert(indexToAdd,
-                                                    {
-                                                        "text": description,
-                                                        "video_fps": ""+refreshRate,
-                                                        "is_custom": custom
-                                                    })
+                        function choiceText(choice) {
+                            switch (choice.kind) {
+                            case "vrr":
+                                return qsTr("VRR (%1 FPS)").arg(choice.video_fps)
+                            case "low-latency-vrr":
+                                return qsTr("Low-latency VRR (%1 FPS)").arg(choice.video_fps)
+                            case "custom":
+                                return qsTr("Custom (%1 FPS)").arg(choice.video_fps)
+                            default:
+                                return qsTr("%1 FPS").arg(choice.video_fps)
                             }
-
-                            return indexToAdd
                         }
 
                         function reinitialize() {
-                            // Add native refresh rate for all attached displays
-                            var done = false
-                            for (var displayIndex = 0; !done; displayIndex++) {
-                                var refreshRate = SystemProperties.getRefreshRate(displayIndex);
-                                if (refreshRate === 0) {
-                                    // Exceeded max count of displays
-                                    done = true
-                                    break
-                                }
+                            var choices = StreamingPreferences.getFpsChoices(getRefreshRates())
+                            model.clear()
+                            var hasCustomChoice = false
 
-                                addRefreshRateOrdered(fpsListModel, refreshRate, qsTr("%1 FPS").arg(refreshRate), false)
+                            for (var i = 0; i < choices.length; i++) {
+                                var choice = choices[i]
+                                hasCustomChoice = hasCustomChoice || choice.is_custom
+                                model.append({
+                                                 "text": choiceText(choice),
+                                                 "video_fps": choice.video_fps,
+                                                 "is_custom": choice.is_custom
+                                             })
                             }
 
                             var saved_fps = StreamingPreferences.fps
@@ -617,12 +611,18 @@ Flickable {
                                 }
                             }
 
-                            // If we didn't find one, add a custom frame rate for the current value
+                            // VRR mode omits exact native refresh rates, so a saved
+                            // native value may have no entry to select.
                             if (!found) {
-                                currentIndex = addRefreshRateOrdered(model, saved_fps, qsTr("Custom (%1 FPS)").arg(saved_fps), true)
+                                currentIndex = model.count > 0 ? 0 : -1
                             }
-                            else {
-                                addRefreshRateOrdered(model, "", qsTr("Custom"), true)
+
+                            if (!hasCustomChoice) {
+                                model.append({
+                                                 "text": qsTr("Custom"),
+                                                 "video_fps": "",
+                                                 "is_custom": true
+                                             })
                             }
 
                             recalculateWidth()
@@ -634,21 +634,12 @@ Flickable {
                         Component.onCompleted: {
                             reinitialize()
                             languageChanged.connect(reinitialize)
+                            StreamingPreferences.enableVsyncChanged.connect(reinitialize)
+                            StreamingPreferences.enableVrrChanged.connect(reinitialize)
                         }
 
                         model: ListModel {
                             id: fpsListModel
-                            // Other elements may be added at runtime
-                            ListElement {
-                                text: qsTr("30 FPS")
-                                video_fps: "30"
-                                is_custom: false
-                            }
-                            ListElement {
-                                text: qsTr("60 FPS")
-                                video_fps: "60"
-                                is_custom: false
-                            }
                         }
 
                         id: fpsComboBox
@@ -799,7 +790,10 @@ Flickable {
 
                     id: windowModeComboBox
                     visible: SystemProperties.hasDesktopEnvironment
-                    enabled: !SystemProperties.rendererAlwaysFullScreen
+                    // An active VRR session always uses borderless fullscreen,
+                    // so the saved preference cannot take effect while it is on.
+                    enabled: !SystemProperties.rendererAlwaysFullScreen &&
+                             !(StreamingPreferences.enableVsync && StreamingPreferences.enableVrr)
                     hoverEnabled: true
                     textRole: "text"
                     onActivated: {
@@ -846,6 +840,23 @@ Flickable {
                         ToolTip.timeout: 5000
                         ToolTip.visible: hovered
                         ToolTip.text: qsTr("Frame pacing reduces micro-stutter by delaying frames that come in too early")
+                    }
+
+                    CheckBox {
+                        hoverEnabled: true
+                        text: qsTr("Enable VRR")
+                        font.pointSize: 12
+                        enabled: StreamingPreferences.enableVsync
+                        checked: StreamingPreferences.enableVrr
+                        onCheckedChanged: {
+                            StreamingPreferences.enableVrr = checked
+                        }
+
+                        ToolTip.delay: 1000
+                        ToolTip.timeout: 5000
+                        ToolTip.visible: hovered
+                        ToolTip.text: enabled ? qsTr("VRR uses paced adaptive presentation with best-effort tear avoidance. Sessions without enough refresh-rate headroom use fixed V-Sync. Borderless fullscreen is used while VRR is active.")
+                                              : qsTr("VRR requires V-Sync. Enable V-Sync to change this setting.")
                     }
                 }
 

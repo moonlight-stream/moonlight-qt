@@ -44,11 +44,19 @@ typedef struct _DECODER_PARAMETERS {
     int frameRate;
     bool enableVsync;
     bool enableFramePacing;
+    // VRR is an opt-in, session-snapshotted third pacing mode.
+    bool enableVrr;
+    // Strictly obtained during Session initialization. A value of zero means
+    // the session was not qualified for VRR; Pacer must not substitute a
+    // legacy 60 Hz fallback when this path is requested.
+    int vrrDisplayRefreshHz;
     bool testOnly;
 } DECODER_PARAMETERS, *PDECODER_PARAMETERS;
 
 #define WINDOW_STATE_CHANGE_SIZE 0x01
 #define WINDOW_STATE_CHANGE_DISPLAY 0x02
+#define WINDOW_STATE_CHANGE_MINIMIZED 0x04
+#define WINDOW_STATE_CHANGE_RESTORED 0x08
 
 typedef struct _WINDOW_STATE_CHANGE_INFO {
     SDL_Window* window;
