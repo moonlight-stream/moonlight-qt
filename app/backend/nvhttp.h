@@ -10,6 +10,34 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 
+#include <optional>
+
+struct AbrCapabilities {
+    bool supported;
+    int version;
+    QStringList features;
+};
+
+struct AbrConfig {
+    bool enabled;
+    int minBitrate;
+    int maxBitrate;
+    QString mode;
+};
+
+struct NetworkFeedback {
+    float packetLoss;
+    int rttMs;
+    float decodeFps;
+    int droppedFrames;
+    int currentBitrate;
+};
+
+struct AbrAction {
+    std::optional<int> newBitrate;
+    std::optional<QString> reason;
+};
+
 class NvComputer;
 
 class NvDisplayMode
@@ -182,6 +210,18 @@ public:
     QVector<NvDisplayMode>
     getDisplayModeList(QString serverInfo);
 
+    bool
+    setBitrate(int bitrateKbps);
+
+    AbrCapabilities
+    getAbrCapabilities();
+
+    bool
+    setAbrMode(const AbrConfig& config);
+
+    std::optional<AbrAction>
+    reportNetworkFeedback(const NetworkFeedback& feedback);
+
     QUrl m_BaseUrlHttp;
     QUrl m_BaseUrlHttps;
 private:
@@ -194,6 +234,12 @@ private:
                    QString arguments,
                    int timeoutMs,
                    NvLogLevel logLevel);
+
+    QString
+    abrGet(const QString& pathSegments);
+
+    QString
+    abrPost(const QString& pathSegments, const QByteArray& payload);
 
     NvAddress m_Address;
     QNetworkAccessManager* m_Nam;
