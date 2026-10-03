@@ -355,8 +355,12 @@ bool NvComputer::wake() const
     return success;
 }
 
-NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
+NvComputer::ReachabilityType NvComputer::getActiveAddressReachability(bool* activeInterfaceIsWifi) const
 {
+    if (activeInterfaceIsWifi != nullptr) {
+        *activeInterfaceIsWifi = false;
+    }
+
     NvAddress copyOfActiveAddress;
 
     {
@@ -393,6 +397,10 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
                     qInfo() << "Interface Type:" << nic.type();
                     qInfo() << "Interface MTU:" << nic.maximumTransmissionUnit();
+
+                    if (activeInterfaceIsWifi != nullptr) {
+                        *activeInterfaceIsWifi = nic.type() == QNetworkInterface::Wifi;
+                    }
 
                     if (nic.type() == QNetworkInterface::Virtual ||
                             nic.type() == QNetworkInterface::Ppp) {
