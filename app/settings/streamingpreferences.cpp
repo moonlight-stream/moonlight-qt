@@ -52,6 +52,7 @@
 #define SER_KEEPAWAKE "keepawake"
 #define SER_LANGUAGE "language"
 #define SER_RENDERER "renderer"
+#define SER_MACOSFULLSIZECONTENTVIEW "macosfullsizecontentview"
 
 #define CURRENT_DEFAULT_VER 2
 
@@ -152,6 +153,7 @@ void StreamingPreferences::reload()
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
     enableHdr = settings.value(SER_HDR, false).toBool();
+    macOSFullSizeContentView = settings.value(SER_MACOSFULLSIZECONTENTVIEW, true).toBool();
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
@@ -351,6 +353,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
     settings.setValue(SER_RENDERER, static_cast<int>(rendererSelection));
+    settings.setValue(SER_MACOSFULLSIZECONTENTVIEW, macOSFullSizeContentView);
     settings.setValue(SER_WINDOWMODE, static_cast<int>(windowMode));
     settings.setValue(SER_UIDISPLAYMODE, static_cast<int>(uiDisplayMode));
     settings.setValue(SER_LANGUAGE, static_cast<int>(language));
