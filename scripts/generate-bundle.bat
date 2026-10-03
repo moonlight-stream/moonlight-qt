@@ -27,7 +27,7 @@ if /I "%BUILD_CONFIG%"=="debug" (
             )
 
             if not defined SIGNTOOL_PARAMS (
-                echo "A signtool parameter string must be specified in SIGNTOOL_PARAMS for signed release builds"
+                echo A signtool parameter string must be specified in SIGNTOOL_PARAMS for signed release builds
                 exit /b 1
             )
         ) else (

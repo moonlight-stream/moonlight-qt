@@ -16,10 +16,10 @@
     <SignOutput>true</SignOutput>
   </PropertyGroup>
   <Target Name="SignBundleEngine">
-    <Exec Command='signtool.exe $(SIGNTOOL_PARAMS) %(SignBundleEngine.FullPath)' />
+    <Exec Command='signtool.exe sign $(SIGNTOOL_PARAMS) %(SignBundleEngine.FullPath)' />
   </Target>
   <Target Name="SignBundle">
-    <Exec Command='signtool.exe $(SIGNTOOL_PARAMS) %(SignBundle.FullPath)' />
+    <Exec Command='signtool.exe sign $(SIGNTOOL_PARAMS) %(SignBundle.FullPath)' />
   </Target>
   <ItemGroup>
     <PackageReference Include="WixToolset.Bal.wixext" Version="7.0.0" />
