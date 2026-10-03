@@ -749,7 +749,7 @@ int main(int argc, char *argv[])
     // NB: We do not force SDL_VIDEO_WAYLAND_MODE_SCALING to "stretch" on KDE,
     // because SDL 3.6 has a workaround for KDE and switches the default to
     // "aspect" for all desktops.
-    if (qgetenv("XDG_CURRENT_DESKTOP") != "KDE") {
+    if (!qgetenv("XDG_CURRENT_DESKTOP").contains("KDE")) {
         SDL_SetHint("SDL_VIDEO_WAYLAND_MODE_SCALING", "aspect");
     }
 
