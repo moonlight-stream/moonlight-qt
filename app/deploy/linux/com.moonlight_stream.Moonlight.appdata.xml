@@ -51,6 +51,68 @@
 	</screenshots>
 
 	<releases>
+		<release version="6.2.0" date="2026-10-03">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Ctrl+Alt+Shift+K has been added to toggle system keyboard grab</li>
+					<li>Added support for DualSense adaptive triggers (requires a compatible host)</li>
+					<li>Gamepads with a second trackpad can now be passed to the host (requires host support)</li>
+					<li>Client identifiers are now provided to the host to allow client-specific session management</li>
+					<li>Added an option to disable pre-launch warnings</li>
+				</ul>
+				<p>Behavior Changes:</p>
+				<ul>
+					<li>Most video renderers now use full range color instead of limited range</li>
+					<li>The cursor is now also locked to the video area in single display borderless windowed scenarios. This was previously only done in true full-screen mode.</li>
+					<li>The cursor is no longer captured by default in windowed mode. Clicking on the streaming window or pressing Ctrl+Alt+Shift+Z will capture the cursor.</li>
+					<li>GPUs on non-x86 Linux platforms are now assumed to be slow by default, which enables a number of optimizations for improved performance. GL_IS_SLOW=0/VULKAN_IS_SLOW=0 can be set at runtime to override this.</li>
+					<li>The default streaming resolution for new installs is now 1080p instead of 720p.</li>
+					<li>Video bitrate no longer resets when adjusting resolution or frame rate if it's already been manually adjusted</li>
+				</ul>
+				<p>Security:</p>
+				<ul>
+					<li>CVE-2026-33546, CVE-2026-33547, and CVE-2026-41210 have been fixed</li>
+					<li>These vulnerabilities could allow a malicious host to crash Moonlight when connecting</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Reduced background CPU usage</li>
+					<li>Improved startup, settings page, and stream load times</li>
+					<li>Optimized the EGL/GLES renderer to improve performance on low end GPUs and embedded devices</li>
+					<li>Fixed EGL/GLES renderer failures under X11 when GLX was used for the UI</li>
+					<li>Improved readability of the statistics overlay by adding an outline</li>
+					<li>Improved timing accuracy in the statistics overlay</li>
+					<li>Improved performance when multiple gamepads are sending input simultaneously</li>
+					<li>Improved performance when recovering from dropped network packets</li>
+					<li>Fixed black or green padding being rendered on the bottom or right side of the video stream when streaming from certain hosts</li>
+					<li>Fixed horizontal scroll direction not being correctly inverted when requested</li>
+					<li>Fixed Moonlight not exiting after an abnormal stream termination when launched via the CLI</li>
+					<li>Fixed failure to start on Linux systems where desktop OpenGL is not available</li>
+					<li>Fixed broken overlay rendering on PowerVR systems using the proprietary driver</li>
+					<li>Fixed automatic selection of AV1 on systems where HEVC is not available</li>
+					<li>Fixed instability when using VAAPI decoding under X11</li>
+					<li>Fixed small deviations in chroma co-siting and color conversion</li>
+					<li>Fixed suboptimal format selection on some V4L2 decoders</li>
+					<li>Fixed handling of some non-US keyboard layouts</li>
+					<li>Fixed stale app list being displayed when using CLI commands</li>
+					<li>Fixed handling of IPv6 literals that are not URL-escaped</li>
+					<li>Fixed AV1 Vulkan Video decoding on newer versions of FFmpeg</li>
+					<li>Fixed Ctrl+C/SIGTERM when running from the console</li>
+					<li>Fixed several GUI interoperability issues with Qt 6.9 and later</li>
+					<li>Fixed the IME or software keyboard being unexpectedly displayed in various situations</li>
+					<li>Fixed launching in a new VT while a Wayland compositor is running</li>
+					<li>Fixed moving focus from the app grid into the toolbar via the gamepad or keyboard</li>
+					<li>Fixed a possible crash in the Vulkan renderer when disabling an overlay</li>
+					<li>Fixed keyboard grab not working under sdl2-compat on Wayland compositors that lack support for keyboard-shortcuts-inhibit-unstable-v1</li>
+					<li>Fixed CLI stream launch causing the saved manual address to be overwritten</li>
+					<li>Fixed distinguishing between Enter and Numpad Enter keys (requires updated host software)</li>
+					<li>Fixed mDNS discovering unexpected devices after running for a period of time</li>
+					<li>Fixed libdecor-gtk window decorations not being displayed on the streaming window</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="6.1.0" date="2024-09-16">
 			<description>
 				<p>New features:</p>
