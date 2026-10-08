@@ -9,11 +9,16 @@ on:
       ci_version:
         required: true
         type: string
+      ci_build_date:
+        required: true
+        type: string
 
 jobs:
   build:
     env:
       CI_VERSION: ${{ inputs.ci_version }}
+      GIT_HASH: ${{ inputs.ci_version }}
+      BUILD_DATE: ${{ inputs.ci_build_date }}
     strategy:
       fail-fast: false
       matrix:
