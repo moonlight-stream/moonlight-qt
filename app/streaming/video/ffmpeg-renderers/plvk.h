@@ -7,6 +7,7 @@
 #endif
 
 #include <libplacebo/log.h>
+#include <libplacebo/options.h>
 #include <libplacebo/renderer.h>
 #include <libplacebo/vulkan.h>
 
@@ -93,6 +94,7 @@ private:
 
     // Stream state
     int m_MaxVideoFps;
+    StreamingPreferences::VideoScalingMode m_VideoScalingMode;
 
     // The libplacebo rendering state
     pl_log m_Log = nullptr;
@@ -103,6 +105,7 @@ private:
     pl_vulkan m_Vulkan = nullptr;
     pl_swapchain m_Swapchain = nullptr;
     pl_renderer m_Renderer = nullptr;
+    pl_options m_RenderOptions = nullptr;
     pl_tex m_Textures[PL_MAX_PLANES] = {};
     pl_color_space m_LastColorspace = {};
 
