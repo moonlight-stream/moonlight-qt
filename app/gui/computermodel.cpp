@@ -2,6 +2,8 @@
 
 #include <QThreadPool>
 
+#include <utility>
+
 ComputerModel::ComputerModel(QObject* object)
     : QAbstractListModel(object) {}
 
@@ -152,23 +154,26 @@ void ComputerModel::deleteComputer(int computerIndex)
 class DeferredWakeHostTask : public QRunnable
 {
 public:
-    DeferredWakeHostTask(NvComputer* computer)
-        : m_Computer(computer) {}
+    DeferredWakeHostTask(NvComputer* computer, QList<QHostAddress> wolProxyAddresses)
+        : m_Computer(computer),
+          m_WolProxyAddresses(std::move(wolProxyAddresses)) {}
 
     void run()
     {
-        m_Computer->wake();
+        m_Computer->wake(m_WolProxyAddresses);
     }
 
 private:
     NvComputer* m_Computer;
+    QList<QHostAddress> m_WolProxyAddresses;
 };
 
 void ComputerModel::wakeComputer(int computerIndex)
 {
     Q_ASSERT(computerIndex < m_Computers.count());
 
-    DeferredWakeHostTask* wakeTask = new DeferredWakeHostTask(m_Computers[computerIndex]);
+    DeferredWakeHostTask* wakeTask = new DeferredWakeHostTask(m_Computers[computerIndex],
+                                                              m_ComputerManager->getWolProxyAddresses());
     QThreadPool::globalInstance()->start(wakeTask);
 }
 
