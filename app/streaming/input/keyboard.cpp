@@ -168,6 +168,10 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 
         // Toggle the system key capture mode
         if (isSystemKeyCaptureActive()) {
+            // Release held keys before disabling capture, since GUI key-up events
+            // will no longer be forwarded once system key capture is inactive.
+            raiseAllKeys();
+
             m_CaptureSystemKeysMode = StreamingPreferences::CSK_OFF;
         }
         else {
