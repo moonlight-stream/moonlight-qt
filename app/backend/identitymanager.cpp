@@ -186,7 +186,7 @@ IdentityManager::getSslKey()
 
         BUF_MEM* mem;
         BIO_get_mem_ptr(bio, &mem);
-        m_CachedSslKey = QSslKey(QByteArray(mem->data, (int)mem->length), QSsl::Rsa);
+        m_CachedSslKey = QSslKey(QByteArray(mem->data, (int)mem->length), getSslCertificate().publicKey().algorithm());
 
         BIO_free(bio);
         EVP_PKEY_free(pk);
