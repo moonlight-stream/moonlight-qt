@@ -976,6 +976,17 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         m_LastColorspace = mappedFrame.color;
         SDL_assert(pl_color_space_equal(&mappedFrame.color, &m_LastColorspace));
 
+        // Opt-in SDR presentation experiment for Wayland compositor color
+        // conversion. Keep HDR untouched and let libplacebo convert the source
+        // into an explicitly sRGB output swapchain.
+        if (qEnvironmentVariableIntValue("PLVK_FORCE_SRGB_OUTPUT") == 1 &&
+            !pl_color_space_is_hdr(&mappedFrame.color)) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "SDR output test: requesting sRGB swapchain (source primaries=%d transfer=%d)",
+                        (int)mappedFrame.color.primaries, (int)mappedFrame.color.transfer);
+            pl_swapchain_colorspace_hint(m_Swapchain, &pl_color_space_srgb);
+        }
+        else
 #ifdef Q_OS_DARWIN
         // There is a gamma mismatch on macOS between what libplacebo thinks BT.709
         // should use and what the Metal layer actually displays. Use sRGB for the
