@@ -812,6 +812,8 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     dst.w = drawableWidth;
     dst.h = drawableHeight;
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+    // glViewport() uses a bottom-left origin, so flip to preserve the video alignment
+    dst.y = drawableHeight - dst.y - dst.h;
     glViewport(dst.x, dst.y, dst.w, dst.h);
 
     glUseProgram(m_ShaderProgram);
