@@ -28,6 +28,9 @@ typedef struct PenState {
     bool tipDown;
     bool eraser;
     bool inProximity;
+    bool hasSuppressionAnchor;
+    float suppressionX;
+    float suppressionY;
     uint8_t buttons;
 } PenState;
 
@@ -43,6 +46,7 @@ static bool g_filterInstalled;
 
 static MoonlightPenHandler g_handler;
 static void *g_handlerUserdata;
+static bool g_penHoverSuppressed;
 
 // Track a handful of concurrent pens (built-in display pens are usually one).
 #define MAX_PEN_STATE 8
@@ -168,6 +172,29 @@ static void emitPen(const PenState *state, unsigned char eventType)
     g_handler(&ev, g_handlerUserdata);
 }
 
+static bool penMotionClaimsPointer(PenState *state, float x, float y)
+{
+    if (!g_penHoverSuppressed) {
+        return true;
+    }
+
+    // XWayland may not report a new PROXIMITY_IN after mouse activity if the
+    // pen never logically left proximity. Ignore stationary packets at the old
+    // pen location, but treat deliberate pen movement as renewed hover intent.
+    const float movementThreshold = 2.0f;
+    if (state->hasSuppressionAnchor &&
+            fabsf(x - state->suppressionX) < movementThreshold &&
+            fabsf(y - state->suppressionY) < movementThreshold) {
+        return false;
+    }
+
+    g_penHoverSuppressed = false;
+    for (int i = 0; i < MAX_PEN_STATE; i++) {
+        g_penState[i].hasSuppressionAnchor = false;
+    }
+    return true;
+}
+
 static void applyAxis(PenState *state, SDL_PenAxis axis, float value)
 {
     switch (axis) {
@@ -199,7 +226,10 @@ static bool handlePenEvent(const SDL_Event *event)
         if (!state) {
             return true;
         }
-        // Wait for motion/axis for coordinates before sending HOVER.
+        // A fresh proximity transition is deliberate pen activity. Wait for
+        // motion/axis for coordinates before sending HOVER.
+        g_penHoverSuppressed = false;
+        state->hasSuppressionAnchor = false;
         state->inProximity = true;
         state->eraser = (event->pproximity.pen_state & SDL_PEN_INPUT_ERASER_TIP) != 0;
         state->buttons = mapPenButtons(event->pproximity.pen_state);
@@ -208,7 +238,9 @@ static bool handlePenEvent(const SDL_Event *event)
     case SDL_EVENT_PEN_PROXIMITY_OUT: {
         PenState *state = getPenState(event->pproximity.which, false);
         if (state) {
-            emitPen(state, LI_TOUCH_EVENT_HOVER_LEAVE);
+            if (state->inProximity) {
+                emitPen(state, LI_TOUCH_EVENT_HOVER_LEAVE);
+            }
             clearPenState(event->pproximity.which);
         }
         return true;
@@ -218,6 +250,8 @@ static bool handlePenEvent(const SDL_Event *event)
         if (!state) {
             return true;
         }
+        g_penHoverSuppressed = false;
+        state->hasSuppressionAnchor = false;
         state->inProximity = true;
         state->tipDown = true;
         state->eraser = event->ptouch.eraser || ((event->ptouch.pen_state & SDL_PEN_INPUT_ERASER_TIP) != 0);
@@ -245,13 +279,20 @@ static bool handlePenEvent(const SDL_Event *event)
         if (!state) {
             return true;
         }
-        state->inProximity = true;
         state->tipDown = (event->pmotion.pen_state & SDL_PEN_INPUT_DOWN) != 0;
         state->eraser = (event->pmotion.pen_state & SDL_PEN_INPUT_ERASER_TIP) != 0;
         state->buttons = mapPenButtons(event->pmotion.pen_state);
+        bool claimsPointer = penMotionClaimsPointer(state, event->pmotion.x, event->pmotion.y);
+        state->inProximity = claimsPointer || state->tipDown;
         state->x = event->pmotion.x;
         state->y = event->pmotion.y;
-        emitPen(state, state->tipDown ? LI_TOUCH_EVENT_MOVE : LI_TOUCH_EVENT_HOVER);
+        if (state->tipDown) {
+            g_penHoverSuppressed = false;
+            state->hasSuppressionAnchor = false;
+            emitPen(state, LI_TOUCH_EVENT_MOVE);
+        } else if (claimsPointer) {
+            emitPen(state, LI_TOUCH_EVENT_HOVER);
+        }
         return true;
     }
     case SDL_EVENT_PEN_AXIS: {
@@ -259,14 +300,21 @@ static bool handlePenEvent(const SDL_Event *event)
         if (!state) {
             return true;
         }
-        state->inProximity = true;
         state->tipDown = (event->paxis.pen_state & SDL_PEN_INPUT_DOWN) != 0;
         state->eraser = (event->paxis.pen_state & SDL_PEN_INPUT_ERASER_TIP) != 0;
         state->buttons = mapPenButtons(event->paxis.pen_state);
+        bool claimsPointer = penMotionClaimsPointer(state, event->paxis.x, event->paxis.y);
+        state->inProximity = claimsPointer || state->tipDown;
         state->x = event->paxis.x;
         state->y = event->paxis.y;
         applyAxis(state, event->paxis.axis, event->paxis.value);
-        emitPen(state, state->tipDown ? LI_TOUCH_EVENT_MOVE : LI_TOUCH_EVENT_HOVER);
+        if (state->tipDown) {
+            g_penHoverSuppressed = false;
+            state->hasSuppressionAnchor = false;
+            emitPen(state, LI_TOUCH_EVENT_MOVE);
+        } else if (claimsPointer) {
+            emitPen(state, LI_TOUCH_EVENT_HOVER);
+        }
         return true;
     }
     case SDL_EVENT_PEN_BUTTON_DOWN:
@@ -275,6 +323,8 @@ static bool handlePenEvent(const SDL_Event *event)
         if (!state) {
             return true;
         }
+        g_penHoverSuppressed = false;
+        state->hasSuppressionAnchor = false;
         state->inProximity = true;
         state->tipDown = (event->pbutton.pen_state & SDL_PEN_INPUT_DOWN) != 0;
         state->eraser = (event->pbutton.pen_state & SDL_PEN_INPUT_ERASER_TIP) != 0;
@@ -359,6 +409,27 @@ void Moonlight_Pen_EnsureFilter(void)
     installHints();
 }
 
+void Moonlight_Pen_NotifyMouseActivity(void)
+{
+    if (g_penHoverSuppressed) {
+        return;
+    }
+
+    g_penHoverSuppressed = true;
+    for (int i = 0; i < MAX_PEN_STATE; i++) {
+        PenState *state = &g_penState[i];
+        if (g_penIds[i] != 0 && !state->tipDown) {
+            state->hasSuppressionAnchor = true;
+            state->suppressionX = state->x;
+            state->suppressionY = state->y;
+            if (state->inProximity) {
+                emitPen(state, LI_TOUCH_EVENT_HOVER_LEAVE);
+                state->inProximity = false;
+            }
+        }
+    }
+}
+
 void Moonlight_Pen_Stop(void)
 {
     if (g_filterInstalled && g_setEventFilter) {
@@ -370,6 +441,7 @@ void Moonlight_Pen_Stop(void)
     g_chainedUserdata = NULL;
     g_handler = NULL;
     g_handlerUserdata = NULL;
+    g_penHoverSuppressed = false;
     memset(g_penIds, 0, sizeof(g_penIds));
     memset(g_penState, 0, sizeof(g_penState));
 }

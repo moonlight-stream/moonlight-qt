@@ -31,6 +31,8 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
         return;
     }
 
+    notifySdl3MouseActivity();
+
     switch (event->button)
     {
         case SDL_BUTTON_LEFT:
@@ -78,6 +80,8 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         // Ignore synthetic touch/pen mouse events
         return;
     }
+
+    notifySdl3MouseActivity();
 
     // Batch all pending mouse motion events to save CPU time
     Sint32 x = event->x, y = event->y, xrel = event->xrel, yrel = event->yrel;
@@ -175,6 +179,8 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
             return;
         }
     }
+
+    notifySdl3MouseActivity();
 
 #if SDL_VERSION_ATLEAST(2, 0, 18)
     if (event->preciseY != 0.0f) {

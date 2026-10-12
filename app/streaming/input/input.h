@@ -137,6 +137,7 @@ public:
     void stopSdl3PenCapture();
     void ensureSdl3PenFilter();
     void handleSdl3PenEvent(const struct MoonlightPenRawEvent* event);
+    void notifySdl3MouseActivity();
     static bool isSyntheticPenMouseId(Uint32 which);
 
     int getAttachedGamepadMask();

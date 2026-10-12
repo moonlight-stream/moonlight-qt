@@ -53,6 +53,13 @@ void SdlInputHandler::ensureSdl3PenFilter()
     }
 }
 
+void SdlInputHandler::notifySdl3MouseActivity()
+{
+    if (m_Sdl3PenCaptureActive) {
+        Moonlight_Pen_NotifyMouseActivity();
+    }
+}
+
 void SdlInputHandler::handleSdl3PenEvent(const MoonlightPenRawEvent* event)
 {
     if (!m_Window || !event) {

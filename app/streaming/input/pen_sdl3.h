@@ -40,6 +40,10 @@ bool Moonlight_Pen_Start(MoonlightPenHandler handler, void* userdata);
 // Re-wrap the SDL3 filter if sdl2-compat reset it. Call once per event-loop wake.
 void Moonlight_Pen_EnsureFilter(void);
 
+// Transfer pointer ownership to a real mouse. Sends HOVER_LEAVE once and
+// suppresses lingering pen hover until the pen deliberately becomes active.
+void Moonlight_Pen_NotifyMouseActivity(void);
+
 // Remove our filter wrap and clear handler state.
 void Moonlight_Pen_Stop(void);
 
