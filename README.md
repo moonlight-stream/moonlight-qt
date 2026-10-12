@@ -1,3 +1,81 @@
+# Moonlight PC — Linux pen / Wayland SDR fork
+
+This is an experimental, unofficial fork of
+[Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt), maintained on
+[`inkbridge-pen`](https://github.com/Shiu/moonlight-qt/tree/inkbridge-pen).
+It adds Linux native pen input and an opt-in SDR presentation workaround.
+It is not a replacement for upstream Moonlight's official releases or support.
+
+## Fork-specific changes
+
+- **Native pen input through SDL3/sdl2-compat:** forwards pen position, pressure,
+  tilt, hover, tip/eraser state, and buttons using the host's pen/touch protocol.
+  Available data depends on the tablet, driver, and host. The host must advertise
+  pen/touch support; otherwise this capture path is disabled.
+- **Pen/mouse arbitration:** real mouse activity ends remote pen hover;
+  deliberate pen movement or contact can reclaim pointer ownership, avoiding
+  stationary pen hover packets fighting the mouse.
+- **Opt-in sRGB output for SDR video:** `PLVK_FORCE_SRGB_OUTPUT=1` asks the
+  Vulkan/libplacebo renderer for an sRGB output swapchain. Libplacebo converts
+  the source video into that output space. This avoids observed over-bright
+  native-Wayland presentation with Hyprland color management enabled
+  ([upstream issue #1875](https://github.com/moonlight-stream/moonlight-qt/issues/1875)).
+  HDR frames are left untouched; the option does not change the host's codec,
+  bitrate, resolution, HDR setting, or input-capture preference.
+
+## Using this branch
+
+Clone the patched branch, including submodules:
+
+```bash
+git clone --branch inkbridge-pen --recurse-submodules https://github.com/Shiu/moonlight-qt.git
+cd moonlight-qt
+```
+
+Use the upstream build instructions below. In addition to those dependencies,
+this branch requires SDL3 development headers. Native pen capture is designed
+for Moonlight's SDL2 API running through **sdl2-compat backed by SDL3**; a classic
+SDL2 runtime alone does not provide this pen-event path. The SDR workaround
+requires a build with the Vulkan/libplacebo renderer enabled.
+
+For a Linux native-Wayland SDR stream, enable the presentation workaround when
+launching your built client (replace the host/application names as needed):
+
+```bash
+QT_QPA_PLATFORM=wayland SDL_VIDEODRIVER=wayland PLVK_FORCE_SRGB_OUTPUT=1 \
+  ./app/moonlight stream "HOST_NAME" "APPLICATION_NAME"
+```
+
+The same environment variables work when opening the GUI: omit `stream` and its
+arguments. For comparison, omit `PLVK_FORCE_SRGB_OUTPUT` or set it to `0`.
+System-shortcut capture still requires Moonlight's **Capture system keyboard
+shortcuts** setting and compositor support; this fork does not force it on.
+
+No portable fork-specific binary release is provided by this README. The local
+`dist/moonlight-pen.sh` bundle used by Shiui is not tracked here. Upstream
+Flatpak, Snap, AppImage, and release downloads do **not** include these patches.
+Shiui's Dock profiles and machine-specific geometry are separate from this fork.
+
+## Validation and limitations
+
+- Correct SDR colors and Super+E capture were physically verified on Arch Linux,
+  Hyprland 0.56.2, NVIDIA RTX 5080, SDL3 3.4.16 / sdl2-compat 2.32.72, using
+  Vulkan/libplacebo and a 3792×2110, 120 FPS HEVC Main10 SDR stream.
+- Actual HDR output, other compositors/GPUs, and Windows/macOS fork-specific
+  behavior have not been validated. This is a targeted workaround, not a
+  general-purpose color-management fix.
+- Pen hover re-entry was previously tested; pressure, tilt, mapping, and touch
+  still need revalidation on the final native-Wayland color-fixed build.
+- XWayland gave correct colors in testing but did not suppress Hyprland's
+  compositor shortcuts; the full XWayland GUI also stalled during startup.
+- Please include your compositor, GPU/driver, SDL versions, host software,
+  codec, renderer log, and reproduction steps in fork-specific bug reports.
+
+The upstream project documentation follows. Its downloads, badges, and support
+links describe **official Moonlight**, not builds of this branch.
+
+---
+
 # Moonlight PC
 
 [Moonlight PC](https://moonlight-stream.org) is an open source PC client for NVIDIA GameStream and [Sunshine](https://github.com/LizardByte/Sunshine).
