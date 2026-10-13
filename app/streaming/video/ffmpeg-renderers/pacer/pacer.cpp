@@ -11,6 +11,10 @@
 #include "waylandvsyncsource.h"
 #endif
 
+#ifdef Q_OS_MACOS
+#include "cvdisplaysource.h"
+#endif
+
 #include <SDL_syswm.h>
 
 // Limit the number of queued frames to prevent excessive memory consumption
@@ -289,6 +293,12 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
     #if defined(SDL_VIDEO_DRIVER_WAYLAND) && defined(HAS_WAYLAND)
         case SDL_SYSWM_WAYLAND:
             m_VsyncSource = new WaylandVsyncSource(this);
+            break;
+    #endif
+
+    #ifdef Q_OS_MACOS
+        case SDL_SYSWM_COCOA:
+            m_VsyncSource = new CVDisplaySource(this);
             break;
     #endif
 

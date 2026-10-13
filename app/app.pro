@@ -414,6 +414,12 @@ macx {
 
     HEADERS += \
         streaming/video/ffmpeg-renderers/vt.h
+
+    # macOS frame pacing (CVDisplayLink-based VsyncSource)
+    SOURCES += \
+        streaming/video/ffmpeg-renderers/pacer/cvdisplaysource.mm
+    HEADERS += \
+        streaming/video/ffmpeg-renderers/pacer/cvdisplaysource.h
 }
 discord-rpc {
     message(Discord integration enabled)
