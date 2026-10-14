@@ -28,7 +28,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="314"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>Запустити цю гру одразу ж як обраний хост, пропускаючи вибір гри.</translation>
+        <translation>Запускати цю гру одразу після вибору хоста, оминаючи список ігор.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="322"/>
@@ -38,7 +38,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="326"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>Приховати цю гру в на екрані ігор. Щоб отримати доступ до прихованих ігор, клацніть правою кнопкою миші на хості та виберіть %1.</translation>
+        <translation>Приховати цю гру на екрані ігор. Щоб отримати доступ до прихованих ігор, клацніть правою кнопкою миші на хості та виберіть %1.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="326"/>
@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="341"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation>Схоже цей комп&apos;ютер не має ніяких додатків або деякі додатки приховані</translation>
+        <translation>Схоже, на цьому комп&apos;ютері немає жодних програм або деякі з них приховано</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="354"/>
@@ -66,12 +66,12 @@
     <message>
         <location filename="../gui/CliPair.qml" line="12"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation>Парування... Будь ласка, введіть «%1» на %2.</translation>
+        <translation>Сполучення... Введіть «%1» на %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="81"/>
         <source>Pairing completed successfully</source>
-        <translation>Парування успішно завершено</translation>
+        <translation>Сполучення успішно завершено</translation>
     </message>
 </context>
 <context>
@@ -129,12 +129,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation>Парований</translation>
+        <translation>Сполучено</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation>Не парований</translation>
+        <translation>Не сполучено</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
@@ -174,7 +174,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation>Уведена адреса: %1</translation>
+        <translation>Адреса, введена вручну: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
@@ -184,7 +184,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation>Стан парування: %1</translation>
+        <translation>Стан сполучення: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
@@ -228,12 +228,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="66"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>З&apos;єднання вашого ПК до інтернету, блокує Moonlight. Транслювання через інтернет може не працювати доки ви під&apos;єднані до цієї мережі.</translation>
+        <translation>Інтернет-з&apos;єднання цього ПК блокує Moonlight. Поки ви підключені до цієї мережі, трансляція через інтернет може не працювати.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="69"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation>Натисніть на кнопку Допомога для можливих рішень проблем.</translation>
+        <translation>Натисніть «Довідка», щоб побачити можливі рішення.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="100"/>
@@ -273,7 +273,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="225"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>Версія GeForce Experience на %1 не підтримується цією збіркою MoonLight. Потрібно оновити Moonlight, щоб транслювати з %1.</translation>
+        <translation>Версія GeForce Experience на %1 не підтримується цією збіркою Moonlight. Щоб транслювати з %1, оновіть Moonlight.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="324"/>
@@ -288,12 +288,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="335"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>Якщо ви намагаєтеся вести трансляцію через Інтернет, встановіть застосунок Moonlight Internet Hosting Tool на свій ігровий ПК та запустіть Internet Streaming Tester, щоб перевірити з&apos;єднання з інтернетом вашого ігрового ПК.</translation>
+        <translation>Якщо ви хочете транслювати через інтернет, встановіть на ігровий ПК Moonlight Internet Hosting Tool і запустіть Internet Streaming Tester з його комплекту, щоб перевірити інтернет-з&apos;єднання ігрового ПК.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="339"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Схоже, поточна мережа вашого ПК блокує Moonlight. Трансляція через Інтернет може не працювати доки ви під&apos;єднані до цієї мережі.</translation>
+        <translation>Схоже, поточна мережа вашого ПК блокує Moonlight. Поки ви підключені до цієї мережі, трансляція через інтернет може не працювати.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="339"/>
@@ -303,7 +303,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="331"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation>Не вдалося виконати тест мережі, оскільки жоден із серверів тестування під&apos;єднання Moonlight не був знайдений з цього ПК. Перевірте під&apos;єднання до Інтернету або спробуйте пізніше.</translation>
+        <translation>Не вдалося перевірити мережу: жоден із тестових серверів Moonlight недоступний з цього ПК. Перевірте інтернет-з&apos;єднання або спробуйте пізніше.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="170"/>
@@ -328,12 +328,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="297"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation>Будь ласка, введіть %1 на хост-ПК. Це вікно закриється, коли з&apos;єднання буде завершено.</translation>
+        <translation>Введіть %1 на хост-ПК. Це вікно закриється, щойно сполучення завершиться.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="298"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation>Якщо Sunshine працює на вашому хост-ПК, відкрийте вебінтерфейс Sunshine, щоб ввести PIN-код.</translation>
+        <translation>Якщо на хост-ПК працює Sunshine, відкрийте вебінтерфейс Sunshine, щоб ввести PIN-код.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="310"/>
@@ -343,7 +343,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="324"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation>Moonlight перевіряє мережу, щоб визначити, чи заблоковані потрібні порти.</translation>
+        <translation>Moonlight перевіряє мережеве з&apos;єднання, щоб з&apos;ясувати, чи не заблоковано потрібні порти.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="351"/>
@@ -361,17 +361,17 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="608"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>Ви не можете створити пару, доки попередній сеанс не закінчено на хост-ПК. Вийдіть із запущених ігор або перезавантажте хост-ПК, а потім спробуйте створити пару знову.</translation>
+        <translation>Неможливо виконати сполучення, поки на хост-ПК ще триває попередній сеанс. Закрийте запущені ігри або перезавантажте хост-ПК і спробуйте ще раз.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="611"/>
         <source>Pairing failed. Please try again.</source>
-        <translation>З&apos;єднання не вдалося. Спробуйте ще раз.</translation>
+        <translation>Сполучення не вдалося. Спробуйте ще раз.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="615"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation>Ще одна спроба з&apos;єднатися вже триває.</translation>
+        <translation>Інша спроба сполучення вже триває.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="625"/>
@@ -384,7 +384,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="675"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation>Цю гру запустив не цей ПК. Ви повинні вийти з гри на хост-ПК вручну або використовувати пристрій, з якого була запущена гра.</translation>
+        <translation>Цю гру запустив не цей ПК. Закрийте гру вручну на хост-ПК або з пристрою, з якого її запущено.</translation>
     </message>
 </context>
 <context>
@@ -392,7 +392,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation>%1 вже паровано</translation>
+        <translation>%1 уже сполучено</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="109"/>
@@ -405,23 +405,23 @@
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>Не паровано з комп&apos;ютером %1. Будь ласка, відкрийте Moonlight для парування перед тим як запускати трансляцію.</translation>
+        <translation>Комп&apos;ютер %1 не сполучено. Відкрийте Moonlight і виконайте сполучення, перш ніж запускати трансляцію.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation>Не вдалося вийти з гри, через: %1</translation>
+        <translation>Не вдалося закрити гру: %1</translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation>Не вдалося знайти застосунок %1</translation>
+        <translation>Не вдалося знайти гру %1</translation>
     </message>
     <message>
         <location filename="../cli/listapps.cpp" line="108"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation>Не паровано з комп&apos;ютером %1. Будь ласка, запустіть Moonlight для парування перед запитом списку ігор.</translation>
+        <translation>Комп&apos;ютер %1 не сполучено. Відкрийте Moonlight і виконайте сполучення, перш ніж отримувати список ігор.</translation>
     </message>
 </context>
 <context>
@@ -457,7 +457,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="13"/>
         <source>Quitting %1...</source>
-        <translation>Виходимо з %1...</translation>
+        <translation>Закриття %1...</translation>
     </message>
 </context>
 <context>
@@ -465,17 +465,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="104"/>
         <source>No video received from host.</source>
-        <translation>Немає відео з хоста.</translation>
+        <translation>Від хост-ПК не надходить відео.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="105"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Перевірте ваш брандмауер та правила відкриття наступних портів: %1</translation>
+        <translation>Перевірте брандмауер і правила переадресації портів: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="110"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation>Ваша мережа не справляється. Зменшіть бітрейт або спробуйте швидшу мережу.</translation>
+        <translation>Мережеве з&apos;єднання не справляється. Зменшіть бітрейт відео або спробуйте швидше з&apos;єднання.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="116"/>
@@ -485,77 +485,77 @@
     <message>
         <location filename="../streaming/session.cpp" line="117"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation>Переконайтеся, що на вашому хост-ПК не відкрито захищений DRM вміст. Ви також можете спробувати перезавантажити хост-ПК.</translation>
+        <translation>Переконайтеся, що на вашому хост-ПК не відкрито вміст, захищений DRM. Ви також можете спробувати перезавантажити хост-ПК.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="131"/>
         <source>Connection terminated</source>
-        <translation>З&apos;єднання розірване</translation>
+        <translation>З&apos;єднання розірвано</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="958"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>Версія GeForce Experience на %1 не підтримується цією збіркою Moonlight. Оновіть Moonlight для транслювання з %1.</translation>
+        <translation>Версія GeForce Experience на %1 не підтримується цією збіркою Moonlight. Щоб транслювати з %1, оновіть Moonlight.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="963"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation>Ваш вибір увімкнути режим миші &quot;віддалений робочий стіл&quot; може викликати проблеми в іграх.</translation>
+        <translation>Режим миші «віддалений робочий стіл» може спричиняти проблеми в іграх.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="967"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>Ваш вибір примусити програмне декодування може викликати погану продуктивність трансляції.</translation>
+        <translation>Примусове програмне декодування може погіршити продуктивність трансляції.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1003"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation>Хост не підтримує кодування HEVC.</translation>
+        <translation>Ваш хост-ПК не підтримує кодування HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1021"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation>Використання програмного декодування через вибір HEVC, котрий не підтримується відеокартою. Якість трансляції може погіршитися.</translation>
+        <translation>Використовується програмне декодування через примусовий вибір HEVC, який відеокарта не підтримує. Це може погіршити якість трансляції.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="973"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation>ПЗ або відеокарта вашого хоста не підтримує кодування AV1.</translation>
+        <translation>ПЗ або відеокарта вашого хост-ПК не підтримує кодування AV1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="991"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation>Використання програмного декодування через вибір AV1, що не підтримується відеокартою. Якість трансляції може погіршитися.</translation>
+        <translation>Використовується програмне декодування через примусовий вибір AV1, який відеокарта не підтримує. Це може погіршити якість трансляції.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1068"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation>Хост не підтримує транслювання HDR.</translation>
+        <translation>Ваш хост-ПК не підтримує трансляцію HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1060"/>
         <source>HDR is not supported using the H.264 codec.</source>
-        <translation>HDR не підтримується під час використання кодека H.264.</translation>
+        <translation>HDR не підтримується з кодеком H.264.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1083"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation>Графічна карта цього ПК не підтримує декодування AV1 Main10 для транслювання HDR.</translation>
+        <translation>Відеокарта цього ПК не підтримує декодування AV1 Main10 для трансляції HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1064"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation>Відеокарта цього ПК не підтримує декодування 10-bit HEVC або AV1 для транслювання HDR.</translation>
+        <translation>Відеокарта цього ПК не підтримує декодування 10-бітного HEVC чи AV1 для трансляції HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1116"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation>Хост та клієнт не підтримують однакові кодеки для HDR відео.</translation>
+        <translation>Хост-ПК і клієнтський ПК не мають спільних відеокодеків для HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1209"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
-        <translation>Роздільність понад 4K не підтримується кодеком H.264.</translation>
+        <translation>Роздільна здатність понад 4K не підтримується кодеком H.264.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1606"/>
@@ -565,12 +565,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="122"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation>Хост повідомив про фатальну помилку кодування.</translation>
+        <translation>Хост-ПК повідомив про критичну помилку кодування відео.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="123"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation>Спробуйте вимкнути HDR, змінити роздільну здатність трансляції або змінити роздільну здатність на хост-ПК.</translation>
+        <translation>Спробуйте вимкнути режим HDR, змінити роздільну здатність трансляції або змінити роздільну здатність дисплея на хост-ПК.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="132"/>
@@ -580,88 +580,88 @@
     <message>
         <location filename="../streaming/session.cpp" line="1040"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation>Використання програмного декодування через вибір H.264, що не підтримується відеокартою. Якість трансляції може погіршитися.</translation>
+        <translation>Використовується програмне декодування через примусовий вибір H.264, який відеокарта не підтримує. Це може погіршити якість трансляції.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1050"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation>Хост-ПК та клієнтський ПК не підтримують однакові відео кодеки. Якість трансляції може погіршитися.</translation>
+        <translation>Хост-ПК і клієнтський ПК не мають спільних відеокодеків. Це може погіршити якість трансляції.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1053"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation>Відеокарта на клієнті не підтримує декодування H.264. Якість трансляції може погіршитися.</translation>
+        <translation>Відеокарта клієнтського ПК не підтримує декодування H.264. Це може погіршити якість трансляції.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1089"/>
         <location filename="../streaming/session.cpp" line="1107"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation>Використання програмного декодування через вибір HDR, що не підтримується відеокартою. Якість трансляції може погіршитися.</translation>
+        <translation>Використовується програмне декодування через примусовий вибір HDR, який відеокарта не підтримує. Це може погіршити якість трансляції.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1101"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation>Відеокарта цього ПК не підтримує декодування HEVC Main10 для транслювання HDR.</translation>
+        <translation>Відеокарта цього ПК не підтримує декодування HEVC Main10 для трансляції HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1123"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation>Хост не підтримує транслювання YUV 4:4:4.</translation>
+        <translation>Ваш хост-ПК не підтримує трансляцію YUV 4:4:4.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1131"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation>Ваш хост-ПК не підтримує транслювання YUV 4:4:4 для вибраного відео кодека.</translation>
+        <translation>Ваш хост-ПК не підтримує трансляцію YUV 4:4:4 для вибраного відеокодека.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1146"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation>Використання програмного декодування через вибір YUV 4:4:4, що не підтримується відеокартою. Якість трансляції може погіршитися.</translation>
+        <translation>Використовується програмне декодування через примусовий вибір YUV 4:4:4, який відеокарта не підтримує. Це може погіршити якість трансляції.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1152"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation>Відеокарта цього ПК не підтримує декодування YUV 4:4:4 для вибраного кодека.</translation>
+        <translation>Відеокарта цього ПК не підтримує декодування YUV 4:4:4 для вибраного відеокодека.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1161"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation>Потрібно GeForce Experience 3.0 або вище для транслювання 4K.</translation>
+        <translation>Для трансляції 4K потрібна GeForce Experience версії 3.0 або новіша.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1176"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation>Обрані налаштування об&apos;ємного звуку не підтримуються поточним аудіо пристроєм.</translation>
+        <translation>Обране налаштування об&apos;ємного звуку не підтримується поточним аудіопристроєм.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1182"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation>Не вдалося відкрити аудіо пристрій. Аудіо буде відсутнім протягом цієї сесії.</translation>
+        <translation>Не вдалося відкрити аудіопристрій. Звук буде недоступний протягом цього сеансу.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1187"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation type="unfinished"></translation>
+        <translation>Підключений геймпад не має прив&apos;язки кнопок і не працюватиме. Як це виправити — дивіться в довідці Moonlight.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1205"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation>Відеокарта вашого хост-ПК не підтримує транслювання відео з роздільністю більше за 4K.</translation>
+        <translation>Відеокарта вашого хост-ПК не підтримує трансляцію з роздільною здатністю понад 4K.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1223"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation type="unfinished"></translation>
+        <translation>Примусове апаратне декодування неможливе: відеокарта цього ПК не підтримує апаратного декодування.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1226"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вибраний кодек несумісний із примусовим апаратним декодуванням: відеокарта цього ПК не вміє декодувати цей кодек.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="2204"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
-        <translation>Не вдалося ініціалізувати відео декодер. Перевірте налаштування трансляції та спробуйте знову.</translation>
+        <translation>Не вдалося ініціалізувати відеодекодер. Перевірте налаштування трансляції та спробуйте знову.</translation>
     </message>
 </context>
 <context>
@@ -674,12 +674,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="116"/>
         <source>Resolution and FPS</source>
-        <translation>Роздільність та частота кадрів</translation>
+        <translation>Роздільна здатність та FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="124"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
-        <translation>Виставлення зависокого значення для вашого ПК або мережі може спричинити лаг, статери або інші помилки.</translation>
+        <translation>Завищені для вашого ПК чи мережі значення можуть спричинити затримки, підвисання або помилки.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="106"/>
@@ -709,22 +709,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="375"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
-        <translation type="unfinished"></translation>
+        <translation>GeForce Experience офіційно не підтримує власні роздільні здатності, тож не змінить роздільну здатність дисплея хоста. Її доведеться встановити вручну в грі.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="376"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
-        <translation>Роздільність, що не підтримується вашим клієнтом або хост-ПК може спричинити помилки трансляції.</translation>
+        <translation>Роздільні здатності, які не підтримує ваш клієнтський чи хост-ПК, можуть спричинити помилки трансляції.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="382"/>
         <source>Enter a custom resolution:</source>
-        <translation>Уведіть користувацьку роздільну здатність:</translation>
+        <translation>Користувацька роздільна здатність:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="604"/>
         <source>%1 FPS</source>
-        <translation>%1 К/с</translation>
+        <translation>%1 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="672"/>
@@ -734,7 +734,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="680"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
-        <translation>Зменште бітрейт при повільному з&apos;єднанні. Підвищте бітрейт, щоб збільшити якість зображення.</translation>
+        <translation>Знижуйте бітрейт на повільному з&apos;єднанні. Підвищуйте бітрейт для кращої якості зображення.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="702"/>
@@ -744,7 +744,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="732"/>
         <source>Display mode</source>
-        <translation>Режим показу</translation>
+        <translation>Режим відображення</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="743"/>
@@ -755,7 +755,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="812"/>
         <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation type="unfinished"></translation>
+        <translation>Повноекранний режим зазвичай найпродуктивніший, але вікно без рамки може краще працювати з такими функціями, як macOS Spaces, Alt+Tab, програми для знімків екрана, екранні оверлеї тощо.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="748"/>
@@ -770,12 +770,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation>Нативний (Без вирізу)</translation>
+        <translation>Нативний (без вирізу)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation>Стандартний (%1 Мбіт/с)</translation>
+        <translation>Типовий (%1 Мбіт/с)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -786,7 +786,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="762"/>
         <source>(Recommended)</source>
-        <translation>(Рекомендовано)</translation>
+        <translation>(рекомендовано)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="819"/>
@@ -796,22 +796,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="829"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation type="unfinished"></translation>
+        <translation>Вимкнення V-Sync дає затримку рендерингу менше ніж за кадр, але можуть з&apos;явитися помітні розриви зображення</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="836"/>
         <source>Frame pacing</source>
-        <translation>Вирівнювання інтервалу між кадрами</translation>
+        <translation>Рівномірна подача кадрів</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="846"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation>Вирівнювання інтервалу між кадрами покращує плавність трансляції, затримуючи кадри, що надходять зарано.</translation>
+        <translation>Рівномірна подача кадрів зменшує мікрозаїкання, притримуючи кадри, що надійшли зарано</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="856"/>
         <source>Audio Settings</source>
-        <translation>Налаштування аудіо</translation>
+        <translation>Налаштування звуку</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="891"/>
@@ -831,22 +831,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="913"/>
         <source>Mute host PC speakers while streaming</source>
-        <translation>Заглушити динаміки на хост-ПК під час трансляції</translation>
+        <translation>Вимкнути звук динаміків хост-ПК під час трансляції</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="923"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
-        <translation>Потрібно перезапустити будь-яку активну гру, щоб зміни застосувалися.</translation>
+        <translation>Для застосування цього налаштування потрібно перезапустити гру</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="929"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
-        <translation>Заглушити аудіо, коли Moonlight не фокусовано</translation>
+        <translation>Вимкнути звук трансляції, коли Moonlight не є активним вікном</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="940"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
-        <translation>Заглушує аудіо від Moonlight, коли ви робите Alt+Tab з трансляції, або клацаєте на інше вікно.</translation>
+        <translation>Вимикає звук Moonlight, коли ви виходите з трансляції через Alt+Tab або клацаєте на інше вікно.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="989"/>
@@ -866,12 +866,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1160"/>
         <source>You must restart Moonlight for this change to take effect</source>
-        <translation>Потрібно перезапустити Moonlight для застосування</translation>
+        <translation>Для застосування цієї зміни потрібно перезапустити Moonlight</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1177"/>
         <source>GUI display mode</source>
-        <translation>Режим показу інтерфейсу</translation>
+        <translation>Режим відображення інтерфейсу</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1214"/>
@@ -886,17 +886,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1298"/>
         <source>Input Settings</source>
-        <translation>Налаштування уведення</translation>
+        <translation>Налаштування введення</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1319"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вмикає плавне керування мишею без захоплення курсора клієнта. Ідеально для роботи з віддаленим робочим столом, але не працюватиме в більшості ігор.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1321"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation>ПРИМІТКА: Через помилку у GeForce Experience, ця опція може працювати не правильно, якщо у хост-ПК є кілька моніторів.</translation>
+        <translation>ПРИМІТКА: Через помилку в GeForce Experience ця опція може не працювати належним чином, якщо до хост-ПК підключено кілька моніторів.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1621"/>
@@ -906,37 +906,37 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1636"/>
         <source>Enable HDR</source>
-        <translation>Увімкнути HDR</translation>
+        <translation>HDR</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1651"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>Трансляція підтримуватиме HDR, але деякі ігри можуть вимагати HDR-монітор на хост-ПК для увімкнення режиму HDR.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1653"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation>Транслювання HDR не підтримується на цьому ПК.</translation>
+        <translation>Трансляція HDR не підтримується на цьому ПК.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1659"/>
         <source>Enable YUV 4:4:4</source>
-        <translation>Увімкнути YUV 4:4:4</translation>
+        <translation>YUV 4:4:4</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1740"/>
         <source>Show performance stats while streaming</source>
-        <translation>Показувати показники продуктивності під час трансляції</translation>
+        <translation>Статистика продуктивності під час трансляції</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1750"/>
         <source>Display real-time stream performance information while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Відображати інформацію про продуктивність трансляції в реальному часі.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1751"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation>Можна перемкнути у будь-який момент під час трансляції використавши Ctrl+Alt+Shift+S або Select+L1+R1+X.</translation>
+        <translation>Можна перемкнути в будь-який момент під час трансляції, натиснувши Ctrl+Alt+Shift+S або Select+L1+R1+X.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1752"/>
@@ -946,22 +946,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1340"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
-        <translation>ПРИМІТКА: Деякі клавіатурні скорочення, як от Ctrl+Alt+Del на Windows, не можуть перехоплюватися будь-якими програмами, включно з Moonlight.</translation>
+        <translation>ПРИМІТКА: Деякі комбінації клавіш, як-от Ctrl+Alt+Del у Windows, не можуть бути перехоплені жодним застосунком, включаючи Moonlight.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1403"/>
         <source>Use touchscreen as a virtual trackpad</source>
-        <translation>Використовувати сенсорний екран як віртуальний трекпад</translation>
+        <translation>Використовувати сенсорний екран як віртуальний тачпад</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1420"/>
         <source>Swap left and right mouse buttons</source>
-        <translation>Поміняти ліву та праву кнопку миші місцями</translation>
+        <translation>Поміняти ліву та праву кнопки миші</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1432"/>
         <source>Reverse mouse scrolling direction</source>
-        <translation>Інвертувати напрямок гортання</translation>
+        <translation>Інвертувати напрямок прокручування</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1446"/>
@@ -971,42 +971,42 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1456"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
-        <translation>Поміняти місцями A/B та X/Y на контролері</translation>
+        <translation>Поміняти кнопки A/B та X/Y на геймпаді</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1466"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>Міняє місцями кнопки на контролери на подобу контролерів Nintendo.</translation>
+        <translation>Перемикає геймпади в розкладку кнопок у стилі Nintendo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1472"/>
         <source>Force gamepad #1 always connected</source>
-        <translation type="unfinished"></translation>
+        <translation>Примусово тримати геймпад №1 підключеним</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1482"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Примусово утримує один геймпад підключеним до хоста, навіть якщо до цього ПК фактично не підключено жодного геймпада.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1320"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
-        <translation>Можна перемкнути під час трансляції натиснувши Ctrl+Alt+Shift+M.</translation>
+        <translation>Можна перемкнути під час трансляції, натиснувши Ctrl+Alt+Shift+M.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1490"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation type="unfinished"></translation>
+        <translation>Керувати мишею хоста з геймпадів, утримуючи кнопку «Start»</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1501"/>
         <source>Process gamepad input when Moonlight is in the background</source>
-        <translation>Перехоплювати уведення з контролера у фоні</translation>
+        <translation>Обробляти введення з геймпада, коли Moonlight у фоні</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1512"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
-        <translation>Дозволити Moonlight перехоплювати уведення з геймпада навіть якщо фокусоване інше вікно</translation>
+        <translation>Дозволяє Moonlight приймати введення з геймпада, навіть коли його вікно не у фокусі</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="949"/>
@@ -1016,12 +1016,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1521"/>
         <source>Advanced Settings</source>
-        <translation>Просунуті налаштування</translation>
+        <translation>Розширені налаштування</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="866"/>
         <source>Audio configuration</source>
-        <translation>Конфігурація аудіо</translation>
+        <translation>Конфігурація звуку</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1231"/>
@@ -1036,70 +1036,70 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1264"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation>Показує у вашому статусі у Discord назву гри яку ви транслюєте.</translation>
+        <translation>Оновлює ваш статус у Discord, відображаючи назву гри, яку ви транслюєте.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1483"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
-        <translation>Вмикайте цю опцію тільки коли транслюєте гру, котра не підтримує під&apos;єднання геймпада опісля запуску.</translation>
+        <translation>Вмикайте цю опцію лише при трансляції гри, яка не підтримує підключення геймпадів після запуску.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1309"/>
         <source>Optimize mouse for remote desktop instead of games</source>
-        <translation>Оптимізувати мишу для віддаленого робочого стола замість ігор</translation>
+        <translation>Оптимізувати мишу для віддаленого робочого столу</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="512"/>
         <location filename="../gui/SettingsView.qml" line="622"/>
         <source>Custom (%1 FPS)</source>
-        <translation>Користувацька (%1 К/с)</translation>
+        <translation>Користувацька (%1 FPS)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="527"/>
         <source>Enter a custom frame rate:</source>
-        <translation>Користувацька частота оновлення:</translation>
+        <translation>Користувацька частота кадрів:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="219"/>
         <location filename="../gui/SettingsView.qml" line="228"/>
         <location filename="../gui/SettingsView.qml" line="625"/>
         <source>Custom</source>
-        <translation>Користувацька</translation>
+        <translation>Власна</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="643"/>
         <source>30 FPS</source>
-        <translation>30 К/с</translation>
+        <translation>30 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="648"/>
         <source>60 FPS</source>
-        <translation>60 К/с</translation>
+        <translation>60 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1270"/>
         <source>Keep the display awake while streaming</source>
-        <translation>Тримати монітор увімкненим під час трансляції</translation>
+        <translation>Не вимикати дисплей під час трансляції</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1280"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation>Запобігає запуску екранної заставки або переходу дисплея у режим сну під час трансляції.</translation>
+        <translation>Запобігає запуску заставки або переходу дисплея в режим сну під час трансляції.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1331"/>
         <source>Capture system keyboard shortcuts</source>
-        <translation>Перехоплювати системні клавіатурні скорочення</translation>
+        <translation>Перехоплювати системні комбінації клавіш</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1339"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation>Вмикає перехоплення клавіатурних скорочень по типу Alt+Tab, котрі зазвичай обробляються операційною системою клієнта під час трансляції.</translation>
+        <translation>Вмикає перехоплення системних комбінацій клавіш на кшталт Alt+Tab, які під час трансляції зазвичай обробляє ОС клієнта.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1369"/>
         <source>in fullscreen</source>
-        <translation>коли на весь екран</translation>
+        <translation>у повноекранному режимі</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1373"/>
@@ -1109,7 +1109,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1413"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Якщо увімкнено, сенсорний екран працює як тачпад. Якщо вимкнено, сенсорний екран безпосередньо керує покажчиком миші.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="959"/>
@@ -1119,23 +1119,23 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="970"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation>Вийти з програми на віддаленому ПК після завершення трансляції</translation>
+        <translation>Закрити програму на хост-ПК після завершення трансляції</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="980"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation type="unfinished"></translation>
+        <translation>Це закриє програму або гру, яку ви транслюєте, після завершення трансляції. Ви втратите весь незбережений прогрес!</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1531"/>
         <source>Video decoder</source>
-        <translation>Відео декодер</translation>
+        <translation>Відеодекодер</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1556"/>
         <location filename="../gui/SettingsView.qml" line="1609"/>
         <source>Automatic (Recommended)</source>
-        <translation>Автоматично (Рекомендовано)</translation>
+        <translation>Автоматично (рекомендовано)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1560"/>
@@ -1150,7 +1150,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1579"/>
         <source>Video codec</source>
-        <translation>Відео кодек</translation>
+        <translation>Відеокодек</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1613"/>
@@ -1165,7 +1165,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1681"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Підходить для трансляції робочого столу та ігор з великою кількістю тексту, але не рекомендується для динамічних ігор.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1683"/>
@@ -1175,22 +1175,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1689"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation>Розблокувати ліміт бітрейту (Експериментально)</translation>
+        <translation>Зняти обмеження бітрейту (експериментально)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1702"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Відкриває дуже високі бітрейти відео для хостів Sunshine. Використовуйте лише при трансляції через дротову локальну мережу (Ethernet).</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1708"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation>Автоматично знаходити ПК на локальній мережі (Рекомендовано)</translation>
+        <translation>Автоматично знаходити ПК у локальній мережі (рекомендовано)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1729"/>
         <source>Automatically detect blocked connections (Recommended)</source>
-        <translation>Автоматично виявляти заблоковане з&apos;єднання (Рекомендовано)</translation>
+        <translation>Автоматично виявляти заблоковані з&apos;єднання (рекомендовано)</translation>
     </message>
 </context>
 <context>
@@ -1214,12 +1214,12 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="29"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Перевірте ваш брандмауер та правила переадресації для наступних портів: %1</translation>
+        <translation>Перевірте брандмауер і правила переадресації портів: %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="65"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Moonlight блокується підключенням до Інтернету цього ПК. Потокова трансляція через Інтернет може не працювати під час підключення до цієї мережі.</translation>
+        <translation>Інтернет-з&apos;єднання цього ПК блокує Moonlight. Поки ви підключені до цієї мережі, трансляція через інтернет може не працювати.</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="168"/>
@@ -1229,7 +1229,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Press %1 to disconnect your session</source>
-        <translation>Натисніть %1, щоб вийти з сесії</translation>
+        <translation>Натисніть %1, щоб завершити сеанс</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="169"/>
@@ -1272,27 +1272,27 @@
     <message>
         <location filename="../gui/main.qml" line="413"/>
         <source>Gamepad Mapper</source>
-        <translation type="unfinished"></translation>
+        <translation>Налаштування геймпада</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="459"/>
         <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
-        <translation type="unfinished"></translation>
+        <translation>Апаратне прискорення не працює на XWayland. Продовження роботи на XWayland може призвести до низької продуктивності трансляції. Спробуйте запустити з QT_QPA_PLATFORM=wayland або перейдіть на X11.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="468"/>
         <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ця версія Moonlight не оптимізована для вашого ПК. Для найкращої продуктивності трансляції завантажте версію Moonlight «%1».</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="477"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight виявив геймпади без прив&apos;язки кнопок:</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="517"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation>Уведіть IP адресу вашого віддаленого ПК:</translation>
+        <translation>Введіть IP-адресу вашого хост-ПК:</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="390"/>
@@ -1302,12 +1302,12 @@
     <message>
         <location filename="../gui/main.qml" line="451"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight не знайшов жодного робочого апаратного відеодекодера. У такій конфігурації продуктивність трансляції може сильно погіршитися.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="453"/>
         <source>Click the Help button for more information on solving this problem.</source>
-        <translation>Натисніть «Довідка», щоб отримати інформацію про розв&apos;язання проблеми.</translation>
+        <translation>Натисніть «Довідка», щоб дізнатися, як розв&apos;язати цю проблему.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="461"/>
@@ -1317,7 +1317,7 @@
     <message>
         <location filename="../gui/main.qml" line="479"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation type="unfinished"></translation>
+        <translation>Натисніть «Довідка», щоб дізнатися, як налаштувати геймпади.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="487"/>
