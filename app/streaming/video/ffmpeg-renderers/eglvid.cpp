@@ -75,7 +75,8 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_eglClientWaitSync(nullptr),
         m_GlesMajorVersion(0),
         m_GlesMinorVersion(0),
-        m_HasExtUnpackSubimage(false)
+        m_HasExtUnpackSubimage(false),
+        m_VideoScalingMode(StreamingPreferences::VSM_AUTO)
 {
     SDL_assert(backendRenderer);
     SDL_assert(backendRenderer->canExportEGL());
@@ -353,6 +354,8 @@ bool EGLRenderer::compileShaders() {
         m_ShaderProgramParams[NV12_PARAM_CHROMA_OFFSET] = glGetUniformLocation(m_ShaderProgram, "chromaOffset");
         m_ShaderProgramParams[NV12_PARAM_PLANE1] = glGetUniformLocation(m_ShaderProgram, "plane1");
         m_ShaderProgramParams[NV12_PARAM_PLANE2] = glGetUniformLocation(m_ShaderProgram, "plane2");
+        m_ShaderProgramParams[NV12_PARAM_VIDEO_SIZE] = glGetUniformLocation(m_ShaderProgram, "videoSize");
+        m_ShaderProgramParams[NV12_PARAM_NEAREST_NEIGHBOR] = glGetUniformLocation(m_ShaderProgram, "nearestNeighbor");
 
         // Set up constant uniforms
         glUseProgram(m_ShaderProgram);
@@ -367,6 +370,8 @@ bool EGLRenderer::compileShaders() {
         }
 
         m_ShaderProgramParams[OPAQUE_PARAM_TEXTURE] = glGetUniformLocation(m_ShaderProgram, "uTexture");
+        m_ShaderProgramParams[OPAQUE_PARAM_VIDEO_SIZE] = glGetUniformLocation(m_ShaderProgram, "videoSize");
+        m_ShaderProgramParams[OPAQUE_PARAM_NEAREST_NEIGHBOR] = glGetUniformLocation(m_ShaderProgram, "nearestNeighbor");
 
         // Set up constant uniforms
         glUseProgram(m_ShaderProgram);
@@ -398,6 +403,7 @@ bool EGLRenderer::compileShaders() {
 bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 {
     m_Window = params->window;
+    m_VideoScalingMode = params->videoScalingMode;
 
     // It's not safe to attempt to opportunistically create a GLES2
     // renderer prior to 2.0.10. If GLES2 isn't available, SDL will
@@ -815,6 +821,16 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     glViewport(dst.x, dst.y, dst.w, dst.h);
 
     glUseProgram(m_ShaderProgram);
+
+    bool nearestNeighbor = shouldUseNearestNeighborScaling(m_VideoScalingMode, &src, &dst);
+    if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12 || m_EGLImagePixelFormat == AV_PIX_FMT_P010) {
+        glUniform2f(m_ShaderProgramParams[NV12_PARAM_VIDEO_SIZE], frame->width, frame->height);
+        glUniform1i(m_ShaderProgramParams[NV12_PARAM_NEAREST_NEIGHBOR], nearestNeighbor);
+    }
+    else {
+        glUniform2f(m_ShaderProgramParams[OPAQUE_PARAM_VIDEO_SIZE], frame->width, frame->height);
+        glUniform1i(m_ShaderProgramParams[OPAQUE_PARAM_NEAREST_NEIGHBOR], nearestNeighbor);
+    }
 
     // If the frame format has changed, we'll need to recompute the constants
     if (hasFrameFormatChanged(frame) && (m_EGLImagePixelFormat == AV_PIX_FMT_NV12 || m_EGLImagePixelFormat == AV_PIX_FMT_P010)) {

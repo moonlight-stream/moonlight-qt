@@ -77,6 +77,13 @@ D3D11VARenderer::~D3D11VARenderer()
     SDL_DestroyMutex(m_ContextLock);
 
     m_VideoVertexBuffer.Reset();
+    m_ScalingInputVertexBuffer.Reset();
+    m_ScalingOutputVertexBuffer.Reset();
+    m_ScalingTextureResourceView.Reset();
+    m_ScalingRenderTargetView.Reset();
+    m_ScalingTexture.Reset();
+    m_LinearSampler.Reset();
+    m_NearestSampler.Reset();
     for (auto& shader : m_VideoPixelShaders) {
         shader.Reset();
     }
@@ -887,32 +894,13 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
 
 void D3D11VARenderer::bindVideoVertexBuffer(bool frameChanged, AVFrame* frame)
 {
-    if (frameChanged || !m_VideoVertexBuffer) {
-        // Scale video to the window size while preserving aspect ratio
-        SDL_Rect src, dst;
-        src.x = src.y = 0;
-        src.w = frame->width;
-        src.h = frame->height;
-        dst.x = dst.y = 0;
-        dst.w = m_DisplayWidth;
-        dst.h = m_DisplayHeight;
-        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-        // Convert screen space to normalized device coordinates
-        SDL_FRect renderRect;
-        StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, m_DisplayWidth, m_DisplayHeight);
-
-        // Don't sample from the alignment padding area
-        auto framesContext = (AVHWFramesContext*)frame->hw_frames_ctx->data;
-        float uMax = (float)frame->width / framesContext->width;
-        float vMax = (float)frame->height / framesContext->height;
-
-        VERTEX verts[] =
-        {
+    auto createVertexBuffer = [this](const SDL_FRect& renderRect, float uMax, float vMax,
+                                     ComPtr<ID3D11Buffer>& vertexBuffer) {
+        const VERTEX verts[] = {
             {renderRect.x, renderRect.y, 0, vMax},
-            {renderRect.x, renderRect.y+renderRect.h, 0, 0},
-            {renderRect.x+renderRect.w, renderRect.y, uMax, vMax},
-            {renderRect.x+renderRect.w, renderRect.y+renderRect.h, uMax, 0},
+            {renderRect.x, renderRect.y + renderRect.h, 0, 0},
+            {renderRect.x + renderRect.w, renderRect.y, uMax, vMax},
+            {renderRect.x + renderRect.w, renderRect.y + renderRect.h, uMax, 0},
         };
 
         D3D11_BUFFER_DESC vbDesc = {};
@@ -926,19 +914,100 @@ void D3D11VARenderer::bindVideoVertexBuffer(bool frameChanged, AVFrame* frame)
         D3D11_SUBRESOURCE_DATA vbData = {};
         vbData.pSysMem = verts;
 
-        HRESULT hr = m_RenderDevice->CreateBuffer(&vbDesc, &vbData, &m_VideoVertexBuffer);
+        HRESULT hr = m_RenderDevice->CreateBuffer(&vbDesc, &vbData, &vertexBuffer);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreateBuffer() failed: %x",
                          hr);
-            return;
+            return false;
         }
+
+        return true;
+    };
+
+    // Scale video to the window size while preserving aspect ratio
+    SDL_Rect src = {0, 0, frame->width, frame->height};
+    SDL_Rect dst = {0, 0, m_DisplayWidth, m_DisplayHeight};
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+    // Convert screen space to normalized device coordinates
+    SDL_FRect renderRect;
+    StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, m_DisplayWidth, m_DisplayHeight);
+
+    // Don't sample from the decoder's alignment padding area
+    auto framesContext = (AVHWFramesContext*)frame->hw_frames_ctx->data;
+    float uMax = (float)frame->width / framesContext->width;
+    float vMax = (float)frame->height / framesContext->height;
+
+    if (frameChanged || !m_VideoVertexBuffer) {
+        createVertexBuffer(renderRect, uMax, vMax, m_VideoVertexBuffer);
     }
 
     // Bind video rendering vertex buffer
     UINT stride = sizeof(VERTEX);
     UINT offset = 0;
     m_RenderDeviceContext->IASetVertexBuffers(0, 1, m_VideoVertexBuffer.GetAddressOf(), &stride, &offset);
+
+    if (frameChanged || !m_ScalingInputVertexBuffer) {
+        const SDL_FRect fullSurface = {-1.0f, -1.0f, 2.0f, 2.0f};
+        createVertexBuffer(fullSurface, uMax, vMax, m_ScalingInputVertexBuffer);
+    }
+
+    if (frameChanged || !m_ScalingOutputVertexBuffer) {
+        createVertexBuffer(renderRect, 1.0f, 1.0f, m_ScalingOutputVertexBuffer);
+    }
+}
+
+bool D3D11VARenderer::setupScalingResources(AVFrame* frame)
+{
+    D3D11_TEXTURE2D_DESC currentDesc = {};
+    if (m_ScalingTexture && m_ScalingRenderTargetView && m_ScalingTextureResourceView) {
+        m_ScalingTexture->GetDesc(&currentDesc);
+        if (currentDesc.Width == (UINT)frame->width && currentDesc.Height == (UINT)frame->height) {
+            return true;
+        }
+    }
+
+    m_ScalingTextureResourceView.Reset();
+    m_ScalingRenderTargetView.Reset();
+    m_ScalingTexture.Reset();
+
+    D3D11_TEXTURE2D_DESC textureDesc = {};
+    textureDesc.Width = frame->width;
+    textureDesc.Height = frame->height;
+    textureDesc.MipLevels = 1;
+    textureDesc.ArraySize = 1;
+    textureDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ?
+                             DXGI_FORMAT_R10G10B10A2_UNORM : DXGI_FORMAT_R8G8B8A8_UNORM;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.Usage = D3D11_USAGE_DEFAULT;
+    textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+    HRESULT hr = m_RenderDevice->CreateTexture2D(&textureDesc, nullptr, &m_ScalingTexture);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "ID3D11Device::CreateTexture2D() for scaling failed: %x",
+                     hr);
+        return false;
+    }
+
+    hr = m_RenderDevice->CreateRenderTargetView(m_ScalingTexture.Get(), nullptr, &m_ScalingRenderTargetView);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "ID3D11Device::CreateRenderTargetView() for scaling failed: %x",
+                     hr);
+        return false;
+    }
+
+    hr = m_RenderDevice->CreateShaderResourceView(m_ScalingTexture.Get(), nullptr, &m_ScalingTextureResourceView);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "ID3D11Device::CreateShaderResourceView() for scaling failed: %x",
+                     hr);
+        return false;
+    }
+
+    return true;
 }
 
 void D3D11VARenderer::bindColorConversion(bool frameChanged, AVFrame* frame)
@@ -1059,8 +1128,32 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
 
     bool frameChanged = hasFrameFormatChanged(frame);
 
+    SDL_Rect src = {0, 0, frame->width, frame->height};
+    SDL_Rect dst = {0, 0, m_DisplayWidth, m_DisplayHeight};
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+    bool nearestNeighbor = shouldUseNearestNeighborScaling(m_DecoderParams.videoScalingMode, &src, &dst);
+
     // Bind our vertex buffer
     bindVideoVertexBuffer(frameChanged, frame);
+
+    bool useScalingPass = nearestNeighbor &&
+                          m_ScalingInputVertexBuffer &&
+                          m_ScalingOutputVertexBuffer &&
+                          setupScalingResources(frame);
+
+    if (useScalingPass) {
+        D3D11_VIEWPORT viewport = {};
+        viewport.Width = frame->width;
+        viewport.Height = frame->height;
+        viewport.MaxDepth = 1;
+        m_RenderDeviceContext->RSSetViewports(1, &viewport);
+        m_RenderDeviceContext->OMSetRenderTargets(1, m_ScalingRenderTargetView.GetAddressOf(), nullptr);
+
+        UINT stride = sizeof(VERTEX);
+        UINT offset = 0;
+        m_RenderDeviceContext->IASetVertexBuffers(0, 1, m_ScalingInputVertexBuffer.GetAddressOf(), &stride, &offset);
+        m_RenderDeviceContext->PSSetSamplers(0, 1, m_LinearSampler.GetAddressOf());
+    }
 
     // Bind our CSC shader (and constant buffer, if required)
     bindColorConversion(frameChanged, frame);
@@ -1075,6 +1168,26 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
     // Unbind SRVs for this frame
     ID3D11ShaderResourceView* nullSrvs[2] = {};
     m_RenderDeviceContext->PSSetShaderResources(0, 2, nullSrvs);
+
+    if (useScalingPass) {
+        D3D11_VIEWPORT viewport = {};
+        viewport.Width = m_DisplayWidth;
+        viewport.Height = m_DisplayHeight;
+        viewport.MaxDepth = 1;
+        m_RenderDeviceContext->RSSetViewports(1, &viewport);
+        m_RenderDeviceContext->OMSetRenderTargets(1, m_RenderTargetView.GetAddressOf(), nullptr);
+
+        UINT stride = sizeof(VERTEX);
+        UINT offset = 0;
+        m_RenderDeviceContext->IASetVertexBuffers(0, 1, m_ScalingOutputVertexBuffer.GetAddressOf(), &stride, &offset);
+        m_RenderDeviceContext->PSSetShader(m_OverlayPixelShader.Get(), nullptr, 0);
+        m_RenderDeviceContext->PSSetShaderResources(0, 1, m_ScalingTextureResourceView.GetAddressOf());
+        m_RenderDeviceContext->PSSetSamplers(0, 1, m_NearestSampler.GetAddressOf());
+        m_RenderDeviceContext->DrawIndexed(6, 0, 0);
+
+        m_RenderDeviceContext->PSSetShaderResources(0, 1, nullSrvs);
+        m_RenderDeviceContext->PSSetSamplers(0, 1, m_LinearSampler.GetAddressOf());
+    }
 
     // Insert a fence to force the decode context to wait for the render context to finish reading
     if (m_DecodeDevice != m_RenderDevice) {
@@ -1271,6 +1384,7 @@ bool D3D11VARenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo)
 
         // Release the video vertex buffer so we will upload a new one after resize
         m_VideoVertexBuffer.Reset();
+        m_ScalingOutputVertexBuffer.Reset();
 
         // Create new vertex buffers for active overlays
         SDL_AtomicLock(&m_OverlayLock);
@@ -1609,7 +1723,8 @@ bool D3D11VARenderer::setupRenderingResources()
         }
     }
 
-    // We use a common sampler for all pixel shaders
+    // YUV reconstruction always uses linear sampling. Point sampling is only
+    // applied to the RGB result in the optional second scaling pass.
     {
         D3D11_SAMPLER_DESC samplerDesc = {};
         samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -1622,14 +1737,22 @@ bool D3D11VARenderer::setupRenderingResources()
         samplerDesc.MinLOD = 0.0f;
         samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-        ComPtr<ID3D11SamplerState> sampler;
-        hr = m_RenderDevice->CreateSamplerState(&samplerDesc,  &sampler);
+        hr = m_RenderDevice->CreateSamplerState(&samplerDesc, &m_LinearSampler);
         if (SUCCEEDED(hr)) {
-            m_RenderDeviceContext->PSSetSamplers(0, 1, sampler.GetAddressOf());
+            m_RenderDeviceContext->PSSetSamplers(0, 1, m_LinearSampler.GetAddressOf());
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreateSamplerState() failed: %x",
+                         hr);
+            return false;
+        }
+
+        samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+        hr = m_RenderDevice->CreateSamplerState(&samplerDesc, &m_NearestSampler);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateSamplerState() for point sampling failed: %x",
                          hr);
             return false;
         }

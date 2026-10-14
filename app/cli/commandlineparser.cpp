@@ -316,6 +316,11 @@ StreamCommandLineParser::StreamCommandLineParser()
         {"software", StreamingPreferences::VDS_FORCE_SOFTWARE},
         {"hardware", StreamingPreferences::VDS_FORCE_HARDWARE},
     };
+    m_VideoScalingModeMap = {
+        {"auto",    StreamingPreferences::VSM_AUTO},
+        {"linear",  StreamingPreferences::VSM_LINEAR},
+        {"nearest", StreamingPreferences::VSM_NEAREST},
+    };
     m_CaptureSysKeysModeMap = {
         {"never",      StreamingPreferences::CSK_OFF},
         {"fullscreen", StreamingPreferences::CSK_FULLSCREEN},
@@ -371,6 +376,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addChoiceOption("capture-system-keys", "capture system key combos", m_CaptureSysKeysModeMap.keys());
     parser.addChoiceOption("video-codec", "video codec", m_VideoCodecMap.keys());
     parser.addChoiceOption("video-decoder", "video decoder", m_VideoDecoderMap.keys());
+    parser.addChoiceOption("video-scaling", "video scaling mode", m_VideoScalingModeMap.keys());
 
     if (!parser.parse(args)) {
         parser.showError(parser.errorText());
@@ -504,6 +510,11 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --video-decoder option
     if (parser.isSet("video-decoder")) {
         preferences->videoDecoderSelection = mapValue(m_VideoDecoderMap, parser.getChoiceOptionValue("video-decoder"));
+    }
+
+    // Resolve --video-scaling option
+    if (parser.isSet("video-scaling")) {
+        preferences->videoScalingMode = mapValue(m_VideoScalingModeMap, parser.getChoiceOptionValue("video-scaling"));
     }
 
     // This method will not return and terminates the process if --version or
