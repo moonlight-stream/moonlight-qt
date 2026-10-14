@@ -123,6 +123,8 @@ public:
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
     Q_PROPERTY(int bitrateKbps MEMBER bitrateKbps NOTIFY bitrateChanged)
+    Q_PROPERTY(int wifiBitrateKbps MEMBER wifiBitrateKbps NOTIFY wifiBitrateChanged)
+    Q_PROPERTY(bool useWifiBitrate MEMBER useWifiBitrate NOTIFY useWifiBitrateChanged)
     Q_PROPERTY(bool unlockBitrate MEMBER unlockBitrate NOTIFY unlockBitrateChanged)
     Q_PROPERTY(bool autoAdjustBitrate MEMBER autoAdjustBitrate NOTIFY autoAdjustBitrateChanged)
     Q_PROPERTY(bool enableVsync MEMBER enableVsync NOTIFY enableVsyncChanged)
@@ -165,6 +167,8 @@ public:
     int height;
     int fps;
     int bitrateKbps;
+    int wifiBitrateKbps;
+    bool useWifiBitrate;
     bool unlockBitrate;
     bool autoAdjustBitrate;
     bool enableVsync;
@@ -204,6 +208,8 @@ public:
 signals:
     void displayModeChanged();
     void bitrateChanged();
+    void wifiBitrateChanged();
+    void useWifiBitrateChanged();
     void unlockBitrateChanged();
     void autoAdjustBitrateChanged();
     void enableVsyncChanged();
@@ -246,4 +252,3 @@ private:
 
     QQmlEngine* m_QmlEngine;
 };
-
