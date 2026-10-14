@@ -384,6 +384,11 @@ void write_seq_parameter_set_rbsp(sps_t* sps, bs_t* b)
     }
     else if( sps->pic_order_cnt_type == 1 )
     {
+        if (sps->num_ref_frames_in_pic_order_cnt_cycle > 256)
+        {
+            sps->num_ref_frames_in_pic_order_cnt_cycle = 256;
+        }
+
         bs_write_u1(b, sps->delta_pic_order_always_zero_flag);
         bs_write_se(b, sps->offset_for_non_ref_pic);
         bs_write_se(b, sps->offset_for_top_to_bottom_field);
@@ -529,6 +534,11 @@ void write_vui_parameters(sps_t* sps, bs_t* b)
 
 void write_hrd_parameters(hrd_t* hrd, bs_t* b)
 {
+    if (hrd->cpb_cnt_minus1 > 31)
+    {
+        hrd->cpb_cnt_minus1 = 31;
+    }
+
     bs_write_ue(b, hrd->cpb_cnt_minus1);
     bs_write_u(b, 4, hrd->bit_rate_scale);
     bs_write_u(b, 4, hrd->cpb_size_scale);
