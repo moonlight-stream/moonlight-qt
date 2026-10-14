@@ -6,6 +6,7 @@
 
 #include "streaming/session.h"
 #include "streaming/streamutils.h"
+#include "streaming/video/videoenhancement.h"
 
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -276,4 +277,39 @@ void SystemProperties::refreshDisplays()
     }
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
+}
+
+/**
+ * \brief Inform if the menu is selectable (DEBUG mode)
+ *
+ * For Debugging purpose only, we allow the dropdown menu visible to test other algorithms
+ *
+ * \return bool Returns true if in debug mode
+ */
+bool SystemProperties::isVideoEnhancementSwitchable()
+{
+#if defined(QT_DEBUG) && defined(Q_OS_WIN)
+    return true;
+#else
+    return false;
+#endif
+}
+
+/**
+ * \brief Inform if the GPU is capable of Video enhancement
+ *
+ * Check if either Video Super-Resolution features can be used by the GPU.
+ *
+ * isAvailable() only reflects that FFmpeg advertises a hwaccel able to carry the
+ * feature, which stays true on systems where the D3D12 device cannot actually be
+ * created. On Windows the upscaler lives in the D3D12 renderer (the Vulkan/FSR1
+ * path is not user-selectable there), so a D3D12 failure means the feature is out
+ * of reach and the setting must be greyed out.
+ *
+ * \return bool Returns true if the GPU is capable
+ */
+bool SystemProperties::isVideoEnhancementAvailable()
+{
+    return VideoEnhancement::getInstance().isAvailable() &&
+           VideoEnhancement::getInstance().isD3D12Available();
 }
