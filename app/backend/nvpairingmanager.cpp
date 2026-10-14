@@ -140,6 +140,9 @@ NvPairingManager::getSignatureFromPemCert(const QByteArray& certificate)
 
     X509* cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
     BIO_free_all(bio);
+    if (cert == nullptr) {
+        return QByteArray();
+    }
 
     QByteArray signature = getSignatureFromCert(cert);
     X509_free(cert);
@@ -159,9 +162,15 @@ NvPairingManager::verifySignature(const QByteArray& data, const QByteArray& sign
 
     X509* cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
     BIO_free_all(bio);
+    if (cert == nullptr) {
+        return false;
+    }
 
     EVP_PKEY* pubKey = X509_get_pubkey(cert);
-    THROW_BAD_ALLOC_IF_NULL(pubKey);
+    if (pubKey == nullptr) {
+        X509_free(cert);
+        return false;
+    }
 
     EVP_MD_CTX* mdctx = EVP_MD_CTX_create();
     THROW_BAD_ALLOC_IF_NULL(mdctx);
