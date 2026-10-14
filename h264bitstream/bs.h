@@ -208,7 +208,7 @@ static inline void bs_write_u(bs_t* b, int n, uint32_t v)
     int i;
     for (i = 0; i < n; i++)
     {
-        bs_write_u1(b, (v >> ( n - i - 1 ))&0x01 );
+        bs_write_u1(b, (n - i - 1 >= 32) ? 0 : ((v >> ( n - i - 1 ))&0x01) );
     }
 }
 
