@@ -287,7 +287,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     }
 
     QByteArray challengeResponseData = decrypt(m_Http.getXmlStringFromHex(challengeXml, "challengeresponse"), aesKey);
-    if (challengeResponseData.size() < hashLength) {
+    if (challengeResponseData.size() < hashLength + 16) {
         qCritical() << "Invalid challengeresponse at stage #2";
         m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::FAILED;
