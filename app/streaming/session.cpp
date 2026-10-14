@@ -1,6 +1,8 @@
 #include "session.h"
 #include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
+#include "streaming/adaptivebitrateservice.h"
+#include "backend/nvhttp.h"
 #include "backend/richpresencemanager.h"
 
 #include <Limelight.h>
@@ -38,6 +40,7 @@
 #include <QPainter>
 #include <QImage>
 #include <QGuiApplication>
+#include <optional>
 #include <QCursor>
 #include <QScreen>
 
@@ -584,7 +587,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0),
-      m_DropAudioEndTime(0)
+      m_DropAudioEndTime(0),
+      m_AdaptiveBitrateService(nullptr)
 {
 }
 
@@ -1957,6 +1961,8 @@ void Session::exec()
     // Toggle the stats overlay if requested by the user
     m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
 
+    startAdaptiveBitrateIfEnabled();
+
     // Switch to async logging mode when we enter the SDL loop
     StreamUtils::enterAsyncLoggingMode();
 
@@ -2311,6 +2317,8 @@ DispatchDeferredCleanup:
     // Switch back to synchronous logging mode
     StreamUtils::exitAsyncLoggingMode();
 
+    stopAdaptiveBitrate();
+
     // Uncapture the mouse and hide the window immediately,
     // so we can return to the Qt GUI ASAP.
     m_InputHandler->setCaptureActive(false);
@@ -2376,4 +2384,56 @@ DispatchDeferredCleanup:
     // When it is complete, it will release our s_ActiveSessionSemaphore
     // reference.
     QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
+}
+
+void Session::startAdaptiveBitrateIfEnabled()
+{
+    if (!m_Preferences->enableAdaptiveBitrate) {
+        return;
+    }
+
+    if (m_AdaptiveBitrateService != nullptr) {
+        return;
+    }
+
+    Session* session = this;
+    m_AdaptiveBitrateService = new AdaptiveBitrateService(
+        [session]() {
+            return new NvHTTP(session->m_Computer);
+        },
+        [session]() -> std::optional<AdaptiveBitrateService::AbrStats> {
+            ADAPTIVE_BITRATE_STATS stats = {};
+            SDL_LockMutex(session->m_DecoderLock);
+            if (session->m_VideoDecoder == nullptr ||
+                !session->m_VideoDecoder->getAdaptiveBitrateStats(&stats) ||
+                !stats.valid) {
+                SDL_UnlockMutex(session->m_DecoderLock);
+                return std::nullopt;
+            }
+            SDL_UnlockMutex(session->m_DecoderLock);
+
+            return AdaptiveBitrateService::AbrStats{
+                stats.packetLossPercent,
+                stats.rttMs,
+                stats.totalFps,
+                stats.droppedFrames
+            };
+        },
+        [session](int bitrateKbps, const QString& reason) {
+            Q_UNUSED(reason);
+            session->m_StreamConfig.bitrate = bitrateKbps;
+        });
+
+    m_AdaptiveBitrateService->start(m_StreamConfig.bitrate, m_Preferences->abrMode);
+}
+
+void Session::stopAdaptiveBitrate()
+{
+    if (m_AdaptiveBitrateService == nullptr) {
+        return;
+    }
+
+    m_AdaptiveBitrateService->stop();
+    delete m_AdaptiveBitrateService;
+    m_AdaptiveBitrateService = nullptr;
 }
