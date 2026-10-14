@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SDL_compat.h"
+#include "settings/streamingpreferences.h"
 
 class StreamUtils
 {
@@ -10,6 +11,9 @@ public:
 
     static
     SDL_Window* createTestWindow();
+
+    static
+    void setVideoAlignment(StreamingPreferences::VideoAlignment alignment);
 
     static
     void scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst);
