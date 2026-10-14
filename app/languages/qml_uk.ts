@@ -465,7 +465,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="104"/>
         <source>No video received from host.</source>
-        <translation>Від хост-ПК не надходить відео.</translation>
+        <translation>Від хоста не надходить відео.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="105"/>
