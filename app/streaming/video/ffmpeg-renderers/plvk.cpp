@@ -7,7 +7,7 @@
 #define PL_LIBAV_IMPLEMENTATION 0
 #include <libplacebo/utils/libav.h>
 
-#include <SDL_vulkan.h>
+#include <SDL3/SDL_vulkan.h>
 
 extern "C" {
 #include <libavutil/hwcontext_drm.h>
@@ -132,7 +132,7 @@ void PlVkRenderer::unlockQueue(struct AVHWDeviceContext *dev_ctx, uint32_t queue
 
 void PlVkRenderer::overlayUploadComplete(void* opaque)
 {
-    SDL_FreeSurface((SDL_Surface*)opaque);
+    SDL_DestroySurface((SDL_Surface*)opaque);
 }
 
 PlVkRenderer::PlVkRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRenderer) :
@@ -429,22 +429,17 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     m_MaxVideoFps = params->frameRate;
 
     unsigned int instanceExtensionCount = 0;
-    if (!SDL_Vulkan_GetInstanceExtensions(params->window, &instanceExtensionCount, nullptr)) {
+    const char* const* sdlInstanceExtensions = SDL_Vulkan_GetInstanceExtensions(&instanceExtensionCount);
+    if (sdlInstanceExtensions == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_Vulkan_GetInstanceExtensions() #1 failed: %s",
+                     "SDL_Vulkan_GetInstanceExtensions() failed: %s",
                      SDL_GetError());
         m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
 
-    std::vector<const char*> instanceExtensions(instanceExtensionCount);
-    if (!SDL_Vulkan_GetInstanceExtensions(params->window, &instanceExtensionCount, instanceExtensions.data())) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_Vulkan_GetInstanceExtensions() #2 failed: %s",
-                     SDL_GetError());
-        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
-        return false;
-    }
+    std::vector<const char*> instanceExtensions(sdlInstanceExtensions,
+                                                sdlInstanceExtensions + instanceExtensionCount);
 
     pl_vk_inst_params vkInstParams = pl_vk_inst_default_params;
     {
@@ -476,7 +471,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         // Don't let Qt take DRM master from us during SDL_Vulkan_CreateSurface()
         DrmMasterLocker locker;
 
-        if (!SDL_Vulkan_CreateSurface(params->window, m_PlVkInstance->instance, &m_VkSurface)) {
+        if (!SDL_Vulkan_CreateSurface(params->window, m_PlVkInstance->instance, nullptr, &m_VkSurface)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_Vulkan_CreateSurface() failed: %s",
                          SDL_GetError());
@@ -544,10 +539,10 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
 #ifdef PLVK_USE_EARLY_RENDER_TO_WAIT
-    SDL_Surface *emptySurface = SDL_CreateRGBSurfaceWithFormat(0, 1, 1, 0, SDL_PIXELFORMAT_ARGB8888);
+    SDL_Surface *emptySurface = SDL_CreateSurface(1, 1, SDL_PIXELFORMAT_ARGB8888);
     if (emptySurface == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateRGBSurfaceWithFormat() failed: %s", SDL_GetError());
+                     "SDL_CreateSurface() failed: %s", SDL_GetError());
         return false;
     }
 
@@ -892,7 +887,7 @@ void PlVkRenderer::waitToRender()
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "GPU is in failed state. Recreating renderer.");
         SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
+        event.type = SDL_EVENT_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         return;
     }
@@ -910,7 +905,11 @@ void PlVkRenderer::waitToRender()
 
     // Handle the swapchain being resized
     int vkDrawableW, vkDrawableH;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_GetWindowSizeInPixels(m_Window, &vkDrawableW, &vkDrawableH);
+#else
     SDL_Vulkan_GetDrawableSize(m_Window, &vkDrawableW, &vkDrawableH);
+#endif
     if (!pl_swapchain_resize(m_Swapchain, &vkDrawableW, &vkDrawableH)) {
         // Swapchain (re)creation can fail if the window is occluded
         return;
@@ -1000,7 +999,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     pl_frame_from_swapchain(&targetFrame, &m_SwapchainFrame);
 
     // We perform minimal processing under the overlay lock to avoid blocking threads updating the overlay
-    SDL_AtomicLock(&m_OverlayLock);
+    SDL_LockSpinlock(&m_OverlayLock);
     for (int i = 0; i < Overlay::OverlayMax; i++) {
         // If we have a staging overlay, we need to transfer ownership to us
         if (m_Overlays[i].hasStagingOverlay) {
@@ -1047,7 +1046,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
             overlays.push_back(m_Overlays[i].overlay);
         }
     }
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 
     SDL_Rect src;
     src.x = mappedFrame.crop.x0;
@@ -1091,7 +1090,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
 
         // Recreate the renderer
         SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
+        event.type = SDL_EVENT_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         goto UnmapExit;
     }
@@ -1107,7 +1106,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         if (!createSwapchain(2)) {
             // Recreate the renderer
             SDL_Event event;
-            event.type = SDL_RENDER_DEVICE_RESET;
+            event.type = SDL_EVENT_RENDER_DEVICE_RESET;
             SDL_PushEvent(&event);
             goto UnmapExit;
         }
@@ -1179,12 +1178,12 @@ bool PlVkRenderer::testRenderFrame(AVFrame *frame)
 bool PlVkRenderer::createOverlay(pl_overlay* overlay, SDL_Surface* surface)
 {
     // Find a compatible texture format
-    SDL_assert(surface->format->format == SDL_PIXELFORMAT_ARGB8888);
+    SDL_assert(surface->format == SDL_PIXELFORMAT_ARGB8888);
     pl_fmt texFormat = pl_find_named_fmt(m_Vulkan->gpu, "bgra8");
     if (!texFormat) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_find_named_fmt(bgra8) failed");
-        SDL_FreeSurface(surface);
+        SDL_DestroySurface(surface);
         return false;
     }
 
@@ -1202,7 +1201,7 @@ bool PlVkRenderer::createOverlay(pl_overlay* overlay, SDL_Surface* surface)
     if (!pl_tex_recreate(m_Vulkan->gpu, &overlay->tex, &texParams)) {
         pl_tex_destroy(m_Vulkan->gpu, &overlay->tex);
         SDL_zerop(overlay);
-        SDL_FreeSurface(surface);
+        SDL_DestroySurface(surface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_tex_recreate() failed");
         return false;
@@ -1219,7 +1218,7 @@ bool PlVkRenderer::createOverlay(pl_overlay* overlay, SDL_Surface* surface)
     if (!pl_tex_upload(m_Vulkan->gpu, &xferParams)) {
         pl_tex_destroy(m_Vulkan->gpu, &overlay->tex);
         SDL_zerop(overlay);
-        SDL_FreeSurface(surface);
+        SDL_DestroySurface(surface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_tex_upload() failed");
         return false;
@@ -1243,12 +1242,12 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    SDL_AtomicLock(&m_OverlayLock);
+    SDL_LockSpinlock(&m_OverlayLock);
     // We want to clear the staging overlay flag even if a staging overlay is still present,
     // since this ensures the render thread will not read from a partially initialized pl_tex
     // as we modify or recreate the staging overlay texture outside the overlay lock.
     m_Overlays[type].hasStagingOverlay = false;
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 
     // If there's no new staging overlay, free the old staging overlay texture.
     // NB: This is safe to do outside the overlay lock because we're guaranteed
@@ -1265,10 +1264,10 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
     // Make this staging overlay visible to the render thread
-    SDL_AtomicLock(&m_OverlayLock);
+    SDL_LockSpinlock(&m_OverlayLock);
     SDL_assert(!m_Overlays[type].hasStagingOverlay);
     m_Overlays[type].hasStagingOverlay = true;
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 }
 
 bool PlVkRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
