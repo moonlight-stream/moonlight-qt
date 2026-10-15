@@ -1079,7 +1079,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1270"/>
         <source>Keep the display awake while streaming</source>
-        <translation>Тримати монітор увімкненим під час трансляції</translation>
+        <translation>Не вимикати дисплей під час трансляції</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1280"/>
