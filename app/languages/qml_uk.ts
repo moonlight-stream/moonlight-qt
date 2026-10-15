@@ -641,7 +641,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1187"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation>Підключений геймпад не має прив&apos;язки кнопок і не працюватиме. Як це виправити — дивіться в довідці Moonlight.</translation>
+        <translation>Підключений геймпад не має прив&apos;язки кнопок, тож Moonlight не зможе його використати. Як це виправити, дивіться в довідці Moonlight.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1205"/>
