@@ -669,6 +669,13 @@ int main(int argc, char *argv[])
     // The DXVA2 renderer uses Direct3D 9Ex itself directly.
     SDL_SetHint(SDL_HINT_WINDOWS_USE_D3D9EX, "1");
 
+#ifdef Q_OS_WIN32
+    // SDL3 disables Raw Input by default, which prevents Xbox trigger rumble
+    // and limits us to four Xbox controllers. Restore SDL2's default while
+    // allowing users to override it through the environment.
+    SDL_SetHintWithPriority("SDL_JOYSTICK_RAWINPUT", "1", SDL_HINT_DEFAULT);
+#endif
+
     if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_TIMER) failed: %s",
