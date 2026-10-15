@@ -411,12 +411,12 @@
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation>Не вдалося закрити гру: %1</translation>
+        <translation>Не вдалося закрити застосунок: %1</translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation>Не вдалося знайти гру %1</translation>
+        <translation>Не вдалося знайти застосунок %1</translation>
     </message>
     <message>
         <location filename="../cli/listapps.cpp" line="108"/>
@@ -846,7 +846,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="940"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
-        <translation>Вимикає звук Moonlight, коли ви виходите з трансляції через Alt+Tab або клацаєте на інше вікно.</translation>
+        <translation>Вимикає звук трансляції, коли вікно Moonlight втрачає фокус на клієнтському ПК.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="989"/>
@@ -971,7 +971,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1456"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
-        <translation>Поміняти кнопки A/B та X/Y на геймпаді</translation>
+        <translation>Поміняти місцями A/B та X/Y на геймпаді</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1466"/>
@@ -1001,12 +1001,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1501"/>
         <source>Process gamepad input when Moonlight is in the background</source>
-        <translation>Обробляти введення з геймпада, коли Moonlight у фоні</translation>
+        <translation>Перехоплювати введення з геймпада, коли Moonlight у фоні</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1512"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
-        <translation>Дозволяє Moonlight приймати введення з геймпада, навіть коли його вікно не у фокусі</translation>
+        <translation>Дозволяє Moonlight перехоплювати введення з геймпада, навіть коли його вікно не у фокусі</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="949"/>
@@ -1064,7 +1064,7 @@
         <location filename="../gui/SettingsView.qml" line="228"/>
         <location filename="../gui/SettingsView.qml" line="625"/>
         <source>Custom</source>
-        <translation>Власна</translation>
+        <translation>Користувацька</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="643"/>
@@ -1079,12 +1079,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1270"/>
         <source>Keep the display awake while streaming</source>
-        <translation>Не вимикати дисплей під час трансляції</translation>
+        <translation>Тримати монітор увімкненим під час трансляції</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1280"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation>Запобігає запуску заставки або переходу дисплея в режим сну під час трансляції.</translation>
+        <translation>Запобігає запуску скрінсейвера або переходу дисплея в режим сну під час трансляції.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1331"/>
