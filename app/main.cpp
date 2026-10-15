@@ -668,6 +668,13 @@ int main(int argc, char *argv[])
     // The DXVA2 renderer uses Direct3D 9Ex itself directly.
     SDL_SetHint(SDL_HINT_WINDOWS_USE_D3D9EX, "1");
 
+#ifdef Q_OS_WIN32
+    // Keep Xbox trigger rumble and support for more than four controllers when
+    // GameInput is unavailable. SDL3 disables Raw Input by default, so restore
+    // SDL2's behavior while allowing users to override it through the environment.
+    SDL_SetHintWithPriority(SDL_HINT_JOYSTICK_RAWINPUT, "1", SDL_HINT_DEFAULT);
+#endif
+
 #if defined(STEAM_LINK) || defined(Q_OS_WIN32)
     // Steam Link requires that we initialize video before creating our
     // QGuiApplication in order to configure the framebuffer correctly.
