@@ -162,6 +162,8 @@ private:
 
     int getAudioRendererCapabilities(int audioConfiguration);
 
+    int getTargetDisplayIndex();
+
     void getWindowDimensions(int& x, int& y,
                              int& width, int& height);
 
