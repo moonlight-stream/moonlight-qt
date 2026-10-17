@@ -17,6 +17,7 @@
 #define SER_BITRATE "bitrate"
 #define SER_UNLOCK_BITRATE "unlockbitrate"
 #define SER_AUTOADJUSTBITRATE "autoadjustbitrate"
+#define SER_NATIVERESATLAUNCH "nativeresolutionatlaunch"
 #define SER_FULLSCREEN "fullscreen"
 #define SER_VSYNC "vsync"
 #define SER_GAMEOPTS "gameopts"
@@ -124,6 +125,7 @@ void StreamingPreferences::reload()
 
     width = settings.value(SER_WIDTH, 1920).toInt();
     height = settings.value(SER_HEIGHT, 1080).toInt();
+    nativeResolutionAtLaunch = settings.value(SER_NATIVERESATLAUNCH, false).toBool();
     fps = settings.value(SER_FPS, 60).toInt();
     enableYUV444 = settings.value(SER_YUV444, false).toBool();
     bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps, enableYUV444)).toInt();
@@ -325,6 +327,7 @@ void StreamingPreferences::save()
 
     settings.setValue(SER_WIDTH, width);
     settings.setValue(SER_HEIGHT, height);
+    settings.setValue(SER_NATIVERESATLAUNCH, nativeResolutionAtLaunch);
     settings.setValue(SER_FPS, fps);
     settings.setValue(SER_BITRATE, bitrateKbps);
     settings.setValue(SER_UNLOCK_BITRATE, unlockBitrate);

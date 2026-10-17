@@ -157,7 +157,8 @@ Flickable {
                                                                "text": friendlyNamePrefix+" ("+rect.width+"x"+rect.height+")",
                                                                "video_width": ""+rect.width,
                                                                "video_height": ""+rect.height,
-                                                               "is_custom": false
+                                                               "is_custom": false,
+                                                               "is_auto": false
                                                            })
                             }
                         }
@@ -169,6 +170,7 @@ Flickable {
 
                             // Add native and safe area resolutions for all attached displays
                             var done = false
+                            var primaryNativeRect = null
                             for (var displayIndex = 0; !done; displayIndex++) {
                                 var screenRect = SystemProperties.getNativeResolution(displayIndex);
                                 var safeAreaRect = SystemProperties.getSafeAreaResolution(displayIndex);
@@ -177,6 +179,10 @@ Flickable {
                                     // Exceeded max count of displays
                                     done = true
                                     break
+                                }
+
+                                if (primaryNativeRect === null) {
+                                    primaryNativeRect = screenRect
                                 }
 
                                 addDetectedResolution(qsTr("Native"), screenRect)
@@ -197,12 +203,34 @@ Flickable {
                                 }
                             }
 
+                            // Offer the native resolution of whichever display is in use when the stream starts
+                            if (primaryNativeRect !== null &&
+                                    (max_pixels <= 0 || primaryNativeRect.width * primaryNativeRect.height <= max_pixels)) {
+                                resolutionListModel.append({
+                                                               "text": qsTr("Native (Detect at stream start)"),
+                                                               "video_width": ""+primaryNativeRect.width,
+                                                               "video_height": ""+primaryNativeRect.height,
+                                                               "is_custom": false,
+                                                               "is_auto": true
+                                                           })
+                            }
+
                             // load the saved width/height, and iterate through the ComboBox until a match is found
                             // and set it to that index.
                             var saved_width = StreamingPreferences.width
                             var saved_height = StreamingPreferences.height
                             var index_set = false
                             for (var i = 0; i < resolutionListModel.count; i++) {
+                                if (resolutionListModel.get(i).is_auto !== StreamingPreferences.nativeResolutionAtLaunch) {
+                                    continue
+                                }
+
+                                if (resolutionListModel.get(i).is_auto) {
+                                    currentIndex = i
+                                    index_set = true
+                                    break
+                                }
+
                                 var el_width = parseInt(resolutionListModel.get(i).video_width);
                                 var el_height = parseInt(resolutionListModel.get(i).video_height);
 
@@ -219,7 +247,8 @@ Flickable {
                                                                "text": qsTr("Custom")+" ("+StreamingPreferences.width+"x"+StreamingPreferences.height+")",
                                                                "video_width": ""+StreamingPreferences.width,
                                                                "video_height": ""+StreamingPreferences.height,
-                                                               "is_custom": true
+                                                               "is_custom": true,
+                                                               "is_auto": false
                                                            })
                                 currentIndex = resolutionListModel.count - 1
                             }
@@ -228,7 +257,8 @@ Flickable {
                                                                "text": qsTr("Custom"),
                                                                "video_width": "",
                                                                "video_height": "",
-                                                               "is_custom": true
+                                                               "is_custom": true,
+                                                               "is_auto": false
                                                            })
                             }
 
@@ -251,24 +281,28 @@ Flickable {
                                 video_width: "1280"
                                 video_height: "720"
                                 is_custom: false
+                                is_auto: false
                             }
                             ListElement {
                                 text: qsTr("1080p")
                                 video_width: "1920"
                                 video_height: "1080"
                                 is_custom: false
+                                is_auto: false
                             }
                             ListElement {
                                 text: qsTr("1440p")
                                 video_width: "2560"
                                 video_height: "1440"
                                 is_custom: false
+                                is_auto: false
                             }
                             ListElement {
                                 text: qsTr("4K")
                                 video_width: "3840"
                                 video_height: "2160"
                                 is_custom: false
+                                is_auto: false
                             }
                         }
 
@@ -299,6 +333,7 @@ Flickable {
                                 customResolutionDialog.open()
                             }
                             else {
+                                StreamingPreferences.nativeResolutionAtLaunch = resolutionListModel.get(currentIndex).is_auto
                                 updateBitrateForSelection()
                             }
                         }
@@ -348,6 +383,8 @@ Flickable {
                                     reject()
                                     return
                                 }
+
+                                StreamingPreferences.nativeResolutionAtLaunch = false
 
                                 var width = widthField.text ? widthField.text : widthField.placeholderText
                                 var height = heightField.text ? heightField.text : heightField.placeholderText

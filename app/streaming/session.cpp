@@ -15,6 +15,10 @@
 #include "video/slvid.h"
 #endif
 
+#ifdef Q_OS_DARWIN
+#include <ApplicationServices/ApplicationServices.h>
+#endif
+
 #ifdef Q_OS_WIN32
 // Scaling the icon down on Win32 looks dreadful, so render at lower res
 #define ICON_SIZE 32
@@ -607,19 +611,44 @@ bool Session::initialize(QQuickWindow* qtWindow)
         // - SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=0 will place the video underneath the notch
         // - SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=1 will place the video below the notch
         bool shouldUseFullScreenSpaces = m_Preferences->windowMode != StreamingPreferences::WM_FULLSCREEN;
+        // SDL video is not initialized yet, so find the display of the Qt window in the
+        // CoreGraphics display list that StreamUtils::getNativeDesktopMode() also uses.
+        int targetDisplayIndex = -1;
+        if (m_Preferences->nativeResolutionAtLaunch && m_QtWindow != nullptr && m_QtWindow->screen() != nullptr) {
+            QRect screenRect = m_QtWindow->screen()->geometry();
+            CGDirectDisplayID displayIds[16];
+            uint32_t displayCount = 0;
+            CGGetActiveDisplayList(16, displayIds, &displayCount);
+            for (uint32_t i = 0; i < displayCount; i++) {
+                CGRect bounds = CGDisplayBounds(displayIds[i]);
+                if ((int)bounds.origin.x == screenRect.x() && (int)bounds.origin.y == screenRect.y()) {
+                    targetDisplayIndex = (int)i;
+                    break;
+                }
+            }
+        }
         SDL_DisplayMode desktopMode;
         SDL_Rect safeArea;
         for (int displayIndex = 0; StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea); displayIndex++) {
             // Check if this display has a notch (safeArea != desktopMode)
             if (desktopMode.h != safeArea.h || desktopMode.w != safeArea.w) {
+                // Detecting the native resolution at stream start uses the full native resolution
+                // of the display that the stream will use, regardless of the saved resolution
+                bool nativeAtLaunch = m_Preferences->nativeResolutionAtLaunch;
+                bool usesNative = nativeAtLaunch ?
+                            displayIndex == targetDisplayIndex :
+                            (m_Preferences->width == desktopMode.w && m_Preferences->height == desktopMode.h);
+                bool usesSafeArea = !nativeAtLaunch &&
+                            m_Preferences->width == safeArea.w && m_Preferences->height == safeArea.h;
+
                 // Check if we're trying to stream at the full native resolution (including notch)
-                if (m_Preferences->width == desktopMode.w && m_Preferences->height == desktopMode.h) {
+                if (usesNative) {
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Overriding default fullscreen mode for native fullscreen resolution");
                     shouldUseFullScreenSpaces = false;
                     break;
                 }
-                else if (m_Preferences->width == safeArea.w && m_Preferences->height == safeArea.h) {
+                else if (usesSafeArea) {
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Overriding default fullscreen mode for native safe area resolution");
                     shouldUseFullScreenSpaces = true;
@@ -658,6 +687,32 @@ bool Session::initialize(QQuickWindow* qtWindow)
     LiInitializeStreamConfiguration(&m_StreamConfig);
     m_StreamConfig.width = m_Preferences->width;
     m_StreamConfig.height = m_Preferences->height;
+    m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
+
+    if (m_Preferences->nativeResolutionAtLaunch) {
+        // Resolve the native resolution of the display we will stream on now,
+        // since it may differ from the display used when settings were saved.
+        SDL_DisplayMode nativeMode;
+        SDL_Rect safeArea;
+        int displayIndex = getTargetDisplayIndex();
+        if (StreamUtils::getNativeDesktopMode(displayIndex, &nativeMode, &safeArea)) {
+            m_StreamConfig.width = nativeMode.w;
+            m_StreamConfig.height = nativeMode.h;
+            if (m_Preferences->autoAdjustBitrate) {
+                m_StreamConfig.bitrate = StreamingPreferences::getDefaultBitrate(nativeMode.w, nativeMode.h,
+                                                                                 m_Preferences->fps,
+                                                                                 m_Preferences->enableYUV444);
+            }
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using native resolution of display %d: %dx%d at %d Kbps",
+                        displayIndex, m_StreamConfig.width, m_StreamConfig.height, m_StreamConfig.bitrate);
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to query native resolution of display %d; using %dx%d",
+                        displayIndex, m_StreamConfig.width, m_StreamConfig.height);
+        }
+    }
 
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
@@ -672,6 +727,26 @@ bool Session::initialize(QQuickWindow* qtWindow)
         return false;
     }
 
+    if (m_Preferences->nativeResolutionAtLaunch) {
+        // The settings UI hides resolutions above the decoder limit, so apply
+        // the same limit to the resolution resolved at stream start.
+        bool isHardwareAccelerated, isFullScreenOnly, isHdrSupported;
+        QSize maxResolution;
+        getDecoderInfo(testWindow, isHardwareAccelerated, isFullScreenOnly, isHdrSupported, maxResolution);
+
+        int maxPixels = maxResolution.width() * maxResolution.height();
+        if (maxPixels > 0 && m_StreamConfig.width * m_StreamConfig.height > maxPixels) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Native resolution %dx%d exceeds decoder limit %dx%d; using %dx%d",
+                        m_StreamConfig.width, m_StreamConfig.height,
+                        maxResolution.width(), maxResolution.height(),
+                        m_Preferences->width, m_Preferences->height);
+            m_StreamConfig.width = m_Preferences->width;
+            m_StreamConfig.height = m_Preferences->height;
+            m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
+        }
+    }
+
     qInfo() << "Server GPU:" << m_Computer->gpuModel;
     qInfo() << "Server GFE version:" << m_Computer->gfeVersion;
 
@@ -679,7 +754,6 @@ bool Session::initialize(QQuickWindow* qtWindow)
     m_VideoCallbacks.setup = drSetup;
 
     m_StreamConfig.fps = m_Preferences->fps;
-    m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
@@ -1315,8 +1389,7 @@ private:
     Session* m_Session;
 };
 
-void Session::getWindowDimensions(int& x, int& y,
-                                  int& width, int& height)
+int Session::getTargetDisplayIndex()
 {
     int displayIndex = 0;
 
@@ -1362,6 +1435,14 @@ void Session::getWindowDimensions(int& x, int& y,
             }
         }
     }
+
+    return displayIndex;
+}
+
+void Session::getWindowDimensions(int& x, int& y,
+                                  int& width, int& height)
+{
+    int displayIndex = getTargetDisplayIndex();
 
     SDL_Rect usableBounds;
     if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
