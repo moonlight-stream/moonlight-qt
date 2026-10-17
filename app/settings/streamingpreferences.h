@@ -120,6 +120,7 @@ public:
     Q_ENUM(CaptureSysKeysMode);
 
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
+    Q_PROPERTY(bool nativeResolutionAtLaunch MEMBER nativeResolutionAtLaunch NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
     Q_PROPERTY(int bitrateKbps MEMBER bitrateKbps NOTIFY bitrateChanged)
@@ -163,6 +164,7 @@ public:
     // Directly accessible members for preferences
     int width;
     int height;
+    bool nativeResolutionAtLaunch;
     int fps;
     int bitrateKbps;
     bool unlockBitrate;

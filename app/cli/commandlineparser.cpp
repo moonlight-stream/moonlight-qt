@@ -383,6 +383,9 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     QStringList resoOptions = parser.optionNames().filter(resolutionRexExp);
     bool displaySet = !resoOptions.isEmpty();
     if (displaySet) {
+        // An explicit resolution overrides detecting the native resolution at stream start
+        preferences->nativeResolutionAtLaunch = false;
+
         QString name = resoOptions.last();
         if (name == "720") {
             preferences->width  = 1280;
@@ -414,6 +417,8 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --bitrate option
     if (parser.isSet("bitrate")) {
         preferences->bitrateKbps = parser.getIntOption("bitrate");
+        // Don't replace an explicit bitrate when resolving the native resolution
+        preferences->autoAdjustBitrate = false;
         if (!inRange(preferences->bitrateKbps, 500, 500000)) {
             fprintf(stderr, "Warning: Bitrate is out of the supported range (500 - 500000 Kbps). Performance may suffer!\n");
         }
