@@ -177,8 +177,52 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         updateKeyboardGrabState();
         break;
 
+    case KeyComboToggleShortcutMenu:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected shortcut menu toggle combo");
+        Session::get()->toggleShortcutMenu();
+        break;
+
     default:
         Q_UNREACHABLE();
+    }
+}
+
+void SdlInputHandler::sendHostKeyCombo(const unsigned short* vkCodes, int count)
+{
+    // Release anything the user is physically holding so it can't combine with our chord
+    raiseAllKeys();
+
+    auto modifierFor = [](unsigned short vk) -> int {
+        switch (vk) {
+        case 0x10: case 0xA0: case 0xA1: return MODIFIER_SHIFT;
+        case 0x11: case 0xA2: case 0xA3: return MODIFIER_CTRL;
+        case 0x12: case 0xA4: case 0xA5: return MODIFIER_ALT;
+        case 0x5B: case 0x5C:            return MODIFIER_META;
+        default:                         return 0;
+        }
+    };
+
+    // Keys that Windows treats as "extended" (matches the handling in handleKeyEvent)
+    auto isExtended = [](unsigned short vk) -> bool {
+        return vk == 0x2C || vk == 0x2E || vk == 0x5B || vk == 0x5C || vk == 0xA3 || vk == 0xA5;
+    };
+
+    int modifiers = 0;
+
+    for (int i = 0; i < count; i++) {
+        modifiers |= modifierFor(vkCodes[i]);
+        int eventModifiers = modifiers | (isExtended(vkCodes[i]) ? MODIFIER_EXTENDED : 0);
+        LiSendKeyboardEvent2((short)(vkCodes[i] | 0x8000), KEY_ACTION_DOWN, (char)eventModifiers, 0);
+    }
+
+    // Give the host a moment to register the chord before releasing it
+    SDL_Delay(15);
+
+    for (int i = count - 1; i >= 0; i--) {
+        modifiers &= ~modifierFor(vkCodes[i]);
+        int eventModifiers = modifiers | (isExtended(vkCodes[i]) ? MODIFIER_EXTENDED : 0);
+        LiSendKeyboardEvent2((short)(vkCodes[i] | 0x8000), KEY_ACTION_UP, (char)eventModifiers, 0);
     }
 }
 

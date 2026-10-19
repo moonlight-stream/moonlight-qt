@@ -155,7 +155,6 @@ public:
     static
     QString getUnmappedGamepads();
 
-private:
     enum KeyCombo {
         KeyComboQuit,
         KeyComboUngrabInput,
@@ -168,9 +167,18 @@ private:
         KeyComboTogglePointerRegionLock,
         KeyComboQuitAndExit,
         KeyComboToggleKeyboardGrab,
+        KeyComboToggleShortcutMenu,
         KeyComboMax
     };
 
+    // Runs one of Moonlight's own Ctrl+Alt+Shift+<key> actions
+    void performSpecialKeyCombo(KeyCombo combo);
+
+    // Presses and releases a chord of Windows VK_* codes on the remote PC
+    // (e.g. {0xA2, 0xA4, 0x2E} = Ctrl+Alt+Del)
+    void sendHostKeyCombo(const unsigned short* vkCodes, int count);
+
+private:
     GamepadState*
     findStateForGamepad(SDL_JoystickID id);
 
@@ -185,8 +193,6 @@ private:
     void disableTouchFeedback();
 
     void handleRelativeFingerEvent(SDL_TouchFingerEvent* event);
-
-    void performSpecialKeyCombo(KeyCombo combo);
 
     static
     Uint32 longPressTimerCallback(Uint32 interval, void* param);

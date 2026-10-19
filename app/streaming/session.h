@@ -11,6 +11,8 @@
 #include "audio/renderers/renderer.h"
 #include "video/overlaymanager.h"
 
+class ShortcutMenu;
+
 class SupportedVideoFormatList : public QList<int>
 {
 public:
@@ -124,6 +126,8 @@ public:
     void flushWindowEvents();
 
     void setShouldExit(bool quitHostApp = false);
+
+    void toggleShortcutMenu();
 
 signals:
     void stageStarting(QString stage);
@@ -260,6 +264,7 @@ private:
     QQuickWindow* m_QtWindow;
     bool m_UnexpectedTermination;
     SdlInputHandler* m_InputHandler;
+    ShortcutMenu* m_ShortcutMenu;
     int m_MouseEmulationRefCount;
     int m_FlushingWindowEventsRef;
     QStringList m_LaunchWarnings;
