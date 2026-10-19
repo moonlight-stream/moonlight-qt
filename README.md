@@ -7,12 +7,12 @@ VibeLight is a fork of [Moonlight PC](https://github.com/moonlight-stream/moonli
 ## What's different from upstream Moonlight
 
 ### Floating "Shortcuts" button
-While streaming, a small always-on-top **Shortcuts** button floats over the stream window. Drag it anywhere. A click opens a dropdown of shortcuts you can click instead of pressing key combinations:
+While streaming, press **Ctrl+Alt+Shift+H** to show a small always-on-top **Shortcuts** button over the stream window. It is hidden the rest of the time. Drag it anywhere. A click opens a dropdown of shortcuts you can click instead of pressing key combinations:
 
 - **Sent to the remote PC:** Ctrl+Alt+Del, Alt+Tab, Alt+F4, Task Manager (Ctrl+Shift+Esc), Win, Win+D, Win+E, Win+L, Win+R, Win+Tab, Win+Shift+S, Print Screen.
 - **VibeLight's own actions** (the Ctrl+Alt+Shift+key hotkeys): release/grab mouse (Z), fullscreen (X), performance stats (S), mouse mode (M), show/hide cursor (C), minimize (D), paste clipboard as typing (V), pointer region lock (L), system key capture (K), quit stream (Q), quit stream and exit app (E).
 - Quit actions need a second click to confirm.
-- **Ctrl+Alt+Shift+H** opens and closes the dropdown from the keyboard. It also frees the mouse first, which is needed in relative mouse mode.
+- Pressing **Ctrl+Alt+Shift+H** also frees the mouse first, which is needed in relative mouse mode. Press it again, press Esc, or pick an action to hide the button again.
 
 Notes and limitations:
 - The button is available on Windows, macOS and X11. It is not shown on Wayland, KMS/DRM or Steam Link. Set the environment variable `ML_DISABLE_SHORTCUT_MENU` to turn it off.
@@ -22,11 +22,16 @@ Notes and limitations:
 ### Icon
 The icon is an original design for this fork (a crescent moon and a spark of light on a warm coral background). It is not the Moonlight logo or any other company's logo. A 1024px copy is in `branding/vibelight-icon.png`.
 
+### Updates
+The update indicator now checks the latest GitHub release of this repository (`nyteghost/moonlight-qt`) instead of upstream Moonlight. It only shows an update when a release exists whose tag (for example `v6.3.0`) is newer than the version in `app/version.txt`. It is only active on Windows, macOS, Steam Link and AppImage builds.
+
+### Look and feel
+The app's colors follow the Vibepollo web UI: a near-black navy background, dark navy toolbar and panels, and a periwinkle accent. This is a color change only. The layout is still Moonlight's.
+
 ### Rename
 The visible app name is now **VibeLight** (window titles, messages, command-line help, the Windows `.exe`, installer and portable package names). Some things intentionally still say Moonlight:
 - Internal identifiers (settings location, registry keys, cache folders, log file names) are unchanged, so settings and pairing data are compatible with upstream Moonlight.
 - Linux and macOS binary and package names are unchanged.
-- The built-in update check still looks at upstream Moonlight releases, so an "update available" notice refers to upstream, not this fork.
 - Translations of changed strings fall back to English.
 - Some in-app links and licenses still point to upstream.
 

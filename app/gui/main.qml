@@ -25,12 +25,9 @@ ApplicationWindow {
 
     // This function runs prior to creation of the initial StackView item
     function doEarlyInit() {
-        // Override the background color to Material 2 colors for Qt 6.5+
-        // in order to improve contrast between GFE's placeholder box art
-        // and the background of the app grid.
-        if (SystemProperties.usesMaterial3Theme) {
-            Material.background = "#303030"
-        }
+        // Near-black navy background to match the Vibepollo web UI. This also keeps
+        // good contrast with GFE's placeholder box art in the app grid.
+        Material.background = "#111217"
 
         SdlGamepadKeyNavigation.enable()
     }

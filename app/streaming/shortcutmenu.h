@@ -9,7 +9,8 @@
 class SdlInputHandler;
 
 // A small, free-floating, always-on-top "Shortcuts" button that lives in its own
-// borderless SDL window next to the stream window. Clicking it opens a dropdown of
+// borderless SDL window next to the stream window. It stays hidden until the user
+// presses Ctrl+Alt+Shift+H, and hides again when H is pressed again or an action is chosen. Clicking it opens a dropdown of
 // clickable shortcuts (keys sent to the remote PC, plus Moonlight's own
 // Ctrl+Alt+Shift+<key> actions). The button can be dragged anywhere on screen.
 //
@@ -30,7 +31,7 @@ public:
     // Re-apply position/visibility after the stream window moved, resized, minimized, etc.
     void updatePosition();
 
-    // Open/close the dropdown from the keyboard (also frees the mouse if it was captured).
+    // Show/hide the button from the keyboard (also frees the mouse if it was captured).
     void toggleFromHotkey();
 
 private:
@@ -48,6 +49,7 @@ private:
     void layoutItems();
     void setExpanded(bool expanded);
     void close(bool refocusStream);
+    void dismiss(bool refocusStream);
     void execute(const Item& item);
     int hitTest(int x, int y) const;
     void handleClick(int x, int y);
@@ -79,6 +81,7 @@ private:
 
     bool m_Expanded;
     bool m_Shown;
+    bool m_Revealed; // The button is only visible after Ctrl+Alt+Shift+H
     int m_HoverIndex;
     bool m_HeaderHover;
     int m_ConfirmIndex;

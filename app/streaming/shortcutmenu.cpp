@@ -18,10 +18,12 @@ const int kColumnWidth = 290;
 const int kDefaultTopMargin = 6;
 const int kDragThresholdPx = 4;
 
-const SDL_Color kTextColor = {0xEB, 0xEB, 0xF0, 0xFF};
-const SDL_Color kHintColor = {0x9A, 0xA0, 0xB0, 0xFF};
-const SDL_Color kTitleColor = {0x9C, 0xC8, 0xFF, 0xFF};
-const SDL_Color kDangerColor = {0xF0, 0x6A, 0x6A, 0xFF};
+// Palette matches the Vibepollo web UI: near-black navy surfaces with a periwinkle accent
+const SDL_Color kTextColor = {0xE1, 0xE4, 0xEB, 0xFF};
+const SDL_Color kHintColor = {0x8B, 0x90, 0xA0, 0xFF};
+const SDL_Color kTitleColor = {0xA5, 0xB0, 0xFF, 0xFF};
+const SDL_Color kDangerColor = {0xF0, 0x70, 0x7A, 0xFF};
+const SDL_Color kHeaderTextColor = {0x19, 0x1C, 0x3F, 0xFF};
 
 bool pointInRect(const SDL_Rect& r, int x, int y)
 {
@@ -61,6 +63,7 @@ ShortcutMenu::ShortcutMenu(SDL_Window* parentWindow, SdlInputHandler* inputHandl
       m_ExpandedHeight(0),
       m_Expanded(false),
       m_Shown(false),
+      m_Revealed(false),
       m_HoverIndex(-1),
       m_HeaderHover(false),
       m_ConfirmIndex(-1),
@@ -225,6 +228,14 @@ void ShortcutMenu::updatePosition()
         return;
     }
 
+    if (!m_Revealed) {
+        if (m_Shown) {
+            SDL_HideWindow(m_Window);
+            m_Shown = false;
+        }
+        return;
+    }
+
     Uint32 parentFlags = SDL_GetWindowFlags(m_Parent);
     if (parentFlags & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN)) {
         if (m_Shown) {
@@ -312,16 +323,31 @@ void ShortcutMenu::close(bool refocusStream)
     }
 }
 
+void ShortcutMenu::dismiss(bool refocusStream)
+{
+    // Collapse the dropdown, give the mouse back, and hide the button again
+    close(refocusStream);
+
+    endDrag();
+    m_HeaderHover = false;
+    m_Revealed = false;
+    updatePosition();
+    overrideMinimizeOnFocusLoss(false);
+}
+
 void ShortcutMenu::toggleFromHotkey()
 {
     if (m_Window == nullptr) {
         return;
     }
 
-    if (m_Expanded) {
-        close(true);
+    if (m_Revealed) {
+        // Pressing the hotkey again hides the button
+        dismiss(true);
         return;
     }
+
+    m_Revealed = true;
 
     // Free the mouse so the user can actually reach the menu
     m_RecaptureOnClose = m_Input->isCaptureActive();
@@ -339,9 +365,9 @@ void ShortcutMenu::execute(const Item& itemRef)
     // Copy what we need, since close() may trigger changes
     Item item = itemRef;
 
-    // Give focus (and mouse capture, if we took it) back before acting so that
-    // the action sees the same state the user had.
-    close(true);
+    // Hide the button and give focus (and mouse capture, if we took it) back before
+    // acting so that the action sees the same state the user had.
+    dismiss(true);
 
     if (item.clientCombo >= 0) {
         m_Input->performSpecialKeyCombo((SdlInputHandler::KeyCombo)item.clientCombo);
@@ -536,7 +562,7 @@ bool ShortcutMenu::handleEvent(const SDL_Event& event)
             return false;
         }
         if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE && m_Expanded) {
-            close(true);
+            dismiss(true);
         }
         return true;
 
@@ -582,11 +608,11 @@ void ShortcutMenu::render()
         return;
     }
 
-    Uint32 border = SDL_MapRGB(s->format, 0x5A, 0x5E, 0x70);
-    Uint32 background = SDL_MapRGB(s->format, 0x1E, 0x1F, 0x26);
-    Uint32 headerColor = SDL_MapRGB(s->format, m_HeaderHover ? 0x3A : 0x2A, m_HeaderHover ? 0x5A : 0x3C, m_HeaderHover ? 0xA0 : 0x78);
-    Uint32 hoverColor = SDL_MapRGB(s->format, 0x3A, 0x5A, 0xA0);
-    Uint32 white = SDL_MapRGB(s->format, 0xFF, 0xFF, 0xFF);
+    Uint32 border = SDL_MapRGB(s->format, 0x2C, 0x30, 0x39);
+    Uint32 background = SDL_MapRGB(s->format, 0x18, 0x1B, 0x23);
+    Uint32 headerColor = m_HeaderHover ? SDL_MapRGB(s->format, 0xB9, 0xC2, 0xFF) : SDL_MapRGB(s->format, 0xA5, 0xB0, 0xFF);
+    Uint32 hoverColor = SDL_MapRGB(s->format, 0x27, 0x2A, 0x39);
+    Uint32 chevronColor = SDL_MapRGB(s->format, 0x19, 0x1C, 0x3F);
 
     SDL_FillRect(s, nullptr, border);
     SDL_Rect inner = { 1, 1, s->w - 2, s->h - 2 };
@@ -595,8 +621,8 @@ void ShortcutMenu::render()
     // Header / button (also the drag handle)
     SDL_Rect header = { 1, 1, s->w - 2, kHeaderHeight - 2 };
     SDL_FillRect(s, &header, headerColor);
-    drawText(s, m_Font, "Shortcuts", kTextColor, 12, (kHeaderHeight - TTF_FontHeight(m_Font)) / 2);
-    drawChevron(s, s->w - 16, kHeaderHeight / 2, m_Expanded, white);
+    drawText(s, m_Font, "Shortcuts", kHeaderTextColor, 12, (kHeaderHeight - TTF_FontHeight(m_Font)) / 2);
+    drawChevron(s, s->w - 16, kHeaderHeight / 2, m_Expanded, chevronColor);
 
     if (m_Expanded) {
         for (int c = 0; c < 2; c++) {

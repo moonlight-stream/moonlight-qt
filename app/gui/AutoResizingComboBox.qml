@@ -43,7 +43,7 @@ ComboBox {
         // Override the popup color to improve contrast with the overridden
         // Material 2 background color set in main.qml.
         if (SystemProperties.usesMaterial3Theme) {
-            popup.background.color = "#424242"
+            popup.background.color = "#1F232D"
         }
     }
 

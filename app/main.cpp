@@ -975,16 +975,16 @@ int main(int argc, char *argv[])
 
     // These are defaults that we allow the user to override
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_ACCENT")) {
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "Purple");
+        // Periwinkle accent to match the Vibepollo web UI
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "#A5B0FF");
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_VARIANT")) {
         qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_PRIMARY")) {
-        // Qt 6.9 began to use a different shade of Material.Indigo when we use a dark theme
-        // (which is all the time). The new color looks washed out, so manually specify the
-        // old primary color unless the user overrides it themselves.
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_PRIMARY", "#3F51B5");
+        // Dark navy surface (toolbar, etc.) to match the Vibepollo web UI. Users can still
+        // override this with the environment variable.
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_PRIMARY", "#181B23");
     }
 
     QQmlApplicationEngine engine;
