@@ -101,7 +101,7 @@ static inline int bs_eof(bs_t* b) { if (b->p >= b->end) { return 1; } else { ret
 
 static inline int bs_overrun(bs_t* b) { if (b->p > b->end) { return 1; } else { return 0; } }
 
-static inline int bs_pos(bs_t* b) { if (b->p > b->end) { return (b->end - b->start); } else { return (b->p - b->start); } }
+static inline int bs_pos(bs_t* b) { if (b->p > b->end) { return (int)(b->end - b->start); } else { return (int)(b->p - b->start); } }
 
 static inline uint32_t bs_read_u1(bs_t* b)
 {
@@ -217,7 +217,7 @@ static inline void bs_write_u8(bs_t* b, uint32_t v)
 #ifdef FAST_U8
     if (b->bits_left == 8 && ! bs_eof(b)) // can do fast write
     {
-        b->p[0] = v;
+        b->p[0] = (uint8_t)v;
         b->p++;
         return;
     }
