@@ -19,6 +19,9 @@ Notes and limitations:
 - Windows may block injected Ctrl+Alt+Del depending on the host software.
 - This feature is new and has had limited testing, especially in exclusive fullscreen.
 
+### Icon
+The icon is an original design for this fork (a crescent moon and a spark of light on a warm coral background). It is not the Moonlight logo or any other company's logo. A 1024px copy is in `branding/vibelight-icon.png`.
+
 ### Rename
 The visible app name is now **VibeLight** (window titles, messages, command-line help, the Windows `.exe`, installer and portable package names). Some things intentionally still say Moonlight:
 - Internal identifiers (settings location, registry keys, cache folders, log file names) are unchanged, so settings and pairing data are compatible with upstream Moonlight.
@@ -31,6 +34,9 @@ Files changed in this fork: `app/streaming/shortcutmenu.{h,cpp}` (new), plus sma
 
 ## Downloads
 There are no official releases. Build artifacts come from GitHub Actions: open the **Actions** tab of this repository, pick a run of the **Build** workflow, and download the `VibeLight-Windows-x64-*` artifact (or `-arm64-`). It is an unpacked folder. Create an empty file called `portable.dat` next to `VibeLight.exe` to run it in portable mode, where settings are stored next to the program.
+
+## Credits
+The changes in this fork (the floating Shortcuts button, the rename, the icon and this README) were written with [Claude](https://claude.com) by Anthropic. Moonlight itself is the work of the Moonlight project and its contributors.
 
 ## Upstream Moonlight
  - [Moonlight PC](https://moonlight-stream.org) and its [source](https://github.com/moonlight-stream/moonlight-qt)

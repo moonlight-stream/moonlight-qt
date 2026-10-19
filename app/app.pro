@@ -551,7 +551,7 @@ unix:!macx: {
 win32 {
     RC_ICONS = moonlight.ico
     QMAKE_TARGET_COMPANY = Moonlight Game Streaming Project
-    QMAKE_TARGET_DESCRIPTION = VibeLight Game Streaming Client (fork of Moonlight)
+    QMAKE_TARGET_DESCRIPTION = VibeLight Game Streaming Client (fork of Moonlight, written with Claude)
     QMAKE_TARGET_PRODUCT = VibeLight
 
     CONFIG -= embed_manifest_exe

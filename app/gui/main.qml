@@ -11,6 +11,7 @@ import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 
 ApplicationWindow {
+    title: "VibeLight"
     property bool pollingActive: false
 
     // Set by SettingsView to force the back operation to pop all
