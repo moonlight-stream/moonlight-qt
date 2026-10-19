@@ -70,8 +70,8 @@ void MappingManager::applyMappings()
 {
     QByteArray mappingData = Path::readDataFile("gamecontrollerdb.txt");
     if (!mappingData.isEmpty()) {
-        int newMappings = SDL_GameControllerAddMappingsFromRW(
-                    SDL_RWFromConstMem(mappingData.constData(), mappingData.size()), 1);
+        int newMappings = SDL_AddGamepadMappingsFromIO(
+                    SDL_IOFromConstMem(mappingData.constData(), mappingData.size()), true);
 
         if (newMappings > 0) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -101,7 +101,7 @@ void MappingManager::applyMappings()
     QList<SdlGamepadMapping> mappings = m_Mappings.values();
     for (const SdlGamepadMapping& mapping : std::as_const(mappings)) {
         QString sdlMappingString = mapping.getSdlMappingString();
-        int ret = SDL_GameControllerAddMapping(qPrintable(sdlMappingString));
+        int ret = SDL_AddGamepadMapping(qPrintable(sdlMappingString));
         if (ret < 0) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Unable to add mapping: %s",

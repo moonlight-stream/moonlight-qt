@@ -95,15 +95,15 @@ private:
 #endif
 
     int m_DecoderSelectionPass;
-    int m_WindowSystem;
+    SDLC_VideoDriver m_WindowSystem;
     AVBufferRef* m_HwContext;
     bool m_BlacklistedForDirectRendering;
     bool m_HasRfiLatencyBug;
     bool m_RequiresExplicitPixelFormat;
 
-    SDL_mutex* m_OverlayMutex;
+    SDL_Mutex* m_OverlayMutex;
     VAImageFormat m_OverlayFormat;
-    Uint32 m_OverlaySdlPixelFormat;
+    SDL_PixelFormat m_OverlaySdlPixelFormat;
     VAImage m_OverlayImage[Overlay::OverlayMax];
     VASubpictureID m_OverlaySubpicture[Overlay::OverlayMax];
     SDL_Rect m_OverlayRect[Overlay::OverlayMax];

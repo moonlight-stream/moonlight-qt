@@ -34,9 +34,28 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 1
 
+      - name: Checkout SDL3
+        uses: actions/checkout@v5
+        with:
+          repository: ReenigneArcher/SDL
+          ref: 86729dc5c5396502764ce94a7dcd4fb5eafb15f3
+          path: deps/SDL
+
+      - name: Checkout SDL_ttf
+        uses: actions/checkout@v5
+        with:
+          repository: libsdl-org/SDL_ttf
+          ref: release-3.2.2
+          path: deps/SDL_ttf
+          submodules: 'recursive'
+
       - name: Download dependencies (Windows)
         if: runner.os == 'Windows'
         run: powershell ./setup-deps.ps1
+
+      - name: Download dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: python3 ./setup-deps.py
 
       - name: Install create-dmg (macOS)
         if: runner.os == 'macOS'
@@ -64,6 +83,14 @@ jobs:
           arch: win64_msvc2022_arm64_cross_compiled
           version: ${{ matrix.qt_version }}
 
+      - name: Build SDL3 dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: python ./scripts/build-sdl3-deps.py
+
+      - name: Build SDL3 dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: python3 ./scripts/build-sdl3-deps.py
+
       - name: Build x64 binaries (Windows)
         if: runner.os == 'Windows'
         shell: cmd
@@ -84,6 +111,8 @@ jobs:
 
       - name: Build Package
         shell: pwsh
+        env:
+          MOONLIGHT_DEPS_READY: ${{ runner.os == 'macOS' && '1' || '' }}
         run: |
           if ($Env:RUNNER_OS -eq "Windows") {
             cmd /c scripts\generate-bundle.bat Release

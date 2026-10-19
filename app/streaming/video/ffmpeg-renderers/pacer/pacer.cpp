@@ -5,13 +5,12 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include "dxvsyncsource.h"
+#include <VersionHelpers.h>
 #endif
 
 #ifdef HAS_WAYLAND
 #include "waylandvsyncsource.h"
 #endif
-
-#include <SDL_syswm.h>
 
 // Limit the number of queued frames to prevent excessive memory consumption
 // if the V-Sync source or renderer is blocked for a while. It's important
@@ -105,11 +104,7 @@ int Pacer::vsyncThread(void *context)
 {
     Pacer* me = reinterpret_cast<Pacer*>(context);
 
-#if SDL_VERSION_ATLEAST(2, 0, 9)
-    SDL_SetThreadPriority(SDL_THREAD_PRIORITY_TIME_CRITICAL);
-#else
-    SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
-#endif
+    SDL_SetCurrentThreadPriority(SDL_THREAD_PRIORITY_TIME_CRITICAL);
 
     bool async = me->m_VsyncSource->isAsync();
     while (!me->m_Stopping) {
@@ -138,7 +133,7 @@ int Pacer::renderThread(void* context)
 {
     Pacer* me = reinterpret_cast<Pacer*>(context);
 
-    if (SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH) < 0) {
+    if (!SDL_SetCurrentThreadPriority(SDL_THREAD_PRIORITY_HIGH)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Unable to set render thread to high priority: %s",
                     SDL_GetError());
@@ -190,7 +185,7 @@ void Pacer::enqueueFrameForRenderingAndUnlock(AVFrame *frame)
         SDL_Event event;
 
         // For main thread rendering, we'll push an event to trigger a callback
-        event.type = SDL_USEREVENT;
+        event.type = SDL_EVENT_USER;
         event.user.code = SDL_CODE_FRAME_READY;
         SDL_PushEvent(&event);
     }
@@ -270,27 +265,22 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
                     "Frame pacing: target %d Hz with %d FPS stream",
                     m_DisplayFps, m_MaxVideoFps);
 
-        SDL_SysWMinfo info;
-        SDL_VERSION(&info.version);
-        if (!SDL_GetWindowWMInfo(window, &info)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_GetWindowWMInfo() failed: %s",
-                         SDL_GetError());
-            return false;
-        }
-
-        switch (info.subsystem) {
-    #ifdef Q_OS_WIN32
-        case SDL_SYSWM_WINDOWS:
-            m_VsyncSource = new DxVsyncSource(this);
+        switch (SDLC_GetVideoDriver()) {
+        case SDLC_VIDEO_WIN32:
+#ifdef Q_OS_WIN32
+            // Don't use D3DKMTWaitForVerticalBlankEvent() on Windows 7, because
+            // it blocks during other concurrent DX operations (like actually rendering).
+            if (IsWindows8OrGreater()) {
+                m_VsyncSource = new DxVsyncSource(this);
+            }
+#endif
             break;
-    #endif
 
-    #if defined(SDL_VIDEO_DRIVER_WAYLAND) && defined(HAS_WAYLAND)
-        case SDL_SYSWM_WAYLAND:
+        case SDLC_VIDEO_WAYLAND:
+#if defined(SDL_VIDEO_DRIVER_WAYLAND) && defined(HAS_WAYLAND)
             m_VsyncSource = new WaylandVsyncSource(this);
+#endif
             break;
-    #endif
 
         default:
             // Platforms without a VsyncSource will just render frames

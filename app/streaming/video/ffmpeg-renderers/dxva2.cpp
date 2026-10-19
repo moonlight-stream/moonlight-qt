@@ -14,8 +14,6 @@ extern "C" {
 #include <libavutil/hwcontext_dxva2.h>
 }
 
-#include <SDL_syswm.h>
-
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <dwmapi.h>
@@ -398,11 +396,6 @@ bool DXVA2Renderer::isDecoderBlacklisted()
 
 bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
 {
-    SDL_SysWMinfo info;
-
-    SDL_VERSION(&info.version);
-    SDL_GetWindowWMInfo(window, &info);
-
     ComPtr<IDirect3D9Ex> d3d9ex;
     HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d9ex);
     if (FAILED(hr)) {
@@ -412,8 +405,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         return false;
     }
 
-    int adapterIndex = SDL_Direct3D9GetAdapterIndex(SDL_GetWindowDisplayIndex(window));
-    Uint32 windowFlags = SDL_GetWindowFlags(window);
+    int adapterIndex = SDL_GetDirect3D9AdapterIndex(SDL_GetDisplayForWindow(window));
 
     // Initialize quirks *before* calling CreateDeviceEx() to allow our below
     // logic to avoid a hang with NahimicOSD.dll's broken full-screen handling.
@@ -429,7 +421,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     d3d9ex->GetAdapterDisplayModeEx(adapterIndex, &currentMode, nullptr);
 
     D3DPRESENT_PARAMETERS d3dpp = {};
-    d3dpp.hDeviceWindow = info.info.win.window;
+    d3dpp.hDeviceWindow = (HWND)SDLC_Win32_GetHwnd(window);
     d3dpp.Flags = D3DPRESENTFLAG_VIDEO;
 
     if (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) {
@@ -447,7 +439,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         }
     }
 
-    if ((windowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+    if (SDLC_IsFullscreenExclusive(window)) {
         d3dpp.Windowed = false;
         d3dpp.BackBufferWidth = currentMode.Width;
         d3dpp.BackBufferHeight = currentMode.Height;
@@ -610,14 +602,14 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    SDL_AtomicLock(&m_OverlayLock);
+    SDL_LockSpinlock(&m_OverlayLock);
     ComPtr<IDirect3DTexture9> oldTexture = std::move(m_OverlayTextures[type]);
     ComPtr<IDirect3DVertexBuffer9> oldVertexBuffer = std::move(m_OverlayVertexBuffers[type]);
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 
     // If the overlay is disabled, we're done
     if (!overlayEnabled) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         return;
     }
 
@@ -633,7 +625,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
                                  &newTexture,
                                  nullptr);
     if (FAILED(hr)) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "CreateTexture() failed: %x",
                      hr);
@@ -643,7 +635,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     D3DLOCKED_RECT lockedRect;
     hr = newTexture->LockRect(0, &lockedRect, nullptr, D3DLOCK_DISCARD);
     if (FAILED(hr)) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "IDirect3DTexture9::LockRect() failed: %x",
                      hr);
@@ -651,7 +643,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
     // Copy (and convert, if necessary) the surface pixels to the texture
-    SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format->format, newSurface->pixels,
+    SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format, newSurface->pixels,
                       newSurface->pitch, SDL_PIXELFORMAT_ARGB8888, lockedRect.pBits, lockedRect.Pitch);
 
     newTexture->UnlockRect(0);
@@ -673,7 +665,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     renderRect.h = newSurface->h;
 
     // The surface is no longer required
-    SDL_FreeSurface(newSurface);
+    SDL_DestroySurface(newSurface);
     newSurface = nullptr;
 
     // Compensate for D3D9's half pixel offset
@@ -712,10 +704,10 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
     newVertexBuffer->Unlock();
 
-    SDL_AtomicLock(&m_OverlayLock);
+    SDL_LockSpinlock(&m_OverlayLock);
     m_OverlayVertexBuffers[type] = std::move(newVertexBuffer);
     m_OverlayTextures[type] = std::move(newTexture);
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 }
 
 void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
@@ -727,7 +719,7 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
     }
 
     // If the overlay is being updated, just skip rendering it this frame
-    if (!SDL_AtomicTryLock(&m_OverlayLock)) {
+    if (!SDL_TryLockSpinlock(&m_OverlayLock)) {
         return;
     }
 
@@ -735,7 +727,7 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
     // overlay update thread tries to release them.
     ComPtr<IDirect3DTexture9> overlayTexture = m_OverlayTextures[type];
     ComPtr<IDirect3DVertexBuffer9> overlayVertexBuffer = m_OverlayVertexBuffers[type];
-    SDL_AtomicUnlock(&m_OverlayLock);
+    SDL_UnlockSpinlock(&m_OverlayLock);
 
     if (overlayTexture == nullptr) {
         return;
@@ -951,7 +943,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                      "Clear() failed: %x",
                      hr);
         SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
+        event.type = SDL_EVENT_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         return;
     }
@@ -962,7 +954,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                      "BeginScene() failed: %x",
                      hr);
         SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
+        event.type = SDL_EVENT_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         return;
     }
@@ -988,7 +980,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                          "StretchRect() failed: %x",
                          hr);
             SDL_Event event;
-            event.type = SDL_RENDER_DEVICE_RESET;
+            event.type = SDL_EVENT_RENDER_DEVICE_RESET;
             SDL_PushEvent(&event);
             return;
         }
@@ -1005,7 +997,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                      "EndScene() failed: %x",
                      hr);
         SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
+        event.type = SDL_EVENT_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         return;
     }
@@ -1023,7 +1015,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                      "PresentEx() failed: %x",
                      hr);
         SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
+        event.type = SDL_EVENT_RENDER_DEVICE_RESET;
         SDL_PushEvent(&event);
         return;
     }
