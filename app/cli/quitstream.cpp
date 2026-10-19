@@ -86,7 +86,7 @@ public:
                 } else {
                     m_State = StateFailure;
                     QString msg = QObject::tr("Computer %1 has not been paired. "
-                                              "Please open Moonlight to pair before streaming.")
+                                              "Please open VibeLight to pair before streaming.")
                             .arg(event.computer->name);
                     emit q->failed(msg);
                 }

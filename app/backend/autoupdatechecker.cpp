@@ -20,7 +20,7 @@ AutoUpdateChecker::AutoUpdateChecker(QObject *parent) :
             this, &AutoUpdateChecker::handleUpdateCheckRequestFinished);
 
     QString currentVersion(VERSION_STR);
-    qDebug() << "Current Moonlight version:" << currentVersion;
+    qDebug() << "Current VibeLight version:" << currentVersion;
     parseStringToVersionQuad(currentVersion, m_CurrentVersionQuad);
 
     // Should at least have a 1.0-style version number
@@ -180,7 +180,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
                     qDebug() << "Found update manifest match for current platform";
 
                     QString latestVersion = updateObj["version"].toString();
-                    qDebug() << "Latest version of Moonlight for this platform is:" << latestVersion;
+                    qDebug() << "Latest version of VibeLight for this platform is:" << latestVersion;
 
                     QVector<int> latestVersionQuad;
                     parseStringToVersionQuad(latestVersion, latestVersionQuad);

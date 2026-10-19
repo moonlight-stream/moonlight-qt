@@ -115,7 +115,7 @@ bool CompatFetcher::isGfeVersionSupported(QString gfeVersion)
         }
         else if (actualVerVal > latestSupportedVal) {
             // Actual version is greater than latest supported - this is bad
-            qWarning() << "GFE version" << gfeVersion << "is not supported by this version of Moonlight";
+            qWarning() << "GFE version" << gfeVersion << "is not supported by this version of VibeLight";
             return false;
         }
     }

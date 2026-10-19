@@ -1,5 +1,5 @@
-﻿<?define ShortName = "Moonlight" ?>
-<?define FullName = "Moonlight Game Streaming Client" ?>
+﻿<?define ShortName = "VibeLight" ?>
+<?define FullName = "VibeLight Game Streaming Client" ?>
 
 <?define ShortcutName = "$(var.ShortName)" ?>
 <?define ShortcutDesc = "Stream games and other applications from another PC" ?>
@@ -87,7 +87,7 @@
         <File Id="MoonlightExe"
               KeyPath="yes"
               Checksum="yes"
-              Source="$(var.BuildDir)\app\$(var.Configuration)\Moonlight.exe">
+              Source="$(var.BuildDir)\app\$(var.Configuration)\VibeLight.exe">
           <fire:FirewallException Id="MoonlightFirewallException"
                                   Scope="any"
                                   IgnoreFailure="yes"
@@ -100,7 +100,7 @@
       <Files Include="$(var.DeployDir)\**" />
     </ComponentGroup>
 
-    <Feature Id="ProductFeature" Title="Moonlight" Level="1" ConfigurableDirectory="INSTALLFOLDER">
+    <Feature Id="ProductFeature" Title="VibeLight" Level="1" ConfigurableDirectory="INSTALLFOLDER">
       <ComponentRef Id="Moonlight" />
       <ComponentRef Id="MoonlightShortcuts" />
       <ComponentRef Id="MoonlightDesktopShortcutState" />

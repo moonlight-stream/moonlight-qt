@@ -1,14 +1,41 @@
-# Moonlight PC
+# VibeLight
 
-[Moonlight PC](https://moonlight-stream.org) is an open source PC client for NVIDIA GameStream and [Sunshine](https://github.com/LizardByte/Sunshine).
+VibeLight is a fork of [Moonlight PC](https://github.com/moonlight-stream/moonlight-qt), the open source PC client for NVIDIA GameStream and [Sunshine](https://github.com/LizardByte/Sunshine). All of the streaming, decoding and input work is Moonlight's. This fork adds a few conveniences for remote-desktop use and renames the app.
 
-Moonlight also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and [iOS](https://github.com/moonlight-stream/moonlight-ios).
+> **This is an unofficial fork.** It is not affiliated with or endorsed by the Moonlight project. Please don't report problems with this fork to the upstream project. Upstream is licensed under GPLv3, and so is this fork (see [LICENSE](LICENSE)).
 
-You can follow development on our [Discord server](https://moonlight-stream.org/discord) and help translate Moonlight into your language on [Weblate](https://hosted.weblate.org/projects/moonlight/moonlight-qt/).
+## What's different from upstream Moonlight
 
- [![Build](https://img.shields.io/github/actions/workflow/status/moonlight-stream/moonlight-qt/build.yml?branch=master)](https://github.com/moonlight-stream/moonlight-qt/actions/workflows/build.yml?query=branch%3Amaster)
- [![Downloads](https://img.shields.io/github/downloads/moonlight-stream/moonlight-qt/total)](https://github.com/moonlight-stream/moonlight-qt/releases)
- [![Translation Status](https://hosted.weblate.org/widgets/moonlight/-/moonlight-qt/svg-badge.svg)](https://hosted.weblate.org/projects/moonlight/moonlight-qt/)
+### Floating "Shortcuts" button
+While streaming, a small always-on-top **Shortcuts** button floats over the stream window. Drag it anywhere. A click opens a dropdown of shortcuts you can click instead of pressing key combinations:
+
+- **Sent to the remote PC:** Ctrl+Alt+Del, Alt+Tab, Alt+F4, Task Manager (Ctrl+Shift+Esc), Win, Win+D, Win+E, Win+L, Win+R, Win+Tab, Win+Shift+S, Print Screen.
+- **VibeLight's own actions** (the Ctrl+Alt+Shift+key hotkeys): release/grab mouse (Z), fullscreen (X), performance stats (S), mouse mode (M), show/hide cursor (C), minimize (D), paste clipboard as typing (V), pointer region lock (L), system key capture (K), quit stream (Q), quit stream and exit app (E).
+- Quit actions need a second click to confirm.
+- **Ctrl+Alt+Shift+H** opens and closes the dropdown from the keyboard. It also frees the mouse first, which is needed in relative mouse mode.
+
+Notes and limitations:
+- The button is available on Windows, macOS and X11. It is not shown on Wayland, KMS/DRM or Steam Link. Set the environment variable `ML_DISABLE_SHORTCUT_MENU` to turn it off.
+- Windows may block injected Ctrl+Alt+Del depending on the host software.
+- This feature is new and has had limited testing, especially in exclusive fullscreen.
+
+### Rename
+The visible app name is now **VibeLight** (window titles, messages, command-line help, the Windows `.exe`, installer and portable package names). Some things intentionally still say Moonlight:
+- Internal identifiers (settings location, registry keys, cache folders, log file names) are unchanged, so settings and pairing data are compatible with upstream Moonlight.
+- Linux and macOS binary and package names are unchanged.
+- The built-in update check still looks at upstream Moonlight releases, so an "update available" notice refers to upstream, not this fork.
+- Translations of changed strings fall back to English.
+- Some in-app links and licenses still point to upstream.
+
+Files changed in this fork: `app/streaming/shortcutmenu.{h,cpp}` (new), plus small edits in `app/streaming/session.{h,cpp}`, `app/streaming/input/{input.h,input.cpp,keyboard.cpp}`, `app/app.pro`, the Windows packaging scripts and WiX files, and user-visible strings.
+
+## Downloads
+There are no official releases. Build artifacts come from GitHub Actions: open the **Actions** tab of this repository, pick a run of the **Build** workflow, and download the `VibeLight-Windows-x64-*` artifact (or `-arm64-`). It is an unpacked folder. Create an empty file called `portable.dat` next to `VibeLight.exe` to run it in portable mode, where settings are stored next to the program.
+
+## Upstream Moonlight
+ - [Moonlight PC](https://moonlight-stream.org) and its [source](https://github.com/moonlight-stream/moonlight-qt)
+ - Mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and [iOS](https://github.com/moonlight-stream/moonlight-ios)
+ - [Discord server](https://moonlight-stream.org/discord) and [Weblate translations](https://hosted.weblate.org/projects/moonlight/moonlight-qt/)
 
 ## Features
  - Hardware accelerated video decoding on Windows, Mac, and Linux
@@ -20,25 +47,7 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
  - Gamepad support with force feedback and motion controls for up to 16 players
  - Support for both pointer capture (for games) and direct mouse control (for remote desktop)
  - Support for passing system-wide keyboard shortcuts like Alt+Tab to the host
- 
-## Downloads
-- [Windows, macOS, and Steam Link](https://github.com/moonlight-stream/moonlight-qt/releases)
-- [Snap (for Ubuntu-based Linux distros)](https://snapcraft.io/moonlight)
-- [Flatpak (for other Linux distros)](https://flathub.org/apps/details/com.moonlight_stream.Moonlight)
-- [AppImage](https://github.com/moonlight-stream/moonlight-qt/releases)
-- [Raspberry Pi 4 and 5](https://github.com/moonlight-stream/moonlight-docs/wiki/Installing-Moonlight-Qt-on-Raspberry-Pi-4)
-- [Generic ARM 32-bit and 64-bit Debian packages](https://github.com/moonlight-stream/moonlight-docs/wiki/Installing-Moonlight-Qt-on-ARM%E2%80%90based-Single-Board-Computers) (not for Raspberry Pi)
-- [Experimental RISC-V Debian packages](https://github.com/moonlight-stream/moonlight-docs/wiki/Installing-Moonlight-Qt-on-RISC%E2%80%90V-Single-Board-Computers)
-- [NVIDIA Jetson and Nintendo Switch (Ubuntu L4T)](https://github.com/moonlight-stream/moonlight-docs/wiki/Installing-Moonlight-Qt-on-Linux4Tegra-(L4T)-Ubuntu)
-
-### Nightly Builds
-- [Downloads](https://nightly.link/moonlight-stream/moonlight-qt/workflows/build/master)
-
-#### Special Thanks
-
-[![Hosted By: Cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.com)
-
-Hosting for Moonlight's Debian and L4T package repositories is graciously provided for free by [Cloudsmith](https://cloudsmith.com).
+ - Clickable, draggable shortcuts button (added in this fork)
 
 ## Building
 

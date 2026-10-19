@@ -76,7 +76,7 @@ ShortcutMenu::ShortcutMenu(SDL_Window* parentWindow, SdlInputHandler* inputHandl
       m_SavedHint(nullptr)
 {
     m_ColumnTitles[0] = "Send to remote PC";
-    m_ColumnTitles[1] = "Moonlight (Ctrl+Alt+Shift+key)";
+    m_ColumnTitles[1] = "VibeLight (Ctrl+Alt+Shift+key)";
 
     if (m_FontData.isEmpty()) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Shortcut menu: font failed to load");
@@ -103,7 +103,7 @@ ShortcutMenu::ShortcutMenu(SDL_Window* parentWindow, SdlInputHandler* inputHandl
 #if SDL_VERSION_ATLEAST(2, 0, 5)
     flags |= SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_SKIP_TASKBAR;
 #endif
-    SDL_Window* window = SDL_CreateWindow("Moonlight Shortcuts",
+    SDL_Window* window = SDL_CreateWindow("VibeLight Shortcuts",
                                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                           kCollapsedWidth, kHeaderHeight, flags);
     if (window == nullptr) {

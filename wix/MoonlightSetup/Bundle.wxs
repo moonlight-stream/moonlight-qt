@@ -11,7 +11,7 @@
 
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
-  <Bundle Name="Moonlight Game Streaming Client"
+  <Bundle Name="VibeLight Game Streaming Client"
           Version="!(bind.PackageVersion.Moonlight_x64)"
           Manufacturer="Moonlight Game Streaming Project"
           UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5"
@@ -20,8 +20,8 @@
           DisableModify="yes"
           IconSourceFile="..\..\app\moonlight.ico">
 
-    <bal:Condition Message="This version of Moonlight requires Windows 10 or later." Condition="VersionNT &gt;= v10.0" />
-    <bal:Condition Message="This version of Moonlight requires a 64-bit version of Windows." Condition="NativeMachine &lt;&gt; 332" />
+    <bal:Condition Message="This version of VibeLight requires Windows 10 or later." Condition="VersionNT &gt;= v10.0" />
+    <bal:Condition Message="This version of VibeLight requires a 64-bit version of Windows." Condition="NativeMachine &lt;&gt; 332" />
 
     <Variable Name="InstallFolder" Type="formatted" Value="[ProgramFiles6432Folder]Moonlight Game Streaming" />
 
@@ -49,7 +49,7 @@
       <bal:WixStandardBootstrapperApplication ShowVersion="yes"
                                               LicenseFile="license.rtf"
                                               LogoFile="..\..\app\moonlight_wix.png"
-                                              LaunchTarget="[InstallFolder]\Moonlight.exe"
+                                              LaunchTarget="[InstallFolder]\VibeLight.exe"
                                               ThemeFile="RtfTheme.xml"
                                               Theme="rtfLicense" />
       <Payload Name="Moonlight.ico" SourceFile="..\..\app\moonlight.ico" Compressed="yes" />

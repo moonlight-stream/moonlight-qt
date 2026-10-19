@@ -62,7 +62,7 @@ Item {
     function sessionFinished(portTestResult)
     {
         if (portTestResult !== 0 && portTestResult !== -1 && streamSegueErrorDialog.text) {
-            streamSegueErrorDialog.text += "\n\n" + qsTr("This PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.")
+            streamSegueErrorDialog.text += "\n\n" + qsTr("This PC's Internet connection is blocking VibeLight. Streaming over the Internet may not work while connected to this network.")
         }
 
         // Re-enable GUI gamepad usage now
