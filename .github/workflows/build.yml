@@ -28,13 +28,17 @@ jobs:
           CI_VERSION=`echo ${GITHUB_SHA} | cut -c1-6`
           echo "ci_version=${CI_VERSION}" >> "${GITHUB_OUTPUT}"
 
+  # Linux AppImage, Steam Link and macOS builds are slow and are only needed for
+  # pull requests; branch pushes build Windows only.
   build-appimage:
+    if: github.event_name == 'pull_request'
     needs: setup
     uses: ./.github/workflows/build-appimage.yml
     with:
       ci_version: ${{ needs.setup.outputs.ci_version }}
 
   build-steamlink:
+    if: github.event_name == 'pull_request'
     needs: setup
     uses: ./.github/workflows/build-steamlink.yml
     with:
@@ -45,3 +49,4 @@ jobs:
     uses: ./.github/workflows/build-win-mac.yml
     with:
       ci_version: ${{ needs.setup.outputs.ci_version }}
+      windows_only: ${{ github.event_name != 'pull_request' }}

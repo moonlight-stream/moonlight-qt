@@ -9,9 +9,15 @@ on:
       ci_version:
         required: true
         type: string
+      windows_only:
+        description: Skip the macOS build (used for quick branch builds)
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
+    if: ${{ !(inputs.windows_only && startsWith(matrix.os, 'macos')) }}
     env:
       CI_VERSION: ${{ inputs.ci_version }}
     strategy:
