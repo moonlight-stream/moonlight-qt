@@ -3,6 +3,17 @@
 #include "path.h"
 
 #include <QtGlobal>
+#include <QDesktopServices>
+#include <QDir>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStandardPaths>
+#include <QStringList>
+#include <QUrl>
+
+#include <Limelight.h>
 
 #include <cstdlib>
 #include <cstring>
@@ -18,12 +29,14 @@ const int kColumnWidth = 290;
 const int kDefaultTopMargin = 6;
 const int kDragThresholdPx = 4;
 
-// Palette matches the Vibepollo web UI: near-black navy surfaces with a periwinkle accent
-const SDL_Color kTextColor = {0xE1, 0xE4, 0xEB, 0xFF};
-const SDL_Color kHintColor = {0x8B, 0x90, 0xA0, 0xFF};
-const SDL_Color kTitleColor = {0xA5, 0xB0, 0xFF, 0xFF};
+// Palette matches the Vibepollo web UI: near-black navy surfaces with an indigo accent
+const SDL_Color kTextColor = {0xE2, 0xE8, 0xF0, 0xFF};
+const SDL_Color kHintColor = {0x8B, 0x95, 0xAD, 0xFF};
+const SDL_Color kTitleColor = {0xA5, 0xB4, 0xFC, 0xFF};
 const SDL_Color kDangerColor = {0xF0, 0x70, 0x7A, 0xFF};
-const SDL_Color kHeaderTextColor = {0x19, 0x1C, 0x3F, 0xFF};
+const SDL_Color kHeaderTextColor = {0xFF, 0xFF, 0xFF, 0xFF};
+const int kMaxRowsPerColumn = 14;
+const int kMaxCustomColumns = 4;
 
 bool pointInRect(const SDL_Rect& r, int x, int y)
 {
@@ -59,6 +72,7 @@ ShortcutMenu::ShortcutMenu(SDL_Window* parentWindow, SdlInputHandler* inputHandl
       m_SmallFont(nullptr),
       m_FontData(Path::readDataFile("ModeSeven.ttf")),
       m_TtfInitialized(false),
+      m_NumColumns(2),
       m_ExpandedWidth(0),
       m_ExpandedHeight(0),
       m_Expanded(false),
@@ -78,8 +92,6 @@ ShortcutMenu::ShortcutMenu(SDL_Window* parentWindow, SdlInputHandler* inputHandl
       m_HintOverridden(false),
       m_SavedHint(nullptr)
 {
-    m_ColumnTitles[0] = "Send to remote PC";
-    m_ColumnTitles[1] = "VibeLight (Ctrl+Alt+Shift+key)";
 
     if (m_FontData.isEmpty()) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Shortcut menu: font failed to load");
@@ -135,16 +147,139 @@ ShortcutMenu::~ShortcutMenu()
     }
 }
 
+namespace {
+
+// Names accepted in the custom shortcuts file, mapped to Windows virtual-key codes
+bool lookupKeyName(const QString& rawName, unsigned short& vk)
+{
+    const QString name = rawName.trimmed().toLower();
+    if (name.isEmpty()) {
+        return false;
+    }
+
+    static const struct { const char* name; unsigned short vk; } kNames[] = {
+        {"ctrl", 0xA2}, {"control", 0xA2}, {"shift", 0xA0}, {"alt", 0xA4},
+        {"win", 0x5B}, {"windows", 0x5B}, {"super", 0x5B}, {"meta", 0x5B}, {"cmd", 0x5B},
+        {"esc", 0x1B}, {"escape", 0x1B}, {"tab", 0x09}, {"enter", 0x0D}, {"return", 0x0D},
+        {"space", 0x20}, {"backspace", 0x08}, {"delete", 0x2E}, {"del", 0x2E},
+        {"insert", 0x2D}, {"ins", 0x2D}, {"home", 0x24}, {"end", 0x23},
+        {"pageup", 0x21}, {"pgup", 0x21}, {"pagedown", 0x22}, {"pgdn", 0x22},
+        {"left", 0x25}, {"up", 0x26}, {"right", 0x27}, {"down", 0x28},
+        {"printscreen", 0x2C}, {"prtsc", 0x2C}, {"pause", 0x13}, {"capslock", 0x14},
+        {"numlock", 0x90}, {"scrolllock", 0x91}, {"menu", 0x5D}, {"apps", 0x5D},
+        {"plus", 0xBB}, {"=", 0xBB}, {"minus", 0xBD}, {"-", 0xBD},
+        {"comma", 0xBC}, {",", 0xBC}, {"period", 0xBE}, {".", 0xBE},
+        {"slash", 0xBF}, {"/", 0xBF}, {"semicolon", 0xBA}, {";", 0xBA},
+        {"grave", 0xC0}, {"backtick", 0xC0}, {"`", 0xC0},
+        {"backslash", 0xDC}, {"\\", 0xDC}, {"[", 0xDB}, {"]", 0xDD}, {"'", 0xDE},
+    };
+    for (const auto& entry : kNames) {
+        if (name == QLatin1String(entry.name)) {
+            vk = entry.vk;
+            return true;
+        }
+    }
+
+    // F1 - F24
+    if (name.size() >= 2 && name[0] == 'f') {
+        bool ok = false;
+        int n = name.mid(1).toInt(&ok);
+        if (ok && n >= 1 && n <= 24) {
+            vk = (unsigned short)(0x70 + n - 1);
+            return true;
+        }
+    }
+
+    // A - Z and 0 - 9
+    if (name.size() == 1) {
+        QChar c = name[0];
+        if (c >= 'a' && c <= 'z') {
+            vk = (unsigned short)(0x41 + (c.unicode() - 'a'));
+            return true;
+        }
+        if (c >= '0' && c <= '9') {
+            vk = (unsigned short)(0x30 + (c.unicode() - '0'));
+            return true;
+        }
+    }
+
+    return false;
+}
+
+} // namespace
+
+bool ShortcutMenu::parseKeyCombo(const QString& combo, std::vector<unsigned short>& out)
+{
+    out.clear();
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    const QStringList parts = combo.split('+', Qt::SkipEmptyParts);
+#else
+    const QStringList parts = combo.split('+', QString::SkipEmptyParts);
+#endif
+    if (parts.isEmpty() || parts.size() > 6) {
+        return false;
+    }
+
+    for (const QString& part : parts) {
+        unsigned short vk;
+        if (!lookupKeyName(part, vk)) {
+            out.clear();
+            return false;
+        }
+        out.push_back(vk);
+    }
+    return true;
+}
+
+QString ShortcutMenu::configFilePath()
+{
+    // Portable installs (portable.dat next to the exe) keep the file next to the program,
+    // matching how the rest of the settings behave.
+    QString dir;
+    if (QFile::exists(QDir::currentPath() + "/portable.dat")) {
+        dir = QDir::currentPath();
+    }
+    else {
+        dir = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    }
+
+    QDir().mkpath(dir);
+    return QDir(dir).filePath("vibelight-shortcuts.json");
+}
+
 void ShortcutMenu::buildItems()
 {
+    m_Items.clear();
+    m_ColumnTitles.assign(2, std::string());
+    m_ColumnTitles[0] = "Send to remote PC";
+    m_ColumnTitles[1] = "VibeLight (Ctrl+Alt+Shift+key)";
+
     // Windows virtual-key codes
     const unsigned short CTRL = 0xA2, SHIFT = 0xA0, ALT = 0xA4, WIN = 0x5B;
 
     auto remote = [this](const char* label, const char* hint, std::vector<unsigned short> keys) {
-        m_Items.push_back({label, hint, keys, -1, false, 0, {0, 0, 0, 0}});
+        Item item;
+        item.label = label;
+        item.hint = hint;
+        item.kind = KindHostKeys;
+        item.keys = keys;
+        item.clientCombo = -1;
+        item.dangerous = false;
+        item.column = 0;
+        item.rect = {0, 0, 0, 0};
+        m_Items.push_back(item);
     };
     auto client = [this](const char* label, const char* hint, SdlInputHandler::KeyCombo combo, bool dangerous) {
-        m_Items.push_back({label, hint, {}, (int)combo, dangerous, 1, {0, 0, 0, 0}});
+        Item item;
+        item.label = label;
+        item.hint = hint;
+        item.kind = KindClient;
+        item.clientCombo = (int)combo;
+        item.dangerous = dangerous;
+        item.column = 1;
+        item.rect = {0, 0, 0, 0};
+        m_Items.push_back(item);
     };
 
     // Column 0: keys sent to the remote PC
@@ -161,7 +296,7 @@ void ShortcutMenu::buildItems()
     remote("Snipping tool",            "Win+Shift+S",   {WIN, SHIFT, 0x53});
     remote("Print Screen",             "",              {0x2C});
 
-    // Column 1: Moonlight's own client-side shortcuts
+    // Column 1: VibeLight's own client-side shortcuts
     client("Release/grab mouse",       "Z", SdlInputHandler::KeyComboUngrabInput, false);
     client("Toggle fullscreen",        "X", SdlInputHandler::KeyComboToggleFullScreen, false);
     client("Performance stats",        "S", SdlInputHandler::KeyComboToggleStatsOverlay, false);
@@ -173,12 +308,144 @@ void ShortcutMenu::buildItems()
     client("System key capture",       "K", SdlInputHandler::KeyComboToggleKeyboardGrab, false);
     client("Quit stream",              "Q", SdlInputHandler::KeyComboQuit, true);
     client("Quit stream + exit app",   "E", SdlInputHandler::KeyComboQuitAndExit, true);
+
+    // Columns 2+: the user's own shortcuts
+    addCustomItems();
+}
+
+void ShortcutMenu::addCustomItems()
+{
+    const QString path = configFilePath();
+
+    // Create a starter file the first time so there is something to edit
+    if (!QFile::exists(path)) {
+        QFile starter(path);
+        if (starter.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            starter.write(
+                "{\n"
+                "  \"_help\": \"Add your own shortcuts below. Each needs a \\\"label\\\" and either \\\"keys\\\" (for example \\\"Ctrl+Alt+T\\\") or \\\"text\\\" (typed on the remote PC). Optional: \\\"confirm\\\": true asks for a second click. Save the file, then press Ctrl+Alt+Shift+H again to see your changes.\",\n"
+                "  \"shortcuts\": []\n"
+                "}\n");
+        }
+    }
+
+    std::vector<Item> custom;
+
+    auto addInfo = [&custom](const std::string& message) {
+        Item item;
+        item.label = message;
+        item.kind = KindInfo;
+        item.clientCombo = -1;
+        item.dangerous = true;
+        item.column = 2;
+        item.rect = {0, 0, 0, 0};
+        custom.push_back(item);
+    };
+
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        addInfo("Can't read custom shortcuts file");
+    }
+    else {
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &error);
+        if (doc.isNull() || !doc.isObject()) {
+            addInfo("Custom shortcuts file isn't valid JSON");
+        }
+        else {
+            const QJsonArray array = doc.object().value("shortcuts").toArray();
+            for (const QJsonValue& value : array) {
+                if (!value.isObject()) {
+                    continue;
+                }
+
+                const QJsonObject obj = value.toObject();
+                const QString label = obj.value("label").toString().trimmed();
+                const QString keys = obj.value("keys").toString().trimmed();
+                const QString text = obj.value("text").toString();
+                if (label.isEmpty() || (keys.isEmpty() && text.isEmpty())) {
+                    continue;
+                }
+
+                Item item;
+                item.label = label.toStdString();
+                item.clientCombo = -1;
+                item.dangerous = obj.value("confirm").toBool(false);
+                item.column = 2;
+                item.rect = {0, 0, 0, 0};
+
+                if (!keys.isEmpty()) {
+                    if (!parseKeyCombo(keys, item.keys)) {
+                        item.kind = KindInfo;
+                        item.label = (label + " (unknown key)").toStdString();
+                        item.dangerous = true;
+                    }
+                    else {
+                        item.kind = KindHostKeys;
+                        item.hint = keys.toStdString();
+                    }
+                }
+                else {
+                    item.kind = KindHostText;
+                    item.text = text.toStdString();
+                    item.hint = "types text";
+                }
+
+                custom.push_back(item);
+            }
+        }
+    }
+
+    // Always offer a way to open the file
+    {
+        Item item;
+        item.label = "Edit custom shortcuts...";
+        item.hint = "opens file";
+        item.kind = KindOpenConfig;
+        item.clientCombo = -1;
+        item.dangerous = false;
+        item.column = 2;
+        item.rect = {0, 0, 0, 0};
+        custom.push_back(item);
+    }
+
+    // Flow the custom items into as many extra columns as needed
+    const int maxItems = kMaxRowsPerColumn * kMaxCustomColumns;
+    if ((int)custom.size() > maxItems) {
+        // Keep the "Edit" item, drop the overflow
+        Item edit = custom.back();
+        custom.resize(maxItems - 1);
+        custom.push_back(edit);
+    }
+
+    for (size_t i = 0; i < custom.size(); i++) {
+        custom[i].column = 2 + (int)(i / kMaxRowsPerColumn);
+        m_Items.push_back(custom[i]);
+    }
+
+    const int customColumns = ((int)custom.size() + kMaxRowsPerColumn - 1) / kMaxRowsPerColumn;
+    m_ColumnTitles.resize(2 + customColumns);
+    for (int c = 0; c < customColumns; c++) {
+        m_ColumnTitles[2 + c] = (c == 0) ? "Custom" : "Custom (cont.)";
+    }
+}
+
+void ShortcutMenu::rebuildItems()
+{
+    // Re-read the custom shortcuts file so edits show up without restarting the stream
+    buildItems();
+    layoutItems();
 }
 
 void ShortcutMenu::layoutItems()
 {
-    int rowY[2];
-    rowY[0] = rowY[1] = kHeaderHeight + kPadding + kTitleHeight;
+    m_NumColumns = 1;
+    for (const Item& item : m_Items) {
+        m_NumColumns = qMax(m_NumColumns, item.column + 1);
+    }
+
+    std::vector<int> rowY(m_NumColumns, kHeaderHeight + kPadding + kTitleHeight);
+    int tallest = rowY[0];
 
     for (Item& item : m_Items) {
         item.rect.x = kPadding + item.column * (kColumnWidth + kPadding);
@@ -186,10 +453,11 @@ void ShortcutMenu::layoutItems()
         item.rect.w = kColumnWidth;
         item.rect.h = kRowHeight;
         rowY[item.column] += kRowHeight;
+        tallest = qMax(tallest, rowY[item.column]);
     }
 
-    m_ExpandedWidth = kPadding * 3 + kColumnWidth * 2;
-    m_ExpandedHeight = qMax(rowY[0], rowY[1]) + kPadding;
+    m_ExpandedWidth = kPadding * (m_NumColumns + 1) + kColumnWidth * m_NumColumns;
+    m_ExpandedHeight = tallest + kPadding;
 }
 
 void ShortcutMenu::showWithoutActivation()
@@ -347,6 +615,9 @@ void ShortcutMenu::toggleFromHotkey()
         return;
     }
 
+    // Pick up any edits to the custom shortcuts file
+    rebuildItems();
+
     m_Revealed = true;
 
     // Free the mouse so the user can actually reach the menu
@@ -362,18 +633,38 @@ void ShortcutMenu::toggleFromHotkey()
 
 void ShortcutMenu::execute(const Item& itemRef)
 {
-    // Copy what we need, since close() may trigger changes
+    // Copy what we need, since dismiss() may trigger changes
     Item item = itemRef;
+
+    if (item.kind == KindInfo) {
+        return;
+    }
+
+    if (item.kind == KindOpenConfig) {
+        // Hide the button, then open the file in whatever editor the OS prefers
+        dismiss(false);
+        QDesktopServices::openUrl(QUrl::fromLocalFile(configFilePath()));
+        return;
+    }
 
     // Hide the button and give focus (and mouse capture, if we took it) back before
     // acting so that the action sees the same state the user had.
     dismiss(true);
 
-    if (item.clientCombo >= 0) {
+    switch (item.kind) {
+    case KindClient:
         m_Input->performSpecialKeyCombo((SdlInputHandler::KeyCombo)item.clientCombo);
-    }
-    else {
+        break;
+    case KindHostKeys:
         m_Input->sendHostKeyCombo(item.keys.data(), (int)item.keys.size());
+        break;
+    case KindHostText:
+        // Make sure no held keys interfere with the text being typed
+        m_Input->raiseAllKeys();
+        LiSendUtf8TextEvent(item.text.c_str(), (unsigned int)item.text.size());
+        break;
+    default:
+        break;
     }
 }
 
@@ -410,6 +701,9 @@ void ShortcutMenu::handleClick(int x, int y)
     }
 
     const Item& item = m_Items[index];
+    if (item.kind == KindInfo) {
+        return;
+    }
     if (item.dangerous && m_ConfirmIndex != index) {
         // Require a second click for destructive actions
         m_ConfirmIndex = index;
@@ -608,11 +902,11 @@ void ShortcutMenu::render()
         return;
     }
 
-    Uint32 border = SDL_MapRGB(s->format, 0x2C, 0x30, 0x39);
-    Uint32 background = SDL_MapRGB(s->format, 0x18, 0x1B, 0x23);
-    Uint32 headerColor = m_HeaderHover ? SDL_MapRGB(s->format, 0xB9, 0xC2, 0xFF) : SDL_MapRGB(s->format, 0xA5, 0xB0, 0xFF);
-    Uint32 hoverColor = SDL_MapRGB(s->format, 0x27, 0x2A, 0x39);
-    Uint32 chevronColor = SDL_MapRGB(s->format, 0x19, 0x1C, 0x3F);
+    Uint32 border = SDL_MapRGB(s->format, 0x1E, 0x26, 0x40);
+    Uint32 background = SDL_MapRGB(s->format, 0x0D, 0x14, 0x24);
+    Uint32 headerColor = m_HeaderHover ? SDL_MapRGB(s->format, 0x7A, 0x7D, 0xF5) : SDL_MapRGB(s->format, 0x63, 0x66, 0xF1);
+    Uint32 hoverColor = SDL_MapRGB(s->format, 0x1A, 0x23, 0x40);
+    Uint32 chevronColor = SDL_MapRGB(s->format, 0xFF, 0xFF, 0xFF);
 
     SDL_FillRect(s, nullptr, border);
     SDL_Rect inner = { 1, 1, s->w - 2, s->h - 2 };
@@ -625,8 +919,8 @@ void ShortcutMenu::render()
     drawChevron(s, s->w - 16, kHeaderHeight / 2, m_Expanded, chevronColor);
 
     if (m_Expanded) {
-        for (int c = 0; c < 2; c++) {
-            drawText(s, m_SmallFont, m_ColumnTitles[c], kTitleColor,
+        for (int c = 0; c < m_NumColumns && c < (int)m_ColumnTitles.size(); c++) {
+            drawText(s, m_SmallFont, m_ColumnTitles[c].c_str(), kTitleColor,
                      kPadding + c * (kColumnWidth + kPadding) + 4,
                      kHeaderHeight + kPadding + (kTitleHeight - TTF_FontHeight(m_SmallFont)) / 2);
         }
@@ -634,18 +928,18 @@ void ShortcutMenu::render()
         for (size_t i = 0; i < m_Items.size(); i++) {
             const Item& item = m_Items[i];
 
-            if ((int)i == m_HoverIndex) {
+            if ((int)i == m_HoverIndex && item.kind != KindInfo) {
                 SDL_FillRect(s, const_cast<SDL_Rect*>(&item.rect), hoverColor);
             }
 
             bool confirming = ((int)i == m_ConfirmIndex);
             SDL_Color color = item.dangerous ? kDangerColor : kTextColor;
-            const char* label = confirming ? "Click again to confirm" : item.label;
+            const char* label = confirming ? "Click again to confirm" : item.label.c_str();
 
             drawText(s, m_Font, label, color,
                      item.rect.x + 6, item.rect.y + (item.rect.h - TTF_FontHeight(m_Font)) / 2);
             if (!confirming) {
-                drawText(s, m_SmallFont, item.hint, kHintColor,
+                drawText(s, m_SmallFont, item.hint.c_str(), kHintColor,
                          item.rect.x + item.rect.w - 6,
                          item.rect.y + (item.rect.h - TTF_FontHeight(m_SmallFont)) / 2, true);
             }

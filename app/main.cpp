@@ -976,7 +976,7 @@ int main(int argc, char *argv[])
     // These are defaults that we allow the user to override
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_ACCENT")) {
         // Periwinkle accent to match the Vibepollo web UI
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "#A5B0FF");
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "#6366F1");
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_VARIANT")) {
         qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
@@ -984,7 +984,7 @@ int main(int argc, char *argv[])
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_PRIMARY")) {
         // Dark navy surface (toolbar, etc.) to match the Vibepollo web UI. Users can still
         // override this with the environment variable.
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_PRIMARY", "#181B23");
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_PRIMARY", "#0D1424");
     }
 
     QQmlApplicationEngine engine;

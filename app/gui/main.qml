@@ -27,7 +27,7 @@ ApplicationWindow {
     function doEarlyInit() {
         // Near-black navy background to match the Vibepollo web UI. This also keeps
         // good contrast with GFE's placeholder box art in the app grid.
-        Material.background = "#111217"
+        Material.background = "#060918"
 
         SdlGamepadKeyNavigation.enable()
     }

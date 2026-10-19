@@ -1,0 +1,75 @@
+name: Release
+# Publishes a GitHub Release (with portable Windows zips and the macOS dmg) when a
+# version tag is pushed, for example:  git tag v6.2.1 && git push origin v6.2.1
+# The tag must match app/version.txt (6.2.1 <-> v6.2.1) or the run stops early.
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      ci_version: ${{ steps.info.outputs.ci_version }}
+      version: ${{ steps.info.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify tag matches app/version.txt
+        id: info
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          FILE_VERSION="$(tr -d '[:space:]' < app/version.txt)"
+          if [ "${TAG#v}" != "${FILE_VERSION}" ]; then
+            echo "::error::Tag ${TAG} does not match app/version.txt (${FILE_VERSION}). Bump app/version.txt, commit, and re-tag."
+            exit 1
+          fi
+          echo "version=${FILE_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "ci_version=$(echo ${GITHUB_SHA} | cut -c1-6)" >> "${GITHUB_OUTPUT}"
+
+  build:
+    needs: check-version
+    uses: ./.github/workflows/build-win-mac.yml
+    with:
+      ci_version: ${{ needs.check-version.outputs.ci_version }}
+
+  publish:
+    needs: [check-version, build]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VERSION: ${{ needs.check-version.outputs.version }}
+      CI_VERSION: ${{ needs.check-version.outputs.ci_version }}
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          path: artifacts
+          pattern: VibeLight-*
+
+      - name: Package release files
+        shell: bash
+        run: |
+          mkdir -p release
+          for arch in x64 arm64; do
+            dir="artifacts/VibeLight-Windows-${arch}-${CI_VERSION}"
+            if [ -d "$dir" ]; then
+              # portable.dat next to the exe makes VibeLight keep its settings in this folder
+              touch "$dir/portable.dat"
+              (cd "$dir" && zip -qr "../../release/VibeLight-${VERSION}-Windows-${arch}-portable.zip" .)
+            fi
+          done
+          cp artifacts/VibeLight-macOS-${CI_VERSION}/*.dmg "release/VibeLight-${VERSION}-macOS.dmg" 2>/dev/null || true
+          ls -l release
+
+      - name: Create GitHub Release
+        shell: bash
+        run: |
+          gh release create "${GITHUB_REF_NAME}" release/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "VibeLight ${VERSION}" \
+            --generate-notes

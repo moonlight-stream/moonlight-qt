@@ -205,7 +205,8 @@ void SdlInputHandler::sendHostKeyCombo(const unsigned short* vkCodes, int count)
 
     // Keys that Windows treats as "extended" (matches the handling in handleKeyEvent)
     auto isExtended = [](unsigned short vk) -> bool {
-        return vk == 0x2C || vk == 0x2E || vk == 0x5B || vk == 0x5C || vk == 0xA3 || vk == 0xA5;
+        return (vk >= 0x21 && vk <= 0x28) || vk == 0x2C || vk == 0x2D || vk == 0x2E ||
+               vk == 0x5B || vk == 0x5C || vk == 0x5D || vk == 0xA3 || vk == 0xA5;
     };
 
     int modifiers = 0;

@@ -4,6 +4,8 @@
 #include <SDL_ttf.h>
 
 #include <QByteArray>
+#include <QString>
+#include <string>
 #include <vector>
 
 class SdlInputHandler;
@@ -35,17 +37,31 @@ public:
     void toggleFromHotkey();
 
 private:
+    enum Kind {
+        KindHostKeys,   // press and release a chord on the remote PC
+        KindHostText,   // type a string on the remote PC
+        KindClient,     // one of VibeLight's own Ctrl+Alt+Shift+key actions
+        KindOpenConfig, // open the custom shortcuts file in the default editor
+        KindInfo        // non-clickable message (for example a config error)
+    };
+
     struct Item {
-        const char* label;
-        const char* hint;
-        std::vector<unsigned short> keys; // Windows VK codes; empty for client actions
-        int clientCombo;                  // SdlInputHandler::KeyCombo; -1 for remote key combos
+        std::string label;
+        std::string hint;
+        Kind kind;
+        std::vector<unsigned short> keys; // Windows VK codes for KindHostKeys
+        std::string text;                 // for KindHostText
+        int clientCombo;                  // SdlInputHandler::KeyCombo for KindClient
         bool dangerous;
         int column;
         SDL_Rect rect;
     };
 
     void buildItems();
+    void addCustomItems();
+    void rebuildItems();
+    static QString configFilePath();
+    static bool parseKeyCombo(const QString& combo, std::vector<unsigned short>& out);
     void layoutItems();
     void setExpanded(bool expanded);
     void close(bool refocusStream);
@@ -75,7 +91,8 @@ private:
     bool m_TtfInitialized;
 
     std::vector<Item> m_Items;
-    const char* m_ColumnTitles[2];
+    std::vector<std::string> m_ColumnTitles;
+    int m_NumColumns;
     int m_ExpandedWidth;
     int m_ExpandedHeight;
 
