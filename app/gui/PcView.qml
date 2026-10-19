@@ -63,7 +63,7 @@ CenteredGridView {
             errorDialog.text = qsTr("Unable to connect to the specified PC.")
 
             if (detectedPortBlocking) {
-                errorDialog.text += "\n\n" + qsTr("This PC's Internet connection is blocking VibeLight. Streaming over the Internet may not work while connected to this network.")
+                errorDialog.text += "\n\n" + qsTr("This PC's Internet connection is blocking Vibelight. Streaming over the Internet may not work while connected to this network.")
             }
             else {
                 errorDialog.helpText = qsTr("Click the Help button for possible solutions.")
@@ -222,7 +222,7 @@ CenteredGridView {
         onClicked: {
             if (model.online) {
                 if (!model.serverSupported) {
-                    errorDialog.text = qsTr("The version of GeForce Experience on %1 is not supported by this build of VibeLight. You must update VibeLight to stream from %1.").arg(model.name)
+                    errorDialog.text = qsTr("The version of GeForce Experience on %1 is not supported by this build of Vibelight. You must update Vibelight to stream from %1.").arg(model.name)
                     errorDialog.helpText = ""
                     errorDialog.open()
                 }
@@ -321,22 +321,22 @@ CenteredGridView {
         standardButtons: Dialog.Ok
 
         onAboutToShow: {
-            testConnectionDialog.text = qsTr("VibeLight is testing your network connection to determine if any required ports are blocked.") + "\n\n" + qsTr("This may take a few seconds…")
+            testConnectionDialog.text = qsTr("Vibelight is testing your network connection to determine if any required ports are blocked.") + "\n\n" + qsTr("This may take a few seconds…")
             showSpinner = true
         }
 
         function connectionTestComplete(result, blockedPorts)
         {
             if (result === -1) {
-                text = qsTr("The network test could not be performed because none of VibeLight's connection testing servers were reachable from this PC. Check your Internet connection or try again later.")
+                text = qsTr("The network test could not be performed because none of Vibelight's connection testing servers were reachable from this PC. Check your Internet connection or try again later.")
                 imageSrc = "qrc:/res/baseline-warning-24px.svg"
             }
             else if (result === 0) {
-                text = qsTr("This network does not appear to be blocking VibeLight. If you still have trouble connecting, check your PC's firewall settings.") + "\n\n" + qsTr("If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC's Internet connection.")
+                text = qsTr("This network does not appear to be blocking Vibelight. If you still have trouble connecting, check your PC's firewall settings.") + "\n\n" + qsTr("If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC's Internet connection.")
                 imageSrc = "qrc:/res/baseline-check_circle_outline-24px.svg"
             }
             else {
-                text = qsTr("Your PC's current network connection seems to be blocking VibeLight. Streaming over the Internet may not work while connected to this network.") + "\n\n" + qsTr("The following network ports were blocked:") + "\n"
+                text = qsTr("Your PC's current network connection seems to be blocking Vibelight. Streaming over the Internet may not work while connected to this network.") + "\n\n" + qsTr("The following network ports were blocked:") + "\n"
                 text += blockedPorts
                 imageSrc = "qrc:/res/baseline-error_outline-24px.svg"
             }

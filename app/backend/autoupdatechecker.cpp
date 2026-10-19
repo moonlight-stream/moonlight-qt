@@ -20,7 +20,7 @@ AutoUpdateChecker::AutoUpdateChecker(QObject *parent) :
             this, &AutoUpdateChecker::handleUpdateCheckRequestFinished);
 
     QString currentVersion(VERSION_STR);
-    qDebug() << "Current VibeLight version:" << currentVersion;
+    qDebug() << "Current Vibelight version:" << currentVersion;
     parseStringToVersionQuad(currentVersion, m_CurrentVersionQuad);
 
     // Should at least have a 1.0-style version number
@@ -43,12 +43,12 @@ void AutoUpdateChecker::start()
     QT_WARNING_POP
 #endif
 
-    // We'll get a callback when this is finished. VibeLight checks the latest
+    // We'll get a callback when this is finished. Vibelight checks the latest
     // published release of its own GitHub repository instead of upstream Moonlight.
     QUrl url("https://api.github.com/repos/nyteghost/moonlight-qt/releases/latest");
     QNetworkRequest request(url);
     request.setRawHeader("Accept", "application/vnd.github+json");
-    request.setRawHeader("User-Agent", "VibeLight-UpdateChecker"); // Required by the GitHub API
+    request.setRawHeader("User-Agent", "Vibelight-UpdateChecker"); // Required by the GitHub API
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
 #else
@@ -159,7 +159,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
         }
 
         QString latestVersion = release["tag_name"].toString();
-        qDebug() << "Latest VibeLight release is:" << latestVersion;
+        qDebug() << "Latest Vibelight release is:" << latestVersion;
 
         QVector<int> latestVersionQuad;
         parseStringToVersionQuad(latestVersion, latestVersionQuad);
@@ -187,7 +187,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
     }
     else if (reply->error() == QNetworkReply::ContentNotFoundError) {
         // The repository has no published releases yet
-        qDebug() << "No VibeLight releases published yet";
+        qDebug() << "No Vibelight releases published yet";
         reply->deleteLater();
     }
     else {

@@ -118,7 +118,7 @@ ShortcutMenu::ShortcutMenu(SDL_Window* parentWindow, SdlInputHandler* inputHandl
 #if SDL_VERSION_ATLEAST(2, 0, 5)
     flags |= SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_SKIP_TASKBAR;
 #endif
-    SDL_Window* window = SDL_CreateWindow("VibeLight Shortcuts",
+    SDL_Window* window = SDL_CreateWindow("Vibelight Shortcuts",
                                           SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                           kCollapsedWidth, kHeaderHeight, flags);
     if (window == nullptr) {
@@ -253,7 +253,7 @@ void ShortcutMenu::buildItems()
     m_Items.clear();
     m_ColumnTitles.assign(2, std::string());
     m_ColumnTitles[0] = "Send to remote PC";
-    m_ColumnTitles[1] = "VibeLight (Ctrl+Alt+Shift+key)";
+    m_ColumnTitles[1] = "Vibelight (Ctrl+Alt+Shift+key)";
 
     // Windows virtual-key codes
     const unsigned short CTRL = 0xA2, SHIFT = 0xA0, ALT = 0xA4, WIN = 0x5B;
@@ -296,7 +296,7 @@ void ShortcutMenu::buildItems()
     remote("Snipping tool",            "Win+Shift+S",   {WIN, SHIFT, 0x53});
     remote("Print Screen",             "",              {0x2C});
 
-    // Column 1: VibeLight's own client-side shortcuts
+    // Column 1: Vibelight's own client-side shortcuts
     client("Release/grab mouse",       "Z", SdlInputHandler::KeyComboUngrabInput, false);
     client("Toggle fullscreen",        "X", SdlInputHandler::KeyComboToggleFullScreen, false);
     client("Performance stats",        "S", SdlInputHandler::KeyComboToggleStatsOverlay, false);

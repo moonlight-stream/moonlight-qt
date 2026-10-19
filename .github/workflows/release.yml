@@ -49,21 +49,21 @@ jobs:
       - uses: actions/download-artifact@v6
         with:
           path: artifacts
-          pattern: VibeLight-*
+          pattern: Vibelight-*
 
       - name: Package release files
         shell: bash
         run: |
           mkdir -p release
           for arch in x64 arm64; do
-            dir="artifacts/VibeLight-Windows-${arch}-${CI_VERSION}"
+            dir="artifacts/Vibelight-Windows-${arch}-${CI_VERSION}"
             if [ -d "$dir" ]; then
-              # portable.dat next to the exe makes VibeLight keep its settings in this folder
+              # portable.dat next to the exe makes Vibelight keep its settings in this folder
               touch "$dir/portable.dat"
-              (cd "$dir" && zip -qr "../../release/VibeLight-${VERSION}-Windows-${arch}-portable.zip" .)
+              (cd "$dir" && zip -qr "../../release/Vibelight-${VERSION}-Windows-${arch}-portable.zip" .)
             fi
           done
-          cp artifacts/VibeLight-macOS-${CI_VERSION}/*.dmg "release/VibeLight-${VERSION}-macOS.dmg" 2>/dev/null || true
+          cp artifacts/Vibelight-macOS-${CI_VERSION}/*.dmg "release/Vibelight-${VERSION}-macOS.dmg" 2>/dev/null || true
           ls -l release
 
       - name: Create GitHub Release
@@ -71,5 +71,5 @@ jobs:
         run: |
           gh release create "${GITHUB_REF_NAME}" release/* \
             --repo "${GITHUB_REPOSITORY}" \
-            --title "VibeLight ${VERSION}" \
+            --title "Vibelight ${VERSION}" \
             --generate-notes

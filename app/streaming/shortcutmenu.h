@@ -40,7 +40,7 @@ private:
     enum Kind {
         KindHostKeys,   // press and release a chord on the remote PC
         KindHostText,   // type a string on the remote PC
-        KindClient,     // one of VibeLight's own Ctrl+Alt+Shift+key actions
+        KindClient,     // one of Vibelight's own Ctrl+Alt+Shift+key actions
         KindOpenConfig, // open the custom shortcuts file in the default editor
         KindInfo        // non-clickable message (for example a config error)
     };

@@ -1,6 +1,6 @@
-# VibeLight
+# Vibelight
 
-VibeLight is a fork of [Moonlight PC](https://github.com/moonlight-stream/moonlight-qt), the open source PC client for NVIDIA GameStream and [Sunshine](https://github.com/LizardByte/Sunshine). All of the streaming, decoding and input work is Moonlight's. This fork adds a few conveniences for remote-desktop use and renames the app.
+Vibelight is a fork of [Moonlight PC](https://github.com/moonlight-stream/moonlight-qt), the open source PC client for NVIDIA GameStream and [Sunshine](https://github.com/LizardByte/Sunshine). All of the streaming, decoding and input work is Moonlight's. This fork adds a few conveniences for remote-desktop use and renames the app.
 
 > **This is an unofficial fork.** It is not affiliated with or endorsed by the Moonlight project. Please don't report problems with this fork to the upstream project. Upstream is licensed under GPLv3, and so is this fork (see [LICENSE](LICENSE)).
 
@@ -10,7 +10,7 @@ VibeLight is a fork of [Moonlight PC](https://github.com/moonlight-stream/moonli
 While streaming, press **Ctrl+Alt+Shift+H** to show a small always-on-top **Shortcuts** button over the stream window. It is hidden the rest of the time. Drag it anywhere. A click opens a dropdown of shortcuts you can click instead of pressing key combinations:
 
 - **Sent to the remote PC:** Ctrl+Alt+Del, Alt+Tab, Alt+F4, Task Manager (Ctrl+Shift+Esc), Win, Win+D, Win+E, Win+L, Win+R, Win+Tab, Win+Shift+S, Print Screen.
-- **VibeLight's own actions** (the Ctrl+Alt+Shift+key hotkeys): release/grab mouse (Z), fullscreen (X), performance stats (S), mouse mode (M), show/hide cursor (C), minimize (D), paste clipboard as typing (V), pointer region lock (L), system key capture (K), quit stream (Q), quit stream and exit app (E).
+- **Vibelight's own actions** (the Ctrl+Alt+Shift+key hotkeys): release/grab mouse (Z), fullscreen (X), performance stats (S), mouse mode (M), show/hide cursor (C), minimize (D), paste clipboard as typing (V), pointer region lock (L), system key capture (K), quit stream (Q), quit stream and exit app (E).
 - **Custom shortcuts** appear in extra columns (see below).
 - Quit actions need a second click to confirm.
 - Pressing **Ctrl+Alt+Shift+H** also frees the mouse first, which is needed in relative mouse mode. Press it again, press Esc, or pick an action to hide the button again.
@@ -21,7 +21,7 @@ Notes and limitations:
 - This feature is new and has had limited testing, especially in exclusive fullscreen.
 
 ### Custom shortcuts
-Click **Edit custom shortcuts...** in the dropdown (or edit the file yourself) to add your own buttons. The file is `vibelight-shortcuts.json`. It lives in the app's config folder, or next to `VibeLight.exe` in portable mode. It is created the first time you open the menu. Changes show up the next time you press Ctrl+Alt+Shift+H, with no restart.
+Click **Edit custom shortcuts...** in the dropdown (or edit the file yourself) to add your own buttons. The file is `vibelight-shortcuts.json`. It lives in the app's config folder, or next to `Vibelight.exe` in portable mode. It is created the first time you open the menu. Changes show up the next time you press Ctrl+Alt+Shift+H, with no restart.
 
 ```json
 {
@@ -49,7 +49,7 @@ The update indicator now checks the latest GitHub release of this repository (`n
 The app's colors follow the Vibepollo web UI: a near-black navy background (`#060918`), dark navy toolbar and panels (`#0D1424`), and an indigo accent (`#6366F1`). This is a color change only. The layout is still Moonlight's.
 
 ### Rename
-The visible app name is now **VibeLight** (window titles, messages, command-line help, the Windows `.exe`, installer and portable package names). Some things intentionally still say Moonlight:
+The visible app name is now **Vibelight** (window titles, messages, command-line help, the Windows `.exe`, installer and portable package names). Some things intentionally still say Moonlight:
 - Internal identifiers (settings location, registry keys, cache folders, log file names) are unchanged, so settings and pairing data are compatible with upstream Moonlight.
 - Linux and macOS binary and package names are unchanged.
 - Translations of changed strings fall back to English.
@@ -62,12 +62,12 @@ Releases are optional. To publish one:
 
 1. Edit `app/version.txt` (for example `6.2.1`) and commit it.
 2. Tag and push: `git tag v6.2.1 && git push origin v6.2.1`.
-3. The **Release** workflow builds the app and creates a GitHub Release with portable zips (`VibeLight-6.2.1-Windows-x64-portable.zip`, `...-arm64-...`) and a macOS `.dmg`. It stops early if the tag doesn't match `app/version.txt`.
+3. The **Release** workflow builds the app and creates a GitHub Release with portable zips (`Vibelight-6.2.1-Windows-x64-portable.zip`, `...-arm64-...`) and a macOS `.dmg`. It stops early if the tag doesn't match `app/version.txt`.
 
 The in-app update indicator only shows something once a release like this exists with a higher version than the installed one.
 
 ## Downloads
-Until you publish a release, build artifacts come from GitHub Actions: open the **Actions** tab of this repository, pick a run of the **Build** workflow, and download the `VibeLight-Windows-x64-*` artifact (or `-arm64-`). It is an unpacked folder. Create an empty file called `portable.dat` next to `VibeLight.exe` to run it in portable mode, where settings are stored next to the program.
+Until you publish a release, build artifacts come from GitHub Actions: open the **Actions** tab of this repository, pick a run of the **Build** workflow, and download the `Vibelight-Windows-x64-*` artifact (or `-arm64-`). It is an unpacked folder. Create an empty file called `portable.dat` next to `Vibelight.exe` to run it in portable mode, where settings are stored next to the program.
 
 ## Credits
 The changes in this fork (the floating Shortcuts button, custom shortcuts, the release workflow, the rename, the icon and this README) were written with [Claude](https://claude.com) by Anthropic. Moonlight itself is the work of the Moonlight project and its contributors.

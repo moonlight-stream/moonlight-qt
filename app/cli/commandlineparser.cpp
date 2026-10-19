@@ -154,7 +154,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
     parser.setupCommonOptions();
     parser.setApplicationDescription(
         "\n"
-        "Starts VibeLight normally if no arguments are given.\n"
+        "Starts Vibelight normally if no arguments are given.\n"
         "\n"
         "Available actions:\n"
         "  list            List the available apps on a host\n"
@@ -360,7 +360,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("game-optimization", "game optimizations");
     parser.addToggleOption("audio-on-host", "audio on host PC");
     parser.addToggleOption("frame-pacing", "frame pacing");
-    parser.addToggleOption("mute-on-focus-loss", "mute audio when VibeLight window loses focus");
+    parser.addToggleOption("mute-on-focus-loss", "mute audio when Vibelight window loses focus");
     parser.addToggleOption("background-gamepad", "background gamepad input");
     parser.addToggleOption("reverse-scroll-direction", "inverted scroll direction");
     parser.addToggleOption("swap-gamepad-buttons", "swap A/B and X/Y gamepad buttons (Nintendo-style)");

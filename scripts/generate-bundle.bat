@@ -81,9 +81,9 @@ cmd /c "set VERSION= && msbuild -Restore %SOURCE_ROOT%\wix\MoonlightSetup\Moonli
 if !ERRORLEVEL! NEQ 0 goto Error
 
 rem Rename the installer to match the publishing convention
-ren %INSTALLER_FOLDER%\MoonlightSetup.exe VibeLightSetup-%VERSION%.exe
+ren %INSTALLER_FOLDER%\MoonlightSetup.exe VibelightSetup-%VERSION%.exe
 
-echo Build successful for VibeLight v%VERSION% installer!
+echo Build successful for Vibelight v%VERSION% installer!
 exit /b 0
 
 :Error

@@ -4,7 +4,7 @@ CONFIG += c++17
 unix:!macx {
     TARGET = moonlight
 } else:win32 {
-    TARGET = VibeLight
+    TARGET = Vibelight
 } else {
     # On macOS, this is the name displayed in the global menu bar
     TARGET = Moonlight
@@ -551,8 +551,8 @@ unix:!macx: {
 win32 {
     RC_ICONS = moonlight.ico
     QMAKE_TARGET_COMPANY = Moonlight Game Streaming Project
-    QMAKE_TARGET_DESCRIPTION = VibeLight Game Streaming Client (fork of Moonlight, written with Claude)
-    QMAKE_TARGET_PRODUCT = VibeLight
+    QMAKE_TARGET_DESCRIPTION = Vibelight Game Streaming Client (fork of Moonlight, written with Claude)
+    QMAKE_TARGET_PRODUCT = Vibelight
 
     CONFIG -= embed_manifest_exe
     QMAKE_LFLAGS += /MANIFEST:embed /MANIFESTINPUT:$${PWD}/Moonlight.exe.manifest
