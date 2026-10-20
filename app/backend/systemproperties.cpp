@@ -4,6 +4,8 @@
 #include <QGuiApplication>
 #include <QLibraryInfo>
 
+#include <climits>
+
 #include "streaming/session.h"
 #include "streaming/streamutils.h"
 
@@ -151,6 +153,12 @@ QRect SystemProperties::getNativeResolution(int displayIndex)
     return monitorNativeResolutions.value(displayIndex);
 }
 
+QRect SystemProperties::getNativeResolutionAt(int x, int y)
+{
+    int index = monitorOrigins.indexOf(QPoint(x, y));
+    return monitorNativeResolutions.value(index < 0 ? 0 : index);
+}
+
 QRect SystemProperties::getSafeAreaResolution(int displayIndex)
 {
     // Returns default constructed QRect if out of bounds
@@ -225,6 +233,7 @@ void SystemProperties::refreshDisplays()
     }
 
     monitorNativeResolutions.clear();
+    monitorOrigins.clear();
     monitorSafeAreaResolutions.clear();
     monitorRefreshRates.clear();
 
@@ -238,6 +247,9 @@ void SystemProperties::refreshDisplays()
                 // Keep these lists compact because their QML consumers iterate until
                 // the first empty entry. Inserting by SDL display index is invalid if
                 // an earlier display was skipped (for example, a >8K virtual display).
+                SDL_Rect bounds;
+                monitorOrigins.append(SDL_GetDisplayBounds(displayIndex, &bounds) == 0 ?
+                                          QPoint(bounds.x, bounds.y) : QPoint(INT_MIN, INT_MIN));
                 monitorNativeResolutions.append(QRect(0, 0, desktopMode.w, desktopMode.h));
                 monitorSafeAreaResolutions.append(QRect(0, 0, safeArea.w, safeArea.h));
             }

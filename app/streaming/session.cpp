@@ -613,7 +613,8 @@ bool Session::initialize(QQuickWindow* qtWindow)
             // Check if this display has a notch (safeArea != desktopMode)
             if (desktopMode.h != safeArea.h || desktopMode.w != safeArea.w) {
                 // Check if we're trying to stream at the full native resolution (including notch)
-                if (m_Preferences->width == desktopMode.w && m_Preferences->height == desktopMode.h) {
+                if (m_Preferences->nativeResolution ||
+                        (m_Preferences->width == desktopMode.w && m_Preferences->height == desktopMode.h)) {
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Overriding default fullscreen mode for native fullscreen resolution");
                     shouldUseFullScreenSpaces = false;
@@ -659,6 +660,20 @@ bool Session::initialize(QQuickWindow* qtWindow)
     m_StreamConfig.width = m_Preferences->width;
     m_StreamConfig.height = m_Preferences->height;
 
+    if (m_Preferences->nativeResolution) {
+        SDL_DisplayMode nativeMode;
+        SDL_Rect safeArea;
+        if (!StreamUtils::getNativeDesktopMode(getTargetDisplayIndex(), &nativeMode, &safeArea) ||
+                nativeMode.w == 0 || nativeMode.h == 0) {
+            emit displayLaunchError(tr("Unable to detect the native resolution of this display. Select a fixed resolution in Settings."));
+            SDL_QuitSubSystem(SDL_INIT_VIDEO);
+            return false;
+        }
+
+        m_StreamConfig.width = nativeMode.w;
+        m_StreamConfig.height = nativeMode.h;
+    }
+
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
 
@@ -679,7 +694,10 @@ bool Session::initialize(QQuickWindow* qtWindow)
     m_VideoCallbacks.setup = drSetup;
 
     m_StreamConfig.fps = m_Preferences->fps;
-    m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
+    m_StreamConfig.bitrate = m_Preferences->nativeResolution && m_Preferences->autoAdjustBitrate ?
+                StreamingPreferences::getDefaultBitrate(m_StreamConfig.width, m_StreamConfig.height,
+                                                        m_Preferences->fps, m_Preferences->enableYUV444) :
+                m_Preferences->bitrateKbps;
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
@@ -1315,8 +1333,7 @@ private:
     Session* m_Session;
 };
 
-void Session::getWindowDimensions(int& x, int& y,
-                                  int& width, int& height)
+int Session::getTargetDisplayIndex()
 {
     int displayIndex = 0;
 
@@ -1362,6 +1379,14 @@ void Session::getWindowDimensions(int& x, int& y,
             }
         }
     }
+
+    return displayIndex;
+}
+
+void Session::getWindowDimensions(int& x, int& y,
+                                  int& width, int& height)
+{
+    int displayIndex = getTargetDisplayIndex();
 
     SDL_Rect usableBounds;
     if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
