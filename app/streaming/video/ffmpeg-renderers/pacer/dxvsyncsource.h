@@ -10,6 +10,7 @@ typedef UINT D3DKMT_HANDLE;
 typedef UINT D3DDDI_VIDEO_PRESENT_SOURCE_ID;
 #define STATUS_SUCCESS ((NTSTATUS)0x00000000L)
 #define STATUS_GRAPHICS_PRESENT_OCCLUDED ((NTSTATUS)0xC01E0006L)
+#define D3DDDI_ID_UNINITIALIZED (UINT)(~0)
 typedef struct _D3DKMT_OPENADAPTERFROMHDC {
   HDC hDc;
   D3DKMT_HANDLE hAdapter;
@@ -39,13 +40,14 @@ public:
 
     virtual bool isAsync() override;
 
-    virtual void waitForVsync() override;
+    virtual bool waitForVsync() override;
 
 private:
     Pacer* m_Pacer;
     HMODULE m_Gdi32Handle;
     HWND m_Window;
     HMONITOR m_LastMonitor;
+    LUID m_AdapterLuid;
     D3DKMT_WAITFORVERTICALBLANKEVENT m_WaitForVblankEventParams;
 
     PFND3DKMTOPENADAPTERFROMHDC m_D3DKMTOpenAdapterFromHdc;

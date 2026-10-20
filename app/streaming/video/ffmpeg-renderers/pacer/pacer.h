@@ -22,9 +22,10 @@ public:
     // sources require calls to waitForVsync().
     virtual bool isAsync() = 0;
 
-    virtual void waitForVsync() {
+    virtual bool waitForVsync() {
         // Synchronous sources must implement waitForVsync()!
         SDL_assert(false);
+        return false;
     }
 };
 
