@@ -1537,6 +1537,68 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Allows Moonlight to capture gamepad inputs even if it's not the current window in focus")
                 }
+
+                Label {
+                    width: parent.width
+                    text: qsTr("Controller update rate")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                AutoResizingComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        var saved_interval = StreamingPreferences.gamepadSendIntervalMs
+
+                        currentIndex = 0
+
+                        for (var i = 0; i < gamepadSendIntervalModel.count; i++) {
+                            if (gamepadSendIntervalModel.get(i).val === saved_interval) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+
+                        recalculateWidth()
+                    }
+
+                    id: gamepadSendIntervalComboBox
+                    textRole: "text"
+                    model: ListModel {
+                        id: gamepadSendIntervalModel
+                        ListElement {
+                            text: qsTr("125 Hz (8 ms) - recommended")
+                            val: 8
+                        }
+                        ListElement {
+                            text: qsTr("250 Hz (4 ms)")
+                            val: 4
+                        }
+                        ListElement {
+                            text: qsTr("500 Hz (2 ms)")
+                            val: 2
+                        }
+                        ListElement {
+                            text: qsTr("1000 Hz (1 ms)")
+                            val: 1
+                        }
+                        ListElement {
+                            text: qsTr("Unlimited")
+                            val: 0
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated: {
+                        if (enabled) {
+                            StreamingPreferences.gamepadSendIntervalMs = gamepadSendIntervalModel.get(currentIndex).val
+                        }
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Caps how often gamepad state is sent to the host. Lower rates help with controllers that poll much faster than the stream frame rate.")
+                }
             }
         }
 

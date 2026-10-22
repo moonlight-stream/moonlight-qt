@@ -36,6 +36,10 @@ struct GamepadState {
     short lsX, lsY;
     short rsX, rsY;
     unsigned char lt, rt;
+
+    bool sendPending;
+    uint32_t lastSendTime;
+    SDL_TimerID flushTimer;
 };
 
 
@@ -68,6 +72,9 @@ struct DualSenseOutputReport{
     uint8_t lightbarGreen;
     uint8_t lightbarBlue;
 };
+
+// Push a user event when a throttled gamepad state needs to be flushed from the main thread
+#define SDL_CODE_GAMEPAD_STATE_FLUSH 110
 
 // activeGamepadMask is a short, so we're bounded by the number of mask bits
 #define MAX_GAMEPADS 16
@@ -134,6 +141,8 @@ public:
 
     void raiseAllKeys();
 
+    void flushPendingGamepadState();
+
     void notifyMouseLeave();
 
     void notifyFocusLost();
@@ -176,6 +185,13 @@ private:
 
     void sendGamepadState(GamepadState* state);
 
+    void queueGamepadState(GamepadState* state);
+
+    void cancelPendingGamepadFlush(GamepadState* state);
+
+    static
+    Uint32 gamepadFlushTimerCallback(Uint32 interval, void* param);
+
     void sendGamepadBatteryState(GamepadState* state, SDL_JoystickPowerLevel level);
 
     void handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
@@ -217,6 +233,7 @@ private:
     bool m_PointerRegionLockToggledByUser;
 
     int m_GamepadMask;
+    int m_GamepadSendIntervalMs;
     GamepadState m_GamepadState[MAX_GAMEPADS];
     QSet<uint32_t> m_KeysDown;
     bool m_FakeMouseCaptureActive;

@@ -35,6 +35,8 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_DragButton(0),
       m_NumFingersDown(0)
 {
+    m_GamepadSendIntervalMs = prefs.gamepadSendIntervalMs;
+
     // System keys are always captured when running without a DE
     if (!WMUtils::isRunningDesktopEnvironment()) {
         m_CaptureSystemKeysMode = StreamingPreferences::CSK_ALWAYS;
@@ -228,6 +230,9 @@ SdlInputHandler::~SdlInputHandler()
             SDL_HapticClose(m_GamepadState[i].haptic);
         }
 #endif
+        if (m_GamepadState[i].flushTimer != 0) {
+            SDL_RemoveTimer(m_GamepadState[i].flushTimer);
+        }
         if (m_GamepadState[i].controller != nullptr) {
             SDL_GameControllerClose(m_GamepadState[i].controller);
         }

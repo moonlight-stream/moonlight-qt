@@ -2025,6 +2025,9 @@ void Session::exec()
             case SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER:
                 m_FlushingWindowEventsRef--;
                 break;
+            case SDL_CODE_GAMEPAD_STATE_FLUSH:
+                m_InputHandler->flushPendingGamepadState();
+                break;
             case SDL_CODE_GAMECONTROLLER_RUMBLE:
                 m_InputHandler->rumble((uint16_t)(uintptr_t)event.user.data1,
                                        (uint16_t)((uintptr_t)event.user.data2 >> 16),
