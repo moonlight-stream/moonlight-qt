@@ -1567,6 +1567,10 @@ Flickable {
                     model: ListModel {
                         id: gamepadSendIntervalModel
                         ListElement {
+                            text: qsTr("62.5 Hz (16 ms)")
+                            val: 16
+                        }
+                        ListElement {
                             text: qsTr("125 Hz (8 ms) - recommended")
                             val: 8
                         }
@@ -1597,7 +1601,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Caps how often gamepad state is sent to the host. Lower rates help with controllers that poll much faster than the stream frame rate.")
+                    ToolTip.text: qsTr("Caps how often gamepad state is sent to the host. Lower rates help with controllers that poll much faster than the stream frame rate. 62.5 Hz matches a 60 FPS stream; lower rates can make camera movement feel steppy.")
                 }
             }
         }
