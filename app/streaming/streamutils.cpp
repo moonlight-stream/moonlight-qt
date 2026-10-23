@@ -38,12 +38,15 @@
 #include <asm/hwprobe.h>
 #include <sys/syscall.h>
 #else
-#define __NR_riscv_hwprobe 258
 struct riscv_hwprobe {
     int64_t key;
     uint64_t value;
 };
 #define RISCV_HWPROBE_KEY_IMA_EXT_0 4
+#endif
+
+#ifndef __NR_riscv_hwprobe
+#define __NR_riscv_hwprobe 258
 #endif
 
 // RISC-V Scalar AES [E]ncryption and [D]ecryption
