@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Embedded Info.plist for the MoonlightAWDLHelper privileged helper tool.
+     Linked into the helper binary with:
+       -sectcreate __TEXT __info_plist MoonlightAWDLHelper-Info.plist
+     SMAuthorizedClients lists the code-signing requirements a client must
+     satisfy to install, update, or remove this helper via SMJobBless.
+     The requirement below matches any Apple-issued certificate for the
+     Moonlight app bundle identifier; if you sign with a purely self-signed
+     local certificate, replace "anchor apple generic" with the requirement
+     matching that certificate (e.g. one naming its anchor). -->
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.moonlight-stream.Moonlight.AWDLHelper</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>MoonlightAWDLHelper</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+	<key>SMAuthorizedClients</key>
+	<array>
+		<string>identifier "com.moonlight-stream.Moonlight" and anchor apple generic</string>
+	</array>
+</dict>
+</plist>

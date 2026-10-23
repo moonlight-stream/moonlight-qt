@@ -1713,6 +1713,41 @@ Flickable {
                 }
 
                 CheckBox {
+                    id: disableAwdlCheck
+                    width: parent.width
+                    text: qsTr("Disable AWDL while streaming")
+                    font.pointSize: 12
+                    visible: SystemProperties.isDarwin
+                    checked: StreamingPreferences.disableAwdlWhileStreaming
+                    onCheckedChanged: {
+                        // This is called on init, so only act when the value actually changes.
+                        if (StreamingPreferences.disableAwdlWhileStreaming != checked) {
+                            StreamingPreferences.disableAwdlWhileStreaming = checked
+                            if (checked) {
+                                // Install the privileged helper now, so the one-time admin
+                                // prompt appears here -- not in the middle of a stream launch.
+                                // Empty string means success (or already installed).
+                                awdlHelperStatus.text = StreamingPreferences.installAwdlHelper()
+                            } else {
+                                awdlHelperStatus.text = ""
+                            }
+                        }
+                    }
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Disables Apple Wireless Direct Link while streaming to avoid Wi-Fi stutter. AirDrop, AirPlay, Sidecar, and Universal Control pause while streaming and resume when the stream ends. Requires a one-time admin approval to install the helper.")
+                }
+
+                Label {
+                    id: awdlHelperStatus
+                    width: parent.width
+                    visible: SystemProperties.isDarwin && text !== ""
+                    wrapMode: Text.Wrap
+                    font.pointSize: 12
+                }
+
+                CheckBox {
                     id: enableYUV444
                     width: parent.width
                     text: qsTr("Enable YUV 4:4:4")

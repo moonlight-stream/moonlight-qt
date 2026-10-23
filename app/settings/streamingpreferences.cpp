@@ -1,6 +1,10 @@
 #include "streamingpreferences.h"
 #include "utils.h"
 
+#ifdef Q_OS_MACOS
+#include "utils/awdlhelper.h"
+#endif
+
 #include <QSettings>
 #include <QTranslator>
 #include <QCoreApplication>
@@ -50,6 +54,7 @@
 #define SER_SWAPFACEBUTTONS "swapfacebuttons"
 #define SER_CAPTURESYSKEYS "capturesyskeys"
 #define SER_KEEPAWAKE "keepawake"
+#define SER_DISABLEAWDL "disableawdl"
 #define SER_LANGUAGE "language"
 #define SER_RENDERER "renderer"
 
@@ -151,6 +156,7 @@ void StreamingPreferences::reload()
     reverseScrollDirection = settings.value(SER_REVERSESCROLL, false).toBool();
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
+    disableAwdlWhileStreaming = settings.value(SER_DISABLEAWDL, false).toBool();
     enableHdr = settings.value(SER_HDR, false).toBool();
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
@@ -362,6 +368,29 @@ void StreamingPreferences::save()
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
+    settings.setValue(SER_DISABLEAWDL, disableAwdlWhileStreaming);
+}
+
+QString StreamingPreferences::installAwdlHelper()
+{
+#ifdef Q_OS_MACOS
+    // Already installed (e.g. from a previous enable) -- nothing to do,
+    // and no admin prompt.
+    if (awdlHelperIsInstalled()) {
+        return QString();
+    }
+    QString errorMessage;
+    if (awdlHelperInstall(&errorMessage)) {
+        return QString();
+    }
+    // Return the failure for display in the settings UI. Streaming is
+    // unaffected -- the session code treats a missing helper as "stream
+    // normally without AWDL management".
+    return errorMessage;
+#else
+    // No helper on other platforms; the setting is macOS-only in the UI.
+    return QString();
+#endif
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps, bool yuv444)

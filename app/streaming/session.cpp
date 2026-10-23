@@ -1,5 +1,9 @@
 #include "session.h"
 #include "settings/streamingpreferences.h"
+
+#ifdef Q_OS_MACOS
+#include "utils/awdlhelper.h"
+#endif
 #include "streaming/streamutils.h"
 #include "backend/richpresencemanager.h"
 
@@ -580,6 +584,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_FlushingWindowEventsRef(0),
       m_ShouldExit(false),
       m_AsyncConnectionSuccess(false),
+      m_AwdlDisabled(false),
       m_PortTestResults(0),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
@@ -1270,6 +1275,24 @@ private:
 
     void run() override
     {
+#ifdef Q_OS_MACOS
+        // Restore AWDL if we disabled it for this session. This task runs
+        // on every session exit path (normal end, launch failure, and
+        // interrupt -- see the three call sites in Session::exec()), so
+        // this is the single funnel that guarantees the re-enable.
+        // (A process crash or kill skips this; main.cpp re-enables AWDL
+        // once on next launch as a safety net for that case.)
+        if (m_Session->m_AwdlDisabled) {
+            QString errorMessage;
+            if (!awdlHelperSetEnabled(true, 10000, &errorMessage)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Failed to re-enable AWDL after streaming: %s",
+                            errorMessage.toUtf8().constData());
+            }
+            m_Session->m_AwdlDisabled = false;
+        }
+#endif
+
         // Only quit the running app if our session terminated gracefully
         bool shouldQuit =
                 !m_Session->m_UnexpectedTermination &&
@@ -1593,6 +1616,28 @@ public:
 // Called in a non-main thread
 bool Session::startConnectionAsync()
 {
+#ifdef Q_OS_MACOS
+    // Disable AWDL while streaming to avoid Wi-Fi stutter from AWDL's
+    // periodic radio use. This runs on the async connection thread (not
+    // the main thread), which the synchronous helper call requires.
+    // The matching re-enable lives in DeferredSessionCleanupTask::run(),
+    // which runs on every session exit path -- success, launch failure,
+    // and interrupt -- so a failed launch can never leave AWDL down.
+    if (m_Preferences->disableAwdlWhileStreaming) {
+        QString errorMessage;
+        if (awdlHelperSetEnabled(false, 10000, &errorMessage)) {
+            m_AwdlDisabled = true;
+        }
+        else {
+            // Helper missing or install failed: warn and stream normally
+            // without AWDL management. Never fail the launch over this.
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to disable AWDL for streaming: %s",
+                        errorMessage.toUtf8().constData());
+        }
+    }
+#endif
+
     // The UI should have ensured the old game was already quit
     // if we decide to stream a different game.
     Q_ASSERT(m_Computer->currentGameId == 0 ||

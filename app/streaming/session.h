@@ -268,6 +268,10 @@ private:
     bool m_AsyncConnectionSuccess;
     int m_PortTestResults;
 
+    // True while AWDL has been disabled for this session (macOS only).
+    // Set in startConnectionAsync(), cleared in DeferredSessionCleanupTask.
+    bool m_AwdlDisabled;
+
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;
     int m_ActiveVideoHeight;

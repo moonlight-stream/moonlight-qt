@@ -56,5 +56,17 @@
 	<string>Moonlight</string>
     <key>LSApplicationCategoryType</key>
 	<string>public.app-category.games</string>
+	<key>SMPrivilegedExecutables</key>
+	<dict>
+		<!-- Code-signing requirement the AWDL helper tool must satisfy for
+		     SMJobBless to install it. This names the helper's identifier
+		     (its executable file name in Contents/Library/LaunchServices).
+		     The requirement uses "anchor apple generic", which matches any
+		     Apple-issued certificate; if you sign with a purely self-signed
+		     local certificate, replace it with the requirement matching
+		     that certificate (see helper/README.md). -->
+		<key>com.moonlight-stream.Moonlight.AWDLHelper</key>
+		<string>identifier "com.moonlight-stream.Moonlight.AWDLHelper" and anchor apple generic</string>
+	</dict>
 </dict>
 </plist>

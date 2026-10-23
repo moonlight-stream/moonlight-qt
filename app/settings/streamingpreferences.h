@@ -157,8 +157,14 @@ public:
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
+    Q_PROPERTY(bool disableAwdlWhileStreaming MEMBER disableAwdlWhileStreaming NOTIFY disableAwdlWhileStreamingChanged)
 
     Q_INVOKABLE bool retranslate();
+
+    // Installs the privileged AWDL helper tool (macOS only). Returns an
+    // empty string on success (or when already installed), otherwise an
+    // error message for display in the settings UI. No-op on other OSes.
+    Q_INVOKABLE QString installAwdlHelper();
 
     // Directly accessible members for preferences
     int width;
@@ -188,6 +194,7 @@ public:
     bool reverseScrollDirection;
     bool swapFaceButtons;
     bool keepAwake;
+    bool disableAwdlWhileStreaming;
     int packetSize;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
@@ -238,6 +245,7 @@ signals:
     void keepAwakeChanged();
     void languageChanged();
     void rendererSelectionChanged();
+    void disableAwdlWhileStreamingChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);
