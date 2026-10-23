@@ -65,6 +65,8 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
 
 Session* Session::s_ActiveSession;
 QSemaphore Session::s_ActiveSessionSemaphore(1);
+QSize Session::s_DecoderMaxResolution;
+bool Session::s_DecoderMaxResolutionProbed;
 
 void Session::clStageStarting(int stage)
 {
@@ -392,6 +394,18 @@ void Session::getDecoderInfo(SDL_Window* window,
 {
     IVideoDecoder* decoder;
 
+    // Every successful probe reports the same set of decoder attributes. The
+    // maximum resolution is also kept for automatic resolution mode to use.
+    auto recordDecoderInfo = [&](IVideoDecoder* decoder) {
+        isHardwareAccelerated = decoder->isHardwareAccelerated();
+        isFullScreenOnly = decoder->isAlwaysFullScreen();
+        maxResolution = decoder->getDecoderMaxResolution();
+        delete decoder;
+
+        s_DecoderMaxResolution = maxResolution;
+        s_DecoderMaxResolutionProbed = true;
+    };
+
     // Since AV1 support on the host side is in its infancy, let's not consider
     // _only_ a working AV1 decoder to be acceptable and still show the warning
     // dialog indicating lack of hardware decoding support.
@@ -401,12 +415,8 @@ void Session::getDecoderInfo(SDL_Window* window,
                       StreamingPreferences::RS_PROBE_ONLY,
                       window, VIDEO_FORMAT_H265_MAIN10, 1920, 1080, 60,
                       false, false, true, decoder)) {
-        isHardwareAccelerated = decoder->isHardwareAccelerated();
-        isFullScreenOnly = decoder->isAlwaysFullScreen();
         isHdrSupported = decoder->isHdrSupported();
-        maxResolution = decoder->getDecoderMaxResolution();
-        delete decoder;
-
+        recordDecoderInfo(decoder);
         return;
     }
 
@@ -447,11 +457,7 @@ void Session::getDecoderInfo(SDL_Window* window,
                       StreamingPreferences::RS_PROBE_ONLY,
                       window, VIDEO_FORMAT_H265, 1920, 1080, 60,
                       false, false, true, decoder)) {
-        isHardwareAccelerated = decoder->isHardwareAccelerated();
-        isFullScreenOnly = decoder->isAlwaysFullScreen();
-        maxResolution = decoder->getDecoderMaxResolution();
-        delete decoder;
-
+        recordDecoderInfo(decoder);
         return;
     }
 
@@ -461,11 +467,7 @@ void Session::getDecoderInfo(SDL_Window* window,
                       StreamingPreferences::RS_PROBE_ONLY,
                       window, VIDEO_FORMAT_AV1_MAIN8, 1920, 1080, 60,
                       false, false, true, decoder)) {
-        isHardwareAccelerated = decoder->isHardwareAccelerated();
-        isFullScreenOnly = decoder->isAlwaysFullScreen();
-        maxResolution = decoder->getDecoderMaxResolution();
-        delete decoder;
-
+        recordDecoderInfo(decoder);
         return;
     }
 #endif
@@ -476,11 +478,7 @@ void Session::getDecoderInfo(SDL_Window* window,
                       StreamingPreferences::RS_PROBE_ONLY,
                       window, VIDEO_FORMAT_H264, 1920, 1080, 60,
                       false, false, true, decoder)) {
-        isHardwareAccelerated = decoder->isHardwareAccelerated();
-        isFullScreenOnly = decoder->isAlwaysFullScreen();
-        maxResolution = decoder->getDecoderMaxResolution();
-        delete decoder;
-
+        recordDecoderInfo(decoder);
         return;
     }
 
@@ -600,12 +598,48 @@ bool Session::initialize(QQuickWindow* qtWindow)
 {
     m_QtWindow = qtWindow;
 
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return false;
+    }
+
+    // Stop text input. SDL enables it by default
+    // when we initialize the video subsystem, but this
+    // causes an IME popup when certain keys are held down
+    // on macOS.
+    SDL_StopTextInput();
+
+    LiInitializeStreamConfiguration(&m_StreamConfig);
+    m_StreamConfig.width = m_Preferences->width;
+    m_StreamConfig.height = m_Preferences->height;
+    m_StreamConfig.fps = m_Preferences->fps;
+    m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
+
+    // Create a hidden window to use for decoder initialization tests
+    SDL_Window* testWindow = StreamUtils::createTestWindow();
+    if (!testWindow) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create window for hardware decode test: %s",
+                     SDL_GetError());
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return false;
+    }
+
+    // Replace the saved resolution and/or frame rate with the client display's
+    // own values if the user asked us to match it automatically
+    overrideStreamConfigForClientDisplay(testWindow);
+
 #ifdef Q_OS_DARWIN
     if (qEnvironmentVariableIntValue("I_WANT_BUGGY_FULLSCREEN") == 0) {
-        // If we have a notch and the user specified one of the two native display modes
+        // If we have a notch and we're streaming at one of the two native display modes
         // (notched or notchless), override the fullscreen mode to ensure it works as expected.
         // - SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=0 will place the video underneath the notch
         // - SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=1 will place the video below the notch
+        //
+        // This must run after the automatic resolution override so it sees the resolution
+        // we will actually stream at, and before the stream window is created.
         bool shouldUseFullScreenSpaces = m_Preferences->windowMode != StreamingPreferences::WM_FULLSCREEN;
         SDL_DisplayMode desktopMode;
         SDL_Rect safeArea;
@@ -613,13 +647,13 @@ bool Session::initialize(QQuickWindow* qtWindow)
             // Check if this display has a notch (safeArea != desktopMode)
             if (desktopMode.h != safeArea.h || desktopMode.w != safeArea.w) {
                 // Check if we're trying to stream at the full native resolution (including notch)
-                if (m_Preferences->width == desktopMode.w && m_Preferences->height == desktopMode.h) {
+                if (m_StreamConfig.width == desktopMode.w && m_StreamConfig.height == desktopMode.h) {
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Overriding default fullscreen mode for native fullscreen resolution");
                     shouldUseFullScreenSpaces = false;
                     break;
                 }
-                else if (m_Preferences->width == safeArea.w && m_Preferences->height == safeArea.h) {
+                else if (m_StreamConfig.width == safeArea.w && m_StreamConfig.height == safeArea.h) {
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Overriding default fullscreen mode for native safe area resolution");
                     shouldUseFullScreenSpaces = true;
@@ -642,44 +676,14 @@ bool Session::initialize(QQuickWindow* qtWindow)
     }
 #endif
 
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
-    // Stop text input. SDL enables it by default
-    // when we initialize the video subsystem, but this
-    // causes an IME popup when certain keys are held down
-    // on macOS.
-    SDL_StopTextInput();
-
-    LiInitializeStreamConfiguration(&m_StreamConfig);
-    m_StreamConfig.width = m_Preferences->width;
-    m_StreamConfig.height = m_Preferences->height;
-
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
-
-    // Create a hidden window to use for decoder initialization tests
-    SDL_Window* testWindow = StreamUtils::createTestWindow();
-    if (!testWindow) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to create window for hardware decode test: %s",
-                     SDL_GetError());
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        return false;
-    }
 
     qInfo() << "Server GPU:" << m_Computer->gpuModel;
     qInfo() << "Server GFE version:" << m_Computer->gfeVersion;
 
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
-
-    m_StreamConfig.fps = m_Preferences->fps;
-    m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
@@ -1315,53 +1319,151 @@ private:
     Session* m_Session;
 };
 
+void Session::overrideStreamConfigForClientDisplay(SDL_Window* testWindow)
+{
+    if (!m_Preferences->autoResolution && !m_Preferences->autoFps) {
+        return;
+    }
+
+    int displayIndex = getStreamDisplayIndex();
+
+    if (m_Preferences->autoResolution) {
+        SDL_DisplayMode desktopMode;
+        SDL_Rect safeArea;
+
+        // getNativeDesktopMode() can succeed with a zeroed mode on macOS if no
+        // display mode is flagged as native, so treat an empty safe area as a
+        // detection failure.
+        if (StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea) &&
+                safeArea.w > 0 && safeArea.h > 0) {
+            // The settings page never offers resolutions above what the decoder
+            // supports, so don't let automatic mode pick one either. The GUI probes
+            // this limit once at startup, but the command line stream path skips
+            // that probe, so run it here if it hasn't happened yet.
+            if (!s_DecoderMaxResolutionProbed) {
+                bool isHardwareAccelerated, isFullScreenOnly, isHdrSupported;
+                QSize probedMaxResolution;
+                getDecoderInfo(testWindow, isHardwareAccelerated, isFullScreenOnly,
+                               isHdrSupported, probedMaxResolution);
+            }
+
+            QSize maxResolution = s_DecoderMaxResolution;
+            if (!maxResolution.isEmpty() &&
+                    safeArea.w * safeArea.h > maxResolution.width() * maxResolution.height()) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Display %d resolution %dx%d exceeds decoder maximum of %dx%d. Using %dx%d.",
+                            displayIndex, safeArea.w, safeArea.h,
+                            maxResolution.width(), maxResolution.height(),
+                            m_StreamConfig.width, m_StreamConfig.height);
+            }
+            else {
+                // Use the safe area rather than the full native resolution, so we don't
+                // render video underneath a notch on displays that have one. They are
+                // identical on displays without a notch.
+                m_StreamConfig.width = safeArea.w;
+                m_StreamConfig.height = safeArea.h;
+
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Matching resolution of display %d: %dx%d",
+                            displayIndex, m_StreamConfig.width, m_StreamConfig.height);
+            }
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to detect resolution of display %d. Using %dx%d.",
+                        displayIndex, m_StreamConfig.width, m_StreamConfig.height);
+        }
+    }
+
+    if (m_Preferences->autoFps) {
+        // Match the rate the display is running at now, not the highest it supports
+        int refreshRate = StreamUtils::getCurrentRefreshRate(displayIndex);
+        if (refreshRate != 0) {
+            m_StreamConfig.fps = refreshRate;
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Matching refresh rate of display %d: %d FPS",
+                        displayIndex, m_StreamConfig.fps);
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to detect refresh rate of display %d. Using %d FPS.",
+                        displayIndex, m_StreamConfig.fps);
+        }
+    }
+
+    // The default bitrate was computed for the saved resolution and frame rate, so it
+    // needs to be recalculated for the display mode we actually ended up with. If the
+    // user picked their own bitrate, we assume they really wanted that value.
+    if (m_Preferences->autoAdjustBitrate) {
+        // Never exceed the ceiling of the bitrate slider on the settings page
+        m_StreamConfig.bitrate = qMin(StreamingPreferences::getDefaultBitrate(m_StreamConfig.width,
+                                                                              m_StreamConfig.height,
+                                                                              m_StreamConfig.fps,
+                                                                              m_Preferences->enableYUV444),
+                                      StreamingPreferences::getMaxBitrate(m_Preferences->unlockBitrate));
+    }
+}
+
+int Session::getStreamDisplayIndex()
+{
+    if (m_Window != nullptr) {
+        int displayIndex = SDL_GetWindowDisplayIndex(m_Window);
+        SDL_assert(displayIndex >= 0);
+        return displayIndex >= 0 ? displayIndex : 0;
+    }
+
+    // We will create our window on the same display that Qt's UI
+    // was being displayed on.
+    Q_ASSERT(m_QtWindow != nullptr);
+    if (m_QtWindow != nullptr) {
+        QScreen* screen = m_QtWindow->screen();
+        if (screen != nullptr) {
+            QRect displayRect = screen->geometry();
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Qt UI screen is at (%d,%d)",
+                        displayRect.x(), displayRect.y());
+            for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
+                SDL_Rect displayBounds;
+
+                if (SDL_GetDisplayBounds(i, &displayBounds) == 0) {
+                    if (displayBounds.x == displayRect.x() &&
+                        displayBounds.y == displayRect.y()) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "SDL found matching display %d",
+                                    i);
+                        return i;
+                    }
+                }
+                else {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "SDL_GetDisplayBounds(%d) failed: %s",
+                                i, SDL_GetError());
+                }
+            }
+
+            // Falling through means Qt and SDL disagree about where this
+            // display starts. Say so, because using display 0 instead will
+            // otherwise look like a correct result that picked the wrong
+            // display.
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "No SDL display found at (%d,%d). Using display 0.",
+                        displayRect.x(), displayRect.y());
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Qt window is not associated with a QScreen!");
+        }
+    }
+
+    return 0;
+}
+
 void Session::getWindowDimensions(int& x, int& y,
                                   int& width, int& height)
 {
-    int displayIndex = 0;
-
-    if (m_Window != nullptr) {
-        displayIndex = SDL_GetWindowDisplayIndex(m_Window);
-        SDL_assert(displayIndex >= 0);
-    }
-    // Create our window on the same display that Qt's UI
-    // was being displayed on.
-    else {
-        Q_ASSERT(m_QtWindow != nullptr);
-        if (m_QtWindow != nullptr) {
-            QScreen* screen = m_QtWindow->screen();
-            if (screen != nullptr) {
-                QRect displayRect = screen->geometry();
-
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Qt UI screen is at (%d,%d)",
-                            displayRect.x(), displayRect.y());
-                for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
-                    SDL_Rect displayBounds;
-
-                    if (SDL_GetDisplayBounds(i, &displayBounds) == 0) {
-                        if (displayBounds.x == displayRect.x() &&
-                            displayBounds.y == displayRect.y()) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "SDL found matching display %d",
-                                        i);
-                            displayIndex = i;
-                            break;
-                        }
-                    }
-                    else {
-                        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                    "SDL_GetDisplayBounds(%d) failed: %s",
-                                    i, SDL_GetError());
-                    }
-                }
-            }
-            else {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Qt window is not associated with a QScreen!");
-            }
-        }
-    }
+    int displayIndex = getStreamDisplayIndex();
 
     SDL_Rect usableBounds;
     if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
