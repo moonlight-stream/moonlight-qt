@@ -16,7 +16,7 @@ struct GamepadState {
     int hapticEffectId;
 #endif
 
-    SDL_TimerID mouseEmulationTimer;
+    uint32_t mouseEmulationDeadline;
     uint32_t lastStartDownTime;
 
     bool clickpadButtonEmulationEnabled;
@@ -39,7 +39,6 @@ struct GamepadState {
 
     bool sendPending;
     uint32_t lastSendTime;
-    SDL_TimerID flushTimer;
 };
 
 
@@ -73,8 +72,8 @@ struct DualSenseOutputReport{
     uint8_t lightbarBlue;
 };
 
-// Push a user event when a throttled gamepad state needs to be flushed from the main thread
-#define SDL_CODE_GAMEPAD_STATE_FLUSH 110
+// How long between polling the gamepad to send virtual mouse input
+#define MOUSE_EMULATION_POLLING_INTERVAL 50
 
 // activeGamepadMask is a short, so we're bounded by the number of mask bits
 #define MAX_GAMEPADS 16
@@ -143,6 +142,10 @@ public:
 
     void flushPendingGamepadState();
 
+    void runExpiredInputTimers();
+
+    int getNextTimerDelayMs(int maxWaitMs);
+
     void notifyMouseLeave();
 
     void notifyFocusLost();
@@ -189,9 +192,6 @@ private:
 
     void cancelPendingGamepadFlush(GamepadState* state);
 
-    static
-    Uint32 gamepadFlushTimerCallback(Uint32 interval, void* param);
-
     void sendGamepadBatteryState(GamepadState* state, SDL_JoystickPowerLevel level);
 
     void handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
@@ -204,20 +204,13 @@ private:
 
     void performSpecialKeyCombo(KeyCombo combo);
 
-    static
-    Uint32 longPressTimerCallback(Uint32 interval, void* param);
+    void sendMouseEmulationMotion(GamepadState* state);
 
     static
-    Uint32 mouseEmulationTimerCallback(Uint32 interval, void* param);
+    void armDeadline(uint32_t& deadline, uint32_t delayMs);
 
     static
-    Uint32 releaseLeftButtonTimerCallback(Uint32 interval, void* param);
-
-    static
-    Uint32 releaseRightButtonTimerCallback(Uint32 interval, void* param);
-
-    static
-    Uint32 dragTimerCallback(Uint32 interval, void* param);
+    void cancelDeadline(uint32_t& deadline);
 
     SDL_Window* m_Window;
     bool m_MultiController;
@@ -253,7 +246,7 @@ private:
 
     SDL_TouchFingerEvent m_LastTouchDownEvent;
     SDL_TouchFingerEvent m_LastTouchUpEvent;
-    SDL_TimerID m_LongPressTimer;
+    uint32_t m_LongPressDeadline;
     int m_StreamWidth;
     int m_StreamHeight;
     bool m_AbsoluteMouseMode;
@@ -261,9 +254,9 @@ private:
     bool m_DisabledTouchFeedback;
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
-    SDL_TimerID m_LeftButtonReleaseTimer;
-    SDL_TimerID m_RightButtonReleaseTimer;
-    SDL_TimerID m_DragTimer;
+    uint32_t m_LeftButtonReleaseDeadline;
+    uint32_t m_RightButtonReleaseDeadline;
+    uint32_t m_DragDeadline;
     char m_DragButton;
     int m_NumFingersDown;
 

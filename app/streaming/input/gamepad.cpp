@@ -10,9 +10,6 @@
 // How long the Start button must be pressed to toggle mouse emulation
 #define MOUSE_EMULATION_LONG_PRESS_TIME 750
 
-// How long between polling the gamepad to send virtual mouse input
-#define MOUSE_EMULATION_POLLING_INTERVAL 50
-
 // Determines how fast the mouse will move each interval
 #define MOUSE_EMULATION_MOTION_MULTIPLIER 4
 
@@ -131,67 +128,42 @@ void SdlInputHandler::queueGamepadState(GamepadState* state)
     }
 
     // Too soon to send again. The host is now missing the latest state, so
-    // remember that a flush is owed and let the timer deliver it once the
+    // remember that a flush is owed and let the main loop deliver it once the
     // send window has elapsed. Dropping the trailing state instead would
     // leave the host stuck with a stale stick position.
+    //
+    // NB: We intentionally avoid SDL timers here. sdl2-compat's SDL_RemoveTimer()
+    // destroys the timer's properties before cancelling the timer, so a callback
+    // racing with removal uses freed memory and crashes inside SDL3. At 1-8 ms
+    // intervals, a high-rate stick hits that race reliably.
     state->sendPending = true;
-    if (state->flushTimer == 0) {
-        // Arm the timer for the remainder of the window, not the whole window
-        uint32_t remaining = (uint32_t)m_GamepadSendIntervalMs -
-                             (SDL_GetTicks() - state->lastSendTime);
-        if (remaining == 0) {
-            // The clock ticked over between the check above and here
-            remaining = 1;
-        }
-        state->flushTimer = SDL_AddTimer(remaining,
-                                         SdlInputHandler::gamepadFlushTimerCallback,
-                                         state);
-    }
 }
 
 void SdlInputHandler::cancelPendingGamepadFlush(GamepadState* state)
 {
-    if (state->flushTimer != 0) {
-        SDL_RemoveTimer(state->flushTimer);
-        state->flushTimer = 0;
-    }
-
     state->sendPending = false;
 }
 
 void SdlInputHandler::flushPendingGamepadState()
 {
+    uint32_t now = SDL_GetTicks();
+
     for (int i = 0; i < MAX_GAMEPADS; i++) {
         GamepadState* state = &m_GamepadState[i];
 
-        if (state->flushTimer == 0 && !state->sendPending) {
+        if (!state->sendPending || state->controller == nullptr) {
             continue;
         }
 
-        if (state->sendPending && state->controller != nullptr) {
-            sendGamepadState(state);
-            state->lastSendTime = SDL_GetTicks();
+        if (m_GamepadSendIntervalMs > 0 &&
+                now - state->lastSendTime < (uint32_t)m_GamepadSendIntervalMs) {
+            continue;
         }
 
-        cancelPendingGamepadFlush(state);
+        sendGamepadState(state);
+        state->sendPending = false;
+        state->lastSendTime = now;
     }
-}
-
-Uint32 SdlInputHandler::gamepadFlushTimerCallback(Uint32 interval, void* param)
-{
-    // Timers run on SDL's timer thread, so only wake the main thread here.
-    // GamepadState must only be touched from the event loop.
-    (void)param;
-
-    SDL_Event event;
-    SDL_zero(event);
-    event.type = SDL_USEREVENT;
-    event.user.code = SDL_CODE_GAMEPAD_STATE_FLUSH;
-    SDL_PushEvent(&event);
-
-    // Keep firing until the main thread cancels the timer. This also covers
-    // the case where the event queue was full and the event was dropped.
-    return interval;
 }
 
 void SdlInputHandler::sendGamepadBatteryState(GamepadState* state, SDL_JoystickPowerLevel level)
@@ -235,21 +207,19 @@ void SdlInputHandler::sendGamepadBatteryState(GamepadState* state, SDL_JoystickP
     LiSendControllerBatteryEvent(state->index, batteryState, batteryPercentage);
 }
 
-Uint32 SdlInputHandler::mouseEmulationTimerCallback(Uint32 interval, void *param)
+void SdlInputHandler::sendMouseEmulationMotion(GamepadState* state)
 {
-    auto gamepad = reinterpret_cast<GamepadState*>(param);
-
     int rawX;
     int rawY;
 
     // Determine which analog stick is currently receiving the strongest input
-    if (abs(gamepad->lsX) + abs(gamepad->lsY) > abs(gamepad->rsX) + abs(gamepad->rsY)) {
-        rawX = gamepad->lsX;
-        rawY = -gamepad->lsY;
+    if (abs(state->lsX) + abs(state->lsY) > abs(state->rsX) + abs(state->rsY)) {
+        rawX = state->lsX;
+        rawY = -state->lsY;
     }
     else {
-        rawX = gamepad->rsX;
-        rawY = -gamepad->rsY;
+        rawX = state->rsX;
+        rawY = -state->rsY;
     }
 
     float deltaX;
@@ -266,8 +236,6 @@ Uint32 SdlInputHandler::mouseEmulationTimerCallback(Uint32 interval, void *param
     if (deltaX != 0 || deltaY != 0) {
         LiSendMouseMoveEvent((short)deltaX, (short)deltaY);
     }
-
-    return interval;
 }
 
 static void updateAnalogStickAxis(short& value, short newValue, bool& dirty)
@@ -350,7 +318,7 @@ void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
     }
 
     // Only send the gamepad state to the host if it's not in mouse emulation mode
-    if (state->mouseEmulationTimer == 0 && dirty) {
+    if (state->mouseEmulationDeadline == 0 && dirty) {
         queueGamepadState(state);
     }
 }
@@ -392,7 +360,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         if (event->button == SDL_CONTROLLER_BUTTON_START) {
             state->lastStartDownTime = SDL_GetTicks();
         }
-        else if (state->mouseEmulationTimer != 0) {
+        else if (state->mouseEmulationDeadline != 0) {
             if (event->button == SDL_CONTROLLER_BUTTON_A) {
                 LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
             }
@@ -427,9 +395,8 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
 
         if (event->button == SDL_CONTROLLER_BUTTON_START) {
             if (SDL_GetTicks() - state->lastStartDownTime > MOUSE_EMULATION_LONG_PRESS_TIME) {
-                if (state->mouseEmulationTimer != 0) {
-                    SDL_RemoveTimer(state->mouseEmulationTimer);
-                    state->mouseEmulationTimer = 0;
+                if (state->mouseEmulationDeadline != 0) {
+                    state->mouseEmulationDeadline = 0;
 
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Mouse emulation deactivated");
@@ -441,7 +408,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
                     cancelPendingGamepadFlush(state);
                     state->lastSendTime = SDL_GetTicks();
 
-                    state->mouseEmulationTimer = SDL_AddTimer(MOUSE_EMULATION_POLLING_INTERVAL, SdlInputHandler::mouseEmulationTimerCallback, state);
+                    armDeadline(state->mouseEmulationDeadline, MOUSE_EMULATION_POLLING_INTERVAL);
 
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Mouse emulation active");
@@ -449,7 +416,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
                 }
             }
         }
-        else if (state->mouseEmulationTimer != 0) {
+        else if (state->mouseEmulationDeadline != 0) {
             if (event->button == SDL_CONTROLLER_BUTTON_A) {
                 LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
             }
@@ -501,7 +468,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
     }
 
     // Only send the gamepad state to the host if it's not in mouse emulation mode
-    if (state->mouseEmulationTimer == 0) {
+    if (state->mouseEmulationDeadline == 0) {
         // Button edges are always delivered immediately to preserve input latency
         sendGamepadState(state);
         cancelPendingGamepadFlush(state);
@@ -863,9 +830,9 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
     else if (event->type == SDL_CONTROLLERDEVICEREMOVED) {
         state = findStateForGamepad(event->which);
         if (state != NULL) {
-            if (state->mouseEmulationTimer != 0) {
+            if (state->mouseEmulationDeadline != 0) {
                 Session::get()->notifyMouseEmulationMode(false);
-                SDL_RemoveTimer(state->mouseEmulationTimer);
+                state->mouseEmulationDeadline = 0;
             }
 
             // Stop any pending throttled send before the state is cleared below

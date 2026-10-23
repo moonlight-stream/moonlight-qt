@@ -23,15 +23,15 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_KeyboardCaptureActive(false),
       m_CaptureSystemKeysMode(prefs.captureSysKeysMode),
       m_MouseCursorCapturedVisibilityState(SDL_DISABLE),
-      m_LongPressTimer(0),
+      m_LongPressDeadline(0),
       m_StreamWidth(streamWidth),
       m_StreamHeight(streamHeight),
       m_AbsoluteMouseMode(prefs.absoluteMouseMode),
       m_AbsoluteTouchMode(prefs.absoluteTouchMode),
       m_DisabledTouchFeedback(false),
-      m_LeftButtonReleaseTimer(0),
-      m_RightButtonReleaseTimer(0),
-      m_DragTimer(0),
+      m_LeftButtonReleaseDeadline(0),
+      m_RightButtonReleaseDeadline(0),
+      m_DragDeadline(0),
       m_DragButton(0),
       m_NumFingersDown(0)
 {
@@ -221,27 +221,18 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
 SdlInputHandler::~SdlInputHandler()
 {
     for (int i = 0; i < MAX_GAMEPADS; i++) {
-        if (m_GamepadState[i].mouseEmulationTimer != 0) {
+        if (m_GamepadState[i].mouseEmulationDeadline != 0) {
             Session::get()->notifyMouseEmulationMode(false);
-            SDL_RemoveTimer(m_GamepadState[i].mouseEmulationTimer);
         }
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
         if (m_GamepadState[i].haptic != nullptr) {
             SDL_HapticClose(m_GamepadState[i].haptic);
         }
 #endif
-        if (m_GamepadState[i].flushTimer != 0) {
-            SDL_RemoveTimer(m_GamepadState[i].flushTimer);
-        }
         if (m_GamepadState[i].controller != nullptr) {
             SDL_GameControllerClose(m_GamepadState[i].controller);
         }
     }
-
-    SDL_RemoveTimer(m_LongPressTimer);
-    SDL_RemoveTimer(m_LeftButtonReleaseTimer);
-    SDL_RemoveTimer(m_RightButtonReleaseTimer);
-    SDL_RemoveTimer(m_DragTimer);
 
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_QuitSubSystem(SDL_INIT_HAPTIC);
@@ -432,4 +423,116 @@ void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
     else {
         handleRelativeFingerEvent(event);
     }
+}
+
+void SdlInputHandler::armDeadline(uint32_t& deadline, uint32_t delayMs)
+{
+    deadline = SDL_GetTicks() + delayMs;
+    if (deadline == 0) {
+        // 0 is the sentinel for an inactive deadline
+        deadline = 1;
+    }
+}
+
+void SdlInputHandler::cancelDeadline(uint32_t& deadline)
+{
+    deadline = 0;
+}
+
+void SdlInputHandler::runExpiredInputTimers()
+{
+    uint32_t now = SDL_GetTicks();
+
+    if (m_LongPressDeadline != 0 && SDL_TICKS_PASSED(now, m_LongPressDeadline)) {
+        m_LongPressDeadline = 0;
+
+        // Raise the left click and start a right click
+        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+        LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
+    }
+
+    if (m_DragDeadline != 0 && SDL_TICKS_PASSED(now, m_DragDeadline)) {
+        m_DragDeadline = 0;
+
+        // Check how many fingers are down now to decide
+        // which button to hold down
+        if (m_NumFingersDown == 2) {
+            m_DragButton = BUTTON_RIGHT;
+        }
+        else if (m_NumFingersDown == 1) {
+            m_DragButton = BUTTON_LEFT;
+        }
+
+        LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, m_DragButton);
+    }
+
+    if (m_LeftButtonReleaseDeadline != 0 && SDL_TICKS_PASSED(now, m_LeftButtonReleaseDeadline)) {
+        m_LeftButtonReleaseDeadline = 0;
+        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+    }
+
+    if (m_RightButtonReleaseDeadline != 0 && SDL_TICKS_PASSED(now, m_RightButtonReleaseDeadline)) {
+        m_RightButtonReleaseDeadline = 0;
+        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
+    }
+
+    for (int i = 0; i < MAX_GAMEPADS; i++) {
+        GamepadState* state = &m_GamepadState[i];
+
+        if (state->mouseEmulationDeadline == 0 ||
+                !SDL_TICKS_PASSED(now, state->mouseEmulationDeadline)) {
+            continue;
+        }
+
+        armDeadline(state->mouseEmulationDeadline, MOUSE_EMULATION_POLLING_INTERVAL);
+        sendMouseEmulationMotion(state);
+    }
+}
+
+int SdlInputHandler::getNextTimerDelayMs(int maxWaitMs)
+{
+    uint32_t now = SDL_GetTicks();
+    int delay = maxWaitMs;
+
+    auto considerDeadline = [&](uint32_t deadline) {
+        if (deadline == 0) {
+            return;
+        }
+
+        if (SDL_TICKS_PASSED(now, deadline)) {
+            delay = 0;
+            return;
+        }
+
+        int remaining = (int)(deadline - now);
+        if (remaining < delay) {
+            delay = remaining;
+        }
+    };
+
+    considerDeadline(m_LongPressDeadline);
+    considerDeadline(m_DragDeadline);
+    considerDeadline(m_LeftButtonReleaseDeadline);
+    considerDeadline(m_RightButtonReleaseDeadline);
+
+    for (int i = 0; i < MAX_GAMEPADS; i++) {
+        GamepadState* state = &m_GamepadState[i];
+
+        considerDeadline(state->mouseEmulationDeadline);
+
+        if (m_GamepadSendIntervalMs > 0 && state->sendPending && state->controller != nullptr) {
+            uint32_t elapsed = now - state->lastSendTime;
+            if (elapsed >= (uint32_t)m_GamepadSendIntervalMs) {
+                delay = 0;
+            }
+            else {
+                int remaining = (int)((uint32_t)m_GamepadSendIntervalMs - elapsed);
+                if (remaining < delay) {
+                    delay = remaining;
+                }
+            }
+        }
+    }
+
+    return delay;
 }
