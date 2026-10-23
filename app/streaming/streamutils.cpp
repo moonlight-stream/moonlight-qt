@@ -128,6 +128,13 @@ SDL_Window* StreamUtils::createTestWindow()
     return testWindow;
 }
 
+static StreamingPreferences::VideoAlignment s_VideoAlignment = StreamingPreferences::VA_CENTER;
+
+void StreamUtils::setVideoAlignment(StreamingPreferences::VideoAlignment alignment)
+{
+    s_VideoAlignment = alignment;
+}
+
 void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst)
 {
     int dstH = SDL_ceilf((float)dst->w * src->h / src->w);
@@ -138,7 +145,16 @@ void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst)
         dst->w = dstW;
     }
     else {
-        dst->y += (dst->h - dstH) / 2;
+        switch (s_VideoAlignment) {
+        case StreamingPreferences::VA_TOP:
+            break;
+        case StreamingPreferences::VA_BOTTOM:
+            dst->y += dst->h - dstH;
+            break;
+        default:
+            dst->y += (dst->h - dstH) / 2;
+            break;
+        }
         dst->h = dstH;
     }
 }
