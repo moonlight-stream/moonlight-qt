@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QRect>
 #include <QQmlEngine>
+#include <QVariantList>
 
 class StreamingPreferences : public QObject
 {
@@ -126,6 +127,7 @@ public:
     Q_PROPERTY(bool unlockBitrate MEMBER unlockBitrate NOTIFY unlockBitrateChanged)
     Q_PROPERTY(bool autoAdjustBitrate MEMBER autoAdjustBitrate NOTIFY autoAdjustBitrateChanged)
     Q_PROPERTY(bool enableVsync MEMBER enableVsync NOTIFY enableVsyncChanged)
+    Q_PROPERTY(bool enableVrr MEMBER enableVrr NOTIFY enableVrrChanged)
     Q_PROPERTY(bool gameOptimizations MEMBER gameOptimizations NOTIFY gameOptimizationsChanged)
     Q_PROPERTY(bool playAudioOnHost MEMBER playAudioOnHost NOTIFY playAudioOnHostChanged)
     Q_PROPERTY(bool multiController MEMBER multiController NOTIFY multiControllerChanged)
@@ -160,6 +162,10 @@ public:
 
     Q_INVOKABLE bool retranslate();
 
+    // Rate choices are advisory; toggling VRR never rewrites the saved FPS
+    // preference.
+    Q_INVOKABLE QVariantList getFpsChoices(const QVariantList& refreshRates) const;
+
     // Directly accessible members for preferences
     int width;
     int height;
@@ -168,6 +174,7 @@ public:
     bool unlockBitrate;
     bool autoAdjustBitrate;
     bool enableVsync;
+    bool enableVrr;
     bool gameOptimizations;
     bool playAudioOnHost;
     bool multiController;
@@ -207,6 +214,7 @@ signals:
     void unlockBitrateChanged();
     void autoAdjustBitrateChanged();
     void enableVsyncChanged();
+    void enableVrrChanged();
     void gameOptimizationsChanged();
     void playAudioOnHostChanged();
     void multiControllerChanged();

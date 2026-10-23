@@ -2,10 +2,15 @@
 
 #include "../../decoder.h"
 #include "../renderer.h"
+#include "vrr/vrrtypes.h"
 
 #include <QQueue>
 #include <QMutex>
 #include <QWaitCondition>
+
+#include <memory>
+
+class VrrPacingWorker;
 
 // The maximum number of frames pacer will ever hold is:
 // - 3 frames in the pacing queue
@@ -36,9 +41,18 @@ public:
 
     ~Pacer();
 
+    // Only the active VRR worker consumes the decoder-facing pacing metadata.
+    void submitFrame(PacedFrame&& frame);
+
     void submitFrame(AVFrame* frame);
 
-    bool initialize(SDL_Window* window, int maxVideoFps, bool enablePacing);
+    bool isVrrActive() const;
+
+    bool initialize(SDL_Window* window, int maxVideoFps,
+                    bool enablePacing, bool enableVsync,
+                    bool enableVrr, int vrrDisplayRefreshHz);
+
+    void notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info);
 
     void signalVsync();
 
@@ -76,4 +90,5 @@ private:
     int m_DisplayFps;
     PVIDEO_STATS m_VideoStats;
     int m_RendererAttributes;
+    std::unique_ptr<VrrPacingWorker> m_VrrWorker;
 };
