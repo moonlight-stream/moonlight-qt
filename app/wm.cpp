@@ -205,6 +205,52 @@ bool WMUtils::isRunningDesktopEnvironment()
 #endif
 }
 
+bool WMUtils::hasDisplayUsableBounds()
+{
+    static SDL_atomic_t hasDisplayUsableBounds;
+
+    // If the value is not set yet, populate it now.
+    int val = SDL_AtomicGet(&hasDisplayUsableBounds);
+    if (!(val & VALUE_SET)) {
+        int numDisplays = SDL_GetNumVideoDisplays();
+        bool hasUsableBounds = false;
+
+        for (int i = 0; i < numDisplays; i++) {
+            SDL_Rect displayBounds;
+            SDL_Rect usableBounds;
+
+            if (SDL_GetDisplayBounds(i, &displayBounds) != 0) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "SDL_GetDisplayBounds(%d) failed: %s",
+                            i, SDL_GetError());
+                continue;
+            }
+
+            if (SDL_GetDisplayUsableBounds(i, &usableBounds) != 0) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "SDL_GetDisplayUsableBounds(%d) failed: %s",
+                            i, SDL_GetError());
+                continue;
+            }
+
+            // If at least one display has usable bounds that differ from the
+            // complete bounds, we assume that usable bounds are accurate.
+            if (!SDL_RectEquals(&displayBounds, &usableBounds)) {
+                hasUsableBounds = true;
+                break;
+            }
+        }
+
+        // Populate the value to return and have for next time.
+        // This can race with another thread populating the same data,
+        // but that's no big deal.
+        val = VALUE_SET | (hasUsableBounds ? VALUE_TRUE : 0);
+        SDL_AtomicSet(&hasDisplayUsableBounds, val);
+    }
+
+    return !!(val & VALUE_TRUE);
+}
+
 bool WMUtils::isGpuSlow()
 {
     bool ret;
