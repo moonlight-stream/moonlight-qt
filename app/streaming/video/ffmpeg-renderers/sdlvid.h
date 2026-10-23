@@ -34,11 +34,16 @@ private:
     int m_VideoFormat;
     SDL_Renderer* m_Renderer;
     SDL_Texture* m_Texture;
+    SDL_Texture* m_ScalingTexture;
     SDL_Texture* m_OverlayTextures[Overlay::OverlayMax];
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];
 
     // Used for CPU conversion of YUV to RGB if needed
     bool m_NeedsYuvToRgbConversion;
+    bool m_CanUseRenderTargets;
+    StreamingPreferences::VideoScalingMode m_VideoScalingMode;
+    int m_ScalingTextureWidth;
+    int m_ScalingTextureHeight;
     SwsContext* m_SwsContext;
     AVFrame* m_RgbFrame;
 
@@ -48,4 +53,3 @@ private:
     CUDAGLInteropHelper* m_CudaGLHelper;
 #endif
 };
-
