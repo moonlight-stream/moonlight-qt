@@ -507,10 +507,13 @@ NvHTTP::openConnection(QUrl baseUrl,
     request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
 #endif
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
+
     // Use fine-grained idle timeouts to avoid calling QNetworkAccessManager::clearAccessCache(),
     // which tears down the NAM's global thread each time. We must not keep persistent connections
     // or GFE will puke.
+#if QT_VERSION >= QT_VERSION_CHECK(6, 12, 0)
+    request.setAttribute(QNetworkRequest::ConnectionCacheExpiryTimeoutSecondsAttribute, -1);
+#elif QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
     request.setAttribute(QNetworkRequest::ConnectionCacheExpiryTimeoutSecondsAttribute, 0);
 #endif
 
