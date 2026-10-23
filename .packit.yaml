@@ -1,0 +1,22 @@
+specfile_path: .distro/moonlight-qt.spec
+upstream_package_name: moonlight-qt
+downstream_package_name: moonlight-qt
+
+version_suffix: "^{PACKIT_PROJECT_SNAPSHOTID}"
+update_release: false
+
+actions:
+  post-upstream-clone:
+    - ./.distro/post-upstream-clone.py
+
+notifications:
+  failure_comment:
+    message: |
+      Packit build failed @LecrisUT please check
+
+targets:
+  - fedora-all
+
+jobs:
+  - job: copr_build
+    trigger: pull_request
