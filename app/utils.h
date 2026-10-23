@@ -12,6 +12,7 @@ namespace WMUtils {
     bool isRunningWayland();
     bool isRunningWindowManager();
     bool isRunningDesktopEnvironment();
+    bool hasDisplayUsableBounds();
     QString getDrmCardOverride();
     bool isGpuSlow();
 }

@@ -16,7 +16,7 @@
     <SignOutput>true</SignOutput>
   </PropertyGroup>
   <Target Name="SignMsi">
-    <Exec Command='signtool.exe $(SIGNTOOL_PARAMS) %(SignMsi.FullPath)' />
+    <Exec Command='signtool.exe sign $(SIGNTOOL_PARAMS) %(SignMsi.FullPath)' />
   </Target>
   <ItemGroup>
     <PackageReference Include="WixToolset.Firewall.wixext" Version="7.0.0" />

@@ -38,12 +38,15 @@
 #include <asm/hwprobe.h>
 #include <sys/syscall.h>
 #else
-#define __NR_riscv_hwprobe 258
 struct riscv_hwprobe {
     int64_t key;
     uint64_t value;
 };
 #define RISCV_HWPROBE_KEY_IMA_EXT_0 4
+#endif
+
+#ifndef __NR_riscv_hwprobe
+#define __NR_riscv_hwprobe 258
 #endif
 
 // RISC-V Scalar AES [E]ncryption and [D]ecryption
@@ -222,12 +225,14 @@ bool StreamUtils::hasFastAes()
     // Everything that runs Catalina and later has AES-NI or ARMv8 crypto instructions
     return true;
 #elif (defined(Q_OS_FREEBSD) || defined(Q_OS_OPENBSD)) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 4
-    unsigned long hwcap2 = 0;
-    elf_aux_info(AT_HWCAP2, &hwcap2, sizeof(hwcap2));
+    unsigned long hwcap2;
+    if (elf_aux_info(AT_HWCAP2, &hwcap2, sizeof(hwcap2)) != 0)
+        hwcap2 = 0;
     return (hwcap2 & HWCAP2_AES);
 #elif (defined(Q_OS_FREEBSD) || defined(Q_OS_OPENBSD)) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 8
-    unsigned long hwcap = 0;
-    elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap));
+    unsigned long hwcap;
+    if (elf_aux_info(AT_HWCAP, &hwcap, sizeof(hwcap)) != 0)
+        hwcap = 0;
     return (hwcap & HWCAP_AES);
 #elif defined(Q_OS_LINUX) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 4
     return getauxval(AT_HWCAP2) & HWCAP2_AES;

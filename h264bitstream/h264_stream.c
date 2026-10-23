@@ -1,3 +1,26 @@
+/*
+ * h264bitstream - a library for reading and writing H.264 video
+ * Copyright (C) 2005-2007 Auroras Entertainment, LLC
+ * Copyright (C) 2008-2011 Avail-TVN
+ * Copyright (C) 2012 Alex Izvorski
+ *
+ * Written by Alex Izvorski <aizvorski@gmail.com> and Alex Giladi <alex.giladi@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -361,6 +384,11 @@ void write_seq_parameter_set_rbsp(sps_t* sps, bs_t* b)
     }
     else if( sps->pic_order_cnt_type == 1 )
     {
+        if (sps->num_ref_frames_in_pic_order_cnt_cycle > 256)
+        {
+            sps->num_ref_frames_in_pic_order_cnt_cycle = 256;
+        }
+
         bs_write_u1(b, sps->delta_pic_order_always_zero_flag);
         bs_write_se(b, sps->offset_for_non_ref_pic);
         bs_write_se(b, sps->offset_for_top_to_bottom_field);
@@ -506,6 +534,11 @@ void write_vui_parameters(sps_t* sps, bs_t* b)
 
 void write_hrd_parameters(hrd_t* hrd, bs_t* b)
 {
+    if (hrd->cpb_cnt_minus1 > 31)
+    {
+        hrd->cpb_cnt_minus1 = 31;
+    }
+
     bs_write_ue(b, hrd->cpb_cnt_minus1);
     bs_write_u(b, 4, hrd->bit_rate_scale);
     bs_write_u(b, 4, hrd->cpb_size_scale);

@@ -1410,34 +1410,48 @@ void Session::getWindowDimensions(int& x, int& y,
         }
     }
 
+    // Get the usable display bounds
     SDL_Rect usableBounds;
-    if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
-        // If the stream resolution fits within the usable display area, use it directly
-        if (m_StreamConfig.width <= usableBounds.w &&
-            m_StreamConfig.height <= usableBounds.h) {
-            width = m_StreamConfig.width;
-            height = m_StreamConfig.height;
-        } else {
-            // Otherwise, use 80% of usable bounds and preserve aspect ratio
-            SDL_Rect src, dst;
-            src.x = src.y = dst.x = dst.y = 0;
-            src.w = m_StreamConfig.width;
-            src.h = m_StreamConfig.height;
-
-            dst.w = ((int)(usableBounds.w * 0.80f)) & ~0x1;  // even width
-            dst.h = ((int)(usableBounds.h * 0.80f)) & ~0x1;  // even height
-
-            StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-            width = dst.w;
-            height = dst.h;
-        }
-    }
-    else {
+    if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_GetDisplayUsableBounds() failed: %s",
                      SDL_GetError());
+        SDL_zero(usableBounds);
+    }
 
+    // Use the usable display bounds if they are valid
+    if (usableBounds.w != 0 &&
+            WMUtils::hasDisplayUsableBounds() &&
+            m_StreamConfig.width <= usableBounds.w &&
+            m_StreamConfig.height <= usableBounds.h) {
+        // We fit pixel-perfect in the usable area, so don't scale at all
+        width = m_StreamConfig.width;
+        height = m_StreamConfig.height;
+    }
+    else if (usableBounds.w != 0 || SDL_GetDisplayBounds(displayIndex, &usableBounds) == 0) {
+        // Otherwise, use 80% of usable bounds and preserve aspect ratio
+        SDL_Rect src, dst;
+        src.x = src.y = dst.x = dst.y = 0;
+        src.w = m_StreamConfig.width;
+        src.h = m_StreamConfig.height;
+
+        dst.w = ((int)(usableBounds.w * 0.80f)) & ~0x1;  // even width
+        dst.h = ((int)(usableBounds.h * 0.80f)) & ~0x1;  // even height
+
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        // Only scale the size down, never up
+        if (m_StreamConfig.width >= dst.w || m_StreamConfig.height >= dst.h) {
+            width = dst.w;
+            height = dst.h;
+        }
+        else {
+            width = m_StreamConfig.width;
+            height = m_StreamConfig.height;
+        }
+    }
+    else {
+        // Oh well, hope for the best
         width = m_StreamConfig.width;
         height = m_StreamConfig.height;
     }

@@ -25,14 +25,17 @@ if /I "%BUILD_CONFIG%"=="debug" (
                 echo Signed release builds must not have unstaged changes!
                 exit /b 1
             )
+
+            if not defined SIGNTOOL_PARAMS (
+                echo A signtool parameter string must be specified in SIGNTOOL_PARAMS for signed release builds
+                exit /b 1
+            )
         ) else (
             echo Invalid build configuration - expected 'debug' or 'release'
             exit /b 1
         )
     )
 )
-
-set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 8b9d0d682ad9459e54f05a79694bc10f9876e297 /v
 
 set BUILD_ROOT=%cd%\build
 set SOURCE_ROOT=%cd%

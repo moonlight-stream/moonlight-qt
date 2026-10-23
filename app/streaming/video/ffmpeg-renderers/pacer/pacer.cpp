@@ -115,13 +115,20 @@ int Pacer::vsyncThread(void *context)
     while (!me->m_Stopping) {
         if (async) {
             // Wait for the VSync source to invoke signalVsync() or 100ms to elapse
-            me->m_FrameQueueLock.lock();
+            QMutexLocker locker(&me->m_FrameQueueLock);
             me->m_VsyncSignalled.wait(&me->m_FrameQueueLock, 100);
-            me->m_FrameQueueLock.unlock();
         }
         else {
             // Let the VSync source wait in the context of our thread
-            me->m_VsyncSource->waitForVsync();
+            if (!me->m_VsyncSource->waitForVsync()) {
+                // Fall back to a fixed delay if the VSync source fails
+                //
+                // NB: We don't actually expect signalVsync() to be called, since
+                // this is a synchronous VSync source, but we wait on m_VsyncSignalled
+                // anyway so that the destructor can immediately wake us on shutdown.
+                QMutexLocker locker(&me->m_FrameQueueLock);
+                me->m_VsyncSignalled.wait(&me->m_FrameQueueLock, 1000 / me->m_DisplayFps);
+            }
         }
 
         if (me->m_Stopping) {
@@ -148,23 +155,24 @@ int Pacer::renderThread(void* context)
         // Wait for the renderer to be ready for the next frame
         me->m_VsyncRenderer->waitToRender();
 
-        // Acquire the frame queue lock to protect the queue and
-        // the not empty condition
-        me->m_FrameQueueLock.lock();
+        AVFrame* frame;
+        {
+            // Acquire the frame queue lock to protect the queue and
+            // the not empty condition
+            QMutexLocker locker(&me->m_FrameQueueLock);
 
-        // Wait for a frame to be ready to render
-        while (!me->m_Stopping && me->m_RenderQueue.isEmpty()) {
-            me->m_RenderQueueNotEmpty.wait(&me->m_FrameQueueLock);
+            // Wait for a frame to be ready to render
+            while (!me->m_Stopping && me->m_RenderQueue.isEmpty()) {
+                me->m_RenderQueueNotEmpty.wait(&me->m_FrameQueueLock);
+            }
+
+            if (me->m_Stopping) {
+                // Exit this thread
+                break;
+            }
+
+            frame = me->m_RenderQueue.dequeue();
         }
-
-        if (me->m_Stopping) {
-            // Exit this thread
-            me->m_FrameQueueLock.unlock();
-            break;
-        }
-
-        AVFrame* frame = me->m_RenderQueue.dequeue();
-        me->m_FrameQueueLock.unlock();
 
         me->renderFrame(frame);
     }
@@ -249,7 +257,7 @@ void Pacer::handleVsync(int timeUntilNextVsyncMillis)
             return;
         }
 
-        if (m_Stopping) {
+        if (m_Stopping || m_PacingQueue.isEmpty()) {
             m_FrameQueueLock.unlock();
             return;
         }
@@ -349,7 +357,7 @@ void Pacer::renderFrame(AVFrame* frame)
     av_frame_free(&frame);
 
     // Drop frames if we have too many queued up for a while
-    m_FrameQueueLock.lock();
+    QMutexLocker frameQueueLocker(&m_FrameQueueLock);
 
     int frameDropTarget;
 
@@ -382,13 +390,11 @@ void Pacer::renderFrame(AVFrame* frame)
         AVFrame* frame = m_RenderQueue.dequeue();
 
         // Drop the lock while we call av_frame_free()
-        m_FrameQueueLock.unlock();
+        frameQueueLocker.unlock();
         m_VideoStats->pacerDroppedFrames++;
         av_frame_free(&frame);
-        m_FrameQueueLock.lock();
+        frameQueueLocker.relock();
     }
-
-    m_FrameQueueLock.unlock();
 }
 
 void Pacer::dropFrameForEnqueue(QQueue<AVFrame*>& queue)

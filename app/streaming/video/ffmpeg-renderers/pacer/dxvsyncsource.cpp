@@ -10,6 +10,8 @@ DxVsyncSource::DxVsyncSource(Pacer* pacer) :
     m_LastMonitor(nullptr)
 {
     SDL_zero(m_WaitForVblankEventParams);
+    m_WaitForVblankEventParams.VidPnSourceId = D3DDDI_ID_UNINITIALIZED;
+    SDL_zero(m_AdapterLuid);
 }
 
 DxVsyncSource::~DxVsyncSource()
@@ -72,41 +74,43 @@ bool DxVsyncSource::isAsync()
     return false;
 }
 
-void DxVsyncSource::waitForVsync()
+bool DxVsyncSource::waitForVsync()
 {
     NTSTATUS status;
 
     // If the monitor has changed from last time, open the new adapter
     HMONITOR currentMonitor = MonitorFromWindow(m_Window, MONITOR_DEFAULTTONEAREST);
-    if (currentMonitor != m_LastMonitor) {
+    if (!currentMonitor || currentMonitor != m_LastMonitor) {
+        // Close the old adapter
+        if (m_WaitForVblankEventParams.hAdapter != 0) {
+            D3DKMT_CLOSEADAPTER closeAdapterParams = {};
+            closeAdapterParams.hAdapter = m_WaitForVblankEventParams.hAdapter;
+            m_D3DKMTCloseAdapter(&closeAdapterParams);
+            m_WaitForVblankEventParams.hAdapter = 0;
+        }
+        m_LastMonitor = nullptr;
+
+        // We can't wait if we're not on any monitor
+        if (!currentMonitor) {
+            return false;
+        }
+
         MONITORINFOEXA monitorInfo = {};
         monitorInfo.cbSize = sizeof(monitorInfo);
         if (!GetMonitorInfoA(currentMonitor, &monitorInfo)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GetMonitorInfo() failed: %d",
                          GetLastError());
-            return;
+            return false;
         }
 
-        DEVMODEA monitorMode;
+        DEVMODEA monitorMode = {};
         monitorMode.dmSize = sizeof(monitorMode);
         if (!EnumDisplaySettingsA(monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, &monitorMode)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "EnumDisplaySettings() failed: %d",
                          GetLastError());
-            return;
-        }
-
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Monitor changed: %s %d Hz",
-                    monitorInfo.szDevice,
-                    monitorMode.dmDisplayFrequency);
-
-        // Close the old adapter
-        if (m_WaitForVblankEventParams.hAdapter != 0) {
-            D3DKMT_CLOSEADAPTER closeAdapterParams = {};
-            closeAdapterParams.hAdapter = m_WaitForVblankEventParams.hAdapter;
-            m_D3DKMTCloseAdapter(&closeAdapterParams);
+            return false;
         }
 
         D3DKMT_OPENADAPTERFROMHDC openAdapterParams = {};
@@ -115,7 +119,7 @@ void DxVsyncSource::waitForVsync()
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "CreateDC() failed: %d",
                          GetLastError());
-            return;
+            return false;
         }
 
         // Open the new adapter
@@ -126,21 +130,38 @@ void DxVsyncSource::waitForVsync()
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "D3DKMTOpenAdapterFromHdc() failed: %x",
                          status);
-            return;
+            return false;
+        }
+
+        // VidPnSourceId is scoped to the adapter, so we must also check the adapter LUID
+        if (m_AdapterLuid.LowPart != openAdapterParams.AdapterLuid.LowPart ||
+                m_AdapterLuid.HighPart != openAdapterParams.AdapterLuid.HighPart ||
+                m_WaitForVblankEventParams.VidPnSourceId != openAdapterParams.VidPnSourceId) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Monitor changed: %s %d Hz",
+                        monitorInfo.szDevice,
+                        monitorMode.dmDisplayFrequency);
         }
 
         m_WaitForVblankEventParams.hAdapter = openAdapterParams.hAdapter;
         m_WaitForVblankEventParams.hDevice = 0;
         m_WaitForVblankEventParams.VidPnSourceId = openAdapterParams.VidPnSourceId;
 
+        m_AdapterLuid = openAdapterParams.AdapterLuid;
         m_LastMonitor = currentMonitor;
     }
 
     status = m_D3DKMTWaitForVerticalBlankEvent(&m_WaitForVblankEventParams);
     if (status != STATUS_SUCCESS) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "D3DKMTWaitForVerticalBlankEvent() failed: %x",
-                     status);
-        return;
+        if (status != STATUS_GRAPHICS_PRESENT_OCCLUDED) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "D3DKMTWaitForVerticalBlankEvent() failed: %x",
+                         status);
+        }
+
+        m_LastMonitor = nullptr;
+        return false;
     }
+
+    return true;
 }
