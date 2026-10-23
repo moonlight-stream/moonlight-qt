@@ -1,5 +1,6 @@
 # This script requires create-dmg to be installed from https://github.com/sindresorhus/create-dmg
 BUILD_CONFIG=$1
+BUILD_SYSTEM="${BUILD_SYSTEM:-qmake}"
 
 fail()
 {
@@ -48,12 +49,20 @@ export LDFLAGS=-flto=thin
 
 echo Configuring the project
 pushd $BUILD_FOLDER
-qmake $SOURCE_ROOT/moonlight-qt.pro QMAKE_APPLE_DEVICE_ARCHS="x86_64 arm64" || fail "Qmake failed!"
+if [ "$BUILD_SYSTEM" = "cmake" ]; then
+  cmake $SOURCE_ROOT -DCMAKE_BUILD_TYPE=$BUILD_CONFIG -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" || fail "CMake configure failed!"
+else
+  qmake $SOURCE_ROOT/moonlight-qt.pro QMAKE_APPLE_DEVICE_ARCHS="x86_64 arm64" || fail "Qmake failed!"
+fi
 popd
 
 echo Compiling Moonlight in $BUILD_CONFIG configuration
 pushd $BUILD_FOLDER
-make -j$(sysctl -n hw.logicalcpu) $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Make failed!"
+if [ "$BUILD_SYSTEM" = "cmake" ]; then
+  cmake --build . -j$(sysctl -n hw.logicalcpu) || fail "CMake build failed!"
+else
+  make -j$(sysctl -n hw.logicalcpu) $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Make failed!"
+fi
 popd
 
 echo Saving dSYM file
