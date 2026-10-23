@@ -976,6 +976,96 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
     }
 }
 
+// Compact variant of stringifyVideoStats() used for the on-screen overlay.
+// Three short lines instead of a diagnostic dump; the full form remains in logs.
+void FFmpegVideoDecoder::stringifyVideoStatsCompact(VIDEO_STATS& stats, char* output, int length)
+{
+    int offset = 0;
+    int ret;
+
+    output[0] = 0;
+
+    const char* codecString;
+    switch (m_VideoFormat) {
+    case VIDEO_FORMAT_H264:
+    case VIDEO_FORMAT_H264_HIGH8_444:
+        codecString = "H.264";
+        break;
+    case VIDEO_FORMAT_H265:
+    case VIDEO_FORMAT_H265_REXT8_444:
+        codecString = "HEVC";
+        break;
+    case VIDEO_FORMAT_H265_MAIN10:
+    case VIDEO_FORMAT_H265_REXT10_444:
+        codecString = LiGetCurrentHostDisplayHdrMode() ? "HEVC HDR" : "HEVC 10";
+        break;
+    case VIDEO_FORMAT_AV1_MAIN8:
+    case VIDEO_FORMAT_AV1_HIGH8_444:
+        codecString = "AV1";
+        break;
+    case VIDEO_FORMAT_AV1_MAIN10:
+    case VIDEO_FORMAT_AV1_HIGH10_444:
+        codecString = LiGetCurrentHostDisplayHdrMode() ? "AV1 HDR" : "AV1 10";
+        break;
+    default:
+        codecString = "?";
+        break;
+    }
+
+    if (stats.receivedFps > 0 && m_VideoDecoderCtx != nullptr) {
+        ret = snprintf(&output[offset], length - offset,
+                       "%dx%d  %s  %.0f FPS\n",
+                       m_VideoDecoderCtx->width,
+                       m_VideoDecoderCtx->height,
+                       codecString,
+                       stats.renderedFps);
+        if (ret < 0 || ret >= length - offset) {
+            return;
+        }
+        offset += ret;
+    }
+
+    if (stats.renderedFrames != 0) {
+        if (stats.lastRtt != 0) {
+            ret = snprintf(&output[offset], length - offset,
+                           "PING %u ms   DECODE %.1f ms   RENDER %.1f ms\n",
+                           stats.lastRtt,
+                           (double)(stats.totalDecodeTimeUs / 1000.0) / stats.decodedFrames,
+                           (double)(stats.totalRenderTimeUs / 1000.0) / stats.renderedFrames);
+        }
+        else {
+            ret = snprintf(&output[offset], length - offset,
+                           "DECODE %.1f ms   RENDER %.1f ms\n",
+                           (double)(stats.totalDecodeTimeUs / 1000.0) / stats.decodedFrames,
+                           (double)(stats.totalRenderTimeUs / 1000.0) / stats.renderedFrames);
+        }
+        if (ret < 0 || ret >= length - offset) {
+            return;
+        }
+        offset += ret;
+
+        float lossPct = (float)stats.networkDroppedFrames / stats.totalFrames * 100;
+        float jitterPct = (float)stats.pacerDroppedFrames / stats.decodedFrames * 100;
+        if (stats.framesWithHostProcessingLatency > 0) {
+            ret = snprintf(&output[offset], length - offset,
+                           "HOST %.1f ms   LOSS %.1f%%   JITTER %.1f%%",
+                           (float)stats.totalHostProcessingLatency / 10 / stats.framesWithHostProcessingLatency,
+                           lossPct,
+                           jitterPct);
+        }
+        else {
+            ret = snprintf(&output[offset], length - offset,
+                           "LOSS %.1f%%   JITTER %.1f%%",
+                           lossPct,
+                           jitterPct);
+        }
+        if (ret < 0 || ret >= length - offset) {
+            return;
+        }
+        offset += ret;
+    }
+}
+
 void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
 {
     if (stats.renderedFps > 0 || stats.renderedFrames != 0) {
@@ -2126,9 +2216,9 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
             addVideoStats(m_LastWndVideoStats, lastTwoWndStats);
             addVideoStats(m_ActiveWndVideoStats, lastTwoWndStats);
 
-            stringifyVideoStats(lastTwoWndStats,
-                                Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug),
-                                Session::get()->getOverlayManager().getOverlayMaxTextLength());
+            stringifyVideoStatsCompact(lastTwoWndStats,
+                                       Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug),
+                                       Session::get()->getOverlayManager().getOverlayMaxTextLength());
             Session::get()->getOverlayManager().setOverlayTextUpdated(Overlay::OverlayDebug);
         }
 
