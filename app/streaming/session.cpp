@@ -276,7 +276,7 @@ void Session::clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlag
     SDL_PushEvent(&setControllerLEDEvent);
 }
 
-void Session::clClipboardText(uint32_t, const char *text, unsigned int length)
+void Session::clClipboardText(const char *text, unsigned int length)
 {
     if (s_ActiveSession == nullptr || !s_ActiveSession->m_Preferences->syncClipboard) {
         return;

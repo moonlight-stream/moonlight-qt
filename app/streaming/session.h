@@ -225,7 +225,7 @@ private:
     void clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlags, uint8_t typeLeft, uint8_t typeRight, uint8_t *left, uint8_t *right);
 
     static
-    void clClipboardText(uint32_t token, const char *text, unsigned int length);
+    void clClipboardText(const char *text, unsigned int length);
 
     void sendClipboardToHost(const char *text);
     void applyClipboardFromHost(const char *text, unsigned int length);
