@@ -548,6 +548,17 @@ NvHTTP::openConnection(QUrl baseUrl,
     connectTimer->start(REQUEST_TIMEOUT_MS);
 #endif
 
+    // sslErrors() is only emitted when the host's certificate fails validation, so
+    // handleSslErrors() never sees a certificate that chains to a CA trusted by the
+    // system. Check the pinned certificate here too. This signal is emitted after the
+    // TLS handshake but before our request (and its query parameters) is sent.
+    connect(reply, &QNetworkReply::encrypted, reply, [this, reply]() {
+        if (reply->sslConfiguration().peerCertificate() != m_ServerCert) {
+            reply->setProperty("cert_mismatch", true);
+            reply->abort();
+        }
+    });
+
     if (logLevel >= NvLogLevel::NVLL_VERBOSE) {
         qInfo() << "Executing request:" << url.toString();
     }
@@ -575,7 +586,7 @@ NvHTTP::openConnection(QUrl baseUrl,
             qWarning() << command << "request failed with error:" << reply->error();
         }
 
-        if (reply->error() == QNetworkReply::SslHandshakeFailedError) {
+        if (reply->error() == QNetworkReply::SslHandshakeFailedError || reply->property("cert_mismatch").toBool()) {
             // This will trigger falling back to HTTP for the serverinfo query
             // then pairing again to get the updated certificate.
             GfeHttpResponseException exception(401, "Server certificate mismatch");
