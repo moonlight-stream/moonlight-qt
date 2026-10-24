@@ -152,6 +152,10 @@ public:
 
     void updatePointerRegionLock();
 
+    void updateAltMouseGrab(SDL_Scancode scancode, bool pressed);
+
+    void releaseAltMouseGrab();
+
     static
     QString getUnmappedGamepads();
 
@@ -221,6 +225,10 @@ private:
     QSet<uint32_t> m_KeysDown;
     bool m_FakeMouseCaptureActive;
     bool m_KeyboardCaptureActive;
+    bool m_LeftAltDown;
+    bool m_RightAltDown;
+    bool m_AltMouseGrabActive;
+    bool m_AltMouseGrabUsesWindowGrab;
     QString m_OldIgnoreDevices;
     QString m_OldIgnoreDevicesExcept;
     QStringList m_IgnoreDeviceGuids;
