@@ -24,6 +24,11 @@ BoxArtManager::getFilePathForBoxArt(NvComputer* computer, int appId)
 {
     QDir dir = m_BoxArtDir;
 
+    // Never let the UUID escape the box art cache directory
+    if (!NvComputer::isValidUuid(computer->uuid)) {
+        return QString();
+    }
+
     // Create the cache directory if it did not already exist
     if (!dir.exists(computer->uuid)) {
         dir.mkdir(computer->uuid);
@@ -71,8 +76,13 @@ private:
 
 QUrl BoxArtManager::loadBoxArt(NvComputer* computer, NvApp& app)
 {
+    QString cachePath = getFilePathForBoxArt(computer, app.id);
+    if (cachePath.isEmpty()) {
+        return QUrl("qrc:/res/no_app_image.png");
+    }
+
     // Try to open the cached file if it exists and contains data
-    QFile cacheFile(getFilePathForBoxArt(computer, app.id));
+    QFile cacheFile(cachePath);
     if (cacheFile.exists() && cacheFile.size() > 0) {
         return QUrl::fromLocalFile(cacheFile.fileName());
     }
@@ -90,6 +100,12 @@ QUrl BoxArtManager::loadBoxArt(NvComputer* computer, NvApp& app)
 void BoxArtManager::deleteBoxArt(NvComputer* computer)
 {
     QDir dir(Path::getBoxArtCacheDir());
+
+    // Never let the UUID escape the box art cache directory. QDir::cd() also
+    // returns true for an empty string, which would delete the entire cache.
+    if (!NvComputer::isValidUuid(computer->uuid)) {
+        return;
+    }
 
     // Delete everything in this computer's box art directory
     if (dir.cd(computer->uuid)) {

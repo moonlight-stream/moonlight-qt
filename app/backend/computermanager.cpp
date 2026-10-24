@@ -854,6 +854,14 @@ private:
 
         // Create initial newComputer using HTTP serverinfo with no pinned cert
         NvComputer* newComputer = new NvComputer(http, serverInfo);
+        if (!NvComputer::isValidUuid(newComputer->uuid)) {
+            qWarning() << "Ignoring PC at" << m_Address.toString() << "with invalid UUID:" << newComputer->uuid;
+            delete newComputer;
+            if (!m_Mdns) {
+                emit computerAddCompleted(false, false);
+            }
+            return;
+        }
         http.setTrueUid(!newComputer->isNvidiaServerSoftware);
 
         // Check if we have a record of this host UUID to pull the pinned cert

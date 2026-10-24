@@ -44,6 +44,9 @@ public:
 
     explicit NvComputer(QSettings& settings);
 
+    static bool
+    isValidUuid(const QString& uuid);
+
     void
     setRemoteAddress(QHostAddress);
 

@@ -6,6 +6,7 @@
 #include <QHostInfo>
 #include <QNetworkInterface>
 #include <QNetworkProxy>
+#include <QRegularExpression>
 
 #define SER_NAME "hostname"
 #define SER_UUID "uuid"
@@ -22,6 +23,15 @@
 #define SER_SRVCERT "srvcert"
 #define SER_CUSTOMNAME "customname"
 #define SER_NVIDIASOFTWARE "nvidiasw"
+
+bool NvComputer::isValidUuid(const QString& uuid)
+{
+    // The UUID is provided by the host over unauthenticated HTTP and we use it
+    // as a directory name for the box art cache, so it must not contain path
+    // separators or relative path components like "..".
+    static const QRegularExpression k_UuidRegex("^[A-Za-z0-9_-]+$");
+    return k_UuidRegex.match(uuid).hasMatch();
+}
 
 NvComputer::NvComputer(QSettings& settings)
 {
