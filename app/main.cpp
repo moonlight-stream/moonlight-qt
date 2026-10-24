@@ -465,7 +465,16 @@ int main(int argc, char *argv[])
 #endif
     {
         s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
-        if (s_LoggerFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
+
+        // The log directory may be shared with other users (/tmp on macOS), so
+        // we must never open a file or symlink that someone else planted there.
+        // NewOnly fails if anything already exists at this path.
+        QIODevice::OpenMode logOpenMode = QIODevice::WriteOnly | QIODevice::Text | QIODevice::NewOnly;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
+        if (s_LoggerFile->open(logOpenMode, QFileDevice::ReadOwner | QFileDevice::WriteOwner)) {
+#else
+        if (s_LoggerFile->open(logOpenMode)) {
+#endif
             QTextStream(stderr) << "Redirecting log output to " << s_LoggerFile->fileName() << Qt::endl;
             s_LoggerStream.setDevice(s_LoggerFile);
         }
