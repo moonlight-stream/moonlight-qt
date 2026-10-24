@@ -215,7 +215,13 @@ NvPairingManager::saltPin(const QByteArray& salt, QString pin)
 NvPairingManager::PairState
 NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverCert)
 {
-    int serverMajorVersion = NvHTTP::parseQuad(appVersion).at(0);
+    QVector<int> serverVersion = NvHTTP::parseQuad(appVersion);
+    if (serverVersion.isEmpty()) {
+        qCritical() << "Unable to pair with server that did not report its version";
+        return PairState::FAILED;
+    }
+
+    int serverMajorVersion = serverVersion.at(0);
     qInfo() << "Pairing with server generation:" << serverMajorVersion;
 
     QCryptographicHash::Algorithm hashAlgo;
