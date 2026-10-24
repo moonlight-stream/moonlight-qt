@@ -426,7 +426,13 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
 
     D3DDISPLAYMODEEX currentMode;
     currentMode.Size = sizeof(currentMode);
-    d3d9ex->GetAdapterDisplayModeEx(adapterIndex, &currentMode, nullptr);
+    hr = d3d9ex->GetAdapterDisplayModeEx(adapterIndex, &currentMode, nullptr);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "GetAdapterDisplayModeEx() failed: %x",
+                     hr);
+        return false;
+    }
 
     D3DPRESENT_PARAMETERS d3dpp = {};
     d3dpp.hDeviceWindow = info.info.win.window;
@@ -987,6 +993,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "StretchRect() failed: %x",
                          hr);
+            m_Device->EndScene();
             SDL_Event event;
             event.type = SDL_RENDER_DEVICE_RESET;
             SDL_PushEvent(&event);
