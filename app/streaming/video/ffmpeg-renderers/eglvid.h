@@ -44,6 +44,7 @@ private:
     SDL_Window *m_Window;
     IFFmpegRenderer *m_Backend;
     unsigned int m_VideoVAO;
+    unsigned int m_VideoVBO;
     bool m_BlockingSwapBuffers;
     EGLSync m_LastRenderSync;
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC m_glEGLImageTargetTexture2DOES;
