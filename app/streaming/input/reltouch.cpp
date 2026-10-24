@@ -14,36 +14,6 @@
 // How far the finger can move before it cancels a drag or tap
 #define DEAD_ZONE_DELTA 0.01f
 
-Uint32 SdlInputHandler::releaseLeftButtonTimerCallback(Uint32, void*)
-{
-    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
-    return 0;
-}
-
-Uint32 SdlInputHandler::releaseRightButtonTimerCallback(Uint32, void*)
-{
-    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
-    return 0;
-}
-
-Uint32 SdlInputHandler::dragTimerCallback(Uint32, void *param)
-{
-    auto me = reinterpret_cast<SdlInputHandler*>(param);
-
-    // Check how many fingers are down now to decide
-    // which button to hold down
-    if (me->m_NumFingersDown == 2) {
-        me->m_DragButton = BUTTON_RIGHT;
-    }
-    else if (me->m_NumFingersDown == 1) {
-        me->m_DragButton = BUTTON_LEFT;
-    }
-
-    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, me->m_DragButton);
-
-    return 0;
-}
-
 void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
 {
     int fingerIndex = -1;
@@ -108,18 +78,14 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
     // fingers go down
     if (event->type == SDL_FINGERDOWN &&
             (fingerIndex == 0 || fingerIndex == 1)) {
-        SDL_RemoveTimer(m_DragTimer);
-        m_DragTimer = SDL_AddTimer(DRAG_ACTIVATION_DELAY,
-                                   dragTimerCallback,
-                                   this);
+        armDeadline(m_DragDeadline, DRAG_ACTIVATION_DELAY);
     }
 
     if (event->type == SDL_FINGERMOTION) {
         // If it's outside the deadzone delta, cancel drags and taps
         if (qSqrt(qPow(event->x - m_TouchDownEvent[fingerIndex].x, 2) +
                   qPow(event->y - m_TouchDownEvent[fingerIndex].y, 2)) > DEAD_ZONE_DELTA) {
-            SDL_RemoveTimer(m_DragTimer);
-            m_DragTimer = 0;
+            cancelDeadline(m_DragDeadline);
 
             // This effectively cancels the tap logic below
             m_TouchDownEvent[fingerIndex].timestamp = 0;
@@ -128,8 +94,7 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
 
     if (event->type == SDL_FINGERUP) {
         // Cancel the drag timer on finger up
-        SDL_RemoveTimer(m_DragTimer);
-        m_DragTimer = 0;
+        cancelDeadline(m_DragDeadline);
 
         // Release any drag
         if (m_DragButton != 0) {
@@ -146,10 +111,7 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
             LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
 
             // Queue a timer to release it in 100 ms
-            SDL_RemoveTimer(m_RightButtonReleaseTimer);
-            m_RightButtonReleaseTimer = SDL_AddTimer(TAP_BUTTON_RELEASE_DELAY,
-                                                     releaseRightButtonTimerCallback,
-                                                     nullptr);
+            armDeadline(m_RightButtonReleaseDeadline, TAP_BUTTON_RELEASE_DELAY);
         }
         // 1 finger tap
         else if (event->timestamp - m_TouchDownEvent[0].timestamp < 250) {
@@ -157,10 +119,7 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
             LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
 
             // Queue a timer to release it in 100 ms
-            SDL_RemoveTimer(m_LeftButtonReleaseTimer);
-            m_LeftButtonReleaseTimer = SDL_AddTimer(TAP_BUTTON_RELEASE_DELAY,
-                                                    releaseLeftButtonTimerCallback,
-                                                    nullptr);
+            armDeadline(m_LeftButtonReleaseDeadline, TAP_BUTTON_RELEASE_DELAY);
         }
     }
 
