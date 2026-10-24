@@ -269,7 +269,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
 int EGLRenderer::loadAndBuildShader(int shaderType,
                                     const char *file) {
     GLuint shader = glCreateShader(shaderType);
-    if (!shader || shader == GL_INVALID_ENUM) {
+    if (!shader) {
         EGL_LOG(Error, "Can't create shader: %d", glGetError());
         return 0;
     }
@@ -286,6 +286,7 @@ int EGLRenderer::loadAndBuildShader(int shaderType,
         char shaderLog[512];
         glGetShaderInfoLog(shader, sizeof (shaderLog), nullptr, shaderLog);
         EGL_LOG(Error, "Cannot load shader \"%s\": %s", file, shaderLog);
+        glDeleteShader(shader);
         return 0;
     }
 
@@ -297,7 +298,7 @@ unsigned EGLRenderer::compileShader(const char* vertexShaderSrc, const char* fra
 
     GLuint vertexShader = loadAndBuildShader(GL_VERTEX_SHADER, vertexShaderSrc);
     if (!vertexShader)
-        return false;
+        return 0;
 
     GLuint fragmentShader = loadAndBuildShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
     if (!fragmentShader)
@@ -787,7 +788,7 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     }
 
     ssize_t plane_count = m_Backend->exportEGLImages(frame, m_EGLDisplay, imgs);
-    if (plane_count < 0)
+    if (plane_count <= 0)
         return;
     for (ssize_t i = 0; i < plane_count; ++i) {
         glActiveTexture(GL_TEXTURE0 + i);
