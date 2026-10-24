@@ -21,6 +21,10 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_PointerRegionLockToggledByUser(false),
       m_FakeMouseCaptureActive(false),
       m_KeyboardCaptureActive(false),
+      m_LeftAltDown(false),
+      m_RightAltDown(false),
+      m_AltMouseGrabActive(false),
+      m_AltMouseGrabUsesWindowGrab(false),
       m_CaptureSystemKeysMode(prefs.captureSysKeysMode),
       m_MouseCursorCapturedVisibilityState(SDL_DISABLE),
       m_LongPressTimer(0),
@@ -272,6 +276,10 @@ void SdlInputHandler::setWindow(SDL_Window *window)
 
 void SdlInputHandler::notifyFocusLost()
 {
+    // If focus is lost while Alt is held, we won't receive the key up event,
+    // so make sure any temporary grab for Alt+click is released now.
+    releaseAltMouseGrab();
+
     // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
     // This lets user to interact with our window's title bar and with the buttons in it.
     // Doing this while the window is full-screen breaks the transition out of FS
@@ -387,6 +395,10 @@ void SdlInputHandler::setCaptureActive(bool active)
         }
     }
     else {
+        // Don't leave the temporary Alt+click grab behind if capture is
+        // deactivated while Alt is still held.
+        releaseAltMouseGrab();
+
         if (m_FakeMouseCaptureActive) {
             // Display the cursor again
             SDL_ShowCursor(SDL_ENABLE);

@@ -182,6 +182,93 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
     }
 }
 
+void SdlInputHandler::updateAltMouseGrab(SDL_Scancode scancode, bool pressed)
+{
+    if (scancode == SDL_SCANCODE_LALT) {
+        m_LeftAltDown = pressed;
+    }
+    else if (scancode == SDL_SCANCODE_RALT) {
+        m_RightAltDown = pressed;
+    }
+    else {
+        return;
+    }
+
+    bool altDown = m_LeftAltDown || m_RightAltDown;
+    if (altDown == m_AltMouseGrabActive) {
+        return;
+    }
+
+    // Many X11 window managers bind Alt+left click to moving or resizing
+    // windows. Their passive grab fires even while streaming and consumes the
+    // click before we ever see it, so Alt+click appears not to work. Grab the
+    // pointer ourselves while Alt is held to keep those clicks for the stream.
+    //
+    // On Wayland, KWin also performs these window actions unless the pointer is
+    // constrained, so use a window grab (pointer constraint) there as well.
+    const char* videoDriver = SDL_GetCurrentVideoDriver();
+    bool isX11 = videoDriver != nullptr && SDL_strcmp(videoDriver, "x11") == 0;
+    bool isWayland = videoDriver != nullptr && SDL_strcmp(videoDriver, "wayland") == 0;
+    if (m_Window == nullptr || (!isX11 && !isWayland)) {
+        return;
+    }
+
+    if (altDown) {
+        if (!isCaptureActive()) {
+            // Only take the pointer if the user is actually interacting with the
+            // video area, not with the window decorations.
+            int mouseX, mouseY;
+            SDL_GetMouseState(&mouseX, &mouseY);
+            if (!isMouseInVideoRegion(mouseX, mouseY)) {
+                return;
+            }
+        }
+
+        // Relative mouse mode already uses a window grab, and Wayland needs one
+        // for the compositor to consider the pointer constrained. Otherwise,
+        // capture the pointer without confining it (e.g. absolute mouse mode).
+        m_AltMouseGrabUsesWindowGrab = SDL_GetRelativeMouseMode() || isWayland;
+        if (m_AltMouseGrabUsesWindowGrab) {
+            SDL_SetWindowMouseGrab(m_Window, SDL_TRUE);
+        }
+        else {
+            SDL_CaptureMouse(SDL_TRUE);
+        }
+    }
+    else {
+        if (m_AltMouseGrabUsesWindowGrab) {
+            SDL_SetWindowMouseGrab(m_Window, SDL_FALSE);
+        }
+        else {
+            SDL_CaptureMouse(SDL_FALSE);
+        }
+    }
+
+    m_AltMouseGrabActive = altDown;
+}
+
+void SdlInputHandler::releaseAltMouseGrab()
+{
+    m_LeftAltDown = false;
+    m_RightAltDown = false;
+
+    if (!m_AltMouseGrabActive) {
+        return;
+    }
+
+    if (m_Window != nullptr) {
+        if (m_AltMouseGrabUsesWindowGrab) {
+            SDL_SetWindowMouseGrab(m_Window, SDL_FALSE);
+        }
+        else {
+            SDL_CaptureMouse(SDL_FALSE);
+        }
+    }
+
+    m_AltMouseGrabActive = false;
+    m_AltMouseGrabUsesWindowGrab = false;
+}
+
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 {
     short keyCode;
@@ -193,6 +280,11 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         // Ignore repeat key down events
         SDL_assert(event->state == SDL_PRESSED);
         return;
+    }
+
+    if (event->keysym.scancode == SDL_SCANCODE_LALT ||
+            event->keysym.scancode == SDL_SCANCODE_RALT) {
+        updateAltMouseGrab(event->keysym.scancode, event->state == SDL_PRESSED);
     }
 
     // Check for our special key combos
