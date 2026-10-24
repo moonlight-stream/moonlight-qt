@@ -578,5 +578,24 @@ macx {
     }
 }
 
+macx {
+    # App-side client for the AWDL privileged helper tool (see helper/).
+    SOURCES += utils/awdlhelper.mm
+    HEADERS += utils/awdlhelper.h ../helper/AWDLHelperProtocol.h
+    INCLUDEPATH += $$PWD/../helper
+    LIBS += -framework ServiceManagement -framework Security
+
+    # Bundle the helper tool inside Moonlight.app so SMJobBless can install
+    # it. The helper target (helper/ subdir, see moonlight-qt.pro) must
+    # build before the app bundle; that ordering is enforced by
+    # app.depends. If this copy ever fails silently, the fallback is to
+    # copy the helper binary manually into the bundle before signing:
+    #   cp build-release/helper/com.moonlight-stream.Moonlight.AWDLHelper \
+    #      app/Moonlight.app/Contents/Library/LaunchServices/
+    AWDL_HELPER.files = $$OUT_PWD/../helper/com.moonlight-stream.Moonlight.AWDLHelper
+    AWDL_HELPER.path = Contents/Library/LaunchServices
+    QMAKE_BUNDLE_DATA += AWDL_HELPER
+}
+
 VERSION = "$$cat(version.txt)"
 DEFINES += VERSION_STR=\\\"$$cat(version.txt)\\\"

@@ -53,6 +53,9 @@
 #include "backend/systemproperties.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
+#ifdef Q_OS_MACOS
+#include "utils/awdlhelper.h"
+#endif
 #include "gui/sdlgamepadkeynavigation.h"
 
 #if defined(Q_OS_WIN32)
@@ -1041,6 +1044,18 @@ int main(int argc, char *argv[])
         if (engine.rootObjects().isEmpty())
             return -1;
     }
+
+#ifdef Q_OS_MACOS
+    // Safety net: if a previous Moonlight process was killed mid-stream
+    // (crash, force-quit), its stream-end AWDL restore never ran and AWDL
+    // may still be down. Restore it once on launch when the setting is on
+    // and the helper is installed. Runs on a background queue via
+    // awdlHelperRestoreAtStartupAsync() and never blocks startup.
+    // (Assumes a single Moonlight instance; see helper/README.md.)
+    if (StreamingPreferences::get()->disableAwdlWhileStreaming) {
+        awdlHelperRestoreAtStartupAsync();
+    }
+#endif
 
     int err = app.exec();
 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Embedded launchd plist for the MoonlightAWDLHelper privileged helper tool.
+     Linked into the helper binary with:
+       -sectcreate __TEXT __launchd_plist MoonlightAWDLHelper-Launchd.plist
+     SMJobBless extracts this plist to /Library/LaunchDaemons/ and sets
+     ProgramArguments itself; do NOT add ProgramArguments here. The helper
+     is started on demand when a client connects to its Mach service and
+     exits when idle. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.moonlight-stream.Moonlight.AWDLHelper</string>
+	<key>MachServices</key>
+	<dict>
+		<key>com.moonlight-stream.Moonlight.AWDLHelper</key>
+		<true/>
+	</dict>
+</dict>
+</plist>
