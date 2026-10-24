@@ -21,8 +21,10 @@
 VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
     : IFFmpegRenderer(RendererType::VAAPI),
       m_DecoderSelectionPass(decoderSelectionPass),
+      m_WindowSystem(SDL_SYSWM_UNKNOWN),
       m_HwContext(nullptr),
       m_BlacklistedForDirectRendering(false),
+      m_HasRfiLatencyBug(false),
       m_RequiresExplicitPixelFormat(false),
       m_OverlayMutex(nullptr)
 #ifdef HAVE_EGL
