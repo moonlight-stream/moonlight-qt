@@ -178,16 +178,18 @@ static inline uint32_t bs_read_ue(bs_t* b)
 
 static inline int32_t bs_read_se(bs_t* b)
 {
-    int32_t r = bs_read_ue(b);
+    // Do the math in unsigned space. bs_read_ue() can return values above
+    // INT32_MAX, and (r+1)/2 on a signed INT32_MAX is undefined behavior.
+    // bs_read_ue() returns at most 0xFFFFFFFE, so both results fit in int32_t.
+    uint32_t r = bs_read_ue(b);
     if (r & 0x01)
     {
-        r = (r+1)/2;
+        return (int32_t)((r >> 1) + 1);
     }
     else
     {
-        r = -(r/2);
+        return -(int32_t)(r >> 1);
     }
-    return r;
 }
 
 static inline void bs_write_u1(bs_t* b, uint32_t v)
