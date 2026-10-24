@@ -240,7 +240,7 @@ ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, EGLDisplay dpy, EGLImag
     else {
         // Cast the EGLAttrib array elements to EGLint for the KHR extension
         EGLint intAttribs[MAX_ATTRIB_COUNT];
-        for (int i = 0; i < MAX_ATTRIB_COUNT; i++) {
+        for (int i = 0; i < attribIndex; i++) {
             intAttribs[i] = (EGLint)attribs[i];
         }
 
