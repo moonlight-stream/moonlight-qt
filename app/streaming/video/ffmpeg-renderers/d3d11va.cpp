@@ -60,7 +60,7 @@ D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
       m_DecoderSelectionPass(decoderSelectionPass),
       m_DevicesWithFL11Support(0),
       m_DevicesWithCodecSupport(0),
-      m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
+      m_SwapChainColorTrc(AVCOL_TRC_UNSPECIFIED),
       m_AllowTearing(false),
       m_OverlayLock(0),
       m_HwDeviceContext(nullptr)
@@ -800,7 +800,7 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
 
     HRESULT hr;
 
-    if (frame->color_trc != m_LastColorTrc) {
+    if (frame->color_trc != m_SwapChainColorTrc) {
         if (frame->color_trc == AVCOL_TRC_SMPTE2084) {
             // Switch to Rec 2020 PQ (SMPTE ST 2084) colorspace for HDR10 rendering
             hr = m_SwapChain->SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
@@ -820,7 +820,7 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
             }
         }
 
-        m_LastColorTrc = frame->color_trc;
+        m_SwapChainColorTrc = frame->color_trc;
     }
 
     // Present according to the decoder parameters
