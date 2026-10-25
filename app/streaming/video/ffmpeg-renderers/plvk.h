@@ -103,6 +103,10 @@ private:
     pl_vulkan m_Vulkan = nullptr;
     pl_swapchain m_Swapchain = nullptr;
     pl_renderer m_Renderer = nullptr;
+    // Started as a copy of pl_render_fast_params and adjusted per the user's
+    // scaling filter preference. Kept as a member so the default stays exactly
+    // on the upstream preset.
+    pl_render_params m_RenderParams = {};
     pl_tex m_Textures[PL_MAX_PLANES] = {};
     pl_color_space m_LastColorspace = {};
 
