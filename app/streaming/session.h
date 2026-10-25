@@ -11,6 +11,8 @@
 #include "audio/renderers/renderer.h"
 #include "video/overlaymanager.h"
 
+class MicStream;
+
 class SupportedVideoFormatList : public QList<int>
 {
 public:
@@ -148,6 +150,9 @@ private:
 
     bool startConnectionAsync();
 
+    void startMicrophone();
+    void stopMicrophone();
+
     bool validateLaunch(SDL_Window* testWindow);
 
     void emitLaunchWarning(QString text);
@@ -271,6 +276,7 @@ private:
     // True while AWDL has been disabled for this session (macOS only).
     // Set in startConnectionAsync(), cleared in DeferredSessionCleanupTask.
     bool m_AwdlDisabled;
+    MicStream* m_MicStream;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;

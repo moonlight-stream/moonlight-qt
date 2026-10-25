@@ -1748,6 +1748,24 @@ Flickable {
                 }
 
                 CheckBox {
+                    id: enableMicrophoneCheck
+                    width: parent.width
+                    text: qsTr("Enable microphone passthrough")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.enableMicrophone
+                    onCheckedChanged: {
+                        // This is called on init, so only act when the value actually changes.
+                        if (StreamingPreferences.enableMicrophone != checked) {
+                            StreamingPreferences.enableMicrophone = checked
+                        }
+                    }
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Sends your microphone to the host during streaming. The host must support mic passthrough (VibePollo with the 0x3003 receiver); the audio appears on the host as the Steam Streaming Microphone input. Use a headset mic to avoid echo.")
+                }
+
+                CheckBox {
                     id: enableYUV444
                     width: parent.width
                     text: qsTr("Enable YUV 4:4:4")
