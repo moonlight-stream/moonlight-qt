@@ -268,8 +268,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, in
     glDisable(GL_BLEND);
 }
 
-int EGLRenderer::loadAndBuildShader(int shaderType,
-                                    const char *file) {
+GLuint EGLRenderer::loadAndBuildShader(int shaderType, const char *file) {
     GLuint shader = glCreateShader(shaderType);
     if (!shader) {
         EGL_LOG(Error, "Can't create shader: %d", glGetError());

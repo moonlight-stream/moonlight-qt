@@ -29,7 +29,7 @@ private:
     bool compileShaders();
     bool setupVideoRenderingState();
     bool setupOverlayRenderingState();
-    static int loadAndBuildShader(int shaderType, const char *filename);
+    static GLuint loadAndBuildShader(int shaderType, const char *filename);
 
     AVPixelFormat m_EGLImagePixelFormat;
     void *m_EGLDisplay;
