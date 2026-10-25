@@ -62,6 +62,14 @@ typedef struct _WINDOW_STATE_CHANGE_INFO {
     int displayIndex;
 } WINDOW_STATE_CHANGE_INFO, *PWINDOW_STATE_CHANGE_INFO;
 
+typedef struct _ADAPTIVE_BITRATE_STATS {
+    float packetLossPercent;
+    int rttMs;
+    float totalFps;
+    int droppedFrames;
+    bool valid;
+} ADAPTIVE_BITRATE_STATS, *PADAPTIVE_BITRATE_STATS;
+
 class IVideoDecoder {
 public:
     virtual ~IVideoDecoder() {}
@@ -77,4 +85,9 @@ public:
     virtual void renderFrameOnMainThread() = 0;
     virtual void setHdrMode(bool enabled) = 0;
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info) = 0;
+    virtual bool getAdaptiveBitrateStats(PADAPTIVE_BITRATE_STATS stats)
+    {
+        Q_UNUSED(stats);
+        return false;
+    }
 };
