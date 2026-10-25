@@ -1712,6 +1712,56 @@ Flickable {
                     }
                 }
 
+                Label {
+                    width: parent.width
+                    id: scalerTitle
+                    text: qsTr("Scaling Filter")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                AutoResizingComboBox {
+                    // Same load pattern as the renderer box above: publish the index
+                    // only once the saved value is known.
+                    Component.onCompleted: {
+                        var saved_sa = StreamingPreferences.scalerAlgorithm
+
+                        currentIndex = 0
+
+                        for (var i = 0; i < scalerListModel.count; i++) {
+                            var el_sa = scalerListModel.get(i).val;
+                            if (saved_sa === el_sa) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+
+                        activated(currentIndex)
+                    }
+
+                    id: scalerComboBox
+                    textRole: "text"
+                    model: ListModel {
+                        id: scalerListModel
+                        ListElement {
+                            text: qsTr("Bilinear (Default)")
+                            val: StreamingPreferences.SA_BILINEAR
+                        }
+                        ListElement {
+                            text: qsTr("Bicubic (Catmull-Rom)")
+                            val: StreamingPreferences.SA_BICUBIC
+                        }
+                        ListElement {
+                            text: qsTr("Lanczos 3")
+                            val: StreamingPreferences.SA_LANCZOS3
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated: {
+                        StreamingPreferences.scalerAlgorithm = scalerListModel.get(currentIndex).val
+                    }
+                }
+
                 CheckBox {
                     id: enableYUV444
                     width: parent.width
