@@ -240,7 +240,7 @@ ssize_t EglImageFactory::exportDRMImages(AVFrame* frame, EGLDisplay dpy, EGLImag
     else {
         // Cast the EGLAttrib array elements to EGLint for the KHR extension
         EGLint intAttribs[MAX_ATTRIB_COUNT];
-        for (int i = 0; i < MAX_ATTRIB_COUNT; i++) {
+        for (int i = 0; i < attribIndex; i++) {
             intAttribs[i] = (EGLint)attribs[i];
         }
 
@@ -328,7 +328,7 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, uint32_t exportFlags, EG
                 attribs[attribIndex++] = layer.offset[0];
                 attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
                 attribs[attribIndex++] = layer.pitch[0];
-                if (m_EGLExtDmaBuf) {
+                if (m_EGLExtDmaBuf && object.drm_format_modifier != DRM_FORMAT_MOD_INVALID) {
                     attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT;
                     attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
                     attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT;
@@ -343,7 +343,7 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, uint32_t exportFlags, EG
                 attribs[attribIndex++] = layer.offset[1];
                 attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_PITCH_EXT;
                 attribs[attribIndex++] = layer.pitch[1];
-                if (m_EGLExtDmaBuf) {
+                if (m_EGLExtDmaBuf && object.drm_format_modifier != DRM_FORMAT_MOD_INVALID) {
                     attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT;
                     attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
                     attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT;
@@ -358,7 +358,7 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, uint32_t exportFlags, EG
                 attribs[attribIndex++] = layer.offset[2];
                 attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_PITCH_EXT;
                 attribs[attribIndex++] = layer.pitch[2];
-                if (m_EGLExtDmaBuf) {
+                if (m_EGLExtDmaBuf && object.drm_format_modifier != DRM_FORMAT_MOD_INVALID) {
                     attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT;
                     attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
                     attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT;
@@ -373,7 +373,7 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, uint32_t exportFlags, EG
                 attribs[attribIndex++] = layer.offset[3];
                 attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_PITCH_EXT;
                 attribs[attribIndex++] = layer.pitch[3];
-                if (m_EGLExtDmaBuf) {
+                if (m_EGLExtDmaBuf && object.drm_format_modifier != DRM_FORMAT_MOD_INVALID) {
                     attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT;
                     attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
                     attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT;

@@ -21,8 +21,10 @@
 VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
     : IFFmpegRenderer(RendererType::VAAPI),
       m_DecoderSelectionPass(decoderSelectionPass),
+      m_WindowSystem(SDL_SYSWM_UNKNOWN),
       m_HwContext(nullptr),
       m_BlacklistedForDirectRendering(false),
+      m_HasRfiLatencyBug(false),
       m_RequiresExplicitPixelFormat(false),
       m_OverlayMutex(nullptr)
 #ifdef HAVE_EGL
@@ -159,6 +161,9 @@ VAAPIRenderer::openDisplay(SDL_Window* window)
                                  errno);
                     return nullptr;
                 }
+                // This FD is owned by us (not shared with SDL), so it must be
+                // closed when we're done with it or adopted into m_DrmFd.
+                mustCloseFd = true;
             }
 
             // If the KMSDRM FD is not a render node FD, open the render node for libva to use.

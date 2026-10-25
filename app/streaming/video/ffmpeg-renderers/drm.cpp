@@ -1307,7 +1307,7 @@ bool DrmRenderer::mapDumbBuffer(uint32_t handle, size_t size, void** mapping)
 #else
     *mapping = mmap(nullptr, size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
 #endif
-    if (mapping == MAP_FAILED) {
+    if (*mapping == MAP_FAILED) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "mmap() failed for dumb buffer: %d",
                      errno);
