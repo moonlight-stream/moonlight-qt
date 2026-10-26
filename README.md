@@ -10,6 +10,16 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
  [![Downloads](https://img.shields.io/github/downloads/moonlight-stream/moonlight-qt/total)](https://github.com/moonlight-stream/moonlight-qt/releases)
  [![Translation Status](https://hosted.weblate.org/widgets/moonlight/-/moonlight-qt/svg-badge.svg)](https://hosted.weblate.org/projects/moonlight/moonlight-qt/)
 
+## Fork additions
+
+This fork adds the following on top of upstream Moonlight PC:
+
+- **Microphone passthrough** — Settings has an "Enable microphone passthrough" checkbox (off by default). When enabled, the client's default microphone is captured (48 kHz mono Opus at 64 kbps) and sent to the host over the control stream (packet type `0x3003`). The host must support the matching receiver: the [VibePollo](https://github.com/neer2005/Vibepollo) fork with mic support, where the audio appears as the Steam Streaming Microphone input (the driver arrives with Steam Remote Play use). There is no mid-stream mute toggle yet; turn it on or off in Settings between streams. On macOS, the first stream triggers the system microphone permission prompt. Use a headset mic to avoid echo, as the host path has no echo cancellation.
+- **Disable AWDL while streaming (macOS only)** — Settings has a "Disable AWDL while streaming" checkbox. AWDL (Apple Wireless Direct Link) periodically steals the Wi-Fi radio, which can cause streaming stutter; enabling this turns `awdl0` off when a stream starts and back on when it ends (a startup safety net also re-enables it if a previous session crashed with it off). This requires a one-time privileged helper install (admin prompt); the helper and the app must be signed with the same identity, so unsigned/CI builds cannot install it — use a locally signed build to test it. While AWDL is off, AirDrop, AirPlay receiver, Sidecar, and Universal Control are paused.
+- **Forked common-c submodule** — the `moonlight-common-c` submodule points at [neer2005/moonlight-common-c](https://github.com/neer2005/moonlight-common-c), which adds the `LiSendRawControlStreamPacket` API the mic sender uses. `git submodule update --init --recursive` pulls it automatically; no extra setup.
+- **Build requirement: Qt Multimedia** — in addition to the requirements below, this fork requires the Qt Multimedia module (for microphone capture). On Debian/Ubuntu, install `qt6-multimedia-dev` alongside the other Qt packages; CI builds already include it.
+- **CI builds** — pushes and pull requests to `master` run the Build workflow, with macOS and Windows artifacts attached to each run.
+
 ## Features
  - Hardware accelerated video decoding on Windows, Mac, and Linux
  - H.264, HEVC, and AV1 codec support (AV1 requires Sunshine and a supported host GPU)
