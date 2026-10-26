@@ -55,7 +55,6 @@
 #define SER_CAPTURESYSKEYS "capturesyskeys"
 #define SER_KEEPAWAKE "keepawake"
 #define SER_DISABLEAWDL "disableawdl"
-#define SER_ENABLEMICROPHONE "enablemicrophone"
 #define SER_LANGUAGE "language"
 #define SER_RENDERER "renderer"
 
@@ -158,7 +157,6 @@ void StreamingPreferences::reload()
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
     disableAwdlWhileStreaming = settings.value(SER_DISABLEAWDL, false).toBool();
-    enableMicrophone = settings.value(SER_ENABLEMICROPHONE, false).toBool();
     enableHdr = settings.value(SER_HDR, false).toBool();
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
@@ -371,7 +369,6 @@ void StreamingPreferences::save()
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
     settings.setValue(SER_DISABLEAWDL, disableAwdlWhileStreaming);
-    settings.setValue(SER_ENABLEMICROPHONE, enableMicrophone);
 }
 
 QString StreamingPreferences::installAwdlHelper()

@@ -5,7 +5,6 @@
 #include "utils/awdlhelper.h"
 #endif
 #include "streaming/streamutils.h"
-#include "streaming/micstream.h"
 #include "backend/richpresencemanager.h"
 
 #include <Limelight.h>
@@ -587,7 +586,6 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_ShouldExit(false),
       m_AsyncConnectionSuccess(false),
       m_AwdlDisabled(false),
-      m_MicStream(nullptr),
       m_PortTestResults(0),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
@@ -1313,13 +1311,6 @@ private:
         // LiStartConnection() and LiStopConnection().
         SDL_assert(m_Session->m_VideoDecoder == nullptr);
 
-        // Stop microphone passthrough before tearing down the connection:
-        // LiSendRawControlStreamPacket() is only valid between
-        // LiStartConnection() and LiStopConnection(). This task runs on
-        // every session exit path, so this is the single funnel that
-        // guarantees the mic stops (mirroring the AWDL re-enable above).
-        m_Session->stopMicrophone();
-
         // Finish cleanup of the connection state
         LiStopConnection();
 
@@ -1782,50 +1773,8 @@ bool Session::startConnectionAsync()
 
     emit connectionStarted();
 
-    // Start microphone passthrough if enabled. Queued so QAudioSource is
-    // created on the session thread's event loop, not inside any nested
-    // processEvents() call during launch (qiin2333's deferred-toggle
-    // rationale: creating QAudioSource inside nested event loops can
-    // corrupt the heap).
-    if (m_Preferences->enableMicrophone) {
-        QMetaObject::invokeMethod(this, [this]() {
-            startMicrophone();
-        }, Qt::QueuedConnection);
-    }
-
     return true;
 }
-
-#ifndef STEAM_LINK
-void Session::startMicrophone()
-{
-    if (!m_MicStream) {
-        m_MicStream = new MicStream(this);
-        if (!m_MicStream->start()) {
-            delete m_MicStream;
-            m_MicStream = nullptr;
-        }
-    }
-}
-
-void Session::stopMicrophone()
-{
-    if (m_MicStream) {
-        m_MicStream->stop();
-        delete m_MicStream;
-        m_MicStream = nullptr;
-    }
-}
-#else
-void Session::startMicrophone()
-{
-    // Microphone not supported on Steam Link
-}
-
-void Session::stopMicrophone()
-{
-}
-#endif
 
 void Session::flushWindowEvents()
 {

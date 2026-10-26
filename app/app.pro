@@ -192,7 +192,6 @@ SOURCES += \
     streaming/input/mouse.cpp \
     streaming/input/reltouch.cpp \
     streaming/session.cpp \
-    streaming/micstream.cpp \
     streaming/audio/audio.cpp \
     streaming/audio/renderers/sdlaud.cpp \
     gui/computermodel.cpp \
@@ -230,8 +229,6 @@ HEADERS += \
     settings/streamingpreferences.h \
     streaming/input/input.h \
     streaming/session.h \
-    streaming/micstream.h \
-    streaming/macpermissions.h \
     streaming/audio/renderers/renderer.h \
     streaming/audio/renderers/sdl.h \
     gui/computermodel.h \
@@ -588,11 +585,6 @@ macx {
     INCLUDEPATH += $$PWD/../helper
     LIBS += -framework ServiceManagement -framework Security
 
-    # macOS microphone permission pre-check (single TCC dialog before
-    # QMediaDevices is touched). Needs AVFoundation.
-    SOURCES += streaming/macpermissions.mm
-    LIBS += -framework AVFoundation
-
     # Bundle the helper tool inside Moonlight.app so SMJobBless can install
     # it. The helper target (helper/ subdir, see moonlight-qt.pro) must
     # build before the app bundle; that ordering is enforced by
@@ -603,11 +595,6 @@ macx {
     AWDL_HELPER.files = $$OUT_PWD/../helper/com.moonlight-stream.Moonlight.AWDLHelper
     AWDL_HELPER.path = Contents/Library/LaunchServices
     QMAKE_BUNDLE_DATA += AWDL_HELPER
-}
-
-!macx {
-    # Stub permission check for non-macOS platforms (always grants).
-    SOURCES += streaming/macpermissions_stub.cpp
 }
 
 VERSION = "$$cat(version.txt)"
