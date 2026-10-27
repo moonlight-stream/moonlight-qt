@@ -53,6 +53,7 @@ jobs:
           tools: ${{ runner.os == 'Windows' && 'tools_qtcreator_gui' || '' }}
           version: ${{ matrix.qt_version }}
           aqtsource: 'git+https://github.com/miurahr/aqtinstall.git@073e34d7c2ab4ae6961ed7cca690b3abd5ba5a7e'
+          modules: 'qtmultimedia'
 
       - name: Install Qt ARM64 (Windows)
         if: runner.os == 'Windows'
@@ -63,6 +64,7 @@ jobs:
           add-tools-to-path: false
           arch: win64_msvc2022_arm64_cross_compiled
           version: ${{ matrix.qt_version }}
+          modules: 'qtmultimedia'
 
       - name: Build x64 binaries (Windows)
         if: runner.os == 'Windows'
