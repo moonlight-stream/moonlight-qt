@@ -19,7 +19,7 @@
 VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
     : IFFmpegRenderer(RendererType::VAAPI),
       m_DecoderSelectionPass(decoderSelectionPass),
-      m_WindowSystem(SDL_SYSWM_UNKNOWN),
+      m_WindowSystem(SDLC_VIDEO_UNKNOWN),
       m_HwContext(nullptr),
       m_BlacklistedForDirectRendering(false),
       m_HasRfiLatencyBug(false),
