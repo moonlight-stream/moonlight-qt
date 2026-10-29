@@ -5,6 +5,7 @@ import QtQuick.Controls.Material 2.2
 import AppModel 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
+import SystemProperties 1.0
 
 CenteredGridView {
     property int computerIndex
@@ -298,6 +299,16 @@ CenteredGridView {
                 NavigableMenuItem {
                     text: model.running ? qsTr("Resume Game") : qsTr("Launch Game")
                     onTriggered: launchOrResumeSelectedApp(true)
+                }
+                NavigableMenuItem {
+                    text: qsTr("Launch in New Window")
+                    onTriggered: appModel.launchAppInNewInstance(model.index)
+                    visible: SystemProperties.hasDesktopEnvironment
+
+                    ToolTip.text: qsTr("Stream this app in a second Moonlight window, so you can stay connected to another host at the same time.")
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
                 }
                 NavigableMenuItem {
                     text: qsTr("Quit Game")
