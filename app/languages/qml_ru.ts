@@ -651,12 +651,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="1223"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation>Вы выбрали аппаратное декодирование, но видеокарта этого ПК не поддерживает аппаратное декодирование для выбранного кодека.</translation>
+        <translation>Невозможно применить принудительное аппаратное декодирование, так как видеокарта этого компьютера не поддерживает аппаратное декодирование.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1226"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation>Вы выбрали аппаратное декодирование, но видеокарта этого ПК не поддерживает аппаратное декодирование для выбранного кодека.</translation>
+        <translation>Выбранный вами кодек и принудительное аппаратное декодирование несовместимы. Видеокарта этого компьютера не поддерживает декодирование выбранного вами кодека.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="2204"/>
