@@ -1263,8 +1263,12 @@ bool D3D11VARenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo)
         DXGI_SWAP_CHAIN_DESC1 swapchainDesc;
         m_SwapChain->GetDesc1(&swapchainDesc);
 
-        // Lock the context to avoid concurrent rendering
-        lockContext(this);
+        // Lock the context to avoid concurrent decoding use. This is
+        // already synchronized with rendering by the render lock, so
+        // we only need to do this when not using separate devices.
+        if (m_DecodeDevice == m_RenderDevice) {
+            lockContext(this);
+        }
 
         m_DisplayWidth = stateInfo->width;
         m_DisplayHeight = stateInfo->height;
@@ -1294,17 +1298,23 @@ bool D3D11VARenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO stateInfo)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "IDXGISwapChain::ResizeBuffers() failed: %x",
                          hr);
-            unlockContext(this);
+            if (m_DecodeDevice == m_RenderDevice) {
+                unlockContext(this);
+            }
             return false;
         }
 
         // Reset swapchain-dependent resources (RTV, viewport, etc)
         if (!setupSwapchainDependentResources()) {
-            unlockContext(this);
+            if (m_DecodeDevice == m_RenderDevice) {
+                unlockContext(this);
+            }
             return false;
         }
 
-        unlockContext(this);
+        if (m_DecodeDevice == m_RenderDevice) {
+            unlockContext(this);
+        }
 
         // We've handled this state change
         stateInfo->stateChangeFlags &= ~WINDOW_STATE_CHANGE_SIZE;

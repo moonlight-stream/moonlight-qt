@@ -155,10 +155,24 @@ public:
         VTMetal,
     };
 
-    IFFmpegRenderer(RendererType type) : m_Type(type) {}
+    IFFmpegRenderer(RendererType type) : m_Type(type), m_RenderLock(SDL_CreateMutex()) {}
+    virtual ~IFFmpegRenderer() {
+        SDL_DestroyMutex(m_RenderLock);
+    }
+
+    // Synchronizes with renderFrame(), setHdrMode(), and notifyWindowChanged()
+    void acquireRenderLock() {
+        SDL_LockMutex(m_RenderLock);
+    }
+    void releaseRenderLock() {
+        SDL_UnlockMutex(m_RenderLock);
+    }
 
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
+
+    // Synchronized via the render lock
+    // NOT synchronized with notifyOverlayUpdated()
     virtual void renderFrame(AVFrame* frame) = 0;
 
     enum class InitFailureReason
@@ -287,6 +301,7 @@ public:
         return getPreferredPixelFormat(videoFormat) == pixelFormat;
     }
 
+    // Synchronized via the render lock
     virtual void setHdrMode(bool) {
         // Nothing
     }
@@ -296,6 +311,7 @@ public:
         return true;
     }
 
+    // Synchronized via the render lock
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) {
         // Assume the renderer cannot handle window state changes
         return false;
@@ -494,6 +510,13 @@ public:
     }
 
     // IOverlayRenderer
+    //
+    // NB: May be called from an arbitrary thread concurrently with renderFrame(),
+    // setHdrMode(), and notifyWindowUpdated(), however it does not race with
+    // prepareToRender(), cleanupRenderContext(), initialize(), etc.
+    //
+    // NB2: This must NOT call acquireRenderLock() due to the possibility of a
+    // deadlock during Pacer shutdown.
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override {
         // Nothing
     }
@@ -537,6 +560,7 @@ protected:
 
 private:
     RendererType m_Type;
+    SDL_mutex* m_RenderLock;
 
     // Properties watched by hasFrameFormatChanged()
     int m_LastFrameWidth = 0;

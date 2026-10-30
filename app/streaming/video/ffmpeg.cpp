@@ -77,12 +77,20 @@ bool FFmpegVideoDecoder::isHdrSupported()
 
 void FFmpegVideoDecoder::setHdrMode(bool enabled)
 {
+    m_FrontendRenderer->acquireRenderLock();
     m_FrontendRenderer->setHdrMode(enabled);
+    m_FrontendRenderer->releaseRenderLock();
 }
 
 bool FFmpegVideoDecoder::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 {
-    return m_FrontendRenderer->notifyWindowChanged(info);
+    bool ret;
+
+    m_FrontendRenderer->acquireRenderLock();
+    ret = m_FrontendRenderer->notifyWindowChanged(info);
+    m_FrontendRenderer->releaseRenderLock();
+
+    return ret;
 }
 
 int FFmpegVideoDecoder::getDecoderCapabilities()

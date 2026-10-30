@@ -357,7 +357,9 @@ void Pacer::renderFrame(AVFrame* frame)
     m_VideoStats->totalPacerTimeUs += (beforeRender - (uint64_t)frame->pkt_dts);
 
     // Render it
+    m_VsyncRenderer->acquireRenderLock();
     m_VsyncRenderer->renderFrame(frame);
+    m_VsyncRenderer->releaseRenderLock();
     uint64_t afterRender = LiGetMicroseconds();
 
     m_VideoStats->totalRenderTimeUs += (afterRender - beforeRender);
