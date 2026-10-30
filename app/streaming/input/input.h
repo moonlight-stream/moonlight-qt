@@ -203,12 +203,16 @@ private:
     static
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
+    short scaleScrollDelta(float precise, float& remainder);
+
     SDL_Window* m_Window;
     bool m_MultiController;
     bool m_GamepadMouse;
     bool m_SwapMouseButtons;
     bool m_ReverseScrollDirection;
     bool m_SwapFaceButtons;
+    float m_ScrollScale; // 1 unless scroll scaling is enabled
+    float m_ScrollRemainder[2]; // wheel units not yet sent, Y and X
 
     bool m_NeedsManualCaptureOnLeave;
     bool m_MouseWasInVideoRegion;

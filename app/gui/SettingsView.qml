@@ -1462,6 +1462,52 @@ Flickable {
                         StreamingPreferences.reverseScrollDirection = checked
                     }
                 }
+
+                CheckBox {
+                    id: scaleScrollCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Scale down scrolling speed")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.scaleScroll
+                    onCheckedChanged: {
+                        StreamingPreferences.scaleScroll = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Multiplies every scroll event sent to the host by the speed below. Use it when trackpad scrolling travels too far on the host.")
+                }
+
+                Row {
+                    width: parent.width
+                    spacing: 5
+                    visible: scaleScrollCheck.checked
+
+                    Slider {
+                        id: scrollScaleSlider
+
+                        value: StreamingPreferences.scrollScale
+
+                        stepSize: 1
+                        from: 0
+                        to: 100
+
+                        width: Math.min(400, parent.width - scrollScaleLabel.width - parent.spacing)
+
+                        onValueChanged: {
+                            StreamingPreferences.scrollScale = Math.round(value)
+                        }
+                    }
+
+                    Label {
+                        id: scrollScaleLabel
+                        anchors.verticalCenter: scrollScaleSlider.verticalCenter
+                        text: qsTr("%1%").arg(Math.round(scrollScaleSlider.value))
+                        font.pointSize: 12
+                    }
+                }
             }
         }
 

@@ -179,6 +179,26 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
     }
 }
 
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+// Converts a precise scroll delta to wheel units, scaled by the scroll speed
+// setting. Fractions of a unit carry over to the next event, so slow scrolls
+// at a low speed still add up instead of being rounded away.
+short SdlInputHandler::scaleScrollDelta(float precise, float& remainder)
+{
+    float units = precise * 120 * m_ScrollScale; // WHEEL_DELTA
+
+    if (remainder * units < 0) {
+        // Direction reversed, so drop what was left over
+        remainder = 0;
+    }
+
+    units = SDL_clamp(units + remainder, (float)SHRT_MIN, (float)SHRT_MAX);
+    short delta = (short)units;
+    remainder = units - delta;
+    return delta;
+}
+#endif
+
 void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
 {
     if (!isCaptureActive()) {
@@ -213,7 +233,10 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         event->preciseY = SDL_clamp(event->preciseY, -(float)SHRT_MAX / 120, (float)SHRT_MAX / 120);
 #endif
 
-        LiSendHighResScrollEvent((short)(event->preciseY * 120)); // WHEEL_DELTA
+        short delta = scaleScrollDelta(event->preciseY, m_ScrollRemainder[0]);
+        if (delta != 0) {
+            LiSendHighResScrollEvent(delta);
+        }
     }
 
     if (event->preciseX != 0.0f) {
@@ -229,7 +252,10 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         event->preciseX = SDL_clamp(event->preciseX, -(float)SHRT_MAX / 120, (float)SHRT_MAX / 120);
 #endif
 
-        LiSendHighResHScrollEvent((short)(event->preciseX * 120)); // WHEEL_DELTA
+        short delta = scaleScrollDelta(event->preciseX, m_ScrollRemainder[1]);
+        if (delta != 0) {
+            LiSendHighResHScrollEvent(delta);
+        }
     }
 #else
     if (event->y != 0) {
