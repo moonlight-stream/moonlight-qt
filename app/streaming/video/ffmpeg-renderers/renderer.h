@@ -6,6 +6,7 @@
 
 #include "streaming/video/decoder.h"
 #include "streaming/video/overlaymanager.h"
+#include "streaming/streamutils.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -136,6 +137,21 @@ private:
 #define RENDERER_ATTRIBUTE_HDR_SUPPORT 0x04
 #define RENDERER_ATTRIBUTE_NO_BUFFERING 0x08
 #define RENDERER_ATTRIBUTE_FORCE_PACING 0x10
+
+static inline bool shouldUseNearestNeighborScaling(StreamingPreferences::VideoScalingMode mode,
+                                                   const SDL_Rect* src,
+                                                   const SDL_Rect* dst)
+{
+    switch (mode) {
+    case StreamingPreferences::VSM_NEAREST:
+        return true;
+    case StreamingPreferences::VSM_AUTO:
+        return StreamUtils::isIntegerScale(src, dst);
+    case StreamingPreferences::VSM_LINEAR:
+    default:
+        return false;
+    }
+}
 
 class IFFmpegRenderer : public Overlay::IOverlayRenderer {
 public:
