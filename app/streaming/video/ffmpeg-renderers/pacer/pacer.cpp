@@ -1,5 +1,6 @@
 #include "pacer.h"
 #include "streaming/streamutils.h"
+#include "streaming/session.h"
 
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -64,6 +65,9 @@ Pacer::~Pacer()
         SDL_WaitThread(m_RenderThread, nullptr);
     }
     else {
+        // Stop any further overlay callbacks
+        Session::get()->getOverlayManager().setOverlayRenderer(nullptr);
+
         // Notify the renderer that it is being destroyed soon
         // NB: This must happen on the same thread that calls renderFrame().
         m_VsyncRenderer->cleanupRenderContext();
@@ -176,6 +180,9 @@ int Pacer::renderThread(void* context)
 
         me->renderFrame(frame);
     }
+
+    // Stop any further overlay callbacks
+    Session::get()->getOverlayManager().setOverlayRenderer(nullptr);
 
     // Notify the renderer that it is being destroyed soon
     // NB: This must happen on the same thread that calls renderFrame().
@@ -324,6 +331,12 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
     if (m_VsyncSource != nullptr) {
         m_VsyncThread = SDL_CreateThread(Pacer::vsyncThread, "PacerVsync", this);
     }
+
+    // Allow the renderer to perform final preparations for rendering
+    m_VsyncRenderer->prepareToRender();
+
+    // Tell overlay manager to use this frontend renderer
+    Session::get()->getOverlayManager().setOverlayRenderer(m_VsyncRenderer);
 
     if (m_VsyncRenderer->isRenderThreadSupported()) {
         m_RenderThread = SDL_CreateThread(Pacer::renderThread, "PacerRender", this);

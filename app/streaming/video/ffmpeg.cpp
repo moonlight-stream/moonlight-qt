@@ -288,10 +288,6 @@ void FFmpegVideoDecoder::reset()
     // need to delete in the renderer destructor.
     avcodec_free_context(&m_VideoDecoderCtx);
 
-    if (m_CurrentTestMode != TestMode::TestFrameOnly) {
-        Session::get()->getOverlayManager().setOverlayRenderer(nullptr);
-    }
-
     // If we have a separate frontend renderer, free that first
     if (m_FrontendRenderer != m_BackendRenderer) {
         delete m_FrontendRenderer;
@@ -493,15 +489,6 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     m_StreamFps = params->frameRate;
     m_VideoFormat = params->videoFormat;
     m_CurrentTestMode = testMode;
-
-    // Don't bother initializing Pacer if we're not actually going to render
-    if (testMode != TestMode::TestFrameOnly) {
-        m_Pacer = new Pacer(m_FrontendRenderer, &m_ActiveWndVideoStats);
-        if (!m_Pacer->initialize(params->window, params->frameRate,
-                                 params->enableFramePacing || (params->enableVsync && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FORCE_PACING)))) {
-            return false;
-        }
-    }
 
     m_VideoDecoderCtx = avcodec_alloc_context3(decoder);
     if (!m_VideoDecoderCtx) {
@@ -723,11 +710,11 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
             m_NeedsSpsFixup = false;
         }
 
-        // Tell overlay manager to use this frontend renderer
-        Session::get()->getOverlayManager().setOverlayRenderer(m_FrontendRenderer);
-
-        // Allow the renderer to perform final preparations for rendering
-        m_FrontendRenderer->prepareToRender();
+        m_Pacer = new Pacer(m_FrontendRenderer, &m_ActiveWndVideoStats);
+        if (!m_Pacer->initialize(params->window, params->frameRate,
+                                 params->enableFramePacing || (params->enableVsync && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FORCE_PACING)))) {
+            return false;
+        }
 
         // Only create the decoder thread when instantiating the decoder for real. It will use APIs from
         // moonlight-common-c that can only be legally called with an established connection.
