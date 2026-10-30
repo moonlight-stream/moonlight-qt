@@ -1,6 +1,7 @@
 #include "input.h"
 
 #include <Limelight.h>
+#include <climits>
 #include "SDL_compat.h"
 #include "streaming/streamutils.h"
 
@@ -206,9 +207,10 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         }
 
 #ifdef Q_OS_DARWIN
-        // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
-        // from generating wild scroll deltas when scrolling quickly.
-        event->preciseY = SDL_clamp(event->preciseY, -1.0f, 1.0f);
+        // Upstream clamps macOS deltas to one notch to tame OS scroll acceleration,
+        // which caps fast trackpad swipes at the same speed. Only keep them within
+        // what the 16-bit high-res scroll event can carry.
+        event->preciseY = SDL_clamp(event->preciseY, -(float)SHRT_MAX / 120, (float)SHRT_MAX / 120);
 #endif
 
         LiSendHighResScrollEvent((short)(event->preciseY * 120)); // WHEEL_DELTA
@@ -221,9 +223,10 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         }
 
 #ifdef Q_OS_DARWIN
-        // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
-        // from generating wild scroll deltas when scrolling quickly.
-        event->preciseX = SDL_clamp(event->preciseX, -1.0f, 1.0f);
+        // Upstream clamps macOS deltas to one notch to tame OS scroll acceleration,
+        // which caps fast trackpad swipes at the same speed. Only keep them within
+        // what the 16-bit high-res scroll event can carry.
+        event->preciseX = SDL_clamp(event->preciseX, -(float)SHRT_MAX / 120, (float)SHRT_MAX / 120);
 #endif
 
         LiSendHighResHScrollEvent((short)(event->preciseX * 120)); // WHEEL_DELTA
