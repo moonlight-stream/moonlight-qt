@@ -47,6 +47,12 @@ private:
 SystemProperties::SystemProperties()
 {
     versionString = QString(VERSION_STR);
+    QString gitHash(GIT_HASH_STR);
+    QString buildDate(BUILD_DATE_STR);
+    if (gitHash != "unknown" || buildDate != "unknown") {
+        buildInfoString = QString("%1, %2").arg(gitHash, buildDate);
+    }
+    
     hasDesktopEnvironment = WMUtils::isRunningDesktopEnvironment();
     isRunningWayland = WMUtils::isRunningWayland();
     isRunningXWayland = isRunningWayland && QGuiApplication::platformName() == "xcb";
