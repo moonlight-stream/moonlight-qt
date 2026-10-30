@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QReadWriteLock>
 
 #include "SDL_compat.h"
 #include <SDL_ttf.h>
@@ -54,6 +55,7 @@ private:
     } m_Overlays[OverlayMax];
     IOverlayRenderer* m_Renderer;
     QByteArray m_FontData;
+    QReadWriteLock m_OverlayRendererLock;
 };
 
 }

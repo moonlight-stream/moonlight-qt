@@ -113,11 +113,14 @@ SDL_Color OverlayManager::getOverlayColor(OverlayType type)
 
 void OverlayManager::setOverlayRenderer(IOverlayRenderer* renderer)
 {
+    QWriteLocker lock(&m_OverlayRendererLock);
     m_Renderer = renderer;
 }
 
 void OverlayManager::notifyOverlayUpdated(OverlayType type)
 {
+    QReadLocker lock(&m_OverlayRendererLock);
+
     if (m_Renderer == nullptr) {
         return;
     }
