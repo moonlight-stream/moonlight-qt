@@ -5,13 +5,6 @@
 
 #include <Limelight.h>
 
-// HACK: Avoid including X11 headers which conflict with QDir
-#ifdef SDL_VIDEO_DRIVER_X11
-#undef SDL_VIDEO_DRIVER_X11
-#endif
-
-#include <SDL_syswm.h>
-
 #include <QDir>
 #include <QTextStream>
 
@@ -64,7 +57,7 @@ void MmalRenderer::prepareToRender()
 {
     // Create a renderer and draw a black background for the area not covered by the MMAL overlay.
     // On the KMSDRM backend, this triggers the modeset that puts the CRTC into the mode we selected.
-    m_BackgroundRenderer = SDL_CreateRenderer(m_Window, -1, SDL_RENDERER_SOFTWARE);
+    m_BackgroundRenderer = SDL_CreateRenderer(m_Window, SDLC_DEFAULT_RENDER_DRIVER, SDL_RENDERER_SOFTWARE);
     if (m_BackgroundRenderer == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
@@ -77,8 +70,17 @@ void MmalRenderer::prepareToRender()
     // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
     // renderer. This can lead to an infinite to renderer recreation, so discard all
     // SDL_WINDOWEVENT events after SDL_CreateRenderer().
-    SDL_assert(Session::get());
-    Session::get()->flushWindowEvents();
+    Session* session = Session::get();
+    if (session != nullptr) {
+        // If we get here during a session, we need to synchronize with the event loop
+        // to ensure we don't drop any important events.
+        session->flushWindowEvents();
+    }
+    else {
+        // If we get here prior to the start of a session, just pump and flush ourselves.
+        SDL_PumpEvents();
+        SDLC_FlushWindowEvents();
+    }
 
     SDL_SetRenderDrawColor(m_BackgroundRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
     SDL_RenderClear(m_BackgroundRenderer);
