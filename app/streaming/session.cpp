@@ -600,6 +600,8 @@ bool Session::initialize(QQuickWindow* qtWindow)
 {
     m_QtWindow = qtWindow;
 
+    StreamUtils::setVideoAlignment(m_Preferences->videoAlignment);
+
 #ifdef Q_OS_DARWIN
     if (qEnvironmentVariableIntValue("I_WANT_BUGGY_FULLSCREEN") == 0) {
         // If we have a notch and the user specified one of the two native display modes
