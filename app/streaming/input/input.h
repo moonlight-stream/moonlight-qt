@@ -98,6 +98,9 @@ public:
 
     void handleMouseWheelEvent(SDL_MouseWheelEvent* event);
 
+    // Called from the macOS event monitor for trackpad pinch gestures
+    void handlePinchGesture(float magnification, bool began, bool ended);
+
     void handleControllerAxisEvent(SDL_ControllerAxisEvent* event);
 
     void handleControllerButtonEvent(SDL_ControllerButtonEvent* event);
@@ -205,6 +208,13 @@ private:
 
     short scaleScrollDelta(float precise, float& remainder);
 
+    void endPinchGesture();
+
+#ifdef Q_OS_DARWIN
+    void installMacEventMonitor(bool dropScrollMomentum, bool pinchToZoom);
+    void removeMacEventMonitor();
+#endif
+
     SDL_Window* m_Window;
     bool m_MultiController;
     bool m_GamepadMouse;
@@ -213,6 +223,11 @@ private:
     bool m_SwapFaceButtons;
     float m_ScrollScale; // 1 unless scroll scaling is enabled
     float m_ScrollRemainder[2]; // wheel units not yet sent, Y and X
+    bool m_CoalesceScroll;
+    bool m_PinchActive;
+    bool m_PinchCtrlInjected; // we sent a Ctrl down for the current pinch
+    float m_PinchRemainder;
+    void* m_MacEventMonitor; // macOS NSEvent monitor token, if installed
 
     bool m_NeedsManualCaptureOnLeave;
     bool m_MouseWasInVideoRegion;

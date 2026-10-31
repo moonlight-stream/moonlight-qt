@@ -155,6 +155,9 @@ public:
     Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
     Q_PROPERTY(bool scaleScroll MEMBER scaleScroll NOTIFY scaleScrollChanged)
     Q_PROPERTY(int scrollScale MEMBER scrollScale NOTIFY scrollScaleChanged)
+    Q_PROPERTY(bool coalesceScroll MEMBER coalesceScroll NOTIFY coalesceScrollChanged)
+    Q_PROPERTY(bool dropScrollMomentum MEMBER dropScrollMomentum NOTIFY dropScrollMomentumChanged)
+    Q_PROPERTY(bool pinchToZoom MEMBER pinchToZoom NOTIFY pinchToZoomChanged)
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
@@ -190,6 +193,9 @@ public:
     bool reverseScrollDirection;
     bool scaleScroll;
     int scrollScale; // percent, used when scaleScroll is set
+    bool coalesceScroll;
+    bool dropScrollMomentum; // macOS only
+    bool pinchToZoom; // macOS only
     bool swapFaceButtons;
     bool keepAwake;
     int packetSize;
@@ -239,6 +245,9 @@ signals:
     void reverseScrollDirectionChanged();
     void scaleScrollChanged();
     void scrollScaleChanged();
+    void coalesceScrollChanged();
+    void dropScrollMomentumChanged();
+    void pinchToZoomChanged();
     void swapFaceButtonsChanged();
     void captureSysKeysModeChanged();
     void keepAwakeChanged();

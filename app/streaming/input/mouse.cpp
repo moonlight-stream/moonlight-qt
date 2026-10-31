@@ -220,39 +220,54 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
     }
 
 #if SDL_VERSION_ATLEAST(2, 0, 18)
-    if (event->preciseY != 0.0f) {
+    float preciseX = event->preciseX, preciseY = event->preciseY;
+
+    if (m_CoalesceScroll) {
+        // Fold all pending wheel events into this one, like we do for motion
+        SDL_Event nextEvent;
+        while (SDL_PeepEvents(&nextEvent, 1, SDL_GETEVENT, SDL_MOUSEWHEEL, SDL_MOUSEWHEEL) > 0) {
+            // Ignore synthetic mouse events
+            if (nextEvent.wheel.which != SDL_TOUCH_MOUSEID) {
+                preciseX += nextEvent.wheel.preciseX;
+                preciseY += nextEvent.wheel.preciseY;
+            }
+        }
+
+        // We should not reference the original event anymore
+        event = nullptr;
+    }
+
+    if (preciseY != 0.0f) {
         // Invert the scroll direction if needed
         if (m_ReverseScrollDirection) {
-            event->preciseY = -event->preciseY;
+            preciseY = -preciseY;
         }
 
 #ifdef Q_OS_DARWIN
         // Upstream clamps macOS deltas to one notch to tame OS scroll acceleration,
         // which caps fast trackpad swipes at the same speed. Only keep them within
         // what the 16-bit high-res scroll event can carry.
-        event->preciseY = SDL_clamp(event->preciseY, -(float)SHRT_MAX / 120, (float)SHRT_MAX / 120);
+        preciseY = SDL_clamp(preciseY, -(float)SHRT_MAX / 120, (float)SHRT_MAX / 120);
 #endif
 
-        short delta = scaleScrollDelta(event->preciseY, m_ScrollRemainder[0]);
+        short delta = scaleScrollDelta(preciseY, m_ScrollRemainder[0]);
         if (delta != 0) {
             LiSendHighResScrollEvent(delta);
         }
     }
 
-    if (event->preciseX != 0.0f) {
+    if (preciseX != 0.0f) {
         // Invert the scroll direction if needed
         if (m_ReverseScrollDirection) {
-            event->preciseX = -event->preciseX;
+            preciseX = -preciseX;
         }
 
 #ifdef Q_OS_DARWIN
-        // Upstream clamps macOS deltas to one notch to tame OS scroll acceleration,
-        // which caps fast trackpad swipes at the same speed. Only keep them within
-        // what the 16-bit high-res scroll event can carry.
-        event->preciseX = SDL_clamp(event->preciseX, -(float)SHRT_MAX / 120, (float)SHRT_MAX / 120);
+        // See comment above
+        preciseX = SDL_clamp(preciseX, -(float)SHRT_MAX / 120, (float)SHRT_MAX / 120);
 #endif
 
-        short delta = scaleScrollDelta(event->preciseX, m_ScrollRemainder[1]);
+        short delta = scaleScrollDelta(preciseX, m_ScrollRemainder[1]);
         if (delta != 0) {
             LiSendHighResHScrollEvent(delta);
         }
@@ -286,6 +301,61 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         LiSendHScrollEvent((signed char)event->x);
     }
 #endif
+}
+
+void SdlInputHandler::handlePinchGesture(float magnification, bool began, bool ended)
+{
+    if (began) {
+        // Only start a zoom when the host would get our mouse input
+        endPinchGesture();
+        if (!isCaptureActive()) {
+            return;
+        }
+        if (m_AbsoluteMouseMode) {
+            int mouseX, mouseY;
+            SDL_GetMouseState(&mouseX, &mouseY);
+            if (!isMouseInVideoRegion(mouseX, mouseY)) {
+                return;
+            }
+        }
+
+        // Windows apps zoom on Ctrl + wheel. Leave Ctrl alone if the user is already holding it.
+        m_PinchCtrlInjected = !(SDL_GetModState() & KMOD_CTRL);
+        if (m_PinchCtrlInjected) {
+            LiSendKeyboardEvent(0x8000 | 0xA2, KEY_ACTION_DOWN, MODIFIER_CTRL); // VK_LCONTROL
+        }
+        m_PinchActive = true;
+        m_PinchRemainder = 0;
+    }
+
+    if (!m_PinchActive) {
+        return;
+    }
+
+    if (magnification != 0.0f) {
+        // A full pinch out is roughly +1.0 magnification, so make that about 5 wheel notches.
+        // Zoom ignores the scroll direction and speed settings, since those are about scrolling.
+        float units = magnification * 5 * 120 + m_PinchRemainder; // WHEEL_DELTA
+        units = SDL_clamp(units, (float)SHRT_MIN, (float)SHRT_MAX);
+        short delta = (short)units;
+        m_PinchRemainder = units - delta;
+        if (delta != 0) {
+            LiSendHighResScrollEvent(delta);
+        }
+    }
+
+    if (ended) {
+        endPinchGesture();
+    }
+}
+
+void SdlInputHandler::endPinchGesture()
+{
+    if (m_PinchCtrlInjected) {
+        LiSendKeyboardEvent(0x8000 | 0xA2, KEY_ACTION_UP, 0); // VK_LCONTROL
+        m_PinchCtrlInjected = false;
+    }
+    m_PinchActive = false;
 }
 
 bool SdlInputHandler::isMouseInVideoRegion(int mouseX, int mouseY, int windowWidth, int windowHeight)

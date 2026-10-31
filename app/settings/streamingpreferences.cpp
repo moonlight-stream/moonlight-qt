@@ -49,6 +49,9 @@
 #define SER_REVERSESCROLL "reversescroll"
 #define SER_SCALESCROLL "scalescroll"
 #define SER_SCROLLSCALE "scrollscale"
+#define SER_COALESCESCROLL "coalescescroll"
+#define SER_DROPSCROLLMOMENTUM "dropscrollmomentum"
+#define SER_PINCHTOZOOM "pinchtozoom"
 #define SER_SWAPFACEBUTTONS "swapfacebuttons"
 #define SER_CAPTURESYSKEYS "capturesyskeys"
 #define SER_KEEPAWAKE "keepawake"
@@ -153,6 +156,9 @@ void StreamingPreferences::reload()
     reverseScrollDirection = settings.value(SER_REVERSESCROLL, false).toBool();
     scaleScroll = settings.value(SER_SCALESCROLL, false).toBool();
     scrollScale = qBound(0, settings.value(SER_SCROLLSCALE, 20).toInt(), 100);
+    coalesceScroll = settings.value(SER_COALESCESCROLL, false).toBool();
+    dropScrollMomentum = settings.value(SER_DROPSCROLLMOMENTUM, false).toBool();
+    pinchToZoom = settings.value(SER_PINCHTOZOOM, false).toBool();
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
     enableHdr = settings.value(SER_HDR, false).toBool();
@@ -365,6 +371,9 @@ void StreamingPreferences::save()
     settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
     settings.setValue(SER_SCALESCROLL, scaleScroll);
     settings.setValue(SER_SCROLLSCALE, scrollScale);
+    settings.setValue(SER_COALESCESCROLL, coalesceScroll);
+    settings.setValue(SER_DROPSCROLLMOMENTUM, dropScrollMomentum);
+    settings.setValue(SER_PINCHTOZOOM, pinchToZoom);
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
