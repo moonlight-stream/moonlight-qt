@@ -1,11 +1,13 @@
 #include "plvk.h"
 
 #include "streaming/session.h"
+#include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
 
 // Implementation in plvk_c.c
 #define PL_LIBAV_IMPLEMENTATION 0
 #include <libplacebo/utils/libav.h>
+#include <libplacebo/filters.h>
 
 #include <SDL_vulkan.h>
 
@@ -422,6 +424,28 @@ bool PlVkRenderer::isExtensionSupportedByPhysicalDevice(VkPhysicalDevice device,
                      "Missing required Vulkan function: " #name); \
         return false; \
     }
+
+// Maps the user's scaling filter preference onto a libplacebo filter config.
+// Everything starts from pl_render_fast_params so SA_BILINEAR reproduces the
+// upstream behaviour exactly; only the upscaler is overridden, which also covers
+// the subsampled chroma planes because plane_upscaler stays NULL.
+static const pl_render_params *scalerParams(pl_render_params &scratch)
+{
+    scratch = pl_render_fast_params;
+
+    switch (StreamingPreferences::get()->scalerAlgorithm) {
+    case StreamingPreferences::SA_BICUBIC:
+        scratch.upscaler = &pl_filter_catmull_rom;
+        break;
+    case StreamingPreferences::SA_LANCZOS3:
+        scratch.upscaler = &pl_filter_lanczos;
+        break;
+    default:
+        break;
+    }
+
+    return &scratch;
+}
 
 bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 {
@@ -948,7 +972,7 @@ void PlVkRenderer::waitToRender()
         targetFrame.overlays = &m_EmptyOverlay;
 
         beginRenderTiming();
-        if (!pl_render_image(m_Renderer, nullptr, &targetFrame, &pl_render_fast_params)) {
+        if (!pl_render_image(m_Renderer, nullptr, &targetFrame, scalerParams(m_RenderParams))) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "pl_render_image() failed during render wait");
         }
@@ -1088,7 +1112,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     // Render the video image and overlays into the swapchain buffer
     targetFrame.num_overlays = (int)overlays.size();
     targetFrame.overlays = overlays.data();
-    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &pl_render_fast_params)) {
+    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, scalerParams(m_RenderParams))) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_render_image() failed");
         // NB: We must fallthrough to call pl_swapchain_submit_frame()
