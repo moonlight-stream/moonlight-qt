@@ -1,5 +1,5 @@
 ---
-name: Build - Windows and macOS
+name: Build - macOS Intel
 permissions:
   contents: read
 
@@ -14,14 +14,12 @@ jobs:
   build:
     env:
       CI_VERSION: ${{ inputs.ci_version }}
+      MAC_ARCHS: x86_64
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Windows
-          - os: windows-2025
-            qt_version: 6.12.0
-          # macOS
+          # macOS, cross-compiled for Intel (x86_64) only
           - os: macos-26
             qt_version: 6.11.2
 
@@ -111,7 +109,7 @@ jobs:
         uses: actions/upload-artifact@v6
         if: runner.os == 'macOS'
         with:
-          name: Moonlight-${{ runner.os }}-${{ env.CI_VERSION }}
+          name: Moonlight-${{ runner.os }}-x64-${{ env.CI_VERSION }}
           path: build/installer-Release/*.dmg
           compression-level: 0
           if-no-files-found: error
