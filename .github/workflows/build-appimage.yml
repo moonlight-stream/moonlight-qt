@@ -9,11 +9,21 @@ on:
       ci_version:
         required: true
         type: string
+      ci_build_version:
+        required: true
+        type: string
+      ci_build_date:
+        required: true
+        type: string
+
 
 jobs:
   build:
     env:
       CI_VERSION: ${{ inputs.ci_version }}
+      GIT_HASH: ${{ inputs.ci_version }}
+      CI_BUILD_VERSION: ${{ inputs.ci_build_version }}
+      CI_BUILD_DATE: ${{ inputs.ci_build_date }}
     runs-on: ubuntu-22.04
 
     steps:

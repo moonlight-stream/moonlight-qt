@@ -580,3 +580,79 @@ macx {
 
 VERSION = "$$cat(version.txt)"
 DEFINES += VERSION_STR=\\\"$$cat(version.txt)\\\"
+
+GIT_HASH = $$(GIT_HASH)
+win32 {
+    isEmpty(GIT_HASH) {
+        GIT_HASH = $$system(git rev-parse --short=6 HEAD 2> NULL)
+    }
+}
+else{
+    isEmpty(GIT_HASH) {
+        GIT_HASH = $$system(git rev-parse --short=6 HEAD 2> /dev/null)
+    }
+}
+isEmpty(GIT_HASH) {
+    GIT_HASH = unknown
+}
+
+win32{
+    NULLDEV = NUL
+}
+else{
+    NULLDEV = /dev/null
+}
+
+GIT_COMMIT_SHORT = $$system(git log -1 --format=%h 2> $$NULLDEV)
+GIT_COMMIT_LONG = $$system(git log -1 --format=%H 2> $$NULLDEV)
+
+GIT_COMMIT_COUNT = $$system(git rev-list --count HEAD 2> $$NULLDEV)
+
+GIT_DESCRIBE = $$system(git describe --tags --dirty --always 2> $$NULLDEV)
+
+isEmpty(GIT_COMMIT_SHORT) {
+    GIT_COMMIT_SHORT = unknown
+}
+isEmpty(GIT_COMMIT_LONG) {
+    GIT_COMMIT_LONG = unknown
+}
+isEmpty(GIT_COMMIT_COUNT) {
+    GIT_COMMIT_COUNT = unknown
+}
+isEmpty(GIT_DESCRIBE) {
+    GIT_DESCRIBE = unknown
+}
+
+BUILD_DATE = $$(BUILD_DATE)
+win32{
+    isEmpty(BUILD_DATE) {
+        BUILD_DATE = $$system(git log -1 --format=%cd --date=format:%Y-%m-%d 2> NULL)
+    }
+}
+else{
+    isEmpty(BUILD_DATE) {
+        BUILD_DATE = $$system(git log -1 --format=%cd --date=format:%Y-%m-%d 2> /dev/null)
+    }
+}
+isEmpty(BUILD_DATE) {
+    BUILD_DATE = unknown
+}
+
+DEFINES += GIT_HASHSTRING=\\\"$$GIT_HASH\\\"
+DEFINES += BUILD_DATESTRING=\\\"$$BUILD_DATE\\\"
+DEFINES += GIT_COMMIT_SHORTSTRING=\\\"$$GIT_COMMIT_SHORT\\\"
+DEFINES += GIT_COMMIT_LONGSTRING=\\\"$$GIT_COMMIT_LONG\\\"
+DEFINES += GIT_COMMIT_COUNTSTRING=\\\"$$GIT_COMMIT_COUNT\\\"
+DEFINES += GIT_DESCRIBESTRING=\\\"$$GIT_DESCRIBE\\\"
+
+!isEmpty(GIT_HASH) {
+    !equals(GIT_HASH, unknown)
+    win32{
+        !system(git diff-index --quiet HEAD -- 2> NULL) {
+            GIT_HASH = $${GIT_HASH}-dirty
+        }
+    }
+    else{
+        !system(git diff-index --quiet HEAD -- 2> /dev/null): GIT_HASH = $${GIT_HASH}-dirty
+    }
+}
