@@ -83,7 +83,7 @@ private:
     UINT64 m_D2RFenceValue;
     Microsoft::WRL::ComPtr<ID3D11Fence> m_DecodeR2DFence, m_RenderR2DFence;
     UINT64 m_R2DFenceValue;
-    SDL_mutex* m_ContextLock;
+    SDL_Mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;
 
     DECODER_PARAMETERS m_DecoderParams;

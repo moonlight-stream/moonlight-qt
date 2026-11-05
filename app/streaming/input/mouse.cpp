@@ -17,8 +17,8 @@ void SdlInputHandler::notifyMouseLeave()
             // NB: Not using SDL_GetGlobalMouseState() because we want our state not the system's
             Uint32 mouseState = SDL_GetMouseState(nullptr, nullptr);
             for (Uint32 button = SDL_BUTTON_LEFT; button <= SDL_BUTTON_X2; button++) {
-                if (mouseState & SDL_BUTTON(button)) {
-                    SDL_CaptureMouse(SDL_TRUE);
+                if (mouseState & SDL_BUTTON_MASK(button)) {
+                    SDL_CaptureMouse(true);
                     break;
                 }
             }
@@ -35,7 +35,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
         return;
     }
     else if (!isCaptureActive()) {
-        if (event->button == SDL_BUTTON_LEFT && event->state == SDL_RELEASED &&
+        if (event->button == SDL_BUTTON_LEFT && !event->down &&
                 isMouseInVideoRegion(event->x, event->y)) {
             // Capture the mouse again if clicked when unbound.
             // We start capture on left button released instead of
@@ -48,7 +48,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
         // Not capturing
         return;
     }
-    else if (m_AbsoluteMouseMode && !isMouseInVideoRegion(event->x, event->y) && event->state == SDL_PRESSED) {
+    else if (m_AbsoluteMouseMode && !isMouseInVideoRegion(event->x, event->y) && event->down) {
         // Ignore button presses outside the video region, but allow button releases
         return;
     }
@@ -84,7 +84,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
             button = BUTTON_RIGHT;
     }
 
-    LiSendMouseButtonEvent(event->state == SDL_PRESSED ?
+    LiSendMouseButtonEvent(event->down ?
                                BUTTON_ACTION_PRESS :
                                BUTTON_ACTION_RELEASE,
                            button);
@@ -103,12 +103,21 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 
     // Batch all pending mouse motion events to save CPU time
     Sint32 x = event->x, y = event->y, xrel = event->xrel, yrel = event->yrel;
+    const SDL_MouseID firstMouse = event->which;
+    SDL_MouseID lastMouse = firstMouse;
+    Uint64 lastTimestamp = event->timestamp;
+    int motionCount = 1;
+    bool mixedMice = false;
     SDL_Event nextEvent;
-    while (SDL_PeepEvents(&nextEvent, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0) {
+    while (SDL_PeepEvents(&nextEvent, 1, SDL_GETEVENT, SDL_EVENT_MOUSE_MOTION, SDL_EVENT_MOUSE_MOTION) > 0) {
         event = &nextEvent.motion;
 
         // Ignore synthetic mouse events
         if (event->which != SDL_TOUCH_MOUSEID) {
+            mixedMice |= event->which != firstMouse;
+            lastMouse = event->which;
+            lastTimestamp = event->timestamp;
+            ++motionCount;
             x = event->x;
             y = event->y;
             xrel += event->xrel;
@@ -118,6 +127,21 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 
     // We should not reference the original event anymore
     event = nullptr;
+
+    // Trace the client mouse path independently from forwarded gamepad touches.
+    // Device names may be unavailable when Windows device hotplug detection is disabled.
+    static Uint64 lastMouseDebugTime = 0;
+    if (SDL_GetLogPriority(SDL_LOG_CATEGORY_INPUT) <= SDL_LOG_PRIORITY_DEBUG &&
+            (lastTimestamp >= lastMouseDebugTime + SDL_MS_TO_NS(200) ||
+             xrel >= 80 || xrel <= -80 || yrel >= 80 || yrel <= -80)) {
+        const char* name = SDL_GetMouseNameForID(firstMouse);
+        SDL_LogDebug(SDL_LOG_CATEGORY_INPUT,
+                     "Moonlight mouse motion: ms=%llu first=%u (%s) last=%u mixed=%d count=%d dx=%d dy=%d absolute=%d",
+                     (unsigned long long)SDL_NS_TO_MS(lastTimestamp), firstMouse,
+                     name ? name : "unknown", lastMouse, mixedMice, motionCount,
+                     xrel, yrel, m_AbsoluteMouseMode);
+        lastMouseDebugTime = lastTimestamp;
+    }
 
     if (m_AbsoluteMouseMode) {
         int windowWidth, windowHeight;
@@ -152,7 +176,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
             if (m_PendingMouseButtonsAllUpOnVideoRegionLeave) {
                 if (m_NeedsManualCaptureOnLeave) {
                     // Stop capturing the mouse now
-                    SDL_CaptureMouse(SDL_FALSE);
+                    SDL_CaptureMouse(false);
                 }
                 m_PendingMouseButtonsAllUpOnVideoRegionLeave = false;
             }
@@ -163,7 +187,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 
         // Adjust the cursor visibility if applicable
         if (mouseInVideoRegion ^ m_MouseWasInVideoRegion) {
-            SDL_ShowCursor((mouseInVideoRegion && m_MouseCursorCapturedVisibilityState == SDL_DISABLE) ? SDL_DISABLE : SDL_ENABLE);
+            SDLC_SetCursorVisible(!mouseInVideoRegion || m_MouseCursorCapturedVisibilityState);
             if (!mouseInVideoRegion && buttonState != 0) {
                 // If we still have a button pressed on leave, wait for that to come up
                 // before we stop sending mouse position events.
@@ -190,73 +214,43 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
     }
 
     if (m_AbsoluteMouseMode) {
-        int mouseX, mouseY;
+        float mouseX, mouseY;
         SDL_GetMouseState(&mouseX, &mouseY);
-        if (!isMouseInVideoRegion(mouseX, mouseY)) {
+        if (!isMouseInVideoRegion(qRound(mouseX), qRound(mouseY))) {
             // Ignore scroll events outside the video region
             return;
         }
     }
 
-#if SDL_VERSION_ATLEAST(2, 0, 18)
-    if (event->preciseY != 0.0f) {
-        // Invert the scroll direction if needed
-        if (m_ReverseScrollDirection) {
-            event->preciseY = -event->preciseY;
-        }
-
-#ifdef Q_OS_DARWIN
-        // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
-        // from generating wild scroll deltas when scrolling quickly.
-        event->preciseY = SDL_clamp(event->preciseY, -1.0f, 1.0f);
-#endif
-
-        LiSendHighResScrollEvent((short)(event->preciseY * 120)); // WHEEL_DELTA
-    }
-
-    if (event->preciseX != 0.0f) {
-        // Invert the scroll direction if needed
-        if (m_ReverseScrollDirection) {
-            event->preciseX = -event->preciseX;
-        }
-
-#ifdef Q_OS_DARWIN
-        // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
-        // from generating wild scroll deltas when scrolling quickly.
-        event->preciseX = SDL_clamp(event->preciseX, -1.0f, 1.0f);
-#endif
-
-        LiSendHighResHScrollEvent((short)(event->preciseX * 120)); // WHEEL_DELTA
-    }
-#else
-    if (event->y != 0) {
+    if (event->y != 0.0f) {
         // Invert the scroll direction if needed
         if (m_ReverseScrollDirection) {
             event->y = -event->y;
         }
 
 #ifdef Q_OS_DARWIN
-        // See comment above
-        event->y = SDL_clamp(event->y, -1, 1);
+        // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
+        // from generating wild scroll deltas when scrolling quickly.
+        event->y = SDL_clamp(event->y, -1.0f, 1.0f);
 #endif
 
-        LiSendScrollEvent((signed char)event->y);
+        LiSendHighResScrollEvent((short)(event->y * 120)); // WHEEL_DELTA
     }
 
-    if (event->x != 0) {
+    if (event->x != 0.0f) {
         // Invert the scroll direction if needed
         if (m_ReverseScrollDirection) {
             event->x = -event->x;
         }
 
 #ifdef Q_OS_DARWIN
-        // See comment above
-        event->x = SDL_clamp(event->x, -1, 1);
+        // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
+        // from generating wild scroll deltas when scrolling quickly.
+        event->x = SDL_clamp(event->x, -1.0f, 1.0f);
 #endif
 
-        LiSendHScrollEvent((signed char)event->x);
+        LiSendHighResHScrollEvent((short)(event->x * 120)); // WHEEL_DELTA
     }
-#endif
 }
 
 bool SdlInputHandler::isMouseInVideoRegion(int mouseX, int mouseY, int windowWidth, int windowHeight)
@@ -285,7 +279,7 @@ bool SdlInputHandler::isMouseInVideoRegion(int mouseX, int mouseY, int windowWid
 void SdlInputHandler::updatePointerRegionLock()
 {
     // Pointer region lock is irrelevant in relative mouse mode
-    if (SDL_GetRelativeMouseMode()) {
+    if (SDL_GetWindowRelativeMouseMode(m_Window)) {
         return;
     }
 
@@ -294,14 +288,12 @@ void SdlInputHandler::updatePointerRegionLock()
     // have full control over it and we don't touch it anymore.
     if (!m_PointerRegionLockToggledByUser) {
         // Lock the pointer in true full-screen mode or in any fullscreen mode when only a single monitor is present
-        Uint32 fullscreenFlags = SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP;
-        m_PointerRegionLockActive = (fullscreenFlags == SDL_WINDOW_FULLSCREEN) ||
-                                    (fullscreenFlags != 0 && SDL_GetNumVideoDisplays() == 1);
+        m_PointerRegionLockActive = SDLC_IsFullscreenExclusive(m_Window) ||
+                                    (SDLC_IsFullscreen(m_Window) && SDLC_GetDisplayCount() == 1);
     }
 
     // If region lock is enabled, grab the cursor so it can't accidentally leave our window.
     if (isCaptureActive() && m_PointerRegionLockActive) {
-#if SDL_VERSION_ATLEAST(2, 0, 18)
         SDL_Rect src, dst;
 
         src.x = src.y = 0;
@@ -314,23 +306,10 @@ void SdlInputHandler::updatePointerRegionLock()
         // Use the stream and window sizes to determine the video region
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
-        // SDL 2.0.18 lets us lock the cursor to a specific region
         SDL_SetWindowMouseRect(m_Window, &dst);
-#elif SDL_VERSION_ATLEAST(2, 0, 15)
-        // SDL 2.0.15 only lets us lock the cursor to the whole window
-        SDL_SetWindowMouseGrab(m_Window, SDL_TRUE);
-#else
-        SDL_SetWindowGrab(m_Window, SDL_TRUE);
-#endif
     }
     else {
         // Allow the cursor to leave the bounds of our video region or window
-#if SDL_VERSION_ATLEAST(2, 0, 18)
         SDL_SetWindowMouseRect(m_Window, nullptr);
-#elif SDL_VERSION_ATLEAST(2, 0, 15)
-        SDL_SetWindowMouseGrab(m_Window, SDL_FALSE);
-#else
-        SDL_SetWindowGrab(m_Window, SDL_FALSE);
-#endif
     }
 }

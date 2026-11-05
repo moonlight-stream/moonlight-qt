@@ -5,7 +5,6 @@
 #include "pacer/pacer.h"
 #undef AVMediaType
 
-#include <SDL_syswm.h>
 #include <Limelight.h>
 #include <streaming/session.h>
 
@@ -67,7 +66,7 @@ public:
         }
 
         if (m_VsyncPassed != nullptr) {
-            SDL_DestroyCond(m_VsyncPassed);
+            SDL_DestroyCondition(m_VsyncPassed);
         }
 
         if (m_VsyncMutex != nullptr) {
@@ -122,15 +121,14 @@ public:
         SDL_assert(displayLink == me->m_DisplayLink);
 
         SDL_LockMutex(me->m_VsyncMutex);
-        SDL_CondSignal(me->m_VsyncPassed);
+        SDL_SignalCondition(me->m_VsyncPassed);
         SDL_UnlockMutex(me->m_VsyncMutex);
 
         return kCVReturnSuccess;
     }
 
-    bool initializeVsyncCallback(SDL_SysWMinfo* info)
+    bool initializeVsyncCallback(NSScreen* screen)
     {
-        NSScreen* screen = [info->info.cocoa.window screen];
         CVReturn status;
         if (screen == nullptr) {
             // Window not visible on any display, so use a
@@ -166,7 +164,7 @@ public:
         // The CVDisplayLink callback uses these, so we must initialize them before
         // starting the callbacks.
         m_VsyncMutex = SDL_CreateMutex();
-        m_VsyncPassed = SDL_CreateCond();
+        m_VsyncPassed = SDL_CreateCondition();
 
         status = CVDisplayLinkStart(m_DisplayLink);
         if (status != kCVReturnSuccess) {
@@ -184,7 +182,7 @@ public:
         if (m_DisplayLink != nullptr) {
             // Vsync is enabled, so wait for a swap before returning
             SDL_LockMutex(m_VsyncMutex);
-            if (SDL_CondWaitTimeout(m_VsyncPassed, m_VsyncMutex, 100) == SDL_MUTEX_TIMEDOUT) {
+            if (!SDL_WaitConditionTimeout(m_VsyncPassed, m_VsyncMutex, 100)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "V-sync wait timed out after 100 ms");
             }
@@ -204,7 +202,7 @@ public:
 
             // Trigger the main thread to recreate the decoder
             SDL_Event event;
-            event.type = SDL_RENDER_DEVICE_RESET;
+            event.type = SDL_EVENT_RENDER_DEVICE_RESET;
             SDL_PushEvent(&event);
             return;
         }
@@ -334,23 +332,11 @@ public:
 
         // If we're using direct rendering, set up the AVSampleBufferDisplayLayer
         if (m_DirectRendering && !params->testOnly) {
-            SDL_SysWMinfo info;
-
-            SDL_VERSION(&info.version);
-
-            if (!SDL_GetWindowWMInfo(params->window, &info)) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "SDL_GetWindowWMInfo() failed: %s",
-                            SDL_GetError());
-                return false;
-            }
-
-            SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
+            NSWindow* window = (NSWindow*)SDLC_MacOS_GetWindow(params->window);
 
             // SDL adds its own content view to listen for events.
             // We need to add a subview for our display layer.
-            NSView* contentView = info.info.cocoa.window.contentView;
-            m_StreamView = [[VTView alloc] initWithFrame:contentView.bounds];
+            m_StreamView = [[VTView alloc] initWithFrame:window.contentView.bounds];
 
             m_DisplayLayer = [[AVSampleBufferDisplayLayer alloc] init];
             m_DisplayLayer.bounds = m_StreamView.bounds;
@@ -369,9 +355,9 @@ public:
             if (isAppleSilicon() && !(params->videoFormat & VIDEO_FORMAT_MASK_10BIT)) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using layer rasterization workaround");
-                if (info.info.cocoa.window.screen != nullptr) {
+                if (window.screen != nullptr) {
                     m_DisplayLayer.shouldRasterize = YES;
-                    m_DisplayLayer.rasterizationScale = info.info.cocoa.window.screen.backingScaleFactor;
+                    m_DisplayLayer.rasterizationScale = window.screen.backingScaleFactor;
                 }
                 else {
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -387,10 +373,10 @@ public:
             m_StreamView.layer = m_DisplayLayer;
             m_StreamView.wantsLayer = YES;
 
-            [contentView addSubview: m_StreamView];
+            [window.contentView addSubview: m_StreamView];
 
             if (params->enableFramePacing) {
-                if (!initializeVsyncCallback(&info)) {
+                if (!initializeVsyncCallback(window.screen)) {
                     return false;
                 }
             }
@@ -489,8 +475,8 @@ private:
     CVDisplayLinkRef m_DisplayLink;
     int m_LastColorSpace;
     CGColorSpaceRef m_ColorSpace;
-    SDL_mutex* m_VsyncMutex;
-    SDL_cond* m_VsyncPassed;
+    SDL_Mutex* m_VsyncMutex;
+    SDL_Condition* m_VsyncPassed;
     bool m_DirectRendering;
 };
 

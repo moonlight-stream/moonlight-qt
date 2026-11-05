@@ -3,8 +3,6 @@
 #include <streaming/streamutils.h>
 #include <utils.h>
 
-#include <SDL_syswm.h>
-
 #define BAIL_ON_FAIL(status, something) if ((status) != VDP_STATUS_OK) { \
                                             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, \
                                                         #something " failed: %d", (status)); \
@@ -79,7 +77,6 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
 {
     int err;
     VdpStatus status;
-    SDL_SysWMinfo info;
 
     // Avoid initializing VDPAU on this window on the first selection pass if:
     // a) We know we want HDR compatibility
@@ -98,26 +95,17 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
-    SDL_VERSION(&info.version);
-
-    if (!SDL_GetWindowWMInfo(params->window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
-        return false;
-    }
-
-    if (info.subsystem == SDL_SYSWM_WAYLAND) {
+    SDLC_VideoDriver videoDriver = SDLC_GetVideoDriver();
+    if (videoDriver == SDLC_VIDEO_WAYLAND) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "VDPAU is not supported on Wayland");
         m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
-    else if (info.subsystem != SDL_SYSWM_X11) {
+    else if (videoDriver != SDLC_VIDEO_X11) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VDPAU is not supported on the current subsystem: %d",
-                     info.subsystem);
+                     videoDriver);
         m_InitFailureReason = InitFailureReason::NoSoftwareSupport;
         return false;
     }
@@ -137,8 +125,8 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
 
     char* displayName = nullptr;
 #ifdef HAS_X11
-    SDL_assert(info.subsystem == SDL_SYSWM_X11);
-    displayName = XDisplayString(info.info.x11.display);
+    SDL_assert(videoDriver == SDLC_VIDEO_X11);
+    displayName = XDisplayString((Display*)SDLC_X11_GetDisplay(params->window));
 #endif
 
     err = av_hwdevice_ctx_create(&m_HwContext,
@@ -228,12 +216,10 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
 
     SDL_GetWindowSize(params->window, (int*)&m_DisplayWidth, (int*)&m_DisplayHeight);
 
-    SDL_assert(info.subsystem == SDL_SYSWM_X11);
-
     GET_PROC_ADDRESS(VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11,
                      &m_VdpPresentationQueueTargetCreateX11);
     status = m_VdpPresentationQueueTargetCreateX11(m_Device,
-                                                   info.info.x11.window,
+                                                   SDLC_X11_GetWindow(params->window),
                                                    &m_PresentationQueueTarget);
     if (status != VDP_STATUS_OK) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -399,13 +385,13 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
     if (!overlayEnabled) {
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
         return;
     }
 
     if (newSurface != nullptr) {
         SDL_assert(!SDL_MUSTLOCK(newSurface));
-        SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
+        SDL_assert(newSurface->format == SDL_PIXELFORMAT_ARGB8888);
 
         VdpBitmapSurface newBitmapSurface = 0;
         status = m_VdpBitmapSurfaceCreate(m_Device,
@@ -418,7 +404,7 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "VdpBitmapSurfaceCreate() failed: %s",
                          m_VdpGetErrorString(status));
-            SDL_FreeSurface(newSurface);
+            SDL_DestroySurface(newSurface);
             return;
         }
 
@@ -431,7 +417,7 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
                          "VdpBitmapSurfacePutBitsNative() failed: %s",
                          m_VdpGetErrorString(status));
             m_VdpBitmapSurfaceDestroy(newBitmapSurface);
-            SDL_FreeSurface(newSurface);
+            SDL_DestroySurface(newSurface);
             return;
         }
 
@@ -452,7 +438,7 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         overlayRect.y1 = overlayRect.y0 + newSurface->h;
 
         // Surface data is no longer needed
-        SDL_FreeSurface(newSurface);
+        SDL_DestroySurface(newSurface);
 
         SDL_LockMutex(m_OverlayMutex);
         m_OverlaySurface[type] = newBitmapSurface;
@@ -491,7 +477,7 @@ void VDPAURenderer::renderOverlay(VdpOutputSurface destination, Overlay::Overlay
         return;
     }
 
-    if (SDL_TryLockMutex(m_OverlayMutex) != 0) {
+    if (!SDL_TryLockMutex(m_OverlayMutex)) {
         // If the overlay is currently being updated, skip rendering it this frame.
         return;
     }

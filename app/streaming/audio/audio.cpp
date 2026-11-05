@@ -157,7 +157,7 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
     // of other threads due to severely restricted CPU time available,
     // so we will skip it on that platform.
     if (s_ActiveSession->m_AudioSampleCount == 0) {
-        if (SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH) < 0) {
+        if (SDLC_FAILURE(SDL_SetCurrentThreadPriority(SDL_THREAD_PRIORITY_HIGH))) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Unable to set audio thread to high priority: %s",
                         SDL_GetError());
@@ -167,7 +167,7 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
 
     // See if we need to drop this sample
     if (s_ActiveSession->m_DropAudioEndTime != 0) {
-        if (SDL_TICKS_PASSED(SDL_GetTicks(), s_ActiveSession->m_DropAudioEndTime)) {
+        if (SDL_GetTicks() >= s_ActiveSession->m_DropAudioEndTime) {
             // Avoid calling SDL_GetTicks() now
             s_ActiveSession->m_DropAudioEndTime = 0;
 

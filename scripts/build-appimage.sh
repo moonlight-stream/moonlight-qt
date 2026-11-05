@@ -130,6 +130,7 @@ pushd $INSTALLER_FOLDER
 # bundled last-resort copy for hosts without libva).
 VERSION=$VERSION $LINUXDEPLOY --appdir $DEPLOY_FOLDER \
   --library=/usr/local/lib/libSDL3.so.0 \
+  --library=/usr/local/lib/libSDL3_ttf.so.0 \
   --plugin qt \
   --custom-apprun $APP_RUN \
   --exclude-library=libva.so* \

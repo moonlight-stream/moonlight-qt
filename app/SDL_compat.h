@@ -1,67 +1,62 @@
 //
-// Compatibility header for older version of SDL.
-// Include this instead of SDL.h directly.
+// Small Moonlight-specific helpers around native SDL 3 APIs.
+// Include this instead of SDL headers directly.
 //
 
 #pragma once
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
+#include <stdbool.h>
 
-// SDL_FRect wasn't added until 2.0.10
-#if !SDL_VERSION_ATLEAST(2, 0, 10)
-typedef struct SDL_FRect
-{
-    float x;
-    float y;
-    float w;
-    float h;
-} SDL_FRect;
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#ifndef SDL_HINT_VIDEO_X11_FORCE_EGL
-#define SDL_HINT_VIDEO_X11_FORCE_EGL "SDL_VIDEO_X11_FORCE_EGL"
-#endif
+void* SDLC_Win32_GetHwnd(SDL_Window* window);
+void* SDLC_MacOS_GetWindow(SDL_Window* window);
+void* SDLC_X11_GetDisplay(SDL_Window* window);
+unsigned long SDLC_X11_GetWindow(SDL_Window* window);
+void* SDLC_Wayland_GetDisplay(SDL_Window* window);
+void* SDLC_Wayland_GetSurface(SDL_Window* window);
+int SDLC_KMSDRM_GetFd(SDL_Window* window);
+int SDLC_KMSDRM_GetDevIndex(SDL_Window* window);
 
-#ifndef SDL_HINT_KMSDRM_REQUIRE_DRM_MASTER
-#define SDL_HINT_KMSDRM_REQUIRE_DRM_MASTER "SDL_KMSDRM_REQUIRE_DRM_MASTER"
-#endif
+typedef enum {
+    SDLC_VIDEO_UNKNOWN,
+    SDLC_VIDEO_WIN32,
+    SDLC_VIDEO_MACOS,
+    SDLC_VIDEO_X11,
+    SDLC_VIDEO_WAYLAND,
+    SDLC_VIDEO_KMSDRM,
+} SDLC_VideoDriver;
 
-#ifndef SDL_HINT_ALLOW_ALT_TAB_WHILE_GRABBED
-#define SDL_HINT_ALLOW_ALT_TAB_WHILE_GRABBED "SDL_ALLOW_ALT_TAB_WHILE_GRABBED"
-#endif
+SDLC_VideoDriver SDLC_GetVideoDriver(void);
 
-#ifndef SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE
-#define SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE "SDL_JOYSTICK_HIDAPI_PS4_RUMBLE"
-#endif
+bool SDLC_IsFullscreen(SDL_Window* window);
+bool SDLC_IsFullscreenExclusive(SDL_Window* window);
+bool SDLC_IsFullscreenDesktop(SDL_Window* window);
+void SDLC_EnterFullscreen(SDL_Window* window, bool exclusive);
+void SDLC_LeaveFullscreen(SDL_Window* window);
 
-#ifndef SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE
-#define SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE "SDL_JOYSTICK_HIDAPI_PS5_RUMBLE"
-#endif
+SDL_Window* SDLC_CreateWindowWithFallback(const char* title,
+                                          int x, int y, int w, int h,
+                                          SDL_WindowFlags requiredFlags,
+                                          SDL_WindowFlags optionalFlags);
 
-#ifndef SDL_HINT_WINDOWS_USE_D3D9EX
-#define SDL_HINT_WINDOWS_USE_D3D9EX "SDL_WINDOWS_USE_D3D9EX"
-#endif
+void SDLC_FlushWindowEvents(void);
+void SDLC_SetCursorVisible(bool visible);
+int SDLC_GetDisplayCount(void);
 
-#ifndef SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS
-#define SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS "SDL_GAMECONTROLLER_USE_BUTTON_LABELS"
-#endif
+#define SDLC_SUCCESS(x) (x)
+#define SDLC_FAILURE(x) (!(x))
 
-#ifndef SDL_HINT_MOUSE_RELATIVE_SCALING
-#define SDL_HINT_MOUSE_RELATIVE_SCALING "SDL_MOUSE_RELATIVE_SCALING"
-#endif
+#define KEY_DOWN(x) ((x)->down)
+#define KEY_KEY(x) ((x)->key)
+#define KEY_MOD(x) ((x)->mod)
+#define KEY_SCANCODE(x) ((x)->scancode)
 
-#ifndef SDL_HINT_AUDIO_DEVICE_APP_NAME
-#define SDL_HINT_AUDIO_DEVICE_APP_NAME "SDL_AUDIO_DEVICE_APP_NAME"
-#endif
+#define SDLC_DEFAULT_RENDER_DRIVER NULL
 
-#ifndef SDL_HINT_APP_NAME
-#define SDL_HINT_APP_NAME "SDL_APP_NAME"
-#endif
-
-#ifndef SDL_HINT_MOUSE_AUTO_CAPTURE
-#define SDL_HINT_MOUSE_AUTO_CAPTURE "SDL_MOUSE_AUTO_CAPTURE"
-#endif
-
-#ifndef SDL_HINT_VIDEO_WAYLAND_EMULATE_MOUSE_WARP
-#define SDL_HINT_VIDEO_WAYLAND_EMULATE_MOUSE_WARP "SDL_VIDEO_WAYLAND_EMULATE_MOUSE_WARP"
+#ifdef __cplusplus
+}
 #endif

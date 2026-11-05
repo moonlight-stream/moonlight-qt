@@ -5,8 +5,6 @@
 
 #include <Limelight.h>
 
-#include <SDL_syswm.h>
-
 extern "C" {
 #include <libavutil/pixdesc.h>
 #include <libavutil/opt.h>
@@ -75,16 +73,15 @@ void SdlRenderer::prepareToRender()
 
 bool SdlRenderer::isRenderThreadSupported()
 {
-    SDL_RendererInfo info;
-    SDL_GetRendererInfo(m_Renderer, &info);
+    const char* rendererName = SDL_GetRendererName(m_Renderer);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "SDL renderer backend: %s",
-                info.name);
+                rendererName);
 
-    if (info.name != QString("direct3d11") &&
-        info.name != QString("direct3d12") &&
-        info.name != QString("metal")) {
+    if (rendererName != QString("direct3d11") &&
+        rendererName != QString("direct3d12") &&
+        rendererName != QString("metal")) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "SDL renderer backend requires main thread rendering");
         return false;
@@ -96,7 +93,7 @@ bool SdlRenderer::isRenderThreadSupported()
 bool SdlRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
     if (videoFormat & (VIDEO_FORMAT_MASK_10BIT | VIDEO_FORMAT_MASK_YUV444)) {
-        // SDL2 can't natively handle textures with these formats, but we can perform
+        // SDL can't natively handle textures with these formats, but we can perform
         // conversion on the CPU using swscale then upload them as an RGB texture.
         const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get(pixelFormat);
         if (!formatDesc) {
@@ -132,7 +129,7 @@ bool SdlRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
 
 bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
 {
-    Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;
+    bool enableVsync = false;
 
     m_VideoFormat = params->videoFormat;
     m_SwFrameMapper.setVideoFormat(m_VideoFormat);
@@ -149,35 +146,25 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     if (params->testOnly) {
         return true;
     }
-
-    SDL_SysWMinfo info;
-    SDL_VERSION(&info.version);
-    if (!SDL_GetWindowWMInfo(params->window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
     // Only set SDL_RENDERER_PRESENTVSYNC if we know we'll get tearing otherwise.
     // Since we don't use V-Sync to pace our frame rate, we want non-blocking
     // presents to reduce video latency.
-    switch (info.subsystem) {
-    case SDL_SYSWM_WINDOWS:
+    switch (SDLC_GetVideoDriver()) {
+    case SDLC_VIDEO_WIN32:
         // DWM is always tear-free except in full-screen exclusive mode
-        if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+        if (SDLC_IsFullscreenExclusive(params->window)) {
             if (params->enableVsync) {
-                rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
+                enableVsync = true;
             }
         }
         break;
-    case SDL_SYSWM_WAYLAND:
+    case SDLC_VIDEO_WAYLAND:
         // Wayland is always tear-free in all modes
         break;
     default:
         // For other subsystems, just set SDL_RENDERER_PRESENTVSYNC if asked
         if (params->enableVsync) {
-            rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
+            enableVsync = true;
         }
         break;
     }
@@ -190,11 +177,16 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     SDL_SetHintWithPriority(SDL_HINT_RENDER_DIRECT3D_THREADSAFE, "1", SDL_HINT_OVERRIDE);
 #endif
 
-    m_Renderer = SDL_CreateRenderer(params->window, -1, rendererFlags);
+    m_Renderer = SDL_CreateRenderer(params->window, SDLC_DEFAULT_RENDER_DRIVER);
     if (!m_Renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
                      SDL_GetError());
+    }
+    else if (!SDL_SetRenderVSync(m_Renderer, enableVsync ? 1 : 0)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "SDL_SetRenderVSync() failed: %s",
+                    SDL_GetError());
     }
 
     // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
@@ -211,7 +203,7 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     else {
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
-        SDL_FlushEvent(SDL_WINDOWEVENT);
+        SDLC_FlushWindowEvents();
     }
 
     if (!m_Renderer) {
@@ -237,7 +229,7 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
             if (type == Overlay::OverlayStatusUpdate) {
                 // Bottom Left
                 SDL_Rect viewportRect;
-                SDL_RenderGetViewport(m_Renderer, &viewportRect);
+                SDL_GetRenderViewport(m_Renderer, &viewportRect);
                 m_OverlayRects[type].x = 0;
                 m_OverlayRects[type].y = viewportRect.h - newSurface->h;
             }
@@ -251,17 +243,17 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
             m_OverlayRects[type].h = newSurface->h;
 
             m_OverlayTextures[type] = SDL_CreateTextureFromSurface(m_Renderer, newSurface);
-            SDL_FreeSurface(newSurface);
+            SDL_DestroySurface(newSurface);
 
             if (m_OverlayTextures[type]) {
                 // Overlays are always drawn at exact size
-                SDL_SetTextureScaleMode(m_OverlayTextures[type], SDL_ScaleModeNearest);
+                SDL_SetTextureScaleMode(m_OverlayTextures[type], SDL_SCALEMODE_NEAREST);
             }
         }
 
         // If we have an overlay texture, render it too
         if (m_OverlayTextures[type] != nullptr) {
-            SDL_RenderCopy(m_Renderer, m_OverlayTextures[type], nullptr, &m_OverlayRects[type]);
+            SDL_RenderTexture(m_Renderer, m_OverlayTextures[type], nullptr, &m_OverlayRects[type]);
         }
     }
 }
@@ -307,7 +299,8 @@ ReadbackRetry:
     }
 
     if (m_Texture == nullptr) {
-        Uint32 sdlFormat;
+        SDL_PixelFormat sdlFormat;
+        SDL_Colorspace sdlColorspace = SDL_COLORSPACE_SRGB;
 
         // Remember to keep this in sync with SdlRenderer::isPixelFormatSupported()!
         m_NeedsYuvToRgbConversion = false;
@@ -357,7 +350,7 @@ ReadbackRetry:
             av_dict_set_int(&options, "dsth", m_RgbFrame->height, 0);
             av_dict_set_int(&options, "dst_format", m_RgbFrame->format, 0);
             av_dict_set_int(&options, "dst_range", 1, 0);
-            av_dict_set_int(&options, "threads", std::min(SDL_GetCPUCount(), 4), 0); // Up to 4 threads
+            av_dict_set_int(&options, "threads", std::min(SDL_GetNumLogicalCPUCores(), 4), 0); // Up to 4 threads
 
             err = av_opt_set_dict(m_SwsContext, &options);
             av_dict_free(&options);
@@ -397,15 +390,15 @@ ReadbackRetry:
             {
             case COLORSPACE_REC_709:
                 SDL_assert(!isFrameFullRange(frame));
-                SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT709);
+                sdlColorspace = SDL_COLORSPACE_BT709_LIMITED;
                 break;
             case COLORSPACE_REC_601:
                 if (isFrameFullRange(frame)) {
                     // SDL's JPEG mode is Rec 601 Full Range
-                    SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_JPEG);
+                    sdlColorspace = SDL_COLORSPACE_JPEG;
                 }
                 else {
-                    SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT601);
+                    sdlColorspace = SDL_COLORSPACE_BT601_LIMITED;
                 }
                 break;
             default:
@@ -413,11 +406,14 @@ ReadbackRetry:
             }
         }
 
-        m_Texture = SDL_CreateTexture(m_Renderer,
-                                      sdlFormat,
-                                      SDL_TEXTUREACCESS_STREAMING,
-                                      frame->width,
-                                      frame->height);
+        SDL_PropertiesID textureProperties = SDL_CreateProperties();
+        SDL_SetNumberProperty(textureProperties, SDL_PROP_TEXTURE_CREATE_FORMAT_NUMBER, sdlFormat);
+        SDL_SetNumberProperty(textureProperties, SDL_PROP_TEXTURE_CREATE_ACCESS_NUMBER, SDL_TEXTUREACCESS_STREAMING);
+        SDL_SetNumberProperty(textureProperties, SDL_PROP_TEXTURE_CREATE_WIDTH_NUMBER, frame->width);
+        SDL_SetNumberProperty(textureProperties, SDL_PROP_TEXTURE_CREATE_HEIGHT_NUMBER, frame->height);
+        SDL_SetNumberProperty(textureProperties, SDL_PROP_TEXTURE_CREATE_COLORSPACE_NUMBER, sdlColorspace);
+        m_Texture = SDL_CreateTextureWithProperties(m_Renderer, textureProperties);
+        SDL_DestroyProperties(textureProperties);
         if (!m_Texture) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_CreateTexture() failed: %s",
@@ -572,17 +568,17 @@ ReadbackRetry:
     src.w = frame->width;
     src.h = frame->height;
     dst.x = dst.y = 0;
-    SDL_GetRendererOutputSize(m_Renderer, &dst.w, &dst.h);
+    SDL_GetCurrentRenderOutputSize(m_Renderer, &dst.w, &dst.h);
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
     // Ensure the viewport is set to the desired video region
-    SDL_RenderSetViewport(m_Renderer, &dst);
+    SDL_SetRenderViewport(m_Renderer, &dst);
 
     // Draw the video content itself
-    SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);
+    SDL_RenderTexture(m_Renderer, m_Texture, nullptr, nullptr);
 
     // Reset the viewport to the full window for overlay rendering
-    SDL_RenderSetViewport(m_Renderer, nullptr);
+    SDL_SetRenderViewport(m_Renderer, nullptr);
 
     // Draw the overlays
     for (int i = 0; i < Overlay::OverlayMax; i++) {
@@ -643,7 +639,7 @@ bool SdlRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 
 int SdlRenderer::getDecoderColorspace()
 {
-    // SDL2 only supports both full and limited range for BT.601. Additionally, libswscale
+    // SDL only supports both full and limited range for BT.601. Additionally, libswscale
     // assumes content is in the BT.601 color space when performing YUV to RGB conversion.
     return COLORSPACE_REC_601;
 }
