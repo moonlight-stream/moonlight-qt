@@ -518,12 +518,12 @@ void D3D12VARenderer::enhanceAutoSelection()
     else if(m_VideoEnhancement->isVendorQualcomm()){
         m_VendorVSRenabled = true;
         m_VendorHDRenabled = false;
-        m_EnhancerType = D3D12VideoShaders::Enhancer::SGSR1;
+        m_EnhancerType = D3D12VideoShaders::Enhancer::MWSR;
         m_RenderStep1 = RenderStep::CONVERT_SHADER;
         m_RenderStep2 = RenderStep::UPSCALE_SHADER;
-        m_InfoUpscaler = "SGSR1 Upscaler";
-        m_InfoSharpener = "SGSR1 Sharpener";
-        m_InfoAlgo = "Shader SGSR1";
+        m_InfoUpscaler = "MWSR Upscaler";
+        m_InfoSharpener = "MWSR Sharpener";
+        m_InfoAlgo = "Shader MWSR";
     }
 
     // The user can force the algorithm used for Test/Debug purpose only, the production must be set to "auto"
