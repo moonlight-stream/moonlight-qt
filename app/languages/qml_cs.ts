@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="341"/>
         <source>This computer doesn&apos;t seem to have any applications or some applications are hidden</source>
-        <translation type="unfinished"></translation>
+        <translation>Zdá se, že tento počítač nemá žádné aplikace, nebo jsou některé aplikace skryté</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="354"/>
@@ -110,12 +110,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished">Online</translation>
+        <translation>Online</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished">Offline</translation>
+        <translation>Offline</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -124,7 +124,7 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation>Neznámé</translation>
+        <translation>Neznámý</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
@@ -134,12 +134,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation>Nespárované</translation>
+        <translation>Nespárováno</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Název: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
@@ -154,7 +154,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
@@ -169,7 +169,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation>IPv6 adresa: %1</translation>
+        <translation>IPv6 Adresa: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
@@ -179,7 +179,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation>MAC adresa: %1</translation>
+        <translation>MAC Adresa: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
@@ -210,7 +210,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="381"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation>Zařízení pro zachycení zvuku není k dispozici. Přeinstalování GeForce Experience by tento problém mělo vyřešit.</translation>
+        <translation>Zařízení záznam zvuku není k dispozici. Přeinstalování GeForce Experience by tento problém mělo vyřešit.</translation>
     </message>
 </context>
 <context>
@@ -243,7 +243,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="99"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation>Hledání kompatibilních zažízení na lokální síti...</translation>
+        <translation>Hledání kompatibilních zařízení na lokální síti...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="184"/>
@@ -525,7 +525,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1003"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš hostující PC nepodporuje kódování HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1021"/>
@@ -535,12 +535,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="973"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš hostujícíc software nebo grafická karta nepodporuje kódování AV1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="991"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Na základě vašeho výběru se používá softwarové dekódování, aby se vynutilo použití formátu AV1 bez podpory GPU. To může způsobit snížený výkon při streamování.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1068"/>
@@ -550,27 +550,27 @@
     <message>
         <location filename="../streaming/session.cpp" line="1060"/>
         <source>HDR is not supported using the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR není podporováno s kodekem H.264.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1083"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Grafická karta tohoto počítače nepodporuje dekódování formátu AV1 Main10 pro streamování v HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1064"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Grafická karta tohoto počítače nepodporuje 10bitové dekódování formátů HEVC ani AV1 pro streamování v HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1116"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš hostitelský počítač a klientský počítač nepodporují stejné kodeky pro HDR video.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1209"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Rozlišení videa vyšší než 4K není kodekem H.264 podporováno.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1606"/>
@@ -611,17 +611,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="1131"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš hostitelský počítač nepodporuje streamování ve formátu YUV 4:4:4 pro vybraný video kodek.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1146"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Na základě vašeho výběru se používá softwarové dekódování, které vynucuje formát YUV 4:4:4 bez podpory GPU. To může způsobit snížený výkon při streamování.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1152"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Grafická karta tohoto počítače nepodporuje dekódování YUV 4:4:4 pro vybraný video kodek.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1161"/>
@@ -765,17 +765,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="182"/>
         <source>Native</source>
-        <translation type="unfinished"></translation>
+        <translation>Nativní</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
+        <translation>Nativní (kromě Notch)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <source>Use Default (%1 Mbps)</source>
-        <translation type="unfinished"></translation>
+        <translation>Použít Výchozí (%1 Mbps)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="753"/>
@@ -796,7 +796,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="836"/>
         <source>Frame pacing</source>
-        <translation>Frame pacing</translation>
+        <translation>Synchronizace snímků</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="846"/>
@@ -876,7 +876,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
         <source>Show configuration warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazit varování týkající se konfigurace</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1298"/>
@@ -896,7 +896,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1621"/>
         <source>AV1</source>
-        <translation type="unfinished"></translation>
+        <translation>AV1</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1636"/>
@@ -916,27 +916,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1659"/>
         <source>Enable YUV 4:4:4</source>
-        <translation type="unfinished"></translation>
+        <translation>Zapnout YUV 4:4:4</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1740"/>
         <source>Show performance stats while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazit statistiky výkonu během streamování</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1750"/>
         <source>Display real-time stream performance information while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazovat informace o výkonu streamu v reálném čase během streamování.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1751"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation type="unfinished"></translation>
+        <translation>Během streamování můžete tuto funkci kdykoli zapnout či vypnout pomocí klávesové zkratky Ctrl+Alt+Shift+S nebo tlačítek Select+L1+R1+X.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1752"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation type="unfinished"></translation>
+        <translation>Funkce &quot;překrytí výkonu&quot; není podporována na Steam Linku ani na Raspberry Pi.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1340"/>
@@ -1016,7 +1016,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="866"/>
         <source>Audio configuration</source>
-        <translation>Nastavení zvuku</translation>
+        <translation>Konfigurace zvuku</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1231"/>
@@ -1047,29 +1047,29 @@
         <location filename="../gui/SettingsView.qml" line="512"/>
         <location filename="../gui/SettingsView.qml" line="622"/>
         <source>Custom (%1 FPS)</source>
-        <translation type="unfinished"></translation>
+        <translation>Vlastní (%1 FPS)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="527"/>
         <source>Enter a custom frame rate:</source>
-        <translation type="unfinished"></translation>
+        <translation>Zadejte vlastní snímkovou frekvenci:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="219"/>
         <location filename="../gui/SettingsView.qml" line="228"/>
         <location filename="../gui/SettingsView.qml" line="625"/>
         <source>Custom</source>
-        <translation type="unfinished"></translation>
+        <translation>Vlastní</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="643"/>
         <source>30 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>30 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="648"/>
         <source>60 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>60 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="762"/>
@@ -1165,22 +1165,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1681"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hodí se pro streamování her s graficky náročným rozhraním a her s velkým množstvím textu, ale nedoporučuje se pro hry s rychlým tempem.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1683"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>YUV 4:4:4 není na tomto počítači podporováno.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1689"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Odblokovat omezení přenosové rychlosti (experimentální)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1702"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tím se odemknou extrémně vysoké přenosové rychlosti videa pro použití s hostiteli Sunshine. Tuto funkci je vhodné používat pouze při streamování přes ethernetové připojení v lokální síti.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1708"/>
@@ -1272,7 +1272,7 @@
     <message>
         <location filename="../gui/main.qml" line="413"/>
         <source>Gamepad Mapper</source>
-        <translation>Gamepad Mapper</translation>
+        <translation>Mapovač gamepadu</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="459"/>
@@ -1322,7 +1322,7 @@
     <message>
         <location filename="../gui/main.qml" line="517"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Zadejte IP adresu hostujícího PC:</translation>
     </message>
 </context>
 </TS>
