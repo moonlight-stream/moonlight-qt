@@ -107,5 +107,9 @@
         <file alias="FSR1_HDR.glsl">shaders/enhancer/AMD/FSR1_HDR.glsl</file>
         <file alias="sgsr1_shader.hlsl">shaders/enhancer/QUALCOMM/sgsr1_shader.hlsl</file>
         <file alias="sgsr1.h">shaders/enhancer/QUALCOMM/sgsr1.h</file>
+        <file alias="mwsr-up.hlsl">shaders/enhancer/MWSR/mwsr-up.hlsl</file>
+        <file alias="mwsr-down-4.hlsl">shaders/enhancer/MWSR/mwsr-down-4.hlsl</file>
+        <file alias="mwsr-down-9.hlsl">shaders/enhancer/MWSR/mwsr-down-9.hlsl</file>
+        <file alias="mwsr-down-16.hlsl">shaders/enhancer/MWSR/mwsr-down-16.hlsl</file>
     </qresource>
 </RCC>

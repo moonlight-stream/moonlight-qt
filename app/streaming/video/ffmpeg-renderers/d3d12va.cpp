@@ -447,15 +447,15 @@ void D3D12VARenderer::enhanceAutoSelection()
         } else if(m_IsTexture10bits){
             m_VendorVSRenabled = false;
             m_VendorHDRenabled = false;
-            m_EnhancerType = D3D12VideoShaders::Enhancer::NIS;
+            m_EnhancerType = D3D12VideoShaders::Enhancer::MWSR;
             m_RenderStep1 = RenderStep::CONVERT_SHADER;
             m_RenderStep2 = RenderStep::UPSCALE_SHADER;
-            m_InfoUpscaler = "NIS Upscaler";
-            m_InfoSharpener = "NIS Sharpener";
-            m_InfoAlgo = "Shader NIS";
+            m_InfoUpscaler = "MWSR Upscaler";
+            m_InfoSharpener = "MWSR Sharpener";
+            m_InfoAlgo = "Shader MWSR";
         } else {
 
-            // IntelVPL is only available for the architecture x64, we fallback to FSR1 only for ARM.
+            // IntelVPL is only available for the architecture x64, we fallback to MWSR only for ARM.
 #if defined(HAVE_INTEL_VPL)
             // // NOTE: Current version is too slow (20ms per frame)
             // m_VendorVSRenabled = true;
@@ -469,21 +469,21 @@ void D3D12VARenderer::enhanceAutoSelection()
             
             m_VendorVSRenabled = false;
             m_VendorHDRenabled = false;
-            m_EnhancerType = D3D12VideoShaders::Enhancer::FSR1;
+            m_EnhancerType = D3D12VideoShaders::Enhancer::MWSR;
             m_RenderStep1 = RenderStep::CONVERT_SHADER;
             m_RenderStep2 = RenderStep::UPSCALE_SHADER;
-            m_InfoUpscaler = "FSR1 EASU";
-            m_InfoSharpener = "FRS1 RCAS";
-            m_InfoAlgo = "Shader FSR1";
+            m_InfoUpscaler = "MWSR Upscaler";
+            m_InfoSharpener = "MWSR Sharpener";
+            m_InfoAlgo = "Shader MWSR";
 #else
             m_VendorVSRenabled = false;
             m_VendorHDRenabled = false;
-            m_EnhancerType = D3D12VideoShaders::Enhancer::FSR1;
+            m_EnhancerType = D3D12VideoShaders::Enhancer::MWSR;
             m_RenderStep1 = RenderStep::CONVERT_SHADER;
             m_RenderStep2 = RenderStep::UPSCALE_SHADER;
-            m_InfoUpscaler = "FSR1 EASU";
-            m_InfoSharpener = "FRS1 RCAS";
-            m_InfoAlgo = "Shader FSR1";
+            m_InfoUpscaler = "MWSR Upscaler";
+            m_InfoSharpener = "MWSR Sharpener";
+            m_InfoAlgo = "Shader MWSR";
 #endif
         }
     }
@@ -502,15 +502,15 @@ void D3D12VARenderer::enhanceAutoSelection()
             m_InfoAlgo = "NVIDIA RTX Video Super Resolution";
         } else {
             // For GPUs which are not supporting VSR capability (like the GTX),
-            // we switch to NIS.
+            // we switch to MWSR.
             m_VendorVSRenabled = false;
             m_VendorHDRenabled = false;
-            m_EnhancerType = D3D12VideoShaders::Enhancer::NIS;
+            m_EnhancerType = D3D12VideoShaders::Enhancer::MWSR;
             m_RenderStep1 = RenderStep::CONVERT_SHADER;
             m_RenderStep2 = RenderStep::UPSCALE_SHADER;
-            m_InfoUpscaler = "NIS Upscaler";
-            m_InfoSharpener = "NIS Sharpener";
-            m_InfoAlgo = "Shader NIS";
+            m_InfoUpscaler = "MWSR Upscaler";
+            m_InfoSharpener = "MWSR Sharpener";
+            m_InfoAlgo = "Shader MWSR";
         }
     }
     
@@ -579,6 +579,18 @@ void D3D12VARenderer::enhanceAutoSelection()
         break;
 
     case StreamingPreferences::SRM_03:
+        // MWSR
+        m_VendorVSRenabled = false;
+        // m_VendorHDRenabled: Keep default setting
+        m_EnhancerType = D3D12VideoShaders::Enhancer::MWSR;
+        m_RenderStep1 = RenderStep::CONVERT_SHADER;
+        m_RenderStep2 = RenderStep::UPSCALE_SHADER;
+        m_InfoUpscaler = "MWSR Upscaler";
+        m_InfoSharpener = "MWSR Sharpener";
+        m_InfoAlgo = "Shader MWSR";
+        break;
+
+    case StreamingPreferences::SRM_04:
         // FSR1 (Shader version)
         m_VendorVSRenabled = false;
         // m_VendorHDRenabled: Keep default setting
@@ -590,7 +602,7 @@ void D3D12VARenderer::enhanceAutoSelection()
         m_InfoAlgo = "Shader FSR1";
         break;
 
-    case StreamingPreferences::SRM_04:
+    case StreamingPreferences::SRM_05:
         // NIS
         m_VendorVSRenabled = false;
         // m_VendorHDRenabled: Keep default setting
@@ -602,7 +614,7 @@ void D3D12VARenderer::enhanceAutoSelection()
         m_InfoAlgo = "Shader NIS";
         break;
         
-    case StreamingPreferences::SRM_05:
+    case StreamingPreferences::SRM_06:
         // SGSR1
         m_VendorVSRenabled = false;
         // m_VendorHDRenabled: Keep default setting
@@ -615,7 +627,7 @@ void D3D12VARenderer::enhanceAutoSelection()
         break;
 
 
-    case StreamingPreferences::SRM_06:
+    case StreamingPreferences::SRM_07:
         // RCAS (Only Sharpener)
         m_VendorVSRenabled = false;
         // m_VendorHDRenabled: Keep default setting
@@ -627,7 +639,7 @@ void D3D12VARenderer::enhanceAutoSelection()
         m_InfoAlgo = "Video Processor RCAS";
         break;
 
-    case StreamingPreferences::SRM_07:
+    case StreamingPreferences::SRM_08:
         // NIS Sharpener
         m_VendorVSRenabled = false;
         // m_VendorHDRenabled: Keep default setting
@@ -3659,12 +3671,12 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
                 m_RenderStep1 = RenderStep::CONVERT_SHADER;
                 break;
             case RenderStep::ALL_VIDEOPROCESSOR:
-                m_EnhancerType = D3D12VideoShaders::Enhancer::SGSR1;
+                m_EnhancerType = D3D12VideoShaders::Enhancer::MWSR;
                 m_RenderStep1 = RenderStep::CONVERT_SHADER;
                 m_RenderStep2 = RenderStep::UPSCALE_SHADER;
-                m_InfoUpscaler = "SGSR1 Upscaler";
-                m_InfoSharpener = "SGSR1 Sharpener";
-                m_InfoAlgo = "Shader SGSR1";
+                m_InfoUpscaler = "MWSR Upscaler";
+                m_InfoSharpener = "MWSR Sharpener";
+                m_InfoAlgo = "Shader MWSR";
                 if(m_VendorHDRenabled){
                     m_InfoAlgo = m_InfoAlgo + " (SDR->HDR)";
                 }
@@ -3690,12 +3702,12 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
             // Render Step 1
             switch (m_RenderStep1) {
             case RenderStep::ALL_VIDEOPROCESSOR:
-                m_EnhancerType = D3D12VideoShaders::Enhancer::SGSR1;
+                m_EnhancerType = D3D12VideoShaders::Enhancer::MWSR;
                 m_RenderStep1 = (m_IsTextureYUV444 && m_VideoProcessorConvertEnabled) ? RenderStep::CONVERT_VIDEOPROCESSOR : RenderStep::CONVERT_SHADER;
                 m_RenderStep2 = RenderStep::UPSCALE_SHADER;
-                m_InfoUpscaler = "SGSR1 Upscaler";
-                m_InfoSharpener = "SGSR1 Sharpener";
-                m_InfoAlgo = "Shader SGSR1";
+                m_InfoUpscaler = "MWSR Upscaler";
+                m_InfoSharpener = "MWSR Sharpener";
+                m_InfoAlgo = "Shader MWSR";
                 if(m_VendorHDRenabled){
                     m_InfoAlgo = m_InfoAlgo + " (SDR->HDR)";
                 }
@@ -3708,11 +3720,11 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
             // Render Step 2
             switch (m_RenderStep2) {
             case RenderStep::UPSCALE_VIDEOPROCESSOR:
-                m_EnhancerType = D3D12VideoShaders::Enhancer::SGSR1;
+                m_EnhancerType = D3D12VideoShaders::Enhancer::MWSR;
                 m_RenderStep2 = RenderStep::UPSCALE_SHADER;
-                m_InfoUpscaler = "SGSR1 Upscaler";
-                m_InfoSharpener = "SGSR1 Sharpener";
-                m_InfoAlgo = "SGSR1 FSR1";
+                m_InfoUpscaler = "MWSR Upscaler";
+                m_InfoSharpener = "MWSR Sharpener";
+                m_InfoAlgo = "Shader MWSR";
                 if(m_VendorHDRenabled){
                     m_InfoAlgo = m_InfoAlgo + " (SDR->HDR)";
                 }
@@ -4076,7 +4088,8 @@ bool D3D12VARenderer::initialize(PDECODER_PARAMETERS params)
                 viewport,
                 scissorRect,
                 m_EnhancerType,
-                m_Decoder.ColorSpace
+                m_Decoder.ColorSpace,
+                m_IsTextureYUV444
                 );
             if (!m_ShaderUpscaler)
                 return false;

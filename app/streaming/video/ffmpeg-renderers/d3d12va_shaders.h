@@ -33,6 +33,7 @@ public:
         NIS_SHARPENER,
         FSR1,
         SGSR1,
+        MWSR,
         RCAS,
         COPY
     };
@@ -51,7 +52,8 @@ public:
         D3D12_VIEWPORT viewport,
         D3D12_RECT scissorRect,
         Enhancer enhancer,
-        DXGI_COLOR_SPACE_TYPE colorSpace
+        DXGI_COLOR_SPACE_TYPE colorSpace,
+        bool isStreamYUV444 = false
         );
 
     ~D3D12VideoShaders();
@@ -89,6 +91,9 @@ private:
     };
     SGSRConstants m_SGSRConstants;
     ComPtr<ID3D12Resource> m_SGSRConstantBuffer;
+
+    // MWSR
+    ComPtr<ID3D12Resource> m_MWSRConstantBuffer;
 
     struct alignas(16) RootConsts
     {
@@ -165,6 +170,7 @@ private:
     bool m_IsYUV444 = false;
     bool m_IsHDR = false;
     bool m_Is2Planes = false;
+    bool m_IsStreamYUV444 = false; // The input texture can be RGB even if the stream is 4:4:4
     bool m_AdvancedShader = true;
 
     // States
@@ -225,6 +231,7 @@ private:
     bool initializeNIS(bool isUpscaling = true);
     bool initializeFSR1();
     bool initializeSGSR1();
+    bool initializeMWSR();
     bool initializeRCAS();
     bool initializeCOPY();
 
@@ -232,6 +239,7 @@ private:
     bool applyNIS();
     bool applyFSR1();
     bool applySGSR1();
+    bool applyMWSR();
     bool applyRCAS();
     bool applyCOPY();
 

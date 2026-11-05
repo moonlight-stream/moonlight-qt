@@ -1,3 +1,7 @@
+// MWSR Declaration
+// It must stay before the Windows headers, their min and max macros break std::min and std::max.
+#include "shaders/enhancer/MWSR/mwsr.h"
+
 #include <directx/d3dx12.h>
 #include "d3d12va_shaders.h"
 #include "SDL_log.h"
@@ -78,7 +82,8 @@ D3D12VideoShaders::D3D12VideoShaders(
     D3D12_VIEWPORT viewport,
     D3D12_RECT scissorRect,
     Enhancer enhancer,
-    DXGI_COLOR_SPACE_TYPE colorSpace
+    DXGI_COLOR_SPACE_TYPE colorSpace,
+    bool isStreamYUV444
     ) :
     m_Device(device),
     m_GraphicsCommandList(graphicsCommandList),
@@ -93,7 +98,8 @@ D3D12VideoShaders::D3D12VideoShaders(
     m_isYUV(false),
     m_IsYUV444(false),
     m_IsHDR(false),
-    m_Is2Planes(false)
+    m_Is2Planes(false),
+    m_IsStreamYUV444(isStreamYUV444)
 {
     // Texture must be provided
     if (!m_TextureIn || !m_TextureOut) {
@@ -175,6 +181,9 @@ D3D12VideoShaders::D3D12VideoShaders(
         break;
     case Enhancer::SGSR1:
         initializeSGSR1();
+        break;
+    case Enhancer::MWSR:
+        initializeMWSR();
         break;
     case Enhancer::RCAS:
         initializeRCAS();
@@ -336,6 +345,7 @@ bool D3D12VideoShaders::isUpscaler(Enhancer enhancer)
     switch (enhancer) {
     case Enhancer::FSR1:
     case Enhancer::NIS:
+    case Enhancer::MWSR:
         return true;
     default:
         return false;
@@ -355,6 +365,7 @@ bool D3D12VideoShaders::isSharpener(Enhancer enhancer)
     switch (enhancer) {
     case Enhancer::FSR1:
     case Enhancer::NIS:
+    case Enhancer::MWSR:
     case Enhancer::RCAS:
     case Enhancer::NIS_SHARPENER:
         return true;
@@ -1939,7 +1950,298 @@ bool D3D12VideoShaders::initializeSGSR1()
     SDL_Log("Pipeline State Object created successfully");
     
     SDL_Log("initializeSGSR1 completed successfully");
-    
+
+    return true;
+}
+
+/**
+ * \brief Initialize MoonlightWeb Super Resolution pipeline
+ *
+ * Compiles MWSR pixel shader.
+ * Fast as 1-Pass only, it upscales and sharpens in the same draw.
+ * The shader file depends on the scale, a stream larger than the output is reduced.
+ *
+ * \return bool True if initialization succeeded
+ */
+bool D3D12VideoShaders::initializeMWSR()
+{
+    // 1 SRV heap / 1 RTV heap
+    createDescriptorHeaps(1, 1, 0);
+
+    // Create SRVs for m_TextureIn
+    if (!updateShaderResourceView(m_TextureIn.Get())) {
+        return false;
+    }
+
+    // Create RTV descriptor for m_TextureOut at RTV index 0
+    if (!createRTVforResource(m_TextureOut.Get(), 0, m_TextureOut.Get()->GetDesc().Format)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "createRTVforResource failed");
+        return false;
+    }
+    SDL_Log("Created RTV for output texture");
+
+    // Select the shader file for this scale
+    const mwsr::Regime regime = mwsr::regime(m_InWidth, m_InHeight, m_OutWidth, m_OutHeight);
+    const QString shaderFile = ":/enhancer/" + QString::fromStdString(mwsr::shaderFile(regime));
+
+    // A 4:4:4 stream also sharpens the borders between two colours of the same luma
+    std::vector<mwsr::Define> upscaleDefines;
+    if (m_IsStreamYUV444) {
+        upscaleDefines.push_back({"CHROMA444", "1"});
+    }
+
+    // Use a local variable as it must stay alive until the end of the compilation
+    std::vector<std::wstring> shaderDefines;
+    for (const mwsr::Define& define : mwsr::defines(regime, upscaleDefines)) {
+        shaderDefines.push_back(QString::fromStdString(define.name + "=" + define.value).toStdWString());
+    }
+
+    ComPtr<IDxcCompiler3> compiler;
+    DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&compiler));
+    ComPtr<IDxcIncludeHandler> includeHandler = new QtIncludeHandler();
+    ComPtr<IDxcResult> result;
+
+    // Vertex shader
+    QFile fileVS(shaderFile);
+    if (!fileVS.open(QIODevice::ReadOnly)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot open %s for Vertex shader", qPrintable(shaderFile));
+        return false;
+    }
+    QByteArray hlslSourceVS = fileVS.readAll();
+    fileVS.close();
+
+    DxcBuffer sourceBufferVS = {};
+    sourceBufferVS.Ptr = hlslSourceVS.data();
+    sourceBufferVS.Size = hlslSourceVS.size();
+    sourceBufferVS.Encoding = DXC_CP_UTF8;
+
+    m_Args = {
+        L"-E",  L"MwsrVS",
+        L"-T",  L"vs_6_0",
+        L"-O3",
+        L"-Qstrip_reflect",
+        L"-Qstrip_debug",
+    };
+
+    m_hr = compiler->Compile(
+        &sourceBufferVS,
+        m_Args.data(),
+        (UINT32)m_Args.size(),
+        includeHandler.Get(),
+        IID_PPV_ARGS(&result));
+    if(!verifyHResult(m_hr, "compiler->Compile(... sourceBufferVS)")){
+        return false;
+    }
+
+    if(result){
+        ComPtr<IDxcBlobEncoding> errorsBlob;
+        m_hr = result->GetErrorBuffer(&errorsBlob);
+        if(!verifyHResult(m_hr, "result->GetErrorBuffer(&errorsBlob)")){
+            if (errorsBlob) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "VS compile error: %s",
+                             (char*)errorsBlob->GetBufferPointer());
+            }
+            return false;
+        }
+    }
+
+    ComPtr<IDxcBlob> shaderBlobVS;
+    ComPtr<IDxcBlobUtf16> shaderNameVS;
+    m_hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlobVS), &shaderNameVS);
+    if (!verifyHResult(m_hr, "result->GetOutput(DXC_OUT_OBJECT, ...)")) {
+        return false;
+    }
+    if (!shaderBlobVS || shaderBlobVS->GetBufferSize() == 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Shader blob Vertex shader is empty!");
+        return false;
+    }
+    SDL_Log("Vertex Shader compiled successfully");
+
+    // Pixel shader
+    QFile filePS(shaderFile);
+    if (!filePS.open(QIODevice::ReadOnly)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Cannot open %s for Pixel shader", qPrintable(shaderFile));
+        return false;
+    }
+    QByteArray hlslSourcePS = filePS.readAll();
+    filePS.close();
+
+    DxcBuffer sourceBufferPS = {};
+    sourceBufferPS.Ptr = hlslSourcePS.data();
+    sourceBufferPS.Size = hlslSourcePS.size();
+    sourceBufferPS.Encoding = DXC_CP_UTF8;
+
+    m_Args = {
+        L"-E",  L"MwsrPS",
+        L"-T",  L"ps_6_0",
+        L"-O3",
+        L"-Qstrip_reflect",
+        L"-Qstrip_debug",
+    };
+    for (const std::wstring& shaderDefine : shaderDefines) {
+        m_Args.push_back(L"-D");
+        m_Args.push_back(shaderDefine.c_str());
+    }
+
+    m_hr = compiler->Compile(
+        &sourceBufferPS,
+        m_Args.data(),
+        (UINT32)m_Args.size(),
+        includeHandler.Get(),
+        IID_PPV_ARGS(&result));
+    if(!verifyHResult(m_hr, "compiler->Compile(... sourceBufferPS)")){
+        return false;
+    }
+
+    if(result){
+        ComPtr<IDxcBlobEncoding> errorsBlob;
+        m_hr = result->GetErrorBuffer(&errorsBlob);
+        if(!verifyHResult(m_hr, "result->GetErrorBuffer(&errorsBlob)")){
+            if (errorsBlob) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "PS compile error: %s",
+                             (char*)errorsBlob->GetBufferPointer());
+            }
+            return false;
+        }
+    }
+
+    ComPtr<IDxcBlob> shaderBlobPS;
+    ComPtr<IDxcBlobUtf16> shaderNamePS;
+    m_hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlobPS), &shaderNamePS);
+    if (!verifyHResult(m_hr, "result->GetOutput(DXC_OUT_OBJECT, ...)")) {
+        return false;
+    }
+    if (!shaderBlobPS || shaderBlobPS->GetBufferSize() == 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Shader blob Pixel shader is empty!");
+        return false;
+    }
+    SDL_Log("Pixel Shader compiled successfully");
+
+    // Descriptor Range
+    CD3DX12_DESCRIPTOR_RANGE1 srvRange = {};
+    srvRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);  // 1 SRV, t0 (RGB)
+
+    // Root Parameters : descriptor table (index 0)
+    CD3DX12_ROOT_PARAMETER1 rootParameters[2] = {};
+    // index 0 : CBV b0 → MwsrConstants
+    rootParameters[0].InitAsConstantBufferView(
+        0, 0,
+        D3D12_ROOT_DESCRIPTOR_FLAG_NONE,
+        D3D12_SHADER_VISIBILITY_PIXEL);
+    // index 1 : SRV descriptor table t0
+    rootParameters[1].InitAsDescriptorTable(
+        1, &srvRange,
+        D3D12_SHADER_VISIBILITY_PIXEL);
+
+    // Static sampler
+    D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
+    samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+    samplerDesc.MipLODBias = 0;
+    samplerDesc.MaxAnisotropy = 1;
+    samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+    samplerDesc.MinLOD = 0.0f;
+    samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+    samplerDesc.ShaderRegister = 0;  // s0
+    samplerDesc.RegisterSpace = 0;
+    samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    // Root Signature
+    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+    D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+    rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 1, &samplerDesc,
+                               rootSignatureFlags);
+
+    ComPtr<ID3DBlob> signature;
+    ComPtr<ID3DBlob> error;
+    m_hr = D3DX12SerializeVersionedRootSignature(&rootSignatureDesc,
+                                                 D3D_ROOT_SIGNATURE_VERSION_1_1,
+                                                 &signature, &error);
+
+    if(!verifyHResult(m_hr, "D3DX12SerializeVersionedRootSignature(... rootSignatureDesc)")){
+        if (error) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Root signature serialization error: %s",
+                         (char*)error->GetBufferPointer());
+        }
+        return false;
+    }
+
+    m_hr = m_Device->CreateRootSignature(0, signature->GetBufferPointer(),
+                                         signature->GetBufferSize(),
+                                         IID_PPV_ARGS(&m_RootSignature));
+    if(!verifyHResult(m_hr, "m_Device->CreateRootSignature(... m_RootSignature)")){
+        return false;
+    }
+    SDL_Log("Root Signature created successfully");
+
+    // Scale constants
+    // Aligned to 256 bytes (required for D3D12 CBV)
+    const UINT cbSize = (sizeof(mwsr::Constants) + 255) & ~255;
+
+    CD3DX12_HEAP_PROPERTIES heapPropsCB(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC resDescCB = CD3DX12_RESOURCE_DESC::Buffer(cbSize);
+
+    m_hr = m_Device->CreateCommittedResource(
+        &heapPropsCB,
+        D3D12_HEAP_FLAG_NONE,
+        &resDescCB,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&m_MWSRConstantBuffer));
+    if (!verifyHResult(m_hr, "CreateCommittedResource MWSRConstantBuffer")) {
+        return false;
+    }
+
+    // HDR takes no margin on the upscale and no sharpening on the reduction
+    mwsr::Options options;
+    options.hdr = m_IsHDR;
+    const mwsr::Constants constants = mwsr::constants(m_InWidth, m_InHeight, m_OutWidth, m_OutHeight, options);
+
+    // Map → memcpy → Unmap
+    void* pDataCB = nullptr;
+    CD3DX12_RANGE readRangeCB(0, 0);
+    m_MWSRConstantBuffer->Map(0, &readRangeCB, &pDataCB);
+    memcpy(pDataCB, &constants, sizeof(mwsr::Constants));
+    m_MWSRConstantBuffer->Unmap(0, nullptr);
+
+    // Pipeline State Object
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+    psoDesc.pRootSignature = m_RootSignature.Get();
+    psoDesc.VS = CD3DX12_SHADER_BYTECODE(shaderBlobVS->GetBufferPointer(), shaderBlobVS->GetBufferSize());
+    psoDesc.PS = CD3DX12_SHADER_BYTECODE(shaderBlobPS->GetBufferPointer(), shaderBlobPS->GetBufferSize());
+    psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+    psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+    psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+    psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+    psoDesc.DepthStencilState.DepthEnable = FALSE;
+    psoDesc.DepthStencilState.StencilEnable = FALSE;
+    psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    psoDesc.DepthStencilState.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    psoDesc.DepthStencilState.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    psoDesc.InputLayout = { nullptr, 0 };
+    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    psoDesc.NumRenderTargets = 1;
+    psoDesc.RTVFormats[0] = m_TextureOut->GetDesc().Format;
+    psoDesc.SampleDesc.Count = 1;
+    psoDesc.SampleDesc.Quality = 0;
+    psoDesc.SampleMask = UINT_MAX;
+
+    m_hr = m_Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PipelineState));
+    if(!verifyHResult(m_hr, "m_Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PipelineState));")){
+        return false;
+    }
+    SDL_Log("Pipeline State Object created successfully");
+
+    SDL_Log("initializeMWSR completed successfully");
+
     return true;
 }
 
@@ -2276,6 +2578,9 @@ void D3D12VideoShaders::draw(
         break;
     case Enhancer::SGSR1:
         applySGSR1();
+        break;
+    case Enhancer::MWSR:
+        applyMWSR();
         break;
     case Enhancer::RCAS:
         applyRCAS();
@@ -2709,6 +3014,94 @@ bool D3D12VideoShaders::applySGSR1()
         m_GraphicsCommandList->ResourceBarrier(NbrBarriers, barriers);
     }
     
+    return true;
+}
+
+/**
+ * \brief Apply MWSR one-pass enhancement
+ *
+ * Execute MWSR upscaling and sharpening pass to the texture.
+ *
+ * \return bool True if MWSR applied successfully
+ */
+bool D3D12VideoShaders::applyMWSR()
+{
+    if (!m_GraphicsCommandList || !m_PipelineState) return false;
+
+    CD3DX12_RESOURCE_BARRIER barriers[2];
+    UINT NbrBarriers;
+
+    NbrBarriers = 0;
+    if(m_InputTextureStateIn != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE){
+        barriers[NbrBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_TextureIn.Get(),
+            m_InputTextureStateIn,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+            );
+        NbrBarriers++;
+    }
+    if(m_OutputTextureStateIn != D3D12_RESOURCE_STATE_RENDER_TARGET){
+        barriers[NbrBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_TextureOut.Get(),
+            m_OutputTextureStateIn,
+            D3D12_RESOURCE_STATE_RENDER_TARGET
+            );
+        NbrBarriers++;
+    }
+    if(NbrBarriers > 0){
+        m_GraphicsCommandList->ResourceBarrier(NbrBarriers, barriers);
+    }
+
+    m_GraphicsCommandList->SetPipelineState(m_PipelineState.Get());
+    m_GraphicsCommandList->SetGraphicsRootSignature(m_RootSignature.Get());
+
+    // Set descriptor heap and root signature/PSO
+    ID3D12DescriptorHeap* heaps[] = { m_DescriptorHeapCBV_SRV_UAV.Get() };
+    m_GraphicsCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+    m_GraphicsCommandList->SetGraphicsRootConstantBufferView(0, m_MWSRConstantBuffer->GetGPUVirtualAddress());
+
+    m_GraphicsCommandList->SetGraphicsRootDescriptorTable(
+        1,
+        m_DescriptorHeapCBV_SRV_UAV->GetGPUDescriptorHandleForHeapStart()
+        );
+
+    m_GraphicsCommandList->RSSetViewports(1, &m_Viewport);
+    m_GraphicsCommandList->RSSetScissorRects(1, &m_ScissorRect);
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_DescriptorHeapRTV->GetCPUDescriptorHandleForHeapStart());
+
+    m_GraphicsCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+    // Clear the texture in black
+    const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    m_GraphicsCommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
+    // Set primitive topology (triangle) and draw fullscreen triangle with SV_VertexID
+    m_GraphicsCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    m_GraphicsCommandList->DrawInstanced(3, 1, 0, 0);
+
+    NbrBarriers = 0;
+    if(m_InputTextureStateOut != D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE){
+        barriers[NbrBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_TextureIn.Get(),
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            m_InputTextureStateOut
+            );
+        NbrBarriers++;
+    }
+    if(m_OutputTextureStateOut != D3D12_RESOURCE_STATE_RENDER_TARGET){
+        barriers[NbrBarriers] = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_TextureOut.Get(),
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            m_OutputTextureStateOut
+            );
+        NbrBarriers++;
+    }
+    if(NbrBarriers > 0){
+        m_GraphicsCommandList->ResourceBarrier(NbrBarriers, barriers);
+    }
+
     return true;
 }
 

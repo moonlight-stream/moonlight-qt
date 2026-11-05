@@ -973,24 +973,28 @@ Flickable {
                             val: StreamingPreferences.SRM_02
                         }
                         ListElement {
-                            text: qsTr("FSR1 Upscaler")
+                            text: qsTr("MWSR Upscaler")
                             val: StreamingPreferences.SRM_03
                         }
                         ListElement {
-                            text: qsTr("NIS Upscaler")
+                            text: qsTr("FSR1 Upscaler")
                             val: StreamingPreferences.SRM_04
                         }
                         ListElement {
-                            text: qsTr("SGSR1 Upscaler")
+                            text: qsTr("NIS Upscaler")
                             val: StreamingPreferences.SRM_05
                         }
                         ListElement {
-                            text: qsTr("RCAS Sharpener")
+                            text: qsTr("SGSR1 Upscaler")
                             val: StreamingPreferences.SRM_06
                         }
                         ListElement {
-                            text: qsTr("NIS Sharpener")
+                            text: qsTr("RCAS Sharpener")
                             val: StreamingPreferences.SRM_07
+                        }
+                        ListElement {
+                            text: qsTr("NIS Sharpener")
+                            val: StreamingPreferences.SRM_08
                         }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
