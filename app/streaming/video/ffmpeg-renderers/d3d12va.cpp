@@ -1001,8 +1001,12 @@ bool D3D12VARenderer::enableAMDVideoSuperResolution(bool activate, bool logInfo)
         m_AmfVideoConverterUpscaled->Terminate();
         m_AmfVideoConverterUpscaled = nullptr;
         // Context
+        m_AmfCompute = nullptr;
         m_AmfContext->Terminate();
         m_AmfContext = nullptr;
+        // These interfaces must be released before the Factory unloads the AMF runtime
+        amfCaps = nullptr;
+        baseContext = nullptr;
         // Factory
         g_AMFFactory.Terminate();
 
