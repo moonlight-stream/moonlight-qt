@@ -111,6 +111,11 @@ bool CUDAGLInteropHelper::registerBoundTextures()
         // Get the ID of this plane's texture
         glActiveTexture(GL_TEXTURE0 + i);
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &tex);
+        if (tex == 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "No GL texture bound to slot %d", i);
+            err = 211; // CUDA_ERROR_NOT_MAPPED
+            goto Exit;
+        }
 
         // Register it with CUDA
         err = m_Funcs->cuGraphicsGLRegisterImage(&m_Resources[i], tex, GL_TEXTURE_2D, CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD);
