@@ -16,9 +16,14 @@ CUDARenderer::~CUDARenderer()
     }
 }
 
-bool CUDARenderer::initialize(PDECODER_PARAMETERS)
+bool CUDARenderer::initialize(PDECODER_PARAMETERS params)
 {
     int err;
+
+    // This renderer only supports NV12 output
+    if (params->videoFormat & (VIDEO_FORMAT_MASK_10BIT | VIDEO_FORMAT_MASK_YUV444)) {
+        return false;
+    }
 
     err = av_hwdevice_ctx_create(&m_HwContext, AV_HWDEVICE_TYPE_CUDA, nullptr, nullptr, 0);
     if (err != 0) {
