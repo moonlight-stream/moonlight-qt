@@ -5298,7 +5298,10 @@ RenderStep1:
         
         // Ask IntelVPL to consume directly the texture given (zero-copy),
         // otherwise IntelVPL will copy to its internal allocated resource. 
-        if (vppSurfaceIn && !vppSurfaceIn->surface) {
+        if (!vppSurfaceIn || !vppSurfaceOut) {
+            // All the surfaces are still in use by IntelVPL, we skip this frame
+            vppError = true;
+        } else if (!vppSurfaceIn->surface) {
             sts = m_MemoryInterface->ImportFrameSurface(
                 m_MemoryInterface,
                 MFX_SURFACE_COMPONENT_VPP_INPUT,
@@ -5308,8 +5311,6 @@ RenderStep1:
             if (sts != MFX_ERR_NONE) {
                 vppError = true;
             }
-        } else {
-            vppError = true;
         }
         
         if (vppError) {
@@ -5405,9 +5406,11 @@ RenderStep1:
         }
         
         // Process the upscaling
-        sts = MFXVideoVPP_ProcessFrameAsync(m_VppSession, vppSurfaceIn->surface, &vppSurfaceOut->surface);
+        if (!vppError) {
+            sts = MFXVideoVPP_ProcessFrameAsync(m_VppSession, vppSurfaceIn->surface, &vppSurfaceOut->surface);
+        }
         
-        if (sts == MFX_ERR_NONE && !vppError) {
+        if (!vppError && sts == MFX_ERR_NONE) {
             
             // Wait for the result
             sts = vppSurfaceOut->surface->FrameInterface->Synchronize(vppSurfaceOut->surface, 1000);
@@ -5548,6 +5551,12 @@ RenderStep1:
             
         } else {
             vppError = true;
+        }
+        
+        // The output surface is allocated by IntelVPL for each frame, it must be given back
+        if (vppSurfaceOut && vppSurfaceOut->surface) {
+            vppSurfaceOut->surface->FrameInterface->Release(vppSurfaceOut->surface);
+            vppSurfaceOut->surface = nullptr;
         }
         
         if (vppError) {
