@@ -44,6 +44,14 @@ public:
     };
     Q_ENUM(VideoDecoderSelection)
 
+    enum VideoScalingMode
+    {
+        VSM_AUTO,
+        VSM_LINEAR,
+        VSM_NEAREST
+    };
+    Q_ENUM(VideoScalingMode)
+
     // Mac only (for now)
     enum RendererSelection
     {
@@ -145,6 +153,7 @@ public:
     Q_PROPERTY(bool enableHdr MEMBER enableHdr NOTIFY enableHdrChanged)
     Q_PROPERTY(bool enableYUV444 MEMBER enableYUV444 NOTIFY enableYUV444Changed)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
+    Q_PROPERTY(VideoScalingMode videoScalingMode MEMBER videoScalingMode NOTIFY videoScalingModeChanged)
     Q_PROPERTY(RendererSelection rendererSelection MEMBER rendererSelection NOTIFY rendererSelectionChanged)
     Q_PROPERTY(WindowMode windowMode MEMBER windowMode NOTIFY windowModeChanged)
     Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
@@ -194,6 +203,7 @@ public:
     bool enableHdr;
     bool enableYUV444;
     VideoDecoderSelection videoDecoderSelection;
+    VideoScalingMode videoScalingMode;
     WindowMode windowMode;
     WindowMode recommendedFullScreenMode;
     UIDisplayMode uiDisplayMode;
@@ -220,6 +230,7 @@ signals:
     void enableHdrChanged();
     void enableYUV444Changed();
     void videoDecoderSelectionChanged();
+    void videoScalingModeChanged();
     void uiDisplayModeChanged();
     void windowModeChanged();
     void framePacingChanged();
@@ -246,4 +257,3 @@ private:
 
     QQmlEngine* m_QmlEngine;
 };
-

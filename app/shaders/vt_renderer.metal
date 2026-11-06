@@ -24,13 +24,20 @@ vertex Vertex vs_draw(constant Vertex *vertices [[ buffer(0) ]], uint id [[ vert
 
 fragment half4 ps_draw_biplanar(Vertex v [[ stage_in ]],
                                 constant CscParams &cscParams [[ buffer(0) ]],
+                                constant uint &nearestNeighbor [[ buffer(1) ]],
                                 texture2d<half> luminancePlane [[ texture(0) ]],
                                 texture2d<half> chrominancePlane [[ texture(1) ]])
 {
+    float2 texCoords = v.texCoords;
+    if (nearestNeighbor) {
+        float2 lumaSize(luminancePlane.get_width(), luminancePlane.get_height());
+        texCoords = (floor(texCoords * lumaSize) + 0.5) / lumaSize;
+    }
+
     float2 chromaOffset = float2(cscParams.chromaOffset) / float2(luminancePlane.get_width(),
                                                                   luminancePlane.get_height());
-    half3 yuv = half3(luminancePlane.sample(s, v.texCoords).r,
-                      chrominancePlane.sample(s, v.texCoords + chromaOffset).rg);
+    half3 yuv = half3(luminancePlane.sample(s, texCoords).r,
+                      chrominancePlane.sample(s, texCoords + chromaOffset).rg);
     yuv *= cscParams.bitnessScaleFactor;
     yuv -= cscParams.offsets;
 
@@ -39,15 +46,22 @@ fragment half4 ps_draw_biplanar(Vertex v [[ stage_in ]],
 
 fragment half4 ps_draw_triplanar(Vertex v [[ stage_in ]],
                                  constant CscParams &cscParams [[ buffer(0) ]],
+                                 constant uint &nearestNeighbor [[ buffer(1) ]],
                                  texture2d<half> luminancePlane [[ texture(0) ]],
                                  texture2d<half> chrominancePlaneU [[ texture(1) ]],
                                  texture2d<half> chrominancePlaneV [[ texture(2) ]])
 {
+    float2 texCoords = v.texCoords;
+    if (nearestNeighbor) {
+        float2 lumaSize(luminancePlane.get_width(), luminancePlane.get_height());
+        texCoords = (floor(texCoords * lumaSize) + 0.5) / lumaSize;
+    }
+
     float2 chromaOffset = float2(cscParams.chromaOffset) / float2(luminancePlane.get_width(),
                                                                   luminancePlane.get_height());
-    half3 yuv = half3(luminancePlane.sample(s, v.texCoords).r,
-                      chrominancePlaneU.sample(s, v.texCoords + chromaOffset).r,
-                      chrominancePlaneV.sample(s, v.texCoords + chromaOffset).r);
+    half3 yuv = half3(luminancePlane.sample(s, texCoords).r,
+                      chrominancePlaneU.sample(s, texCoords + chromaOffset).r,
+                      chrominancePlaneV.sample(s, texCoords + chromaOffset).r);
     yuv *= cscParams.bitnessScaleFactor;
     yuv -= cscParams.offsets;
 
