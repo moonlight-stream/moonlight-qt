@@ -1,4 +1,7 @@
 #include "session.h"
+#ifdef Q_OS_MACOS
+#include "native-mic.h"
+#endif
 #include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
 #include "backend/richpresencemanager.h"
@@ -1274,6 +1277,10 @@ private:
                 !m_Session->m_UnexpectedTermination &&
                 m_Session->m_Preferences->quitAppAfter;
 
+#ifdef Q_OS_MACOS
+        // Capture is also stopped synchronously by exec() before window/UI exit.
+        stopNativeMic();
+#endif
         // Notify the UI
         if (shouldQuit) {
             emit m_Session->quitStarting();
@@ -1716,6 +1723,10 @@ bool Session::startConnectionAsync()
                                                                          false);
     }
 
+#ifdef Q_OS_MACOS
+    const bool nativeTone = qgetenv("MOONLIGHT_NATIVE_TEST_TONE") == "1";
+    m_StreamConfig.requestNativeMic = m_Preferences->nativeMic || nativeTone;
+#endif
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks, &m_AudioCallbacks,
                                 NULL, 0, NULL, 0);
@@ -1725,8 +1736,73 @@ bool Session::startConnectionAsync()
         return false;
     }
 
+#ifdef Q_OS_MACOS
+    if (m_StreamConfig.requestNativeMic) {
+        char address[64];
+        if (!LiGetNativeMicPort()) {
+            m_NativeMicMessage = tr("Microphone unavailable: host setup/negotiation required");
+        }
+        else if (!LiIsNativeMicAudioEncrypted()) {
+            m_NativeMicMessage = tr("Microphone stopped: encrypted native audio mode required");
+        }
+        else if (!LiGetNativeMicAddress(address, sizeof(address))) {
+            m_NativeMicMessage = tr("Microphone unavailable: private IPv4 host required");
+        }
+        else {
+            int status = (nativeTone ? startNativeTone : startNativeMic)(address, LiGetNativeMicPort(),
+                    m_StreamConfig.remoteInputAesKey, m_StreamConfig.remoteInputAesIv);
+            m_NativeMicActive = status == 0;
+            if (m_NativeMicActive) {
+                m_NativeMicMessage = nativeTone ? tr("Synthetic microphone tone (no capture)\nCtrl+Alt+Shift+N to stop")
+                                               : tr("Microphone forwarding ON\nCtrl+Alt+Shift+N to stop");
+            }
+            else if (status == 1) {
+                m_NativeMicMessage = tr("Grant microphone access in macOS, then reconnect");
+            }
+            else if (status == 2) {
+                m_NativeMicMessage = tr("Microphone access denied: review macOS Privacy settings");
+            }
+            else if (status == 5) {
+                m_NativeMicMessage = tr("Microphone forwarding requires macOS 10.14 or later");
+            }
+            else {
+                m_NativeMicMessage = tr("Microphone could not start (code %1); normal streaming continues").arg(status);
+            }
+            SDL_Log("Native microphone start result: %d", status);
+        }
+    }
+#endif
     emit connectionStarted();
     return true;
+}
+
+void Session::stopNativeMicrophone()
+{
+#ifdef Q_OS_MACOS
+    stopNativeMic();
+    m_NativeMicActive = false;
+    m_NativeMicMessage = tr("Microphone forwarding stopped\nReconnect to enable it again");
+    m_NativeMicMessageExpires = SDL_GetTicks() + 8000;
+    updateNativeMicrophoneStatus();
+#endif
+}
+
+void Session::updateNativeMicrophoneStatus()
+{
+#ifdef Q_OS_MACOS
+    if (m_NativeMicActive && nativeMicStatus() <= 0) {
+        const bool failed = nativeMicStatus() < 0;
+        stopNativeMic();
+        m_NativeMicActive = false;
+        m_NativeMicMessage = failed ? tr("Microphone stopped after a capture/transport error")
+                                   : tr("Synthetic microphone test complete");
+    }
+    if (!m_NativeMicActive && !m_NativeMicMessage.isEmpty()) {
+        if (!m_NativeMicMessageExpires) m_NativeMicMessageExpires = SDL_GetTicks() + 8000;
+        if (SDL_TICKS_PASSED(SDL_GetTicks(), m_NativeMicMessageExpires)) m_NativeMicMessage.clear();
+    }
+    m_OverlayManager.setMicrophoneStatus(m_NativeMicMessage.toUtf8());
+#endif
 }
 
 void Session::flushWindowEvents()
@@ -1794,6 +1870,10 @@ void Session::exec()
 {
     // If the connection failed, clean up and abort the connection.
     if (!m_AsyncConnectionSuccess) {
+#ifdef Q_OS_MACOS
+        stopNativeMic();
+        m_NativeMicActive = false;
+#endif
         delete m_InputHandler;
         m_InputHandler = nullptr;
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -1880,7 +1960,10 @@ void Session::exec()
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_CreateWindow() failed: %s",
                          SDL_GetError());
-
+#ifdef Q_OS_MACOS
+            stopNativeMic();
+            m_NativeMicActive = false;
+#endif
             delete m_InputHandler;
             m_InputHandler = nullptr;
             SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -1976,7 +2059,12 @@ void Session::exec()
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
+    Uint32 nativeMicStatusAt = 0;
     for (;;) {
+        if (SDL_GetTicks() - nativeMicStatusAt >= 1000) {
+            updateNativeMicrophoneStatus();
+            nativeMicStatusAt = SDL_GetTicks();
+        }
 #if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)
         // SDL 2.0.18 has a proper wait event implementation that uses platform
         // support to block on events rather than polling on Windows, macOS, X11,
@@ -2321,6 +2409,13 @@ void Session::exec()
     }
 
 DispatchDeferredCleanup:
+#ifdef Q_OS_MACOS
+    // End capture while the streaming UI/stop shortcut still belongs to us,
+    // before renderer/window teardown or deferred network cleanup can delay it.
+    stopNativeMic();
+    m_NativeMicActive = false;
+    m_OverlayManager.setMicrophoneStatus(QByteArray());
+#endif
     // Switch back to synchronous logging mode
     StreamUtils::exitAsyncLoggingMode();
 

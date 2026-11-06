@@ -580,3 +580,9 @@ macx {
 
 VERSION = "$$cat(version.txt)"
 DEFINES += VERSION_STR=\\\"$$cat(version.txt)\\\"
+
+macx {
+    OBJECTIVE_SOURCES += streaming/native-mic.m
+    HEADERS += streaming/native-mic.h
+    LIBS += -framework AudioToolbox -framework AVFoundation
+}
