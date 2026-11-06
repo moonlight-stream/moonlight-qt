@@ -154,11 +154,17 @@ CenteredGridView {
             width: parent.width
             anchors.top: pcIcon.bottom
             anchors.bottom: parent.bottom
-            font.pointSize: 36
+            font.pointSize: 30
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             elide: Text.ElideRight
         }
+
+        // Display a tooltip with the full name if it's truncated
+        ToolTip.text: model.name
+        ToolTip.delay: 1000
+        ToolTip.timeout: 5000
+        ToolTip.visible: (hovered || highlighted) && pcNameText.truncated
 
         Loader {
             id: pcContextMenuLoader
