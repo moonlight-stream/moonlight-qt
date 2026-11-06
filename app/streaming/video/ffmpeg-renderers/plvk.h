@@ -10,6 +10,8 @@
 #include <libplacebo/log.h>
 #include <libplacebo/renderer.h>
 #include <libplacebo/vulkan.h>
+#include <libplacebo/dispatch.h>
+#include <libplacebo/shaders/colorspace.h>
 #include <libplacebo/shaders/custom.h>
 
 #include <QFile>
@@ -83,6 +85,9 @@ private:
     std::string loadGLSL(const QString& path);
     void fsrHook(pl_hook_res *res, const pl_hook_params *params);
 
+    // MWSR in one pass from the decoder's planes, when Video Enhancement takes MWSR
+    bool renderMwsrPlanes(const AVFrame* frame, const pl_frame* image, const pl_frame* target);
+
     // The backend renderer if we're frontend-only
     IFFmpegRenderer* m_Backend;
     AVHWDeviceType m_HwDeviceType;
@@ -155,6 +160,12 @@ private:
     const pl_hook *m_FsrHookHDR = nullptr;
     pl_render_params m_RenderParams = pl_render_fast_params;
     pl_render_params m_RenderParamsHDR = pl_render_fast_params;
+
+    // MWSR's one pass (renderMwsrPlanes), null when MWSR is not in use
+    pl_dispatch m_MwsrDispatch = nullptr;
+    std::string m_MwsrPlanesShader;
+    bool m_MwsrYUV444 = false;
+    bool m_MwsrPlanesInUse = false;
 
     // Vulkan functions we call directly
     PFN_vkDestroySurfaceKHR fn_vkDestroySurfaceKHR = nullptr;

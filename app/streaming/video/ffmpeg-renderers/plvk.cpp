@@ -17,6 +17,7 @@ extern "C" {
 
 #include <vector>
 #include <set>
+#include <cmath>
 
 #ifndef VK_KHR_video_decode_av1
 #define VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME "VK_KHR_video_decode_av1"
@@ -200,6 +201,7 @@ PlVkRenderer::~PlVkRenderer()
         DrmMasterLocker locker;
 
         pl_renderer_destroy(&m_Renderer);
+        pl_dispatch_destroy(&m_MwsrDispatch);
 
         // The FSR hooks own GPU resources, so they must be released while the
         // pl_gpu they were parsed on is still alive. m_FsrHookHDR stays null when
@@ -731,6 +733,16 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
             m_RenderParamsHDR.num_hooks = m_FsrHook ? 1 : 0;
         }
 
+        // MWSR is drawn in one pass straight from the decoder's planes whenever the frame allows it
+        // (renderMwsrPlanes), the hook above being kept for the other frames
+        if (isMWSR) {
+            m_MwsrPlanesShader = loadGLSL(":/enhancer/mwsr-up-planes.glsl");
+            if (!m_MwsrPlanesShader.empty()) {
+                m_MwsrDispatch = pl_dispatch_create(m_Log, m_Vulkan->gpu);
+            }
+            m_MwsrYUV444 = isYUV444;
+        }
+
         if (m_RenderParams.num_hooks == 0 || m_RenderParamsHDR.num_hooks == 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to parse the %s shader. Video enhancement is disabled for this session.",
@@ -771,6 +783,172 @@ std::string PlVkRenderer::loadGLSL(const QString& path)
     file.close();
 
     return std::string(data.constData(), data.size());
+}
+
+// MWSR in one pass: the kernel reads the decoder's luma and chroma planes, turns each read into RGB
+// and writes the target itself, through the same colour mapping as pl_render_image. This replaces
+// the three passes of the hook (the RGB picture at the stream's size, the hook, the output).
+// Returns false, for pl_render_image to draw the frame, unless the frame is a two-plane YCbCr one
+// (the hardware decoders' NV12 and P010) drawn larger on both axes, as the hook's //!WHEN asks.
+bool PlVkRenderer::renderMwsrPlanes(const AVFrame* frame, const pl_frame* image, const pl_frame* target)
+{
+    if (m_MwsrDispatch == nullptr || m_MwsrPlanesShader.empty() ||
+            image->num_planes != 2 || target->num_planes != 1 || image->repr.dovi != nullptr ||
+            image->planes[0].flipped || image->planes[1].flipped || target->planes[0].flipped) {
+        return false;
+    }
+
+    // Y, then Cb and Cr
+    const pl_plane& luma = image->planes[0];
+    const pl_plane& chroma = image->planes[1];
+    if (luma.components != 1 || luma.component_mapping[0] != 0 ||
+            chroma.components != 2 || chroma.component_mapping[0] != 1 || chroma.component_mapping[1] != 2) {
+        return false;
+    }
+    switch (image->repr.sys) {
+    case PL_COLOR_SYSTEM_BT_601:
+    case PL_COLOR_SYSTEM_BT_709:
+    case PL_COLOR_SYSTEM_SMPTE_240M:
+    case PL_COLOR_SYSTEM_BT_2020_NC:
+        break;
+    default:
+        return false;
+    }
+    pl_tex lumaTex = luma.texture;
+    pl_tex chromaTex = chroma.texture;
+    pl_tex fbo = target->planes[0].texture;
+    if (!lumaTex->params.sampleable || !chromaTex->params.sampleable || !fbo->params.renderable ||
+            !(lumaTex->params.format->caps & PL_FMT_CAP_LINEAR) || !(chromaTex->params.format->caps & PL_FMT_CAP_LINEAR)) {
+        return false;
+    }
+
+    const float srcW = image->crop.x1 - image->crop.x0;
+    const float srcH = image->crop.y1 - image->crop.y0;
+    const float dstW = target->crop.x1 - target->crop.x0;
+    const float dstH = target->crop.y1 - target->crop.y0;
+    if (srcW <= 0 || srcH <= 0 || !(dstW > srcW && dstH > srcH)) {
+        return false;
+    }
+
+    // The YCbCr to RGB transform, the bit depth folded in (P010 holds 10 bits at the top of 16)
+    pl_color_repr repr = image->repr;
+    const float bitScale = pl_color_repr_normalize(&repr);
+    const pl_transform3x3 yuvToRgb = pl_color_repr_decode(&repr, nullptr);
+
+    // The values mwsr-up-planes.glsl reads, in luma texture coordinates
+    const float lw = lumaTex->params.w, lh = lumaTex->params.h;
+    const float cw = chromaTex->params.w, ch = chromaTex->params.h;
+    float yuv[3][3], yuvc[3];
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            yuv[i][j] = yuvToRgb.mat.m[i][j] * bitScale;
+        }
+        yuvc[i] = yuvToRgb.c[i];
+    }
+    const float pt[2] = { 1.0f / lw, 1.0f / lh };
+    const float dims[2] = { lw, lh };
+    const float ymin[2] = { (image->crop.x0 + 0.5f) / lw, (image->crop.y0 + 0.5f) / lh };
+    const float ymax[2] = { (image->crop.x1 - 0.5f) / lw, (image->crop.y1 - 0.5f) / lh };
+    const float cmin[2] = { image->crop.x0 / lw + 0.5f / cw, image->crop.y0 / lh + 0.5f / ch };
+    const float cmax[2] = { image->crop.x1 / lw - 0.5f / cw, image->crop.y1 / lh - 0.5f / ch };
+    const float coff[2] = { -chroma.shift_x / lw, -chroma.shift_y / lh };
+    const float scale[2] = { dstW / srcW, dstH / srcH };
+    const float src0[2] = { image->crop.x0, image->crop.y0 };
+
+    pl_rect2d rect;
+    rect.x0 = (int)lroundf(target->crop.x0);
+    rect.y0 = (int)lroundf(target->crop.y0);
+    rect.x1 = (int)lroundf(target->crop.x1);
+    rect.y1 = (int)lroundf(target->crop.y1);
+    const float dst0[2] = { (float)rect.x0, (float)rect.y0 };
+
+    pl_shader_desc descs[2] = {};
+    descs[0].desc.name = "mwsr_luma";
+    descs[0].desc.type = PL_DESC_SAMPLED_TEX;
+    descs[0].binding.object = lumaTex;
+    descs[0].binding.address_mode = PL_TEX_ADDRESS_CLAMP;
+    descs[0].binding.sample_mode = PL_TEX_SAMPLE_LINEAR;
+    descs[1] = descs[0];
+    descs[1].desc.name = "mwsr_chroma";
+    descs[1].binding.object = chromaTex;
+
+    pl_shader_var vars[14] = {};
+    int numVars = 0;
+    auto addVar = [&](pl_var var, const void* data) {
+        vars[numVars].var = var;
+        vars[numVars].data = data;
+        numVars++;
+    };
+    addVar(pl_var_vec3("mwsr_yuv0"), yuv[0]);
+    addVar(pl_var_vec3("mwsr_yuv1"), yuv[1]);
+    addVar(pl_var_vec3("mwsr_yuv2"), yuv[2]);
+    addVar(pl_var_vec3("mwsr_yuvc"), yuvc);
+    addVar(pl_var_vec2("mwsr_pt"), pt);
+    addVar(pl_var_vec2("mwsr_dims"), dims);
+    addVar(pl_var_vec2("mwsr_ymin"), ymin);
+    addVar(pl_var_vec2("mwsr_ymax"), ymax);
+    addVar(pl_var_vec2("mwsr_cmin"), cmin);
+    addVar(pl_var_vec2("mwsr_cmax"), cmax);
+    addVar(pl_var_vec2("mwsr_coff"), coff);
+    addVar(pl_var_vec2("mwsr_scale"), scale);
+    addVar(pl_var_vec2("mwsr_src0"), src0);
+    addVar(pl_var_vec2("mwsr_dst0"), dst0);
+
+    const bool hdr = frame->color_trc == AVCOL_TRC_SMPTE2084;
+    const std::string header = std::string("#define MWSR_HDR ") + (hdr ? "1" : "0") +
+                               "\n#define MWSR_CHROMA444 " + (m_MwsrYUV444 ? "1" : "0") + "\n" + m_MwsrPlanesShader;
+
+    pl_custom_shader custom = {};
+    custom.header = header.c_str();
+    custom.description = "MWSR (MoonlightWeb Super Resolution) from the planes";
+    custom.body = "color = mwsrPlanes();";
+    custom.input = PL_SHADER_SIG_NONE;
+    custom.output = PL_SHADER_SIG_COLOR;
+    custom.descriptors = descs;
+    custom.num_descriptors = 2;
+    custom.variables = vars;
+    custom.num_variables = numVars;
+
+    pl_dispatch_reset_frame(m_MwsrDispatch);
+    pl_shader sh = pl_dispatch_begin(m_MwsrDispatch);
+    if (!pl_shader_custom(sh, &custom)) {
+        pl_dispatch_abort(m_MwsrDispatch, &sh);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "MWSR: the one-pass shader was refused, the hook takes over");
+        m_MwsrPlanesShader.clear();
+        return false;
+    }
+
+    // From the picture's colours to the target's, as pl_render_image maps them
+    pl_color_space srcColor = image->color;
+    pl_color_space dstColor = target->color;
+    pl_color_space_infer_map(&srcColor, &dstColor);
+    pl_color_map_args mapArgs = {};
+    mapArgs.src = srcColor;
+    mapArgs.dst = dstColor;
+    pl_shader_color_map_ex(sh, &pl_color_map_default_params, &mapArgs);
+
+    // The bars around a picture that does not fill the target, as pl_render_image clears them
+    if (rect.x0 > 0 || rect.y0 > 0 || rect.x1 < fbo->params.w || rect.y1 < fbo->params.h) {
+        static const float black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        pl_frame_clear_rgba(m_Vulkan->gpu, target, black);
+    }
+
+    pl_dispatch_params dispatch = {};
+    dispatch.shader = &sh;
+    dispatch.target = fbo;
+    dispatch.rect = rect;
+    if (!pl_dispatch_finish(m_MwsrDispatch, &dispatch)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "MWSR: the one-pass shader failed, the hook takes over");
+        m_MwsrPlanesShader.clear();
+        return false;
+    }
+
+    if (!m_MwsrPlanesInUse) {
+        m_MwsrPlanesInUse = true;
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "MWSR drawn in one pass from the decoder's planes (%dx%d to %dx%d)",
+                    (int)srcW, (int)srcH, (int)dstW, (int)dstH);
+    }
+    return true;
 }
 
 bool PlVkRenderer::createSwapchain(int depth)
@@ -1236,7 +1414,14 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         renderParams = (frame->color_trc == AVCOL_TRC_SMPTE2084) ? m_RenderParamsHDR : m_RenderParams;
     }
 
-    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &renderParams)) {
+    if (m_VideoEnhancement->isVideoEnhancementEnabled() && renderMwsrPlanes(frame, &mappedFrame, &targetFrame)) {
+        // MWSR has drawn the video, only the overlays are left (a NULL image draws them alone)
+        if (targetFrame.num_overlays > 0 && !pl_render_image(m_Renderer, nullptr, &targetFrame, &pl_render_fast_params)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "pl_render_image() failed for the overlays");
+        }
+    }
+    else if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &renderParams)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_render_image() failed");
         // NB: We must fallthrough to call pl_swapchain_submit_frame()

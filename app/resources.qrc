@@ -112,6 +112,7 @@
         <file alias="mwsr-down-9.hlsl">shaders/enhancer/MWSR/mwsr-down-9.hlsl</file>
         <file alias="mwsr-down-16.hlsl">shaders/enhancer/MWSR/mwsr-down-16.hlsl</file>
         <file alias="mwsr-up.hook">shaders/enhancer/MWSR/mwsr-up.hook</file>
+        <file alias="mwsr-up-planes.glsl">shaders/enhancer/MWSR/mwsr-up-planes.glsl</file>
         <file alias="mwsr-up.metal">shaders/enhancer/MWSR/mwsr-up.metal</file>
     </qresource>
 </RCC>
