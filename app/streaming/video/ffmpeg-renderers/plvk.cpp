@@ -56,6 +56,23 @@ public:
     DrmMasterLocker& operator=(DrmMasterLocker&&) noexcept = delete;
 };
 
+// MWSR's hook takes its HDR (PQ) and 4:4:4 variants from its parameters
+static void setMwsrParameters(const pl_hook* hook, bool hdr, bool yuv444)
+{
+    if (hook == nullptr) {
+        return;
+    }
+    for (int i = 0; i < hook->num_parameters; i++) {
+        const pl_hook_par& par = hook->parameters[i];
+        if (strcmp(par.name, "MWSR_HDR") == 0) {
+            par.data->i = hdr ? 1 : 0;
+        }
+        else if (strcmp(par.name, "MWSR_CHROMA444") == 0) {
+            par.data->i = yuv444 ? 1 : 0;
+        }
+    }
+}
+
 #if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(60, 26, 100)
 static const char *k_OptionalDeviceExtensions[] = {
     /* Misc or required by other extensions */
@@ -677,14 +694,21 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
 #endif
 
-    // Video Super Resolution via the Shader FSR1
+    // Video Super Resolution via the Shader FSR1, or MWSR when it is selected
     // https://gist.github.com/agyild/82219c545228d70c5604f865ce0b0ce5
     if (m_VideoEnhancement->isVideoEnhancementEnabled()) {
 
+        // MWSR: one text for SDR and HDR, each hook told by its parameters which one it draws
+        const bool isMWSR = StreamingPreferences::get()->superResolutionMode == StreamingPreferences::SRM_03;
+        const bool isYUV444 = (params->videoFormat & VIDEO_FORMAT_MASK_YUV444) != 0;
+
         // FSR1 (SDR)
         // The shader has been customized to set the sharpening at 0.75
-        std::string FsrShader = loadGLSL(":/enhancer/FSR1.glsl");
+        std::string FsrShader = loadGLSL(isMWSR ? ":/enhancer/mwsr-up.hook" : ":/enhancer/FSR1.glsl");
         m_FsrHook = pl_mpv_user_shader_parse(m_Vulkan->gpu, FsrShader.c_str(), FsrShader.size());
+        if (isMWSR) {
+            setMwsrParameters(m_FsrHook, false, isYUV444);
+        }
         m_RenderParams.hooks     = &m_FsrHook;
         m_RenderParams.num_hooks = m_FsrHook ? 1 : 0;
 
@@ -693,8 +717,11 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         // Only a 10-bit stream can carry PQ frames, so for anything else the SDR hook is reused
         // rather than parsing and allocating GPU resources for a second identical copy of it.
         if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
-            std::string FsrShaderHDR = loadGLSL(":/enhancer/FSR1_HDR.glsl");
+            std::string FsrShaderHDR = isMWSR ? FsrShader : loadGLSL(":/enhancer/FSR1_HDR.glsl");
             m_FsrHookHDR = pl_mpv_user_shader_parse(m_Vulkan->gpu, FsrShaderHDR.c_str(), FsrShaderHDR.size());
+            if (isMWSR) {
+                setMwsrParameters(m_FsrHookHDR, true, isYUV444);
+            }
             m_RenderParamsHDR.hooks     = &m_FsrHookHDR;
             m_RenderParamsHDR.num_hooks = m_FsrHookHDR ? 1 : 0;
         }
@@ -705,7 +732,8 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 
         if (m_RenderParams.num_hooks == 0 || m_RenderParamsHDR.num_hooks == 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to parse the FSR1 shader. Video enhancement is disabled for this session.");
+                         "Failed to parse the %s shader. Video enhancement is disabled for this session.",
+                         isMWSR ? "MWSR" : "FSR1");
             m_VideoEnhancement->enableVideoEnhancement(false);
         }
         else {
@@ -713,7 +741,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
             SDL_Vulkan_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
             m_VideoEnhancement->setRatio(static_cast<float>(drawableHeight) / static_cast<float>(params->height));
 
-            m_VideoEnhancement->setAlgo("Shader FSR1");
+            m_VideoEnhancement->setAlgo(isMWSR ? "Shader MWSR" : "Shader FSR1");
         }
     }
 
