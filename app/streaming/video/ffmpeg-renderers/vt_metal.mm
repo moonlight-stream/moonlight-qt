@@ -20,6 +20,9 @@
 #import <MetalPerformanceShaders/MetalPerformanceShaders.h>
 
 #include "streaming/video/videoenhancement.h"
+#include "shaders/enhancer/MWSR/mwsr.h"
+
+#include <QFile>
 
 extern "C" {
     #include <libavutil/pixdesc.h>
@@ -154,6 +157,18 @@ public:
             [m_ChromaUpscaler release];
         }
 
+        if (m_MwsrRgbTexture != nullptr) {
+            [m_MwsrRgbTexture release];
+        }
+
+        if (m_MwsrPipelineState != nullptr) {
+            [m_MwsrPipelineState release];
+        }
+
+        if (m_MwsrLibrary != nullptr) {
+            [m_MwsrLibrary release];
+        }
+
         // Note: CFRelease makes the application crash sometime as the m_TextureCache seems to be cleared before it is called
         // if (m_TextureCache != nullptr) {
         //     CFRelease(m_TextureCache);
@@ -188,6 +203,10 @@ public:
         dst.w = drawableWidth;
         dst.h = drawableHeight;
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        // MWSR draws into this region, its size in pixels
+        m_VideoRegionWidth = dst.w;
+        m_VideoRegionHeight = dst.h;
 
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
@@ -336,6 +355,21 @@ public:
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to create video pipeline state");
             return false;
+        }
+
+        // MWSR draws the RGB frame into the same layer
+        if (m_MwsrLibrary) {
+            pipelineDesc = [[MTLRenderPipelineDescriptor new] autorelease];
+            pipelineDesc.vertexFunction = [[m_ShaderLibrary newFunctionWithName:@"vs_draw"] autorelease];
+            pipelineDesc.fragmentFunction = [[m_MwsrLibrary newFunctionWithName:@"mwsr_up"] autorelease];
+            pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
+            [m_MwsrPipelineState release];
+            m_MwsrPipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
+            if (!m_MwsrPipelineState) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to create MWSR pipeline state");
+                return false;
+            }
         }
 
         pipelineDesc = [[MTLRenderPipelineDescriptor new] autorelease];
@@ -576,7 +610,60 @@ public:
 
         id<MTLCommandBuffer> commandBuffer = [m_CommandQueue commandBuffer];
 
-        if(frame->format == AV_PIX_FMT_VIDEOTOOLBOX && m_VideoEnhancement->isVideoEnhancementEnabled()){
+        // MWSR: the frame converted to RGB at its own size, then drawn by MWSR into the video region, when both axes grow
+        bool useMwsr = false;
+        mwsr::Constants mwsrConstants{};
+        if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX && m_VideoEnhancement->isVideoEnhancementEnabled() && m_IsMWSR && m_MwsrPipelineState) {
+            const int inWidth = (int)CVPixelBufferGetWidthOfPlane(pixBuf, 0);
+            const int inHeight = (int)CVPixelBufferGetHeightOfPlane(pixBuf, 0);
+            useMwsr = m_VideoRegionWidth > inWidth && m_VideoRegionHeight > inHeight;
+
+            if (useMwsr && (m_MwsrRgbTexture == nullptr ||
+                            (int)m_MwsrRgbTexture.width != inWidth || (int)m_MwsrRgbTexture.height != inHeight ||
+                            m_MwsrRgbTexture.pixelFormat != m_MetalLayer.pixelFormat)) {
+                [m_MwsrRgbTexture release];
+                MTLTextureDescriptor* rgbDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:m_MetalLayer.pixelFormat
+                                                                                                     width:inWidth
+                                                                                                    height:inHeight
+                                                                                                 mipmapped:NO];
+                rgbDescriptor.storageMode = MTLStorageModePrivate;
+                rgbDescriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
+                m_MwsrRgbTexture = [m_MetalLayer.device newTextureWithDescriptor:rgbDescriptor];
+                useMwsr = m_MwsrRgbTexture != nullptr;
+            }
+
+            if (useMwsr) {
+                MTLRenderPassDescriptor* rgbPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+                rgbPassDescriptor.colorAttachments[0].texture = m_MwsrRgbTexture;
+                rgbPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+                rgbPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+
+                // The whole texture, in the video region's orientation
+                Vertex wholeVerts[] =
+                {
+                    { { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } },
+                    { { -1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0} },
+                    { { 1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f} },
+                    { { 1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 0} },
+                };
+
+                id<MTLRenderCommandEncoder> rgbEncoder = [commandBuffer renderCommandEncoderWithDescriptor:rgbPassDescriptor];
+                [rgbEncoder setRenderPipelineState:m_VideoPipelineState];
+                [rgbEncoder setFragmentTexture:CVMetalTextureGetTexture(cvLumaTexture) atIndex:0];
+                [rgbEncoder setFragmentTexture:CVMetalTextureGetTexture(cvChromaTexture) atIndex:1];
+                [rgbEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
+                [rgbEncoder setVertexBytes:wholeVerts length:sizeof(wholeVerts) atIndex:0];
+                [rgbEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:SDL_arraysize(wholeVerts)];
+                [rgbEncoder endEncoding];
+
+                // PQ (HDR) takes no margin on the bound, as on Windows
+                mwsr::Options options;
+                options.hdr = frame->color_trc == AVCOL_TRC_SMPTE2084;
+                mwsrConstants = mwsr::constants(inWidth, inHeight, m_VideoRegionWidth, m_VideoRegionHeight, options);
+            }
+        }
+
+        if(frame->format == AV_PIX_FMT_VIDEOTOOLBOX && m_VideoEnhancement->isVideoEnhancementEnabled() && !m_IsMWSR){
           m_LumaWidth = CVPixelBufferGetWidthOfPlane(pixBuf, 0);
           m_LumaHeight = CVPixelBufferGetHeightOfPlane(pixBuf, 0);
           m_ChromaWidth = CVPixelBufferGetWidthOfPlane(pixBuf, 1);
@@ -646,9 +733,14 @@ public:
         id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
 
         // Bind textures and buffers then draw the video region
-        [renderEncoder setRenderPipelineState:m_VideoPipelineState];
+        [renderEncoder setRenderPipelineState:useMwsr ? m_MwsrPipelineState : m_VideoPipelineState];
         if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
-            if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+            if (useMwsr) {
+                // MWSR reads the RGB frame and its constants
+                [renderEncoder setFragmentTexture:m_MwsrRgbTexture atIndex:0];
+                [renderEncoder setFragmentBytes:&mwsrConstants length:sizeof(mwsrConstants) atIndex:1];
+            }
+            else if(m_VideoEnhancement->isVideoEnhancementEnabled() && !m_IsMWSR){
                 // Use scaled textures
                 [renderEncoder setFragmentTexture:m_LumaUpscaledTexture atIndex:0];
                 [renderEncoder setFragmentTexture:m_ChromaUpscaledTexture atIndex:1];
@@ -844,7 +936,9 @@ public:
         if (@available(macOS 13.0, *) && m_DecoderParams.enableVideoEnhancement) {
             // Check if the user has enable Video enhancement
             m_VideoEnhancement->setVSRcapable(true);
-            m_VideoEnhancement->setAlgo("MetalFX");
+            // MWSR when it is selected, MetalFX otherwise
+            m_IsMWSR = StreamingPreferences::get()->superResolutionMode == StreamingPreferences::SRM_03;
+            m_VideoEnhancement->setAlgo(m_IsMWSR ? "Shader MWSR" : "MetalFX");
         } else {
           m_VideoEnhancement->enableVideoEnhancement(false);
         }
@@ -883,6 +977,27 @@ public:
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to compile shaders");
             return false;
+        }
+
+        // MWSR's shader, its 4:4:4 variant by a macro; MetalFX takes over if it does not compile
+        if (m_IsMWSR) {
+            MTLCompileOptions* mwsrOptions = [[MTLCompileOptions new] autorelease];
+            if (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_YUV444) {
+                mwsrOptions.preprocessorMacros = @{ @"MWSR_CHROMA444" : @1 };
+            }
+            NSError* mwsrError = nil;
+            QFile mwsrFile(":/enhancer/mwsr-up.metal");
+            if (mwsrFile.open(QIODevice::ReadOnly)) {
+                QString mwsrSource = QString::fromUtf8(mwsrFile.readAll());
+                m_MwsrLibrary = [device newLibraryWithSource:mwsrSource.toNSString() options:mwsrOptions error:&mwsrError];
+            }
+            if (!m_MwsrLibrary) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to compile the MWSR shader, MetalFX is used instead: %s",
+                             mwsrError ? mwsrError.localizedDescription.UTF8String : "the shader file is missing");
+                m_IsMWSR = false;
+                m_VideoEnhancement->setAlgo("MetalFX");
+            }
         }
 
         // Create a command queue for submission
@@ -1146,6 +1261,14 @@ private:
     size_t m_ChromaHeight;
     MTLPixelFormat m_LumaPixelFormart;
     MTLPixelFormat m_ChromaPixelFormart;
+
+    // MWSR
+    bool m_IsMWSR = false;
+    id<MTLLibrary> m_MwsrLibrary = nullptr;
+    id<MTLRenderPipelineState> m_MwsrPipelineState = nullptr;
+    id<MTLTexture> m_MwsrRgbTexture = nullptr;
+    int m_VideoRegionWidth = 0;
+    int m_VideoRegionHeight = 0;
 };
 
 @implementation DisplayLinkDelegate {
