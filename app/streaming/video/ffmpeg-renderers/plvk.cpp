@@ -694,18 +694,13 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
 #endif
 
-    // Video Super Resolution via the Shader FSR1, or MWSR when it is selected (and in Auto on macOS)
+    // Video Super Resolution via the Shader MWSR in Auto or when it is selected, otherwise FSR1
     // https://gist.github.com/agyild/82219c545228d70c5604f865ce0b0ce5
     if (m_VideoEnhancement->isVideoEnhancementEnabled()) {
 
         // MWSR: one text for SDR and HDR, each hook told by its parameters which one it draws
         const StreamingPreferences::SuperResolutionMode srMode = StreamingPreferences::get()->superResolutionMode;
-#ifdef Q_OS_DARWIN
-        // On macOS, Auto takes MWSR too; elsewhere Auto keeps FSR1
         const bool isMWSR = srMode == StreamingPreferences::SRM_03 || srMode == StreamingPreferences::SRM_00;
-#else
-        const bool isMWSR = srMode == StreamingPreferences::SRM_03;
-#endif
         const bool isYUV444 = (params->videoFormat & VIDEO_FORMAT_MASK_YUV444) != 0;
 
         // FSR1 (SDR)
