@@ -1405,14 +1405,14 @@ bool D3D12VideoShaders::initializeFSR1()
     }
 
     // Create SRV descriptor for m_TextureInterm
-    if (!createSRVforResource(m_TextureInterm.Get(), 1, m_TextureInterm->GetDesc().Format)) {
+    if (!createSRVforResource(m_TextureInterm.Get(), 2, m_TextureInterm->GetDesc().Format)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "createSRVforResource failed");
         return false;
     }
     SDL_Log("Created SRV for intermediate texture");
 
     // Create UAV descriptor for m_TextureInterm
-    if (!createUAVforResource(m_TextureInterm.Get(), 2, m_TextureInterm->GetDesc().Format)) {
+    if (!createUAVforResource(m_TextureInterm.Get(), 1, m_TextureInterm->GetDesc().Format)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "createUAVforResource failed");
         return false;
     }
@@ -2875,6 +2875,14 @@ bool D3D12VideoShaders::applyFSR1()
         m_GraphicsCommandList->Dispatch(m_DispatchX, m_DispatchY, 1);
     }
 
+    // RCAS reads as an SRV what EASU has just written as a UAV
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_TextureInterm.Get(),
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE
+        );
+    m_GraphicsCommandList->ResourceBarrier(1, barriers);
+
     // ===============================
     // PASS 2 : RCAS
     // ===============================
@@ -2904,6 +2912,14 @@ bool D3D12VideoShaders::applyFSR1()
         // Dispatch
         m_GraphicsCommandList->Dispatch(m_DispatchX, m_DispatchY, 1);
     }
+
+    // Back to a UAV for the next frame's EASU
+    barriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_TextureInterm.Get(),
+        D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        );
+    m_GraphicsCommandList->ResourceBarrier(1, barriers);
 
     NbrBarriers = 0;
     if(m_InputTextureStateOut != D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE){
