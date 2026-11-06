@@ -1,4 +1,5 @@
 #include "streamingpreferences.h"
+#include "wolproxysettings.h"
 #include "utils.h"
 
 #include <QSettings>
@@ -52,6 +53,7 @@
 #define SER_KEEPAWAKE "keepawake"
 #define SER_LANGUAGE "language"
 #define SER_RENDERER "renderer"
+#define SER_WOLPROXYADDRESSES "wolproxyaddresses"
 
 #define CURRENT_DEFAULT_VER 2
 
@@ -151,6 +153,14 @@ void StreamingPreferences::reload()
     reverseScrollDirection = settings.value(SER_REVERSESCROLL, false).toBool();
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
+    const QString storedWolProxyAddresses = settings.value(SER_WOLPROXYADDRESSES).toString();
+    if (WolProxySettings::isAddressListValid(storedWolProxyAddresses)) {
+        wolProxyAddresses = WolProxySettings::normalizeAddressList(storedWolProxyAddresses);
+    }
+    else {
+        qWarning() << "Ignoring invalid Wake-on-LAN proxy address list in settings";
+        wolProxyAddresses.clear();
+    }
     enableHdr = settings.value(SER_HDR, false).toBool();
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
@@ -323,6 +333,8 @@ void StreamingPreferences::save()
 {
     QSettings settings;
 
+    wolProxyAddresses = WolProxySettings::normalizeAddressList(wolProxyAddresses);
+
     settings.setValue(SER_WIDTH, width);
     settings.setValue(SER_HEIGHT, height);
     settings.setValue(SER_FPS, fps);
@@ -362,6 +374,17 @@ void StreamingPreferences::save()
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
+    settings.setValue(SER_WOLPROXYADDRESSES, wolProxyAddresses);
+}
+
+bool StreamingPreferences::isValidWolProxyList(const QString& addressList)
+{
+    return WolProxySettings::isAddressListValid(addressList);
+}
+
+QString StreamingPreferences::normalizeWolProxyList(const QString& addressList)
+{
+    return WolProxySettings::normalizeAddressList(addressList);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps, bool yuv444)
