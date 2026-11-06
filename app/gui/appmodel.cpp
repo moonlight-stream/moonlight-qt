@@ -1,5 +1,12 @@
 #include "appmodel.h"
 
+#include "settings/streamingpreferences.h"
+#include "streaming/streamutils.h"
+
+#include <QCoreApplication>
+#include <QDir>
+#include <QProcess>
+
 AppModel::AppModel(QObject *parent)
     : QAbstractListModel(parent)
 {
@@ -45,6 +52,57 @@ Session* AppModel::createSessionForApp(int appIndex)
     NvApp app = m_VisibleApps.at(appIndex);
 
     return new Session(m_Computer, app);
+}
+
+bool AppModel::launchAppInNewInstance(int appIndex)
+{
+    Q_ASSERT(appIndex < m_VisibleApps.count());
+    NvApp app = m_VisibleApps.at(appIndex);
+
+    // moonlight-common-c maintains a single global connection per process
+    // (LiStopConnection() and friends take no connection handle), so a
+    // concurrent second stream must live in a separate process. The new
+    // instance inherits the user's streaming preferences.
+    QStringList args { QStringLiteral("stream"), m_Computer->uuid, app.name };
+
+#ifdef Q_OS_DARWIN
+    // The whole point of a second window is being able to leave both streams
+    // connected and switch between them, which on macOS means each one needs
+    // its own Space. Session::initialize() only enables
+    // SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES when the configured resolution is
+    // not the notched display's exact native mode, so ask the new instance for
+    // the safe area instead. Passing it on the command line does not modify
+    // saved preferences (StreamingPreferences::save() is settings-screen only).
+    StreamingPreferences* prefs = StreamingPreferences::get();
+    if (prefs->windowMode != StreamingPreferences::WM_FULLSCREEN) {
+        SDL_DisplayMode desktopMode;
+        SDL_Rect safeArea;
+
+        for (int i = 0; StreamUtils::getNativeDesktopMode(i, &desktopMode, &safeArea); i++) {
+            if ((desktopMode.w != safeArea.w || desktopMode.h != safeArea.h) &&
+                    prefs->width == desktopMode.w && prefs->height == desktopMode.h) {
+                args << QStringLiteral("--resolution")
+                     << QStringLiteral("%1x%2").arg(safeArea.w).arg(safeArea.h);
+                break;
+            }
+        }
+    }
+
+    // Running the bundle's binary directly bypasses LaunchServices activation,
+    // so ask it to start a second instance of the bundle for us instead.
+    QDir bundleDir(QCoreApplication::applicationDirPath());
+    if (!bundleDir.cd("../..")) {
+        return false;
+    }
+
+    return QProcess::startDetached(QStringLiteral("/usr/bin/open"),
+                                   QStringList { QStringLiteral("-n"),
+                                                 QStringLiteral("-a"),
+                                                 bundleDir.absolutePath(),
+                                                 QStringLiteral("--args") } + args);
+#else
+    return QProcess::startDetached(QCoreApplication::applicationFilePath(), args);
+#endif
 }
 
 int AppModel::getDirectLaunchAppIndex()
