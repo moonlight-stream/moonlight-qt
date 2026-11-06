@@ -1462,6 +1462,105 @@ Flickable {
                         StreamingPreferences.reverseScrollDirection = checked
                     }
                 }
+
+                CheckBox {
+                    id: scaleScrollCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Scale down scrolling speed")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.scaleScroll
+                    onCheckedChanged: {
+                        StreamingPreferences.scaleScroll = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Multiplies every scroll event sent to the host by the speed below. Use it when trackpad scrolling travels too far on the host.")
+                }
+
+                Row {
+                    width: parent.width
+                    spacing: 5
+                    visible: scaleScrollCheck.checked
+
+                    Slider {
+                        id: scrollScaleSlider
+
+                        value: StreamingPreferences.scrollScale
+
+                        stepSize: 1
+                        from: 0
+                        to: 100
+
+                        width: Math.min(400, parent.width - scrollScaleLabel.width - parent.spacing)
+
+                        onValueChanged: {
+                            StreamingPreferences.scrollScale = Math.round(value)
+                        }
+                    }
+
+                    Label {
+                        id: scrollScaleLabel
+                        anchors.verticalCenter: scrollScaleSlider.verticalCenter
+                        text: qsTr("%1%").arg(Math.round(scrollScaleSlider.value))
+                        font.pointSize: 12
+                    }
+                }
+
+                CheckBox {
+                    id: coalesceScrollCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Combine queued scroll events")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.coalesceScroll
+                    onCheckedChanged: {
+                        StreamingPreferences.coalesceScroll = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Sends all scroll events waiting to be processed as a single event, reducing bursts of scroll packets to the host.")
+                }
+
+                CheckBox {
+                    id: dropScrollMomentumCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    visible: SystemProperties.isDarwin
+                    text: qsTr("Disable trackpad scroll momentum")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.dropScrollMomentum
+                    onCheckedChanged: {
+                        StreamingPreferences.dropScrollMomentum = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Stops scrolling on the host as soon as your fingers leave the trackpad, instead of sending macOS inertial scrolling.")
+                }
+
+                CheckBox {
+                    id: pinchToZoomCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    visible: SystemProperties.isDarwin
+                    text: qsTr("Pinch to zoom (sends Ctrl + scroll)")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.pinchToZoom
+                    onCheckedChanged: {
+                        StreamingPreferences.pinchToZoom = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Turns trackpad pinch gestures into Ctrl + mouse wheel on the host, which zooms in most Windows apps.")
+                }
             }
         }
 

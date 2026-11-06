@@ -15,6 +15,13 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_SwapMouseButtons(prefs.swapMouseButtons),
       m_ReverseScrollDirection(prefs.reverseScrollDirection),
       m_SwapFaceButtons(prefs.swapFaceButtons),
+      m_ScrollScale(prefs.scaleScroll ? prefs.scrollScale / 100.0f : 1.0f),
+      m_ScrollRemainder{},
+      m_CoalesceScroll(prefs.coalesceScroll),
+      m_PinchActive(false),
+      m_PinchCtrlInjected(false),
+      m_PinchRemainder(0),
+      m_MacEventMonitor(nullptr),
       m_MouseWasInVideoRegion(false),
       m_PendingMouseButtonsAllUpOnVideoRegionLeave(false),
       m_PointerRegionLockActive(false),
@@ -214,10 +221,22 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     SDL_zero(m_LastTouchDownEvent);
     SDL_zero(m_LastTouchUpEvent);
     SDL_zero(m_TouchDownEvent);
+
+#ifdef Q_OS_DARWIN
+    // Trackpad scroll phases and pinch gestures aren't exposed by SDL2,
+    // so we watch for them in the native event stream.
+    if (prefs.dropScrollMomentum || prefs.pinchToZoom) {
+        installMacEventMonitor(prefs.dropScrollMomentum, prefs.pinchToZoom);
+    }
+#endif
 }
 
 SdlInputHandler::~SdlInputHandler()
 {
+#ifdef Q_OS_DARWIN
+    removeMacEventMonitor();
+#endif
+
     for (int i = 0; i < MAX_GAMEPADS; i++) {
         if (m_GamepadState[i].mouseEmulationTimer != 0) {
             Session::get()->notifyMouseEmulationMode(false);
@@ -387,6 +406,9 @@ void SdlInputHandler::setCaptureActive(bool active)
         }
     }
     else {
+        // Don't leave the host stuck with Ctrl held from a pinch
+        endPinchGesture();
+
         if (m_FakeMouseCaptureActive) {
             // Display the cursor again
             SDL_ShowCursor(SDL_ENABLE);
