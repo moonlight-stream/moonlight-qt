@@ -41,8 +41,8 @@ jobs:
       - name: Checkout SDL3
         uses: actions/checkout@v5
         with:
-          repository: ReenigneArcher/SDL
-          ref: f871593bd40f45248ca84cbfb1ac36984e2810be
+          repository: libsdl-org/SDL
+          ref: bc0cbbdd98f18730cce4cf2a26591a89d15ddebf
           path: deps/SDL
 
       - name: Build SDL3

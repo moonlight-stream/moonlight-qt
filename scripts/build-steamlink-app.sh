@@ -42,7 +42,7 @@ SDL_BUILD_ROOT=$BUILD_ROOT/steamlink-sdl
 SDL_INSTALL_ROOT=$SDL_BUILD_ROOT/install
 
 if [ ! -d "$SOURCE_ROOT/deps/SDL" ] || [ ! -d "$SOURCE_ROOT/deps/SDL_ttf" ]; then
-  fail "Missing SDL3 sources. Check out ReenigneArcher/SDL and SDL_ttf in deps/SDL and deps/SDL_ttf."
+  fail "Missing SDL3 sources. Check out libsdl-org/SDL and SDL_ttf in deps/SDL and deps/SDL_ttf."
 fi
 
 echo Building SDL3 for Steam Link
