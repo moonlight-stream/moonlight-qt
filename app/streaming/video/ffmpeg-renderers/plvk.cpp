@@ -17,6 +17,7 @@ extern "C" {
 
 #include <vector>
 #include <set>
+#include <cmath>
 
 #ifndef VK_KHR_video_decode_av1
 #define VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME "VK_KHR_video_decode_av1"
@@ -55,6 +56,23 @@ public:
     DrmMasterLocker(DrmMasterLocker&&) noexcept = delete;
     DrmMasterLocker& operator=(DrmMasterLocker&&) noexcept = delete;
 };
+
+// MWSR's hook takes its HDR (PQ) and 4:4:4 variants from its parameters
+static void setMwsrParameters(const pl_hook* hook, bool hdr, bool yuv444)
+{
+    if (hook == nullptr) {
+        return;
+    }
+    for (int i = 0; i < hook->num_parameters; i++) {
+        const pl_hook_par& par = hook->parameters[i];
+        if (strcmp(par.name, "MWSR_HDR") == 0) {
+            par.data->i = hdr ? 1 : 0;
+        }
+        else if (strcmp(par.name, "MWSR_CHROMA444") == 0) {
+            par.data->i = yuv444 ? 1 : 0;
+        }
+    }
+}
 
 #if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(60, 26, 100)
 static const char *k_OptionalDeviceExtensions[] = {
@@ -139,7 +157,8 @@ void PlVkRenderer::overlayUploadComplete(void* opaque)
 PlVkRenderer::PlVkRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRenderer) :
     IFFmpegRenderer(RendererType::Vulkan),
     m_Backend(backendRenderer),
-    m_HwDeviceType(hwDeviceType)
+    m_HwDeviceType(hwDeviceType),
+    m_VideoEnhancement(&VideoEnhancement::getInstance())
 {
     bool ok;
 
@@ -182,6 +201,19 @@ PlVkRenderer::~PlVkRenderer()
         DrmMasterLocker locker;
 
         pl_renderer_destroy(&m_Renderer);
+        pl_dispatch_destroy(&m_MwsrDispatch);
+
+        // The FSR hooks own GPU resources, so they must be released while the
+        // pl_gpu they were parsed on is still alive. m_FsrHookHDR stays null when
+        // only the SDR variant was parsed and m_RenderParamsHDR points at m_FsrHook.
+        if (m_FsrHookHDR != nullptr && m_FsrHookHDR != m_FsrHook) {
+            pl_mpv_user_shader_destroy(&m_FsrHookHDR);
+        }
+        m_FsrHookHDR = nullptr;
+        if (m_FsrHook != nullptr) {
+            pl_mpv_user_shader_destroy(&m_FsrHook);
+        }
+
         pl_swapchain_destroy(&m_Swapchain);
 #ifdef Q_OS_DARWIN
         m_MetalTextureFactory.reset();
@@ -664,9 +696,260 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
 #endif
 
+    // Video Super Resolution via the Shader MWSR in Auto or when it is selected, otherwise FSR1
+    // https://gist.github.com/agyild/82219c545228d70c5604f865ce0b0ce5
+    if (m_VideoEnhancement->isVideoEnhancementEnabled()) {
+
+        // MWSR: one text for SDR and HDR, each hook told by its parameters which one it draws
+        const StreamingPreferences::SuperResolutionMode srMode = StreamingPreferences::get()->superResolutionMode;
+        const bool isMWSR = srMode == StreamingPreferences::SRM_03 || srMode == StreamingPreferences::SRM_00;
+        const bool isYUV444 = (params->videoFormat & VIDEO_FORMAT_MASK_YUV444) != 0;
+
+        // FSR1 (SDR)
+        // The shader has been customized to set the sharpening at 0.75
+        std::string FsrShader = loadGLSL(isMWSR ? ":/enhancer/mwsr-up.hook" : ":/enhancer/FSR1.glsl");
+        m_FsrHook = pl_mpv_user_shader_parse(m_Vulkan->gpu, FsrShader.c_str(), FsrShader.size());
+        if (isMWSR) {
+            setMwsrParameters(m_FsrHook, false, isYUV444);
+        }
+        m_RenderParams.hooks     = &m_FsrHook;
+        m_RenderParams.num_hooks = m_FsrHook ? 1 : 0;
+
+        // FSR1 (HDR)
+        // The shader has been customized to set the sharpening at 0.75 and PQ at true for HDR.
+        // Only a 10-bit stream can carry PQ frames, so for anything else the SDR hook is reused
+        // rather than parsing and allocating GPU resources for a second identical copy of it.
+        if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+            std::string FsrShaderHDR = isMWSR ? FsrShader : loadGLSL(":/enhancer/FSR1_HDR.glsl");
+            m_FsrHookHDR = pl_mpv_user_shader_parse(m_Vulkan->gpu, FsrShaderHDR.c_str(), FsrShaderHDR.size());
+            if (isMWSR) {
+                setMwsrParameters(m_FsrHookHDR, true, isYUV444);
+            }
+            m_RenderParamsHDR.hooks     = &m_FsrHookHDR;
+            m_RenderParamsHDR.num_hooks = m_FsrHookHDR ? 1 : 0;
+        }
+        else {
+            m_RenderParamsHDR.hooks     = &m_FsrHook;
+            m_RenderParamsHDR.num_hooks = m_FsrHook ? 1 : 0;
+        }
+
+        // MWSR is drawn in one pass straight from the decoder's planes whenever the frame allows it
+        // (renderMwsrPlanes), the hook above being kept for the other frames
+        if (isMWSR) {
+            m_MwsrPlanesShader = loadGLSL(":/enhancer/mwsr-up-planes.glsl");
+            if (!m_MwsrPlanesShader.empty()) {
+                m_MwsrDispatch = pl_dispatch_create(m_Log, m_Vulkan->gpu);
+            }
+            m_MwsrYUV444 = isYUV444;
+        }
+
+        if (m_RenderParams.num_hooks == 0 || m_RenderParamsHDR.num_hooks == 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to parse the %s shader. Video enhancement is disabled for this session.",
+                         isMWSR ? "MWSR" : "FSR1");
+            m_VideoEnhancement->enableVideoEnhancement(false);
+        }
+        else {
+            int drawableWidth, drawableHeight;
+            SDL_Vulkan_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+            m_VideoEnhancement->setRatio(static_cast<float>(drawableHeight) / static_cast<float>(params->height));
+
+            m_VideoEnhancement->setAlgo(isMWSR ? "Shader MWSR" : "Shader FSR1");
+        }
+    }
+
     return true;
 }
 
+/**
+ * \brief Load a GLSL shader file from the given path.
+ *
+ * Reads the file content and returns it as a string. Logs an error if the file cannot be opened.
+ *
+ * \param const QString& path Path to the GLSL shader file
+ * \return std::string File content as a string, or an empty string on failure
+ */
+std::string PlVkRenderer::loadGLSL(const QString& path)
+{
+    QFile file(path);
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Cannot open GLSL file: %s", path.toUtf8().constData());
+        return {};
+    }
+
+    QByteArray data = file.readAll();
+    file.close();
+
+    return std::string(data.constData(), data.size());
+}
+
+// MWSR in one pass: the kernel reads the decoder's luma and chroma planes, turns each read into RGB
+// and writes the target itself, through the same colour mapping as pl_render_image. This replaces
+// the three passes of the hook (the RGB picture at the stream's size, the hook, the output).
+// Returns false, for pl_render_image to draw the frame, unless the frame is a two-plane YCbCr one
+// (the hardware decoders' NV12 and P010) drawn larger on both axes, as the hook's //!WHEN asks.
+bool PlVkRenderer::renderMwsrPlanes(const AVFrame* frame, const pl_frame* image, const pl_frame* target)
+{
+    if (m_MwsrDispatch == nullptr || m_MwsrPlanesShader.empty() ||
+            image->num_planes != 2 || target->num_planes != 1 || image->repr.dovi != nullptr ||
+            image->planes[0].flipped || image->planes[1].flipped || target->planes[0].flipped) {
+        return false;
+    }
+
+    // Y, then Cb and Cr
+    const pl_plane& luma = image->planes[0];
+    const pl_plane& chroma = image->planes[1];
+    if (luma.components != 1 || luma.component_mapping[0] != 0 ||
+            chroma.components != 2 || chroma.component_mapping[0] != 1 || chroma.component_mapping[1] != 2) {
+        return false;
+    }
+    switch (image->repr.sys) {
+    case PL_COLOR_SYSTEM_BT_601:
+    case PL_COLOR_SYSTEM_BT_709:
+    case PL_COLOR_SYSTEM_SMPTE_240M:
+    case PL_COLOR_SYSTEM_BT_2020_NC:
+        break;
+    default:
+        return false;
+    }
+    pl_tex lumaTex = luma.texture;
+    pl_tex chromaTex = chroma.texture;
+    pl_tex fbo = target->planes[0].texture;
+    if (!lumaTex->params.sampleable || !chromaTex->params.sampleable || !fbo->params.renderable ||
+            !(lumaTex->params.format->caps & PL_FMT_CAP_LINEAR) || !(chromaTex->params.format->caps & PL_FMT_CAP_LINEAR)) {
+        return false;
+    }
+
+    const float srcW = image->crop.x1 - image->crop.x0;
+    const float srcH = image->crop.y1 - image->crop.y0;
+    const float dstW = target->crop.x1 - target->crop.x0;
+    const float dstH = target->crop.y1 - target->crop.y0;
+    if (srcW <= 0 || srcH <= 0 || !(dstW > srcW && dstH > srcH)) {
+        return false;
+    }
+
+    // The YCbCr to RGB transform, the bit depth folded in (P010 holds 10 bits at the top of 16)
+    pl_color_repr repr = image->repr;
+    const float bitScale = pl_color_repr_normalize(&repr);
+    const pl_transform3x3 yuvToRgb = pl_color_repr_decode(&repr, nullptr);
+
+    // The values mwsr-up-planes.glsl reads, in luma texture coordinates
+    const float lw = lumaTex->params.w, lh = lumaTex->params.h;
+    const float cw = chromaTex->params.w, ch = chromaTex->params.h;
+    float yuv[3][3], yuvc[3];
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            yuv[i][j] = yuvToRgb.mat.m[i][j] * bitScale;
+        }
+        yuvc[i] = yuvToRgb.c[i];
+    }
+    const float pt[2] = { 1.0f / lw, 1.0f / lh };
+    const float dims[2] = { lw, lh };
+    const float ymin[2] = { (image->crop.x0 + 0.5f) / lw, (image->crop.y0 + 0.5f) / lh };
+    const float ymax[2] = { (image->crop.x1 - 0.5f) / lw, (image->crop.y1 - 0.5f) / lh };
+    const float cmin[2] = { image->crop.x0 / lw + 0.5f / cw, image->crop.y0 / lh + 0.5f / ch };
+    const float cmax[2] = { image->crop.x1 / lw - 0.5f / cw, image->crop.y1 / lh - 0.5f / ch };
+    const float coff[2] = { -chroma.shift_x / lw, -chroma.shift_y / lh };
+    const float scale[2] = { dstW / srcW, dstH / srcH };
+    const float src0[2] = { image->crop.x0, image->crop.y0 };
+
+    pl_rect2d rect;
+    rect.x0 = (int)lroundf(target->crop.x0);
+    rect.y0 = (int)lroundf(target->crop.y0);
+    rect.x1 = (int)lroundf(target->crop.x1);
+    rect.y1 = (int)lroundf(target->crop.y1);
+    const float dst0[2] = { (float)rect.x0, (float)rect.y0 };
+
+    pl_shader_desc descs[2] = {};
+    descs[0].desc.name = "mwsr_luma";
+    descs[0].desc.type = PL_DESC_SAMPLED_TEX;
+    descs[0].binding.object = lumaTex;
+    descs[0].binding.address_mode = PL_TEX_ADDRESS_CLAMP;
+    descs[0].binding.sample_mode = PL_TEX_SAMPLE_LINEAR;
+    descs[1] = descs[0];
+    descs[1].desc.name = "mwsr_chroma";
+    descs[1].binding.object = chromaTex;
+
+    pl_shader_var vars[14] = {};
+    int numVars = 0;
+    auto addVar = [&](pl_var var, const void* data) {
+        vars[numVars].var = var;
+        vars[numVars].data = data;
+        numVars++;
+    };
+    addVar(pl_var_vec3("mwsr_yuv0"), yuv[0]);
+    addVar(pl_var_vec3("mwsr_yuv1"), yuv[1]);
+    addVar(pl_var_vec3("mwsr_yuv2"), yuv[2]);
+    addVar(pl_var_vec3("mwsr_yuvc"), yuvc);
+    addVar(pl_var_vec2("mwsr_pt"), pt);
+    addVar(pl_var_vec2("mwsr_dims"), dims);
+    addVar(pl_var_vec2("mwsr_ymin"), ymin);
+    addVar(pl_var_vec2("mwsr_ymax"), ymax);
+    addVar(pl_var_vec2("mwsr_cmin"), cmin);
+    addVar(pl_var_vec2("mwsr_cmax"), cmax);
+    addVar(pl_var_vec2("mwsr_coff"), coff);
+    addVar(pl_var_vec2("mwsr_scale"), scale);
+    addVar(pl_var_vec2("mwsr_src0"), src0);
+    addVar(pl_var_vec2("mwsr_dst0"), dst0);
+
+    const bool hdr = frame->color_trc == AVCOL_TRC_SMPTE2084;
+    const std::string header = std::string("#define MWSR_HDR ") + (hdr ? "1" : "0") +
+                               "\n#define MWSR_CHROMA444 " + (m_MwsrYUV444 ? "1" : "0") + "\n" + m_MwsrPlanesShader;
+
+    pl_custom_shader custom = {};
+    custom.header = header.c_str();
+    custom.description = "MWSR (MoonlightWeb Super Resolution) from the planes";
+    custom.body = "color = mwsrPlanes();";
+    custom.input = PL_SHADER_SIG_NONE;
+    custom.output = PL_SHADER_SIG_COLOR;
+    custom.descriptors = descs;
+    custom.num_descriptors = 2;
+    custom.variables = vars;
+    custom.num_variables = numVars;
+
+    pl_dispatch_reset_frame(m_MwsrDispatch);
+    pl_shader sh = pl_dispatch_begin(m_MwsrDispatch);
+    if (!pl_shader_custom(sh, &custom)) {
+        pl_dispatch_abort(m_MwsrDispatch, &sh);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "MWSR: the one-pass shader was refused, the hook takes over");
+        m_MwsrPlanesShader.clear();
+        return false;
+    }
+
+    // From the picture's colours to the target's, as pl_render_image maps them
+    pl_color_space srcColor = image->color;
+    pl_color_space dstColor = target->color;
+    pl_color_space_infer_map(&srcColor, &dstColor);
+    pl_color_map_args mapArgs = {};
+    mapArgs.src = srcColor;
+    mapArgs.dst = dstColor;
+    pl_shader_color_map_ex(sh, &pl_color_map_default_params, &mapArgs);
+
+    // The bars around a picture that does not fill the target, as pl_render_image clears them
+    if (rect.x0 > 0 || rect.y0 > 0 || rect.x1 < fbo->params.w || rect.y1 < fbo->params.h) {
+        static const float black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        pl_frame_clear_rgba(m_Vulkan->gpu, target, black);
+    }
+
+    pl_dispatch_params dispatch = {};
+    dispatch.shader = &sh;
+    dispatch.target = fbo;
+    dispatch.rect = rect;
+    if (!pl_dispatch_finish(m_MwsrDispatch, &dispatch)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "MWSR: the one-pass shader failed, the hook takes over");
+        m_MwsrPlanesShader.clear();
+        return false;
+    }
+
+    if (!m_MwsrPlanesInUse) {
+        m_MwsrPlanesInUse = true;
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "MWSR drawn in one pass from the decoder's planes (%dx%d to %dx%d)",
+                    (int)srcW, (int)srcH, (int)dstW, (int)dstH);
+    }
+    return true;
+}
 
 bool PlVkRenderer::createSwapchain(int depth)
 {
@@ -1124,7 +1407,21 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     // Render the video image and overlays into the swapchain buffer
     targetFrame.num_overlays = (int)overlays.size();
     targetFrame.overlays = overlays.data();
-    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &pl_render_fast_params)) {
+
+    pl_render_params renderParams = pl_render_fast_params;
+    if (m_VideoEnhancement->isVideoEnhancementEnabled()) {
+        // If the frame is HDR, load the Shader with HDR enabled
+        renderParams = (frame->color_trc == AVCOL_TRC_SMPTE2084) ? m_RenderParamsHDR : m_RenderParams;
+    }
+
+    if (m_VideoEnhancement->isVideoEnhancementEnabled() && renderMwsrPlanes(frame, &mappedFrame, &targetFrame)) {
+        // MWSR has drawn the video, only the overlays are left (a NULL image draws them alone)
+        if (targetFrame.num_overlays > 0 && !pl_render_image(m_Renderer, nullptr, &targetFrame, &pl_render_fast_params)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "pl_render_image() failed for the overlays");
+        }
+    }
+    else if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &renderParams)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_render_image() failed");
         // NB: We must fallthrough to call pl_swapchain_submit_frame()
@@ -1320,6 +1617,10 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
 bool PlVkRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 {
+    // We force the reinitialization of FFX API when the Window change
+    if (m_VideoEnhancement->isVideoEnhancementEnabled()) {
+        return !(info->stateChangeFlags & (WINDOW_STATE_CHANGE_DISPLAY | WINDOW_STATE_CHANGE_SIZE));
+    }
     // We can transparently handle size and display changes
     return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_SIZE | WINDOW_STATE_CHANGE_DISPLAY));
 }
