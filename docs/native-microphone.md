@@ -1,14 +1,14 @@
 # Native NVIDIA GameStream microphone forwarding
 
-This macOS client contribution forwards the default microphone through the native NVIDIA GameStream path. It is opt-in for the current application run and requires the separately documented Windows host integration. It is not Sunshine microphone support.
+This desktop client contribution forwards the default microphone on macOS, Windows and Linux through the native NVIDIA GameStream path. It is opt-in for the current application run and requires the separately documented Windows host integration. It is not Sunshine microphone support.
 
 ## Use and consent
 
-Enable **Forward microphone to NVIDIA GameStream for this run** in audio settings, then connect to the paired host. On the first attempt macOS requests microphone permission; grant it and reconnect. A denied request leaves ordinary streaming available and displays a privacy-settings explanation. Permission callbacks never start capture after the session that requested them has ended.
+Enable **Forward microphone to NVIDIA GameStream for this run** in audio settings, then connect to the paired host. On macOS the first attempt requests microphone permission; grant it and reconnect. A denied request leaves ordinary streaming available and displays a privacy-settings explanation. Permission callbacks never start capture after the session that requested them has ended.
 
-While forwarding, the streaming status includes **Microphone forwarding ON** and the stop shortcut. Press **Control + Option + Shift + N** on macOS to stop immediately. Reconnect to enable forwarding again. Stop/error notices expire after eight seconds; connection and gamepad messages retain their own portion of the status display. Capture stops synchronously before the streaming window is torn down and before deferred network cleanup or finished signals return to the Qt UI.
+While forwarding, the streaming status includes **Microphone forwarding ON** and the stop shortcut. Press **Control + Option + Shift + N** on macOS or **Ctrl + Alt + Shift + N** on Windows/Linux to stop immediately. Reconnect to enable forwarding again. Stop/error notices expire after eight seconds; connection and gamepad messages retain their own portion of the status display. Capture stops synchronously before the streaming window is torn down and before deferred network cleanup or finished signals return to the Qt UI.
 
-The preference is not saved to QSettings. The OS microphone indicator provides an additional capture indication. No microphone audio is recorded to disk by this sender. Synthetic diagnostic mode (MOONLIGHT_NATIVE_TEST_TONE=1) sends a generated 1 kHz tone instead and never opens an input device; its visible status identifies it as synthetic.
+The preference is not saved to QSettings. The OS microphone indicator provides an additional capture indication. No microphone audio is recorded to disk by this sender. On macOS, synthetic diagnostic mode (MOONLIGHT_NATIVE_TEST_TONE=1) sends a generated 1 kHz tone instead and never opens an input device; its visible status identifies it as synthetic.
 
 ## Implemented scope
 
@@ -31,3 +31,16 @@ Prior AES-GCM advice on the separate Sunshine microphone proposal is useful desi
 The isolated client built on macOS 15.6.1 arm64 with Qt 6.12.0 and Apple Clang 17. Sender tests compile the actual implementation with warnings as errors and send synthetic loopback audio only. They verify 300 encrypted packets, mono Opus decoding, a 1 kHz tone, pacing/PINGs, stop behavior, repeated starts/stops, malformed buffers, destination/key rejection, occupied source port and cleanup. See tests/native-mic/README.md. Production overlay composition has automated contract checks; no human UI walkthrough is claimed.
 
 Historical end-to-end Windows evidence is separate from these new local tests. Reboot, full permanent uninstall/reinstall, actual macOS permission UI/device failure, and delivery of this newly integrated revision to Windows require explicit evidence before those cases can be called passed. The review package reports each boundary rather than treating a successful build as full acceptance.
+
+## Windows and Linux desktop clients
+
+Windows and Linux desktop builds use SDL capture of the default input device.
+The client encodes 48 kHz mono input and sends through the shared common-c
+transport. The same per-run opt-in, indicator, stop shortcut and teardown apply.
+Allow desktop microphone access in the client operating system if needed.
+The Steam Link build leaves forwarding disabled.
+
+The portable adapter and shared transport passed 300 encrypted loopback frames
+with SDL dummy capture on macOS, independent CBC/Opus decoding, and ten restart
+cycles. The macOS release build also passed. Windows and Linux hardware and
+live native host delivery remain separate acceptance checks.

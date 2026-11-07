@@ -23,3 +23,31 @@ DYLD_LIBRARY_PATH=../../../libs/mac/lib ./overlay-test
 ```
 
 It checks that microphone status and connection/gamepad warnings compose correctly, clearing either part preserves the other, and the debug channel remains independent.
+
+### Shared sender and SDL capture
+
+Run after building the Qt release target on macOS. The fixture replaces the
+negotiated session inputs with loopback values. It uses the actual SDL capture
+adapter, Opus, RTP sender and OpenSSL encryption with SDL's dummy audio driver.
+Python requires `cryptography`. No microphone hardware is opened.
+
+```sh
+common=moonlight-common-c/moonlight-common-c
+fixture=tests/native-mic/portable
+objects=moonlight-common-c/release
+cc -c "$fixture/fixture.c" -o "$fixture/fixture.o" \
+    -I"$common/src" -I"$common/enet/include" -Ilibs/mac/include
+c++ -std=c++17 -dynamiclib app/streaming/native-mic-sdl.cpp \
+    "$fixture/fixture.o" "$objects/NativeMicStream.o" "$objects/PlatformCrypto.o" \
+    -I"$common/src" -Ilibs/mac/include/SDL2 -Ilibs/mac/include \
+    -Llibs/mac/lib -lSDL2 -lopus.0 -lcrypto.3 \
+    -o "$fixture/libportable-mic-test.dylib"
+install_name_tool -change @loader_path/../Frameworks/libcrypto.3.dylib \
+    "$PWD/libs/mac/lib/libcrypto.3.dylib" "$fixture/libportable-mic-test.dylib"
+codesign --force --sign - "$fixture/libportable-mic-test.dylib"
+DYLD_LIBRARY_PATH="$PWD/libs/mac/lib" python3 "$fixture/check.py"
+```
+
+This checks capture callback framing, endpoint/opt-in gates, encryption and
+decoding, occupied-port behavior, and teardown/restart. Windows and Linux device
+capture and live native host delivery require their own acceptance tests.

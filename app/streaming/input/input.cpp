@@ -139,7 +139,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     m_SpecialKeyCombos[KeyComboStopMicrophone].keyCode = SDLK_n;
     m_SpecialKeyCombos[KeyComboStopMicrophone].scanCode = SDL_SCANCODE_N;
     m_SpecialKeyCombos[KeyComboStopMicrophone].enabled = false;
-#ifdef Q_OS_MACOS
+#ifdef HAVE_NATIVE_MIC
     m_SpecialKeyCombos[KeyComboStopMicrophone].enabled = true;
 #endif
 
