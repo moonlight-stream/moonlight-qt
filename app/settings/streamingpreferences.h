@@ -142,6 +142,8 @@ public:
     Q_PROPERTY(bool showPerformanceOverlay MEMBER showPerformanceOverlay NOTIFY showPerformanceOverlayChanged)
     Q_PROPERTY(AudioConfig audioConfig MEMBER audioConfig NOTIFY audioConfigChanged)
     Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
+    Q_PROPERTY(bool nativeMicSupported READ nativeMicSupported CONSTANT)
+    Q_PROPERTY(bool nativeMic MEMBER nativeMic NOTIFY nativeMicChanged)
     Q_PROPERTY(bool enableHdr MEMBER enableHdr NOTIFY enableHdrChanged)
     Q_PROPERTY(bool enableYUV444 MEMBER enableYUV444 NOTIFY enableYUV444Changed)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
@@ -191,6 +193,15 @@ public:
     int packetSize;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
+    bool nativeMicSupported() const {
+#ifdef HAVE_NATIVE_MIC
+        return true;
+#else
+        return false;
+#endif
+    }
+
+    bool nativeMic = false; // Deliberately session-only: never saved to QSettings.
     bool enableHdr;
     bool enableYUV444;
     VideoDecoderSelection videoDecoderSelection;
@@ -217,6 +228,7 @@ signals:
     void absoluteTouchModeChanged();
     void audioConfigChanged();
     void videoCodecConfigChanged();
+    void nativeMicChanged();
     void enableHdrChanged();
     void enableYUV444Changed();
     void videoDecoderSelectionChanged();

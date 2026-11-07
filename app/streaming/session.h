@@ -125,6 +125,8 @@ public:
 
     void setShouldExit(bool quitHostApp = false);
 
+    void stopNativeMicrophone();
+
 signals:
     void stageStarting(QString stage);
 
@@ -147,6 +149,8 @@ private:
     void exec();
 
     bool startConnectionAsync();
+
+    void updateNativeMicrophoneStatus();
 
     bool validateLaunch(SDL_Window* testWindow);
 
@@ -247,6 +251,9 @@ private:
     bool m_IsFullScreen;
     SupportedVideoFormatList m_SupportedVideoFormats; // Sorted in order of descending priority
     STREAM_CONFIGURATION m_StreamConfig;
+    bool m_NativeMicActive = false;
+    QString m_NativeMicMessage;
+    Uint32 m_NativeMicMessageExpires = 0;
     DECODER_RENDERER_CALLBACKS m_VideoCallbacks;
     AUDIO_RENDERER_CALLBACKS m_AudioCallbacks;
     NvComputer* m_Computer;
