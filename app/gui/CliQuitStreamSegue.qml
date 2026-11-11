@@ -40,7 +40,6 @@ Item {
         Label {
             id: stageLabel
             height: stageSpinner.height
-            text: stageText
             font.pointSize: 20
             verticalAlignment: Text.AlignVCenter
 
