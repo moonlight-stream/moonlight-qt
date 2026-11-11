@@ -1347,6 +1347,23 @@ Flickable {
                                   qsTr("NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.")
                 }
 
+                CheckBox {
+                    id: syncClipboardCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Sync clipboard")
+                    font.pointSize:  12
+                    checked: StreamingPreferences.syncClipboard
+                    onCheckedChanged: {
+                        StreamingPreferences.syncClipboard = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 10000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Keep text clipboard contents in sync with the host while streaming. Requires a Sunshine host with clipboard support. Ctrl+Alt+Shift+V still types the clipboard on older hosts.")
+                }
+
                 Row {
                     spacing: 5
                     width: parent.width

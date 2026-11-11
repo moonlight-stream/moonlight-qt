@@ -55,6 +55,7 @@ SOURCES += \
     $$COMMON_C_DIR/nanors/rs.c \
     $$COMMON_C_DIR/src/AudioStream.c \
     $$COMMON_C_DIR/src/ByteBuffer.c \
+    $$COMMON_C_DIR/src/Clipboard.c \
     $$COMMON_C_DIR/src/Connection.c \
     $$COMMON_C_DIR/src/ConnectionTester.c \
     $$COMMON_C_DIR/src/ControlStream.c \
