@@ -28,7 +28,9 @@
 #define SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE 103
 #define SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED 104
 #define SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS 105
-#define SDL_CODE_CLIPBOARD_TEXT 106
+#define SDL_CODE_CLIPBOARD_OFFER 106
+#define SDL_CODE_CLIPBOARD_REQUEST 107
+#define SDL_CODE_CLIPBOARD_DATA 108
 
 #include <openssl/rand.h>
 
@@ -62,7 +64,9 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clSetMotionEventState,
     Session::clSetControllerLED,
     Session::clSetAdaptiveTriggers,
-    Session::clClipboardText
+    Session::clClipboardOffer,
+    Session::clClipboardRequest,
+    Session::clClipboardData
 };
 
 Session* Session::s_ActiveSession;
@@ -276,49 +280,114 @@ void Session::clSetAdaptiveTriggers(uint16_t controllerNumber, uint8_t eventFlag
     SDL_PushEvent(&setControllerLEDEvent);
 }
 
-void Session::clClipboardText(const char *text, unsigned int length)
+// Clipboard callbacks run on a moonlight-common-c thread, so they hand
+// the message to the SDL event loop on the main thread.
+struct ClipboardMessage {
+    QByteArray mimeType;
+    QByteArray data;
+    uint32_t sequence;
+};
+
+static void postClipboardMessage(int code, const char* mimeType, const QByteArray& data, uint32_t sequence)
+{
+    auto* message = new ClipboardMessage { mimeType, data, sequence };
+    SDL_Event event = {};
+    event.type = SDL_USEREVENT;
+    event.user.code = code;
+    event.user.data1 = message;
+    if (SDL_PushEvent(&event) < 0) {
+        delete message;
+    }
+}
+
+static bool isTextMimeType(const char* mimeType)
+{
+    return strcmp(mimeType, "text/plain") == 0 || strncmp(mimeType, "text/plain;", strlen("text/plain;")) == 0;
+}
+
+void Session::clClipboardOffer(const char* const* mimeTypes, int mimeTypeCount, uint32_t sequence)
 {
     if (s_ActiveSession == nullptr || !s_ActiveSession->m_Preferences->syncClipboard) {
         return;
     }
 
-    QByteArray *copy = new QByteArray(text, static_cast<int>(length));
-    SDL_Event clipboardEvent = {};
-    clipboardEvent.type = SDL_USEREVENT;
-    clipboardEvent.user.code = SDL_CODE_CLIPBOARD_TEXT;
-    clipboardEvent.user.data1 = copy;
-    if (SDL_PushEvent(&clipboardEvent) < 0) {
-        delete copy;
+    // Moonlight syncs text only
+    for (int i = 0; i < mimeTypeCount; i++) {
+        if (isTextMimeType(mimeTypes[i])) {
+            postClipboardMessage(SDL_CODE_CLIPBOARD_OFFER, mimeTypes[i], QByteArray(), sequence);
+            return;
+        }
     }
 }
 
-void Session::sendClipboardToHost(const char *text)
+void Session::clClipboardRequest(const char* mimeType, uint32_t sequence)
 {
-    if (!m_Preferences->syncClipboard || text == nullptr) {
+    if (s_ActiveSession == nullptr || !s_ActiveSession->m_Preferences->syncClipboard) {
         return;
     }
 
-    QByteArray incoming(text);
-    if (incoming == m_ClipboardEcho) {
-        return;
-    }
-    if (incoming.size() > SS_CLIPBOARD_TEXT_MAX) {
-        incoming.truncate(SS_CLIPBOARD_TEXT_MAX);
-    }
-
-    m_ClipboardEcho = incoming;
-    LiSendClipboardText(incoming.constData(), static_cast<unsigned int>(incoming.size()));
+    postClipboardMessage(SDL_CODE_CLIPBOARD_REQUEST, mimeType, QByteArray(), sequence);
 }
 
-void Session::applyClipboardFromHost(const char *text, unsigned int length)
+void Session::clClipboardData(const char* mimeType, const void* data, uint32_t length, uint32_t sequence)
 {
-    QByteArray incoming(text, static_cast<int>(length));
-    if (incoming == m_ClipboardEcho) {
+    if (s_ActiveSession == nullptr || !s_ActiveSession->m_Preferences->syncClipboard || !isTextMimeType(mimeType)) {
         return;
     }
 
-    m_ClipboardEcho = incoming;
-    SDL_SetClipboardText(incoming.constData());
+    postClipboardMessage(SDL_CODE_CLIPBOARD_DATA, mimeType, QByteArray(static_cast<const char*>(data), static_cast<int>(length)), sequence);
+}
+
+void Session::offerClipboardToHost()
+{
+    if (!SDL_HasClipboardText()) {
+        return;
+    }
+
+    char* text = SDL_GetClipboardText();
+    if (text == nullptr) {
+        return;
+    }
+    QByteArray current(text);
+    SDL_free(text);
+
+    // Skip text the host just sent us, so it isn't offered back
+    if (current.isEmpty() || current == m_ClipboardText || current.size() > SS_CLIPBOARD_DATA_MAX) {
+        return;
+    }
+
+    m_ClipboardText = current;
+    m_ClipboardSequence = m_ClipboardSequence == UINT32_MAX ? 1 : m_ClipboardSequence + 1;
+
+    const char* mimeTypes[] = { SS_CLIPBOARD_MIME_TEXT };
+    LiSendClipboardOffer(mimeTypes, 1, m_ClipboardSequence);
+}
+
+void Session::sendClipboardToHost(const QByteArray& mimeType, uint32_t sequence)
+{
+    // Ignore requests for an older offer
+    if (sequence != m_ClipboardSequence || !isTextMimeType(mimeType.constData())) {
+        return;
+    }
+
+    LiSendClipboardData(mimeType.constData(), m_ClipboardText.constData(), static_cast<uint32_t>(m_ClipboardText.size()), sequence);
+}
+
+void Session::requestClipboardFromHost(const QByteArray& mimeType, uint32_t sequence)
+{
+    m_HostClipboardSequence = sequence;
+    LiSendClipboardRequest(mimeType.constData(), sequence);
+}
+
+void Session::applyClipboardFromHost(const QByteArray& text, uint32_t sequence)
+{
+    // Ignore data for an older offer
+    if (sequence != m_HostClipboardSequence) {
+        return;
+    }
+
+    m_ClipboardText = text;
+    SDL_SetClipboardText(m_ClipboardText.constData());
 }
 
 
@@ -613,6 +682,8 @@ bool Session::populateDecoderProperties(SDL_Window* window)
 
 Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
     : m_Preferences(preferences ? preferences : StreamingPreferences::get()),
+      m_ClipboardSequence(0),
+      m_HostClipboardSequence(0),
       m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
       m_Computer(computer),
       m_App(app),
@@ -2019,7 +2090,8 @@ void Session::exec()
 #if SDL_VERSION_ATLEAST(2, 0, 22)
         SDL_EventState(SDL_CLIPBOARDUPDATE, SDL_ENABLE);
 #endif
-        LiSendClipboardText(nullptr, 0);
+        // An empty offer subscribes to host clipboard changes
+        LiSendClipboardOffer(nullptr, 0, 0);
     }
 
     // Toggle the stats overlay if requested by the user
@@ -2089,12 +2161,20 @@ void Session::exec()
                                                (uint16_t)((uintptr_t)event.user.data2 >> 16),
                                                (uint16_t)((uintptr_t)event.user.data2 & 0xFFFF));
                 break;
-            case SDL_CODE_CLIPBOARD_TEXT: {
-                auto *text = static_cast<QByteArray *>(event.user.data1);
-                if (text != nullptr) {
-                    applyClipboardFromHost(text->constData(), static_cast<unsigned int>(text->size()));
-                    delete text;
+            case SDL_CODE_CLIPBOARD_OFFER:
+            case SDL_CODE_CLIPBOARD_REQUEST:
+            case SDL_CODE_CLIPBOARD_DATA: {
+                auto* message = static_cast<ClipboardMessage*>(event.user.data1);
+                if (event.user.code == SDL_CODE_CLIPBOARD_OFFER) {
+                    requestClipboardFromHost(message->mimeType, message->sequence);
                 }
+                else if (event.user.code == SDL_CODE_CLIPBOARD_REQUEST) {
+                    sendClipboardToHost(message->mimeType, message->sequence);
+                }
+                else {
+                    applyClipboardFromHost(message->data, message->sequence);
+                }
+                delete message;
                 break;
             }
             case SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE:
@@ -2328,12 +2408,8 @@ void Session::exec()
             break;
 #if SDL_VERSION_ATLEAST(2, 0, 22)
         case SDL_CLIPBOARDUPDATE:
-            if (m_Preferences->syncClipboard && SDL_HasClipboardText()) {
-                char *text = SDL_GetClipboardText();
-                if (text != nullptr) {
-                    sendClipboardToHost(text);
-                    SDL_free(text);
-                }
+            if (m_Preferences->syncClipboard) {
+                offerClipboardToHost();
             }
             break;
 #endif
