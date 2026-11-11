@@ -9,7 +9,7 @@ CONFIG(release, debug|release) {
     DEFINES += NDEBUG
 }
 
-# Enable CFG, EHCont, and CET
+# Enable CFG, EHCont, PAC, and CET
 *-msvc {
     QMAKE_CFLAGS += -guard:cf -guard:ehcont
     QMAKE_CXXFLAGS += -guard:cf -guard:ehcont
@@ -17,6 +17,11 @@ CONFIG(release, debug|release) {
 
     contains(QT_ARCH, x86_64) {
         QMAKE_LFLAGS += -cetcompat
+    }
+
+    contains(QT_ARCH, arm64) {
+        QMAKE_CFLAGS += -guard:signret
+        QMAKE_CXXFLAGS += -guard:signret
     }
 }
 
