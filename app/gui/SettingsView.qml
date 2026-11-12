@@ -934,6 +934,19 @@ Flickable {
 
 
                 CheckBox {
+                    width: parent.width
+                    visible: StreamingPreferences.nativeMicSupported
+                    text: qsTr("Forward microphone to NVIDIA GameStream for this run")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.nativeMic
+                    onToggled: StreamingPreferences.nativeMic = checked
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 10000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Requires the documented Windows host setup and microphone permission on your client. Uses legacy NVIDIA encryption, without packet authentication. Private IPv4 networks only. Press Ctrl+Alt+Shift+N while streaming to stop forwarding; reconnect to enable it again.")
+                }
+
+                CheckBox {
                     id: audioPcCheck
                     width: parent.width
                     text: qsTr("Mute host PC speakers while streaming")

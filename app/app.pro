@@ -580,3 +580,16 @@ macx {
 
 VERSION = "$$cat(version.txt)"
 DEFINES += VERSION_STR=\\\"$$cat(version.txt)\\\"
+
+macx {
+    DEFINES += HAVE_NATIVE_MIC
+    OBJECTIVE_SOURCES += streaming/native-mic.m
+    HEADERS += streaming/native-mic.h
+    LIBS += -framework AudioToolbox -framework AVFoundation
+}
+
+!macx:!config_SL:if(win32|linux) {
+    DEFINES += HAVE_NATIVE_MIC
+    SOURCES += streaming/native-mic-sdl.cpp
+    HEADERS += streaming/native-mic.h
+}

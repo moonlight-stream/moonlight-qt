@@ -2,6 +2,7 @@
 
 #include <QString>
 #include <QReadWriteLock>
+#include <QMutex>
 
 #include "SDL_compat.h"
 #include <SDL_ttf.h>
@@ -34,6 +35,9 @@ public:
     int getOverlayMaxTextLength();
     void setOverlayTextUpdated(OverlayType type);
     void setOverlayState(OverlayType type, bool enabled);
+    // Composes capture status with connection/gamepad warnings in the existing
+    // status channel; callers can clear their own part without hiding others.
+    void setMicrophoneStatus(const QByteArray& text);
     SDL_Color getOverlayColor(OverlayType type);
     int getOverlayFontSize(OverlayType type);
     SDL_Surface* getUpdatedOverlaySurface(OverlayType type);
@@ -42,6 +46,7 @@ public:
 
 private:
     void notifyOverlayUpdated(OverlayType type);
+    void refreshStatusOverlay(); // Caller holds m_StatusUpdateLock.
     SDL_Surface* RenderTextOutlinedWrapped(TTF_Font* font, const char* text, SDL_Color textColor, SDL_Color outlineColor, int outlineWidth, int wrapWidth);
 
     struct {
@@ -56,6 +61,10 @@ private:
     IOverlayRenderer* m_Renderer;
     QByteArray m_FontData;
     QReadWriteLock m_OverlayRendererLock;
+    QMutex m_StatusUpdateLock;
+    QByteArray m_StatusUpdateText;
+    QByteArray m_MicrophoneStatus;
+    bool m_StatusUpdateEnabled = false;
 };
 
 }

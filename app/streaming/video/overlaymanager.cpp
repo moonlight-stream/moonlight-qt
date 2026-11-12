@@ -60,6 +60,12 @@ char* OverlayManager::getOverlayText(OverlayType type)
 
 void OverlayManager::updateOverlayText(OverlayType type, const char* text)
 {
+    if (type == OverlayStatusUpdate) {
+        QMutexLocker lock(&m_StatusUpdateLock);
+        m_StatusUpdateText = text;
+        refreshStatusOverlay();
+        return;
+    }
     SDL_utf8strlcpy(m_Overlays[type].text, text, sizeof(m_Overlays[0].text));
     setOverlayTextUpdated(type);
 }
@@ -90,8 +96,41 @@ void OverlayManager::setOverlayTextUpdated(OverlayType type)
     }
 }
 
+void OverlayManager::setMicrophoneStatus(const QByteArray& text)
+{
+    QMutexLocker lock(&m_StatusUpdateLock);
+    if (m_MicrophoneStatus == text) return;
+    m_MicrophoneStatus = text;
+    refreshStatusOverlay();
+}
+
+void OverlayManager::refreshStatusOverlay()
+{
+    QByteArray text = m_StatusUpdateEnabled ? m_StatusUpdateText : QByteArray();
+    if (!m_MicrophoneStatus.isEmpty()) {
+        if (!text.isEmpty()) text.append('\n');
+        text.append(m_MicrophoneStatus);
+    }
+    // Do not rebuild text surfaces when the composed state has not changed.
+    char bounded[sizeof(m_Overlays[0].text)];
+    SDL_utf8strlcpy(bounded, text.constData(), sizeof(bounded));
+    bool enabled = bounded[0] != 0;
+    if (m_Overlays[OverlayStatusUpdate].enabled == enabled &&
+            strcmp(m_Overlays[OverlayStatusUpdate].text, bounded) == 0) return;
+    SDL_utf8strlcpy(m_Overlays[OverlayStatusUpdate].text, bounded, sizeof(bounded));
+    m_Overlays[OverlayStatusUpdate].enabled = enabled;
+    notifyOverlayUpdated(OverlayStatusUpdate);
+}
+
 void OverlayManager::setOverlayState(OverlayType type, bool enabled)
 {
+    if (type == OverlayStatusUpdate) {
+        QMutexLocker lock(&m_StatusUpdateLock);
+        m_StatusUpdateEnabled = enabled;
+        if (!enabled) m_StatusUpdateText.clear();
+        refreshStatusOverlay();
+        return;
+    }
     bool stateChanged = m_Overlays[type].enabled != enabled;
 
     m_Overlays[type].enabled = enabled;
