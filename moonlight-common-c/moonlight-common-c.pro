@@ -35,7 +35,6 @@ macx {
 unix:!macx {
     CONFIG += link_pkgconfig
     PKGCONFIG += openssl
-    DEFINES += HAVE_CLOCK_GETTIME=1
 }
 
 COMMON_C_DIR = $$PWD/moonlight-common-c
@@ -88,9 +87,9 @@ CONFIG(debug, debug|release) {
     DEFINES += LC_DEBUG
 }
 
-# Older GCC versions defaulted to GNU89
-*-g++ {
-    QMAKE_CFLAGS += -std=gnu99
+# Enable support for C11 atomics on MSVC
+*-msvc {
+    QMAKE_CFLAGS += -std:c11 -experimental:c11atomics
 }
 
 # Disable unused parameter warnings on GCC and Clang
