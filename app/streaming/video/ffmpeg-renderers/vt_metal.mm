@@ -15,8 +15,14 @@
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 #import <dispatch/dispatch.h>
-#import <Metal/Metal.h>
+#import <MetalFx/MetalFx.h>
 #import <MetalKit/MetalKit.h>
+#import <MetalPerformanceShaders/MetalPerformanceShaders.h>
+
+#include "streaming/video/videoenhancement.h"
+#include "shaders/enhancer/MWSR/mwsr.h"
+
+#include <QFile>
 
 extern "C" {
     #include <libavutil/pixdesc.h>
@@ -78,8 +84,13 @@ public:
           m_LastFrameWidth(-1),
           m_LastFrameHeight(-1),
           m_LastDrawableWidth(-1),
-          m_LastDrawableHeight(-1)
+          m_LastDrawableHeight(-1),
+          m_LumaUpscaledTexture(nullptr),
+          m_LumaUpscaler(nullptr),
+          m_ChromaUpscaledTexture(nullptr),
+          m_ChromaUpscaler(nullptr)
     {
+        m_VideoEnhancement = &VideoEnhancement::getInstance();
     }
 
     virtual ~VTMetalRenderer() override
@@ -130,9 +141,38 @@ public:
             [m_CommandQueue release];
         }
 
-        if (m_TextureCache != nullptr) {
-            CFRelease(m_TextureCache);
+        if (m_LumaUpscaledTexture != nullptr) {
+            [m_LumaUpscaledTexture release];
         }
+
+        if (m_LumaUpscaler != nullptr) {
+            [m_LumaUpscaler release];
+        }
+
+        if (m_ChromaUpscaledTexture != nullptr) {
+            [m_ChromaUpscaledTexture release];
+        }
+
+        if (m_ChromaUpscaler != nullptr) {
+            [m_ChromaUpscaler release];
+        }
+
+        if (m_MwsrRgbTexture != nullptr) {
+            [m_MwsrRgbTexture release];
+        }
+
+        if (m_MwsrPipelineState != nullptr) {
+            [m_MwsrPipelineState release];
+        }
+
+        if (m_MwsrLibrary != nullptr) {
+            [m_MwsrLibrary release];
+        }
+
+        // Note: CFRelease makes the application crash sometime as the m_TextureCache seems to be cleared before it is called
+        // if (m_TextureCache != nullptr) {
+        //     CFRelease(m_TextureCache);
+        // }
 
         if (m_MetalView != nullptr) {
             SDL_Metal_DestroyView(m_MetalView);
@@ -152,6 +192,8 @@ public:
             return true;
         }
 
+        m_VideoEnhancement->setRatio(static_cast<float>(drawableHeight) / static_cast<float>(frame->height));
+
         // Determine the correct scaled size for the video region
         SDL_Rect src, dst;
         src.x = src.y = 0;
@@ -161,6 +203,10 @@ public:
         dst.w = drawableWidth;
         dst.h = drawableHeight;
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        // MWSR draws into this region, its size in pixels
+        m_VideoRegionWidth = dst.w;
+        m_VideoRegionHeight = dst.h;
 
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
@@ -309,6 +355,21 @@ public:
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to create video pipeline state");
             return false;
+        }
+
+        // MWSR draws the RGB frame into the same layer
+        if (m_MwsrLibrary) {
+            pipelineDesc = [[MTLRenderPipelineDescriptor new] autorelease];
+            pipelineDesc.vertexFunction = [[m_ShaderLibrary newFunctionWithName:@"vs_draw"] autorelease];
+            pipelineDesc.fragmentFunction = [[m_MwsrLibrary newFunctionWithName:@"mwsr_up"] autorelease];
+            pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
+            [m_MwsrPipelineState release];
+            m_MwsrPipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
+            if (!m_MwsrPipelineState) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to create MWSR pipeline state");
+                return false;
+            }
         }
 
         pipelineDesc = [[MTLRenderPipelineDescriptor new] autorelease];
@@ -480,32 +541,218 @@ public:
         size_t planes = getFramePlaneCount(frame);
         SDL_assert(planes <= MAX_VIDEO_PLANES);
 
+        CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
+
+        CVMetalTextureRef cvLumaTexture = nullptr;
+        CVMetalTextureRef cvChromaTexture = nullptr;
+        
         if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
-            if (!createTexturesFromFrame(frame, cvMetalTextures)) {
+
+            // Create Metal textures for the planes of the CVPixelBuffer
+
+            switch (CVPixelBufferGetPixelFormatType(pixBuf)) {
+              case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+              case kCVPixelFormatType_444YpCbCr8BiPlanarVideoRange:
+              case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+              case kCVPixelFormatType_444YpCbCr8BiPlanarFullRange:
+                  m_LumaPixelFormart = MTLPixelFormatR8Unorm;
+                  m_ChromaPixelFormart = MTLPixelFormatRG8Unorm;
+                  break;
+              case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
+              case kCVPixelFormatType_444YpCbCr10BiPlanarFullRange:
+              case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
+              case kCVPixelFormatType_444YpCbCr10BiPlanarVideoRange:
+                  m_LumaPixelFormart = MTLPixelFormatR16Unorm;
+                  m_ChromaPixelFormart = MTLPixelFormatRG16Unorm;
+                  break;
+              default:
+                  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                               "Unknown pixel format: %x",
+                               CVPixelBufferGetPixelFormatType(pixBuf));
+                  return;
+            }
+
+            CVReturn err;
+
+            err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                                                     m_TextureCache,
+                                                                     pixBuf,
+                                                                     nullptr,
+                                                                     m_LumaPixelFormart,
+                                                                     CVPixelBufferGetWidthOfPlane(pixBuf, 0),
+                                                                     CVPixelBufferGetHeightOfPlane(pixBuf, 0),
+                                                                     0,
+                                                                     &cvLumaTexture);
+            if (err != kCVReturnSuccess) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
+                             err);
+                return;
+            }
+
+            err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                                                     m_TextureCache,
+                                                                     pixBuf,
+                                                                     nullptr,
+                                                                     m_ChromaPixelFormart,
+                                                                     CVPixelBufferGetWidthOfPlane(pixBuf, 1),
+                                                                     CVPixelBufferGetHeightOfPlane(pixBuf, 1),
+                                                                     1,
+                                                                     &cvChromaTexture);
+            if (err != kCVReturnSuccess) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
+                             err);
+                CFRelease(cvLumaTexture);
                 return;
             }
         }
 
+        id<MTLCommandBuffer> commandBuffer = [m_CommandQueue commandBuffer];
+
+        // MWSR: the frame converted to RGB at its own size, then drawn by MWSR into the video region, when both axes grow
+        bool useMwsr = false;
+        mwsr::Constants mwsrConstants{};
+        if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX && m_VideoEnhancement->isVideoEnhancementEnabled() && m_IsMWSR && m_MwsrPipelineState) {
+            const int inWidth = (int)CVPixelBufferGetWidthOfPlane(pixBuf, 0);
+            const int inHeight = (int)CVPixelBufferGetHeightOfPlane(pixBuf, 0);
+            useMwsr = m_VideoRegionWidth > inWidth && m_VideoRegionHeight > inHeight;
+
+            if (useMwsr && (m_MwsrRgbTexture == nullptr ||
+                            (int)m_MwsrRgbTexture.width != inWidth || (int)m_MwsrRgbTexture.height != inHeight ||
+                            m_MwsrRgbTexture.pixelFormat != m_MetalLayer.pixelFormat)) {
+                [m_MwsrRgbTexture release];
+                MTLTextureDescriptor* rgbDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:m_MetalLayer.pixelFormat
+                                                                                                     width:inWidth
+                                                                                                    height:inHeight
+                                                                                                 mipmapped:NO];
+                rgbDescriptor.storageMode = MTLStorageModePrivate;
+                rgbDescriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
+                m_MwsrRgbTexture = [m_MetalLayer.device newTextureWithDescriptor:rgbDescriptor];
+                useMwsr = m_MwsrRgbTexture != nullptr;
+            }
+
+            if (useMwsr) {
+                MTLRenderPassDescriptor* rgbPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+                rgbPassDescriptor.colorAttachments[0].texture = m_MwsrRgbTexture;
+                rgbPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionDontCare;
+                rgbPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+
+                // The whole texture, in the video region's orientation
+                Vertex wholeVerts[] =
+                {
+                    { { -1.0f, -1.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } },
+                    { { -1.0f, 1.0f, 0.0f, 1.0f }, { 0.0f, 0} },
+                    { { 1.0f, -1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f} },
+                    { { 1.0f, 1.0f, 0.0f, 1.0f }, { 1.0f, 0} },
+                };
+
+                id<MTLRenderCommandEncoder> rgbEncoder = [commandBuffer renderCommandEncoderWithDescriptor:rgbPassDescriptor];
+                [rgbEncoder setRenderPipelineState:m_VideoPipelineState];
+                [rgbEncoder setFragmentTexture:CVMetalTextureGetTexture(cvLumaTexture) atIndex:0];
+                [rgbEncoder setFragmentTexture:CVMetalTextureGetTexture(cvChromaTexture) atIndex:1];
+                [rgbEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
+                [rgbEncoder setVertexBytes:wholeVerts length:sizeof(wholeVerts) atIndex:0];
+                [rgbEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:SDL_arraysize(wholeVerts)];
+                [rgbEncoder endEncoding];
+
+                // PQ (HDR) takes no margin on the bound, as on Windows
+                mwsr::Options options;
+                options.hdr = frame->color_trc == AVCOL_TRC_SMPTE2084;
+                mwsrConstants = mwsr::constants(inWidth, inHeight, m_VideoRegionWidth, m_VideoRegionHeight, options);
+            }
+        }
+
+        if(frame->format == AV_PIX_FMT_VIDEOTOOLBOX && m_VideoEnhancement->isVideoEnhancementEnabled() && !m_IsMWSR){
+          m_LumaWidth = CVPixelBufferGetWidthOfPlane(pixBuf, 0);
+          m_LumaHeight = CVPixelBufferGetHeightOfPlane(pixBuf, 0);
+          m_ChromaWidth = CVPixelBufferGetWidthOfPlane(pixBuf, 1);
+          m_ChromaHeight = CVPixelBufferGetHeightOfPlane(pixBuf, 1);
+
+          // Setup the Spatial scaler for Luma texture
+          if(m_LumaUpscaler == nullptr){
+            MTLFXSpatialScalerDescriptor* Ldescriptor = [MTLFXSpatialScalerDescriptor new];
+            Ldescriptor.inputWidth = m_LumaWidth;
+            Ldescriptor.inputHeight = m_LumaHeight;
+            Ldescriptor.outputWidth = m_LastDrawableWidth;
+            Ldescriptor.outputHeight = m_LastDrawableHeight;
+            Ldescriptor.colorTextureFormat = m_LumaPixelFormart;
+            Ldescriptor.outputTextureFormat = m_LumaPixelFormart;
+            // Perceptual is faster than Linear, Linear for HDR only
+            Ldescriptor.colorProcessingMode = m_IsTexture10bits ?
+                                                  MTLFXSpatialScalerColorProcessingModeLinear
+                                                : MTLFXSpatialScalerColorProcessingModePerceptual;
+            m_LumaUpscaler = [Ldescriptor newSpatialScalerWithDevice:m_MetalLayer.device];
+            [Ldescriptor release];
+
+            MTLTextureDescriptor *LtextureDescriptor = [[MTLTextureDescriptor alloc] init];
+            LtextureDescriptor.pixelFormat = m_LumaPixelFormart;
+            LtextureDescriptor.width = m_LastDrawableWidth;
+            LtextureDescriptor.height = m_LastDrawableHeight;
+            LtextureDescriptor.storageMode = MTLStorageModePrivate;
+            LtextureDescriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
+
+            m_LumaUpscaledTexture = [m_MetalLayer.device newTextureWithDescriptor:LtextureDescriptor];
+          }
+
+          // Setup the Spacial scaler for Chroma texture
+          if(m_ChromaUpscaler == nullptr){
+
+            // Using Bilinear does not have have visual impact on Chroma and is faster to upscale than Lanczos
+            m_ChromaUpscaler = [[MPSImageBilinearScale alloc] initWithDevice:m_MetalLayer.device];
+            // m_ChromaUpscaler = [[MPSImageLanczosScale alloc] initWithDevice:m_MetalLayer.device];
+            m_ChromaUpscaler.edgeMode = MPSImageEdgeModeClamp;
+
+            MTLTextureDescriptor* CtextureDescriptor = [MTLTextureDescriptor
+                texture2DDescriptorWithPixelFormat:m_ChromaPixelFormart
+                                             width:m_LastDrawableWidth
+                                            height:m_LastDrawableHeight
+                                          mipmapped:NO];
+            CtextureDescriptor.storageMode = MTLStorageModePrivate;
+            CtextureDescriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
+
+            m_ChromaUpscaledTexture = [m_MetalLayer.device newTextureWithDescriptor:CtextureDescriptor];
+          }
+
+          m_LumaUpscaler.colorTexture = CVMetalTextureGetTexture(cvLumaTexture);
+          m_LumaUpscaler.outputTexture = m_LumaUpscaledTexture;
+          [m_LumaUpscaler encodeToCommandBuffer:commandBuffer];
+
+          [m_ChromaUpscaler encodeToCommandBuffer:commandBuffer
+                                    sourceTexture:CVMetalTextureGetTexture(cvChromaTexture)
+                               destinationTexture:m_ChromaUpscaledTexture];
+        }
+
         // Prepare a render pass to render into the next drawable
-        auto renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
         renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
         renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-        auto commandBuffer = [m_CommandQueue commandBuffer];
-        auto renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+
+        id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
 
         // Bind textures and buffers then draw the video region
-        [renderEncoder setRenderPipelineState:m_VideoPipelineState];
+        [renderEncoder setRenderPipelineState:useMwsr ? m_MwsrPipelineState : m_VideoPipelineState];
         if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
-            for (size_t i = 0; i < planes; i++) {
-                [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(cvMetalTextures[i]) atIndex:i];
+            if (useMwsr) {
+                // MWSR reads the RGB frame and its constants
+                [renderEncoder setFragmentTexture:m_MwsrRgbTexture atIndex:0];
+                [renderEncoder setFragmentBytes:&mwsrConstants length:sizeof(mwsrConstants) atIndex:1];
             }
+            else if(m_VideoEnhancement->isVideoEnhancementEnabled() && !m_IsMWSR){
+                // Use scaled textures
+                [renderEncoder setFragmentTexture:m_LumaUpscaledTexture atIndex:0];
+                [renderEncoder setFragmentTexture:m_ChromaUpscaledTexture atIndex:1];
+            } else {
+                [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(cvLumaTexture) atIndex:0];
+                [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(cvChromaTexture) atIndex:1];
+            }
+
             [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
                 // Free textures after completion of rendering per CVMetalTextureCache requirements
-                for (size_t i = 0; i < planes; i++) {
-                    CFRelease(cvMetalTextures[i]);
-                }
+                if(cvLumaTexture != nullptr) CFRelease(cvLumaTexture);
+                if(cvChromaTexture != nullptr) CFRelease(cvChromaTexture);
             }];
         }
         else {
@@ -568,8 +815,11 @@ public:
         [commandBuffer presentDrawable:drawable];
         [commandBuffer commit];
 
-        // Wait for the command buffer to complete and free our CVMetalTextureCache references
-        [commandBuffer waitUntilCompleted];
+        // Note: cvLumaTexture and cvChromaTexture are already released, waitUntilCompleted should be unecessary now
+        if(!m_VideoEnhancement->isVideoEnhancementEnabled()){
+          // Wait for the command buffer to complete and free our CVMetalTextureCache references
+          [commandBuffer waitUntilCompleted];
+        }
     }}
 
     // Caller frees frame after we return
@@ -662,7 +912,11 @@ public:
         int err;
 
         m_Window = params->window;
+        m_DecoderParams = *params;
         m_FrameRateRange = CAFrameRateRangeMake(params->frameRate, params->frameRate, params->frameRate);
+
+        // Check if HDR is enabled by the user in the UI settings.
+        m_IsTexture10bits = m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT;
 
         id<MTLDevice> device = getMetalDevice();
         if (!device) {
@@ -676,6 +930,17 @@ public:
 
         if (m_HwAccel && !checkDecoderCapabilities(device, params)) {
             return false;
+        }
+
+        // Video Super Resolution from MetalFX is available starting from MacOS 13+
+        if (@available(macOS 13.0, *) && m_DecoderParams.enableVideoEnhancement) {
+            // Check if the user has enable Video enhancement
+            m_VideoEnhancement->setVSRcapable(true);
+            // MWSR when it is selected, MetalFX otherwise
+            m_IsMWSR = StreamingPreferences::get()->superResolutionMode == StreamingPreferences::SRM_03;
+            m_VideoEnhancement->setAlgo(m_IsMWSR ? "Shader MWSR" : "MetalFX");
+        } else {
+          m_VideoEnhancement->enableVideoEnhancement(false);
         }
 
         err = av_hwdevice_ctx_create(&m_HwContext,
@@ -712,6 +977,27 @@ public:
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to compile shaders");
             return false;
+        }
+
+        // MWSR's shader, its 4:4:4 variant by a macro; MetalFX takes over if it does not compile
+        if (m_IsMWSR) {
+            MTLCompileOptions* mwsrOptions = [[MTLCompileOptions new] autorelease];
+            if (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_YUV444) {
+                mwsrOptions.preprocessorMacros = @{ @"MWSR_CHROMA444" : @1 };
+            }
+            NSError* mwsrError = nil;
+            QFile mwsrFile(":/enhancer/mwsr-up.metal");
+            if (mwsrFile.open(QIODevice::ReadOnly)) {
+                QString mwsrSource = QString::fromUtf8(mwsrFile.readAll());
+                m_MwsrLibrary = [device newLibraryWithSource:mwsrSource.toNSString() options:mwsrOptions error:&mwsrError];
+            }
+            if (!m_MwsrLibrary) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to compile the MWSR shader, MetalFX is used instead: %s",
+                             mwsrError ? mwsrError.localizedDescription.UTF8String : "the shader file is missing");
+                m_IsMWSR = false;
+                m_VideoEnhancement->setAlgo("MetalFX");
+            }
         }
 
         // Create a command queue for submission
@@ -943,6 +1229,7 @@ private:
     CAMetalLayer* m_MetalLayer;
     CAMetalDisplayLink* m_MetalDisplayLink API_AVAILABLE(macos(14.0));
     CAFrameRateRange m_FrameRateRange;
+    bool m_IsTexture10bits = false;
     AVFrame* m_LatestUnrenderedFrame;
     SDL_mutex* m_FrameLock;
     SDL_cond* m_FrameReady;
@@ -961,6 +1248,27 @@ private:
     int m_LastFrameHeight;
     int m_LastDrawableWidth;
     int m_LastDrawableHeight;
+
+    VideoEnhancement* m_VideoEnhancement;
+    DECODER_PARAMETERS m_DecoderParams;
+    id<MTLTexture> m_LumaUpscaledTexture;
+    id<MTLFXSpatialScaler> m_LumaUpscaler;
+    id<MTLTexture> m_ChromaUpscaledTexture;
+    MPSImageBilinearScale* m_ChromaUpscaler;
+    size_t m_LumaWidth;
+    size_t m_LumaHeight;
+    size_t m_ChromaWidth;
+    size_t m_ChromaHeight;
+    MTLPixelFormat m_LumaPixelFormart;
+    MTLPixelFormat m_ChromaPixelFormart;
+
+    // MWSR
+    bool m_IsMWSR = false;
+    id<MTLLibrary> m_MwsrLibrary = nullptr;
+    id<MTLRenderPipelineState> m_MwsrPipelineState = nullptr;
+    id<MTLTexture> m_MwsrRgbTexture = nullptr;
+    int m_VideoRegionWidth = 0;
+    int m_VideoRegionHeight = 0;
 };
 
 @implementation DisplayLinkDelegate {
