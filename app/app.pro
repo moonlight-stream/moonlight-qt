@@ -580,3 +580,34 @@ macx {
 
 VERSION = "$$cat(version.txt)"
 DEFINES += VERSION_STR=\\\"$$cat(version.txt)\\\"
+
+GIT_HASH = $$(GIT_HASH)
+win32 {
+    isEmpty(GIT_HASH): GIT_HASH = $$system(git rev-parse --short=6 HEAD 2> NUL)
+} else {
+    isEmpty(GIT_HASH): GIT_HASH = $$system(git rev-parse --short=6 HEAD 2> /dev/null)
+}
+isEmpty(GIT_HASH) {
+    GIT_HASH = unknown
+}
+
+BUILD_DATE = $$(BUILD_DATE)
+win32 {
+    isEmpty(BUILD_DATE): BUILD_DATE = $$system(git log -1 --format=%cd --date=format:%Y-%m-%d 2> NUL)
+} else {
+    isEmpty(BUILD_DATE): BUILD_DATE = $$system(git log -1 --format=%cd --date=format:%Y-%m-%d 2> /dev/null)
+}
+isEmpty(BUILD_DATE) {
+    BUILD_DATE = unknown
+}
+
+DEFINES += GIT_HASH_STR=\\\"$$GIT_HASH\\\"
+DEFINES += BUILD_DATE_STR=\\\"$$BUILD_DATE\\\"
+
+!isEmpty(GIT_HASH):!equals(GIT_HASH, unknown) {
+    win32 {
+        !system(git diff-index --quiet HEAD -- 2> NUL): GIT_HASH = $${GIT_HASH}-dirty
+    } else {
+        !system(git diff-index --quiet HEAD -- 2> /dev/null): GIT_HASH = $${GIT_HASH}-dirty
+    }
+}
