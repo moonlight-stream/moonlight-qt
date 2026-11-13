@@ -205,9 +205,13 @@ ComputerManager::~ComputerManager()
     // Stop the delayed flush thread before acquiring the lock in write mode
     // to avoid deadlocking with a flush that needs the lock in read mode.
     {
-        // Wake the delayed flush thread
-        m_DelayedFlushThread->requestInterruption();
-        m_DelayedFlushCondition.wakeOne();
+        // Acquire the delayed flush mutex before requesting interruption and
+        // waking the thread so we cannot race with its predicate check and wait().
+        {
+            QMutexLocker locker(&m_DelayedFlushMutex);
+            m_DelayedFlushThread->requestInterruption();
+            m_DelayedFlushCondition.wakeOne();
+        }
 
         // Wait for it to terminate (and finish any pending flush)
         m_DelayedFlushThread->wait();
