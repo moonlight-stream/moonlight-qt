@@ -37,7 +37,12 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
     case BusyRole:
         return computer->currentGameId != 0;
     case WakeableRole:
-        return !computer->macAddress.isEmpty();
+        // Wakeable depends on the configured wake method
+        if (computer->wakeMethod == NvComputer::WM_HTTP) {
+            return !computer->httpWakeUrl.isEmpty();
+        } else {
+            return !computer->macAddress.isEmpty();
+        }
     case StatusUnknownRole:
         return computer->state == NvComputer::CS_UNKNOWN;
     case ServerSupportedRole:
@@ -177,6 +182,47 @@ void ComputerModel::renameComputer(int computerIndex, QString name)
     Q_ASSERT(computerIndex < m_Computers.count());
 
     m_ComputerManager->renameHost(m_Computers[computerIndex], name);
+}
+
+void ComputerModel::configureWake(int computerIndex, int wakeMethod, QString httpWakeUrl)
+{
+    Q_ASSERT(computerIndex < m_Computers.count());
+    NvComputer* computer = m_Computers[computerIndex];
+
+    {
+        QWriteLocker lock(&computer->lock);
+        computer->wakeMethod = static_cast<NvComputer::WakeMethod>(wakeMethod);
+        computer->httpWakeUrl = httpWakeUrl;
+    }
+
+    m_ComputerManager->clientSideAttributeUpdated(computer);
+}
+
+int ComputerModel::getWakeMethod(int computerIndex)
+{
+    Q_ASSERT(computerIndex < m_Computers.count());
+    NvComputer* computer = m_Computers[computerIndex];
+    QReadLocker lock(&computer->lock);
+    return static_cast<int>(computer->wakeMethod);
+}
+
+QString ComputerModel::getHttpWakeUrl(int computerIndex)
+{
+    Q_ASSERT(computerIndex < m_Computers.count());
+    NvComputer* computer = m_Computers[computerIndex];
+    QReadLocker lock(&computer->lock);
+    return computer->httpWakeUrl;
+}
+
+bool ComputerModel::isValidWakeUrl(QString url)
+{
+    if (url.isEmpty()) {
+        return false;
+    }
+    QUrl qurl(url);
+    return qurl.isValid() &&
+           (qurl.scheme() == "http" || qurl.scheme() == "https") &&
+           !qurl.host().isEmpty();
 }
 
 QString ComputerModel::generatePinString()
