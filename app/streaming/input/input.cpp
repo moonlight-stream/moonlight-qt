@@ -218,6 +218,10 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
 
 SdlInputHandler::~SdlInputHandler()
 {
+#ifdef Q_OS_WIN32
+    removeWin32PenHook();
+#endif
+
     for (int i = 0; i < MAX_GAMEPADS; i++) {
         if (m_GamepadState[i].mouseEmulationTimer != 0) {
             Session::get()->notifyMouseEmulationMode(false);
@@ -268,6 +272,11 @@ SdlInputHandler::~SdlInputHandler()
 void SdlInputHandler::setWindow(SDL_Window *window)
 {
     m_Window = window;
+
+#ifdef Q_OS_WIN32
+    removeWin32PenHook();
+    installWin32PenHook();
+#endif
 }
 
 void SdlInputHandler::notifyFocusLost()
