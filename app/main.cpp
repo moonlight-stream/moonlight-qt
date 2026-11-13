@@ -381,8 +381,12 @@ int SDLCALL signalHandlerThread(void* data)
                     _Exit(1);
                 }
 
-                // If we're not streaming, we'll close the whole app
-                QCoreApplication::instance()->quit();
+                // If we're not streaming, we'll close the whole app on the main thread
+                if (QCoreApplication* app = QCoreApplication::instance()) {
+                    QMetaObject::invokeMethod(app, []() {
+                        QCoreApplication::quit();
+                    }, Qt::QueuedConnection);
+                }
                 requestedQuit = true;
             }
             break;

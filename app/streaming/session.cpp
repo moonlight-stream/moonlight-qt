@@ -1307,7 +1307,11 @@ private:
 
         // Exit the entire program if requested
         if (m_Session->m_ShouldExit) {
-            QCoreApplication::instance()->quit();
+            if (QCoreApplication* app = QCoreApplication::instance()) {
+                QMetaObject::invokeMethod(app, []() {
+                    QCoreApplication::quit();
+                }, Qt::QueuedConnection);
+            }
         }
     }
 
