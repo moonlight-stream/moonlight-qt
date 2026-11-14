@@ -659,6 +659,26 @@ bool Session::initialize(QQuickWindow* qtWindow)
     m_StreamConfig.width = m_Preferences->width;
     m_StreamConfig.height = m_Preferences->height;
 
+    // Native resolution is decided when the stream starts rather than when it was selected, because the user may have changed displays since then. The saved width and height are used if can't find the native resolution.
+    if (m_Preferences->nativeResolution) {
+        int displayIndex = getDisplayIndex();
+        SDL_DisplayMode desktopMode;
+        SDL_Rect safeArea;
+        if (StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea) &&
+                desktopMode.w <= 8192 && desktopMode.h <= 8192) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using native resolution of display %d: %dx%d",
+                        displayIndex, desktopMode.w, desktopMode.h);
+            m_StreamConfig.width = desktopMode.w;
+            m_StreamConfig.height = desktopMode.h;
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to find native resolution of display %d. Using %dx%d instead.",
+                        displayIndex, m_StreamConfig.width, m_StreamConfig.height);
+        }
+    }
+
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
 
@@ -680,6 +700,15 @@ bool Session::initialize(QQuickWindow* qtWindow)
 
     m_StreamConfig.fps = m_Preferences->fps;
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
+
+    // The saved bitrate was picked for the saved resolution, so pick the
+    // default bitrate for the native resolution we found above instead.
+    if (m_Preferences->nativeResolution && m_Preferences->autoAdjustBitrate) {
+        m_StreamConfig.bitrate = StreamingPreferences::getDefaultBitrate(m_StreamConfig.width,
+                                                                         m_StreamConfig.height,
+                                                                         m_StreamConfig.fps,
+                                                                         m_Preferences->enableYUV444);
+    }
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
@@ -1318,8 +1347,7 @@ private:
     Session* m_Session;
 };
 
-void Session::getWindowDimensions(int& x, int& y,
-                                  int& width, int& height)
+int Session::getDisplayIndex()
 {
     int displayIndex = 0;
 
@@ -1365,6 +1393,14 @@ void Session::getWindowDimensions(int& x, int& y,
             }
         }
     }
+
+    return displayIndex;
+}
+
+void Session::getWindowDimensions(int& x, int& y,
+                                  int& width, int& height)
+{
+    int displayIndex = getDisplayIndex();
 
     // Get the usable display bounds
     SDL_Rect usableBounds;
