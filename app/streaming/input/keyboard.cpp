@@ -444,6 +444,22 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 keyCode = 0xAC;
                 modifiers |= MODIFIER_EXTENDED;
                 break;
+            case SDL_SCANCODE_UNDO:
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x0100;
+                break;
+            case SDL_SCANCODE_CUT:
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x0101;
+                break;
+            case SDL_SCANCODE_COPY:
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x0102;
+                break;
+            case SDL_SCANCODE_PASTE:
+                shouldNotConvertToScanCodeOnServer = true;
+                keyCode = 0x0103;
+                break;
             case SDL_SCANCODE_SEMICOLON:
                 keyCode = 0xBA;
                 break;
@@ -500,7 +516,12 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         }
     }
 
-    keyCode |= 0x8000;
+    // Windows virtual-key codes are sent with the legacy 0x8000 prefix. Semantic
+    // keycodes above the VK range (Undo/Cut/Copy/Paste) are interpreted as-is by
+    // Sunshine, which would otherwise mask them down to the low byte.
+    if (keyCode < 0x0100) {
+        keyCode |= 0x8000;
+    }
     flags = shouldNotConvertToScanCodeOnServer ? SS_KBE_FLAG_NON_NORMALIZED : 0;
 
     // Track the key state so we always know which keys are down
