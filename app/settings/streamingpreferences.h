@@ -119,6 +119,15 @@ public:
     };
     Q_ENUM(CaptureSysKeysMode);
 
+    // Vertical placement of the video when it is letterboxed
+    enum VideoAlignment
+    {
+        VA_CENTER,
+        VA_TOP,
+        VA_BOTTOM
+    };
+    Q_ENUM(VideoAlignment);
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
@@ -156,6 +165,7 @@ public:
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
+    Q_PROPERTY(VideoAlignment videoAlignment MEMBER videoAlignment NOTIFY videoAlignmentChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
 
     Q_INVOKABLE bool retranslate();
@@ -200,6 +210,7 @@ public:
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
     RendererSelection rendererSelection;
+    VideoAlignment videoAlignment;
 
 signals:
     void displayModeChanged();
@@ -238,6 +249,7 @@ signals:
     void keepAwakeChanged();
     void languageChanged();
     void rendererSelectionChanged();
+    void videoAlignmentChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);

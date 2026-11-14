@@ -8,6 +8,7 @@
 #include <SDL_syswm.h>
 #include <Limelight.h>
 #include <streaming/session.h>
+#include <streaming/streamutils.h>
 
 #include <mach/mach_time.h>
 #import <Cocoa/Cocoa.h>
@@ -350,7 +351,22 @@ public:
             // SDL adds its own content view to listen for events.
             // We need to add a subview for our display layer.
             NSView* contentView = info.info.cocoa.window.contentView;
-            m_StreamView = [[VTView alloc] initWithFrame:contentView.bounds];
+            
+            // Size our view to the video region so the configured video alignment
+            // is honored (AVLayerVideoGravityResizeAspect always centers).
+            SDL_Rect src, dst;
+            src.x = src.y = dst.x = dst.y = 0;
+            src.w = params->width;
+            src.h = params->height;
+            dst.w = (int)contentView.bounds.size.width;
+            dst.h = (int)contentView.bounds.size.height;
+            StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+            if (!contentView.isFlipped) {
+                // Non-flipped views use a bottom-left origin
+                dst.y = (int)contentView.bounds.size.height - dst.y - dst.h;
+            }
+
+            m_StreamView = [[VTView alloc] initWithFrame:NSMakeRect(dst.x, dst.y, dst.w, dst.h)];
 
             m_DisplayLayer = [[AVSampleBufferDisplayLayer alloc] init];
             m_DisplayLayer.bounds = m_StreamView.bounds;

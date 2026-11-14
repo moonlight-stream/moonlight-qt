@@ -812,6 +812,58 @@ Flickable {
                     ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
                 }
 
+                Label {
+                    width: parent.width
+                    id: videoAlignmentTitle
+                    text: qsTr("Video alignment")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                AutoResizingComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        var saved_va = StreamingPreferences.videoAlignment
+                        currentIndex = 0
+                        for (var i = 0; i < videoAlignmentListModel.count; i++) {
+                            var el_va = videoAlignmentListModel.get(i).val;
+                            if (saved_va === el_va) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+                        activated(currentIndex)
+                    }
+
+                    id: videoAlignmentComboBox
+                    hoverEnabled: true
+                    textRole: "text"
+                    model: ListModel {
+                        id: videoAlignmentListModel
+                        ListElement {
+                            text: qsTr("Middle")
+                            val: StreamingPreferences.VA_CENTER
+                        }
+                        ListElement {
+                            text: qsTr("Top")
+                            val: StreamingPreferences.VA_TOP
+                        }
+                        ListElement {
+                            text: qsTr("Bottom")
+                            val: StreamingPreferences.VA_BOTTOM
+                        }
+                    }
+                    
+                    onActivated : {
+                        StreamingPreferences.videoAlignment = videoAlignmentListModel.get(currentIndex).val
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Where to place the video when its aspect ratio leaves black bars above and below it")
+                }
+
                 Row {
                     spacing: 5
                     width: parent.width
