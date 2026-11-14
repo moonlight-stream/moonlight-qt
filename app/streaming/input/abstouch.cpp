@@ -19,15 +19,6 @@
 // How far the finger can move before it can override the double tap deadzone
 #define DOUBLE_TAP_DEAD_ZONE_DELTA 0.025f
 
-Uint32 SdlInputHandler::longPressTimerCallback(Uint32, void*)
-{
-    // Raise the left click and start a right click
-    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
-    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
-
-    return 0;
-}
-
 void SdlInputHandler::disableTouchFeedback()
 {
     SDL_SysWMinfo info;
@@ -184,8 +175,7 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
 
     if (qSqrt(qPow(event->x - m_LastTouchDownEvent.x, 2) + qPow(event->y - m_LastTouchDownEvent.y, 2)) > LONG_PRESS_ACTIVATION_DELTA) {
         // Moved too far since touch down. Cancel the long press timer.
-        SDL_RemoveTimer(m_LongPressTimer);
-        m_LongPressTimer = 0;
+        cancelDeadline(m_LongPressDeadline);
     }
 
     // Don't reposition for finger down events within the deadzone. This makes double-clicking easier.
@@ -204,10 +194,7 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
         m_LastTouchDownEvent = *event;
 
         // Start/restart the long press timer
-        SDL_RemoveTimer(m_LongPressTimer);
-        m_LongPressTimer = SDL_AddTimer(LONG_PRESS_ACTIVATION_DELAY,
-                                        longPressTimerCallback,
-                                        nullptr);
+        armDeadline(m_LongPressDeadline, LONG_PRESS_ACTIVATION_DELAY);
 
         // Left button down on finger down
         LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
@@ -216,8 +203,7 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
         m_LastTouchUpEvent = *event;
 
         // Cancel the long press timer
-        SDL_RemoveTimer(m_LongPressTimer);
-        m_LongPressTimer = 0;
+        cancelDeadline(m_LongPressDeadline);
 
         // Left button up on finger up
         LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
