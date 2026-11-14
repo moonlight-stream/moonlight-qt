@@ -48,6 +48,7 @@ private:
     bool createOverlayVertexBuffer(Overlay::OverlayType type, int width, int height, Microsoft::WRL::ComPtr<ID3D11Buffer>& newVertexBuffer);
     void bindColorConversion(bool frameChanged, AVFrame* frame);
     void bindVideoVertexBuffer(bool frameChanged, AVFrame* frame);
+    bool setupScalingResources(AVFrame* frame);
     void renderVideo(AVFrame* frame);
     bool checkDecoderSupport(IDXGIAdapter* adapter);
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
@@ -96,6 +97,13 @@ private:
 
     std::array<Microsoft::WRL::ComPtr<ID3D11PixelShader>, PixelShaders::_COUNT> m_VideoPixelShaders;
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_VideoVertexBuffer;
+    Microsoft::WRL::ComPtr<ID3D11Buffer> m_ScalingInputVertexBuffer;
+    Microsoft::WRL::ComPtr<ID3D11Buffer> m_ScalingOutputVertexBuffer;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_ScalingTexture;
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_ScalingRenderTargetView;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_ScalingTextureResourceView;
+    Microsoft::WRL::ComPtr<ID3D11SamplerState> m_LinearSampler;
+    Microsoft::WRL::ComPtr<ID3D11SamplerState> m_NearestSampler;
 
     // Only valid if !m_BindDecoderOutputTextures
     Microsoft::WRL::ComPtr<ID3D11Texture2D> m_VideoTexture;
@@ -111,4 +119,3 @@ private:
 
     AVBufferRef* m_HwDeviceContext;
 };
-
