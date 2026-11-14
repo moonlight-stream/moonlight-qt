@@ -13,6 +13,7 @@
 #include <set>
 #include <unordered_map>
 #include <mutex>
+#include <optional>
 
 // This is only defined in Linux 6.8+ headers
 #ifndef DRM_CAP_ATOMIC_ASYNC_PAGE_FLIP
