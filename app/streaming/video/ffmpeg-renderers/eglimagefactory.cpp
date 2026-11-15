@@ -311,8 +311,8 @@ ssize_t EglImageFactory::exportVAImages(AVFrame *frame, uint32_t exportFlags, EG
         const int EGL_ATTRIB_COUNT = 33 * 2;
         EGLAttrib attribs[EGL_ATTRIB_COUNT] = {
             EGL_LINUX_DRM_FOURCC_EXT, (EGLAttrib)layer.drm_format,
-            EGL_WIDTH, i == 0 ? frame->width : frame->width / 2,
-            EGL_HEIGHT, i == 0 ? frame->height : frame->height / 2,
+            EGL_WIDTH, i == 0 ? frame->width : AV_CEIL_RSHIFT(frame->width, 1),
+            EGL_HEIGHT, i == 0 ? frame->height : AV_CEIL_RSHIFT(frame->height, 1),
             EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
         };
 
