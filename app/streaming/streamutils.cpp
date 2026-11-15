@@ -277,6 +277,12 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
     // native on macOS using the SDL API alone. We'll talk to CoreGraphics to
     // find the correct resolution and match it in our SDL list.
     CFArrayRef modeList = CGDisplayCopyAllDisplayModes(displayIds[displayIndex], nullptr);
+    if (modeList == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "CGDisplayCopyAllDisplayModes() returned NULL for display %d",
+                     displayIndex);
+        return false;
+    }
     CFIndex count = CFArrayGetCount(modeList);
     for (CFIndex i = 0; i < count; i++) {
         auto cgMode = (CGDisplayModeRef)(CFArrayGetValueAtIndex(modeList, i));
