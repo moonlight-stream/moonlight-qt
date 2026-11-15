@@ -61,6 +61,7 @@ NvPairingManager::encrypt(const QByteArray& plaintext, const QByteArray& key)
     EVP_CIPHER_CTX* cipher = EVP_CIPHER_CTX_new();
     THROW_BAD_ALLOC_IF_NULL(cipher);
 
+    Q_ASSERT(key.length() == 16);
     EVP_EncryptInit(cipher, EVP_aes_128_ecb(), reinterpret_cast<const unsigned char*>(key.data()), NULL);
     EVP_CIPHER_CTX_set_padding(cipher, 0);
 
@@ -88,6 +89,7 @@ NvPairingManager::decrypt(const QByteArray& ciphertext, const QByteArray& key)
     EVP_CIPHER_CTX* cipher = EVP_CIPHER_CTX_new();
     THROW_BAD_ALLOC_IF_NULL(cipher);
 
+    Q_ASSERT(key.length() == 16);
     EVP_DecryptInit(cipher, EVP_aes_128_ecb(), reinterpret_cast<const unsigned char*>(key.data()), NULL);
     EVP_CIPHER_CTX_set_padding(cipher, 0);
 
@@ -256,7 +258,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     QByteArray salt = generateRandomBytes(16);
     QByteArray saltedPin = saltPin(salt, pin);
 
-    QByteArray aesKey = QCryptographicHash::hash(saltedPin, hashAlgo).constData();
+    QByteArray aesKey = QCryptographicHash::hash(saltedPin, hashAlgo);
     aesKey.truncate(16);
 
     QString getCert = m_Http.openConnectionToString(m_Http.m_BaseUrlHttp,
