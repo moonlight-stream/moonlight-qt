@@ -241,7 +241,7 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
 void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 {
     char lineBuffer[1024];
-    static int printPrefix = 1;
+    thread_local int printPrefix = 1;
 
     if ((level & 0xFF) > av_log_get_level()) {
         return;
