@@ -278,7 +278,7 @@ void PairCommandLineParser::parse(const QStringList &args)
     }
     m_Host = parser.positionalArguments().at(1);
     m_PredefinedPin = parser.value("pin");
-    if (!m_PredefinedPin.isEmpty() && m_PredefinedPin.length() != 4) {
+    if (!m_PredefinedPin.isEmpty() && !QRegularExpression("^\\d{4}$").match(m_PredefinedPin).hasMatch()) {
         parser.showError("PIN must be 4 digits");
     }
 }
