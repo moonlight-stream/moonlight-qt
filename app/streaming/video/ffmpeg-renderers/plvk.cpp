@@ -1017,7 +1017,15 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     }
 
     if (!mapAvFrameToPlacebo(frame, &mappedFrame)) {
-        // This function logs internally
+        // Submit the pending swapchain frame so swapchain state stays consistent
+        m_HasPendingSwapchainFrame = false;
+        if (!pl_swapchain_submit_frame(m_Swapchain)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "pl_swapchain_submit_frame() failed");
+            SDL_Event event;
+            event.type = SDL_RENDER_DEVICE_RESET;
+            SDL_PushEvent(&event);
+        }
         return;
     }
 
