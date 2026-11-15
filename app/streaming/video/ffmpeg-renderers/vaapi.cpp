@@ -1059,7 +1059,7 @@ VAAPIRenderer::canExportEGL() {
     VADRMPRIMESurfaceDescriptor descriptor;
 
     return (qgetenv("VAAPI_EGL_SEPARATE_LAYERS") != "1" && canExportSurfaceHandle(VA_EXPORT_SURFACE_COMPOSED_LAYERS, &descriptor)) ||
-           canExportSurfaceHandle(VA_EXPORT_SURFACE_SEPARATE_LAYERS, &descriptor);
+           (!(m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) && canExportSurfaceHandle(VA_EXPORT_SURFACE_SEPARATE_LAYERS, &descriptor));
 }
 
 AVPixelFormat VAAPIRenderer::getEGLImagePixelFormat() {
@@ -1094,7 +1094,7 @@ VAAPIRenderer::initializeEGL(IFFmpegRenderer* eglRenderer,
     }
 
     // Prefer exporting composed images absent a user override or lack of support for exporting or importing
-    if (qgetenv("VAAPI_EGL_SEPARATE_LAYERS") == "1") {
+    if (!(m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) && qgetenv("VAAPI_EGL_SEPARATE_LAYERS") == "1") {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Exporting separate layers due to environment variable override");
         m_EglExportType = EglExportType::Separate;
@@ -1126,6 +1126,12 @@ VAAPIRenderer::initializeEGL(IFFmpegRenderer* eglRenderer,
 
     // Let's probe for EGL import support on separate layers too, but only warn if it's not supported
     if (m_EglExportType == EglExportType::Separate) {
+        if (m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Separate layer export is not supported for YUV444 streams");
+            return false;
+        }
+
         if (!canExportSurfaceHandle(VA_EXPORT_SURFACE_SEPARATE_LAYERS, &descriptor)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Exporting separate layers is not supported by the VAAPI driver");
