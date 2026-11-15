@@ -266,7 +266,7 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
     CGDirectDisplayID displayIds[MAX_DISPLAYS];
     uint32_t displayCount = 0;
     CGGetActiveDisplayList(MAX_DISPLAYS, displayIds, &displayCount);
-    if (displayIndex >= (int)displayCount) {
+    if (displayIndex < 0 || displayIndex >= (int)displayCount) {
         return false;
     }
 
@@ -343,7 +343,7 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
 #else
     SDL_assert(SDL_WasInit(SDL_INIT_VIDEO));
 
-    if (displayIndex >= SDL_GetNumVideoDisplays()) {
+    if (displayIndex < 0 || displayIndex >= SDL_GetNumVideoDisplays()) {
         return false;
     }
 
