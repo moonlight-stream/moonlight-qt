@@ -440,7 +440,12 @@ void Pacer::dropFrameForEnqueue(QQueue<AVFrame*>& queue)
     SDL_assert(queue.size() <= MAX_QUEUED_FRAMES);
     if (queue.size() == MAX_QUEUED_FRAMES) {
         AVFrame* frame = queue.dequeue();
+
+        // Drop the lock while we call av_frame_free()
+        m_FrameQueueLock.unlock();
+        m_VideoStats->pacerDroppedFrames++;
         av_frame_free(&frame);
+        m_FrameQueueLock.lock();
     }
 }
 
