@@ -626,7 +626,9 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 #endif
 
         // Populate the device queues for decoding this video format
-        populateQueues(params->videoFormat);
+        if (!populateQueues(params->videoFormat)) {
+            return false;
+        }
 
         int err = av_hwdevice_ctx_init(m_HwDeviceCtx);
         if (err < 0) {
@@ -789,13 +791,14 @@ bool PlVkRenderer::populateQueues(int videoFormat)
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(59, 34, 100)
     Q_UNUSED(videoFormat);
 
-    for (uint32_t i = 0; i < queueFamilyCount; i++) {
+    uint32_t maxQf = SDL_min(queueFamilyCount, (uint32_t)SDL_arraysize(vkDeviceContext->qf));
+    for (uint32_t i = 0; i < maxQf; i++) {
         vkDeviceContext->qf[i].idx = i;
         vkDeviceContext->qf[i].num = queueFamilies[i].queueFamilyProperties.queueCount;
         vkDeviceContext->qf[i].flags = (VkQueueFlagBits)queueFamilies[i].queueFamilyProperties.queueFlags;
         vkDeviceContext->qf[i].video_caps = (VkVideoCodecOperationFlagBitsKHR)queueFamilyVideoProps[i].videoCodecOperations;
     }
-    vkDeviceContext->nb_qf = queueFamilyCount;
+    vkDeviceContext->nb_qf = maxQf;
 #else
     vkDeviceContext->queue_family_index = m_Vulkan->queue_graphics.index;
     vkDeviceContext->nb_graphics_queues = m_Vulkan->queue_graphics.count;
