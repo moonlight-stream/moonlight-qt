@@ -186,6 +186,7 @@ PlVkRenderer::~PlVkRenderer()
 #ifdef Q_OS_DARWIN
         m_MetalTextureFactory.reset();
 #endif
+        av_buffer_unref(&m_HwDeviceCtx);
         pl_vulkan_destroy(&m_Vulkan);
 
         // This surface was created by SDL, so there's no libplacebo API to destroy it
@@ -193,7 +194,6 @@ PlVkRenderer::~PlVkRenderer()
             fn_vkDestroySurfaceKHR(m_PlVkInstance->instance, m_VkSurface, nullptr);
         }
 
-        av_buffer_unref(&m_HwDeviceCtx);
         pl_vk_inst_destroy(&m_PlVkInstance);
     }
 
