@@ -82,7 +82,7 @@ private:
             PWCHAR wideBuffer = new WCHAR[uniChars];
             uniChars = MultiByteToWideChar(CP_THREAD_ACP, 0,
                                            lpLibFileName, -1,
-                                           wideBuffer, uniChars * sizeof(WCHAR));
+                                           wideBuffer, uniChars);
             if (uniChars > 0) {
                 bool ret = isImageBlacklistedW(wideBuffer);
                 delete[] wideBuffer;
