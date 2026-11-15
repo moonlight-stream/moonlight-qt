@@ -40,7 +40,7 @@ pthread_mutex_t g_FdTableLock = PTHREAD_MUTEX_INITIALIZER;
 
 // This lock protects sections of code that must run uninterrupted with DRM master
 pthread_mutex_t g_MasterLock;
-pthread_once_t g_MasterLockInit;
+pthread_once_t g_MasterLockInit = PTHREAD_ONCE_INIT;
 
 // Lock order: g_MasterLock -> g_FdTableLock
 
