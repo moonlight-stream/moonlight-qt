@@ -4,12 +4,9 @@ using namespace std::chrono;
 
 BandwidthTracker::BandwidthTracker(uint32_t windowSeconds, uint32_t bucketIntervalMs)
   : windowSeconds(seconds(windowSeconds)),
-    bucketIntervalMs(bucketIntervalMs)
+    bucketIntervalMs(bucketIntervalMs == 0 ? 250 : bucketIntervalMs)
 {
-    if (bucketIntervalMs <= 0) {
-        bucketIntervalMs = 250;
-    }
-    bucketCount = (windowSeconds * 1000) / bucketIntervalMs;
+    bucketCount = (windowSeconds * 1000) / this->bucketIntervalMs;
     buckets.resize(bucketCount);
 }
 
