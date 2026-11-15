@@ -128,6 +128,7 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to queue audio sample: %s",
                      SDL_GetError());
+        return false;
     }
 
     return true;
