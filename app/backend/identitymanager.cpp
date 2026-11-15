@@ -83,9 +83,11 @@ void IdentityManager::createCredentials(QSettings& settings)
     BUF_MEM* mem;
     BIO_get_mem_ptr(biokey, &mem);
     m_CachedPrivateKey = QByteArray(mem->data, (int)mem->length);
+    m_CachedSslKey = QSslKey();
 
     BIO_get_mem_ptr(biocert, &mem);
     m_CachedPemCert = QByteArray(mem->data, (int)mem->length);
+    m_CachedSslCert = QSslCertificate();
 
     X509_free(cert);
     EVP_PKEY_free(pk);
@@ -173,6 +175,9 @@ IdentityManager::getSslKey()
 
         EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
         BIO_free(bio);
+        if (pk == nullptr) {
+            return m_CachedSslKey;
+        }
 
         bio = BIO_new(BIO_s_mem());
         THROW_BAD_ALLOC_IF_NULL(bio);
