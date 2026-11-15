@@ -50,6 +50,7 @@ bool WaylandVsyncSource::initialize(SDL_Window* window, int)
     m_Callback = wl_surface_frame(m_Surface);
     wl_callback_add_listener(m_Callback, &s_FrameListener, this);
     wl_surface_commit(m_Surface);
+    wl_display_flush(m_Display);
 
     return true;
 }
