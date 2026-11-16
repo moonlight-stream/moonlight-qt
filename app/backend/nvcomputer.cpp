@@ -1,11 +1,13 @@
 #include "nvcomputer.h"
 #include "nvapp.h"
 #include "settings/compatfetcher.h"
+#include "settings/streamingpreferences.h"
 
 #include <QUdpSocket>
 #include <QHostInfo>
 #include <QNetworkInterface>
 #include <QNetworkProxy>
+#include <QHostAddress>
 
 #define SER_NAME "hostname"
 #define SER_UUID "uuid"
@@ -22,6 +24,71 @@
 #define SER_SRVCERT "srvcert"
 #define SER_CUSTOMNAME "customname"
 #define SER_NVIDIASOFTWARE "nvidiasw"
+
+// Tailscale hands out addresses from 100.64.0.0/10 (RFC 6598 shared address space). A host that
+// reports one as its LocalIP is telling us how we reached it, not where it sits on its LAN.
+static bool isSharedAddressSpace(const QString& address)
+{
+    QHostAddress parsed;
+    return parsed.setAddress(address) &&
+            parsed.protocol() == QAbstractSocket::IPv4Protocol &&
+            parsed.isInSubnet(QHostAddress(QStringLiteral("100.64.0.0")), 10);
+}
+
+// Mirrors the VPN heuristics used by getActiveAddressReachability()
+static bool isLikelyVpnInterface(const QNetworkInterface& nic)
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+    if (nic.type() == QNetworkInterface::Virtual || nic.type() == QNetworkInterface::Ppp) {
+        return true;
+    }
+    if (nic.maximumTransmissionUnit() != 0 && nic.maximumTransmissionUnit() < 1500) {
+        return true;
+    }
+#endif
+    if (nic.flags() & QNetworkInterface::IsPointToPoint) {
+        return true;
+    }
+#ifdef Q_OS_WINDOWS
+    if (nic.name().startsWith("iftype53_") || nic.name().startsWith("iftype131_")) {
+        return true;
+    }
+#endif
+    return false;
+}
+
+// Whether this machine is attached (through a non-VPN interface) to the network that contains
+// the given address. Hostnames and IPv6 can't be judged, so they report true to leave the
+// normal address order alone.
+static bool isOnLocalNetworkOf(const QString& address)
+{
+    QHostAddress target;
+    if (!target.setAddress(address) || target.protocol() != QAbstractSocket::IPv4Protocol) {
+        return true;
+    }
+
+    const auto allInterfaces = QNetworkInterface::allInterfaces();
+    for (const QNetworkInterface& nic : allInterfaces) {
+        if ((nic.flags() & QNetworkInterface::IsUp) == 0 ||
+                (nic.flags() & QNetworkInterface::IsLoopBack) != 0 ||
+                isLikelyVpnInterface(nic)) {
+            continue;
+        }
+
+        const auto entries = nic.addressEntries();
+        for (const QNetworkAddressEntry& entry : entries) {
+            if (entry.ip().protocol() != QAbstractSocket::IPv4Protocol) {
+                continue;
+            }
+            // Ignore nonsense and overly broad prefixes so a bogus link can't match everything
+            if (entry.prefixLength() >= 8 && target.isInSubnet(entry.ip(), entry.prefixLength())) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 
 NvComputer::NvComputer(QSettings& settings)
 {
@@ -172,7 +239,8 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
 
     // We can get an IPv4 loopback address if we're using the GS IPv6 Forwarder
     this->localAddress = NvAddress(NvHTTP::getXmlString(serverInfo, "LocalIP"), http.httpPort());
-    if (this->localAddress.address().startsWith("127.")) {
+    if (this->localAddress.address().startsWith("127.") ||
+            isSharedAddressSpace(this->localAddress.address())) {
         this->localAddress = NvAddress();
     }
 
@@ -486,6 +554,15 @@ QVector<NvAddress> NvComputer::uniqueAddresses() const
 {
     QReadLocker readLocker(&lock);
     QVector<NvAddress> uniqueAddressList;
+
+    // When this machine isn't on the host's LAN, a manually entered address (typically a
+    // Tailscale/VPN name or IP) is the one that works, so try it before everything else.
+    // It goes ahead of the active address too, otherwise a stale LAN address would stick.
+    if (!manualAddress.isNull() && !localAddress.isNull() && manualAddress != localAddress &&
+            StreamingPreferences::get()->preferManualAddressAway &&
+            !isOnLocalNetworkOf(localAddress.address())) {
+        uniqueAddressList.append(manualAddress);
+    }
 
     // Start with addresses correctly ordered
     uniqueAddressList.append(activeAddress);
