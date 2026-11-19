@@ -639,20 +639,20 @@ class DrmRenderer : public IFFmpegRenderer {
 
             // Try an async flip if requested
             int err = drmModeAtomicCommit(m_Fd, req,
-                                          m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : DRM_MODE_ATOMIC_ALLOW_MODESET,
+                                          m_AsyncFlip ? DRM_MODE_PAGE_FLIP_ASYNC : 0,
                                           nullptr);
 
-            if (m_AsyncFlip) {
-                if (err == 0) {
-                    m_AsyncCommits++;
-                }
-                else {
-                    // The driver may not support async flips (especially if we changed a non-FB_ID property),
-                    // so try again with a regular flip if we get an error from the async flip attempt.
-                    //
-                    // We pass DRM_MODE_ATOMIC_ALLOW_MODESET because changing HDR state may require a modeset.
-                    err = drmModeAtomicCommit(m_Fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
-                }
+            if (m_AsyncFlip && err == 0) {
+                m_AsyncCommits++;
+            }
+            else if (err != 0) {
+                // The driver may not support async flips (especially if we changed a non-FB_ID property)
+                // or the commit may require a modeset (changing HDR state), so try again with
+                // DRM_MODE_ATOMIC_ALLOW_MODESET.
+                //
+                // We don't pass DRM_MODE_ATOMIC_ALLOW_MODESET on every commit because amdgpu on
+                // DCN < 3.2 performs a full update for every commit that allows a modeset.
+                err = drmModeAtomicCommit(m_Fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
             }
 
             if (err == 0) {
