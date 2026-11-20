@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer.h"
+#include "streaming/video/videoenhancement.h"
 
 #ifdef Q_OS_WIN32
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -9,6 +10,11 @@
 #include <libplacebo/log.h>
 #include <libplacebo/renderer.h>
 #include <libplacebo/vulkan.h>
+#include <libplacebo/dispatch.h>
+#include <libplacebo/shaders/colorspace.h>
+#include <libplacebo/shaders/custom.h>
+
+#include <QFile>
 
 #ifdef Q_OS_DARWIN
 class MetalVulkanTextureFactory {
@@ -74,6 +80,13 @@ private:
     bool isPresentModeSupportedByPhysicalDevice(VkPhysicalDevice device, VkPresentModeKHR presentMode);
     bool isColorSpaceSupportedByPhysicalDevice(VkPhysicalDevice device, VkColorSpaceKHR colorSpace);
     bool isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevice device);
+
+    // FSR1
+    std::string loadGLSL(const QString& path);
+    void fsrHook(pl_hook_res *res, const pl_hook_params *params);
+
+    // MWSR in one pass from the decoder's planes, when Video Enhancement takes MWSR
+    bool renderMwsrPlanes(const AVFrame* frame, const pl_frame* image, const pl_frame* target);
 
     // The backend renderer if we're frontend-only
     IFFmpegRenderer* m_Backend;
@@ -141,6 +154,19 @@ private:
     // Device context used for hwaccel decoders
     AVBufferRef* m_HwDeviceCtx = nullptr;
 
+    // FSR1
+    VideoEnhancement* m_VideoEnhancement;
+    const pl_hook *m_FsrHook = nullptr;
+    const pl_hook *m_FsrHookHDR = nullptr;
+    pl_render_params m_RenderParams = pl_render_fast_params;
+    pl_render_params m_RenderParamsHDR = pl_render_fast_params;
+
+    // MWSR's one pass (renderMwsrPlanes), null when MWSR is not in use
+    pl_dispatch m_MwsrDispatch = nullptr;
+    std::string m_MwsrPlanesShader;
+    bool m_MwsrYUV444 = false;
+    bool m_MwsrPlanesInUse = false;
+
     // Vulkan functions we call directly
     PFN_vkDestroySurfaceKHR fn_vkDestroySurfaceKHR = nullptr;
     PFN_vkGetPhysicalDeviceQueueFamilyProperties2 fn_vkGetPhysicalDeviceQueueFamilyProperties2 = nullptr;
@@ -150,4 +176,5 @@ private:
     PFN_vkGetPhysicalDeviceProperties fn_vkGetPhysicalDeviceProperties = nullptr;
     PFN_vkGetPhysicalDeviceSurfaceSupportKHR fn_vkGetPhysicalDeviceSurfaceSupportKHR = nullptr;
     PFN_vkEnumerateDeviceExtensionProperties fn_vkEnumerateDeviceExtensionProperties = nullptr;
+    PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR fn_vkGetPhysicalDeviceSurfaceCapabilitiesKHR = nullptr;
 };
