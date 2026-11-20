@@ -47,6 +47,15 @@ private:
 SystemProperties::SystemProperties()
 {
     versionString = QString(VERSION_STR);
+    QString gitHash(GIT_HASHSTRING);
+	QString commitShort(GIT_COMMIT_SHORTSTRING);
+	QString commitLong(GIT_COMMIT_LONGSTRING);
+	QString commitCount(GIT_COMMIT_COUNTSTRING);
+	QString describe(GIT_DESCRIBESTRING);
+	QString buildDate(BUILD_DATESTRING);
+    if (buildDate != "unknown" || commitCount != "unknown" || commitShort != "unknown") {
+		buildInfo = QString("Built %1, commit %2, version %3").arg(buildDate, commitShort, commitCount);
+    }
     hasDesktopEnvironment = WMUtils::isRunningDesktopEnvironment();
     isRunningWayland = WMUtils::isRunningWayland();
     isRunningXWayland = isRunningWayland && QGuiApplication::platformName() == "xcb";
