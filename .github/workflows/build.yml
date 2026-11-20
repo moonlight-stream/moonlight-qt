@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 concurrency:
   group: build-${{ github.ref }}
@@ -25,21 +26,26 @@ jobs:
         run: |
           CI_VERSION=`echo ${GITHUB_SHA} | cut -c1-6`
           echo "ci_version=${CI_VERSION}" >> "${GITHUB_OUTPUT}"
+          CI_BUILD_DATE=`date -u +%Y-%m-%d`
+          echo "ci_build_date=${CI_BUILD_DATE}" >> "${GITHUB_OUTPUT}"
 
   build-appimage:
     needs: setup
     uses: ./.github/workflows/build-appimage.yml
     with:
       ci_version: ${{ needs.setup.outputs.ci_version }}
+      ci_build_date: ${{ needs.setup.outputs.ci_build_date }}
 
   build-steamlink:
     needs: setup
     uses: ./.github/workflows/build-steamlink.yml
     with:
       ci_version: ${{ needs.setup.outputs.ci_version }}
+      ci_build_date: ${{ needs.setup.outputs.ci_build_date }}
 
   build-windows-macos:
     needs: setup
     uses: ./.github/workflows/build-win-mac.yml
     with:
       ci_version: ${{ needs.setup.outputs.ci_version }}
+      ci_build_date: ${{ needs.setup.outputs.ci_build_date }}
