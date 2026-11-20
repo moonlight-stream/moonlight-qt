@@ -1005,6 +1005,22 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!")
                 }
+
+                CheckBox {
+                    id: preferManualAddressAway
+                    width: parent.width
+                    text: qsTr("Prefer manual address when away from the host's network")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.preferManualAddressAway
+                    onCheckedChanged: {
+                        StreamingPreferences.preferManualAddressAway = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("When this PC isn't on the same network as the host, try the manually added address (for example a Tailscale IP) first. Has no effect if no manual address is set.")
+                }
             }
         }
 
