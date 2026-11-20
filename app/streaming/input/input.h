@@ -16,7 +16,7 @@ struct GamepadState {
     int hapticEffectId;
 #endif
 
-    SDL_TimerID mouseEmulationTimer;
+    uint32_t mouseEmulationDeadline;
     uint32_t lastStartDownTime;
 
     bool clickpadButtonEmulationEnabled;
@@ -36,6 +36,9 @@ struct GamepadState {
     short lsX, lsY;
     short rsX, rsY;
     unsigned char lt, rt;
+
+    bool sendPending;
+    uint32_t lastSendTime;
 };
 
 
@@ -68,6 +71,9 @@ struct DualSenseOutputReport{
     uint8_t lightbarGreen;
     uint8_t lightbarBlue;
 };
+
+// How long between polling the gamepad to send virtual mouse input
+#define MOUSE_EMULATION_POLLING_INTERVAL 50
 
 // activeGamepadMask is a short, so we're bounded by the number of mask bits
 #define MAX_GAMEPADS 16
@@ -134,6 +140,12 @@ public:
 
     void raiseAllKeys();
 
+    void flushPendingGamepadState();
+
+    void runExpiredInputTimers();
+
+    int getNextTimerDelayMs(int maxWaitMs);
+
     void notifyMouseLeave();
 
     void notifyFocusLost();
@@ -176,6 +188,10 @@ private:
 
     void sendGamepadState(GamepadState* state);
 
+    void queueGamepadState(GamepadState* state);
+
+    void cancelPendingGamepadFlush(GamepadState* state);
+
     void sendGamepadBatteryState(GamepadState* state, SDL_JoystickPowerLevel level);
 
     void handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
@@ -188,20 +204,13 @@ private:
 
     void performSpecialKeyCombo(KeyCombo combo);
 
-    static
-    Uint32 longPressTimerCallback(Uint32 interval, void* param);
+    void sendMouseEmulationMotion(GamepadState* state);
 
     static
-    Uint32 mouseEmulationTimerCallback(Uint32 interval, void* param);
+    void armDeadline(uint32_t& deadline, uint32_t delayMs);
 
     static
-    Uint32 releaseLeftButtonTimerCallback(Uint32 interval, void* param);
-
-    static
-    Uint32 releaseRightButtonTimerCallback(Uint32 interval, void* param);
-
-    static
-    Uint32 dragTimerCallback(Uint32 interval, void* param);
+    void cancelDeadline(uint32_t& deadline);
 
     SDL_Window* m_Window;
     bool m_MultiController;
@@ -217,6 +226,7 @@ private:
     bool m_PointerRegionLockToggledByUser;
 
     int m_GamepadMask;
+    int m_GamepadSendIntervalMs;
     GamepadState m_GamepadState[MAX_GAMEPADS];
     QSet<uint32_t> m_KeysDown;
     bool m_FakeMouseCaptureActive;
@@ -236,7 +246,7 @@ private:
 
     SDL_TouchFingerEvent m_LastTouchDownEvent;
     SDL_TouchFingerEvent m_LastTouchUpEvent;
-    SDL_TimerID m_LongPressTimer;
+    uint32_t m_LongPressDeadline;
     int m_StreamWidth;
     int m_StreamHeight;
     bool m_AbsoluteMouseMode;
@@ -244,9 +254,9 @@ private:
     bool m_DisabledTouchFeedback;
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
-    SDL_TimerID m_LeftButtonReleaseTimer;
-    SDL_TimerID m_RightButtonReleaseTimer;
-    SDL_TimerID m_DragTimer;
+    uint32_t m_LeftButtonReleaseDeadline;
+    uint32_t m_RightButtonReleaseDeadline;
+    uint32_t m_DragDeadline;
     char m_DragButton;
     int m_NumFingersDown;
 
