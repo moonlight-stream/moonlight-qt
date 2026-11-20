@@ -584,7 +584,11 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0),
-      m_DropAudioEndTime(0)
+      m_DropAudioEndTime(0),
+      m_LastInputTime(0),
+      m_InactivityTimeoutMs((m_Preferences->inactivityTimeoutMinutes > 0 ?
+                             m_Preferences->inactivityTimeoutMinutes : 30) * 60 * 1000),
+      m_InactivityTimeoutEnabled(m_Preferences->inactivityTimeoutEnabled)
 {
 }
 
@@ -594,6 +598,31 @@ Session::~Session()
     // Use Session::exec() or DeferredSessionCleanupTask instead.
 
     SDL_DestroyMutex(m_DecoderLock);
+}
+
+void Session::resetInactivityTimer()
+{
+    if (m_InactivityTimeoutEnabled) {
+        m_LastInputTime = SDL_GetTicks();
+    }
+}
+
+void Session::checkInactivityTimeout()
+{
+    if (m_InactivityTimeoutEnabled) {
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime - m_LastInputTime > m_InactivityTimeoutMs) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Disconnecting due to %d minutes of inactivity",
+                        m_InactivityTimeoutMs / 60000);
+            
+            // Push a quit event to trigger cleanup
+            SDL_Event quitEvent;
+            quitEvent.type = SDL_QUIT;
+            quitEvent.quit.timestamp = SDL_GetTicks();
+            SDL_PushEvent(&quitEvent);
+        }
+    }
 }
 
 bool Session::initialize(QQuickWindow* qtWindow)
@@ -1977,6 +2006,11 @@ void Session::exec()
     // Switch to async logging mode when we enter the SDL loop
     StreamUtils::enterAsyncLoggingMode();
 
+    // Initialize inactivity timer (if enabled)
+    if (m_InactivityTimeoutEnabled) {
+        resetInactivityTimer();
+    }
+
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
@@ -1993,6 +2027,9 @@ void Session::exec()
         // and other problems.
         if (!SDL_WaitEventTimeout(&event, 1000)) {
             presence.runCallbacks();
+            if (m_InactivityTimeoutEnabled) {
+                checkInactivityTimeout();
+            }
             continue;
         }
 #else
@@ -2009,6 +2046,9 @@ void Session::exec()
             SDL_Delay(10);
 #endif
             presence.runCallbacks();
+            if (m_InactivityTimeoutEnabled) {
+                checkInactivityTimeout();
+            }
             continue;
         }
 #endif
@@ -2265,25 +2305,43 @@ void Session::exec()
         case SDL_KEYUP:
         case SDL_KEYDOWN:
             presence.runCallbacks();
+            if (m_InactivityTimeoutEnabled) {
+                resetInactivityTimer();
+            }
             m_InputHandler->handleKeyEvent(&event.key);
             break;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
             presence.runCallbacks();
+            if (m_InactivityTimeoutEnabled) {
+                resetInactivityTimer();
+            }
             m_InputHandler->handleMouseButtonEvent(&event.button);
             break;
         case SDL_MOUSEMOTION:
+            if (m_InactivityTimeoutEnabled) {
+                resetInactivityTimer();
+            }
             m_InputHandler->handleMouseMotionEvent(&event.motion);
             break;
         case SDL_MOUSEWHEEL:
+            if (m_InactivityTimeoutEnabled) {
+                resetInactivityTimer();
+            }
             m_InputHandler->handleMouseWheelEvent(&event.wheel);
             break;
         case SDL_CONTROLLERAXISMOTION:
+            if (m_InactivityTimeoutEnabled) {
+                resetInactivityTimer();
+            }
             m_InputHandler->handleControllerAxisEvent(&event.caxis);
             break;
         case SDL_CONTROLLERBUTTONDOWN:
         case SDL_CONTROLLERBUTTONUP:
             presence.runCallbacks();
+            if (m_InactivityTimeoutEnabled) {
+                resetInactivityTimer();
+            }
             m_InputHandler->handleControllerButtonEvent(&event.cbutton);
             break;
 #if SDL_VERSION_ATLEAST(2, 0, 14)
@@ -2293,6 +2351,9 @@ void Session::exec()
         case SDL_CONTROLLERTOUCHPADDOWN:
         case SDL_CONTROLLERTOUCHPADUP:
         case SDL_CONTROLLERTOUCHPADMOTION:
+            if (m_InactivityTimeoutEnabled) {
+                resetInactivityTimer();
+            }
             m_InputHandler->handleControllerTouchpadEvent(&event.ctouchpad);
             break;
 #endif
@@ -2311,6 +2372,9 @@ void Session::exec()
         case SDL_FINGERDOWN:
         case SDL_FINGERMOTION:
         case SDL_FINGERUP:
+            if (m_InactivityTimeoutEnabled) {
+                resetInactivityTimer();
+            }
             m_InputHandler->handleTouchFingerEvent(&event.tfinger);
             break;
         case SDL_DISPLAYEVENT:
