@@ -36,6 +36,7 @@ public:
 
     // Either startAsyncLoad()+waitForAsyncLoad() or refreshDisplays() must be invoked first
     Q_INVOKABLE QRect getNativeResolution(int displayIndex);
+    Q_INVOKABLE QRect getNativeResolutionAt(int x, int y);
     Q_INVOKABLE QRect getSafeAreaResolution(int displayIndex);
     Q_INVOKABLE int getRefreshRate(int displayIndex);
 
@@ -78,6 +79,7 @@ private:
 
     // Properties set by refreshDisplays()
     QList<QRect> monitorNativeResolutions;
+    QList<QPoint> monitorOrigins;
     QList<QRect> monitorSafeAreaResolutions;
     QList<int> monitorRefreshRates;
 };
