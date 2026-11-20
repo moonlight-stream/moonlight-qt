@@ -7,6 +7,7 @@
 #include <QReadWriteLock>
 #include <QSettings>
 #include <QRunnable>
+#include <QList>
 
 class CopySafeReadWriteLock : public QReadWriteLock
 {
@@ -51,7 +52,7 @@ public:
     update(const NvComputer& that);
 
     bool
-    wake() const;
+    wake(const QList<QHostAddress>& wolProxyAddresses = {}) const;
 
     enum ReachabilityType
     {
