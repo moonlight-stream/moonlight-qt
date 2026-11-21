@@ -933,11 +933,21 @@ bool PlVkRenderer::renderMwsrPlanes(const AVFrame* frame, const pl_frame* image,
         pl_frame_clear_rgba(m_Vulkan->gpu, target, black);
     }
 
+    // The decoder's planes are held outside libplacebo until the frame is acquired; pl_render_image()
+    // does this itself, a direct dispatch must too (else vk_tex_barrier asserts !held)
+    if (image->acquire && !image->acquire(m_Vulkan->gpu, const_cast<pl_frame*>(image))) {
+        pl_dispatch_abort(m_MwsrDispatch, &sh);
+        return false;
+    }
     pl_dispatch_params dispatch = {};
     dispatch.shader = &sh;
     dispatch.target = fbo;
     dispatch.rect = rect;
-    if (!pl_dispatch_finish(m_MwsrDispatch, &dispatch)) {
+    bool dispatched = pl_dispatch_finish(m_MwsrDispatch, &dispatch);
+    if (image->release) {
+        image->release(m_Vulkan->gpu, const_cast<pl_frame*>(image));
+    }
+    if (!dispatched) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "MWSR: the one-pass shader failed, the hook takes over");
         m_MwsrPlanesShader.clear();
         return false;
