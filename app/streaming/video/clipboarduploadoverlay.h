@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../clipboarduploadprogress.h"
+#include "../transferratesampler.h"
 #include "SDL_compat.h"
 #include <QCoreApplication>
 #include <QImage>
@@ -8,8 +9,6 @@
 #include <QPainter>
 #include <QReadWriteLock>
 #include <QSet>
-#include <chrono>
-#include <deque>
 
 // The stream loop owns hit testing. The decoder can request a fresh surface on another thread.
 class ClipboardUploadOverlay
@@ -22,9 +21,10 @@ public:
         QWriteLocker lock(&m_Lock);
         if (upload.startedAtMs != m_Upload.startedAtMs || upload.resumedBytes != m_Upload.resumedBytes ||
                 upload.names.isEmpty() || upload.preparing || upload.committing) {
-            m_Samples.clear();
+            m_Rate.reset();
         }
-        const qint64 rate = upload.names.isEmpty() || upload.preparing || upload.committing ? -1 : sampleRate(upload);
+        const quint64 newBytes = upload.acknowledged - qMin(upload.acknowledged, upload.resumedBytes);
+        const qint64 rate = upload.names.isEmpty() || upload.preparing || upload.committing ? -1 : m_Rate.sample(newBytes);
         if (window == m_Window && m_Scale == scale && upload.names == m_Upload.names && upload.index == m_Upload.index &&
                 upload.acknowledged == m_Upload.acknowledged && upload.committing == m_Upload.committing &&
                 upload.preparing == m_Upload.preparing && upload.resumedBytes == m_Upload.resumedBytes &&
@@ -198,29 +198,6 @@ public:
     }
 
 private:
-    struct RateSample {
-        qint64 timeMs;
-        quint64 bytes;
-    };
-
-    qint64 sampleRate(const ClipboardUploadProgress& upload)
-    {
-        using namespace std::chrono;
-        const qint64 now = duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
-        const quint64 bytes = upload.acknowledged - qMin(upload.acknowledged, upload.resumedBytes);
-        if (m_Samples.empty() || bytes < m_Samples.back().bytes) {
-            m_Samples = {{now, bytes}};
-            return -1;
-        }
-        if (now - m_Samples.back().timeMs < 250) return m_BytesPerSecond;
-        // Include a stationary sample even when no ACK arrives so a stalled transfer falls to zero.
-        while (m_Samples.size() > 1 && now - m_Samples[1].timeMs >= 2000) m_Samples.pop_front();
-        m_Samples.push_back({now, bytes});
-        const auto& oldest = m_Samples.front();
-        const auto elapsed = now - oldest.timeMs;
-        return elapsed < 500 ? -1 : qint64((bytes - oldest.bytes) * 1000 / elapsed);
-    }
-
     static constexpr int Margin = 12;
     static QRect cancelRect(int w) { return QRect(qMax(0, w - 100), 6, 86, 28); }
     int rows(QSize window) const
@@ -235,7 +212,7 @@ private:
 
     mutable QReadWriteLock m_Lock;
     ClipboardUploadProgress m_Upload;
-    std::deque<RateSample> m_Samples;
+    TransferRateSampler m_Rate;
     qint64 m_BytesPerSecond = -1;
     QSize m_Window;
     QSize m_Layout;

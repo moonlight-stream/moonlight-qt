@@ -1,5 +1,6 @@
 #include "clipboardsync.h"
 #include "clipboard_win32.h"
+#include "transferfilehash.h"
 #include "backend/identitymanager.h"
 
 #include <Limelight.h>
@@ -174,28 +175,13 @@ QString discardSetting(const QSslCertificate& host)
     return QStringLiteral("clipboardUploadDiscard/%1/").arg(QString::fromLatin1(host.digest(QCryptographicHash::Sha256).toHex()));
 }
 
-bool seekSource(HANDLE file, quint64 offset)
-{
-    LARGE_INTEGER position;
-    position.QuadPart = static_cast<LONGLONG>(offset);
-    return SetFilePointerEx(file, position, nullptr, FILE_BEGIN) != FALSE;
-}
-
 bool fingerprintSources(const std::vector<win_clipboard::detail::source_file>& files, QJsonArray& manifest,
                         const std::function<bool()>& cancelled)
 {
-    QByteArray block(1024 * 1024, Qt::Uninitialized);
     for (size_t i = 0; i < files.size(); ++i) {
         const auto& file = files[i];
         QCryptographicHash hash(QCryptographicHash::Sha256);
-        for (quint64 remaining = file.size; remaining; ) {
-            if (cancelled()) return false;
-            const DWORD length = static_cast<DWORD>((std::min<quint64>)(remaining, block.size()));
-            DWORD read = 0;
-            if (!ReadFile(file.handle.get(), block.data(), length, &read, nullptr) || read != length) return false;
-            hash.addData(QByteArrayView(block.constData(), read));
-            remaining -= read;
-        }
+        if (!transfer_file::hashBytes(file.handle.get(), file.size, hash, cancelled)) return false;
         auto item = manifest.at(i).toObject();
         item.insert(QStringLiteral("sha256"), QString::fromLatin1(hash.result().toHex()));
         manifest[i] = item;
@@ -318,7 +304,7 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
         for (index = 0; index < files.size(); ++index) {
             const auto& file = files[index];
             offset = offsets[index];
-            if (resumable && !seekSource(file.handle.get(), offset)) return failure("resume", {}, "local file seek");
+            if (resumable && !transfer_file::seek(file.handle.get(), offset)) return failure("resume", {}, "local file seek");
             progress.index = static_cast<int>(index);
             progress.fileBytes = offset;
             progress.fileSize = file.size;

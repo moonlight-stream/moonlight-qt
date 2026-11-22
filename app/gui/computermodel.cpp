@@ -3,6 +3,9 @@
 #include <QDateTime>
 #ifdef Q_OS_WIN
 #include "streaming/streamwindow.h"
+#include "streaming/filetransferwindow.h"
+#include <QApplication>
+#include <openssl/rand.h>
 #include <QTimer>
 #endif
 
@@ -10,6 +13,13 @@
 
 ComputerModel::ComputerModel(QObject* object)
     : QAbstractListModel(object) {}
+
+ComputerModel::~ComputerModel()
+{
+#ifdef Q_OS_WIN
+    closeFileTransfers();
+#endif
+}
 
 void ComputerModel::initialize(ComputerManager* computerManager)
 {
@@ -21,6 +31,7 @@ void ComputerModel::initialize(ComputerManager* computerManager)
 
     m_Computers = m_ComputerManager->getComputers();
 #ifdef Q_OS_WIN
+    connect(qApp, &QCoreApplication::aboutToQuit, this, &ComputerModel::closeFileTransfers);
     refreshStreamWindows();
     auto timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &ComputerModel::refreshStreamWindows);
@@ -29,6 +40,14 @@ void ComputerModel::initialize(ComputerManager* computerManager)
 }
 
 #ifdef Q_OS_WIN
+void ComputerModel::closeFileTransfers()
+{
+    // Destroy workers before the application's final thread-pool drain, giving
+    // their asynchronous HTTPS session-end requests time to complete.
+    const auto windows = m_FileWindows.values();
+    qDeleteAll(windows);
+}
+
 void ComputerModel::refreshStreamWindows()
 {
     QHash<QString, StreamStatus> current;
@@ -263,6 +282,51 @@ void ComputerModel::wakeComputer(int computerIndex)
 
     DeferredWakeHostTask* wakeTask = new DeferredWakeHostTask(m_Computers[computerIndex]);
     QThreadPool::globalInstance()->start(wakeTask);
+}
+
+void ComputerModel::openFileTransfer(const QString& uuid)
+{
+#ifdef Q_OS_WIN
+    const int row = indexOfUuid(uuid);
+    if (row < 0) return;
+    if (auto* window = m_FileWindows.value(uuid)) {
+        if (window->isMinimized()) window->showNormal();
+        else window->show();
+        window->raise();
+        window->activateWindow();
+        return;
+    }
+    const auto* computer = m_Computers.at(row);
+    QReadLocker lock(&computer->lock);
+    if (computer->state != NvComputer::CS_ONLINE || computer->pairState != NvComputer::PS_PAIRED ||
+        computer->activeAddress.isNull() || !computer->activeHttpsPort || computer->serverCert.isNull()) {
+        lock.unlock();
+        emit toolActionResult(uuid, tr("Connect to a paired, online host to transfer files."), false);
+        return;
+    }
+    QUrl host;
+    host.setScheme(QStringLiteral("https"));
+    host.setHost(computer->activeAddress.address());
+    host.setPort(computer->activeHttpsPort);
+    const auto certificate = computer->serverCert;
+    const auto name = computer->name;
+    lock.unlock();
+    unsigned char secret[32];
+    if (RAND_bytes(secret, sizeof(secret)) != 1) {
+        emit toolActionResult(uuid, tr("Could not open the file transfer window."), false);
+        return;
+    }
+    const auto token = QByteArray(reinterpret_cast<const char*>(secret), sizeof(secret)).toHex();
+    auto* window = new FileTransferWindow(host, certificate, token, name, uuid, nullptr, true);
+    window->setAttribute(Qt::WA_DeleteOnClose);
+    m_FileWindows.insert(uuid, window);
+    connect(window, &QObject::destroyed, this, [this, uuid] { m_FileWindows.remove(uuid); });
+    window->show();
+    window->raise();
+    window->activateWindow();
+#else
+    emit toolActionResult(uuid, tr("File transfer requires Windows."), false);
+#endif
 }
 
 void ComputerModel::renameComputer(int computerIndex, QString name)

@@ -4,6 +4,8 @@
 
 #include <QAbstractListModel>
 
+class FileTransferWindow;
+
 class ComputerModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -29,6 +31,7 @@ public:
     Q_ENUM(StreamWindowState)
 
     explicit ComputerModel(QObject* object = nullptr);
+    ~ComputerModel() override;
 
     // Must be called before any QAbstractListModel functions
     Q_INVOKABLE void initialize(ComputerManager* computerManager);
@@ -49,6 +52,7 @@ public:
     Q_INVOKABLE void testConnectionForComputer(int computerIndex);
 
     Q_INVOKABLE void wakeComputer(int computerIndex);
+    Q_INVOKABLE void openFileTransfer(const QString& uuid);
 
     Q_INVOKABLE void renameComputer(int computerIndex, QString name);
 
@@ -58,6 +62,7 @@ public:
 
 signals:
     void pairingCompleted(QVariant error);
+    void toolActionResult(QString uuid, QString message, bool success);
     void connectionTestCompleted(int result, QString blockedPorts);
 
 private slots:
@@ -69,6 +74,8 @@ private:
     QVector<NvComputer*> m_Computers;
     ComputerManager* m_ComputerManager;
 #ifdef Q_OS_WIN
+    void closeFileTransfers();
+    QHash<QString, FileTransferWindow*> m_FileWindows;
     void refreshStreamWindows();
     struct StreamStatus {
         StreamWindowState state = NoStreamWindow;

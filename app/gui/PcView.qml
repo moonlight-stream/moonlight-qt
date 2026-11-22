@@ -114,6 +114,13 @@ FocusScope {
         model.initialize(ComputerManager)
         model.pairingCompleted.connect(pairingComplete)
         model.connectionTestCompleted.connect(testConnectionDialog.connectionTestComplete)
+        model.toolActionResult.connect(function(uuid, message, success) {
+            if (!success) {
+                errorDialog.text = message
+                errorDialog.helpText = ""
+                errorDialog.open()
+            }
+        })
         return model
     }
 
@@ -325,6 +332,11 @@ FocusScope {
                                 verticalAlignment: Text.AlignVCenter
                             }
                             enabled: false
+                        }
+                        NavigableMenuItem {
+                            text: qsTranslate("FileTransferWindow", "File transfer")
+                            visible: Qt.platform.os === "windows" && pcRow.paired && pcRow.online
+                            onTriggered: computerModel.openFileTransfer(pcRow.hostUuid)
                         }
                         NavigableMenuItem {
                             text: qsTr("Wake PC")

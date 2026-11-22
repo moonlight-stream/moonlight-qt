@@ -200,6 +200,9 @@
         <source>HTTPS Port: %1</source>
         <translation>HTTPS 端口: %1</translation>
     </message>
+    <message><source>Connect to a paired, online host to transfer files.</source><translation>请选择在线且已配对的主机来传输文件。</translation></message>
+    <message><source>Could not open the file transfer window.</source><translation>无法打开文件传输窗口。</translation></message>
+    <message><source>File transfer requires Windows.</source><translation>文件传输需要 Windows。</translation></message>
 </context>
 <context>
     <name>GamepadMapper</name>
@@ -1468,5 +1471,93 @@
     <message><source>Bottom left</source><translation>左下角</translation></message>
     <message><source>Bottom right</source><translation>右下角</translation></message>
     <message><source>Control center</source><translation>控制中心</translation></message>
+</context>
+<context>
+    <name>FileTransferWindow</name>
+    <message><source>Resume selected</source><translation>继续所选任务</translation></message>
+    <message><source>Interrupted</source><translation>已中断</translation></message>
+    <message><source>Speed</source><translation>速度</translation></message>
+    <message><source>%1/s</source><translation>%1/秒</translation></message>
+    <message><source>Cancelling…</source><translation>正在取消…</translation></message>
+    <message><source>Cancelled</source><translation>已取消</translation></message>
+    <message><source>Transfer is busy in another window</source><translation>另一窗口正在传输此任务</translation></message>
+    <message><source>Transfer ended in another window</source><translation>此任务已在另一窗口结束</translation></message>
+    <message><source>New folder</source><translation>新建文件夹</translation></message>
+    <message><source>Folder name</source><translation>文件夹名称</translation></message>
+    <message><source>Locations and bookmarks</source><translation>位置和书签</translation></message>
+    <message><source>Select all</source><translation>全选</translation></message>
+    <message><source>Type</source><translation>类型</translation></message>
+    <message><source>Drive</source><translation>磁盘</translation></message>
+    <message><source>Folder</source><translation>文件夹</translation></message>
+    <message><source>File</source><translation>文件</translation></message>
+    <message><source>Documents</source><translation>我的文档</translation></message>
+    <message><source>Desktop</source><translation>桌面</translation></message>
+    <message><source>Pictures</source><translation>图片</translation></message>
+    <message><source>Videos</source><translation>视频</translation></message>
+    <message><source>Music</source><translation>音乐</translation></message>
+    <message><source>Downloads</source><translation>下载</translation></message>
+    <message><source>Locations unavailable</source><translation>暂时无法读取快捷位置</translation></message>
+    <message><source>This host did not grant file access. Check the Sunshine version and file transfer permission.</source><translation>主机未授予文件访问权限，请检查 Sunshine 版本和文件传输权限。</translation></message>
+    <message><source>File transfer</source><translation>文件传输</translation></message>
+    <message><source>Local · %1</source><translation>本机 · %1</translation></message>
+    <message><source>Remote · %1</source><translation>远端 · %1</translation></message>
+    <message><source>Transfers</source><translation>传输列表</translation></message>
+    <message><source>Cancel selected</source><translation>取消所选任务</translation></message>
+    <message><source>Clear finished</source><translation>清除已结束任务</translation></message>
+    <message><source>Name</source><translation>名称</translation></message>
+    <message><source>Status</source><translation>状态</translation></message>
+    <message><source>Transferred</source><translation>已传输</translation></message>
+    <message><source>Source</source><translation>发送路径</translation></message>
+    <message><source>Destination</source><translation>接收路径</translation></message>
+    <message><source>In Sunshine, enable “Browse and transfer files” under Configuration → Input, then reconnect.</source><translation>请在 Sunshine 的「配置 → 输入」中开启「Browse and transfer files」（浏览和传输文件），然后重新连接串流。</translation></message>
+    <message><source>← Download</source><translation>← 下载</translation></message>
+    <message><source>Upload →</source><translation>上传 →</translation></message>
+    <message><source>Back</source><translation>后退</translation></message>
+    <message><source>Parent folder</source><translation>上一级</translation></message>
+    <message><source>This PC</source><translation>此电脑</translation></message>
+    <message><source>Folder path</source><translation>文件夹路径</translation></message>
+    <message><source>Refresh</source><translation>刷新</translation></message>
+    <message><source>Bookmarks</source><translation>书签</translation></message>
+    <message><source>Modified</source><translation>修改日期</translation></message>
+    <message><source>Size</source><translation>大小</translation></message>
+    <message><source>Copy</source><translation>复制</translation></message>
+    <message><source>Paste here</source><translation>粘贴到此处</translation></message>
+    <message><source>Enter an absolute folder path.</source><translation>请输入完整的文件夹路径。</translation></message>
+    <message><source>Loading…</source><translation>正在读取…</translation></message>
+    <message><source>Empty folder</source><translation>文件夹为空</translation></message>
+    <message><source>%1 items</source><translation>%1 个项目</translation></message>
+    <message><source>Bookmark current folder</source><translation>收藏当前文件夹</translation></message>
+    <message><source>Remove current bookmark</source><translation>取消收藏当前文件夹</translation></message>
+    <message><source>Queued</source><translation>等待传输</translation></message>
+</context>
+<context>
+    <name>FileTransferEngine</name>
+    <message><source>This transfer is already running or its checkpoint is unavailable</source><translation>任务已在传输，或无法访问其断点记录</translation></message>
+    <message><source>Cannot read transfer checkpoint</source><translation>无法读取传输断点</translation></message>
+    <message><source>Cannot save transfer checkpoint</source><translation>无法保存传输断点</translation></message>
+    <message><source>Invalid transfer checkpoint from host</source><translation>主机返回的传输断点无效</translation></message>
+    <message><source>The partial download changed: %1</source><translation>已下载的部分文件已发生变化：%1</translation></message>
+    <message><source>Cannot create partial download: %1</source><translation>无法创建下载临时文件：%1</translation></message>
+    <message><source>Cannot write partial download: %1</source><translation>无法写入下载临时文件：%1</translation></message>
+    <message><source>File verification failed: %1</source><translation>文件校验失败：%1</translation></message>
+    <message><source>Could not publish download; check the destination: %1</source><translation>无法保存已下载的文件，请检查目标路径：%1</translation></message>
+    <message><source>Enable “Browse and transfer files” in Sunshine and check that this client is paired. Then refresh.</source><translation>请检查客户端配对状态和主机的文件传输权限，然后刷新。</translation></message>
+    <message><source>Update Sunshine to a version that supports standalone file transfer, then refresh.</source><translation>请将 Sunshine 更新至支持独立文件传输的版本，然后刷新。</translation></message>
+    <message><source>Could not start file transfer. Check the connection and that Sunshine supports standalone file transfer. %1</source><translation>无法连接文件传输服务。请检查网络连接和 Sunshine 版本。%1</translation></message>
+    <message><source>Cancelled</source><translation>已取消</translation></message>
+    <message><source>Cannot open folder: %1</source><translation>无法打开文件夹：%1</translation></message>
+    <message><source>Invalid folder listing from host</source><translation>远端返回的目录列表无效</translation></message>
+    <message><source>Invalid file or folder: %1</source><translation>文件或目录无效：%1</translation></message>
+    <message><source>Source changed: %1</source><translation>源文件已更改：%1</translation></message>
+    <message><source>Destination already exists: %1</source><translation>目标已存在：%1</translation></message>
+    <message><source>Cannot create folder: %1</source><translation>无法创建文件夹：%1</translation></message>
+    <message><source>File transfer is unavailable for this session</source><translation>当前会话无法传输文件</translation></message>
+    <message><source>File changed or destination exists: %1</source><translation>文件已更改或目标已存在：%1</translation></message>
+    <message><source>Access denied by host</source><translation>主机拒绝访问</translation></message>
+    <message><source>File or folder not found: %1</source><translation>找不到文件或文件夹：%1</translation></message>
+    <message><source>Unexpected host response (HTTP %1)</source><translation>主机响应异常（HTTP %1）</translation></message>
+    <message><source>Incomplete data from host: %1</source><translation>主机返回的数据不完整：%1</translation></message>
+    <message><source>Transferring</source><translation>传输中</translation></message>
+    <message><source>Completed</source><translation>已完成</translation></message>
 </context>
 </TS>
