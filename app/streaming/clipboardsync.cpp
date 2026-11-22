@@ -534,7 +534,11 @@ struct ClipboardSync::FileQueue {
                 }
                 break;
             }
-            if (!job) return firstPending() != jobs.end();
+            // Unpublished files waiting for a new paste grant leave the host
+            // clipboard available to the ordinary text synchronizer.
+            if (!job) return occupied || std::any_of(jobs.begin(), jobs.end(), [](const auto& j) {
+                return j->targetStatus == Binding && j->progress.state != State::Failed;
+            });
         }
         const auto interrupted = [&] { return sync.isInterruptionRequested() || job->cancelled.load(); };
         if (job->published) {
@@ -960,7 +964,9 @@ void ClipboardSync::run()
             if (m_PasteSequence <= UINT32_MAX && !explicitPaste && !failures) break;
             {
                 std::lock_guard lock(m_FileQueue->mutex);
-                if (m_FileQueue->firstPending() != m_FileQueue->jobs.end()) break;
+                if (std::any_of(m_FileQueue->jobs.begin(), m_FileQueue->jobs.end(), [](const auto& job) {
+                    return job->progress.state == FileQueue::State::Queued;
+                })) break;
             }
             msleep(50);
         }
