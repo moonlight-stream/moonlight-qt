@@ -1616,10 +1616,24 @@ FocusScope {
                         id: lockHelp
                         width: parent.width
                         leftPadding: 12; rightPadding: 12
-                        text: qsTr("Moonlight sends Win+L when you disconnect manually. The remote PC must support this shortcut. If the connection is lost, Moonlight cannot send it.")
+                        text: qsTr("Compatible Windows Sunshine hosts lock after the last stream ends, even after a network loss. This request takes effect when you connect. On older hosts, Moonlight sends a lock shortcut when you disconnect.")
                         color: "#52647a"
                         font.pixelSize: 13
                         wrapMode: Text.Wrap
+                    }
+                    SettingsSwitch {
+                        visible: Qt.platform.os === "windows"
+                        width: parent.width
+                        text: qsTr("Sync copied text with the remote Windows PC")
+                        checked: StreamingPreferences.clipboardSyncText
+                        onToggled: StreamingPreferences.clipboardSyncText = checked
+                    }
+                    SettingsSwitch {
+                        visible: Qt.platform.os === "windows"
+                        width: parent.width
+                        text: qsTr("Transfer copied files through the clipboard")
+                        checked: StreamingPreferences.clipboardSyncFiles
+                        onToggled: StreamingPreferences.clipboardSyncFiles = checked
                     }
                 }
             }

@@ -84,7 +84,7 @@ struct DualSenseOutputReport{
 class SdlInputHandler
 {
 public:
-    explicit SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight);
+    explicit SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight, const QString& hostUuid = {});
 
     ~SdlInputHandler();
 
@@ -133,7 +133,9 @@ public:
     int getAttachedGamepadMask();
 
     void raiseAllKeys();
-    static bool requestHostScreenLock();
+    bool requestHostScreenLock();
+    bool usesHostLockShortcut() const;
+    void setUsesHostLockShortcut(bool enabled);
 
     void notifyMouseLeave();
 
@@ -171,6 +173,7 @@ private:
         KeyComboTogglePointerRegionLock,
         KeyComboQuitAndExit,
         KeyComboToggleKeyboardGrab,
+        KeyComboLockHost,
         KeyComboMax
     };
 
@@ -207,6 +210,7 @@ private:
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
     SDL_Window* m_Window = nullptr;
+    const QString m_HostUuid;
     bool m_MultiController;
     bool m_GamepadMouse;
     bool m_SwapMouseButtons;
@@ -222,6 +226,7 @@ private:
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];
     QSet<uint32_t> m_KeysDown;
+    QSet<SDL_Scancode> m_LocalShortcutKeys;
     bool m_FakeMouseCaptureActive;
     bool m_KeyboardCaptureActive;
     QString m_OldIgnoreDevices;

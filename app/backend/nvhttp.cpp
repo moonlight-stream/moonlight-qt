@@ -2,6 +2,8 @@
 #include <Limelight.h>
 
 #include <QDebug>
+#include <QSettings>
+#include <openssl/rand.h>
 #include <QUuid>
 #include <QtNetwork/QNetworkReply>
 #include <QEventLoop>
@@ -205,8 +207,36 @@ NvHTTP::startApp(QString verb,
                  bool localAudio,
                  int gamepadMask,
                  bool persistGameControllersOnDisconnect,
+                 bool requestDisconnectLock,
+                 bool& hostHandlesDisconnectLock,
+                 QByteArray& clipboardToken,
+                 bool& clipboardText,
+                 bool& clipboardFiles,
                  QString& rtspSessionUrl)
 {
+    QString extensions;
+    if (!isGfe && requestDisconnectLock) {
+        extensions += QStringLiteral("&lockOnDisconnect=1");
+    }
+    clipboardToken.clear();
+    clipboardText = false;
+    clipboardFiles = false;
+#ifdef Q_OS_WIN
+    if (!isGfe && !m_ServerCert.isNull()) {
+        const QSettings settings;
+        clipboardText = settings.value("clipboardSyncText", false).toBool();
+        clipboardFiles = settings.value("clipboardSyncFiles", false).toBool();
+        if (clipboardText || clipboardFiles) {
+            unsigned char secret[32];
+            if (RAND_bytes(secret, sizeof(secret)) == 1) {
+                clipboardToken = QByteArray(reinterpret_cast<const char*>(secret), sizeof(secret)).toHex();
+                extensions += QStringLiteral("&clipboardtoken=%1&clipboardtext=%2&clipboardfiles=%3")
+                                  .arg(QString::fromLatin1(clipboardToken)).arg(int(clipboardText)).arg(int(clipboardFiles));
+            }
+        }
+    }
+#endif
+
     int riKeyId;
 
     memcpy(&riKeyId, streamConfig->remoteInputAesIv, sizeof(riKeyId));
@@ -234,7 +264,7 @@ NvHTTP::startApp(QString verb,
                                    "&remoteControllersBitmap="+QString::number(gamepadMask)+
                                    "&gcmap="+QString::number(gamepadMask)+
                                    "&gcpersist="+QString::number(persistGameControllersOnDisconnect ? 1 : 0)+
-                                   LiGetLaunchUrlQueryParameters(),
+                                   extensions + LiGetLaunchUrlQueryParameters(),
                                    LAUNCH_TIMEOUT_MS);
 
     qInfo() << "Launch response:" << response;
@@ -242,6 +272,13 @@ NvHTTP::startApp(QString verb,
     // Throws if the request failed
     verifyResponseStatus(response);
 
+    hostHandlesDisconnectLock = getXmlString(response, "lockOnDisconnect") == "1";
+    const bool clipboardAccepted = !clipboardToken.isEmpty() && getXmlString(response, "clipboardversion") == "1";
+    clipboardText = clipboardAccepted && clipboardText && getXmlString(response, "clipboardtext") == "1";
+    clipboardFiles = clipboardAccepted && clipboardFiles && getXmlString(response, "clipboardfiles") == "1";
+    if (!clipboardText && !clipboardFiles) {
+        clipboardToken.clear();
+    }
     rtspSessionUrl = getXmlString(response, "sessionUrl0");
 }
 
@@ -499,8 +536,13 @@ NvHTTP::openConnection(QUrl baseUrl,
 
     QNetworkRequest request(url);
 
-    // Add our client certificate
-    request.setSslConfiguration(IdentityManager::get()->getSslConfig());
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
+
+    auto sslConfig = IdentityManager::get()->getSslConfig();
+    if (baseUrl.scheme() == QStringLiteral("https") && !m_ServerCert.isNull()) {
+        sslConfig.setCaCertificates({m_ServerCert});
+    }
+    request.setSslConfiguration(sslConfig);
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     // Disable HTTP/2 (GFE 3.22 doesn't like it) and Qt 6 enables it by default
@@ -519,6 +561,13 @@ NvHTTP::openConnection(QUrl baseUrl,
 
     auto sslErrorsConnection = connect(m_Nam, &QNetworkAccessManager::sslErrors, this, &NvHTTP::handleSslErrors);
     QNetworkReply* reply = m_Nam->get(request);
+    if (baseUrl.scheme() == QStringLiteral("https") && !m_ServerCert.isNull()) {
+        connect(reply, &QNetworkReply::encrypted, reply, [reply, pairedHost = m_ServerCert]() {
+            if (reply->sslConfiguration().peerCertificate() != pairedHost) {
+                reply->abort();
+            }
+        });
+    }
     QEventLoop loop;
 
     // Connect the quit signals
@@ -537,7 +586,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     connect(connectTimer, &QTimer::timeout, reply, [reply, logLevel, url]() {
         if (!reply->isFinished()) {
             if (logLevel >= NvLogLevel::NVLL_ERROR) {
-                qWarning() << "Aborting timed out connection for" << url.toString();
+                qWarning() << "Aborting timed out connection for" << url.toString(QUrl::RemoveQuery);
             }
 
             reply->setProperty("timeout_reason", "connection_timeout");
@@ -549,7 +598,7 @@ NvHTTP::openConnection(QUrl baseUrl,
 #endif
 
     if (logLevel >= NvLogLevel::NVLL_VERBOSE) {
-        qInfo() << "Executing request:" << url.toString();
+        qInfo() << "Executing request:" << url.toString(QUrl::RemoveQuery);
     }
     loop.exec(QEventLoop::ExcludeUserInputEvents);
 
@@ -557,7 +606,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     if (!reply->isFinished())
     {
         if (logLevel >= NvLogLevel::NVLL_ERROR) {
-            qWarning() << "Aborting timed out request for" << url.toString();
+            qWarning() << "Aborting timed out request for" << url.toString(QUrl::RemoveQuery);
         }
         reply->abort();
     }
@@ -592,7 +641,10 @@ NvHTTP::openConnection(QUrl baseUrl,
             throw exception;
         }
         else {
-            QtNetworkReplyException exception(reply->error(), reply->errorString());
+            auto message = reply->errorString();
+            message.replace(url.toString(), url.toString(QUrl::RemoveQuery));
+            message.replace(QString::fromLatin1(url.toEncoded()), url.toString(QUrl::RemoveQuery));
+            QtNetworkReplyException exception(reply->error(), message);
             delete reply;
             throw exception;
         }

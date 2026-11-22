@@ -21,6 +21,14 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
  - Support for both pointer capture (for games) and direct mouse control (for remote desktop)
  - Support for passing system-wide keyboard shortcuts like Alt+Tab to the host
  
+### Windows desktop sharing
+
+This fork supports clipboard sync and host-managed disconnect locking with the [matching Sunshine host](https://github.com/FishOrBear/Sunshine/tree/moonlight-desktop-integration).
+
+- In Sunshine's **Configuration → Input**, enable clipboard text, file transfer, or both. Enable the corresponding options in Moonlight's **Session security** settings and reconnect. Copy text or files during the stream, then paste on the other PC. Each copy can contain up to 1 MiB of UTF-8 text or up to 32 regular local files within a 16 MiB transfer.
+- Enable **Lock the remote PC when I disconnect** before connecting to have Sunshine request a Windows lock when the last stream ends, including after a connection timeout.
+- For a private stream, install a compatible Windows indirect virtual display on the host. In Sunshine's **Audio/Video** settings, set the output to its device ID and select **Privacy screen** as the device configuration. Sunshine checks the active display paths before streaming and restores the host display configuration after the last stream.
+
 ## Downloads
 - [Windows, macOS, and Steam Link](https://github.com/moonlight-stream/moonlight-qt/releases)
 - [Snap (for Ubuntu-based Linux distros)](https://snapcraft.io/moonlight)

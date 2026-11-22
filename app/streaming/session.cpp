@@ -6,6 +6,7 @@
 #include "session.h"
 #ifdef Q_OS_WIN32
 #include "captioncontrols.h"
+#include "clipboardsync.h"
 #include "streamwindow.h"
 #endif
 #include "settings/streamingpreferences.h"
@@ -1813,6 +1814,9 @@ bool Session::startConnectionAsync()
                       m_Preferences->playAudioOnHost,
                       m_InputHandler->getAttachedGamepadMask(),
                       !m_Preferences->multiController,
+                      m_Preferences->lockHostOnDisconnect(),
+                      m_HostHandlesDisconnectLock,
+                      m_ClipboardToken, m_ClipboardText, m_ClipboardFiles,
                       rtspSessionUrl);
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
@@ -1965,7 +1969,7 @@ void Session::start()
 
     // Initialize the gamepad code with our preferences
     // NB: m_InputHandler must be initialize before starting the connection.
-    m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height);
+    m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height, m_Computer->uuid);
     connect(m_Preferences, &StreamingPreferences::captureSysKeysModeChanged, this, [this]() {
         if (m_InputHandler) {
             m_InputHandler->setCaptureSystemKeysMode(m_Preferences->captureSysKeysMode);
@@ -2202,6 +2206,11 @@ void Session::exec()
 #ifdef Q_OS_WIN32
     MIB_IF_ROW2 previousTraffic{};
     CaptionControls caption(m_Window, *m_Preferences, *m_InputHandler);
+    QUrl clipboardHost;
+    clipboardHost.setScheme(QStringLiteral("https"));
+    clipboardHost.setHost(m_Computer->activeAddress.address());
+    clipboardHost.setPort(m_Computer->activeHttpsPort);
+    ClipboardSync clipboard(clipboardHost, m_Computer->serverCert, m_ClipboardToken, m_ClipboardText, m_ClipboardFiles);
     const Uint32 hudStart = lastTitleUpdate;
     caption.update();
     previousTraffic.InterfaceIndex = m_StreamInterface;
@@ -2631,6 +2640,7 @@ void Session::exec()
 
 DispatchDeferredCleanup:
 #ifdef Q_OS_WIN32
+    clipboard.stop();
     caption.close();
 #endif
     // Switch back to synchronous logging mode
@@ -2645,14 +2655,14 @@ DispatchDeferredCleanup:
         QGuiApplication::restoreOverrideCursor();
     }
 
-    // Raise any keys that are still down
-    m_InputHandler->raiseAllKeys();
-
     // A local window close, disconnect button or quit shortcut reaches here with
     // live input. stopInputStream() drains reliable keyboard packets during teardown.
     if (event.type == SDL_QUIT && !SDL_AtomicGet(&m_ConnectionEnding) &&
-            m_Preferences->lockHostOnDisconnect() && !SdlInputHandler::requestHostScreenLock()) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to queue the host screen lock shortcut");
+            !m_HostHandlesDisconnectLock && m_Preferences->lockHostOnDisconnect()) {
+        m_InputHandler->requestHostScreenLock();
+    }
+    else {
+        m_InputHandler->raiseAllKeys();
     }
 
     // Destroy the input handler now. This must be destroyed

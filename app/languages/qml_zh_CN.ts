@@ -740,6 +740,9 @@
 </context>
 <context>
     <name>SettingsView</name>
+    <message><source>Sync copied text with the remote Windows PC</source><translation>与远端 Windows 电脑同步复制的文本</translation></message>
+    <message><source>Transfer copied files through the clipboard</source><translation>通过剪贴板传输复制的文件</translation></message>
+    <message><source>Compatible Windows Sunshine hosts lock after the last stream ends, even after a network loss. This request takes effect when you connect. On older hosts, Moonlight sends a lock shortcut when you disconnect.</source><translation>兼容的 Windows Sunshine 主机会在最后一个串流结束后锁屏，网络意外断开也会生效。此请求在连接时生效。对于旧版主机，Moonlight 会在主动断开时发送锁屏快捷键。</translation></message>
     <message><source>Off</source><translation>关闭</translation></message>
     <message><source>Fullscreen only</source><translation>仅全屏时</translation></message>
     <message><source>Always</source><translation>始终</translation></message>
@@ -1426,6 +1429,12 @@
 </context>
 <context>
     <name>StreamControlCenter</name>
+    <message><source>Request screen lock on disconnect</source><translation>主动断开时锁定被控电脑</translation></message>
+    <message><source>Use installed host lock shortcut</source><translation>使用被控机锁屏快捷方式</translation></message>
+    <message><source>Request screen lock now</source><translation>立即请求锁屏</translation></message>
+    <message><source>Lock shortcut queued</source><translation>锁屏按键已加入发送队列</translation></message>
+    <message><source>Couldn't queue lock shortcut</source><translation>锁屏按键未能加入发送队列</translation></message>
+    <message><source>If Win+L doesn't lock this PC, install the Ctrl+Alt+F10 lock shortcut on the remote PC and enable it above. Press Ctrl+Alt+Shift+End during a stream to request a lock.</source><translation>如果 Win+L 无法锁定被控机，请在被控机上安装 Ctrl+Alt+F10 锁屏快捷方式，再开启上方对应选项。串流中可按 Ctrl+Alt+Shift+End 请求锁屏。</translation></message>
     <message><source>HUD settings</source><translation>统计浮层设置</translation></message>
     <message><source>Security</source><translation>安全</translation></message>
     <message><source>Send Win+L on disconnect</source><translation>主动断开时锁定被控电脑</translation></message>

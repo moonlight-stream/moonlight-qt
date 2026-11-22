@@ -394,6 +394,9 @@ config_SL {
         streaming/audio/renderers/slaud.h
 }
 win32 {
+    SOURCES += streaming/clipboardsync.cpp
+    HEADERS += streaming/clipboardsync.h streaming/clipboard_win32.h
+    LIBS += -lshell32
     HEADERS += streaming/video/ffmpeg-renderers/dxutil.h
 }
 win32:!winrt {

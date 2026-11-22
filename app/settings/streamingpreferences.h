@@ -135,6 +135,8 @@ public:
     Q_PROPERTY(bool playAudioOnHost MEMBER playAudioOnHost NOTIFY playAudioOnHostChanged)
     Q_PROPERTY(bool multiController MEMBER multiController NOTIFY multiControllerChanged)
     Q_PROPERTY(bool enableMdns MEMBER enableMdns NOTIFY enableMdnsChanged)
+    Q_PROPERTY(bool clipboardSyncText MEMBER clipboardSyncText NOTIFY clipboardSyncTextChanged)
+    Q_PROPERTY(bool clipboardSyncFiles MEMBER clipboardSyncFiles NOTIFY clipboardSyncFilesChanged)
     Q_PROPERTY(bool quitAppAfter MEMBER quitAppAfter NOTIFY quitAppAfterChanged)
     Q_PROPERTY(bool lockHostOnDisconnect READ lockHostOnDisconnect WRITE setLockHostOnDisconnect NOTIFY lockHostOnDisconnectChanged)
     Q_PROPERTY(bool absoluteMouseMode MEMBER absoluteMouseMode NOTIFY absoluteMouseModeChanged)
@@ -180,6 +182,8 @@ public:
     bool enableMdns;
     Q_PROPERTY(bool closeToTray MEMBER closeToTray NOTIFY closeToTrayChanged)
     bool closeToTray;
+    bool clipboardSyncText;
+    bool clipboardSyncFiles;
     bool quitAppAfter;
     bool absoluteMouseMode;
     bool absoluteTouchMode;
@@ -222,6 +226,8 @@ signals:
     void enableMdnsChanged();
     void closeToTrayChanged();
     void quitAppAfterChanged();
+    void clipboardSyncTextChanged();
+    void clipboardSyncFilesChanged();
     void lockHostOnDisconnectChanged();
     void absoluteMouseModeChanged();
     void absoluteTouchModeChanged();

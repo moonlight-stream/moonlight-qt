@@ -2,6 +2,7 @@
 
 #include <Limelight.h>
 #include "SDL_compat.h"
+#include <QSettings>
 
 #define VK_0 0x30
 #define VK_A 0x41
@@ -180,6 +181,10 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
                                                              StreamingPreferences::CSK_ALWAYS);
         break;
 
+    case KeyComboLockHost:
+        requestHostScreenLock();
+        break;
+
     default:
         Q_UNREACHABLE();
     }
@@ -195,6 +200,31 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
     if (event->repeat) {
         // Ignore repeat key down events
         SDL_assert(event->state == SDL_PRESSED);
+        return;
+    }
+
+    // A locally consumed shortcut key has no corresponding key-down on the host.
+    // A fresh press also clears any release we missed while unfocused.
+    if (m_LocalShortcutKeys.remove(event->keysym.scancode) && event->state == SDL_RELEASED) {
+        return;
+    }
+
+    // If the client receives Win+L, honor the lock method selected for this host.
+    const auto mod = event->keysym.mod;
+    const auto sym = event->keysym.sym;
+    // Use the physical L as a fallback on non-Latin layouts, while respecting remapped Latin keys.
+    const bool isL = sym == SDLK_l || (event->keysym.scancode == SDL_SCANCODE_L && (sym == SDLK_UNKNOWN || sym > SDLK_DELETE));
+    if (event->state == SDL_PRESSED && (mod & KMOD_GUI) && !(mod & (KMOD_CTRL | KMOD_ALT | KMOD_SHIFT | KMOD_MODE)) && isL &&
+            isSystemKeyCaptureActive() && usesHostLockShortcut()) {
+        m_LocalShortcutKeys.insert(event->keysym.scancode);
+        // requestHostScreenLock() releases previously forwarded Windows keys.
+        if (mod & KMOD_LGUI) {
+            m_LocalShortcutKeys.insert(SDL_SCANCODE_LGUI);
+        }
+        if (mod & KMOD_RGUI) {
+            m_LocalShortcutKeys.insert(SDL_SCANCODE_RGUI);
+        }
+        requestHostScreenLock();
         return;
     }
 
@@ -216,6 +246,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 
         for (int i = 0; i < KeyComboMax; i++) {
             if (m_SpecialKeyCombos[i].enabled && event->keysym.sym == m_SpecialKeyCombos[i].keyCode) {
+                m_LocalShortcutKeys.insert(event->keysym.scancode);
                 performSpecialKeyCombo(m_SpecialKeyCombos[i].keyCombo);
                 return;
             }
@@ -223,6 +254,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 
         for (int i = 0; i < KeyComboMax; i++) {
             if (m_SpecialKeyCombos[i].enabled && event->keysym.scancode == m_SpecialKeyCombos[i].scanCode) {
+                m_LocalShortcutKeys.insert(event->keysym.scancode);
                 performSpecialKeyCombo(m_SpecialKeyCombos[i].keyCombo);
                 return;
             }
@@ -521,20 +553,59 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                          flags);
 }
 
+static QString hostLockShortcutSetting(const QString& uuid)
+{
+    return QStringLiteral("hostLockShortcut/") + QString::fromLatin1(uuid.toUtf8().toHex());
+}
+
+bool SdlInputHandler::usesHostLockShortcut() const
+{
+    return !m_HostUuid.isEmpty() && QSettings().value(hostLockShortcutSetting(m_HostUuid), false).toBool();
+}
+
+void SdlInputHandler::setUsesHostLockShortcut(bool enabled)
+{
+    if (!m_HostUuid.isEmpty()) {
+        QSettings().setValue(hostLockShortcutSetting(m_HostUuid), enabled);
+    }
+}
+
 bool SdlInputHandler::requestHostScreenLock()
 {
-    // Use the same GameStream virtual-key encoding as handleKeyEvent(). Send
-    // Win explicitly: GFE drops ordinary keys carrying the META modifier flag.
-    constexpr short leftWin = static_cast<short>(0x805B);
-    constexpr short keyL = static_cast<short>(0x804C);
-    if (LiSendKeyboardEvent(leftWin, KEY_ACTION_DOWN, MODIFIER_EXTENDED) != 0) {
-        return false;
+    // Modifier keys from the local shortcut may already be down on the host.
+    raiseAllKeys();
+    struct Key {
+        int vk;
+        char downModifiers;
+        char upModifiers;
+    };
+    // Win is sent explicitly because GFE drops ordinary keys carrying MODIFIER_META.
+    constexpr Key winL[] = {{0x5B, MODIFIER_EXTENDED, MODIFIER_EXTENDED}, {'L', 0, 0}};
+    constexpr Key hostShortcut[] = {
+        {0xA2, MODIFIER_CTRL, 0},                            // Left Ctrl
+        {0xA4, MODIFIER_CTRL | MODIFIER_ALT, MODIFIER_CTRL}, // Left Alt
+        {VK_F1 + 9, MODIFIER_CTRL | MODIFIER_ALT, MODIFIER_CTRL | MODIFIER_ALT}
+    };
+    const bool useHostShortcut = usesHostLockShortcut();
+    const Key* keys = useHostShortcut ? hostShortcut : winL;
+    const int count = useHostShortcut ? SDL_arraysize(hostShortcut) : SDL_arraysize(winL);
+    int pressed = 0;
+    for (; pressed < count; ++pressed) {
+        const auto& key = keys[pressed];
+        if (LiSendKeyboardEvent(static_cast<short>(0x8000 | key.vk), KEY_ACTION_DOWN, key.downModifiers) != 0) {
+            break;
+        }
     }
-
-    const bool sentL = LiSendKeyboardEvent(keyL, KEY_ACTION_DOWN, 0) == 0;
-    const bool releasedL = sentL && LiSendKeyboardEvent(keyL, KEY_ACTION_UP, 0) == 0;
-    const bool releasedWin = LiSendKeyboardEvent(leftWin, KEY_ACTION_UP, MODIFIER_EXTENDED) == 0;
-    return releasedL && releasedWin;
+    bool queued = pressed == count;
+    while (pressed > 0) {
+        const auto& key = keys[--pressed];
+        if (LiSendKeyboardEvent(static_cast<short>(0x8000 | key.vk), KEY_ACTION_UP, key.upModifiers) != 0) {
+            queued = false;
+        }
+    }
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Host lock shortcut %s: %s", useHostShortcut ? "Ctrl+Alt+F10" : "Win+L",
+                queued ? "queued" : "queue failed");
+    return queued;
 }
 
 void SdlInputHandler::raiseAllKeys()

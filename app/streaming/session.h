@@ -197,7 +197,11 @@ private:
 #endif
     bool m_DisconnectOnly = false;
     bool m_ExplicitHostQuit = false;
+    bool m_HostHandlesDisconnectLock = false;
+    bool m_ClipboardText = false;
+    bool m_ClipboardFiles = false;
     SDL_atomic_t m_ConnectionEnding{};
+    QByteArray m_ClipboardToken;
 
     void notifyMouseEmulationMode(bool enabled);
 

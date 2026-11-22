@@ -130,8 +130,8 @@ private:
                 if (GetForegroundWindow() != owner)
                     dismiss();
                 else {
-                    const int width = px(m_Page == Security || m_Page == Main || m_Page == SystemKeys ? 300 : 216);
-                    const int height = px(12 + rows().size() * 32 + (m_Page == Security ? 76 : 0));
+                    const int width = px(m_Page == Security ? 340 : (m_Page == Main || m_Page == SystemKeys ? 300 : 216));
+                    const int height = px(12 + rows().size() * 32 + (m_Page == Security ? 102 : 0));
                     RECT work { };
                     MONITORINFO monitor { sizeof(monitor) };
                     GetMonitorInfo(MonitorFromWindow(owner, MONITOR_DEFAULTTONEAREST), &monitor);
@@ -181,7 +181,8 @@ private:
         case HudSettings:
             return { tr("HUD settings"), tr("Displayed metrics"), tr("Position"), tr("Opacity") };
         case Security:
-            return { tr("Security"), tr("Send Win+L on disconnect") };
+            return { tr("Security"), tr("Request screen lock on disconnect"), tr("Use installed host lock shortcut"),
+                tr("Request screen lock now") };
         case Fields:
             return QStringList { tr("Displayed metrics") } + labels();
         case Corner:
@@ -205,6 +206,7 @@ private:
                 break;
             case 2:
                 m_LockOnDisconnect = m_Preferences.lockHostOnDisconnect();
+                m_LockShortcutStatus.clear();
                 m_Page = Security;
                 break;
             case 3:
@@ -225,9 +227,24 @@ private:
             const auto mode = static_cast<StreamingPreferences::CaptureSysKeysMode>(row - 1);
             m_Input.setCaptureSystemKeysMode(mode);
             m_Preferences.setCaptureSysKeysMode(mode);
-        } else if (m_Page == Security) {
+        } else if (m_Page == Security && row == 1) {
+            m_LockShortcutStatus.clear();
             m_Preferences.setLockHostOnDisconnect(!m_LockOnDisconnect);
             m_LockOnDisconnect = m_Preferences.lockHostOnDisconnect();
+        } else if (m_Page == Security && row == 2) {
+            m_LockShortcutStatus.clear();
+            m_Input.setUsesHostLockShortcut(!m_Input.usesHostLockShortcut());
+        } else if (m_Page == Security) {
+            m_LockRequestQueued = m_Input.requestHostScreenLock();
+            if (m_LockRequestQueued) {
+                m_LockShortcutStatus = tr("Lock shortcut queued");
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Queued host screen lock shortcut from control center");
+                SetTimer(m_Menu, LockStatusTimer, 3000, nullptr);
+            } else {
+                m_LockShortcutStatus = tr("Couldn't queue lock shortcut");
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to queue host screen lock shortcut from control center");
+                KillTimer(m_Menu, LockStatusTimer);
+            }
         } else if (m_Page == HudSettings) {
             constexpr Page pages[] = { Fields, Corner, Opacity };
             m_Page = pages[row - 1];
@@ -327,8 +344,8 @@ private:
                     || (m_Page == Fields && i > 0 && (m_Fields & (1 << (i - 1)))))
                     mark = QStringLiteral("✓");
                 line.adjust(9, 0, -9, 0);
-                if ((m_Page == Main && i == 0) || (m_Page == Security && i == 1)) {
-                    const bool checked = m_Page == Main ? enabled() : m_LockOnDisconnect;
+                if ((m_Page == Main && i == 0) || (m_Page == Security && (i == 1 || i == 2))) {
+                    const bool checked = m_Page == Main ? enabled() : (i == 1 ? m_LockOnDisconnect : m_Input.usesHostLockShortcut());
                     const QRect track(line.right() - 29, line.center().y() - 8, 30, 16);
                     p.setRenderHint(QPainter::Antialiasing);
                     p.setPen(Qt::NoPen);
@@ -351,8 +368,12 @@ private:
                 font.setPixelSize(12);
                 p.setFont(font);
                 p.setPen(QColor("#52647a"));
-                p.drawText(QRect(15, top + 6, w - 30, h - top - 10), Qt::AlignLeft | Qt::TextWordWrap,
-                    QCoreApplication::translate("SettingsView", "Moonlight sends Win+L when you disconnect manually. The remote PC must support this shortcut. If the connection is lost, Moonlight cannot send it."));
+                p.drawText(QRect(15, top + 6, w - 30, h - top - 32), Qt::AlignLeft | Qt::TextWordWrap,
+                    tr("If Win+L doesn't lock this PC, install the Ctrl+Alt+F10 lock shortcut on the remote PC and enable it above. Press Ctrl+Alt+Shift+End during a stream to request a lock."));
+                if (!m_LockShortcutStatus.isEmpty()) {
+                    p.setPen(QColor(m_LockRequestQueued ? "#2468d5" : "#a13726"));
+                    p.drawText(QRect(15, h - 27, w - 30, 21), Qt::AlignLeft | Qt::AlignVCenter, m_LockShortcutStatus);
+                }
             }
         }
         p.end();
@@ -377,6 +398,14 @@ private:
             return MA_NOACTIVATE;
         if (msg == WM_NCHITTEST && hwnd == self->m_Hud)
             return HTTRANSPARENT;
+        if (hwnd == self->m_Menu && msg == WM_TIMER && wp == LockStatusTimer) {
+            KillTimer(hwnd, LockStatusTimer);
+            if (self->m_LockRequestQueued) {
+                self->m_LockShortcutStatus.clear();
+                InvalidateRect(hwnd, nullptr, FALSE);
+            }
+            return 0;
+        }
         if (msg == WM_PAINT) {
             PAINTSTRUCT ps { };
             HDC dc = BeginPaint(hwnd, &ps);
@@ -421,6 +450,9 @@ private:
     StreamingPreferences& m_Preferences;
     SdlInputHandler& m_Input;
     bool m_LockOnDisconnect = false;
+    static constexpr UINT_PTR LockStatusTimer = 1;
+    bool m_LockRequestQueued = false;
+    QString m_LockShortcutStatus;
     int m_Fields, m_Corner, m_Opacity, m_Hover = -1;
     double m_Scale = 1;
     bool m_Open = false, m_ButtonHover = false;
