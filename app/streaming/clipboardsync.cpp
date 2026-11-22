@@ -1,4 +1,10 @@
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#include <mstcpip.h>
+
 #include "clipboardsync.h"
+#include "clipboarduploadrate.h"
 #include "clipboard_win32.h"
 #include "transferfilehash.h"
 #include "backend/identitymanager.h"
@@ -10,16 +16,16 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <cstring>
 #include <functional>
 #include <QNetworkAccessManager>
-#include <QNetworkInterface>
+#include <QHostAddress>
 #include <QNetworkProxy>
 #include <QNetworkReply>
 #include <QSslConfiguration>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QTimer>
-#include <QUdpSocket>
 #include <QUrlQuery>
 #include <QUuid>
 #include <thread>
@@ -104,23 +110,28 @@ bool waitForUpload(qint64 deadline, const std::function<bool()>& cancelled)
     return false;
 }
 
-bool directlyConnectedEthernet(const QUrl& host)
+quint64 directEthernetSpeed(const QUrl& host)
 {
-    const QHostAddress peer(host.host());
-    if (peer.isLoopback()) return true;
-    if (peer.isNull()) return false;
-    QUdpSocket route;
-    route.connectToHost(peer, static_cast<quint16>(host.port(443)));
-    const auto local = route.localAddress();
-    for (const auto& nic : QNetworkInterface::allInterfaces()) {
-        if (nic.type() != QNetworkInterface::Ethernet) continue;
-        for (const auto& entry : nic.addressEntries()) {
-            if (entry.ip() == local && entry.prefixLength() > 0 && peer.isInSubnet(local, entry.prefixLength())) {
-                return true;
-            }
-        }
-    }
-    return false;
+    addrinfo hints{};
+    hints.ai_flags = AI_NUMERICHOST;
+    hints.ai_socktype = SOCK_STREAM;
+    addrinfo* address = nullptr;
+    if (getaddrinfo(host.host().toUtf8().constData(), nullptr, &hints, &address) != 0) return 0;
+    SOCKADDR_INET peer{};
+    if (address->ai_addrlen <= sizeof(peer)) std::memcpy(&peer, address->ai_addr, address->ai_addrlen);
+    freeaddrinfo(address);
+
+    MIB_IPFORWARD_ROW2 route{};
+    SOCKADDR_INET source{};
+    if (GetBestRoute2(nullptr, 0, nullptr, &peer, 0, &route, &source) != NO_ERROR ||
+        !INETADDR_ISANY(reinterpret_cast<const SOCKADDR*>(&route.NextHop))) return 0;
+    MIB_IF_ROW2 nic{};
+    nic.InterfaceLuid = route.InterfaceLuid;
+    if (GetIfEntry2(&nic) != NO_ERROR || nic.Type != IF_TYPE_ETHERNET_CSMACD ||
+        !nic.InterfaceAndOperStatusFlags.HardwareInterface || nic.OperStatus != IfOperStatusUp ||
+        nic.PhysicalMediumType != NdisPhysicalMedium802_3 ||
+        nic.TransmitLinkSpeed == UINT64_MAX) return 0;
+    return nic.TransmitLinkSpeed;
 }
 
 // One request in flight; allow at most a short burst, including the first request after a stalled ACK.
@@ -128,42 +139,39 @@ class ClipboardUploadPacer
 {
 public:
     explicit ClipboardUploadPacer(const QUrl& host)
-        : m_Ceiling(directlyConnectedEthernet(host) ? 16 * 1024 * 1024 : m_Rate)
+        : m_Rate(directEthernetSpeed(host), QHostAddress(host.host()).isLoopback())
     {
-        LiGetEstimatedRttInfo(&m_BaseRtt, nullptr);
+        sampleRtt();
     }
 
     DWORD nextSize(quint64 remaining)
     {
         const auto now = monotonicMs();
-        if (now - m_LastSample >= 500) {
+        if (now - m_LastSample >= m_Rate.sampleIntervalMs()) {
             m_LastSample = now;
-            uint32_t rtt = 0, variance = 0;
-            if (LiGetEstimatedRttInfo(&rtt, &variance)) {
-                if (!m_BaseRtt || rtt < m_BaseRtt) m_BaseRtt = rtt;
-                // Back off as soon as the streaming control packets start queueing.
-                if (rtt - m_BaseRtt > (std::max)(12U, m_BaseRtt / 3) || variance > (std::max)(12U, m_BaseRtt / 3)) {
-                    m_Rate = (std::max)(128 * 1024, m_Rate / 2);
-                } else {
-                    m_Rate = (std::min)(m_Ceiling, m_Rate + m_Rate / 4);
-                }
-            }
+            sampleRtt();
         }
-        return static_cast<DWORD>((std::min<quint64>)(remaining, (std::min)(256 * 1024, m_Rate / 32)));
+        return static_cast<DWORD>((std::min<quint64>)(remaining, m_Rate.chunkBytes()));
     }
 
     bool wait(DWORD bytes, const std::function<bool()>& cancelled)
     {
-        const auto due = m_LastSend + (static_cast<qint64>(bytes) * 1000 + m_Rate - 1) / m_Rate;
+        const int rate = m_Rate.bytesPerSecond();
+        const auto due = m_LastSend + (static_cast<qint64>(bytes) * 1000 + rate - 1) / rate;
         if (!waitForUpload(due, cancelled)) return false;
         m_LastSend = monotonicMs();
         return true;
     }
 
 private:
-    int m_Rate = 2 * 1024 * 1024; // bytes per second
-    const int m_Ceiling;
-    uint32_t m_BaseRtt = 0;
+    void sampleRtt()
+    {
+        uint32_t rtt = 0, variance = 0;
+        if (LiGetEstimatedRttInfo(&rtt, &variance)) m_Rate.sample(rtt, variance);
+        else m_Rate.sample(0, 0);
+    }
+
+    ClipboardUploadRate m_Rate;
     qint64 m_LastSend = monotonicMs();
     qint64 m_LastSample = m_LastSend;
 };
