@@ -493,6 +493,10 @@
 </context>
 <context>
     <name>ClipboardTransfer</name>
+    <message><source>Preparing files (%1)</source><translation>正在准备文件（共 %1 个）</translation></message>
+    <message><source>Resuming %1 of %2</source><translation>正在续传第 %1 个文件，共 %2 个</translation></message>
+    <message><source>Speed —</source><translation>速度 —</translation></message>
+    <message><source>Speed %1/s</source><translation>速度 %1/s</translation></message>
     <message><source>Uploading %1 of %2</source><translation>正在上传第 %1 个文件，共 %2 个</translation></message>
     <message><source>Waiting for host</source><translation>等待主机确认</translation></message>
     <message><source>Queued</source><translation>等待中</translation></message>

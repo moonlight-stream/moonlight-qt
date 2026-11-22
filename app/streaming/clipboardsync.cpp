@@ -3,6 +3,7 @@
 #include "backend/identitymanager.h"
 
 #include <Limelight.h>
+#include <QCryptographicHash>
 #include <QDebug>
 #include <QEventLoop>
 #include <QJsonArray>
@@ -14,10 +15,12 @@
 #include <QNetworkProxy>
 #include <QNetworkReply>
 #include <QSslConfiguration>
+#include <QSettings>
 #include <QStandardPaths>
 #include <QTimer>
 #include <QUdpSocket>
 #include <QUrlQuery>
+#include <QUuid>
 #include <thread>
 
 namespace {
@@ -164,10 +167,63 @@ private:
     qint64 m_LastSample = m_LastSend;
 };
 
+// Only a random generation is persisted. An offline Cancel must still make the next
+// authenticated paste start fresh; neither filenames nor clipboard contents are stored.
+QString discardSetting(const QSslCertificate& host)
+{
+    return QStringLiteral("clipboardUploadDiscard/%1/").arg(QString::fromLatin1(host.digest(QCryptographicHash::Sha256).toHex()));
+}
+
+bool seekSource(HANDLE file, quint64 offset)
+{
+    LARGE_INTEGER position;
+    position.QuadPart = static_cast<LONGLONG>(offset);
+    return SetFilePointerEx(file, position, nullptr, FILE_BEGIN) != FALSE;
+}
+
+bool fingerprintSources(const std::vector<win_clipboard::detail::source_file>& files, QJsonArray& manifest,
+                        const std::function<bool()>& cancelled)
+{
+    QByteArray block(1024 * 1024, Qt::Uninitialized);
+    for (size_t i = 0; i < files.size(); ++i) {
+        const auto& file = files[i];
+        QCryptographicHash hash(QCryptographicHash::Sha256);
+        for (quint64 remaining = file.size; remaining; ) {
+            if (cancelled()) return false;
+            const DWORD length = static_cast<DWORD>((std::min<quint64>)(remaining, block.size()));
+            DWORD read = 0;
+            if (!ReadFile(file.handle.get(), block.data(), length, &read, nullptr) || read != length) return false;
+            hash.addData(QByteArrayView(block.constData(), read));
+            remaining -= read;
+        }
+        auto item = manifest.at(i).toObject();
+        item.insert(QStringLiteral("sha256"), QString::fromLatin1(hash.result().toHex()));
+        manifest[i] = item;
+    }
+    return true;
+}
+
+bool readResumeResponse(const QByteArray& body, const std::vector<win_clipboard::detail::source_file>& files,
+                        QByteArray& id, std::vector<quint64>& offsets)
+{
+    const auto response = QJsonDocument::fromJson(body).object();
+    id = response.value(QStringLiteral("id")).toString().toLatin1();
+    const auto values = response.value(QStringLiteral("offsets")).toArray();
+    if (size_t(values.size()) != files.size()) return false;
+    for (size_t i = 0; i < files.size(); ++i) {
+        const auto value = values.at(i);
+        const auto offset = value.toInteger(-1);
+        if (!value.isDouble() || offset < 0 || quint64(offset) > files[i].size) return false;
+        offsets[i] = quint64(offset);
+    }
+    return true;
+}
+
 Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, const QUrl& host,
                        const QSslCertificate& pairedHost, const std::vector<win_clipboard::detail::source_file>& files,
                        DWORD expectedHostSequence, const std::function<bool()>& cancelled,
-                       const std::function<void(const ClipboardUploadProgress&)>& update)
+                       const std::function<void(const ClipboardUploadProgress&)>& update,
+                       bool resumable = false, const std::function<bool()>& discardRequested = {})
 {
     constexpr quint64 MaxBatchBytes = 16ULL * 1024 * 1024 * 1024;
     quint64 acknowledged = 0;
@@ -192,9 +248,15 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
         manifest.append(QJsonObject{{"name", name},
                                     {"size", static_cast<double>(file.size)}});
     }
+    progress.startedAtMs = monotonicMs();
+    progress.preparing = resumable;
     progress.total = total;
     progress.fileSize = files.front().size;
     update(progress);
+
+    if (resumable && !fingerprintSources(files, manifest, cancelled)) {
+        return failure("manifest", {}, cancelled() ? "cancelled" : "local file read");
+    }
 
     QUrl url = host;
     url.setPath("/clipboard/batch");
@@ -213,12 +275,27 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
     if (cancelled()) return failure("begin", {}, "cancelled");
     // Once begin is on the wire, receive the host-generated ID so a cancellation can
     // clean up the staging files. The stream's stop request still interrupts this wait.
-    url.setQuery(QUrlQuery("op=begin"));
-    request.setUrl(url);
     const auto manifestBody = QJsonDocument(manifest).toJson(QJsonDocument::Compact);
+    if (resumable) {
+        QSettings settings;
+        const auto key = discardSetting(pairedHost);
+        const auto pending = settings.value(key + "requested").toByteArray();
+        if (!pending.isEmpty() && pending != settings.value(key + "done").toByteArray()) {
+            auto reset = post(QUrlQuery("op=discard"), manifestBody);
+            if (reset.status != 204) return failure("discard", reset);
+            settings.setValue(key + "done", pending);
+        }
+    }
+    if (cancelled()) return failure("begin", {}, "cancelled");
+    url.setQuery(QUrlQuery(resumable ? "op=resume" : "op=begin"));
+    request.setUrl(url);
     auto begin = exchange(network, request, pairedHost, &manifestBody, {}, 15000);
     if (begin.status != 200) return failure("begin", begin);
-    const auto& id = begin.payload;
+    QByteArray id = begin.payload;
+    std::vector<quint64> offsets(files.size());
+    if (resumable && !readResumeResponse(begin.payload, files, id, offsets)) {
+        return failure("resume", begin, "invalid file offsets");
+    }
     if (id.size() != 32 || !std::all_of(id.begin(), id.end(), [](char ch) {
             return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
         })) return failure("begin", begin, "invalid batch identifier");
@@ -232,13 +309,18 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
     request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
     auto send = [&]() -> Result {
         if (cancelled()) return failure("begin", {}, "cancelled after acknowledgement");
+        for (auto received : offsets) acknowledged += received;
+        progress.resumedBytes = acknowledged;
+        progress.acknowledged = acknowledged;
+        progress.preparing = false;
         ClipboardUploadPacer pacer(host);
         QByteArray chunk;
         for (index = 0; index < files.size(); ++index) {
             const auto& file = files[index];
-            offset = 0;
+            offset = offsets[index];
+            if (resumable && !seekSource(file.handle.get(), offset)) return failure("resume", {}, "local file seek");
             progress.index = static_cast<int>(index);
-            progress.fileBytes = 0;
+            progress.fileBytes = offset;
             progress.fileSize = file.size;
             update(progress);
             while (offset < file.size) {
@@ -253,7 +335,11 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
                 query.addQueryItem("file", QString::number(index));
                 query.addQueryItem("offset", QString::number(offset));
                 auto result = post(query, chunk);
-                if (result.status != 204) return failure("chunk", result);
+                // Qt may resend a POST if the connection closes after the host wrote the
+                // chunk but before its ACK. Only accept that exact end offset on this lease.
+                const bool alreadyWritten = resumable && result.status == 409 && result.conflict == "offset" &&
+                                            result.nextOffset == offset + length;
+                if (result.status != 204 && !alreadyWritten) return failure("chunk", result);
                 if (result.nextOffset != offset + length) return failure("chunk", result, "unexpected acknowledgement offset");
                 offset += length;
                 acknowledged += length;
@@ -276,7 +362,8 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
         }
     };
     auto result = send();
-    if (result.status != 204 || !result.sequence) {
+    const bool discard = !resumable || (discardRequested && discardRequested());
+    if (discard && (result.status != 204 || !result.sequence)) {
         auto cleanup = post(batchQuery("abort"), {}, true);
         if (cleanup.status != 204 && cleanup.status != 404) failure("abort", cleanup);
     }
@@ -284,9 +371,9 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
 }
 }
 
-ClipboardSync::ClipboardSync(QUrl host, QSslCertificate certificate, QByteArray token, bool text, bool files)
+ClipboardSync::ClipboardSync(QUrl host, QSslCertificate certificate, QByteArray token, bool text, bool files, bool resumable)
     : m_Host(std::move(host)), m_Certificate(std::move(certificate)), m_Token(std::move(token)),
-      m_Text(text), m_Files(files), m_LocalSequence(GetClipboardSequenceNumber())
+      m_Text(text), m_Files(files), m_Resumable(files && resumable), m_LocalSequence(GetClipboardSequenceNumber())
 {
     m_Host.setPath("/clipboard");
     if (!m_Token.isEmpty() && !m_Certificate.isNull() && (m_Text || m_Files)) start();
@@ -323,12 +410,18 @@ bool ClipboardSync::requestPaste()
     return true;
 }
 
-void ClipboardSync::cancelPaste()
+void ClipboardSync::cancelPaste(bool discardUpload)
 {
+    std::lock_guard lock(m_UploadMutex);
+    if (discardUpload && m_Resumable && !m_Upload.names.isEmpty()) {
+        m_DiscardGeneration = m_CancelGeneration.load();
+        m_ConfirmedSequence = NoPaste;
+        QSettings settings;
+        settings.setValue(discardSetting(m_Certificate) + "requested", QUuid::createUuid().toRfc4122());
+    }
     ++m_CancelGeneration;
     m_PasteSequence = NoPaste;
     m_PasteCount = 0;
-    std::lock_guard lock(m_UploadMutex);
     m_Upload = {};
 }
 
@@ -403,12 +496,13 @@ void ClipboardSync::run()
                                                     [this, generation](const ClipboardUploadProgress& progress) {
                                                         std::lock_guard lock(m_UploadMutex);
                                                         if (m_CancelGeneration == generation) m_Upload = progress;
-                                                    });
+                                                    }, m_Resumable, [&]{return m_DiscardGeneration == generation;});
                 local = copied;
                 if (result.status == 204 && result.sequence) {
                     remote = result.sequence;
                     m_PasteActivity = monotonicMs();
-                    m_ConfirmedSequence = copied;
+                    std::lock_guard lock(m_UploadMutex);
+                    if (m_DiscardGeneration != generation) m_ConfirmedSequence = copied;
                     if (m_CancelGeneration == generation) m_PasteSequence.compare_exchange_strong(paste, Ready);
                 } else if (m_CancelGeneration == generation) {
                     m_PasteSequence.compare_exchange_strong(paste, NoPaste);

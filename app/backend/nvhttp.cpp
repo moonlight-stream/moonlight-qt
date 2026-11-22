@@ -212,6 +212,7 @@ NvHTTP::startApp(QString verb,
                  QByteArray& clipboardToken,
                  bool& clipboardText,
                  bool& clipboardFiles,
+                 bool& clipboardResumable,
                  QString& rtspSessionUrl)
 {
     QString extensions;
@@ -230,7 +231,7 @@ NvHTTP::startApp(QString verb,
             unsigned char secret[32];
             if (RAND_bytes(secret, sizeof(secret)) == 1) {
                 clipboardToken = QByteArray(reinterpret_cast<const char*>(secret), sizeof(secret)).toHex();
-                extensions += QStringLiteral("&clipboardtoken=%1&clipboardtext=%2&clipboardfiles=%3")
+                extensions += QStringLiteral("&clipboardtoken=%1&clipboardtext=%2&clipboardfiles=%3&clipboardbatchversion=2")
                                   .arg(QString::fromLatin1(clipboardToken)).arg(int(clipboardText)).arg(int(clipboardFiles));
             }
         }
@@ -276,6 +277,7 @@ NvHTTP::startApp(QString verb,
     const bool clipboardAccepted = !clipboardToken.isEmpty() && getXmlString(response, "clipboardversion") == "1";
     clipboardText = clipboardAccepted && clipboardText && getXmlString(response, "clipboardtext") == "1";
     clipboardFiles = clipboardAccepted && clipboardFiles && getXmlString(response, "clipboardfiles") == "1";
+    clipboardResumable = clipboardFiles && getXmlString(response, "clipboardbatchversion").toInt() >= 2;
     if (!clipboardText && !clipboardFiles) {
         clipboardToken.clear();
     }

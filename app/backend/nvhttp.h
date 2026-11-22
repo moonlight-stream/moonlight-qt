@@ -175,6 +175,7 @@ public:
              QByteArray& clipboardToken,
              bool& clipboardText,
              bool& clipboardFiles,
+             bool& clipboardResumable,
              QString& rtspSessionUrl);
 
     QVector<NvApp>

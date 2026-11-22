@@ -200,6 +200,7 @@ private:
     bool m_HostHandlesDisconnectLock = false;
     bool m_ClipboardText = false;
     bool m_ClipboardFiles = false;
+    bool m_ClipboardResumable = false;
     SDL_atomic_t m_ConnectionEnding{};
     QByteArray m_ClipboardToken;
 

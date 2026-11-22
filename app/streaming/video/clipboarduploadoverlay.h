@@ -8,6 +8,8 @@
 #include <QPainter>
 #include <QReadWriteLock>
 #include <QSet>
+#include <chrono>
+#include <deque>
 
 // The stream loop owns hit testing. The decoder can request a fresh surface on another thread.
 class ClipboardUploadOverlay
@@ -18,8 +20,16 @@ public:
     bool update(const ClipboardUploadProgress& upload, QSize window, qreal scale)
     {
         QWriteLocker lock(&m_Lock);
+        if (upload.startedAtMs != m_Upload.startedAtMs || upload.resumedBytes != m_Upload.resumedBytes ||
+                upload.names.isEmpty() || upload.preparing || upload.committing) {
+            m_Samples.clear();
+        }
+        const qint64 rate = upload.names.isEmpty() || upload.preparing || upload.committing ? -1 : sampleRate(upload);
         if (window == m_Window && m_Scale == scale && upload.names == m_Upload.names && upload.index == m_Upload.index &&
-                upload.acknowledged == m_Upload.acknowledged && upload.committing == m_Upload.committing) return false;
+                upload.acknowledged == m_Upload.acknowledged && upload.committing == m_Upload.committing &&
+                upload.preparing == m_Upload.preparing && upload.resumedBytes == m_Upload.resumedBytes &&
+                upload.startedAtMs == m_Upload.startedAtMs && rate == m_BytesPerSecond) return false;
+        m_BytesPerSecond = rate;
         m_Window = window;
         m_Scale = scale;
         m_Layout = window / scale;
@@ -142,8 +152,11 @@ public:
                        p.fontMetrics().elidedText(value, Qt::ElideMiddle, qMax(0, rect.width())));
         };
         const auto tr = [](const char* source) { return QCoreApplication::translate("ClipboardTransfer", source); };
-        const auto title = m_Upload.committing ? tr("Waiting for host") :
-                tr("Uploading %1 of %2").arg(m_Upload.index + 1).arg(m_Upload.names.size());
+        QString title;
+        if (m_Upload.preparing) title = tr("Preparing files (%1)").arg(m_Upload.names.size());
+        else if (m_Upload.committing) title = tr("Waiting for host");
+        else title = (m_Upload.resumedBytes ? tr("Resuming %1 of %2") : tr("Uploading %1 of %2"))
+                             .arg(m_Upload.index + 1).arg(m_Upload.names.size());
         text(QRect(14, 7, button.x() - 19, 26), title, 14, "#f2f5fa", true);
         p.setPen(Qt::NoPen);
         p.setBrush(QColor(m_Hover ? "#566a87" : "#344258"));
@@ -163,21 +176,51 @@ public:
                  12, current ? "#91c2ff" : "#a6b3c6", false, true);
             y += 21;
         }
-        const int track = qMax(1, w - 28);
+        const int track = qMax(1, w - 72);
         p.setPen(Qt::NoPen);
         p.setBrush(QColor("#42516a"));
-        p.drawRoundedRect(QRect(14, y + 4, track, 4), 2, 2);
+        p.drawRoundedRect(QRect(14, y + 6, track, 4), 2, 2);
         p.setBrush(QColor("#81b7ff"));
-        p.drawRoundedRect(QRect(14, y + 4, track * m_Upload.percent() / 100, 4), 2, 2);
+        p.drawRoundedRect(QRect(14, y + 6, track * m_Upload.percent() / 100, 4), 2, 2);
+        text(QRect(w - 54, y, 40, 16), QString::number(m_Upload.percent()) + '%', 12, "#e3ebf6", true, true);
         const QLocale locale;
-        text(QRect(14, y + 11, w - 82, 17),
+        const bool stacked = w < 270;
+        const int available = qMax(0, w - 28);
+        const int speedWidth = stacked ? available : available * 45 / 100;
+        text(QRect(14, y + 17, stacked ? available : available - speedWidth - 4, 17),
              QStringLiteral("%1 / %2").arg(locale.formattedDataSize(m_Upload.acknowledged),
                                             locale.formattedDataSize(m_Upload.total)), 12, "#c6d1e0");
-        text(QRect(w - 66, y + 11, 52, 17), QString::number(m_Upload.percent()) + '%', 12, "#e3ebf6", true, true);
+        const QString speed = m_BytesPerSecond < 0 ? tr("Speed —") :
+                              tr("Speed %1/s").arg(locale.formattedDataSize(m_BytesPerSecond, 1));
+        text(QRect(w - 14 - speedWidth, y + (stacked ? 34 : 17), speedWidth, 17),
+             speed, 12, "#c6d1e0", false, !stacked);
         return surface;
     }
 
 private:
+    struct RateSample {
+        qint64 timeMs;
+        quint64 bytes;
+    };
+
+    qint64 sampleRate(const ClipboardUploadProgress& upload)
+    {
+        using namespace std::chrono;
+        const qint64 now = duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+        const quint64 bytes = upload.acknowledged - qMin(upload.acknowledged, upload.resumedBytes);
+        if (m_Samples.empty() || bytes < m_Samples.back().bytes) {
+            m_Samples = {{now, bytes}};
+            return -1;
+        }
+        if (now - m_Samples.back().timeMs < 250) return m_BytesPerSecond;
+        // Include a stationary sample even when no ACK arrives so a stalled transfer falls to zero.
+        while (m_Samples.size() > 1 && now - m_Samples[1].timeMs >= 2000) m_Samples.pop_front();
+        m_Samples.push_back({now, bytes});
+        const auto& oldest = m_Samples.front();
+        const auto elapsed = now - oldest.timeMs;
+        return elapsed < 500 ? -1 : qint64((bytes - oldest.bytes) * 1000 / elapsed);
+    }
+
     static constexpr int Margin = 12;
     static QRect cancelRect(int w) { return QRect(qMax(0, w - 100), 6, 86, 28); }
     int rows(QSize window) const
@@ -186,11 +229,14 @@ private:
     }
     QSize panelSize(QSize window) const
     {
-        return QSize(qBound(1, window.width() - Margin * 2, 332), 76 + 21 * rows(window));
+        const int width = qBound(1, window.width() - Margin * 2, 332);
+        return QSize(width, 80 + 21 * rows(window) + (width < 270 ? 17 : 0));
     }
 
     mutable QReadWriteLock m_Lock;
     ClipboardUploadProgress m_Upload;
+    std::deque<RateSample> m_Samples;
+    qint64 m_BytesPerSecond = -1;
     QSize m_Window;
     QSize m_Layout;
     qreal m_Scale = 1;
