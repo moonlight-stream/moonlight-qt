@@ -1181,6 +1181,8 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 bool D3D11VARenderer::createOverlayVertexBuffer(Overlay::OverlayType type, int width, int height, ComPtr<ID3D11Buffer>& newVertexBuffer)
 {
     SDL_FRect renderRect = {};
+    renderRect.w = width;
+    renderRect.h = height;
 
     if (type == Overlay::OverlayStatusUpdate) {
         // Bottom Left
@@ -1194,14 +1196,14 @@ bool D3D11VARenderer::createOverlayVertexBuffer(Overlay::OverlayType type, int w
     }
 
 #ifdef Q_OS_WIN32
-    else if (type == Overlay::OverlayFullscreenControls) {
-        auto rect = Session::get()->getOverlayManager().controlsRect(m_DisplayWidth, m_DisplayHeight, width, height);
+    else if (type == Overlay::OverlayFullscreenControls || type == Overlay::OverlayClipboardUpload) {
+        auto rect = Session::get()->getOverlayManager().panelRect(type, m_DisplayWidth, m_DisplayHeight, width, height);
+        renderRect.w = rect.w;
+        renderRect.h = rect.h;
         renderRect.x = rect.x;
-        renderRect.y = m_DisplayHeight - rect.y - height;
+        renderRect.y = m_DisplayHeight - rect.y - rect.h;
     }
 #endif
-    renderRect.w = width;
-    renderRect.h = height;
 
     // Convert screen space to normalized device coordinates
     StreamUtils::screenSpaceToNormalizedDeviceCoords(&renderRect, m_DisplayWidth, m_DisplayHeight);

@@ -663,6 +663,8 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     newTexture->UnlockRect(0);
 
     SDL_FRect renderRect = {};
+    renderRect.w = newSurface->w;
+    renderRect.h = newSurface->h;
 
     if (type == Overlay::OverlayStatusUpdate) {
         // Bottom Left
@@ -676,14 +678,14 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
 #ifdef Q_OS_WIN32
-    else if (type == Overlay::OverlayFullscreenControls) {
-        auto rect = Session::get()->getOverlayManager().controlsRect(m_DisplayWidth, m_DisplayHeight, newSurface->w, newSurface->h);
+    else if (type == Overlay::OverlayFullscreenControls || type == Overlay::OverlayClipboardUpload) {
+        auto rect = Session::get()->getOverlayManager().panelRect(type, m_DisplayWidth, m_DisplayHeight, newSurface->w, newSurface->h);
+        renderRect.w = rect.w;
+        renderRect.h = rect.h;
         renderRect.x = rect.x;
         renderRect.y = rect.y;
     }
 #endif
-    renderRect.w = newSurface->w;
-    renderRect.h = newSurface->h;
 
     // The surface is no longer required
     SDL_FreeSurface(newSurface);

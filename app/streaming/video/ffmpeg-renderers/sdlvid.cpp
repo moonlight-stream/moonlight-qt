@@ -234,6 +234,8 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
                 SDL_DestroyTexture(m_OverlayTextures[type]);
             }
 
+            m_OverlayRects[type].w = newSurface->w;
+            m_OverlayRects[type].h = newSurface->h;
             if (type == Overlay::OverlayStatusUpdate) {
                 // Bottom Left
                 SDL_Rect viewportRect;
@@ -248,14 +250,12 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
             }
 
 #ifdef Q_OS_WIN32
-            else if (type == Overlay::OverlayFullscreenControls) {
+            else if (type == Overlay::OverlayFullscreenControls || type == Overlay::OverlayClipboardUpload) {
                 SDL_Rect viewport;
                 SDL_RenderGetViewport(m_Renderer, &viewport);
-                m_OverlayRects[type] = Session::get()->getOverlayManager().controlsRect(viewport.w, viewport.h, newSurface->w, newSurface->h);
+                m_OverlayRects[type] = Session::get()->getOverlayManager().panelRect(type, viewport.w, viewport.h, newSurface->w, newSurface->h);
             }
 #endif
-            m_OverlayRects[type].w = newSurface->w;
-            m_OverlayRects[type].h = newSurface->h;
 
             m_OverlayTextures[type] = SDL_CreateTextureFromSurface(m_Renderer, newSurface);
             SDL_FreeSurface(newSurface);

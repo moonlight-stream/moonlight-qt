@@ -1,10 +1,12 @@
 #pragma once
 
+#include "clipboarduploadprogress.h"
 #include <QSslCertificate>
 #include <QThread>
 #include <QUrl>
 #include <atomic>
 #include <cstdint>
+#include <mutex>
 
 class ClipboardSync : public QThread
 {
@@ -17,7 +19,8 @@ public:
     void cancelPaste();
     int takeReadyPastes();
     bool pastePending() const { return m_PasteCount != 0; }
-    int fileUploadPercent() const { return pastePending() ? m_FileUploadPercent.load() : -1; }
+    ClipboardUploadProgress fileUploadProgress() const;
+    int fileUploadPercent() const { return fileUploadProgress().percent(); }
 
 protected:
     void run() override;
@@ -34,7 +37,9 @@ private:
     std::atomic<uint64_t> m_ConfirmedSequence{NoPaste};
     std::atomic<uint64_t> m_PasteSequence{NoPaste};
     std::atomic<uint64_t> m_BatchSequence{NoPaste};
-    std::atomic<int> m_FileUploadPercent{-1};
+    mutable std::mutex m_UploadMutex;
+    ClipboardUploadProgress m_Upload;
+    std::atomic<uint64_t> m_CancelGeneration{0};
     int m_PasteCount = 0;
     std::atomic<qint64> m_PasteActivity{0};
 };

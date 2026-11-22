@@ -2,6 +2,7 @@
 #include "clipboard_win32.h"
 #include "backend/identitymanager.h"
 
+#include <Limelight.h>
 #include <QDebug>
 #include <QEventLoop>
 #include <QJsonArray>
@@ -9,12 +10,15 @@
 #include <QJsonObject>
 #include <functional>
 #include <QNetworkAccessManager>
+#include <QNetworkInterface>
 #include <QNetworkProxy>
 #include <QNetworkReply>
 #include <QSslConfiguration>
 #include <QStandardPaths>
 #include <QTimer>
+#include <QUdpSocket>
 #include <QUrlQuery>
+#include <thread>
 
 namespace {
 qint64 monotonicMs()
@@ -28,6 +32,8 @@ struct Result {
     std::optional<DWORD> sequence;
     std::optional<quint64> nextOffset;
     QByteArray payload;
+    QNetworkReply::NetworkError networkError = QNetworkReply::NoError;
+    QByteArray conflict;
 };
 
 Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
@@ -65,53 +71,151 @@ Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
     if (reply->bytesAvailable()) receive();
     // Qt also reports HTTP 4xx/5xx as a network error.
     int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-    if (reply->error() == QNetworkReply::NoError || status >= 400) {
+    result.networkError = reply->error();
+    if (result.networkError == QNetworkReply::NoError || status >= 400) {
         result.status = status;
         bool valid = false;
         DWORD sequence = reply->rawHeader("X-Clipboard-Sequence").toUInt(&valid);
         if (valid) result.sequence = sequence;
         const auto offset = reply->rawHeader("X-Clipboard-Offset").toULongLong(&valid);
         if (valid) result.nextOffset = offset;
+        if (status == 409) {
+            const auto cause = reply->rawHeader("X-Clipboard-Conflict");
+            if (cause == "busy" || cause == "sequence" || cause == "offset" || cause == "desktop" || cause == "shell") {
+                result.conflict = cause;
+            }
+        }
     }
     delete reply;
     return result;
 }
 
+bool waitForUpload(qint64 deadline, const std::function<bool()>& cancelled)
+{
+    while (!cancelled()) {
+        const qint64 remaining = deadline - monotonicMs();
+        if (remaining <= 0) return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds((std::min<qint64>)(remaining, 25)));
+    }
+    return false;
+}
+
+bool directlyConnectedEthernet(const QUrl& host)
+{
+    const QHostAddress peer(host.host());
+    if (peer.isLoopback()) return true;
+    if (peer.isNull()) return false;
+    QUdpSocket route;
+    route.connectToHost(peer, static_cast<quint16>(host.port(443)));
+    const auto local = route.localAddress();
+    for (const auto& nic : QNetworkInterface::allInterfaces()) {
+        if (nic.type() != QNetworkInterface::Ethernet) continue;
+        for (const auto& entry : nic.addressEntries()) {
+            if (entry.ip() == local && entry.prefixLength() > 0 && peer.isInSubnet(local, entry.prefixLength())) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// One request in flight; allow at most a short burst, including the first request after a stalled ACK.
+class ClipboardUploadPacer
+{
+public:
+    explicit ClipboardUploadPacer(const QUrl& host)
+        : m_Ceiling(directlyConnectedEthernet(host) ? 16 * 1024 * 1024 : m_Rate)
+    {
+        LiGetEstimatedRttInfo(&m_BaseRtt, nullptr);
+    }
+
+    DWORD nextSize(quint64 remaining)
+    {
+        const auto now = monotonicMs();
+        if (now - m_LastSample >= 500) {
+            m_LastSample = now;
+            uint32_t rtt = 0, variance = 0;
+            if (LiGetEstimatedRttInfo(&rtt, &variance)) {
+                if (!m_BaseRtt || rtt < m_BaseRtt) m_BaseRtt = rtt;
+                // Back off as soon as the streaming control packets start queueing.
+                if (rtt - m_BaseRtt > (std::max)(12U, m_BaseRtt / 3) || variance > (std::max)(12U, m_BaseRtt / 3)) {
+                    m_Rate = (std::max)(128 * 1024, m_Rate / 2);
+                } else {
+                    m_Rate = (std::min)(m_Ceiling, m_Rate + m_Rate / 4);
+                }
+            }
+        }
+        return static_cast<DWORD>((std::min<quint64>)(remaining, (std::min)(256 * 1024, m_Rate / 32)));
+    }
+
+    bool wait(DWORD bytes, const std::function<bool()>& cancelled)
+    {
+        const auto due = m_LastSend + (static_cast<qint64>(bytes) * 1000 + m_Rate - 1) / m_Rate;
+        if (!waitForUpload(due, cancelled)) return false;
+        m_LastSend = monotonicMs();
+        return true;
+    }
+
+private:
+    int m_Rate = 2 * 1024 * 1024; // bytes per second
+    const int m_Ceiling;
+    uint32_t m_BaseRtt = 0;
+    qint64 m_LastSend = monotonicMs();
+    qint64 m_LastSample = m_LastSend;
+};
+
 Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, const QUrl& host,
                        const QSslCertificate& pairedHost, const std::vector<win_clipboard::detail::source_file>& files,
                        DWORD expectedHostSequence, const std::function<bool()>& cancelled,
-                       const std::function<void(int)>& progress)
+                       const std::function<void(const ClipboardUploadProgress&)>& update)
 {
     constexpr quint64 MaxBatchBytes = 16ULL * 1024 * 1024 * 1024;
-    constexpr DWORD ChunkBytes = 4 * 1024 * 1024;
+    quint64 acknowledged = 0;
+    size_t index = 0;
+    quint64 offset = 0;
+    auto failure = [&](const char* operation, Result result, const char* reason = "response") {
+        qWarning() << "Clipboard file upload failed" << operation << reason << "HTTP" << result.status
+                   << "network error" << result.networkError << "conflict" << result.conflict
+                   << "file index" << index << "file offset" << offset << "acknowledged bytes" << acknowledged;
+        // Only a valid commit response may release the pending paste.
+        result.sequence.reset();
+        return result;
+    };
     QJsonArray manifest;
+    ClipboardUploadProgress progress;
     quint64 total = 0;
     for (const auto& file : files) {
-        if (file.size > MaxBatchBytes - total) return {413, {}, {}, {}};
+        if (file.size > MaxBatchBytes - total) return failure("manifest", {413}, "size limit");
         total += file.size;
-        manifest.append(QJsonObject{{"name", QString::fromUtf8(file.name.data(), static_cast<int>(file.name.size()))},
+        const auto name = QString::fromUtf8(file.name.data(), static_cast<int>(file.name.size()));
+        progress.names.append(name);
+        manifest.append(QJsonObject{{"name", name},
                                     {"size", static_cast<double>(file.size)}});
     }
+    progress.total = total;
+    progress.fileSize = files.front().size;
+    update(progress);
 
     QUrl url = host;
     url.setPath("/clipboard/batch");
     auto post = [&](const QUrlQuery& query, const QByteArray& body, bool cleanup = false) {
         url.setQuery(query);
         request.setUrl(url);
-        if (!cleanup && cancelled()) return Result{};
+        if (!cleanup && cancelled()) {
+            Result result;
+            result.networkError = QNetworkReply::OperationCanceledError;
+            return result;
+        }
         return exchange(network, request, pairedHost, &body, cleanup ? std::function<bool()>{} : cancelled,
                         cleanup ? 3000 : 120000);
     };
     request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
     auto begin = post(QUrlQuery("op=begin"), QJsonDocument(manifest).toJson(QJsonDocument::Compact));
-    if (begin.status != 200) {
-        begin.sequence.reset();
-        return begin;
-    }
+    if (begin.status != 200) return failure("begin", begin);
     const auto& id = begin.payload;
     if (id.size() != 32 || !std::all_of(id.begin(), id.end(), [](char ch) {
             return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f');
-        })) return {};
+        })) return failure("begin", begin, "invalid batch identifier");
 
     auto batchQuery = [&](const QString& op) {
         QUrlQuery query;
@@ -121,36 +225,54 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
     };
     request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
     auto send = [&]() -> Result {
-        quint64 acknowledged = 0;
-        progress(0);
+        ClipboardUploadPacer pacer(host);
         QByteArray chunk;
-        chunk.reserve(ChunkBytes);
-        for (size_t index = 0; index < files.size(); ++index) {
+        for (index = 0; index < files.size(); ++index) {
             const auto& file = files[index];
-            quint64 offset = 0;
+            offset = 0;
+            progress.index = static_cast<int>(index);
+            progress.fileBytes = 0;
+            progress.fileSize = file.size;
+            update(progress);
             while (offset < file.size) {
-                if (cancelled()) return {};
-                const DWORD length = static_cast<DWORD>((std::min<quint64>)(ChunkBytes, file.size - offset));
+                const DWORD length = pacer.nextSize(file.size - offset);
+                if (!pacer.wait(length, cancelled)) return failure("chunk", {}, "cancelled");
                 chunk.resize(length);
                 DWORD count = 0;
-                if (!ReadFile(file.handle.get(), chunk.data(), length, &count, nullptr) || count != length) return {};
+                if (!ReadFile(file.handle.get(), chunk.data(), length, &count, nullptr) || count != length) {
+                    return failure("chunk", {}, "local file read");
+                }
                 auto query = batchQuery("chunk");
                 query.addQueryItem("file", QString::number(index));
                 query.addQueryItem("offset", QString::number(offset));
                 auto result = post(query, chunk);
-                if (result.status != 204) return result;
+                if (result.status != 204) return failure("chunk", result);
+                if (result.nextOffset != offset + length) return failure("chunk", result, "unexpected acknowledgement offset");
                 offset += length;
-                if (result.nextOffset != offset) return {};
                 acknowledged += length;
-                progress(static_cast<int>(acknowledged * 100 / total));
+                progress.fileBytes = offset;
+                progress.acknowledged = acknowledged;
+                update(progress);
             }
         }
         auto query = batchQuery("commit");
         query.addQueryItem("since", QString::number(expectedHostSequence));
-        return post(query, {});
+        progress.committing = true;
+        update(progress);
+        // Keep the original revision guard on every attempt. Older hosts return an ambiguous
+        // 409, and a newer remote clipboard must always win.
+        for (int attempt = 0; ; ++attempt) {
+            auto result = post(query, {});
+            if (result.status == 204 && result.sequence) return result;
+            if (result.status != 409 || result.conflict != "busy" || attempt >= 5) return failure("commit", result);
+            if (!waitForUpload(monotonicMs() + (100 << attempt), cancelled)) return failure("commit", {}, "cancelled");
+        }
     };
     auto result = send();
-    if (result.status != 204 || !result.sequence) post(batchQuery("abort"), {}, true);
+    if (result.status != 204 || !result.sequence) {
+        auto cleanup = post(batchQuery("abort"), {}, true);
+        if (cleanup.status != 204 && cleanup.status != 404) failure("abort", cleanup);
+    }
     return result;
 }
 }
@@ -196,8 +318,18 @@ bool ClipboardSync::requestPaste()
 
 void ClipboardSync::cancelPaste()
 {
+    ++m_CancelGeneration;
     m_PasteSequence = NoPaste;
     m_PasteCount = 0;
+    std::lock_guard lock(m_UploadMutex);
+    m_Upload = {};
+}
+
+ClipboardUploadProgress ClipboardSync::fileUploadProgress() const
+{
+    if (!pastePending()) return {};
+    std::lock_guard lock(m_UploadMutex);
+    return m_Upload;
 }
 
 int ClipboardSync::takeReadyPastes()
@@ -255,20 +387,23 @@ void ClipboardSync::run()
             if (!largeFiles.empty() && copied == paste) {
                 // Each chunk has its own deadline. A progressing multi-gigabyte batch can take minutes.
                 m_BatchSequence = copied;
+                const auto generation = m_CancelGeneration.load();
                 const auto cancelled = [&] {
-                    return isInterruptionRequested() || m_PasteSequence != copied || GetClipboardSequenceNumber() != copied;
+                    return isInterruptionRequested() || m_CancelGeneration != generation ||
+                           m_PasteSequence != copied || GetClipboardSequenceNumber() != copied;
                 };
                 const auto result = uploadFileBatch(network, request, m_Host, m_Certificate, largeFiles, *remote, cancelled,
-                                                    [this](int percent) { m_FileUploadPercent = percent; });
-                m_FileUploadPercent = -1;
+                                                    [this, generation](const ClipboardUploadProgress& progress) {
+                                                        std::lock_guard lock(m_UploadMutex);
+                                                        if (m_CancelGeneration == generation) m_Upload = progress;
+                                                    });
                 local = copied;
                 if (result.status == 204 && result.sequence) {
                     remote = result.sequence;
                     m_PasteActivity = monotonicMs();
                     m_ConfirmedSequence = copied;
-                    m_PasteSequence.compare_exchange_strong(paste, Ready);
-                } else {
-                    qWarning() << "Clipboard file batch did not complete, HTTP" << result.status;
+                    if (m_CancelGeneration == generation) m_PasteSequence.compare_exchange_strong(paste, Ready);
+                } else if (m_CancelGeneration == generation) {
                     m_PasteSequence.compare_exchange_strong(paste, NoPaste);
                 }
                 m_BatchSequence = NoPaste;

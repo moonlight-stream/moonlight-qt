@@ -492,6 +492,13 @@
     </message>
 </context>
 <context>
+    <name>ClipboardTransfer</name>
+    <message><source>Uploading %1 of %2</source><translation>正在上传第 %1 个文件，共 %2 个</translation></message>
+    <message><source>Waiting for host</source><translation>等待主机确认</translation></message>
+    <message><source>Queued</source><translation>等待中</translation></message>
+    <message><source>Cancel (Esc)</source><translation>取消 (Esc)</translation></message>
+</context>
+<context>
     <name>Session</name>
     <message><source>Uploading files %1%</source><translation>正在上传文件 %1%</translation></message>
     <message><source>Checking the network route...</source><translation>正在检查到主机的网络路径…</translation></message>

@@ -395,6 +395,7 @@ config_SL {
 }
 win32 {
     SOURCES += streaming/clipboardsync.cpp
+    HEADERS += streaming/clipboarduploadprogress.h streaming/video/clipboarduploadoverlay.h
     HEADERS += streaming/clipboardsync.h streaming/clipboard_win32.h
     LIBS += -lshell32
     HEADERS += streaming/video/ffmpeg-renderers/dxutil.h

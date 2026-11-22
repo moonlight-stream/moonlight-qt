@@ -2212,6 +2212,12 @@ void Session::exec()
     clipboardHost.setPort(m_Computer->activeHttpsPort);
     ClipboardSync clipboard(clipboardHost, m_Computer->serverCert, m_ClipboardToken, m_ClipboardText, m_ClipboardFiles);
     SDL_Scancode deferredPasteKey = SDL_SCANCODE_UNKNOWN;
+    Uint32 lastUploadUpdate = lastTitleUpdate - 100;
+    auto streamWindowSize = [&] {
+        int w, h;
+        SDL_GetWindowSize(m_Window, &w, &h);
+        return QSize(w, h);
+    };
     const Uint32 hudStart = lastTitleUpdate;
     caption.update();
     previousTraffic.InterfaceIndex = m_StreamInterface;
@@ -2219,6 +2225,11 @@ void Session::exec()
 #endif
     for (;;) {
 #ifdef Q_OS_WIN32
+        if ((clipboard.pastePending() || m_OverlayManager.isOverlayEnabled(Overlay::OverlayClipboardUpload)) &&
+                SDL_GetTicks() - lastUploadUpdate >= 100) {
+            lastUploadUpdate = SDL_GetTicks();
+            m_OverlayManager.updateClipboardUpload(clipboard.fileUploadProgress(), streamWindowSize(), caption.windowScale());
+        }
         if (clipboard.pastePending()) {
             // Dispatch queued focus and input changes before delivering the acknowledged paste.
             SDL_PumpEvents();
@@ -2311,7 +2322,7 @@ void Session::exec()
         // and other problems.
         int waitMs = 1000;
 #ifdef Q_OS_WIN32
-        if (clipboard.pastePending()) waitMs = 16;
+        if (clipboard.pastePending() || m_OverlayManager.isOverlayEnabled(Overlay::OverlayClipboardUpload)) waitMs = 16;
 #endif
         if (!SDL_WaitEventTimeout(&event, waitMs)) {
             presence.runCallbacks();
@@ -2335,6 +2346,12 @@ void Session::exec()
         }
 #endif
 #ifdef Q_OS_WIN32
+        const auto uploadInput = m_OverlayManager.handleClipboardUpload(event);
+        if (uploadInput == ClipboardUploadOverlay::Input::Cancel) {
+            clipboard.cancelPaste();
+            m_OverlayManager.updateClipboardUpload({}, streamWindowSize(), caption.windowScale());
+        }
+        if (uploadInput != ClipboardUploadOverlay::Input::Forward) continue;
         if ((event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) ||
             event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_FINGERDOWN) {
             clipboard.cancelPaste();

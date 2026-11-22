@@ -6,6 +6,9 @@
 
 #include "SDL_compat.h"
 #include <SDL_ttf.h>
+#ifdef Q_OS_WIN32
+#include "clipboarduploadoverlay.h"
+#endif
 
 namespace Overlay {
 
@@ -14,6 +17,7 @@ enum OverlayType {
     OverlayStatusUpdate,
 #ifdef Q_OS_WIN32
     OverlayFullscreenControls,
+    OverlayClipboardUpload,
 #endif
     OverlayMax
 };
@@ -45,6 +49,9 @@ public:
 #ifdef Q_OS_WIN32
     enum class Control { None, Handle, LeaveFullscreen, Disconnect };
     void configureControls(int streamWidth, int streamHeight);
+    void updateClipboardUpload(const ClipboardUploadProgress& upload, QSize window, qreal scale);
+    ClipboardUploadOverlay::Input handleClipboardUpload(const SDL_Event& event);
+    SDL_Rect panelRect(OverlayType type, int width, int height, int panelWidth, int panelHeight) const;
     SDL_Rect controlsRect(int width, int height, int panelWidth, int panelHeight) const;
     SDL_Rect dragReferenceRect(int width, int height) const;
     void moveHandle(int width, int height, int left, int top);
@@ -63,6 +70,7 @@ private:
     SDL_Rect videoRect(int width, int height) const;
     mutable QReadWriteLock m_HandlePositionLock;
     QPointF m_HandlePosition{0.5, 0.0}; // Fraction of the available travel on each axis
+    ClipboardUploadOverlay m_ClipboardUpload;
     SDL_Surface* renderControls() const;
     int m_StreamWidth = 1, m_StreamHeight = 1;
     bool m_Expanded = false;

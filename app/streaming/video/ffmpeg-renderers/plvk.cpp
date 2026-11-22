@@ -1086,6 +1086,8 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         if (m_Overlays[i].hasOverlay) {
             // Position the overlay
             overlayParts[i].src = { 0, 0, (float)m_Overlays[i].overlay.tex->params.w, (float)m_Overlays[i].overlay.tex->params.h };
+            float overlayWidth = overlayParts[i].src.x1;
+            float overlayHeight = overlayParts[i].src.y1;
             if (i == Overlay::OverlayStatusUpdate) {
                 // Bottom Left
                 overlayParts[i].dst.x0 = 0;
@@ -1097,14 +1099,16 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
                 overlayParts[i].dst.y0 = 0;
             }
 #ifdef Q_OS_WIN32
-            else if (i == Overlay::OverlayFullscreenControls) {
-                auto rect = Session::get()->getOverlayManager().controlsRect(targetFrame.crop.x1, targetFrame.crop.y1, overlayParts[i].src.x1, overlayParts[i].src.y1);
+            else if (i == Overlay::OverlayFullscreenControls || i == Overlay::OverlayClipboardUpload) {
+                auto rect = Session::get()->getOverlayManager().panelRect(static_cast<Overlay::OverlayType>(i), targetFrame.crop.x1, targetFrame.crop.y1, overlayParts[i].src.x1, overlayParts[i].src.y1);
+                overlayWidth = rect.w;
+                overlayHeight = rect.h;
                 overlayParts[i].dst.x0 = rect.x;
                 overlayParts[i].dst.y0 = rect.y;
             }
 #endif
-            overlayParts[i].dst.x1 = overlayParts[i].dst.x0 + overlayParts[i].src.x1;
-            overlayParts[i].dst.y1 = overlayParts[i].dst.y0 + overlayParts[i].src.y1;
+            overlayParts[i].dst.x1 = overlayParts[i].dst.x0 + overlayWidth;
+            overlayParts[i].dst.y1 = overlayParts[i].dst.y0 + overlayHeight;
 
             m_Overlays[i].overlay.parts = &overlayParts[i];
             m_Overlays[i].overlay.num_parts = 1;

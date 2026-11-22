@@ -127,6 +127,7 @@ void OverlayManager::setOverlayRenderer(IOverlayRenderer* renderer)
     if (renderer && isOverlayEnabled(OverlayFullscreenControls)) {
         notifyOverlayUpdated(OverlayFullscreenControls);
     }
+    if (renderer && isOverlayEnabled(OverlayClipboardUpload)) notifyOverlayUpdated(OverlayClipboardUpload);
 #endif
 }
 
@@ -139,8 +140,11 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
     }
 
 #ifdef Q_OS_WIN32
-    if (type == OverlayFullscreenControls) {
-        SDL_Surface* surface = isOverlayEnabled(type) ? renderControls() : nullptr;
+    if (type == OverlayFullscreenControls || type == OverlayClipboardUpload) {
+        SDL_Surface* surface = nullptr;
+        if (isOverlayEnabled(type)) {
+            surface = type == OverlayClipboardUpload ? m_ClipboardUpload.render() : renderControls();
+        }
         SDL_FreeSurface(static_cast<SDL_Surface*>(SDL_AtomicSetPtr(
             reinterpret_cast<void**>(&m_Overlays[type].surface), surface)));
         m_Renderer->notifyOverlayUpdated(type);
@@ -249,6 +253,28 @@ SDL_Rect OverlayManager::videoRect(int width, int height) const
     SDL_Rect video = {0, 0, width, height};
     StreamUtils::scaleSourceToDestinationSurface(&source, &video);
     return video;
+}
+
+void OverlayManager::updateClipboardUpload(const ClipboardUploadProgress& upload, QSize window, qreal scale)
+{
+    if (!m_ClipboardUpload.update(upload, window, scale)) return;
+    const bool visible = !upload.names.isEmpty();
+    if (isOverlayEnabled(OverlayClipboardUpload) != visible) setOverlayState(OverlayClipboardUpload, visible);
+    else if (visible) setOverlayTextUpdated(OverlayClipboardUpload);
+}
+
+ClipboardUploadOverlay::Input OverlayManager::handleClipboardUpload(const SDL_Event& event)
+{
+    bool hoverChanged;
+    const auto result = m_ClipboardUpload.handle(event, hoverChanged);
+    if (hoverChanged) setOverlayTextUpdated(OverlayClipboardUpload);
+    return result;
+}
+
+SDL_Rect OverlayManager::panelRect(OverlayType type, int width, int height, int panelWidth, int panelHeight) const
+{
+    if (type == OverlayClipboardUpload) return m_ClipboardUpload.destinationRect(width, height);
+    return controlsRect(width, height, panelWidth, panelHeight);
 }
 
 SDL_Rect OverlayManager::controlsRect(int width, int height, int panelWidth, int panelHeight) const

@@ -45,6 +45,7 @@ public:
         m_ButtonHover = false;
     }
 
+    qreal windowScale() const { return m_Scale; }
     bool enabled() const { return m_Preferences.showPerformanceOverlay; }
     void toggle()
     {
