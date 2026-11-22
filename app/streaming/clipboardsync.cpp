@@ -210,7 +210,13 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
                         cleanup ? 3000 : 120000);
     };
     request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/json"));
-    auto begin = post(QUrlQuery("op=begin"), QJsonDocument(manifest).toJson(QJsonDocument::Compact));
+    if (cancelled()) return failure("begin", {}, "cancelled");
+    // Once begin is on the wire, receive the host-generated ID so a cancellation can
+    // clean up the staging files. The stream's stop request still interrupts this wait.
+    url.setQuery(QUrlQuery("op=begin"));
+    request.setUrl(url);
+    const auto manifestBody = QJsonDocument(manifest).toJson(QJsonDocument::Compact);
+    auto begin = exchange(network, request, pairedHost, &manifestBody, {}, 15000);
     if (begin.status != 200) return failure("begin", begin);
     const auto& id = begin.payload;
     if (id.size() != 32 || !std::all_of(id.begin(), id.end(), [](char ch) {
@@ -225,6 +231,7 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
     };
     request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
     auto send = [&]() -> Result {
+        if (cancelled()) return failure("begin", {}, "cancelled after acknowledgement");
         ClipboardUploadPacer pacer(host);
         QByteArray chunk;
         for (index = 0; index < files.size(); ++index) {
