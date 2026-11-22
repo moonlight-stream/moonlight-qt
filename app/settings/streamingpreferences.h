@@ -172,6 +172,8 @@ public:
     bool playAudioOnHost;
     bool multiController;
     bool enableMdns;
+    Q_PROPERTY(bool closeToTray MEMBER closeToTray NOTIFY closeToTrayChanged)
+    bool closeToTray;
     bool quitAppAfter;
     bool absoluteMouseMode;
     bool absoluteTouchMode;
@@ -212,6 +214,7 @@ signals:
     void multiControllerChanged();
     void unsupportedFpsChanged();
     void enableMdnsChanged();
+    void closeToTrayChanged();
     void quitAppAfterChanged();
     void absoluteMouseModeChanged();
     void absoluteTouchModeChanged();

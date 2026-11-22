@@ -8,6 +8,14 @@ public:
     NvApp() {}
     explicit NvApp(QSettings& settings);
 
+    bool isDesktop() const
+    {
+        // The host app list has no desktop-type flag.
+        const QString title = name.trimmed();
+        return title.compare(QStringLiteral("Desktop"), Qt::CaseInsensitive) == 0 ||
+               title == QStringLiteral("桌面");
+    }
+
     bool operator==(const NvApp& other) const
     {
         return id == other.id &&

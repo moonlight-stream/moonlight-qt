@@ -6,12 +6,6 @@ ComputerSeeker::ComputerSeeker(ComputerManager *manager, QString computerName, Q
     : QObject(parent), m_ComputerManager(manager), m_ComputerName(computerName),
       m_TimeoutTimer(new QTimer(this))
 {
-    // If we know this computer, send a WOL packet to wake it up in case it is asleep.
-    NvComputer* matchingComputer = findMatchingComputer();
-    if (matchingComputer) {
-        matchingComputer->wake();
-    }
-
     m_TimeoutTimer->setSingleShot(true);
     connect(m_TimeoutTimer, &QTimer::timeout,
             this, &ComputerSeeker::onTimeout);
@@ -19,17 +13,24 @@ ComputerSeeker::ComputerSeeker(ComputerManager *manager, QString computerName, Q
             this, &ComputerSeeker::onComputerUpdated);
 }
 
-void ComputerSeeker::start(int timeout)
+void ComputerSeeker::start(int timeout, const NvAddress& preferredAddress)
 {
     m_TimeoutTimer->start(timeout);
 
-    // If we don't know this computer by name, address, or UUID, try adding it
-    // manually and see if we can find it by address, hostname, or mDNS.
-    //
-    // NB: We don't do this unconditionally because it will wipe out the user's
-    // manual address if they pass another reachable hostname/address.
-    if (!findMatchingComputer()) {
+    auto* computer = findMatchingComputer();
+    if (!computer) {
+        // Only add unknown computers so a lookup never replaces a saved manual address.
         m_ComputerManager->addNewHostManually(m_ComputerName);
+    }
+    else if (!preferredAddress.isNull() && preferredAddress.port() && m_ComputerName == computer->uuid) {
+        // The GUI just reached this host. Try that route before other saved addresses.
+        // Polling still verifies the host UUID and pairing status before launching.
+        QWriteLocker lock(&computer->lock);
+        computer->activeAddress = preferredAddress;
+        m_WakeIfOffline = true;
+    }
+    else {
+        computer->wake();
     }
 
     m_ComputerManager->startPolling();
@@ -37,13 +38,17 @@ void ComputerSeeker::start(int timeout)
 
 void ComputerSeeker::onComputerUpdated(NvComputer *computer)
 {
-    if (!m_TimeoutTimer->isActive()) {
+    if (!m_TimeoutTimer->isActive() || !matchComputer(computer)) {
         return;
     }
-    if (matchComputer(computer) && isOnline(computer)) {
+    if (isOnline(computer)) {
         m_ComputerManager->stopPollingAsync();
         m_TimeoutTimer->stop();
         emit computerFound(computer);
+    }
+    else if (m_WakeIfOffline && computer->state == NvComputer::CS_OFFLINE) {
+        m_WakeIfOffline = false;
+        computer->wake();
     }
 }
 

@@ -3,6 +3,9 @@
 <TS version="2.1" language="zh_CN">
 <context>
     <name>AppView</name>
+    <message><source>Connect to Desktop</source><translation>连接桌面</translation></message>
+    <message><source>Reconnect to Desktop</source><translation>重新连接桌面</translation></message>
+    <message><source>End Desktop Session</source><translation>结束桌面会话</translation></message>
     <message>
         <location filename="../gui/AppView.qml" line="143"/>
         <location filename="../gui/AppView.qml" line="299"/>
@@ -89,6 +92,7 @@
 </context>
 <context>
     <name>CliStartStreamSegue</name>
+    <message><source>Waiting for confirmation...</source><translation>正在等待确认切换应用…</translation></message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="8"/>
         <source>Establishing connection to PC...</source>
@@ -215,6 +219,24 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Quick launch</source><translation>快速启动</translation></message>
+    <message><source>Show hidden apps</source><translation>显示隐藏的应用</translation></message>
+    <message><source>Options for %1</source><translation>%1 的应用选项</translation></message>
+    <message><source>Unpaired</source><translation>未配对</translation></message>
+    <message><source>Devices</source><translation>设备</translation></message>
+    <message><source>My devices</source><translation>我的设备</translation></message>
+    <message><source>Searching</source><translation>检测中</translation></message>
+    <message><source>Device options</source><translation>设备选项</translation></message>
+    <message><source>Add device</source><translation>添加设备</translation></message>
+    <message><source>Pair device</source><translation>配对设备</translation></message>
+    <message><source>Enter desktop</source><translation>进入桌面</translation></message>
+    <message><source>Connecting…</source><translation>正在连接…</translation></message>
+    <message><source>Remote control active</source><translation>远控中</translation></message>
+    <message><source>Show remote control window</source><translation>显示远控窗口</translation></message>
+    <message>
+        <source>No desktop or direct-launch app is available on this device.</source>
+        <translation>此设备没有可连接的桌面或设为直接启动的应用。</translation>
+    </message>
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
         <source>Computers</source>
@@ -282,8 +304,8 @@
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="205"/>
-        <source>Delete PC</source>
-        <translation>删除计算机</translation>
+        <source>Remove device</source>
+        <translation>移除设备</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="213"/>
@@ -307,8 +329,12 @@
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="310"/>
-        <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation>你确定需要移除 &apos;%1&apos;吗？</translation>
+        <source>Remove “%1” from your device list?</source>
+        <translation>要从设备列表中移除“%1”吗？</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="324"/>
@@ -378,6 +404,11 @@
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience 返回错误: %1</translation>
     </message>
+</context>
+<context>
+    <name>ComputerManager</name>
+    <message><source>The host went offline.</source><translation>主机已离线。</translation></message>
+    <message><source>The host was removed.</source><translation>主机已移除。</translation></message>
 </context>
 <context>
     <name>PendingQuitTask</name>
@@ -462,6 +493,49 @@
 </context>
 <context>
     <name>Session</name>
+    <message><source>Checking the network route...</source><translation>正在检查到主机的网络路径…</translation></message>
+    <message><source>Setting up networking...</source><translation>正在初始化网络…</translation></message>
+    <message><source>Resolving the host address...</source><translation>正在解析主机地址…</translation></message>
+    <message><source>Preparing the audio stream...</source><translation>正在准备音频流…</translation></message>
+    <message><source>Negotiating stream settings (RTSP)...</source><translation>正在协商串流参数（RTSP）…</translation></message>
+    <message><source>Preparing the control channel...</source><translation>正在准备控制通道…</translation></message>
+    <message><source>Preparing the video stream...</source><translation>正在准备视频流…</translation></message>
+    <message><source>Preparing the input channel...</source><translation>正在准备输入通道…</translation></message>
+    <message><source>Connecting the control channel...</source><translation>正在连接控制通道…</translation></message>
+    <message><source>Connecting the video stream...</source><translation>正在连接视频通道…</translation></message>
+    <message><source>Connecting the audio stream...</source><translation>正在连接音频通道…</translation></message>
+    <message><source>Connecting the input channel...</source><translation>正在连接输入通道…</translation></message>
+    <message><source>Checking network ports...</source><translation>正在检查网络端口…</translation></message>
+    <message><source>Stats</source><translation>统计</translation></message>
+    <message><source>Fullscreen</source><translation>全屏</translation></message>
+    <message>
+        <source>Frame %1 ms</source>
+        <translation>帧延迟 %1 ms</translation>
+    </message>
+    <message>
+        <source>NIC ↑%1 ↓%2 kB/s</source>
+        <translation>网卡 ↑%1 ↓%2 kB/s</translation>
+    </message>
+    <message>
+        <source>Exit fullscreen</source>
+        <translation>退出全屏</translation>
+    </message>
+    <message>
+        <source>Disconnect</source>
+        <translation>退出远控</translation>
+    </message>
+    <message>
+        <source>Poor connection</source>
+        <translation>连接不佳</translation>
+    </message>
+    <message>
+        <source>Connection stable</source>
+        <translation>连接稳定</translation>
+    </message>
+    <message>
+        <source> · RTT %1 ms</source>
+        <translation> · 网络延迟 %1 ms</translation>
+    </message>
     <message>
         <location filename="../streaming/session.cpp" line="104"/>
         <source>No video received from host.</source>
@@ -666,6 +740,11 @@
 </context>
 <context>
     <name>SettingsView</name>
+    <message><source>General</source><translation>常规</translation></message>
+    <message><source>Streaming</source><translation>串流</translation></message>
+    <message><source>Input</source><translation>输入</translation></message>
+    <message><source>Advanced</source><translation>高级</translation></message>
+    <message><source>Close main window to system tray</source><translation>关闭主窗口时收入系统托盘</translation></message>
     <message>
         <location filename="../gui/SettingsView.qml" line="13"/>
         <source>Settings</source>
@@ -1194,7 +1273,13 @@
     </message>
 </context>
 <context>
+    <name>StreamStatusCard</name>
+    <message><source>Step %1 of %2</source><translation>第 %1 步，共 %2 步</translation></message>
+</context>
+<context>
     <name>StreamSegue</name>
+    <message><source>Checking video and audio capabilities...</source><translation>正在检测本机的音视频能力…</translation></message>
+    <message><source>Reviewing stream settings...</source><translation>正在显示串流设置提示…</translation></message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>
         <source>Resuming %1...</source>
@@ -1244,6 +1329,13 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Minimize</source><translation>最小化</translation></message>
+    <message><source>Restore</source><translation>还原</translation></message>
+    <message><source>Maximize</source><translation>最大化</translation></message>
+    <message><source>Close</source><translation>关闭</translation></message>
+    <message><source>Unable to open the streaming window.</source><translation>无法打开串流窗口。</translation></message>
+    <message><source>Show main window</source><translation>显示主窗口</translation></message>
+    <message><source>Quit</source><translation>退出程序</translation></message>
     <message>
         <location filename="../gui/main.qml" line="444"/>
         <source>Settings</source>
@@ -1257,7 +1349,7 @@
     <message>
         <location filename="../gui/main.qml" line="307"/>
         <source>Join our community on Discord</source>
-        <translation>加入我们的社区</translation>
+        <translation>Discord 社区</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="326"/>
@@ -1324,5 +1416,26 @@
         <source>Enter the IP address of your host PC:</source>
         <translation>输入你主机的 IP 地址：</translation>
     </message>
+</context>
+<context>
+    <name>StreamControlCenter</name>
+    <message><source>Duration</source><translation>连接时长</translation></message>
+    <message><source>Frame rate</source><translation>帧率</translation></message>
+    <message><source>Network RTT</source><translation>网络延迟</translation></message>
+    <message><source>Frame latency</source><translation>帧延迟</translation></message>
+    <message><source>Adapter upload</source><translation>网卡上传</translation></message>
+    <message><source>Adapter download</source><translation>网卡下载</translation></message>
+    <message><source>Network frame loss</source><translation>网络丢帧率</translation></message>
+    <message><source>Resolution</source><translation>分辨率</translation></message>
+    <message><source>Statistics HUD</source><translation>显示统计浮窗</translation></message>
+    <message><source>Displayed metrics</source><translation>显示项目</translation></message>
+    <message><source>Position</source><translation>浮窗位置</translation></message>
+    <message><source>Opacity</source><translation>不透明度</translation></message>
+    <message><source>Fullscreen</source><translation>进入全屏</translation></message>
+    <message><source>Top left</source><translation>左上角</translation></message>
+    <message><source>Top right</source><translation>右上角</translation></message>
+    <message><source>Bottom left</source><translation>左下角</translation></message>
+    <message><source>Bottom right</source><translation>右下角</translation></message>
+    <message><source>Control center</source><translation>控制中心</translation></message>
 </context>
 </TS>

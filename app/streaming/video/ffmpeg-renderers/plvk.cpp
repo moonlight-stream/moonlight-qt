@@ -1096,6 +1096,13 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
                 overlayParts[i].dst.x0 = 0;
                 overlayParts[i].dst.y0 = 0;
             }
+#ifdef Q_OS_WIN32
+            else if (i == Overlay::OverlayFullscreenControls) {
+                auto rect = Session::get()->getOverlayManager().controlsRect(targetFrame.crop.x1, targetFrame.crop.y1, overlayParts[i].src.x1, overlayParts[i].src.y1);
+                overlayParts[i].dst.x0 = rect.x;
+                overlayParts[i].dst.y0 = rect.y;
+            }
+#endif
             overlayParts[i].dst.x1 = overlayParts[i].dst.x0 + overlayParts[i].src.x1;
             overlayParts[i].dst.y1 = overlayParts[i].dst.y0 + overlayParts[i].src.y1;
 

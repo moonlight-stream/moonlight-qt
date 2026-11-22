@@ -66,7 +66,9 @@ public:
                            q, &Launcher::onComputerFound);
                 q->connect(m_ComputerSeeker, &ComputerSeeker::errorTimeout,
                            q, &Launcher::onTimeout);
-                m_ComputerSeeker->start(COMPUTER_SEEK_TIMEOUT);
+                const NvAddress preferredAddress(qEnvironmentVariable("MOONLIGHT_WINDOW_HOST_ADDRESS"),
+                                                 qEnvironmentVariable("MOONLIGHT_WINDOW_HOST_PORT").toUShort());
+                m_ComputerSeeker->start(COMPUTER_SEEK_TIMEOUT, preferredAddress);
 
                 q->connect(m_ComputerManager, &ComputerManager::computerStateChanged,
                            q, &Launcher::onComputerUpdated);
@@ -142,8 +144,11 @@ public:
 
     int getAppIndex() const
     {
+        bool useId;
+        int appId = qEnvironmentVariableIntValue("MOONLIGHT_WINDOW_APP_ID", &useId);
         for (int i = 0; i < m_Computer->appList.length(); i++) {
-            if (m_Computer->appList[i].name.toLower() == m_AppName.toLower()) {
+            if (useId ? m_Computer->appList[i].id == appId :
+                        m_Computer->appList[i].name.toLower() == m_AppName.toLower()) {
                 return i;
             }
         }

@@ -1193,6 +1193,13 @@ bool D3D11VARenderer::createOverlayVertexBuffer(Overlay::OverlayType type, int w
         renderRect.y = m_DisplayHeight - height;
     }
 
+#ifdef Q_OS_WIN32
+    else if (type == Overlay::OverlayFullscreenControls) {
+        auto rect = Session::get()->getOverlayManager().controlsRect(m_DisplayWidth, m_DisplayHeight, width, height);
+        renderRect.x = rect.x;
+        renderRect.y = m_DisplayHeight - rect.y - height;
+    }
+#endif
     renderRect.w = width;
     renderRect.h = height;
 

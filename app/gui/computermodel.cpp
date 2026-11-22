@@ -1,4 +1,10 @@
 #include "computermodel.h"
+#include "path.h"
+#include <QDateTime>
+#ifdef Q_OS_WIN
+#include "streaming/streamwindow.h"
+#include <QTimer>
+#endif
 
 #include <QThreadPool>
 
@@ -14,7 +20,34 @@ void ComputerModel::initialize(ComputerManager* computerManager)
             this, &ComputerModel::handlePairingCompleted);
 
     m_Computers = m_ComputerManager->getComputers();
+#ifdef Q_OS_WIN
+    refreshStreamWindows();
+    auto timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &ComputerModel::refreshStreamWindows);
+    timer->start(500);
+#endif
 }
+
+#ifdef Q_OS_WIN
+void ComputerModel::refreshStreamWindows()
+{
+    QHash<QString, StreamStatus> current;
+    for (const auto* computer : std::as_const(m_Computers)) {
+        StreamStatus status;
+        status.state = static_cast<StreamWindowState>(StreamWindow::state(computer->uuid, &status.progressText));
+        if (status.state != NoStreamWindow)
+            current.insert(computer->uuid, status);
+    }
+    m_StreamWindows.swap(current);
+    for (int row = 0; row < m_Computers.size(); ++row) {
+        const auto& uuid = m_Computers.at(row)->uuid;
+        const auto old = current.value(uuid);
+        const auto status = m_StreamWindows.value(uuid);
+        if (old.state != status.state || old.progressText != status.progressText)
+            emit dataChanged(index(row), index(row), {StreamWindowStateRole, StreamProgressTextRole});
+    }
+}
+#endif
 
 QVariant ComputerModel::data(const QModelIndex& index, int role) const
 {
@@ -28,8 +61,31 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
     QReadLocker lock(&computer->lock);
 
     switch (role) {
+    case PreviewRole: {
+        const auto file = Path::desktopPreview(computer->uuid);
+        if (!file.exists()) {
+            return QUrl();
+        }
+        auto url = QUrl::fromLocalFile(file.absoluteFilePath());
+        url.setFragment(QString::number(file.lastModified().toMSecsSinceEpoch()));
+        return url;
+    }
     case NameRole:
         return computer->name;
+    case UuidRole:
+        return computer->uuid;
+    case StreamWindowStateRole:
+#ifdef Q_OS_WIN
+        return static_cast<int>(m_StreamWindows.value(computer->uuid).state);
+#else
+        return static_cast<int>(NoStreamWindow);
+#endif
+    case StreamProgressTextRole:
+#ifdef Q_OS_WIN
+        return m_StreamWindows.value(computer->uuid).progressText;
+#else
+        return QString();
+#endif
     case OnlineRole:
         return computer->state == NvComputer::CS_ONLINE;
     case PairedRole:
@@ -47,7 +103,7 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
 
         switch (computer->state) {
         case NvComputer::CS_ONLINE:
-            state = tr("Online");
+            state = computer->pairState == NvComputer::PS_PAIRED ? tr("Online") : tr("Unpaired");
             break;
         case NvComputer::CS_OFFLINE:
             state = tr("Offline");
@@ -103,6 +159,9 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     QHash<int, QByteArray> names;
 
     names[NameRole] = "name";
+    names[UuidRole] = "uuid";
+    names[StreamWindowStateRole] = "streamWindowState";
+    names[StreamProgressTextRole] = "streamProgressText";
     names[OnlineRole] = "online";
     names[PairedRole] = "paired";
     names[BusyRole] = "busy";
@@ -110,28 +169,61 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     names[StatusUnknownRole] = "statusUnknown";
     names[ServerSupportedRole] = "serverSupported";
     names[DetailsRole] = "details";
+    names[PreviewRole] = "desktopPreview";
 
     return names;
 }
 
-Session* ComputerModel::createSessionForCurrentGame(int computerIndex)
+int ComputerModel::indexOfUuid(const QString& uuid) const
+{
+    for (int row = 0; row < m_Computers.size(); ++row) {
+        if (m_Computers.at(row)->uuid == uuid) {
+            return row;
+        }
+    }
+    return -1;
+}
+
+void ComputerModel::initializeQuickApps(AppModel* apps, int computerIndex)
+{
+    if (apps && computerIndex >= 0 && computerIndex < m_Computers.size()) {
+        apps->initializeForComputer(m_ComputerManager, m_Computers.at(computerIndex), false);
+    }
+}
+
+Session* ComputerModel::createQuickSession(int computerIndex)
 {
     Q_ASSERT(computerIndex >= 0 && computerIndex < m_Computers.count());
 
     NvComputer* computer = m_Computers[computerIndex];
 
-    // We must currently be streaming a game to use this function
-    Q_ASSERT(computer->currentGameId != 0);
-
-    for (NvApp& app : computer->appList) {
-        if (app.id == computer->currentGameId) {
-            return new Session(computer, app);
+    NvApp selected;
+    {
+        QReadLocker lock(&computer->lock);
+        for (const auto& app : std::as_const(computer->appList)) {
+            if (computer->currentGameId) {
+                if (app.id == computer->currentGameId) {
+                    selected = app;
+                    break;
+                }
+            }
+            else if (app.directLaunch && !app.hidden) {
+                selected = app;
+                break;
+            }
+            else if (app.isDesktop() && !app.hidden) {
+                selected = app;
+            }
         }
     }
+    return selected.isInitialized() ? new Session(computer, selected) : nullptr;
+}
 
-    // We have a current running app but it's not in our app list
-    Q_ASSERT(false);
-    return nullptr;
+void ComputerModel::refreshDesktopPreviews()
+{
+    if (!m_Computers.isEmpty()) {
+        emit dataChanged(index(0), index(m_Computers.size() - 1), {PreviewRole});
+    }
 }
 
 void ComputerModel::deleteComputer(int computerIndex)
@@ -141,6 +233,7 @@ void ComputerModel::deleteComputer(int computerIndex)
     beginRemoveRows(QModelIndex(), computerIndex, computerIndex);
 
     // m_Computer[computerIndex] will be deleted by this call
+    QFile::remove(Path::desktopPreview(m_Computers[computerIndex]->uuid).absoluteFilePath());
     m_ComputerManager->deleteHost(m_Computers[computerIndex]);
 
     // Remove the now invalid item
@@ -227,18 +320,34 @@ void ComputerModel::handlePairingCompleted(NvComputer*, QString error)
 
 void ComputerModel::handleComputerStateChanged(NvComputer* computer)
 {
-    QVector<NvComputer*> newComputerList = m_ComputerManager->getComputers();
-
-    // Reset the model if the structural layout of the list has changed
-    if (m_Computers != newComputerList) {
-        beginResetModel();
-        m_Computers = newComputerList;
-        endResetModel();
+    const auto hosts = m_ComputerManager->getComputers();
+    if (hosts != m_Computers) {
+        // Keep surviving delegates and the selected host as availability changes.
+        for (int row = m_Computers.size() - 1; row >= 0; --row) {
+            if (!hosts.contains(m_Computers.at(row))) {
+                beginRemoveRows({}, row, row);
+                m_Computers.removeAt(row);
+                endRemoveRows();
+            }
+        }
+        for (int row = 0; row < hosts.size(); ++row) {
+            const int previous = m_Computers.indexOf(hosts.at(row), row);
+            if (previous < 0) {
+                beginInsertRows({}, row, row);
+                m_Computers.insert(row, hosts.at(row));
+                endInsertRows();
+            }
+            else if (previous != row) {
+                beginMoveRows({}, previous, previous, {}, row);
+                m_Computers.move(previous, row);
+                endMoveRows();
+            }
+        }
     }
-    else {
-        // Let the view know that this specific computer changed
-        int index = m_Computers.indexOf(computer);
-        emit dataChanged(createIndex(index, 0), createIndex(index, 0));
+
+    const int row = m_Computers.indexOf(computer);
+    if (row >= 0) {
+        emit dataChanged(index(row), index(row));
     }
 }
 

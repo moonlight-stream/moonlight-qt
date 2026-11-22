@@ -1,5 +1,7 @@
 #pragma once
 
+#include "nvaddress.h"
+
 #include <QObject>
 
 class ComputerManager;
@@ -12,7 +14,7 @@ class ComputerSeeker : public QObject
 public:
     explicit ComputerSeeker(ComputerManager *manager, QString computerName, QObject *parent = nullptr);
 
-    void start(int timeout);
+    void start(int timeout, const NvAddress& preferredAddress = NvAddress());
 
 signals:
     void computerFound(NvComputer *computer);
@@ -31,4 +33,5 @@ private:
     ComputerManager *m_ComputerManager;
     QString m_ComputerName;
     QTimer *m_TimeoutTimer;
+    bool m_WakeIfOffline = false;
 };

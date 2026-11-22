@@ -2,6 +2,9 @@
 #include "boxartmanager.h"
 #include "nvhttp.h"
 #include "nvpairingmanager.h"
+#ifdef Q_OS_WIN
+#include "streaming/streamwindow.h"
+#endif
 
 #include <Limelight.h>
 #include <QtEndian>
@@ -9,10 +12,72 @@
 #include <QThread>
 #include <QThreadPool>
 #include <QCoreApplication>
+#include <QHostInfo>
+#include <QNetworkInterface>
 #include <QRandomGenerator>
 
 #define SER_HOSTS "hosts"
 #define SER_HOSTS_BACKUP "hostsbackup"
+
+bool ComputerManager::activateStreamWindow(const QString& uuid)
+{
+#ifdef Q_OS_WIN
+    return StreamWindow::activate(uuid);
+#else
+    Q_UNUSED(uuid);
+    return false;
+#endif
+}
+
+static bool isLocalAddress(const QString& address, const QList<QNetworkInterface>& interfaces)
+{
+    const QHostAddress ip(address);
+    if (ip.isNull()) {
+        return address.compare(QStringLiteral("localhost"), Qt::CaseInsensitive) == 0;
+    }
+    if (ip.isLoopback()) {
+        return true;
+    }
+    for (const auto& iface : interfaces) {
+        const auto entries = iface.addressEntries();
+        for (const auto& entry : entries) {
+            if (ip.isEqual(entry.ip())) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+static bool isThisComputer(const NvComputer& host, bool fromMdns, const QList<QNetworkInterface>& interfaces)
+{
+    // A live service discovered at an address assigned to this machine is local.
+    if (fromMdns && isLocalAddress(host.activeAddress.address(), interfaces)) {
+        return true;
+    }
+
+    // Saved LAN addresses can be reused, and loopback can be a manual tunnel.
+    // Corroborate either with the host's identity before hiding an existing PC.
+    if (!isLocalAddress(host.localAddress.address(), interfaces) &&
+            !isLocalAddress(host.ipv6Address.address(), interfaces) &&
+            !isLocalAddress(host.manualAddress.address(), interfaces) &&
+            !isLocalAddress(host.activeAddress.address(), interfaces)) {
+        return false;
+    }
+    if (!host.hasCustomName && !host.name.isEmpty() &&
+            host.name.compare(QHostInfo::localHostName(), Qt::CaseInsensitive) == 0) {
+        return true;
+    }
+    if (host.macAddress.size() == 6) {
+        const auto mac = host.macAddress.toHex(':');
+        for (const auto& iface : interfaces) {
+            if (iface.hardwareAddress().compare(QString::fromLatin1(mac), Qt::CaseInsensitive) == 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 class PcMonitorThread : public QThread
 {
@@ -114,10 +179,13 @@ private:
             // Check if we failed after all retry attempts
             // Note: we don't need to acquire the read lock here,
             // because we're on the writing thread.
-            if (!online && m_Computer->state != NvComputer::CS_OFFLINE) {
-                qInfo() << m_Computer->name << "is now offline";
-                m_Computer->state = NvComputer::CS_OFFLINE;
-                stateChanged = true;
+            if (!online) {
+                QWriteLocker lock(&m_Computer->lock);
+                if (m_Computer->state != NvComputer::CS_OFFLINE) {
+                    qInfo() << m_Computer->name << "is now offline";
+                    m_Computer->state = NvComputer::CS_OFFLINE;
+                    stateChanged = true;
+                }
             }
 
             // Grab the applist if it's empty or it's been long enough that we need to refresh
@@ -177,9 +245,13 @@ ComputerManager::ComputerManager(StreamingPreferences* prefs)
     }
 
     // Inflate our hosts from QSettings
+    const auto interfaces = QNetworkInterface::allInterfaces();
     for (int i = 0; i < hosts; i++) {
         settings.setArrayIndex(i);
         NvComputer* computer = new NvComputer(settings);
+        if (isThisComputer(*computer, false, interfaces)) {
+            m_LocalHostUuids.insert(computer->uuid);
+        }
         m_KnownHosts[computer->uuid] = computer;
         m_LastSerializedHosts[computer->uuid] = *computer;
     }
@@ -272,6 +344,7 @@ void DelayedFlushThread::run() {
 
             // Update the last serialized hosts map under the delayed flush mutex
             m_ComputerManager->m_LastSerializedHosts.clear();
+            QReadLocker hostListLock(&m_ComputerManager->m_Lock);
             for (const NvComputer* computer : std::as_const(m_ComputerManager->m_KnownHosts)) {
                 // Copy the current state of the NvComputer to allow us to check later if we need
                 // to serialize it again when attribute updates occur.
@@ -317,6 +390,10 @@ void DelayedFlushThread::run() {
 
 void ComputerManager::saveHosts()
 {
+    // The device manager owns the host list while independent stream windows run.
+    if (qEnvironmentVariableIsSet("MOONLIGHT_WINDOW_APP_ID")) {
+        return;
+    }
     Q_ASSERT(m_DelayedFlushThread != nullptr && m_DelayedFlushThread->isRunning());
 
     // Punt to a worker thread because QSettings on macOS can take ages (> 500 ms)
@@ -399,7 +476,7 @@ void ComputerManager::startPolling()
 // Must hold m_Lock for write
 void ComputerManager::startPollingComputer(NvComputer* computer)
 {
-    if (m_PollingRef == 0) {
+    if (m_PollingRef == 0 || m_LocalHostUuids.contains(computer->uuid)) {
         return;
     }
 
@@ -478,11 +555,34 @@ void ComputerManager::saveHost(NvComputer *computer)
 
 void ComputerManager::handleComputerStateChanged(NvComputer* computer)
 {
+    {
+        // A poll notification may still be queued after the host was removed.
+        QReadLocker lock(&m_Lock);
+        if (std::find(m_KnownHosts.cbegin(), m_KnownHosts.cend(), computer) == m_KnownHosts.cend()) {
+            return;
+        }
+    }
     emit computerStateChanged(computer);
 
-    if (computer->pendingQuit && computer->currentGameId == 0) {
-        computer->pendingQuit = false;
-        emit quitAppCompleted(QVariant());
+    bool quitCompleted = false;
+    QVariant quitError;
+    {
+        QWriteLocker lock(&computer->lock);
+        if (computer->quitAcknowledged) {
+            // Polling can skip the idle state if another app starts just after the quit.
+            const bool appEnded = computer->currentGameId == 0 || computer->currentGameId != computer->pendingQuitAppId;
+            if (appEnded || computer->state == NvComputer::CS_OFFLINE) {
+                computer->pendingQuitAppId = -1;
+                computer->quitAcknowledged = false;
+                quitCompleted = true;
+                if (!appEnded) {
+                    quitError = tr("The host went offline.");
+                }
+            }
+        }
+    }
+    if (quitCompleted) {
+        emit quitAppCompleted(quitError, computer->uuid);
     }
 
     // Save updates to this host
@@ -493,40 +593,49 @@ QVector<NvComputer*> ComputerManager::getComputers()
 {
     QReadLocker lock(&m_Lock);
 
-    // Return a sorted host list
-    auto hosts = QVector<NvComputer*>::fromList(m_KnownHosts.values());
-    std::stable_sort(hosts.begin(), hosts.end(), [](const NvComputer* host1, const NvComputer* host2) {
-        return host1->name.toLower() < host2->name.toLower();
+    struct HostRow {
+        NvComputer* computer;
+        int group;
+        QString name;
+    };
+    QVector<HostRow> rows;
+    for (NvComputer* host : std::as_const(m_KnownHosts)) {
+        if (m_LocalHostUuids.contains(host->uuid)) {
+            continue;
+        }
+        // Polling can update a host while we sort. Compare immutable snapshots.
+        QReadLocker hostLock(&host->lock);
+        int group;
+        if (host->state == NvComputer::CS_ONLINE) {
+            group = host->pairState == NvComputer::PS_PAIRED ? 0 : 1;
+        }
+        else {
+            group = host->state == NvComputer::CS_UNKNOWN ? 2 : 3;
+        }
+        rows.append({host, group, host->name.toLower()});
+    }
+    std::stable_sort(rows.begin(), rows.end(), [](const HostRow& a, const HostRow& b) {
+        return a.group == b.group ? a.name < b.name : a.group < b.group;
     });
+    QVector<NvComputer*> hosts;
+    hosts.reserve(rows.size());
+    for (const auto& row : std::as_const(rows)) {
+        hosts.append(row.computer);
+    }
     return hosts;
 }
 
 class DeferredHostDeletionTask : public QRunnable
 {
 public:
-    DeferredHostDeletionTask(ComputerManager* cm, NvComputer* computer)
+    DeferredHostDeletionTask(ComputerPollingEntry* pollingEntry, NvComputer* computer)
         : m_Computer(computer),
-          m_ComputerManager(cm) {}
+          m_PollingEntry(pollingEntry) {}
 
     void run()
     {
-        ComputerPollingEntry* pollingEntry;
-
-        // Only do the minimum amount of work while holding the writer lock.
-        // We must release it before calling saveHosts().
-        {
-            QWriteLocker lock(&m_ComputerManager->m_Lock);
-
-            pollingEntry = m_ComputerManager->m_PollEntries.take(m_Computer->uuid);
-
-            m_ComputerManager->m_KnownHosts.remove(m_Computer->uuid);
-        }
-
-        // Persist the new host list with this computer deleted
-        m_ComputerManager->saveHosts();
-
         // Delete the polling entry first. This will stop all polling threads too.
-        delete pollingEntry;
+        delete m_PollingEntry;
 
         // Delete cached box art
         BoxArtManager::deleteBoxArt(m_Computer);
@@ -538,14 +647,30 @@ public:
 
 private:
     NvComputer* m_Computer;
-    ComputerManager* m_ComputerManager;
+    ComputerPollingEntry* m_PollingEntry;
 };
 
 void ComputerManager::deleteHost(NvComputer* computer)
 {
+    // Detach immediately so a concurrent status notification cannot reinsert the row.
+    ComputerPollingEntry* pollingEntry;
+    {
+        QWriteLocker lock(&m_Lock);
+        m_KnownHosts.remove(computer->uuid);
+        pollingEntry = m_PollEntries.take(computer->uuid);
+    }
+    bool quitPending;
+    {
+        QReadLocker lock(&computer->lock);
+        quitPending = computer->pendingQuitAppId != -1;
+    }
+    if (quitPending) {
+        emit quitAppCompleted(tr("The host was removed."), computer->uuid);
+    }
+    saveHosts();
     // Punt to a worker thread to avoid stalling the
     // UI while waiting for the polling thread to die
-    QThreadPool::globalInstance()->start(new DeferredHostDeletionTask(this, computer));
+    QThreadPool::globalInstance()->start(new DeferredHostDeletionTask(pollingEntry, computer));
 }
 
 void ComputerManager::renameHost(NvComputer* computer, QString name)
@@ -650,56 +775,69 @@ class PendingQuitTask : public QObject, public QRunnable
     Q_OBJECT
 
 public:
-    PendingQuitTask(ComputerManager* computerManager, NvComputer* computer)
-        : m_Computer(computer)
-    {
-        connect(this, &PendingQuitTask::quitAppFailed,
-                computerManager, &ComputerManager::quitAppCompleted);
-    }
+    explicit PendingQuitTask(const NvComputer& computer)
+        : m_Computer(computer) {}
 
 signals:
-    void quitAppFailed(QString error);
+    void finished(QVariant error);
 
 private:
     void run()
     {
-        NvHTTP http(m_Computer);
+        NvHTTP http(&m_Computer);
 
         try {
-            if (m_Computer->currentGameId != 0) {
+            if (m_Computer.currentGameId != 0) {
                 http.quitApp();
             }
+            emit finished(QVariant());
         } catch (const GfeHttpResponseException& e) {
-            {
-                QWriteLocker lock(&m_Computer->lock);
-                m_Computer->pendingQuit = false;
-            }
             if (e.getStatusCode() == 599) {
                 // 599 is a special code we make a custom message for
-                emit quitAppFailed(tr("The running game wasn't started by this PC. "
+                emit finished(tr("The running game wasn't started by this PC. "
                                       "You must quit the game on the host PC manually or use the device that originally started the game."));
             }
             else {
-                emit quitAppFailed(e.toQString());
+                emit finished(e.toQString());
             }
         } catch (const QtNetworkReplyException& e) {
-            {
-                QWriteLocker lock(&m_Computer->lock);
-                m_Computer->pendingQuit = false;
-            }
-            emit quitAppFailed(e.toQString());
+            emit finished(e.toQString());
         }
     }
 
-    NvComputer* m_Computer;
+    NvComputer m_Computer;
 };
 
 void ComputerManager::quitRunningApp(NvComputer* computer)
 {
     QWriteLocker lock(&computer->lock);
-    computer->pendingQuit = true;
-
-    PendingQuitTask* quit = new PendingQuitTask(this, computer);
+    if (computer->pendingQuitAppId != -1) {
+        return;
+    }
+    computer->pendingQuitAppId = computer->currentGameId;
+    auto* quit = new PendingQuitTask(*computer);
+    connect(quit, &PendingQuitTask::finished, this,
+            [this, computer, uuid = computer->uuid](QVariant error) {
+        {
+            QReadLocker hostLock(&m_Lock);
+            if (m_KnownHosts.value(uuid) != computer) {
+                return;
+            }
+        }
+        {
+            QWriteLocker lock(&computer->lock);
+            if (error.isValid()) {
+                computer->pendingQuitAppId = -1;
+            } else {
+                computer->quitAcknowledged = true;
+            }
+        }
+        if (error.isValid()) {
+            emit quitAppCompleted(error, uuid);
+        } else {
+            handleComputerStateChanged(computer);
+        }
+    }, Qt::QueuedConnection);
     QThreadPool::globalInstance()->start(quit);
 }
 
@@ -858,6 +996,30 @@ private:
 
         // Create initial newComputer using HTTP serverinfo with no pinned cert
         NvComputer* newComputer = new NvComputer(http, serverInfo);
+        const bool isLocal = isThisComputer(*newComputer, m_Mdns, QNetworkInterface::allInterfaces());
+        {
+            QWriteLocker lock(&m_ComputerManager->m_Lock);
+            if (isLocal || m_ComputerManager->m_LocalHostUuids.contains(newComputer->uuid)) {
+                // Remember the service UUID so an add via another interface or alias
+                // cannot reintroduce it. Keep any saved record and pairing intact.
+                const auto uuid = newComputer->uuid;
+                const bool newlyHidden = !m_ComputerManager->m_LocalHostUuids.contains(uuid);
+                m_ComputerManager->m_LocalHostUuids.insert(uuid);
+                auto* existing = m_ComputerManager->m_KnownHosts.value(uuid);
+                if (auto* entry = m_ComputerManager->m_PollEntries.value(uuid)) {
+                    entry->interrupt();
+                }
+                lock.unlock();
+                delete newComputer;
+                if (existing && newlyHidden) {
+                    emit computerStateChanged(existing);
+                }
+                if (!m_Mdns) {
+                    emit computerAddCompleted(false, false);
+                }
+                return;
+            }
+        }
         http.setTrueUid(!newComputer->isNvidiaServerSoftware);
 
         // Check if we have a record of this host UUID to pull the pinned cert

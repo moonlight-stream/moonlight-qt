@@ -2,6 +2,7 @@
 
 #include <QtDebug>
 #include <QDir>
+#include <QCryptographicHash>
 #include <QStandardPaths>
 #include <QSettings>
 #include <QCoreApplication>
@@ -62,6 +63,12 @@ void Path::deleteCacheFile(QString fileName)
 QFileInfo Path::getCacheFileInfo(QString fileName)
 {
     return QFileInfo(QDir(s_CacheDir), fileName);
+}
+
+QFileInfo Path::desktopPreview(const QString& hostId)
+{
+    const auto key = QCryptographicHash::hash(hostId.toUtf8(), QCryptographicHash::Sha256).toHex();
+    return getCacheFileInfo(QStringLiteral("desktop-%1.png").arg(QString::fromLatin1(key)));
 }
 
 QString Path::getDataFilePath(QString fileName)

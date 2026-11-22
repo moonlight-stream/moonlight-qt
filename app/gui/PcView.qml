@@ -1,7 +1,9 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
+import QtQuick.Controls.Material 2.2
 
+import AppModel 1.0
 import ComputerModel 1.0
 
 import ComputerManager 1.0
@@ -9,35 +11,57 @@ import StreamingPreferences 1.0
 import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 
-CenteredGridView {
-    property ComputerModel computerModel : createModel()
-
-    id: pcGrid
+FocusScope {
+    id: devices
+    property ComputerModel computerModel: createModel()
+    readonly property var device: pcList.currentItem
+    readonly property bool compact: width < 620
+    property bool showingSettings: false
+    property bool pickerOpen: false
+    property var pendingQuits: ({})
+    readonly property var currentQuit: device ? pendingQuits[device.hostUuid] : null
+    onCompactChanged: pickerOpen = false
+    objectName: qsTr("My devices")
+    Material.theme: Material.Light
+    readonly property color actionBlue: "#2468d5"
+    readonly property color actionTint: "#e3edfc"
+    Material.accent: actionBlue
+    Material.background: "#f7f9fc"
     focus: true
-    activeFocusOnTab: true
-    topMargin: 20
-    bottomMargin: 5
-    cellWidth: 310; cellHeight: 330;
-    objectName: qsTr("Computers")
 
-    Component.onCompleted: {
-        // Don't show any highlighted item until interacting with them.
-        // We do this here instead of onActivated to avoid losing the user's
-        // selection when backing out of a different page of the app.
-        currentIndex = -1
+    Connections {
+        target: window
+        function onActiveChanged() {
+            if (window.active && devices.visible) computerModel.refreshDesktopPreviews()
+        }
+    }
+
+    Connections {
+        target: ComputerManager
+        function onQuitAppCompleted(error, hostUuid) {
+            var request = devices.pendingQuits[hostUuid]
+            if (!request) return
+            delete devices.pendingQuits[hostUuid]
+            devices.pendingQuitsChanged()
+            if (error !== undefined && error !== null) {
+                errorDialog.text = error
+                errorDialog.helpText = ""
+                errorDialog.open()
+            } else if (request.targetId && device && device.hostUuid === hostUuid &&
+                       !devices.showingSettings && quickGrid.model && !quickGrid.model.getRunningAppId()) {
+                var session = quickGrid.model.createSessionForAppId(request.targetId)
+                if (session) window.launchGuiSession(session)
+            }
+        }
     }
 
     // Note: Any initialization done here that is critical for streaming must
     // also be done in CliStartStreamSegue.qml, since this code does not run
     // for command-line initiated streams.
     StackView.onActivated: {
+        computerModel.refreshDesktopPreviews()
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
-
-        // Highlight the first item if a gamepad is connected
-        if (currentIndex === -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
-            currentIndex = 0
-        }
     }
 
     StackView.onDeactivating: {
@@ -73,6 +97,17 @@ CenteredGridView {
         }
     }
 
+    function selectDevice(index) {
+        showingSettings = false
+        pcList.currentIndex = index
+        pickerOpen = false
+    }
+
+    function openSettings() {
+        pickerOpen = false
+        showingSettings = true
+    }
+
     function createModel()
     {
         var model = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', parent, '')
@@ -82,207 +117,741 @@ CenteredGridView {
         return model
     }
 
-    Row {
-        anchors.centerIn: parent
-        spacing: 5
-        visible: pcGrid.count === 0
-
-        BusyIndicator {
-            id: searchSpinner
-            visible: StreamingPreferences.enableMdns
-            running: visible
+    Rectangle { anchors.fill: parent; color: "#f7f9fc" }
+    ItemDelegate {
+        id: picker
+        visible: devices.compact
+        anchors { left: parent.left; top: parent.top; margins: 6 }
+        height: 36
+        text: qsTr("Devices")
+        onClicked: devices.pickerOpen = !devices.pickerOpen
+    }
+    MouseArea {
+        anchors.fill: parent
+        anchors.topMargin: picker.y + picker.height
+        visible: devices.compact && devices.pickerOpen
+        z: 1
+        onClicked: devices.pickerOpen = false
+    }
+    Rectangle {
+        id: rail
+        visible: !devices.compact || devices.pickerOpen
+        z: 2
+        width: Math.min(220, devices.width)
+        anchors.top: parent.top
+        anchors.topMargin: devices.compact ? picker.y + picker.height + 4 : 0
+        anchors.bottom: parent.bottom
+        color: "#eff4f7"
+        Keys.onEscapePressed: function(event) {
+            if (devices.compact) {
+                devices.pickerOpen = false
+                picker.forceActiveFocus()
+            } else event.accepted = false
         }
 
-        Label {
-            height: searchSpinner.height
-            elide: Label.ElideRight
-            text: StreamingPreferences.enableMdns ? qsTr("Searching for compatible hosts on your local network...")
-                                                  : qsTr("Automatic PC discovery is disabled. Add your PC manually.")
-            font.pointSize: 20
-            verticalAlignment: Text.AlignVCenter
-            wrapMode: Text.Wrap
+        Item {
+            id: listTitle
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 6 }
+            height: 42
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 12
+                anchors.rightMargin: 2
+                spacing: 8
+                Label {
+                    Layout.fillWidth: true
+                    text: qsTr("My devices")
+                    color: "#536278"
+                    font.pixelSize: 13
+                    font.weight: Font.DemiBold
+                    elide: Text.ElideRight
+                }
+                ToolButton {
+                    id: addDeviceButton
+                    Layout.preferredWidth: 32; Layout.preferredHeight: 32
+                    text: "+"
+                    font.pixelSize: 21
+                    Accessible.name: qsTranslate("main", "Add PC manually")
+                    ToolbarToolTip {
+                        text: addDeviceButton.Accessible.name +
+                              (newPcShortcut.nativeText ? " (" + newPcShortcut.nativeText + ")" : "")
+                    }
+                    onClicked: {
+                        devices.pickerOpen = false
+                        addPcDialog.open()
+                    }
+                }
+            }
+        }
+        ItemDelegate {
+            id: railSettings
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 6 }
+            height: 40
+            text: qsTranslate("main", "Settings")
+            icon.source: "qrc:/res/settings.svg"
+            icon.width: 18; icon.height: 18
+            highlighted: devices.showingSettings
+            background: Rectangle {
+                radius: 6
+                color: devices.showingSettings ? "#dce8fa" : railSettings.hovered || railSettings.visualFocus ? "#e5ecf5" : "transparent"
+            }
+            onClicked: devices.openSettings()
+        }
+        ListView {
+            id: pcList
+            anchors { left: parent.left; right: parent.right; top: listTitle.bottom; bottom: railSettings.top; margins: 8 }
+            topMargin: 4
+            spacing: 3
+            clip: true
+            focus: true
+            model: computerModel
+            onCountChanged: if (count && currentIndex < 0) currentIndex = 0
+            ScrollBar.vertical: ScrollBar {}
+            delegate: ItemDelegate {
+                id: pcRow
+                hoverEnabled: true
+                width: pcList.width
+                height: 42
+                readonly property bool selected: !devices.showingSettings && ListView.isCurrentItem
+                property string hostName: model.name
+                readonly property string hostUuid: model.uuid
+                readonly property bool hasStreamWindow: model.streamWindowState !== ComputerModel.NoStreamWindow
+                readonly property string streamDetail: model.streamProgressText || streamStatus
+                readonly property string streamStatus: model.streamWindowState === ComputerModel.ConnectedStreamWindow
+                                                       ? qsTr("Remote control active") : qsTr("Connecting…")
+                property bool online: model.online
+                property bool paired: model.paired
+                property bool unknown: model.statusUnknown
+                property url preview: model.desktopPreview
+                property alias quickApps: quickAppsLoader.item
+                Loader {
+                    id: quickAppsLoader
+                    active: pcRow.ready && pcRow.ListView.isCurrentItem
+                    sourceComponent: AppModel {
+                        id: apps
+                        Component.onCompleted: computerModel.initializeQuickApps(apps, index)
+                    }
+                }
+                property alias pcContextMenu: pcContextMenuLoader.item
+                readonly property bool ready: online && paired && !unknown
+                readonly property bool needsPairing: online && !paired && !unknown
+                readonly property color statusColor: ready ? "#21a66a" :
+                                                     needsPairing || unknown ? "#b97923" : "#99a5b5"
+                readonly property string statusText: unknown ? qsTr("Searching") : !online ? qsTr("Offline") :
+                                                     paired ? qsTr("Online") : qsTr("Unpaired")
+                leftPadding: 28
+                rightPadding: rowStatus.visible ? rowStatus.implicitWidth + 20 : 12
+                spacing: 10
+                text: hostName
+                font.weight: selected ? Font.DemiBold : Font.Normal
+                icon.source: "qrc:/res/desktop_windows-48px.svg"
+                icon.width: 18
+                icon.height: 18
+                icon.color: "#596b80"
+                Material.foreground: selected ? "#182b46" : "#415168"
+                Accessible.name: hostName
+                Accessible.description: hasStreamWindow ? streamDetail : statusText
+                TextMetrics {
+                    id: nameMetrics
+                    text: pcRow.hostName
+                    font: pcRow.font
+                }
+                ToolbarToolTip {
+                    id: nameTip
+                    visible: pcRow.visible && (pcRow.hovered || pcRow.visualFocus) &&
+                             !(pcRow.pcContextMenu && pcRow.pcContextMenu.visible) &&
+                             nameMetrics.advanceWidth > pcRow.availableWidth - pcRow.icon.width - pcRow.spacing
+                    text: pcRow.hostName
+                    width: Math.min(implicitWidth, 300, devices.width - 16)
+                    x: pcRow.width + 8
+                    y: (pcRow.height - height) / 2
+                    contentItem: Label {
+                        text: nameTip.text
+                        textFormat: Text.PlainText
+                        wrapMode: Text.Wrap
+                        font.pixelSize: 13
+                        color: "#20364e"
+                    }
+                }
+                background: Rectangle {
+                    radius: 7
+                    color: pcRow.selected ? "#dce8fa" : pcRow.hovered ? "#e5ecf5" : "transparent"
+                    border.width: pcRow.visualFocus ? 1 : 0
+                    border.color: devices.actionBlue
+                }
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 7
+                    height: 7
+                    radius: width / 2
+                    color: pcRow.hasStreamWindow ? devices.actionBlue : pcRow.statusColor
+                }
+                Label {
+                    id: rowStatus
+                    visible: pcRow.hasStreamWindow || pcRow.needsPairing || pcRow.hovered || pcRow.visualFocus
+                    anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                    text: pcRow.hasStreamWindow ? pcRow.streamStatus : pcRow.statusText
+                    font.pixelSize: 11
+                    color: pcRow.hasStreamWindow ? devices.actionBlue : pcRow.ready ? "#23694e" : pcRow.needsPairing ? "#825516" : "#526478"
+                }
+                onClicked: devices.selectDevice(index)
+                onDoubleClicked: activateDevice()
+                Keys.onReturnPressed: activateDevice()
+                Keys.onEnterPressed: activateDevice()
+                Loader {
+                    id: pcContextMenuLoader
+                    sourceComponent: NavigableMenu {
+                        id: pcContextMenu
+                        initiator: pcRow
+                        Material.theme: Material.Light
+                        Material.accent: devices.actionBlue
+                        Material.foreground: "#20364e"
+                        Material.background: "#ffffff"
+                        width: Math.min(window.width, Math.max(200, contentWidth + 12))
+                        padding: 5
+                        background: Rectangle {
+                            radius: 8
+                            color: "#ffffff"
+                            border.color: "#c5d4e6"
+                        }
+                        MenuItem {
+                            text: qsTr("PC Status: %1").arg(pcRow.statusText)
+                            font.bold: true
+                            contentItem: Label {
+                                text: parent.text
+                                color: "#526780"
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            enabled: false
+                        }
+                        NavigableMenuItem {
+                            text: qsTr("Wake PC")
+                            onTriggered: computerModel.wakeComputer(index)
+                            visible: !model.online && model.wakeable
+                        }
+                        NavigableMenuItem {
+                            text: qsTr("Test Network")
+                            onTriggered: {
+                                computerModel.testConnectionForComputer(index)
+                                testConnectionDialog.open()
+                            }
+                        }
+
+                        NavigableMenuItem {
+                            text: qsTr("Rename PC")
+                            onTriggered: {
+                                renamePcDialog.pcUuid = pcRow.hostUuid
+                                renamePcDialog.originalName = model.name
+                                renamePcDialog.open()
+                            }
+                        }
+                        NavigableMenuItem {
+                            text: qsTr("Remove device")
+                            onTriggered: deletePcDialog.request(model.uuid, model.name)
+                        }
+                        NavigableMenuItem {
+                            text: qsTr("View Details")
+                            onTriggered: {
+                                showPcDetailsDialog.pcDetails = model.details
+                                showPcDetailsDialog.open()
+                            }
+                        }
+                    }
+                }
+
+                function activateDevice() {
+                    if (devices.pendingQuits[hostUuid]) return
+                    if (ComputerManager.activateStreamWindow(hostUuid)) return
+                    if (model.online) {
+                        if (!model.serverSupported) {
+                            errorDialog.text = qsTr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(model.name)
+                            errorDialog.helpText = ""
+                            errorDialog.open()
+                        }
+                        else if (model.paired) {
+                            var session = computerModel.createQuickSession(index)
+                            if (session) {
+                                window.launchGuiSession(session)
+                            } else {
+                                errorDialog.text = qsTr("No desktop or direct-launch app is available on this device.")
+                                errorDialog.helpText = ""
+                                errorDialog.open()
+                            }
+                        }
+                        else {
+                            var pin = computerModel.generatePinString()
+
+                            // Kick off pairing in the background
+                            computerModel.pairComputer(index, pin)
+
+                            // Display the pairing dialog
+                            pairDialog.pin = pin
+                            pairDialog.open()
+                        }
+                    } else if (!model.online) {
+                        // Using open() here because it may be activated by keyboard
+                        if (pcContextMenu) pcContextMenu.open()
+                    }
+                }
+
+                onPressAndHold: {
+                    // popup() ensures the menu appears under the mouse cursor
+                    pcList.currentIndex = index
+                    if (!pcContextMenu) return
+                    if (pcContextMenu.popup) {
+                        pcContextMenu.popup()
+                    }
+                    else {
+                        // Qt 5.9 doesn't have popup()
+                        if (pcContextMenu) pcContextMenu.open()
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton;
+                    onClicked: {
+                        parent.pressAndHold()
+                    }
+                }
+
+                Keys.onMenuPressed: {
+                    // We must use open() here so the menu is positioned on
+                    // the ItemDelegate and not where the mouse cursor is
+                    if (pcContextMenu) pcContextMenu.open()
+                }
+
+                Keys.onDeletePressed: deletePcDialog.request(model.uuid, model.name)
+            }
+
         }
     }
 
-    model: computerModel
+    Rectangle {
+        id: detailsPanel
+        anchors.fill: parent
+        anchors.leftMargin: devices.compact ? 0 : rail.width
+        anchors.topMargin: devices.compact ? picker.y + picker.height + 4 : 0
+        color: "#f8fafc"
+        radius: 9
+        border.color: "#e1e6eb"
+    }
 
-    delegate: NavigableItemDelegate {
-        width: 300; height: 320;
-        grid: pcGrid
+    Loader {
+        anchors.fill: detailsPanel
+        active: devices.showingSettings && devices.StackView.status !== StackView.Inactive
+        focus: active
+        sourceComponent: SettingsView {}
+    }
 
-        property alias pcContextMenu : pcContextMenuLoader.item
+    ColumnLayout {
+        id: deviceSummary
+        visible: !devices.showingSettings
+        anchors {
+            left: detailsPanel.left; right: detailsPanel.right; top: detailsPanel.top
+            margins: devices.compact ? 14 : Math.min(40, devices.width * 0.04)
+            topMargin: devices.compact ? 14 : 22
+        }
+        spacing: 0
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.bottomMargin: devices.compact ? 10 : 16
+            spacing: 8
+            Rectangle {
+                visible: !!device
+                implicitWidth: status.width + 16
+                implicitHeight: 23
+                radius: height / 2
+                color: "#20252b"
+                Row {
+                    id: status
+                    anchors.centerIn: parent
+                    spacing: 5
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 7; height: 7; radius: 4
+                        color: device ? device.statusColor : "#99a5b5"
+                    }
+                    Label {
+                        text: device ? device.statusText : ""
+                        font.pixelSize: 12; color: "white"
+                    }
+                }
+            }
+            Label {
+                Layout.maximumWidth: Math.max(0, deviceSummary.width - status.width - 68)
+                text: device ? device.hostName : qsTr("My devices")
+                font.pixelSize: devices.compact ? 20 : 24
+                font.bold: true
+                elide: Text.ElideRight
+                color: "#182334"
+            }
+            OverflowButton {
+                id: optionsButton
+                visible: !!device
+                Accessible.name: qsTr("Device options")
+                onClicked: if (device.pcContextMenu) {
+                    if (device.pcContextMenu.popup)
+                        device.pcContextMenu.popup(optionsButton, 0, optionsButton.height)
+                    else
+                        device.pcContextMenu.open()
+                }
+            }
 
-        Image {
-            id: pcIcon
-            anchors.horizontalCenter: parent.horizontalCenter
-            source: "qrc:/res/desktop_windows-48px.svg"
-            sourceSize {
-                width: 200
-                height: 200
+            Item { Layout.fillWidth: true }
+        }
+        Item {
+            id: card
+            readonly property int cornerRadius: 8
+            readonly property bool hasStreamWindow: !!device && device.hasStreamWindow
+            property real emphasis: connectButton.down ? 0.3 :
+                                    connectButton.hovered || connectButton.visualFocus ? 1 : 0
+            Behavior on emphasis { NumberAnimation { duration: 175; easing.type: Easing.OutCubic } }
+            Layout.fillWidth: true
+            Layout.preferredHeight: Math.max(100, Math.min(320, width * 0.4, detailsPanel.height * 0.48))
+            clip: true
+
+            Item {
+                anchors.fill: parent
+                scale: 1 + 0.035 * card.emphasis
+                Image {
+                    anchors.fill: parent
+                    visible: wallpaper.status !== Image.Ready
+                    source: "qrc:/res/remote-horizon.svg"
+                    fillMode: Image.PreserveAspectCrop
+                }
+                Image {
+                    id: wallpaper
+                    anchors.fill: parent
+                    source: SystemProperties.desktopWallpaper
+                    sourceSize.width: 1600
+                    asynchronous: true
+                    fillMode: Image.PreserveAspectCrop
+                }
+            }
+            Rectangle {
+                anchors.fill: parent
+                gradient: Gradient {
+                    GradientStop { position: 0; color: card.hasStreamWindow ? "#94071728" : "transparent" }
+                    GradientStop { position: 0.45; color: card.hasStreamWindow ? "#aa071728" : "#12071728" }
+                    GradientStop { position: 1; color: "#c0071728" }
+                }
+            }
+            Row {
+                visible: !card.hasStreamWindow
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: Math.max(14, card.height * 0.14)
+                spacing: 9
+                Label {
+                    text: connectButton.text
+                    color: "white"; font.pixelSize: 18
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                Label {
+                    text: "\u2192"
+                    color: "white"; font.pixelSize: 21
+                    transform: Translate { x: 5 * card.emphasis }
+                    Accessible.ignored: true
+                }
+            }
+
+            Column {
+                visible: card.hasStreamWindow
+                anchors.centerIn: parent
+                width: Math.max(1, parent.width - 16)
+                spacing: card.height >= 160 ? 12 : 6
+                Image {
+                    visible: card.height >= 160
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 42; height: 42
+                    source: "qrc:/res/desktop_windows-48px.svg"
+                }
+                Label {
+                    width: parent.width
+                    text: device ? device.streamDetail : ""
+                    textFormat: Text.PlainText
+                    horizontalAlignment: Text.AlignHCenter
+                    elide: Text.ElideRight
+                    font.pixelSize: 18; font.weight: Font.DemiBold
+                    color: "white"
+                }
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: Math.min(parent.width, showWindowLabel.implicitWidth + 32)
+                    height: 36
+                    radius: 6
+                    color: connectButton.down ? "#194eaf" : connectButton.hovered ? "#3375e1" : devices.actionBlue
+                    Label {
+                        id: showWindowLabel
+                        anchors.fill: parent
+                        horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideRight
+                        text: connectButton.text
+                        color: "white"; font.pixelSize: 15; font.weight: Font.Medium
+                    }
+                }
+            }
+
+            AbstractButton {
+                id: connectButton
+                enabled: !devices.currentQuit
+                anchors.fill: parent
+                hoverEnabled: true
+                text: card.hasStreamWindow ? qsTr("Show remote control window") :
+                      !device ? qsTr("Add device") : !device.online ? qsTr("Device options") :
+                      !device.paired ? qsTr("Pair device") : qsTr("Enter desktop")
+                Accessible.description: card.hasStreamWindow ? device.streamDetail : ""
+                contentItem: Item {}
+                background: Rectangle {
+                    radius: card.cornerRadius
+                    color: "transparent"
+                    border.width: connectButton.visualFocus ? 2 : 0
+                    border.color: "#9ac7ff"
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.NoButton
+                    cursorShape: Qt.PointingHandCursor
+                }
+                Keys.onReturnPressed: function(event) { if (!event.isAutoRepeat) clicked() }
+                Keys.onEnterPressed: function(event) { if (!event.isAutoRepeat) clicked() }
+                onClicked: device ? device.activateDevice() : addPcDialog.open()
+            }
+
+            // Mask just the corners to keep the scalable artwork inexpensive to resize.
+            Repeater {
+                model: 4
+                Canvas {
+                    width: card.cornerRadius; height: width
+                    x: index % 2 ? card.width - width : 0
+                    y: index >= 2 ? card.height - height : 0
+                    rotation: [0, 90, 270, 180][index]
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.fillStyle = detailsPanel.color
+                        ctx.beginPath()
+                        ctx.moveTo(0, 0)
+                        ctx.lineTo(width, 0)
+                        ctx.arc(width, height, width, -Math.PI / 2, -Math.PI, true)
+                        ctx.closePath()
+                        ctx.fill()
+                    }
+                }
             }
         }
-
-        Image {
-            // TODO: Tooltip
-            id: stateIcon
-            anchors.horizontalCenter: pcIcon.horizontalCenter
-            anchors.verticalCenter: pcIcon.verticalCenter
-            anchors.verticalCenterOffset: !model.online ? -18 : -16
-            visible: !model.statusUnknown && (!model.online || !model.paired)
-            source: !model.online ? "qrc:/res/warning_FILL1_wght300_GRAD200_opsz24.svg" : "qrc:/res/baseline-lock-24px.svg"
-            sourceSize {
-                width: !model.online ? 75 : 70
-                height: !model.online ? 75 : 70
-            }
-        }
-
-        BusyIndicator {
-            id: statusUnknownSpinner
-            anchors.horizontalCenter: pcIcon.horizontalCenter
-            anchors.verticalCenter: pcIcon.verticalCenter
-            anchors.verticalCenterOffset: -15
-            width: 75
-            height: 75
-            visible: model.statusUnknown
-            running: visible
-        }
-
         Label {
-            id: pcNameText
-            text: model.name
-
-            width: parent.width
-            anchors.top: pcIcon.bottom
-            anchors.bottom: parent.bottom
-            font.pointSize: 30
-            horizontalAlignment: Text.AlignHCenter
+            visible: !device
+            Layout.fillWidth: true
+            text: StreamingPreferences.enableMdns ? qsTr("Searching for compatible hosts on your local network...")
+                                                  : qsTr("Automatic PC discovery is disabled. Add your PC manually.")
             wrapMode: Text.Wrap
+            color: "#52647a"
+        }
+    }
+
+    ColumnLayout {
+        anchors {
+            left: deviceSummary.left; right: deviceSummary.right
+            top: deviceSummary.bottom; bottom: detailsPanel.bottom
+            topMargin: devices.compact ? 12 : 20; bottomMargin: 8
+        }
+        visible: !devices.showingSettings && !!device && device.ready
+        spacing: 10
+        Label {
+            Layout.fillWidth: true
+            visible: quickGrid.count > 0 || (!!quickGrid.model && quickGrid.model.hasHiddenApps)
+            text: qsTr("Quick launch")
+            color: "#1b2c42"
+            font.pixelSize: 17
+            font.weight: Font.DemiBold
             elide: Text.ElideRight
         }
+        GridView {
+            id: quickGrid
+            readonly property int tileSpacing: 10
+            readonly property int columnCount: Math.max(1, Math.min(count, Math.floor(width / 280)))
+            Layout.fillWidth: true; Layout.fillHeight: true
+            Layout.rightMargin: -tileSpacing
+            clip: true
+            cellWidth: Math.max(1, Math.min(400, width / columnCount))
+            cellHeight: 84
+            model: device ? device.quickApps : null
+            ScrollBar.vertical: ScrollBar {}
+            footer: CheckBox {
+                visible: !!quickGrid.model && quickGrid.model.hasHiddenApps
+                height: visible ? implicitHeight : 0
+                text: qsTr("Show hidden apps")
+                checked: !!quickGrid.model && quickGrid.model.showHiddenApps
+                onToggled: quickGrid.model.showHiddenApps = checked
+            }
+            delegate: AbstractButton {
+                id: shortcut
+                readonly property bool stopping: !!devices.currentQuit && devices.currentQuit.runningId === model.appid
+                opacity: model.hidden ? 0.55 : 1
+                width: Math.max(1, quickGrid.cellWidth - quickGrid.tileSpacing)
+                height: quickGrid.cellHeight - quickGrid.tileSpacing
+                hoverEnabled: true
+                text: model.name
+                padding: 0
+                background: Rectangle {
+                    radius: 11
+                    color: shortcut.down ? devices.actionTint : shortcut.hovered ? "#f3f7ff" : "white"
+                    border.width: shortcut.visualFocus ? 2 : 1
+                    border.color: shortcut.visualFocus ? devices.actionBlue : shortcut.hovered ? "#a9c4ed" : "#dce4ec"
+                }
+                contentItem: RowLayout {
+                    spacing: 10
+                    Image {
+                        visible: !model.running || shortcut.width >= 235
+                        Layout.leftMargin: 14
+                        Layout.preferredWidth: 43; Layout.preferredHeight: 54
+                        source: model.boxart; asynchronous: true
+                        fillMode: Image.PreserveAspectFit
+                    }
+                    Label {
+                        id: shortcutName
+                        Layout.fillWidth: true; Layout.minimumWidth: 0
+                        Layout.leftMargin: model.running && shortcut.width < 235 ? 10 : 0
+                        text: shortcut.text
+                        font.pixelSize: 15
+                        font.weight: Font.Medium
+                        color: "#24364b"
+                        wrapMode: Text.Wrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
+                    }
+                    RowLayout {
+                        spacing: 0
+                        Layout.rightMargin: 6
+                        SessionActionButton {
+                            id: resumeButton
+                            visible: model.running
+                            enabled: !shortcut.stopping
+                            text: device && device.hasStreamWindow ? qsTr("Show remote control window") :
+                                  model.isDesktop ? qsTranslate("AppView", "Reconnect to Desktop") : qsTranslate("AppView", "Resume Game")
+                            icon.source: "qrc:/res/play_arrow_FILL1_wght700_GRAD200_opsz48.svg"
+                            icon.color: "#2468d5"
+                            onClicked: shortcut.launch()
+                        }
+                        SessionActionButton {
+                            id: stopButton
+                            visible: model.running && !shortcut.stopping
+                            text: model.isDesktop ? qsTranslate("AppView", "End Desktop Session") : qsTranslate("AppView", "Quit Game")
+                            icon.source: "qrc:/res/stop_FILL1_wght700_GRAD200_opsz48.svg"
+                            icon.color: "#b84240"
+                            onClicked: switchApp.request(quickGrid.model, model.appid, 0)
+                        }
+                        BusyIndicator {
+                            visible: shortcut.stopping
+                            running: visible
+                            Layout.preferredWidth: 32
+                            Layout.preferredHeight: 32
+                            Accessible.name: qsTranslate("QuitSegue", "Quitting %1...").arg(shortcut.text)
+                        }
+                        OverflowButton {
+                            id: appOptions
+                            Accessible.name: qsTr("Options for %1").arg(shortcut.text)
+                            onClicked: {
+                                if (appMenu.popup)
+                                    appMenu.popup(appOptions, appOptions.width - appMenu.width, appOptions.height)
+                                else
+                                    appMenu.open()
+                            }
+                        }
+                    }
+                }
+                ToolbarToolTip {
+                    visible: shortcut.visible && shortcutName.truncated && !appMenu.visible &&
+                             !appOptions.hovered && !resumeButton.hovered && !stopButton.hovered &&
+                             (shortcut.hovered || shortcut.visualFocus)
+                    text: shortcut.text
+                    width: Math.min(implicitWidth, shortcut.width)
+                }
 
-        // Display a tooltip with the full name if it's truncated
-        ToolTip.text: model.name
-        ToolTip.delay: 1000
-        ToolTip.timeout: 5000
-        ToolTip.visible: (hovered || highlighted) && pcNameText.truncated
-
-        Loader {
-            id: pcContextMenuLoader
-            asynchronous: true
-            sourceComponent: NavigableMenu {
-                id: pcContextMenu
-                initiator: pcContextMenuLoader.parent
-                MenuItem {
-                    text: qsTr("PC Status: %1").arg(model.online ? qsTr("Online") : qsTr("Offline"))
-                    font.bold: true
-                    enabled: false
-                }
-                NavigableMenuItem {
-                    text: qsTr("View All Apps")
-                    onTriggered: {
-                        var component = Qt.createComponent("AppView.qml")
-                        var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name, "showHiddenGames": true})
-                        stackView.push(appView)
-                    }
-                    visible: model.online && model.paired
-                }
-                NavigableMenuItem {
-                    text: qsTr("Wake PC")
-                    onTriggered: computerModel.wakeComputer(index)
-                    visible: !model.online && model.wakeable
-                }
-                NavigableMenuItem {
-                    text: qsTr("Test Network")
-                    onTriggered: {
-                        computerModel.testConnectionForComputer(index)
-                        testConnectionDialog.open()
+                function launch() {
+                    if (devices.currentQuit) return
+                    if (ComputerManager.activateStreamWindow(device.hostUuid)) return
+                    var apps = quickGrid.model
+                    var running = apps.getRunningAppId()
+                    if (running && running !== model.appid) {
+                        switchApp.request(apps, running, model.appid)
+                    } else {
+                        window.launchGuiSession(apps.createSessionForApp(index))
                     }
                 }
-
-                NavigableMenuItem {
-                    text: qsTr("Rename PC")
-                    onTriggered: {
-                        renamePcDialog.pcIndex = index
-                        renamePcDialog.originalName = model.name
-                        renamePcDialog.open()
+                onClicked: launch()
+                onPressAndHold: appMenu.popup ? appMenu.popup() : appMenu.open()
+                Keys.onMenuPressed: appMenu.open()
+                Keys.onPressed: function(event) {
+                    if (event.key === Qt.Key_F10 && (event.modifiers & Qt.ShiftModifier)) {
+                        appMenu.open()
+                        event.accepted = true
                     }
                 }
-                NavigableMenuItem {
-                    text: qsTr("Delete PC")
-                    onTriggered: {
-                        deletePcDialog.pcIndex = index
-                        deletePcDialog.pcName = model.name
-                        deletePcDialog.open()
-                    }
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.RightButton
+                    onClicked: shortcut.pressAndHold()
                 }
-                NavigableMenuItem {
-                    text: qsTr("View Details")
-                    onTriggered: {
-                        showPcDetailsDialog.pcDetails = model.details
-                        showPcDetailsDialog.open()
+                NavigableMenu {
+                    id: appMenu
+                    initiator: appOptions.activeFocus ? appOptions : shortcut
+                    margins: 8
+                    width: Math.min(window.width - 2 * margins, Math.max(200, contentWidth + leftPadding + rightPadding))
+                    padding: 5
+                    background: Rectangle {
+                        radius: 8
+                        color: "white"
+                        border.color: "#c5d4e6"
+                    }
+                    NavigableMenuItem {
+                        visible: !model.running
+                        text: device && device.hasStreamWindow ? qsTr("Show remote control window") : model.isDesktop
+                              ? qsTranslate("AppView", "Connect to Desktop") : qsTranslate("AppView", "Launch Game")
+                        onTriggered: shortcut.launch()
+                    }
+                    NavigableMenuItem {
+                        checkable: true
+                        checked: model.directLaunch
+                        enabled: !model.hidden
+                        text: qsTranslate("AppView", "Direct Launch")
+                        onTriggered: quickGrid.model.setAppDirectLaunch(index, !model.directLaunch)
+                    }
+                    NavigableMenuItem {
+                        checkable: true
+                        checked: model.hidden
+                        enabled: model.hidden || (!model.running && !model.directLaunch)
+                        text: qsTranslate("AppView", "Hide Game")
+                        onTriggered: quickGrid.model.setAppHidden(index, !model.hidden)
                     }
                 }
             }
         }
+    }
 
-        onClicked: {
-            if (model.online) {
-                if (!model.serverSupported) {
-                    errorDialog.text = qsTr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(model.name)
-                    errorDialog.helpText = ""
-                    errorDialog.open()
-                }
-                else if (model.paired) {
-                    // go to game view
-                    var component = Qt.createComponent("AppView.qml")
-                    var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
-                    stackView.push(appView)
-                }
-                else {
-                    var pin = computerModel.generatePinString()
-
-                    // Kick off pairing in the background
-                    computerModel.pairComputer(index, pin)
-
-                    // Display the pairing dialog
-                    pairDialog.pin = pin
-                    pairDialog.open()
-                }
-            } else if (!model.online) {
-                // Using open() here because it may be activated by keyboard
-                pcContextMenu.open()
-            }
+    NavigableMessageDialog {
+        id: switchApp
+        property var apps
+        property int runningId
+        property int targetId
+        standardButtons: Dialog.Yes | Dialog.No
+        function request(list, running, target) {
+            if (devices.currentQuit) return
+            apps = list
+            runningId = running
+            targetId = target
+            text = qsTranslate("AppView", "Are you sure you want to quit %1? Any unsaved progress will be lost.").arg(apps.getRunningAppName())
+            open()
         }
-
-        onPressAndHold: {
-            // popup() ensures the menu appears under the mouse cursor
-            if (pcContextMenu.popup) {
-                pcContextMenu.popup()
-            }
-            else {
-                // Qt 5.9 doesn't have popup()
-                pcContextMenu.open()
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.RightButton;
-            onClicked: {
-                parent.pressAndHold()
-            }
-        }
-
-        Keys.onMenuPressed: {
-            // We must use open() here so the menu is positioned on
-            // the ItemDelegate and not where the mouse cursor is
-            pcContextMenu.open()
-        }
-
-        Keys.onDeletePressed: {
-            deletePcDialog.pcIndex = index
-            deletePcDialog.pcName = model.name
-            deletePcDialog.open()
+        onAccepted: {
+            if (devices.currentQuit || !device || !apps || apps !== quickGrid.model || apps.getRunningAppId() !== runningId) return
+            if (targetId && ComputerManager.activateStreamWindow(device.hostUuid)) return
+            devices.pendingQuits[device.hostUuid] = { runningId: runningId, targetId: targetId }
+            devices.pendingQuitsChanged()
+            apps.quitRunningApp()
         }
     }
 
@@ -308,16 +877,68 @@ CenteredGridView {
         }
     }
 
-    NavigableMessageDialog {
+    NavigableDialog {
         id: deletePcDialog
-        // don't allow edits to the rest of the window while open
-        property int pcIndex : -1
-        property string pcName : ""
-        text: qsTr("Are you sure you want to remove '%1'?").arg(pcName)
-        standardButtons: Dialog.Yes | Dialog.No
-
+        property string pcUuid
+        property string pcName
+        title: qsTr("Remove device")
+        width: Math.min(392, devices.width - 24)
+        padding: 22
+        closePolicy: Popup.CloseOnEscape
+        Material.theme: Material.Light
+        function request(uuid, name) {
+            pcUuid = uuid
+            pcName = name
+            open()
+        }
+        onOpened: cancelRemoval.forceActiveFocus(Qt.TabFocusReason)
         onAccepted: {
-            computerModel.deleteComputer(pcIndex)
+            var targetRow = computerModel.indexOfUuid(pcUuid)
+            if (targetRow >= 0)
+                computerModel.deleteComputer(targetRow)
+        }
+        background: Rectangle {
+            radius: 14
+            color: "#ffffff"
+            border.color: "#dce3ec"
+        }
+        header: Label {
+            text: deletePcDialog.title
+            leftPadding: 22; rightPadding: 22; topPadding: 20
+            color: "#172437"; font.pixelSize: 20; font.weight: Font.DemiBold
+        }
+        contentItem: ColumnLayout {
+            spacing: 18
+            Label {
+                Layout.fillWidth: true
+                text: qsTr("Remove “%1” from your device list?").arg(deletePcDialog.pcName)
+                textFormat: Text.PlainText
+                wrapMode: Text.Wrap
+                color: "#43536a"; font.pixelSize: 15
+            }
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                spacing: 8
+                Button {
+                    id: cancelRemoval
+                    text: qsTr("Cancel")
+                    flat: true
+                    Keys.onReturnPressed: deletePcDialog.reject()
+                    Keys.onEnterPressed: deletePcDialog.reject()
+                    KeyNavigation.right: confirmRemoval
+                    onClicked: deletePcDialog.reject()
+                }
+                Button {
+                    id: confirmRemoval
+                    text: qsTr("Remove device")
+                    highlighted: true
+                    Material.accent: "#aa3540"
+                    Keys.onReturnPressed: deletePcDialog.accept()
+                    Keys.onEnterPressed: deletePcDialog.accept()
+                    KeyNavigation.left: cancelRemoval
+                    onClicked: deletePcDialog.accept()
+                }
+            }
         }
     }
 
@@ -356,7 +977,7 @@ CenteredGridView {
         id: renamePcDialog
         property string label: qsTr("Enter the new name for this PC:")
         property string originalName
-        property int pcIndex : -1;
+        property string pcUuid
 
         standardButtons: Dialog.Ok | Dialog.Cancel
 
@@ -370,8 +991,9 @@ CenteredGridView {
         }
 
         onAccepted: {
-            if (editText.text) {
-                computerModel.renameComputer(pcIndex, editText.text)
+            var row = computerModel.indexOfUuid(pcUuid)
+            if (editText.text && row >= 0) {
+                computerModel.renameComputer(row, editText.text)
             }
         }
 
@@ -406,5 +1028,4 @@ CenteredGridView {
         standardButtons: Dialog.Ok
     }
 
-    ScrollBar.vertical: ScrollBar {}
 }

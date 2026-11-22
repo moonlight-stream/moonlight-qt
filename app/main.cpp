@@ -1,4 +1,10 @@
 #include <QGuiApplication>
+#ifdef Q_OS_WIN
+#include <QApplication>
+#include <QSystemTrayIcon>
+#include <QMenu>
+#include <QWindow>
+#endif
 #include <QStyleHints>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -34,6 +40,9 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <dwmapi.h>
+#include "streaming/windowcaption.h"
+#include "streaming/streamwindow.h"
 #include <dxgi1_6.h>
 #elif defined(Q_OS_LINUX)
 #include <openssl/ssl.h>
@@ -194,7 +203,7 @@ void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const ch
     }
 
     QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
-    QString txt = QString("%1 - SDL %2 (%3): %4\n").arg(logTime.toString()).arg(priorityTxt).arg(category).arg(message);
+    QString txt = QString("%1 - SDL %2 (%3): %4\n").arg(logTime.toString(Qt::ISODateWithMs)).arg(priorityTxt).arg(category).arg(message);
 
     logToLoggerStream(txt);
 }
@@ -231,7 +240,7 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
     }
 
     QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
-    QString txt = QString("%1 - Qt %2: %3\n").arg(logTime.toString()).arg(typeTxt).arg(msg);
+    QString txt = QString("%1 - Qt %2: %3\n").arg(logTime.toString(Qt::ISODateWithMs)).arg(typeTxt).arg(msg);
 
     logToLoggerStream(txt);
 }
@@ -259,7 +268,7 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 
     if (shouldPrefixThisMessage) {
         QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
-        QString txt = QString("%1 - FFmpeg: %2").arg(logTime.toString()).arg(lineBuffer);
+        QString txt = QString("%1 - FFmpeg: %2").arg(logTime.toString(Qt::ISODateWithMs)).arg(lineBuffer);
         logToLoggerStream(txt);
     }
     else {
@@ -468,7 +477,7 @@ int main(int argc, char *argv[])
     if (IS_UNSPECIFIED_HANDLE(oldConErr))
 #endif
     {
-        s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
+        s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1-%2.log").arg(QDateTime::currentSecsSinceEpoch()).arg(QCoreApplication::applicationPid())));
 
         // The log directory may be shared with other users (/tmp on macOS), so
         // we must never open a file or symlink that someone else planted there.
@@ -636,15 +645,13 @@ int main(int argc, char *argv[])
     }
 #endif
 
-#if !defined(Q_OS_WIN32) || QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#if !defined(Q_OS_WIN32)
     // Moonlight requires the non-threaded renderer because we depend
     // on being able to control the render thread by blocking in the
     // main thread (and pumping events from the main thread when needed).
     // That doesn't work with the threaded renderer which causes all
     // sorts of odd behavior depending on the platform.
     //
-    // NB: Windows defaults to the "windows" non-threaded render loop on
-    // Qt 5 and the threaded render loop on Qt 6.
     qputenv("QSG_RENDER_LOOP", "basic");
 #endif
 
@@ -766,7 +773,11 @@ int main(int argc, char *argv[])
         SDL_SetHint("SDL_VIDEO_WAYLAND_MODE_SCALING", "aspect");
     }
 
+#ifdef Q_OS_WIN
+    QApplication app(argc, argv);
+#else
     QGuiApplication app(argc, argv);
+#endif
 
 #ifdef Q_OS_DARWIN
     // macOS defaults "Keyboard navigation" to text fields and lists only, which
@@ -818,6 +829,14 @@ int main(int argc, char *argv[])
 
     GlobalCommandLineParser parser;
     GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse(app.arguments());
+#if defined(Q_OS_WIN32) && QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // The Windows launcher starts streams in a child process. Let Qt
+    // render the launcher on its default render thread during live resize.
+    // Processes that run the SDL loop still need rendering on the GUI thread.
+    if (commandLineParserResult != GlobalCommandLineParser::NormalStartRequested) {
+        qputenv("QSG_RENDER_LOOP", "basic");
+    }
+#endif
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::ListRequested:
         // Don't log to the console since it will jumble the command output
@@ -1013,6 +1032,13 @@ int main(int argc, char *argv[])
             QString host    = streamParser.getHost();
             QString appName = streamParser.getAppName();
             auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
+#ifdef Q_OS_WIN
+            StreamWindow::adoptReservation(host);
+            QObject::connect(launcher, &CliStartStream::Launcher::failed, &app, &StreamWindow::release);
+            QObject::connect(launcher, &CliStartStream::Launcher::sessionCreated, &app, [&app](const QString&, Session* session) {
+                QObject::connect(session, &Session::sessionFinished, &app, &StreamWindow::release);
+            });
+#endif
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
         }
@@ -1045,7 +1071,21 @@ int main(int argc, char *argv[])
         }
     }
 
+    bool trayAvailable = false;
+#ifdef Q_OS_WIN
+    QMenu trayMenu;
+    QSystemTrayIcon tray(app.windowIcon());
+    trayAvailable = commandLineParserResult == GlobalCommandLineParser::NormalStartRequested &&
+                    QSystemTrayIcon::isSystemTrayAvailable();
+#endif
     if (hasGUI) {
+        bool deferInitialShow = false;
+#ifdef Q_OS_WIN
+        deferInitialShow = commandLineParserResult == GlobalCommandLineParser::NormalStartRequested ||
+                           commandLineParserResult == GlobalCommandLineParser::StreamRequested;
+#endif
+        engine.rootContext()->setContextProperty("deferInitialShow", deferInitialShow);
+        engine.rootContext()->setContextProperty("trayAvailable", trayAvailable);
         engine.rootContext()->setContextProperty("initialView", initialView);
         engine.rootContext()->setContextProperty("isGuiLaunch", commandLineParserResult == GlobalCommandLineParser::NormalStartRequested);
 
@@ -1053,8 +1093,52 @@ int main(int argc, char *argv[])
         engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
         if (engine.rootObjects().isEmpty())
             return -1;
+#ifdef Q_OS_WIN
+        auto window = qobject_cast<QWindow*>(engine.rootObjects().first());
+        if (commandLineParserResult == GlobalCommandLineParser::NormalStartRequested) {
+            // The launcher uses a custom title bar, so opt in to native window rounding.
+            const DWM_WINDOW_CORNER_PREFERENCE corners = DWMWCP_ROUND;
+            DwmSetWindowAttribute(reinterpret_cast<HWND>(window->winId()),
+                                  DWMWA_WINDOW_CORNER_PREFERENCE, &corners, sizeof(corners));
+        }
+        else if (commandLineParserResult == GlobalCommandLineParser::StreamRequested) {
+            applyLightWindowCaption(reinterpret_cast<HWND>(window->winId()));
+            StreamWindow::setProgressWindow(reinterpret_cast<HWND>(window->winId()));
+        }
+        if (deferInitialShow) {
+            QMetaObject::invokeMethod(window, "showInitialWindow", Qt::DirectConnection);
+        }
+#endif
     }
 
+#ifdef Q_OS_WIN
+    if (trayAvailable) {
+        auto mainWindow = qobject_cast<QWindow*>(engine.rootObjects().first());
+        auto restore = [mainWindow]() {
+            if (mainWindow->windowState() == Qt::WindowMinimized) {
+                mainWindow->showNormal();
+            } else {
+                mainWindow->show();
+            }
+            mainWindow->raise();
+            mainWindow->requestActivate();
+        };
+        trayMenu.addAction(QCoreApplication::translate("main", "Show main window"), restore);
+        trayMenu.addAction(QCoreApplication::translate("main", "Quit"), &app, &QCoreApplication::quit);
+        tray.setContextMenu(&trayMenu);
+        tray.setToolTip(app.applicationName());
+        QObject::connect(&tray, &QSystemTrayIcon::activated, &app, [restore](QSystemTrayIcon::ActivationReason reason) {
+            if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick) {
+                restore();
+            }
+        });
+        auto prefs = StreamingPreferences::get();
+        tray.setVisible(prefs->closeToTray);
+        QObject::connect(prefs, &StreamingPreferences::closeToTrayChanged, &tray, [&tray, prefs]() {
+            tray.setVisible(prefs->closeToTray);
+        });
+    }
+#endif
     int err = app.exec();
 
     // Give worker tasks time to properly exit. Fixes PendingQuitTask

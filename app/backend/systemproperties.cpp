@@ -62,6 +62,11 @@ SystemProperties::SystemProperties()
 
 #ifdef Q_OS_WIN32
     {
+        wchar_t wallpaperPath[MAX_PATH] = {};
+        if (SystemParametersInfoW(SPI_GETDESKWALLPAPER, MAX_PATH, wallpaperPath, 0) && wallpaperPath[0]) {
+            desktopWallpaper = QUrl::fromLocalFile(QString::fromWCharArray(wallpaperPath));
+        }
+
         USHORT processArch, machineArch;
 
         // Use IsWow64Process2() because it doesn't lie on ARM64

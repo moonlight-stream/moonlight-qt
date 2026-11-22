@@ -1,4 +1,13 @@
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+#endif
 #include "session.h"
+#ifdef Q_OS_WIN32
+#include "captioncontrols.h"
+#include "streamwindow.h"
+#endif
 #include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
 #include "backend/richpresencemanager.h"
@@ -34,12 +43,15 @@
 #include <QtEndian>
 #include <QCoreApplication>
 #include <QThreadPool>
+#include <QProcess>
+#include <QDir>
 #include <QSvgRenderer>
 #include <QPainter>
 #include <QImage>
 #include <QGuiApplication>
 #include <QCursor>
 #include <QScreen>
+#include <QStyleHints>
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 #include <QQuickOpenGLUtils>
@@ -68,16 +80,30 @@ QSemaphore Session::s_ActiveSessionSemaphore(1);
 
 void Session::clStageStarting(int stage)
 {
-    // We know this is called on the same thread as LiStartConnection()
-    // which happens to be the main thread, so it's cool to interact
-    // with the GUI in these callbacks.
-    emit s_ActiveSession->stageStarting(QString::fromLocal8Bit(LiGetStageName(stage)));
+    QString description;
+    switch (stage) {
+    case STAGE_PLATFORM_INIT: description = tr("Setting up networking..."); break;
+    case STAGE_NAME_RESOLUTION: description = tr("Resolving the host address..."); break;
+    case STAGE_AUDIO_STREAM_INIT: description = tr("Preparing the audio stream..."); break;
+    case STAGE_RTSP_HANDSHAKE: description = tr("Negotiating stream settings (RTSP)..."); break;
+    case STAGE_CONTROL_STREAM_INIT: description = tr("Preparing the control channel..."); break;
+    case STAGE_VIDEO_STREAM_INIT: description = tr("Preparing the video stream..."); break;
+    case STAGE_INPUT_STREAM_INIT: description = tr("Preparing the input channel..."); break;
+    case STAGE_CONTROL_STREAM_START: description = tr("Connecting the control channel..."); break;
+    case STAGE_VIDEO_STREAM_START: description = tr("Connecting the video stream..."); break;
+    case STAGE_AUDIO_STREAM_START: description = tr("Connecting the audio stream..."); break;
+    case STAGE_INPUT_STREAM_START: description = tr("Connecting the input channel..."); break;
+    default: description = QString::fromLocal8Bit(LiGetStageName(stage)); break;
+    }
+    emit s_ActiveSession->stageStarting(description);
 }
 
 void Session::clStageFailed(int stage, int errorCode)
 {
     // Perform the port test now, while we're on the async connection thread and not blocking the UI.
     unsigned int portFlags = LiGetPortFlagsFromStage(stage);
+    if (portFlags)
+        emit s_ActiveSession->stageStarting(tr("Checking network ports..."));
     s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
 
     char failingPorts[128];
@@ -171,6 +197,7 @@ void Session::clRumble(unsigned short controllerNumber, unsigned short lowFreqMo
 
 void Session::clConnectionStatusUpdate(int connectionStatus)
 {
+    SDL_AtomicSet(&s_ActiveSession->m_ConnectionStatus, connectionStatus);
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Connection status update: %d",
                 connectionStatus);
@@ -588,6 +615,30 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
 {
 }
 
+bool Session::launchInWindow() const
+{
+    QProcess child;
+    child.setProgram(QCoreApplication::applicationFilePath());
+    child.setArguments({QStringLiteral("stream"), QStringLiteral("--display-mode"), QStringLiteral("windowed"),
+                        QStringLiteral("--"), m_Computer->uuid, m_App.name});
+    child.setWorkingDirectory(QDir::currentPath());
+    auto environment = QProcessEnvironment::systemEnvironment();
+    environment.insert(QStringLiteral("MOONLIGHT_WINDOW_APP_ID"), QString::number(m_App.id));
+    {
+        QReadLocker lock(&m_Computer->lock);
+        if (m_Computer->state == NvComputer::CS_ONLINE && !m_Computer->activeAddress.isNull()) {
+            environment.insert(QStringLiteral("MOONLIGHT_WINDOW_HOST_ADDRESS"), m_Computer->activeAddress.address());
+            environment.insert(QStringLiteral("MOONLIGHT_WINDOW_HOST_PORT"), QString::number(m_Computer->activeAddress.port()));
+        }
+    }
+    child.setProcessEnvironment(environment);
+#ifdef Q_OS_WIN32
+    return StreamWindow::launchOrActivate(child, m_Computer->uuid);
+#else
+    return child.startDetached();
+#endif
+}
+
 Session::~Session()
 {
     // NB: This may not get destroyed for a long time! Don't put any non-trivial cleanup here.
@@ -975,7 +1026,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         return false;
     }
 
-    if (m_Preferences->absoluteMouseMode && !m_App.isAppCollectorGame) {
+    if (m_Preferences->absoluteMouseMode && !m_App.isDesktop() && !m_App.isAppCollectorGame) {
         emitLaunchWarning(tr("Your selection to enable remote desktop mouse mode may cause problems in games."));
     }
 
@@ -1272,7 +1323,9 @@ private:
         // Only quit the running app if our session terminated gracefully
         bool shouldQuit =
                 !m_Session->m_UnexpectedTermination &&
-                m_Session->m_Preferences->quitAppAfter;
+                !m_Session->m_DisconnectOnly &&
+                (m_Session->m_ExplicitHostQuit ||
+                 (m_Session->m_Preferences->quitAppAfter && !m_Session->m_App.isDesktop()));
 
         // Notify the UI
         if (shouldQuit) {
@@ -1553,12 +1606,134 @@ void Session::toggleFullscreen()
     }
 #endif
 
+#ifdef Q_OS_WIN32
+    updateFullscreenControls();
+#endif
     // Input handler might need to start/stop keyboard grab after changing modes
     m_InputHandler->updateKeyboardGrabState();
 
     // Input handler might need stop/stop mouse grab after changing modes
     m_InputHandler->updatePointerRegionLock();
 }
+
+#ifdef Q_OS_WIN32
+void Session::updateFullscreenControls()
+{
+    m_ControlsExpanded = false;
+    m_ControlPressed = false;
+    m_OverlayManager.showControls(false);
+    m_OverlayManager.setOverlayState(Overlay::OverlayFullscreenControls,
+                                     SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN);
+}
+
+bool Session::handleFullscreenControlEvent(SDL_Event& event)
+{
+    using Control = Overlay::OverlayManager::Control;
+    if (!m_OverlayManager.isOverlayEnabled(Overlay::OverlayFullscreenControls)) {
+        return false;
+    }
+    int x, y;
+    bool touch = false, down = false, up = false;
+    switch (event.type) {
+    case SDL_WINDOWEVENT:
+        if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+            updateFullscreenControls();
+        }
+        return false;
+    case SDL_MOUSEMOTION:
+        if (event.motion.which == SDL_TOUCH_MOUSEID) {
+            return false;
+        }
+        x = event.motion.x;
+        y = event.motion.y;
+        break;
+    case SDL_MOUSEBUTTONDOWN:
+    case SDL_MOUSEBUTTONUP:
+        if (event.button.which == SDL_TOUCH_MOUSEID || event.button.button != SDL_BUTTON_LEFT) {
+            return false;
+        }
+        x = event.button.x;
+        y = event.button.y;
+        down = event.type == SDL_MOUSEBUTTONDOWN;
+        up = !down;
+        break;
+    case SDL_FINGERDOWN:
+    case SDL_FINGERMOTION:
+    case SDL_FINGERUP:
+        if (SDL_GetTouchDeviceType(event.tfinger.touchId) != SDL_TOUCH_DEVICE_DIRECT) {
+            return false;
+        }
+        touch = true;
+        down = event.type == SDL_FINGERDOWN;
+        up = event.type == SDL_FINGERUP;
+        break;
+    default:
+        return false;
+    }
+
+    int width, height;
+    SDL_GetWindowSize(m_Window, &width, &height);
+    if (touch) {
+        x = int(event.tfinger.x * width);
+        y = int(event.tfinger.y * height);
+    }
+    auto hit = m_OverlayManager.controlAt(width, height, x, y);
+    if (m_ControlPressed && (touch != m_ControlTouch ||
+            (touch && event.tfinger.fingerId != m_ControlFinger))) {
+        return false;
+    }
+    if (down && (hit != Control::None || m_ControlsExpanded)) {
+        m_ControlPressed = true;
+        m_ControlTouch = touch;
+        if (touch) {
+            m_ControlFinger = event.tfinger.fingerId;
+        }
+        m_ControlDragging = false;
+        if (hit == Control::Handle) {
+            auto rect = m_OverlayManager.dragReferenceRect(width, height);
+            m_ControlPressPoint = QPoint(x, y);
+            m_ControlGrabOffset = m_ControlPressPoint - QPoint(rect.x, rect.y);
+        }
+        m_PressedControl = hit;
+        return true;
+    }
+    if (m_ControlPressed && m_PressedControl == Control::Handle) {
+        auto delta = QPoint(x, y) - m_ControlPressPoint;
+        if (m_ControlDragging || delta.manhattanLength() >= QGuiApplication::styleHints()->startDragDistance()) {
+            // Redrawing the overlay uploads a texture. Coalesce high-rate mouse motion,
+            // but always apply the first move and the exact release position.
+            auto now = SDL_GetTicks();
+            if (!m_ControlDragging || up || now - m_LastControlMove >= 16) {
+                m_OverlayManager.moveHandle(width, height, x - m_ControlGrabOffset.x(), y - m_ControlGrabOffset.y());
+                m_LastControlMove = now;
+            }
+            m_ControlDragging = !up;
+            m_ControlPressed = !up;
+            return true;
+        }
+    }
+    if (up && m_ControlPressed) {
+        m_ControlPressed = false;
+        m_ControlsExpanded = hit == Control::Handle && hit == m_PressedControl;
+        m_OverlayManager.showControls(m_ControlsExpanded);
+        if (hit == m_PressedControl && hit == Control::LeaveFullscreen) {
+            toggleFullscreen();
+            m_InputHandler->raiseAllKeys();
+        }
+        else if (hit == m_PressedControl && hit == Control::Disconnect) {
+            m_DisconnectOnly = true;
+            event.type = SDL_QUIT;
+            return false;
+        }
+        return true;
+    }
+    if (!up && !down) {
+        m_OverlayManager.showControls(m_ControlsExpanded, hit);
+        return m_ControlPressed;
+    }
+    return false;
+}
+#endif
 
 void Session::notifyMouseEmulationMode(bool enabled)
 {
@@ -1628,7 +1803,9 @@ bool Session::startConnectionAsync()
 
     try {
         NvHTTP http(m_Computer);
-        http.startApp(m_Computer->currentGameId != 0 ? "resume" : "launch",
+        const bool resume = m_Computer->currentGameId != 0;
+        emit requestingHostSession(resume);
+        http.startApp(resume ? "resume" : "launch",
                       m_Computer->isNvidiaServerSoftware,
                       m_App.id, &m_StreamConfig,
                       enableGameOptimizations,
@@ -1644,7 +1821,21 @@ bool Session::startConnectionAsync()
         return false;
     }
 
+    emit stageStarting(tr("Checking the network route..."));
     QByteArray hostnameStr = m_Computer->activeAddress.address().toUtf8();
+#ifdef Q_OS_WIN32
+    addrinfo hints{};
+    hints.ai_socktype = SOCK_DGRAM;
+    addrinfo* routes = nullptr;
+    if (getaddrinfo(hostnameStr.constData(), nullptr, &hints, &routes) == 0) {
+        for (auto* route = routes; route; route = route->ai_next) {
+            if (GetBestInterfaceEx(route->ai_addr, &m_StreamInterface) == NO_ERROR) {
+                break;
+            }
+        }
+        freeaddrinfo(routes);
+    }
+#endif
     QByteArray siAppVersion = m_Computer->appVersion.toUtf8();
 
     SERVER_INFORMATION hostInfo;
@@ -1757,7 +1948,7 @@ void Session::setShouldExit(bool quitHostApp)
     // caller doesn't override to force quit, let the preferences
     // dictate what we do.
     if (quitHostApp) {
-        m_Preferences->quitAppAfter = true;
+        m_ExplicitHostQuit = true;
     }
 
     m_ShouldExit = true;
@@ -1863,6 +2054,9 @@ void Session::exec()
     std::string windowName = QString(m_Computer->name + " - Moonlight").toStdString();
 #endif
 
+#ifdef Q_OS_WIN32
+    defaultWindowFlags |= SDL_WINDOW_HIDDEN;
+#endif
     m_Window = SDL_CreateWindow(windowName.c_str(),
                                 x,
                                 y,
@@ -1914,6 +2108,16 @@ void Session::exec()
         // or our icon will not persist when toggling to windowed mode
         SDL_SetWindowIcon(m_Window, iconSurface);
     }
+#endif
+
+#ifdef Q_OS_WIN32
+    SDL_SysWMinfo wmInfo{};
+    SDL_VERSION(&wmInfo.version);
+    if (SDL_GetWindowWMInfo(m_Window, &wmInfo)) {
+        applyLightWindowCaption(wmInfo.info.win.window);
+        StreamWindow::setConnectedWindow(wmInfo.info.win.window);
+    }
+    SDL_ShowWindow(m_Window);
 #endif
 
     // Update the window display mode based on our current monitor
@@ -1972,7 +2176,14 @@ void Session::exec()
     RichPresenceManager presence(*m_Preferences, m_App.name);
 
     // Toggle the stats overlay if requested by the user
+#ifndef Q_OS_WIN32
     m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
+#endif
+
+#ifdef Q_OS_WIN32
+    m_OverlayManager.configureControls(m_StreamConfig.width, m_StreamConfig.height);
+    updateFullscreenControls();
+#endif
 
     // Switch to async logging mode when we enter the SDL loop
     StreamUtils::enterAsyncLoggingMode();
@@ -1980,7 +2191,75 @@ void Session::exec()
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
+    Uint32 lastTitleUpdate = SDL_GetTicks();
+#ifdef Q_OS_WIN32
+    MIB_IF_ROW2 previousTraffic{};
+    CaptionControls caption(m_Window, m_Preferences->showPerformanceOverlay);
+    const Uint32 hudStart = lastTitleUpdate;
+    caption.update();
+    previousTraffic.InterfaceIndex = m_StreamInterface;
+    bool haveTraffic = m_StreamInterface && GetIfEntry2(&previousTraffic) == NO_ERROR;
+#endif
     for (;;) {
+        const Uint32 now = SDL_GetTicks();
+        if (now - lastTitleUpdate >= 1000) {
+            const Uint32 elapsed = now - lastTitleUpdate;
+            const int frames = SDL_AtomicSet(&m_DecodedFrames, 0);
+            lastTitleUpdate = now;
+            std::string title = windowName;
+            const bool windowed = !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN);
+            {
+                QStringList metrics;
+                if (SDL_AtomicGet(&m_ConnectionStatus) == CONN_STATUS_POOR) {
+                    metrics << tr("Poor connection");
+                }
+                metrics << QStringLiteral("%1 fps").arg(qRound(frames * 1000.0 / elapsed));
+                uint32_t rtt;
+                bool hasRtt = LiGetEstimatedRttInfo(&rtt, nullptr);
+                metrics << QStringLiteral("RTT %1 ms").arg(hasRtt ?
+                               QString::number(rtt) : QStringLiteral("—"));
+                metrics << tr("Frame %1 ms").arg(frames ? QString::number(SDL_AtomicGet(&m_FrameDelayMs)) :
+                                                         QStringLiteral("—"));
+#ifdef Q_OS_WIN32
+                MIB_IF_ROW2 traffic{};
+                traffic.InterfaceIndex = m_StreamInterface;
+                bool valid = m_StreamInterface && GetIfEntry2(&traffic) == NO_ERROR;
+                if (valid && haveTraffic && traffic.OutOctets >= previousTraffic.OutOctets &&
+                        traffic.InOctets >= previousTraffic.InOctets) {
+                    // Bytes per millisecond equals decimal kB/s.
+                    metrics << tr("NIC ↑%1 ↓%2 kB/s")
+                               .arg((traffic.OutOctets - previousTraffic.OutOctets) / elapsed)
+                               .arg((traffic.InOctets - previousTraffic.InOctets) / elapsed);
+                } else {
+                    metrics << tr("NIC ↑%1 ↓%2 kB/s").arg(QStringLiteral("—"), QStringLiteral("—"));
+                }
+                const bool ratesValid = valid && haveTraffic && traffic.OutOctets >= previousTraffic.OutOctets &&
+                                        traffic.InOctets >= previousTraffic.InOctets;
+                const QString missing = QStringLiteral("—");
+                const auto seconds = (now - hudStart) / 1000;
+                const auto loss = SDL_AtomicGet(&m_NetworkLossBasisPoints);
+                caption.setValues({
+                    QStringLiteral("%1:%2:%3").arg(seconds/3600).arg(seconds/60%60,2,10,QChar('0')).arg(seconds%60,2,10,QChar('0')),
+                    QStringLiteral("%1 fps").arg(qRound(frames * 1000.0 / elapsed)),
+                    hasRtt ? QStringLiteral("%1 ms").arg(rtt) : missing,
+                    frames ? QStringLiteral("%1 ms").arg(SDL_AtomicGet(&m_FrameDelayMs)) : missing,
+                    ratesValid ? QStringLiteral("%1 kB/s").arg((traffic.OutOctets-previousTraffic.OutOctets)/elapsed) : missing,
+                    ratesValid ? QStringLiteral("%1 kB/s").arg((traffic.InOctets-previousTraffic.InOctets)/elapsed) : missing,
+                    loss >= 0 && frames ? QStringLiteral("%1%").arg(loss/100.0,0,'f',2) : missing,
+                    QStringLiteral("%1 × %2").arg(m_StreamConfig.width).arg(m_StreamConfig.height)
+                });
+                previousTraffic = traffic;
+                haveTraffic = valid;
+#endif
+                if (windowed) title += "  |  " + metrics.join(QStringLiteral(" | ")).toStdString();
+            }
+#ifdef Q_OS_WIN32
+            caption.update();
+#endif
+            if (title != SDL_GetWindowTitle(m_Window)) {
+                SDL_SetWindowTitle(m_Window, title.c_str());
+            }
+        }
 #if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)
         // SDL 2.0.18 has a proper wait event implementation that uses platform
         // support to block on events rather than polling on Windows, macOS, X11,
@@ -2012,6 +2291,12 @@ void Session::exec()
             continue;
         }
 #endif
+#ifdef Q_OS_WIN32
+        if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_KEYDOWN) caption.dismiss();
+        if (handleFullscreenControlEvent(event)) {
+            continue;
+        }
+#endif
         switch (event.type) {
         case SDL_QUIT:
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -2020,6 +2305,15 @@ void Session::exec()
 
         case SDL_USEREVENT:
             switch (event.user.code) {
+#ifdef Q_OS_WIN32
+            case Session::ToggleStreamHud:
+                caption.toggle();
+                break;
+            case CaptionControls::Fullscreen:
+                if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) toggleFullscreen();
+                caption.update();
+                break;
+#endif
             case SDL_CODE_FRAME_READY:
                 if (m_VideoDecoder != nullptr) {
                     m_VideoDecoder->renderFrameOnMainThread();
@@ -2060,6 +2354,9 @@ void Session::exec()
 
         case SDL_WINDOWEVENT:
             // Early handling of some events
+#ifdef Q_OS_WIN32
+            caption.update();
+#endif
             switch (event.window.event) {
             case SDL_WINDOWEVENT_FOCUS_LOST:
                 if (m_Preferences->muteOnFocusLoss) {
@@ -2325,6 +2622,9 @@ void Session::exec()
     }
 
 DispatchDeferredCleanup:
+#ifdef Q_OS_WIN32
+    caption.close();
+#endif
     // Switch back to synchronous logging mode
     StreamUtils::exitAsyncLoggingMode();
 
@@ -2381,6 +2681,9 @@ DispatchDeferredCleanup:
 
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
+#ifdef Q_OS_WIN32
+    StreamWindow::release();
+#endif
     SDL_DestroyWindow(m_Window);
 
     if (iconSurface != nullptr) {

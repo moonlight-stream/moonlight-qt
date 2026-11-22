@@ -29,7 +29,8 @@ private:
 
     bool updateAppList(QVector<NvApp> newAppList);
 
-    bool pendingQuit;
+    int pendingQuitAppId = -1;
+    bool quitAcknowledged = false;
 
 public:
     NvComputer() = default;

@@ -62,9 +62,18 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected stats toggle combo");
 
+#ifdef Q_OS_WIN32
+        {
+            SDL_Event event{};
+            event.type = SDL_USEREVENT;
+            event.user.code = Session::ToggleStreamHud;
+            SDL_PushEvent(&event);
+        }
+#else
         // Toggle the stats overlay
         Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebug,
                                                             !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug));
+#endif
         break;
 
     case KeyComboToggleMouseMode:

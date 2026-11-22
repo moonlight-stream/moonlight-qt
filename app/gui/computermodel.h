@@ -1,3 +1,4 @@
+#include "appmodel.h"
 #include "backend/computermanager.h"
 #include "streaming/session.h"
 
@@ -16,10 +17,17 @@ class ComputerModel : public QAbstractListModel
         WakeableRole,
         StatusUnknownRole,
         ServerSupportedRole,
-        DetailsRole
+        DetailsRole,
+        PreviewRole,
+        UuidRole,
+        StreamWindowStateRole,
+        StreamProgressTextRole
     };
 
 public:
+    enum StreamWindowState { NoStreamWindow, OpeningStreamWindow, ConnectedStreamWindow };
+    Q_ENUM(StreamWindowState)
+
     explicit ComputerModel(QObject* object = nullptr);
 
     // Must be called before any QAbstractListModel functions
@@ -32,6 +40,7 @@ public:
     virtual QHash<int, QByteArray> roleNames() const override;
 
     Q_INVOKABLE void deleteComputer(int computerIndex);
+    Q_INVOKABLE int indexOfUuid(const QString& uuid) const;
 
     Q_INVOKABLE QString generatePinString();
 
@@ -43,7 +52,9 @@ public:
 
     Q_INVOKABLE void renameComputer(int computerIndex, QString name);
 
-    Q_INVOKABLE Session* createSessionForCurrentGame(int computerIndex);
+    Q_INVOKABLE void initializeQuickApps(AppModel* apps, int computerIndex);
+    Q_INVOKABLE Session* createQuickSession(int computerIndex);
+    Q_INVOKABLE void refreshDesktopPreviews();
 
 signals:
     void pairingCompleted(QVariant error);
@@ -57,4 +68,12 @@ private slots:
 private:
     QVector<NvComputer*> m_Computers;
     ComputerManager* m_ComputerManager;
+#ifdef Q_OS_WIN
+    void refreshStreamWindows();
+    struct StreamStatus {
+        StreamWindowState state = NoStreamWindow;
+        QString progressText;
+    };
+    QHash<QString, StreamStatus> m_StreamWindows;
+#endif
 };

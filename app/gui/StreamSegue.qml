@@ -9,15 +9,21 @@ import SystemProperties 1.0
 Item {
     property Session session
     property string appName
-    property string stageText : isResume ? qsTr("Resuming %1...").arg(appName) :
-                                           qsTr("Starting %1...").arg(appName)
-    property bool isResume : false
+    property string stageText: qsTr("Checking video and audio capabilities...")
+    readonly property string streamProgressText: progressCard.visible ? stageText : ""
+    property int lookupSteps: 0
     property bool quitAfter : false
 
-    function stageStarting(stage)
+    function requestingHostSession(resume)
     {
-        // Update the spinner text
-        stageText = qsTr("Starting %1...").arg(stage)
+        progressCard.step = lookupSteps + 2
+        stageText = resume ? qsTr("Resuming %1...").arg(appName) : qsTr("Starting %1...").arg(appName)
+    }
+
+    function stageStarting(description)
+    {
+        progressCard.step = lookupSteps + 3
+        stageText = description
     }
 
     function stageFailed(stage, errorCode, failingPorts)
@@ -34,9 +40,7 @@ Item {
     {
         // Hide the UI contents so the user doesn't
         // see them briefly when we pop off the StackView
-        stageSpinner.visible = false
-        stageLabel.visible = false
-        hintText.visible = false
+        progressCard.visible = false
 
         // Hide the window now that streaming has begun
         window.visible = false
@@ -61,6 +65,7 @@ Item {
 
     function sessionFinished(portTestResult)
     {
+        progressCard.visible = false
         if (portTestResult !== 0 && portTestResult !== -1 && streamSegueErrorDialog.text) {
             streamSegueErrorDialog.text += "\n\n" + qsTr("This PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.")
         }
@@ -113,6 +118,7 @@ Item {
         toolBar.visible = false
 
         // Hook up our signals
+        session.requestingHostSession.connect(requestingHostSession)
         session.stageStarting.connect(stageStarting)
         session.stageFailed.connect(stageFailed)
         session.connectionStarted.connect(connectionStarted)
@@ -152,7 +158,7 @@ Item {
             // in the hintText control itself to synchronize
             // with Session.exec() which requires no concurrent
             // gamepad usage.
-            hintText.text = qsTr("Tip:") + " " + qsTr("Press %1 to disconnect your session").arg(SdlGamepadKeyNavigation.getConnectedGamepads() > 0 ?
+            progressCard.hint = qsTr("Tip:") + " " + qsTr("Press %1 to disconnect your session").arg(SdlGamepadKeyNavigation.getConnectedGamepads() > 0 ?
                                                   qsTr("Start+Select+L1+R1") : qsTr("Ctrl+Alt+Shift+Q"))
 
             // Stop GUI gamepad usage now
@@ -160,7 +166,7 @@ Item {
 
             // Initialize the session and probe for host/client capabilities
             if (!session.initialize(window)) {
-                sessionFinished(0);
+                session.sessionFinished(0);
                 sessionReadyForDeletion();
                 return;
             }
@@ -168,12 +174,15 @@ Item {
             // This spinner is shown only after session.initialize() has completed
             // to prevent active animations from running during decoder probing,
             // which causes re-entrant event loop livelocks with libdecor-gtk.
-            stageSpinner.visible = true
+            progressCard.spinning = true
 
             // Don't wait unless we have toasts to display
             startSessionTimer.interval = 0
 
             // Display the toasts together in a vertical centered arrangement
+            if (session.launchWarnings.length)
+                stageText = qsTr("Reviewing stream settings...")
+
             var yOffset = 0
             for (var i = 0; i < session.launchWarnings.length; i++) {
                 var text = session.launchWarnings[i]
@@ -200,35 +209,11 @@ Item {
         sourceComponent: Item {}
     }
 
-    Row {
-        anchors.centerIn: parent
-        spacing: 5
-
-        BusyIndicator {
-            id: stageSpinner
-            running: visible
-            visible: false
-        }
-
-        Label {
-            id: stageLabel
-            height: stageSpinner.height
-            text: stageText
-            font.pointSize: 20
-            verticalAlignment: Text.AlignVCenter
-
-            wrapMode: Text.Wrap
-        }
-    }
-
-    Label {
-        id: hintText
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 50
-        anchors.horizontalCenter: parent.horizontalCenter
-        font.pointSize: 18
-        verticalAlignment: Text.AlignVCenter
-
-        wrapMode: Text.Wrap
+    StreamStatusCard {
+        id: progressCard
+        step: lookupSteps + 1
+        stepCount: lookupSteps + 3
+        text: stageText
+        spinning: false
     }
 }

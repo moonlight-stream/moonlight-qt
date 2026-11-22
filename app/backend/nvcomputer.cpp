@@ -58,7 +58,6 @@ NvComputer::NvComputer(QSettings& settings)
     this->appVersion = nullptr;
     this->maxLumaPixelsHEVC = 0;
     this->serverCodecModeSupport = 0;
-    this->pendingQuit = false;
     this->gpuModel = nullptr;
     this->isSupportedServerVersion = true;
     this->externalPort = this->remoteAddress.port();
@@ -209,7 +208,6 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
     this->gpuModel = NvHTTP::getXmlString(serverInfo, "gputype");
     this->activeAddress = http.address();
     this->state = NvComputer::CS_ONLINE;
-    this->pendingQuit = false;
     this->isSupportedServerVersion = CompatFetcher::isGfeVersionSupported(this->gfeVersion);
 }
 

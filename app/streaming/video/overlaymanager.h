@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QPointF>
 #include <QReadWriteLock>
 
 #include "SDL_compat.h"
@@ -11,6 +12,9 @@ namespace Overlay {
 enum OverlayType {
     OverlayDebug,
     OverlayStatusUpdate,
+#ifdef Q_OS_WIN32
+    OverlayFullscreenControls,
+#endif
     OverlayMax
 };
 
@@ -38,12 +42,34 @@ public:
     int getOverlayFontSize(OverlayType type);
     SDL_Surface* getUpdatedOverlaySurface(OverlayType type);
 
+#ifdef Q_OS_WIN32
+    enum class Control { None, Handle, LeaveFullscreen, Disconnect };
+    void configureControls(int streamWidth, int streamHeight);
+    SDL_Rect controlsRect(int width, int height, int panelWidth, int panelHeight) const;
+    SDL_Rect dragReferenceRect(int width, int height) const;
+    void moveHandle(int width, int height, int left, int top);
+    Control controlAt(int width, int height, int x, int y) const;
+    void showControls(bool expanded, Control hover = Control::None);
+#endif
     void setOverlayRenderer(IOverlayRenderer* renderer);
 
 private:
     void notifyOverlayUpdated(OverlayType type);
     SDL_Surface* RenderTextOutlinedWrapped(TTF_Font* font, const char* text, SDL_Color textColor, SDL_Color outlineColor, int outlineWidth, int wrapWidth);
 
+#ifdef Q_OS_WIN32
+    enum class HandleEdge { None, Left, Right };
+    HandleEdge handleEdge() const;
+    SDL_Rect videoRect(int width, int height) const;
+    mutable QReadWriteLock m_HandlePositionLock;
+    QPointF m_HandlePosition{0.5, 0.0}; // Fraction of the available travel on each axis
+    SDL_Surface* renderControls() const;
+    int m_StreamWidth = 1, m_StreamHeight = 1;
+    bool m_Expanded = false;
+    Control m_Hover = Control::None;
+    static constexpr int HandleWidth = 52, HandleHeight = 18;
+    static constexpr int MenuWidth = 272, MenuHeight = 40;
+#endif
     struct {
         bool enabled;
         int fontSize;

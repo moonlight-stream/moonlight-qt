@@ -11,6 +11,7 @@ Item {
     property string nextAppName : ""
 
     property string stageText : qsTr("Quitting %1...").arg(appName)
+    readonly property string streamProgressText: stageText
 
     function quitAppCompleted(error)
     {
@@ -23,6 +24,11 @@ Item {
 
         // If we're supposed to launch another game after this, do so now
         if (error === undefined && nextSession !== null) {
+            if (Qt.platform.os === "windows" && isGuiLaunch) {
+                window.launchGuiSession(nextSession)
+                stackView.pop()
+                return
+            }
             var component = Qt.createComponent("StreamSegue.qml")
             var segue = component.createObject(stackView, {"appName": nextAppName, "session": nextSession})
             stackView.replace(segue)
@@ -54,24 +60,9 @@ Item {
         ComputerManager.quitAppCompleted.disconnect(quitAppCompleted)
     }
 
-    Row {
-        anchors.centerIn: parent
-        spacing: 5
-
-        BusyIndicator {
-            id: stageSpinner
-            running: visible
-        }
-
-        Label {
-            id: stageLabel
-            height: stageSpinner.height
-            text: stageText
-            font.pointSize: 20
-            verticalAlignment: Text.AlignVCenter
-
-            wrapMode: Text.Wrap
-        }
+    StreamStatusCard {
+        id: stageLabel
+        text: stageText
     }
 
     ErrorMessageDialog {

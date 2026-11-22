@@ -4,11 +4,17 @@ import QtQuick.Controls 2.2
 import ComputerManager 1.0
 
 Item {
+    readonly property int lookupSteps: 2
+    readonly property string streamProgressText: quitAppDialog.visible ? qsTr("Waiting for confirmation...") :
+                                                  stageLabel.visible ? stageLabel.text : ""
+
     function onSearchingComputer() {
+        stageLabel.step = 1
         stageLabel.text = qsTr("Establishing connection to PC...")
     }
 
     function onSearchingApp() {
+        stageLabel.step = 2
         stageLabel.text = qsTr("Loading app list...")
     }
 
@@ -17,18 +23,22 @@ Item {
         var segue = component.createObject(stackView, {
             "appName": appName,
             "session": session,
+            "lookupSteps": lookupSteps,
             "quitAfter": true
         })
-        stackView.push(segue)
+        // Decoder preparation starts on activation. Both views use the same progress card.
+        stackView.push(segue, StackView.Immediate)
     }
 
     function onLaunchFailed(message) {
+        stageLabel.visible = false
         errorDialog.text = message
         errorDialog.open()
         console.error(message)
     }
 
     function onAppQuitRequired(appName) {
+        stageLabel.visible = false
         quitAppDialog.appName = appName
         quitAppDialog.open()
     }
@@ -46,23 +56,11 @@ Item {
         }
     }
 
-    Row {
-        anchors.centerIn: parent
-        spacing: 5
-
-        BusyIndicator {
-            id: stageSpinner
-            running: visible
-        }
-
-        Label {
-            id: stageLabel
-            height: stageSpinner.height
-            font.pointSize: 20
-            verticalAlignment: Text.AlignVCenter
-
-            wrapMode: Text.Wrap
-        }
+    StreamStatusCard {
+        id: stageLabel
+        text: qsTr("Establishing connection to PC...")
+        step: 1
+        stepCount: lookupSteps + 3
     }
 
     ErrorMessageDialog {

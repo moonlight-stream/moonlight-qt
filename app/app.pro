@@ -1,5 +1,10 @@
 QT += core quick network quickcontrols2 svg
+win32:QT += widgets
 CONFIG += c++17
+win32 {
+    HEADERS += streaming/captioncontrols.h streaming/streamwindow.h
+    SOURCES += streaming/streamwindow.cpp
+}
 
 unix:!macx {
     TARGET = moonlight
@@ -50,7 +55,7 @@ win32 {
     }
 
     INCLUDEPATH += $$PWD/../libs/windows/include
-    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib
+    LIBS += ws2_32.lib iphlpapi.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib comctl32.lib d3d9.lib dwmapi.lib dbghelp.lib
 }
 macx:!disable-prebuilts {
     !exists($$PWD/../libs/mac) {
@@ -546,6 +551,12 @@ unix:!macx: {
 }
 win32 {
     RC_ICONS = moonlight.ico
+    win32-msvc* {
+        # qmake's resource rule only tracks the generated .rc file.
+        icon_resource.target = $(RES_FILE)
+        icon_resource.depends = $$PWD/moonlight.ico
+        QMAKE_EXTRA_TARGETS += icon_resource
+    }
     QMAKE_TARGET_COMPANY = Moonlight Game Streaming Project
     QMAKE_TARGET_DESCRIPTION = Moonlight Game Streaming Client
     QMAKE_TARGET_PRODUCT = Moonlight

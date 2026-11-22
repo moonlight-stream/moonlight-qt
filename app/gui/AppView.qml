@@ -7,7 +7,7 @@ import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 
 CenteredGridView {
-    property int computerIndex
+    property string computerUuid
     property AppModel appModel : createModel()
     property bool activated
     property bool showHiddenGames
@@ -64,7 +64,7 @@ CenteredGridView {
     function createModel()
     {
         var model = Qt.createQmlObject('import AppModel 1.0; AppModel {}', parent, '')
-        model.initialize(ComputerManager, computerIndex, showHiddenGames)
+        model.initialize(ComputerManager, computerUuid, showHiddenGames)
         return model
     }
 
@@ -140,7 +140,7 @@ CenteredGridView {
                         launchOrResumeSelectedApp(true)
                     }
 
-                    ToolTip.text: qsTr("Resume Game")
+                    ToolTip.text: model.isDesktop ? qsTr("Reconnect to Desktop") : qsTr("Resume Game")
                     ToolTip.delay: 1000
                     ToolTip.timeout: 3000
                     ToolTip.visible: hovered
@@ -166,7 +166,7 @@ CenteredGridView {
                         doQuitGame()
                     }
 
-                    ToolTip.text: qsTr("Quit Game")
+                    ToolTip.text: model.isDesktop ? qsTr("End Desktop Session") : qsTr("Quit Game")
                     ToolTip.delay: 1000
                     ToolTip.timeout: 3000
                     ToolTip.visible: hovered
@@ -205,6 +205,9 @@ CenteredGridView {
 
         function launchOrResumeSelectedApp(quitExistingApp)
         {
+            if (ComputerManager.activateStreamWindow(appGrid.computerUuid))
+                return
+
             var runningId = appModel.getRunningAppId()
             if (runningId !== 0 && runningId !== model.appid) {
                 if (quitExistingApp) {
@@ -218,13 +221,7 @@ CenteredGridView {
                 return
             }
 
-            var component = Qt.createComponent("StreamSegue.qml")
-            var segue = component.createObject(stackView, {
-                                                   "appName": model.name,
-                                                   "session": appModel.createSessionForApp(index),
-                                                   "isResume": runningId === model.appid
-                                               })
-            stackView.push(segue)
+            window.launchGuiSession(appModel.createSessionForApp(index))
         }
 
         onClicked: {
@@ -296,11 +293,12 @@ CenteredGridView {
                 id: appContextMenu
                 initiator: appContextMenuLoader.parent
                 NavigableMenuItem {
-                    text: model.running ? qsTr("Resume Game") : qsTr("Launch Game")
+                    text: model.isDesktop ? (model.running ? qsTr("Reconnect to Desktop") : qsTr("Connect to Desktop"))
+                                          : (model.running ? qsTr("Resume Game") : qsTr("Launch Game"))
                     onTriggered: launchOrResumeSelectedApp(true)
                 }
                 NavigableMenuItem {
-                    text: qsTr("Quit Game")
+                    text: model.isDesktop ? qsTr("End Desktop Session") : qsTr("Quit Game")
                     onTriggered: doQuitGame()
                     visible: model.running
                 }
@@ -355,6 +353,9 @@ CenteredGridView {
         standardButtons: Dialog.Yes | Dialog.No
 
         function quitApp() {
+            if (segueToStream && ComputerManager.activateStreamWindow(appGrid.computerUuid))
+                return
+
             var component = Qt.createComponent("QuitSegue.qml")
             var params = {"appName": appName, "quitRunningAppFn": function() { appModel.quitRunningApp() }}
             if (segueToStream) {

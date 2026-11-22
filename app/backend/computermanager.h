@@ -13,6 +13,7 @@
 #include <QThread>
 #include <QReadWriteLock>
 #include <QSettings>
+#include <QSet>
 #include <QRunnable>
 #include <QTimer>
 #include <QMutex>
@@ -224,6 +225,7 @@ public:
     Q_INVOKABLE void startPolling();
 
     Q_INVOKABLE void stopPollingAsync();
+    Q_INVOKABLE bool activateStreamWindow(const QString& uuid);
 
     Q_INVOKABLE void addNewHostManually(QString address);
 
@@ -251,7 +253,7 @@ signals:
 
     void computerAddCompleted(QVariant success, QVariant detectedPortBlocking);
 
-    void quitAppCompleted(QVariant error);
+    void quitAppCompleted(QVariant error, QString hostUuid);
 
 private slots:
     void handleAboutToQuit();
@@ -273,6 +275,7 @@ private:
     int m_PollingRef;
     QReadWriteLock m_Lock;
     QMap<QString, NvComputer*> m_KnownHosts;
+    QSet<QString> m_LocalHostUuids;
     QMap<QString, ComputerPollingEntry*> m_PollEntries;
     QHash<QString, NvComputer> m_LastSerializedHosts; // Protected by m_DelayedFlushMutex
     QSharedPointer<QMdnsEngine::Server> m_MdnsServer;

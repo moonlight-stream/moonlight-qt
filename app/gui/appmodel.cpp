@@ -1,4 +1,5 @@
 #include "appmodel.h"
+#include <algorithm>
 
 AppModel::AppModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -7,14 +8,24 @@ AppModel::AppModel(QObject *parent)
             this, &AppModel::handleBoxArtLoaded);
 }
 
-void AppModel::initialize(ComputerManager* computerManager, int computerIndex, bool showHiddenGames)
+void AppModel::initialize(ComputerManager* computerManager, const QString& computerUuid, bool showHiddenGames)
+{
+    const auto hosts = computerManager->getComputers();
+    for (auto* host : hosts) {
+        if (host->uuid == computerUuid) {
+            initializeForComputer(computerManager, host, showHiddenGames);
+            return;
+        }
+    }
+}
+
+void AppModel::initializeForComputer(ComputerManager* computerManager, NvComputer* computer, bool showHiddenGames)
 {
     m_ComputerManager = computerManager;
     connect(m_ComputerManager, &ComputerManager::computerStateChanged,
             this, &AppModel::handleComputerStateChanged);
 
-    Q_ASSERT(computerIndex >= 0 && computerIndex < m_ComputerManager->getComputers().count());
-    m_Computer = m_ComputerManager->getComputers().at(computerIndex);
+    m_Computer = computer;
     m_CurrentGameId = m_Computer->currentGameId;
     m_ShowHiddenGames = showHiddenGames;
 
@@ -45,6 +56,16 @@ Session* AppModel::createSessionForApp(int appIndex)
     NvApp app = m_VisibleApps.at(appIndex);
 
     return new Session(m_Computer, app);
+}
+
+Session* AppModel::createSessionForAppId(int appId)
+{
+    for (int i = 0; i < m_VisibleApps.size(); ++i) {
+        if (m_VisibleApps[i].id == appId) {
+            return createSessionForApp(i);
+        }
+    }
+    return nullptr;
 }
 
 int AppModel::getDirectLaunchAppIndex()
@@ -93,6 +114,8 @@ QVariant AppModel::data(const QModelIndex &index, int role) const
         return app.directLaunch;
     case AppCollectorGameRole:
         return app.isAppCollectorGame;
+    case DesktopRole:
+        return app.isDesktop();
     default:
         return QVariant();
     }
@@ -109,6 +132,7 @@ QHash<int, QByteArray> AppModel::roleNames() const
     names[AppIdRole] = "appid";
     names[DirectLaunchRole] = "directLaunch";
     names[AppCollectorGameRole] = "appCollectorGame";
+    names[DesktopRole] = "isDesktop";
 
     return names;
 }
@@ -118,15 +142,18 @@ void AppModel::quitRunningApp()
     m_ComputerManager->quitRunningApp(m_Computer);
 }
 
-bool AppModel::isAppCurrentlyVisible(const NvApp& app)
+bool AppModel::hasHiddenApps() const
 {
-    for (const NvApp& visibleApp : std::as_const(m_VisibleApps)) {
-        if (app.id == visibleApp.id) {
-            return true;
-        }
-    }
+    return std::any_of(m_AllApps.cbegin(), m_AllApps.cend(), [](const NvApp& app) { return app.hidden; });
+}
 
-    return false;
+void AppModel::setShowHiddenApps(bool show)
+{
+    if (m_ShowHiddenGames != show) {
+        m_ShowHiddenGames = show;
+        updateAppList(m_AllApps);
+        emit showHiddenAppsChanged();
+    }
 }
 
 QVector<NvApp> AppModel::getVisibleApps(const QVector<NvApp>& appList)
@@ -134,10 +161,7 @@ QVector<NvApp> AppModel::getVisibleApps(const QVector<NvApp>& appList)
     QVector<NvApp> visibleApps;
 
     for (const NvApp& app : appList) {
-        // Don't immediately hide games that were previously visible. This
-        // allows users to easily uncheck the "Hide App" checkbox if they
-        // check it by mistake.
-        if (m_ShowHiddenGames || !app.hidden || isAppCurrentlyVisible(app)) {
+        if (m_ShowHiddenGames || !app.hidden) {
             visibleApps.append(app);
         }
     }
@@ -147,6 +171,7 @@ QVector<NvApp> AppModel::getVisibleApps(const QVector<NvApp>& appList)
 
 void AppModel::updateAppList(QVector<NvApp> newList)
 {
+    const bool hadHiddenApps = hasHiddenApps();
     m_AllApps = newList;
 
     QVector<NvApp> newVisibleList = getVisibleApps(newList);
@@ -203,6 +228,13 @@ void AppModel::updateAppList(QVector<NvApp> newList)
     }
 
     Q_ASSERT(newVisibleList == m_VisibleApps);
+    if (hadHiddenApps != hasHiddenApps()) {
+        if (hadHiddenApps && m_ShowHiddenGames) {
+            m_ShowHiddenGames = false;
+            emit showHiddenAppsChanged();
+        }
+        emit hasHiddenAppsChanged();
+    }
 }
 
 void AppModel::setAppHidden(int appIndex, bool hidden)

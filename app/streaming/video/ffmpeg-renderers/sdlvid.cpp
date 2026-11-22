@@ -247,6 +247,13 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
                 m_OverlayRects[type].y = 0;
             }
 
+#ifdef Q_OS_WIN32
+            else if (type == Overlay::OverlayFullscreenControls) {
+                SDL_Rect viewport;
+                SDL_RenderGetViewport(m_Renderer, &viewport);
+                m_OverlayRects[type] = Session::get()->getOverlayManager().controlsRect(viewport.w, viewport.h, newSurface->w, newSurface->h);
+            }
+#endif
             m_OverlayRects[type].w = newSurface->w;
             m_OverlayRects[type].h = newSurface->h;
 

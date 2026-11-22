@@ -675,6 +675,13 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         renderRect.y = 0;
     }
 
+#ifdef Q_OS_WIN32
+    else if (type == Overlay::OverlayFullscreenControls) {
+        auto rect = Session::get()->getOverlayManager().controlsRect(m_DisplayWidth, m_DisplayHeight, newSurface->w, newSurface->h);
+        renderRect.x = rect.x;
+        renderRect.y = rect.y;
+    }
+#endif
     renderRect.w = newSurface->w;
     renderRect.h = newSurface->h;
 

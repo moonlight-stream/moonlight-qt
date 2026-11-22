@@ -104,6 +104,14 @@ public:
     Q_INVOKABLE bool initialize(QQuickWindow* qtWindow);
     Q_INVOKABLE void start();
     Q_INVOKABLE void interrupt();
+    Q_PROPERTY(QString appName READ appName CONSTANT)
+    Q_INVOKABLE bool launchInWindow() const;
+    QString appName() const { return m_App.name; }
+    QString desktopPreviewHost() const { return m_App.isDesktop() ? m_Computer->uuid : QString(); }
+#ifdef Q_OS_WIN32
+    void setNetworkLoss(int basisPoints) { SDL_AtomicSet(&m_NetworkLossBasisPoints, basisPoints); }
+    static constexpr int ToggleStreamHud = 110;
+#endif
     Q_PROPERTY(QStringList launchWarnings MEMBER m_LaunchWarnings NOTIFY launchWarningsChanged);
 
     static
@@ -123,10 +131,18 @@ public:
 
     void flushWindowEvents();
 
+    void recordDecodedFrame(uint64_t delayUs)
+    {
+        SDL_AtomicSet(&m_FrameDelayMs, static_cast<int>((delayUs + 500) / 1000));
+        SDL_AtomicAdd(&m_DecodedFrames, 1);
+    }
+
     void setShouldExit(bool quitHostApp = false);
 
 signals:
-    void stageStarting(QString stage);
+    void requestingHostSession(bool resume);
+
+    void stageStarting(QString description);
 
     void stageFailed(QString stage, int errorCode, QString failingPorts);
 
@@ -166,6 +182,21 @@ private:
                              int& width, int& height);
 
     void toggleFullscreen();
+#ifdef Q_OS_WIN32
+    void updateFullscreenControls();
+    bool handleFullscreenControlEvent(SDL_Event& event);
+    bool m_ControlsExpanded = false;
+    bool m_ControlPressed = false;
+    bool m_ControlDragging = false;
+    QPoint m_ControlPressPoint;
+    QPoint m_ControlGrabOffset;
+    Uint32 m_LastControlMove = 0;
+    bool m_ControlTouch = false;
+    SDL_FingerID m_ControlFinger = 0;
+    Overlay::OverlayManager::Control m_PressedControl = Overlay::OverlayManager::Control::None;
+#endif
+    bool m_DisconnectOnly = false;
+    bool m_ExplicitHostQuit = false;
 
     void notifyMouseEmulationMode(bool enabled);
 
@@ -252,6 +283,13 @@ private:
     NvComputer* m_Computer;
     NvApp m_App;
     SDL_Window* m_Window;
+    SDL_atomic_t m_ConnectionStatus{CONN_STATUS_OKAY};
+    SDL_atomic_t m_DecodedFrames{0};
+    SDL_atomic_t m_FrameDelayMs{0};
+#ifdef Q_OS_WIN32
+    unsigned long m_StreamInterface = 0;
+    SDL_atomic_t m_NetworkLossBasisPoints{-1};
+#endif
     IVideoDecoder* m_VideoDecoder;
     SDL_mutex* m_DecoderLock;
     bool m_AudioMuted;

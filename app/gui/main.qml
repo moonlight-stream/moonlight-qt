@@ -11,30 +11,34 @@ import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 
 ApplicationWindow {
+    readonly property bool lightPage: !stackView.currentItem || stackView.currentItem instanceof PcView ||
+        stackView.currentItem instanceof SettingsView || stackView.currentItem instanceof StreamSegue ||
+        stackView.currentItem instanceof CliStartStreamSegue || stackView.currentItem instanceof QuitSegue
+    Material.theme: lightPage ? Material.Light : Material.Dark
+    Material.background: lightPage ? "#f7f9fc" : "#303030"
+    Material.accent: lightPage ? "#2468d5" : Material.Purple
     property bool pollingActive: false
+    readonly property bool customTitleBar: Qt.platform.os === "windows" && isGuiLaunch
 
-    // Set by SettingsView to force the back operation to pop all
-    // pages except the initial view. This is required when doing
-    // a retranslate() because AppView breaks for some reason.
-    property bool clearOnBack: false
+    function toggleWindowSize() {
+        if (visibility === Window.Maximized || visibility === Window.FullScreen)
+            showNormal()
+        else
+            showMaximized()
+    }
 
     id: window
-    width: 1280
-    height: 600
+    title: !isGuiLaunch && stackView.currentItem && stackView.currentItem.streamProgressText
+           ? stackView.currentItem.streamProgressText : Qt.application.name
+    width: isGuiLaunch ? 960 : 1280
+    height: isGuiLaunch ? 665 : 600
 
     // This function runs prior to creation of the initial StackView item
     function doEarlyInit() {
-        // Override the background color to Material 2 colors for Qt 6.5+
-        // in order to improve contrast between GFE's placeholder box art
-        // and the background of the app grid.
-        if (SystemProperties.usesMaterial3Theme) {
-            Material.background = "#303030"
-        }
-
         SdlGamepadKeyNavigation.enable()
     }
 
-    Component.onCompleted: {
+    function showInitialWindow() {
         // Show the window according to the user's preferences
         if (SystemProperties.hasDesktopEnvironment) {
             if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_MAXIMIZED) {
@@ -49,6 +53,14 @@ ApplicationWindow {
         } else {
             window.showFullScreen()
         }
+    }
+
+    Component.onCompleted: {
+        if (customTitleBar)
+            flags |= Qt.FramelessWindowHint
+
+        if (!deferInitialShow)
+            showInitialWindow()
 
         // Display any modal dialogs for configuration warnings
         if (isGuiLaunch) {
@@ -95,15 +107,31 @@ ApplicationWindow {
     // it will never insert a line break and just extend on forever.
     ToolTip.toolTip.contentWidth: Math.min(tooltipTextLayoutHelper.width, 400)
 
+    function launchGuiSession(session) {
+        if (Qt.platform.os === "windows" && isGuiLaunch) {
+            if (!session.launchInWindow()) {
+                streamSegueErrorDialog.text = qsTr("Unable to open the streaming window.")
+                streamSegueErrorDialog.open()
+            }
+        } else {
+            stackView.push(Qt.resolvedUrl("StreamSegue.qml"), {
+                "session": session, "appName": session.appName
+            })
+        }
+    }
+
+    onClosing: function(close) {
+        if (trayAvailable && StreamingPreferences.closeToTray) {
+            close.accepted = false
+            hide()
+        }
+    }
+
     function goBack() {
-        if (clearOnBack) {
-            // Pop all items except the first one
-            stackView.pop(null)
-            clearOnBack = false
-        }
-        else {
+        if (toolBar.devicePage && stackView.currentItem.showingSettings)
+            stackView.currentItem.showingSettings = false
+        else
             stackView.pop()
-        }
     }
 
     StackView {
@@ -126,7 +154,7 @@ ApplicationWindow {
         }
 
         Keys.onEscapePressed: {
-            if (depth > 1) {
+            if (depth > 1 || toolBar.settingsPage) {
                 goBack()
             }
             else {
@@ -135,7 +163,7 @@ ApplicationWindow {
         }
 
         Keys.onBackPressed: {
-            if (depth > 1) {
+            if (depth > 1 || toolBar.settingsPage) {
                 goBack()
             }
             else {
@@ -241,15 +269,44 @@ ApplicationWindow {
         }
     }
 
+    Shortcut {
+        id: newPcShortcut
+        sequence: StandardKey.New
+        enabled: isGuiLaunch
+        onActivated: addPcDialog.open()
+    }
+
+    Shortcut {
+        sequence: StandardKey.HelpContents
+        enabled: SystemProperties.hasBrowser && isGuiLaunch
+        onActivated: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide")
+    }
+
     header: ToolBar {
         id: toolBar
-        height: 60
+        readonly property bool settingsPage: devicePage && stackView.currentItem.showingSettings
+        readonly property bool devicePage: stackView.currentItem instanceof PcView
+        Material.theme: window.Material.theme
+        Material.background: window.lightPage ? "#eff4f7" : Material.primary
+        MouseArea {
+            anchors.fill: parent
+            enabled: window.customTitleBar
+            property point pressPoint
+            onPressed: function(mouse) { pressPoint = Qt.point(mouse.x, mouse.y) }
+            onPositionChanged: function(mouse) {
+                if (pressed && window.visibility !== Window.FullScreen &&
+                        Math.abs(mouse.x - pressPoint.x) + Math.abs(mouse.y - pressPoint.y) >= Qt.styleHints.startDragDistance)
+                    window.startSystemMove()
+            }
+            onDoubleClicked: window.toggleWindowSize()
+        }
+        height: window.customTitleBar ? 46 : (devicePage ? 38 : 60)
         anchors.topMargin: 5
         anchors.bottomMargin: 5
 
         Label {
             id: titleLabel
-            visible: toolBar.width > 700
+            visible: toolBar.width > 700 && !toolBar.devicePage && !toolBar.settingsPage
             anchors.fill: parent
             text: stackView.currentItem.objectName
             font.pointSize: 20
@@ -259,7 +316,7 @@ ApplicationWindow {
         }
 
         RowLayout {
-            spacing: 10
+            spacing: 8
             anchors.leftMargin: 10
             anchors.rightMargin: 10
             anchors.fill: parent
@@ -268,6 +325,8 @@ ApplicationWindow {
                 // Only make the button visible if the user has navigated somewhere.
                 visible: stackView.depth > 1
 
+                icon.width: 18
+                icon.height: 18
                 iconSource: "qrc:/res/arrow_left.svg"
 
                 onClicked: goBack()
@@ -277,75 +336,30 @@ ApplicationWindow {
                 }
             }
 
-            // This label will appear when the window gets too small and
-            // we need to ensure the toolbar controls don't collide
+            Image {
+                visible: toolBar.devicePage
+                Layout.leftMargin: 6
+                Layout.preferredWidth: 19; Layout.preferredHeight: 19
+                source: "qrc:/res/moonlight.svg"
+            }
             Label {
-                id: titleRowLabel
-                font.pointSize: titleLabel.font.pointSize
+                visible: toolBar.devicePage && toolBar.width >= 410
+                text: "Moonlight"
+                font.pixelSize: 15; font.bold: true; color: "#203047"
+            }
+            Label {
+                visible: toolBar.devicePage
+                text: qsTr("Version %1").arg(SystemProperties.versionString)
+                font.pixelSize: 12; color: "#52647a"
+            }
+            Label {
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                font: titleLabel.font
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
-                verticalAlignment: Qt.AlignVCenter
-                Layout.fillWidth: true
-
-                // We need this label to always be visible so it can occupy
-                // the remaining space in the RowLayout. To "hide" it, we
-                // just set the text to empty string.
-                text: !titleLabel.visible ? stackView.currentItem.objectName : ""
-            }
-
-            Label {
-                id: versionLabel
-                visible: stackView.currentItem instanceof SettingsView
-                text: qsTr("Version %1").arg(SystemProperties.versionString)
-                font.pointSize: 12
-                horizontalAlignment: Qt.AlignRight
-                verticalAlignment: Qt.AlignVCenter
-            }
-
-            NavigableToolButton {
-                id: discordButton
-                visible: SystemProperties.hasBrowser &&
-                         stackView.currentItem instanceof SettingsView
-
-                iconSource: "qrc:/res/discord.svg"
-
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
-                ToolTip.text: qsTr("Join our community on Discord")
-
-                // TODO need to make sure browser is brought to foreground.
-                onClicked: Qt.openUrlExternally("https://moonlight-stream.org/discord");
-
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
-                }
-            }
-
-            NavigableToolButton {
-                id: addPcButton
-                visible: stackView.currentItem instanceof PcView
-
-                iconSource:  "qrc:/res/ic_add_to_queue_white_48px.svg"
-
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
-                ToolTip.text: qsTr("Add PC manually") + (newPcShortcut.nativeText ? (" ("+newPcShortcut.nativeText+")") : "")
-
-                Shortcut {
-                    id: newPcShortcut
-                    sequence: StandardKey.New
-                    onActivated: addPcButton.clicked()
-                }
-
-                onClicked: {
-                    addPcDialog.open()
-                }
-
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
-                }
+                text: !toolBar.devicePage && !titleLabel.visible && stackView.currentItem ?
+                          stackView.currentItem.objectName : ""
             }
 
             NavigableToolButton {
@@ -387,31 +401,6 @@ ApplicationWindow {
             }
 
             NavigableToolButton {
-                id: helpButton
-                visible: SystemProperties.hasBrowser
-
-                iconSource: "qrc:/res/question_mark.svg"
-
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
-                ToolTip.text: qsTr("Help") + (helpShortcut.nativeText ? (" ("+helpShortcut.nativeText+")") : "")
-
-                Shortcut {
-                    id: helpShortcut
-                    sequence: StandardKey.HelpContents
-                    onActivated: helpButton.clicked()
-                }
-
-                // TODO need to make sure browser is brought to foreground.
-                onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
-
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
-                }
-            }
-
-            NavigableToolButton {
                 // TODO: Implement gamepad mapping then unhide this button
                 visible: false
 
@@ -431,10 +420,18 @@ ApplicationWindow {
 
             NavigableToolButton {
                 id: settingsButton
+                visible: isGuiLaunch && !toolBar.devicePage
+                Accessible.name: qsTr("Settings")
 
                 iconSource:  "qrc:/res/settings.svg"
 
-                onClicked: navigateTo("qrc:/gui/SettingsView.qml", SettingsView)
+                onClicked: {
+                    var devices = stackView.get(0)
+                    if (!(devices instanceof PcView)) return
+                    if (stackView.currentItem !== devices)
+                        stackView.pop(devices, StackView.Immediate)
+                    devices.openSettings()
+                }
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
@@ -451,6 +448,75 @@ ApplicationWindow {
                 ToolTip.visible: hovered
                 ToolTip.text: qsTr("Settings") + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
             }
+
+            Row {
+                visible: window.customTitleBar
+                Layout.fillHeight: true
+                Repeater {
+                    model: 2
+                    ToolButton {
+                        id: captionButton
+                        readonly property bool isClose: index === 1
+                        readonly property bool showHighlight: hovered || visualFocus || down
+                        width: 46
+                        height: parent.height
+                        padding: 0
+                        hoverEnabled: true
+                        Accessible.name: isClose ? qsTr("Close") : qsTr("Minimize")
+                        ToolbarToolTip { text: captionButton.Accessible.name }
+                        font.family: "Segoe MDL2 Assets"
+                        text: isClose ? "\ue8bb" : "\ue921"
+                        font.pixelSize: 10
+                        Material.foreground: isClose && showHighlight ? "white" : toolBar.Material.foreground
+                        background: Item {
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: parent.width - 6
+                                height: 30
+                                radius: 6
+                                visible: captionButton.showHighlight
+                                color: {
+                                    if (captionButton.isClose)
+                                        return captionButton.down ? "#a62318" : "#c42b1c"
+                                    if (window.lightPage)
+                                        return captionButton.down ? "#ccd9e0" : "#dde7ec"
+                                    return captionButton.down ? "#56616b" : "#454e57"
+                                }
+                                border.width: captionButton.visualFocus ? 1 : 0
+                                border.color: captionButton.isClose ? "white" : toolBar.Material.foreground
+                            }
+                        }
+                        onClicked: {
+                            if (isClose) window.close()
+                            else window.showMinimized()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // The frame handles share the header's parent so they cover the full window,
+    // including the header. Only the narrow perimeter accepts mouse events.
+    Repeater {
+        parent: toolBar.parent
+        model: window.customTitleBar && window.visibility === Window.Windowed ?
+                   [Qt.LeftEdge, Qt.RightEdge, Qt.TopEdge, Qt.BottomEdge,
+                    Qt.TopEdge | Qt.LeftEdge, Qt.TopEdge | Qt.RightEdge,
+                    Qt.BottomEdge | Qt.LeftEdge, Qt.BottomEdge | Qt.RightEdge] : []
+        MouseArea {
+            z: 20
+            readonly property int edges: modelData
+            readonly property bool horizontalEdge: (edges & (Qt.LeftEdge | Qt.RightEdge)) !== 0
+            readonly property bool verticalEdge: (edges & (Qt.TopEdge | Qt.BottomEdge)) !== 0
+            width: horizontalEdge ? 5 : parent.width - 10
+            height: verticalEdge ? 5 : parent.height - 10
+            x: (edges & Qt.RightEdge) ? parent.width - width : horizontalEdge ? 0 : 5
+            y: (edges & Qt.BottomEdge) ? parent.height - height : verticalEdge ? 0 : 5
+            cursorShape: horizontalEdge && verticalEdge ?
+                (edges === (Qt.TopEdge | Qt.LeftEdge) || edges === (Qt.BottomEdge | Qt.RightEdge) ?
+                     Qt.SizeFDiagCursor : Qt.SizeBDiagCursor) : horizontalEdge ? Qt.SizeHorCursor : Qt.SizeVerCursor
+            onPressed: window.startSystemResize(edges)
         }
     }
 
