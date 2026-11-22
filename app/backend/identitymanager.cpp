@@ -7,10 +7,18 @@
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/rand.h>
+#include <openssl/err.h>
 
 #define SER_UNIQUEID "uniqueid"
 #define SER_CERT "certificate"
 #define SER_KEY "key"
+
+static int
+refusePassphrase(char*, int, int, void*)
+{
+    // Fail on encrypted keys instead of letting OpenSSL prompt on the terminal
+    return 0;
+}
 
 IdentityManager* IdentityManager::s_Im = nullptr;
 
@@ -162,40 +170,98 @@ IdentityManager::getSslCertificate()
     return m_CachedSslCert;
 }
 
+bool
+IdentityManager::validateIdentity(const QByteArray& pemCert, const QByteArray& pemKey, QString* error)
+{
+    QString problem;
+
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    BIO* bio = BIO_new_mem_buf(const_cast<char*>(pemCert.constData()), pemCert.size());
+#else
+    BIO* bio = BIO_new_mem_buf(pemCert.constData(), pemCert.size());
+#endif
+    THROW_BAD_ALLOC_IF_NULL(bio);
+    X509* leaf = PEM_read_bio_X509(bio, nullptr, refusePassphrase, nullptr);
+    BIO_free(bio);
+
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    bio = BIO_new_mem_buf(const_cast<char*>(pemKey.constData()), pemKey.size());
+#else
+    bio = BIO_new_mem_buf(pemKey.constData(), pemKey.size());
+#endif
+    THROW_BAD_ALLOC_IF_NULL(bio);
+    EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, refusePassphrase, nullptr);
+    BIO_free(bio);
+
+    QSslCertificate sslCert(pemCert, QSsl::Pem);
+    if (leaf == nullptr || sslCert.isNull()) {
+        problem = QObject::tr("The certificate is not a valid PEM certificate.");
+    }
+    else if (pk == nullptr) {
+        problem = QObject::tr("The private key could not be parsed. "
+                              "It may be encrypted or in an unsupported format.");
+    }
+    else if (X509_check_private_key(leaf, pk) != 1) {
+        problem = QObject::tr("The private key does not match the certificate.");
+    }
+    else if (pemToSslKey(pemKey, sslCert.publicKey().algorithm()).isNull()) {
+        problem = QObject::tr("The private key could not be loaded for use with TLS.");
+    }
+
+    X509_free(leaf);
+    EVP_PKEY_free(pk);
+    ERR_clear_error();
+
+    if (!problem.isEmpty()) {
+        if (error != nullptr) {
+            *error = problem;
+        }
+        return false;
+    }
+    return true;
+}
+
+QSslKey
+IdentityManager::pemToSslKey(const QByteArray& pemKey, QSsl::KeyAlgorithm algorithm)
+{
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    BIO* bio = BIO_new_mem_buf(const_cast<char*>(pemKey.constData()), -1);
+#else
+    BIO* bio = BIO_new_mem_buf(pemKey.constData(), -1);
+#endif
+    THROW_BAD_ALLOC_IF_NULL(bio);
+
+    EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, refusePassphrase, nullptr);
+    BIO_free(bio);
+    if (pk == nullptr) {
+        return QSslKey();
+    }
+
+    bio = BIO_new(BIO_s_mem());
+    THROW_BAD_ALLOC_IF_NULL(bio);
+
+    // We must write out our PEM in the old PKCS1 format for SecureTransport
+    // on macOS/iOS to be able to read it.
+#ifdef Q_OS_DARWIN
+    PEM_write_bio_PrivateKey_traditional(bio, pk, nullptr, nullptr, 0, nullptr, 0);
+#else
+    PEM_write_bio_PrivateKey(bio, pk, nullptr, nullptr, 0, nullptr, 0);
+#endif
+
+    BUF_MEM* mem;
+    BIO_get_mem_ptr(bio, &mem);
+    QSslKey key(QByteArray(mem->data, (int)mem->length), algorithm);
+
+    BIO_free(bio);
+    EVP_PKEY_free(pk);
+    return key;
+}
+
 QSslKey
 IdentityManager::getSslKey()
 {
     if (m_CachedSslKey.isNull()) {
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-        BIO* bio = BIO_new_mem_buf(const_cast<char*>(m_CachedPrivateKey.constData()), -1);
-#else
-        BIO* bio = BIO_new_mem_buf(m_CachedPrivateKey.constData(), -1);
-#endif
-        THROW_BAD_ALLOC_IF_NULL(bio);
-
-        EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
-        BIO_free(bio);
-        if (pk == nullptr) {
-            return m_CachedSslKey;
-        }
-
-        bio = BIO_new(BIO_s_mem());
-        THROW_BAD_ALLOC_IF_NULL(bio);
-
-        // We must write out our PEM in the old PKCS1 format for SecureTransport
-        // on macOS/iOS to be able to read it.
-#ifdef Q_OS_DARWIN
-        PEM_write_bio_PrivateKey_traditional(bio, pk, nullptr, nullptr, 0, nullptr, 0);
-#else
-        PEM_write_bio_PrivateKey(bio, pk, nullptr, nullptr, 0, nullptr, 0);
-#endif
-
-        BUF_MEM* mem;
-        BIO_get_mem_ptr(bio, &mem);
-        m_CachedSslKey = QSslKey(QByteArray(mem->data, (int)mem->length), getSslCertificate().publicKey().algorithm());
-
-        BIO_free(bio);
-        EVP_PKEY_free(pk);
+        m_CachedSslKey = pemToSslKey(m_CachedPrivateKey, getSslCertificate().publicKey().algorithm());
     }
     return m_CachedSslKey;
 }
