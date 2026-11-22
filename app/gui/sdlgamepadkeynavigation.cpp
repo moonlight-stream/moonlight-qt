@@ -51,11 +51,7 @@ void SdlGamepadKeyNavigation::enable()
     // on first init of the GC subsystem. We can't depend on them due to
     // overlapping lifetimes of SdlGamepadKeyNavigation instances, so we
     // will attach ourselves.
-    //
-    // NB: We use SDL_JoystickUpdate() instead of SDL_PumpEvents() because
-    // the latter can do a bit more work that we want (like handling video
-    // events that we intentionally do not want to process yet).
-    SDL_JoystickUpdate();
+    SDL_PumpEvents();
     SDL_FlushEvent(SDL_CONTROLLERDEVICEADDED);
 
     // Open all currently attached game controllers
@@ -103,19 +99,17 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
 {
     SDL_Event event;
 
-    // Update joystick state without pumping other events (see enable() comment)
-    SDL_JoystickUpdate();
-
     // Discard any pending button events on the first poll to avoid picking up
     // stale input data from the stream session (like the quit combo).
     if (m_FirstPoll) {
+        SDL_PumpEvents();
         SDL_FlushEvent(SDL_CONTROLLERBUTTONDOWN);
         SDL_FlushEvent(SDL_CONTROLLERBUTTONUP);
+
         m_FirstPoll = false;
     }
 
-    // Peep events rather than polling to avoid calling SDL_PumpEvents()
-    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) == 1) {
+    while (SDL_PollEvent(&event)) {
         switch (event.type) {
         case SDL_QUIT:
             // SDL may send us a quit event since we initialize
