@@ -2211,12 +2211,31 @@ void Session::exec()
     clipboardHost.setHost(m_Computer->activeAddress.address());
     clipboardHost.setPort(m_Computer->activeHttpsPort);
     ClipboardSync clipboard(clipboardHost, m_Computer->serverCert, m_ClipboardToken, m_ClipboardText, m_ClipboardFiles);
+    SDL_Scancode deferredPasteKey = SDL_SCANCODE_UNKNOWN;
     const Uint32 hudStart = lastTitleUpdate;
     caption.update();
     previousTraffic.InterfaceIndex = m_StreamInterface;
     bool haveTraffic = m_StreamInterface && GetIfEntry2(&previousTraffic) == NO_ERROR;
 #endif
     for (;;) {
+#ifdef Q_OS_WIN32
+        if (clipboard.pastePending()) {
+            // Dispatch queued focus and input changes before delivering the acknowledged paste.
+            SDL_PumpEvents();
+            if (!SDL_HasEvent(SDL_WINDOWEVENT) && !SDL_HasEvent(SDL_KEYDOWN) && !SDL_HasEvent(SDL_MOUSEBUTTONDOWN) &&
+                    !SDL_HasEvent(SDL_FINGERDOWN) && !SDL_HasEvent(SDL_QUIT)) {
+                const int pasteCount = clipboard.takeReadyPastes();
+                if (SDL_GetKeyboardFocus() == m_Window && !SDL_AtomicGet(&m_ConnectionEnding)) {
+                    for (int i = 0; i < pasteCount; ++i) {
+                        // Sunshine applies Ctrl even if the physical key was released during transfer.
+                        constexpr short pasteKey = static_cast<short>(0x8000 | 'V');
+                        LiSendKeyboardEvent(pasteKey, KEY_ACTION_DOWN, MODIFIER_CTRL);
+                        LiSendKeyboardEvent(pasteKey, KEY_ACTION_UP, MODIFIER_CTRL);
+                    }
+                }
+            }
+        }
+#endif
         const Uint32 now = SDL_GetTicks();
         if (now - lastTitleUpdate >= 1000) {
             const Uint32 elapsed = now - lastTitleUpdate;
@@ -2286,7 +2305,11 @@ void Session::exec()
         // NB: This behavior was introduced in SDL 2.0.16, but had a few critical
         // issues that could cause indefinite timeouts, delayed joystick detection,
         // and other problems.
-        if (!SDL_WaitEventTimeout(&event, 1000)) {
+        int waitMs = 1000;
+#ifdef Q_OS_WIN32
+        if (clipboard.pastePending()) waitMs = 16;
+#endif
+        if (!SDL_WaitEventTimeout(&event, waitMs)) {
             presence.runCallbacks();
             continue;
         }
@@ -2308,6 +2331,10 @@ void Session::exec()
         }
 #endif
 #ifdef Q_OS_WIN32
+        if ((event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) ||
+            event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_FINGERDOWN) {
+            clipboard.cancelPaste();
+        }
         if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_KEYDOWN) caption.dismiss();
         if (handleFullscreenControlEvent(event)) {
             continue;
@@ -2579,6 +2606,26 @@ void Session::exec()
         case SDL_KEYUP:
         case SDL_KEYDOWN:
             presence.runCallbacks();
+#ifdef Q_OS_WIN32
+            if (event.key.keysym.scancode == deferredPasteKey && deferredPasteKey != SDL_SCANCODE_UNKNOWN) {
+                if (event.type == SDL_KEYUP || event.key.repeat) {
+                    if (event.type == SDL_KEYUP) deferredPasteKey = SDL_SCANCODE_UNKNOWN;
+                    break;
+                }
+                deferredPasteKey = SDL_SCANCODE_UNKNOWN;
+            }
+            if (event.type == SDL_KEYDOWN && !event.key.repeat) {
+                const auto& key = event.key.keysym;
+                const bool paste = (key.sym == SDLK_v || (key.scancode == SDL_SCANCODE_V &&
+                                   (key.sym == SDLK_UNKNOWN || key.sym > SDLK_DELETE))) &&
+                                   (key.mod & KMOD_CTRL) && !(key.mod & (KMOD_ALT | KMOD_GUI | KMOD_SHIFT | KMOD_MODE));
+                if (paste && SDL_GetKeyboardFocus() == m_Window && clipboard.requestPaste()) {
+                    deferredPasteKey = key.scancode;
+                    break;
+                }
+                if (!paste) clipboard.cancelPaste();
+            }
+#endif
             m_InputHandler->handleKeyEvent(&event.key);
             break;
         case SDL_MOUSEBUTTONDOWN:

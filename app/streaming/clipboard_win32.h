@@ -241,7 +241,7 @@ inline HGLOBAL make_data(std::wstring_view chars, bool files) {
 
 } // namespace detail
 
-inline int read(bool text, bool files, DWORD since, std::string& payload, DWORD& sequence) {
+inline int read(bool text, bool files, std::optional<DWORD> since, std::string& payload, DWORD& sequence) {
     payload.clear();
     std::vector<fs::path> paths;
     {
