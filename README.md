@@ -128,6 +128,52 @@ or the files can't be read,
 or the key doesn't match the certificate,
 Moonlight reports the problem and exits instead of starting.
 
+### Supplying a client identity on standard input
+In some circumstances,
+it can be helpful to avoid putting the certificate and key on disk at all.
+A wrapper application can supply a client identity that exists only in memory,
+such as a short-lived certificate issued for a single session:
+
+```
+wrapper | moonlight --identity-stdin [<action> ...]
+```
+
+`--identity-stdin` works with every action,
+and when starting Moonlight's GUI without an action.
+Use it with `pair` to pair a host with the identity,
+and then with `stream`, `list`, and `quit` to talk to that host.
+
+With `--identity-stdin`, Moonlight reads standard input to EOF (up to 64 KiB) during startup,
+before it shows any window.
+The input must be a single JSON object with exactly these two string members:
+
+```json
+{"certificate": "-----BEGIN CERTIFICATE-----\n...", "key": "-----BEGIN PRIVATE KEY-----\n..."}
+```
+
+* `certificate` is the PEM certificate, optionally followed by intermediate certificates.
+* `key` is the unencrypted PEM private key.
+
+The wrapper must close its end of the pipe after writing the object.
+Standard input can't be a terminal.
+
+This identity takes priority over `certificatefile`, `keyfile`, `cert`, and `key`,
+which are all ignored if `--identity-stdin` is specified.
+Nothing about the identity passed through standard input is saved.
+If it can't be read,
+or the key doesn't match the certificate,
+Moonlight prints the reason to stderr and exits with a nonzero status.
+When starting the GUI, it also shows the reason in a dialog.
+
+The identity is used for as long as Moonlight runs,
+so a short-lived certificate can expire during a long GUI session.
+A host paired from the GUI with this identity
+appears unpaired when Moonlight is later started without it.
+
+On Windows, pass the pipe as `hStdInput` with `STARTF_USESTDHANDLES`,
+and pass `hStdError` to receive errors and the log.
+On macOS, run `Moonlight.app/Contents/MacOS/Moonlight` directly.
+
 ## Contribute
 1. Fork us
 2. Write code
