@@ -106,6 +106,28 @@ for different architectures, which handle building deps and extra linking for yo
         * This build will lack windowed mode, Discord/Help links, and other features that don't make sense on an embedded device.
         * For platforms with poor GPU performance, add `"CONFIG+=gpuslow"` to prefer direct KMSDRM rendering over GL/Vulkan renderers. Direct KMSDRM rendering can use dedicated YUV/RGB conversion and scaling hardware rather than slower GPU shaders for these operations.
 
+## Client Identity
+Moonlight identifies itself to hosts with a client certificate.
+By default it generates one and stores it in the `cert` and `key` settings.
+If that stored identity is ever corrupted or otherwise made unusable,
+Moonlight replaces it and warns that hosts must be paired again.
+
+If a more tightly-controlled certificate and key are needed,
+an administrator can provision an externally-issued identity
+by setting `certificatefile` and `keyfile` in the same settings store:
+
+* `certificatefile` is the path to a PEM certificate,
+  optionally followed by the intermediate certificates needed to verify it.
+  Moonlight presents the whole chain to hosts.
+* `keyfile` is the path to the certificate's unencrypted PEM private key.
+
+When either is set, Moonlight uses these files and ignores `cert` and `key`.
+It never modifies or replaces a provisioned identity.
+If only one of the two is set,
+or the files can't be read,
+or the key doesn't match the certificate,
+Moonlight reports the problem and exits instead of starting.
+
 ## Contribute
 1. Fork us
 2. Write code
