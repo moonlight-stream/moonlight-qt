@@ -241,8 +241,29 @@ inline HGLOBAL make_data(std::wstring_view chars, bool files) {
 
 } // namespace detail
 
+inline int encode_files(const std::vector<detail::source_file>& sources, std::string& payload) {
+    size_t encodedSize = 1;
+    for (const auto& file : sources) {
+        if (file.size > max_body || 8 + file.name.size() + file.size > max_body - encodedSize) return 413;
+        encodedSize += 8 + file.name.size() + static_cast<size_t>(file.size);
+    }
+    payload = "F";
+    payload.reserve(encodedSize);
+    for (const auto& source : sources) {
+        const DWORD size = static_cast<DWORD>(source.size);
+        detail::append_size(payload, static_cast<uint32_t>(source.name.size()));
+        payload.append(source.name);
+        detail::append_size(payload, size);
+        const auto offset = payload.size();
+        payload.resize(offset + size);
+        DWORD read = 0;
+        if (size && (!ReadFile(source.handle.get(), payload.data() + offset, size, &read, nullptr) || read != size)) return 409;
+    }
+    return 200;
+}
+
 inline int read(bool text, bool files, std::optional<DWORD> since, std::string& payload, DWORD& sequence,
-                std::vector<detail::source_file>* largeFiles = nullptr) {
+                std::vector<detail::source_file>* pinnedFiles = nullptr) {
     payload.clear();
     std::vector<fs::path> paths;
     {
@@ -263,37 +284,18 @@ inline int read(bool text, bool files, std::optional<DWORD> since, std::string& 
         } else return 204;
     }
     std::vector<detail::source_file> sources;
-    uint64_t encodedSize = 1;
-    bool fitsLegacyMessage = true;
     for (const auto& path : paths) {
         auto source = detail::open_file(path);
         if (!source) return 204;
-        if (source->size > max_body) fitsLegacyMessage = false;
-        if (fitsLegacyMessage) {
-            encodedSize += 8 + source->name.size() + source->size;
-            fitsLegacyMessage = encodedSize <= max_body;
-        }
         sources.emplace_back(std::move(*source));
     }
+    if (pinnedFiles) {
+        *pinnedFiles = std::move(sources);
+        return 200;
+    }
     if (GetClipboardSequenceNumber() != sequence) return 409;
-    if (!fitsLegacyMessage) {
-        if (largeFiles) *largeFiles = std::move(sources);
-        return 413;
-    }
-
-    payload = "F";
-    payload.reserve(static_cast<size_t>(encodedSize));
-    for (const auto& source : sources) {
-        const DWORD size = static_cast<DWORD>(source.size);
-        detail::append_size(payload, static_cast<uint32_t>(source.name.size()));
-        payload.append(source.name);
-        detail::append_size(payload, size);
-        const auto offset = payload.size();
-        payload.resize(offset + size);
-        DWORD read = 0;
-        if (size && (!ReadFile(source.handle.get(), payload.data() + offset, size, &read, nullptr) || read != size)) return 409;
-    }
-    return GetClipboardSequenceNumber() == sequence ? 200 : 409;
+    const int status = encode_files(sources, payload);
+    return GetClipboardSequenceNumber() == sequence ? status : 409;
 }
 
 inline int write(bool text, bool files, std::string_view payload, DWORD& sequence,

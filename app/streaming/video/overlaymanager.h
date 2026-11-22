@@ -49,8 +49,8 @@ public:
 #ifdef Q_OS_WIN32
     enum class Control { None, Handle, LeaveFullscreen, FileTransfer, Disconnect };
     void configureControls(int streamWidth, int streamHeight, bool fileTransfer = true);
-    void updateClipboardUpload(const ClipboardUploadProgress& upload, QSize window, qreal scale);
-    ClipboardUploadOverlay::Input handleClipboardUpload(const SDL_Event& event);
+    void updateClipboardUpload(const QList<ClipboardUploadProgress>& tasks, QSize window, qreal scale);
+    ClipboardUploadOverlay::Input handleClipboardUpload(const SDL_Event& event, quint64& taskId);
     SDL_Rect panelRect(OverlayType type, int width, int height, int panelWidth, int panelHeight) const;
     SDL_Rect controlsRect(int width, int height, int panelWidth, int panelHeight) const;
     SDL_Rect dragReferenceRect(int width, int height) const;

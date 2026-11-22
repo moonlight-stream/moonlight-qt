@@ -214,6 +214,7 @@ NvHTTP::startApp(QString verb,
                  bool& clipboardText,
                  bool& clipboardFiles,
                  bool& clipboardResumable,
+                 bool& clipboardMultitask,
                  bool& fileBrowser,
                  QString& rtspSessionUrl)
 {
@@ -224,6 +225,8 @@ NvHTTP::startApp(QString verb,
     clipboardToken.clear();
     clipboardText = false;
     clipboardFiles = false;
+    clipboardResumable = false;
+    clipboardMultitask = false;
     fileBrowser = false;
 #ifdef Q_OS_WIN
     if (allowDesktopSharing && !isGfe && !m_ServerCert.isNull()) {
@@ -233,7 +236,7 @@ NvHTTP::startApp(QString verb,
         unsigned char secret[32];
         if (RAND_bytes(secret, sizeof(secret)) == 1) {
             clipboardToken = QByteArray(reinterpret_cast<const char*>(secret), sizeof(secret)).toHex();
-            extensions += QStringLiteral("&clipboardtoken=%1&clipboardtext=%2&clipboardfiles=%3&clipboardbatchversion=2&filebrowser=1")
+            extensions += QStringLiteral("&clipboardtoken=%1&clipboardtext=%2&clipboardfiles=%3&clipboardbatchversion=2&clipboardmultitask=1&filebrowser=1")
                               .arg(QString::fromLatin1(clipboardToken)).arg(int(clipboardText)).arg(int(clipboardFiles));
         }
     }
@@ -280,6 +283,7 @@ NvHTTP::startApp(QString verb,
     clipboardText = clipboardAccepted && clipboardText && getXmlString(response, "clipboardtext") == "1";
     clipboardFiles = clipboardAccepted && clipboardFiles && getXmlString(response, "clipboardfiles") == "1";
     clipboardResumable = clipboardFiles && getXmlString(response, "clipboardbatchversion").toInt() >= 2;
+    clipboardMultitask = clipboardResumable && getXmlString(response, "clipboardmultitask") == "1";
     if (!clipboardText && !clipboardFiles && !fileBrowser) {
         clipboardToken.clear();
     }

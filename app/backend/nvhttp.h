@@ -179,6 +179,7 @@ public:
              bool& clipboardText,
              bool& clipboardFiles,
              bool& clipboardResumable,
+             bool& clipboardMultitask,
              bool& fileBrowser,
              QString& rtspSessionUrl);
 

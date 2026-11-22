@@ -256,18 +256,18 @@ SDL_Rect OverlayManager::videoRect(int width, int height) const
     return video;
 }
 
-void OverlayManager::updateClipboardUpload(const ClipboardUploadProgress& upload, QSize window, qreal scale)
+void OverlayManager::updateClipboardUpload(const QList<ClipboardUploadProgress>& tasks, QSize window, qreal scale)
 {
-    if (!m_ClipboardUpload.update(upload, window, scale)) return;
-    const bool visible = !upload.names.isEmpty();
+    if (!m_ClipboardUpload.updateTasks(tasks, window, scale)) return;
+    const bool visible = !tasks.isEmpty();
     if (isOverlayEnabled(OverlayClipboardUpload) != visible) setOverlayState(OverlayClipboardUpload, visible);
     else if (visible) setOverlayTextUpdated(OverlayClipboardUpload);
 }
 
-ClipboardUploadOverlay::Input OverlayManager::handleClipboardUpload(const SDL_Event& event)
+ClipboardUploadOverlay::Input OverlayManager::handleClipboardUpload(const SDL_Event& event, quint64& taskId)
 {
     bool hoverChanged;
-    const auto result = m_ClipboardUpload.handle(event, hoverChanged);
+    const auto result = m_ClipboardUpload.handle(event, hoverChanged, &taskId);
     if (hoverChanged) setOverlayTextUpdated(OverlayClipboardUpload);
     return result;
 }

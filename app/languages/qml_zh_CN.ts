@@ -524,6 +524,17 @@
     <message><source>Waiting for host</source><translation>等待主机确认</translation></message>
     <message><source>Queued</source><translation>等待中</translation></message>
     <message><source>Cancel (Esc)</source><translation>取消 (Esc)</translation></message>
+    <message><source>Cancel</source><translation>取消</translation></message>
+    <message><source>Dismiss</source><translation>移除</translation></message>
+    <message><source>Paste here</source><translation>粘贴到这里</translation></message>
+    <message><source>Choose where to paste</source><translation>请选择粘贴位置</translation></message>
+    <message><source>Waiting for paste</source><translation>等待粘贴</translation></message>
+    <message><source>Transfer failed</source><translation>传输失败</translation></message>
+    <message><source>Connection or source file unavailable</source><translation>连接中断或源文件无法读取</translation></message>
+    <message><source>Transfer queue is full</source><translation>传输队列已满</translation></message>
+    <message><source>Cannot open the selected files</source><translation>无法打开所选文件</translation></message>
+    <message><source>Remote clipboard changed</source><translation>远端剪贴板已更改</translation></message>
+    <message><source>More tasks (%1-%2 of %3)</source><translation>查看更多任务（%1–%2 / %3）</translation></message>
 </context>
 <context>
     <name>Session</name>

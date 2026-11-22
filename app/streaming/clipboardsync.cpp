@@ -11,6 +11,7 @@
 
 #include <Limelight.h>
 #include <QCryptographicHash>
+#include <QCoreApplication>
 #include <QDebug>
 #include <QEventLoop>
 #include <QJsonArray>
@@ -24,11 +25,15 @@
 #include <QNetworkReply>
 #include <QSslConfiguration>
 #include <QSettings>
+#include <QSet>
 #include <QStandardPaths>
 #include <QTimer>
+#include <QThreadPool>
 #include <QUrlQuery>
 #include <QUuid>
 #include <thread>
+#include <deque>
+#include <mutex>
 
 namespace {
 qint64 monotonicMs()
@@ -44,6 +49,7 @@ struct Result {
     QByteArray payload;
     QNetworkReply::NetworkError networkError = QNetworkReply::NoError;
     QByteArray conflict;
+    QByteArray task;
 };
 
 Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
@@ -89,6 +95,7 @@ Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
         if (valid) result.sequence = sequence;
         const auto offset = reply->rawHeader("X-Clipboard-Offset").toULongLong(&valid);
         if (valid) result.nextOffset = offset;
+        result.task = reply->rawHeader("X-Clipboard-Task");
         if (status == 409) {
             const auto cause = reply->rawHeader("X-Clipboard-Conflict");
             if (cause == "busy" || cause == "sequence" || cause == "offset" || cause == "desktop" || cause == "shell") {
@@ -189,7 +196,8 @@ bool fingerprintSources(const std::vector<win_clipboard::detail::source_file>& f
     for (size_t i = 0; i < files.size(); ++i) {
         const auto& file = files[i];
         QCryptographicHash hash(QCryptographicHash::Sha256);
-        if (!transfer_file::hashBytes(file.handle.get(), file.size, hash, cancelled)) return false;
+        if (!transfer_file::seek(file.handle.get(), 0) ||
+            !transfer_file::hashBytes(file.handle.get(), file.size, hash, cancelled)) return false;
         auto item = manifest.at(i).toObject();
         item.insert(QStringLiteral("sha256"), QString::fromLatin1(hash.result().toHex()));
         manifest[i] = item;
@@ -217,7 +225,9 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
                        const QSslCertificate& pairedHost, const std::vector<win_clipboard::detail::source_file>& files,
                        DWORD expectedHostSequence, const std::function<bool()>& cancelled,
                        const std::function<void(const ClipboardUploadProgress&)>& update,
-                       bool resumable = false, const std::function<bool()>& discardRequested = {})
+                       bool resumable = false, const std::function<bool()>& discardRequested = {},
+                       const QString& task = {}, const std::function<bool()>& allowCommit = {},
+                       const QString& sourceKey = {}, QJsonArray* cachedManifest = nullptr)
 {
     constexpr quint64 MaxBatchBytes = 16ULL * 1024 * 1024 * 1024;
     quint64 acknowledged = 0;
@@ -229,6 +239,7 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
                    << "file index" << index << "file offset" << offset << "acknowledged bytes" << acknowledged;
         // Only a valid commit response may release the pending paste.
         result.sequence.reset();
+        if (result.status == 204) result.status = 502;
         return result;
     };
     QJsonArray manifest;
@@ -248,8 +259,13 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
     progress.fileSize = files.front().size;
     update(progress);
 
-    if (resumable && !fingerprintSources(files, manifest, cancelled)) {
-        return failure("manifest", {}, cancelled() ? "cancelled" : "local file read");
+    if (resumable) {
+        if (cachedManifest && !cachedManifest->isEmpty()) manifest = *cachedManifest;
+        else {
+            if (!fingerprintSources(files, manifest, cancelled))
+                return failure("manifest", {}, cancelled() ? "cancelled" : "local file read");
+            if (cachedManifest) *cachedManifest = manifest;
+        }
     }
 
     QUrl url = host;
@@ -270,18 +286,22 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
     // Once begin is on the wire, receive the host-generated ID so a cancellation can
     // clean up the staging files. The stream's stop request still interrupts this wait.
     const auto manifestBody = QJsonDocument(manifest).toJson(QJsonDocument::Compact);
-    if (resumable) {
+    if (resumable && task.isEmpty()) {
         QSettings settings;
-        const auto key = discardSetting(pairedHost);
-        const auto pending = settings.value(key + "requested").toByteArray();
-        if (!pending.isEmpty() && pending != settings.value(key + "done").toByteArray()) {
+        QStringList keys{discardSetting(pairedHost)};
+        if (!sourceKey.isEmpty()) keys.append(keys.first() + sourceKey);
+        for (const auto& key : keys) {
+            const auto pending = settings.value(key + "requested").toByteArray();
+            if (pending.isEmpty() || pending == settings.value(key + "done").toByteArray()) continue;
             auto reset = post(QUrlQuery("op=discard"), manifestBody);
             if (reset.status != 204) return failure("discard", reset);
             settings.setValue(key + "done", pending);
         }
     }
     if (cancelled()) return failure("begin", {}, "cancelled");
-    url.setQuery(QUrlQuery(resumable ? "op=resume" : "op=begin"));
+    QUrlQuery beginQuery(resumable ? "op=resume" : "op=begin");
+    if (!task.isEmpty()) beginQuery.addQueryItem("task", task);
+    url.setQuery(beginQuery);
     request.setUrl(url);
     auto begin = exchange(network, request, pairedHost, &manifestBody, {}, 15000);
     if (begin.status != 200) return failure("begin", begin);
@@ -298,6 +318,7 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
         QUrlQuery query;
         query.addQueryItem("op", op);
         query.addQueryItem("id", QString::fromLatin1(id));
+        if (!task.isEmpty()) query.addQueryItem("task", task);
         return query;
     };
     request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
@@ -342,22 +363,23 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
                 update(progress);
             }
         }
-        auto query = batchQuery("commit");
-        query.addQueryItem("since", QString::number(expectedHostSequence));
+        if (allowCommit && !allowCommit()) return failure("commit", {}, "cancelled before publication");
+        auto query = batchQuery(task.isEmpty() ? "commit" : "deliver");
+        if (task.isEmpty()) query.addQueryItem("since", QString::number(expectedHostSequence));
         progress.committing = true;
         update(progress);
         // Keep the original revision guard on every attempt. Older hosts return an ambiguous
         // 409, and a newer remote clipboard must always win.
         for (int attempt = 0; ; ++attempt) {
             auto result = post(query, {});
-            if (result.status == 204 && result.sequence) return result;
+            if (result.status == 204 && (!task.isEmpty() || result.sequence)) return result;
             if (result.status != 409 || result.conflict != "busy" || attempt >= 5) return failure("commit", result);
             if (!waitForUpload(monotonicMs() + (100 << attempt), cancelled)) return failure("commit", {}, "cancelled");
         }
     };
     auto result = send();
     const bool discard = !resumable || (discardRequested && discardRequested());
-    if (discard && (result.status != 204 || !result.sequence)) {
+    if (discard && (result.status != 204 || (task.isEmpty() && !result.sequence))) {
         auto cleanup = post(batchQuery("abort"), {}, true);
         if (cleanup.status != 204 && cleanup.status != 404) failure("abort", cleanup);
     }
@@ -365,12 +387,264 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
 }
 }
 
-ClipboardSync::ClipboardSync(QUrl host, QSslCertificate certificate, QByteArray token, bool text, bool files, bool resumable)
-    : m_Host(std::move(host)), m_Certificate(std::move(certificate)), m_Token(std::move(token)),
-      m_Text(text), m_Files(files), m_Resumable(files && resumable), m_LocalSequence(GetClipboardSequenceNumber())
+struct ClipboardSync::FileQueue {
+    using State = ClipboardUploadProgress::State;
+    static constexpr int Binding = -1;
+    static constexpr int Uncertain = -2;
+    struct Job {
+        std::vector<win_clipboard::detail::source_file> files;
+        ClipboardUploadProgress progress;
+        DWORD sequence = 0;
+        QString sourceKey;
+        QString token;
+        QString previous;
+        QJsonArray manifest;
+        std::atomic_bool cancelled{false};
+        // Only an explicit 422 authorizes the ordinary clipboard fallback.
+        std::atomic_int targetStatus{Binding};
+        bool automaticPaste = true;
+        bool published = false;
+        bool dispatched = false;
+        bool verifyClipboard = false;
+        bool uploadStarted = false;
+        DWORD publishedSequence = 0;
+    };
+
+    mutable std::mutex mutex;
+    std::deque<std::shared_ptr<Job>> jobs;
+    QThreadPool controls;
+    QNetworkRequest request;
+    quint64 nextId = 0;
+    quint64 inputGeneration = 0;
+    std::atomic_bool stopping{false};
+    QSet<QString> selections;
+
+    static QString message(const char* english) {
+        return QCoreApplication::translate("ClipboardTransfer", english);
+    }
+
+    auto firstPending() const {
+        return std::find_if(jobs.begin(), jobs.end(), [](const auto& j) { return j->progress.state != State::Failed; });
+    }
+
+    auto publishedJob() const {
+        return std::find_if(jobs.begin(), jobs.end(), [](const auto& j) { return j->published; });
+    }
+
+    static QString sourceKey(const Job& job) {
+        QCryptographicHash hash(QCryptographicHash::Sha256);
+        for (const auto& file : job.files) {
+            BY_HANDLE_FILE_INFORMATION info{};
+            if (!GetFileInformationByHandle(file.handle.get(), &info)) return {};
+            const DWORD fields[] = {info.dwVolumeSerialNumber, info.nFileIndexHigh, info.nFileIndexLow,
+                info.ftLastWriteTime.dwHighDateTime, info.ftLastWriteTime.dwLowDateTime, info.nFileSizeHigh,
+                info.nFileSizeLow, static_cast<DWORD>(file.name.size())};
+            hash.addData(QByteArrayView(reinterpret_cast<const char*>(fields), sizeof(fields)));
+            hash.addData(QByteArrayView(file.name.data(), static_cast<qsizetype>(file.name.size())));
+        }
+        return QString::fromLatin1(hash.result().toHex()) + "/";
+    }
+
+    static void forget(const QSslCertificate& cert, const Job& job) {
+        if (job.token.isEmpty() || job.sourceKey.isEmpty()) return;
+        QSettings settings;
+        const auto key = discardSetting(cert) + job.sourceKey + "task";
+        if (settings.value(key).toString() == job.token) settings.remove(key);
+    }
+
+    void control(ClipboardSync* sync, const std::shared_ptr<Job>& job, bool discard) {
+        const auto deadline = monotonicMs() + 3000;
+        const auto generation = inputGeneration;
+        const auto token = job->token;
+        const auto previous = job->previous;
+        controls.start([this, sync, job, discard, deadline, generation, token, previous] {
+            if (stopping || (!discard && job->cancelled)) return;
+            if (!discard) {
+                std::lock_guard lock(mutex);
+                if (generation != inputGeneration) {
+                    job->targetStatus = Uncertain;
+                    job->progress.state = State::NeedsPaste;
+                    return;
+                }
+            }
+            auto endpoint = sync->m_Host;
+            endpoint.setPath("/clipboard/batch");
+            QUrlQuery query;
+            query.addQueryItem("op", discard ? "discard" : "target");
+            query.addQueryItem("task", token);
+            if (!discard && !previous.isEmpty()) query.addQueryItem("previous", previous);
+            endpoint.setQuery(query);
+            auto req = request;
+            req.setUrl(endpoint);
+            QNetworkAccessManager net;
+            net.setProxy(QNetworkProxy(QNetworkProxy::NoProxy));
+            const QByteArray empty;
+            const int timeout = discard ? 3000 : int((std::max<qint64>)(0, deadline - monotonicMs()));
+            const auto result = timeout ? exchange(net, req, sync->m_Certificate, &empty,
+                [this] { return stopping.load(); }, timeout) : Result{};
+            if (discard) return;
+            std::lock_guard lock(mutex);
+            int status = result.status;
+            if (status == 204) {
+                const auto chosen = QString::fromLatin1(result.task);
+                if (chosen == token || (!previous.isEmpty() && chosen == previous)) job->token = chosen;
+                else if (!chosen.isEmpty() || !previous.isEmpty()) status = 502;
+                if (job->cancelled) {
+                    control(sync, job, true);
+                    return;
+                }
+                if (!job->sourceKey.isEmpty() && status == 204) {
+                    QSettings settings;
+                    const auto key = discardSetting(sync->m_Certificate) + job->sourceKey + "task";
+                    if (settings.value(key).toString() == token) settings.setValue(key, job->token);
+                }
+            }
+            if (generation != inputGeneration && (status == 204 || status == 422)) {
+                if (status == 204 && job->token != previous) control(sync, job, true);
+                job->targetStatus = Uncertain;
+                job->progress.state = State::NeedsPaste;
+            } else job->targetStatus = status;
+        });
+    }
+
+    // One byte stream at a time. Park a task that needs user input so another
+    // task with a confirmed Explorer destination can use the connection.
+    bool process(ClipboardSync& sync, QNetworkAccessManager& net, DWORD& local, std::optional<DWORD>& remote) {
+        std::shared_ptr<Job> job;
+        {
+            std::lock_guard lock(mutex);
+            const bool occupied = publishedJob() != jobs.end();
+            for (const auto& next : jobs) {
+                if (next->targetStatus == Binding && next->progress.state != State::Failed) break;
+                if (next->progress.state == State::Failed || next->targetStatus == Uncertain) continue;
+                if (next->published) {
+                    if (!next->verifyClipboard) continue;
+                } else if (next->targetStatus == 422) {
+                    if (occupied) continue;
+                    if (!next->automaticPaste && sync.m_Multitask) {
+                        next->progress.state = State::NeedsPaste;
+                        continue;
+                    }
+                    if (!remote) return false;
+                }
+                job = next;
+                if (!job->published) {
+                    job->progress.state = State::Uploading;
+                    job->uploadStarted = true;
+                }
+                break;
+            }
+            if (!job) return firstPending() != jobs.end();
+        }
+        const auto interrupted = [&] { return sync.isInterruptionRequested() || job->cancelled.load(); };
+        if (job->published) {
+            auto endpoint = sync.m_Host;
+            endpoint.setQuery(QStringLiteral("since=init&files=1&text=0"));
+            auto req = request;
+            req.setUrl(endpoint);
+            const auto result = exchange(net, req, sync.m_Certificate, nullptr, interrupted, 3000);
+            std::lock_guard lock(mutex);
+            job->verifyClipboard = false;
+            if (result.status == 204 && result.sequence == job->publishedSequence) {
+                job->progress.state = job->automaticPaste ? State::WaitingForPaste : State::NeedsPaste;
+            } else {
+                job->published = false;
+                job->progress.error = message("Remote clipboard changed");
+                job->progress.state = State::Failed;
+                if (result.sequence) remote = result.sequence;
+            }
+            return true;
+        }
+        bool parked = false;
+        const auto allowPublication = [&] {
+            while (!interrupted()) {
+                {
+                    std::lock_guard lock(mutex);
+                    if (job->automaticPaste) return true;
+                    job->progress.state = State::NeedsPaste;
+                    if (sync.m_Multitask) {
+                        parked = true;
+                        return false;
+                    }
+                }
+                QThread::msleep(25);
+            }
+            return false;
+        };
+        const bool direct = job->targetStatus == 204;
+        Result result;
+        if (direct || job->targetStatus == 422) {
+            std::string encoded;
+            const int legacy = direct || sync.m_Resumable ? 413 : win_clipboard::encode_files(job->files, encoded);
+            if (legacy == 413) {
+                const auto update = [&](const ClipboardUploadProgress& p) {
+                    std::lock_guard lock(mutex);
+                    const auto id = job->progress.taskId;
+                    job->progress = p;
+                    job->progress.taskId = id;
+                };
+                result = uploadFileBatch(net, request, sync.m_Host, sync.m_Certificate, job->files, remote.value_or(0),
+                    interrupted, update, direct || sync.m_Resumable, [&] { return job->cancelled.load(); },
+                    direct ? job->token : QString(), direct ? std::function<bool()>{} : allowPublication,
+                    job->sourceKey, &job->manifest);
+            } else if (legacy == 200 && allowPublication()) {
+                auto endpoint = sync.m_Host;
+                QUrlQuery query;
+                query.addQueryItem("files", "1");
+                query.addQueryItem("text", sync.m_Text ? "1" : "0");
+                query.addQueryItem("since", QString::number(*remote));
+                endpoint.setQuery(query);
+                auto req = request;
+                req.setUrl(endpoint);
+                const auto payload = QByteArray::fromRawData(encoded.data(), static_cast<qsizetype>(encoded.size()));
+                result = exchange(net, req, sync.m_Certificate, &payload, interrupted);
+            } else result.status = legacy;
+        } else result.status = job->targetStatus;
+
+        std::lock_guard lock(mutex);
+        // Do not auto-publish this selection after finishing a direct transfer.
+        local = job->sequence;
+        if (interrupted() || parked) return true;
+        job->files.clear();
+        if (result.status == 204 && (direct || result.sequence)) {
+            if (direct) {
+                forget(sync.m_Certificate, *job);
+                jobs.erase(std::find(jobs.begin(), jobs.end(), job));
+            } else {
+                remote = result.sequence;
+                sync.m_ConfirmedSequence = local;
+                job->published = true;
+                job->publishedSequence = *result.sequence;
+                job->progress.acknowledged = job->progress.total;
+                job->progress.state = job->automaticPaste ? State::WaitingForPaste : State::NeedsPaste;
+            }
+        } else {
+            job->progress.state = State::Failed;
+            job->progress.error = result.status ? QStringLiteral("HTTP %1").arg(result.status) :
+                                                  message("Connection or source file unavailable");
+        }
+        return true;
+    }
+};
+
+ClipboardSync::ClipboardSync(QUrl host, QSslCertificate certificate, QByteArray token, bool text, bool files,
+                             bool resumable, bool multitask)
+    : m_FileQueue(std::make_unique<FileQueue>()), m_Host(std::move(host)), m_Certificate(std::move(certificate)),
+      m_Token(std::move(token)), m_Text(text), m_Files(files), m_Resumable(files && resumable),
+      m_Multitask(m_Resumable && multitask), m_LocalSequence(GetClipboardSequenceNumber())
 {
     m_Host.setPath("/clipboard");
-    if (!m_Token.isEmpty() && !m_Certificate.isNull() && (m_Text || m_Files)) start();
+    m_FileQueue->controls.setMaxThreadCount(8);
+    if (!m_Token.isEmpty() && !m_Certificate.isNull() && (m_Text || m_Files)) {
+        auto config = IdentityManager::get()->getSslConfig();
+        config.setCaCertificates({m_Certificate});
+        auto& request = m_FileQueue->request;
+        request.setSslConfiguration(config);
+        request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
+        request.setRawHeader("X-Clipboard-Token", m_Token);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
+        start();
+    }
 }
 
 ClipboardSync::~ClipboardSync()
@@ -380,10 +654,12 @@ ClipboardSync::~ClipboardSync()
 
 void ClipboardSync::stop()
 {
+    m_FileQueue->stopping = true;
     if (isRunning()) {
         requestInterruption();
         wait();
     }
+    m_FileQueue->controls.waitForDone();
 }
 
 bool ClipboardSync::requestPaste()
@@ -392,6 +668,54 @@ bool ClipboardSync::requestPaste()
     const DWORD sequence = GetClipboardSequenceNumber();
     const bool hasFiles = IsClipboardFormatAvailable(CF_HDROP);
     if (!(hasFiles ? m_Files : m_Text && IsClipboardFormatAvailable(CF_UNICODETEXT))) return false;
+    if (hasFiles) {
+        if (m_IncomingSequence == sequence) return false;
+        m_PasteSequence = NoPaste;
+        m_PasteCount = 0;
+        auto job = std::make_shared<FileQueue::Job>();
+        auto& queue = *m_FileQueue;
+        std::lock_guard lock(queue.mutex);
+        job->progress.taskId = ++queue.nextId;
+        if (queue.jobs.size() >= 32) {
+            if (queue.jobs.size() == 32) {
+                job->progress.state = FileQueue::State::Failed;
+                job->progress.error = FileQueue::message("Transfer queue is full");
+                queue.jobs.push_back(job);
+            }
+            return true;
+        }
+        std::string unused;
+        const auto status = win_clipboard::read(false, true, {}, unused, job->sequence, &job->files);
+        if (status != 200 || job->files.empty() || job->sequence != sequence) {
+            job->files.clear();
+            job->progress.state = FileQueue::State::Failed;
+            job->progress.error = FileQueue::message("Cannot open the selected files");
+            queue.jobs.push_back(job);
+            return true;
+        }
+        for (const auto& file : job->files) {
+            job->progress.names.append(QString::fromStdString(file.name));
+            job->progress.total += file.size;
+        }
+        job->sourceKey = FileQueue::sourceKey(*job);
+        job->progress.state = FileQueue::State::Queued;
+        job->automaticPaste = queue.firstPending() == queue.jobs.end();
+        if (m_Multitask) {
+            QSettings settings;
+            const auto key = discardSetting(m_Certificate) + job->sourceKey + "task";
+            if (!job->sourceKey.isEmpty() && !queue.selections.contains(job->sourceKey)) {
+                const auto candidate = settings.value(key).toByteArray();
+                if (candidate.size() == 32 && QByteArray::fromHex(candidate).toHex() == candidate)
+                    job->previous = QString::fromLatin1(candidate);
+                queue.selections.insert(job->sourceKey);
+            }
+            job->token = QString::fromLatin1(QUuid::createUuid().toRfc4122().toHex());
+            if (!job->sourceKey.isEmpty()) settings.setValue(key, job->token);
+            queue.control(this, job, false);
+        } else job->targetStatus = 422;
+        queue.jobs.push_back(job);
+        return true;
+    }
 
     if (m_PasteCount && (m_PasteSequence == sequence || m_PasteSequence == Ready)) {
         ++m_PasteCount;
@@ -404,41 +728,128 @@ bool ClipboardSync::requestPaste()
     return true;
 }
 
+void ClipboardSync::cancelFileTask(quint64 taskId)
+{
+    auto& queue = *m_FileQueue;
+    std::lock_guard lock(queue.mutex);
+    const auto it = std::find_if(queue.jobs.begin(), queue.jobs.end(), [&](const auto& j) { return j->progress.taskId == taskId; });
+    if (it == queue.jobs.end()) return;
+    const auto job = *it;
+    job->cancelled = true;
+    FileQueue::forget(m_Certificate, *job);
+    if (!job->token.isEmpty()) queue.control(this, job, true);
+    if (m_Resumable && job->uploadStarted && job->targetStatus == 422 && !job->sourceKey.isEmpty()) {
+        QSettings settings;
+        settings.setValue(discardSetting(m_Certificate) + job->sourceKey + "requested", QUuid::createUuid().toRfc4122());
+    }
+    queue.jobs.erase(it);
+}
+
+bool ClipboardSync::pasteFileTask(quint64 taskId)
+{
+    auto& queue = *m_FileQueue;
+    std::lock_guard lock(queue.mutex);
+    const auto it = std::find_if(queue.jobs.begin(), queue.jobs.end(), [&](const auto& j) { return j->progress.taskId == taskId; });
+    if (it == queue.jobs.end() || (*it)->progress.state != FileQueue::State::NeedsPaste) return false;
+    const auto& job = *it;
+    if (job->targetStatus == FileQueue::Uncertain) {
+        FileQueue::forget(m_Certificate, *job);
+        job->token = QString::fromLatin1(QUuid::createUuid().toRfc4122().toHex());
+        job->targetStatus = FileQueue::Binding;
+        if (!job->sourceKey.isEmpty()) {
+            QSettings settings;
+            settings.setValue(discardSetting(m_Certificate) + job->sourceKey + "task", job->token);
+        }
+        queue.control(this, job, false);
+    }
+    job->automaticPaste = true;
+    job->verifyClipboard = job->published;
+    job->progress.state = FileQueue::State::Queued;
+    return true;
+}
+
 void ClipboardSync::cancelPaste(bool discardUpload)
 {
-    std::lock_guard lock(m_UploadMutex);
-    if (discardUpload && m_Resumable && !m_Upload.names.isEmpty()) {
-        m_DiscardGeneration = m_CancelGeneration.load();
-        m_ConfirmedSequence = NoPaste;
-        QSettings settings;
-        settings.setValue(discardSetting(m_Certificate) + "requested", QUuid::createUuid().toRfc4122());
-    }
-    ++m_CancelGeneration;
-    m_PasteSequence = NoPaste;
     m_PasteCount = 0;
-    m_Upload = {};
+    m_PasteSequence = NoPaste;
+    quint64 taskId = 0;
+    {
+        std::lock_guard lock(m_FileQueue->mutex);
+        ++m_FileQueue->inputGeneration;
+        for (const auto& job : m_FileQueue->jobs) {
+            if (discardUpload) {
+                taskId = job->progress.taskId;
+                break;
+            }
+            job->automaticPaste = false;
+            if (job->published && !job->dispatched) job->progress.state = FileQueue::State::NeedsPaste;
+        }
+    }
+    if (taskId) cancelFileTask(taskId);
+}
+
+QList<ClipboardUploadProgress> ClipboardSync::fileUploadTasks() const
+{
+    std::lock_guard lock(m_FileQueue->mutex);
+    QList<ClipboardUploadProgress> tasks;
+    for (const auto& job : m_FileQueue->jobs) tasks.append(job->progress);
+    return tasks;
 }
 
 ClipboardUploadProgress ClipboardSync::fileUploadProgress() const
 {
-    if (!pastePending()) return {};
-    std::lock_guard lock(m_UploadMutex);
-    return m_Upload;
+    std::lock_guard lock(m_FileQueue->mutex);
+    const auto it = m_FileQueue->firstPending();
+    return it == m_FileQueue->jobs.end() ? ClipboardUploadProgress{} : (*it)->progress;
+}
+
+bool ClipboardSync::pastePending() const
+{
+    std::lock_guard lock(m_FileQueue->mutex);
+    const auto it = m_FileQueue->firstPending();
+    return m_PasteCount || (it != m_FileQueue->jobs.end() && !(*it)->dispatched);
 }
 
 int ClipboardSync::takeReadyPastes()
 {
+    {
+        std::lock_guard lock(m_FileQueue->mutex);
+        // Text uses the same authenticated worker. Time spent hashing or sending
+        // an earlier file is not a timeout for a later text paste.
+        if (m_PasteCount && m_FileQueue->firstPending() != m_FileQueue->jobs.end()) m_PasteActivity = monotonicMs();
+        const auto it = m_FileQueue->publishedJob();
+        if (it != m_FileQueue->jobs.end()) {
+            const auto& job = *it;
+            if (job->progress.state != FileQueue::State::WaitingForPaste || !job->automaticPaste || job->dispatched) return 0;
+            job->dispatched = true;
+            return 1;
+        }
+    }
     if (!m_PasteCount) return 0;
     const auto state = m_PasteSequence.load();
-    if (state != m_BatchSequence && monotonicMs() - m_PasteActivity.load() > 15000) {
-        qWarning() << "Clipboard paste timed out";
-        cancelPaste();
-        return 0;
-    }
-    if (state != NoPaste && state != Ready && isRunning()) return 0;
+    if (state != NoPaste && state != Ready && monotonicMs() - m_PasteActivity.load() < 15000 && isRunning()) return 0;
     const int count = state == Ready ? m_PasteCount : 0;
-    cancelPaste();
+    m_PasteCount = 0;
+    m_PasteSequence = NoPaste;
     return count;
+}
+
+void ClipboardSync::acknowledgePastesSent(bool delivered)
+{
+    std::lock_guard lock(m_FileQueue->mutex);
+    const auto it = m_FileQueue->publishedJob();
+    if (it == m_FileQueue->jobs.end() || !(*it)->dispatched) return;
+    if (delivered) {
+        // A newer local selection copied while the old host was waiting for the
+        // paste key belongs to its own upcoming gesture.
+        m_DeferredFileSequence = GetClipboardSequenceNumber();
+        FileQueue::forget(m_Certificate, **it);
+        m_FileQueue->jobs.erase(it);
+    } else {
+        (*it)->dispatched = false;
+        (*it)->automaticPaste = false;
+        (*it)->progress.state = FileQueue::State::NeedsPaste;
+    }
 }
 
 void ClipboardSync::run()
@@ -447,18 +858,16 @@ void ClipboardSync::run()
         QStandardPaths::CacheLocation).toStdWString()) / L"Clipboard";
     QNetworkAccessManager network;
     network.setProxy(QNetworkProxy(QNetworkProxy::NoProxy));
-    QNetworkRequest request;
-    auto config = IdentityManager::get()->getSslConfig();
-    config.setCaCertificates({m_Certificate});
-    request.setSslConfiguration(config);
-    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
-    request.setRawHeader("X-Clipboard-Token", m_Token);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
+    auto request = m_FileQueue->request;
 
     DWORD local = m_LocalSequence;
     std::optional<DWORD> remote;
     int failures = 0;
     while (!isInterruptionRequested()) {
+        if (m_FileQueue->process(*this, network, local, remote)) {
+            msleep(20);
+            continue;
+        }
         QUrl url = m_Host;
         QUrlQuery query;
         query.addQueryItem("text", m_Text ? "1" : "0");
@@ -475,35 +884,9 @@ void ClipboardSync::run()
             m_PasteSequence.compare_exchange_strong(paste, Ready);
         } else if (remote && (current != local || explicitPaste)) {
             std::string encoded;
-            std::vector<win_clipboard::detail::source_file> largeFiles;
-            int status = win_clipboard::read(m_Text, m_Files, explicitPaste ? std::nullopt : std::optional<DWORD>(local),
-                                             encoded, copied, explicitPaste ? &largeFiles : nullptr);
-            if (!largeFiles.empty() && copied == paste) {
-                // Each chunk has its own deadline. A progressing multi-gigabyte batch can take minutes.
-                m_BatchSequence = copied;
-                const auto generation = m_CancelGeneration.load();
-                const auto cancelled = [&] {
-                    return isInterruptionRequested() || m_CancelGeneration != generation ||
-                           m_PasteSequence != copied || GetClipboardSequenceNumber() != copied;
-                };
-                const auto result = uploadFileBatch(network, request, m_Host, m_Certificate, largeFiles, *remote, cancelled,
-                                                    [this, generation](const ClipboardUploadProgress& progress) {
-                                                        std::lock_guard lock(m_UploadMutex);
-                                                        if (m_CancelGeneration == generation) m_Upload = progress;
-                                                    }, m_Resumable, [&]{return m_DiscardGeneration == generation;});
-                local = copied;
-                if (result.status == 204 && result.sequence) {
-                    remote = result.sequence;
-                    m_PasteActivity = monotonicMs();
-                    std::lock_guard lock(m_UploadMutex);
-                    if (m_DiscardGeneration != generation) m_ConfirmedSequence = copied;
-                    if (m_CancelGeneration == generation) m_PasteSequence.compare_exchange_strong(paste, Ready);
-                } else if (m_CancelGeneration == generation) {
-                    m_PasteSequence.compare_exchange_strong(paste, NoPaste);
-                }
-                m_BatchSequence = NoPaste;
-                continue;
-            }
+            const bool syncFiles = m_Files && !m_Multitask && current != m_DeferredFileSequence;
+            int status = win_clipboard::read(m_Text, syncFiles, explicitPaste ? std::nullopt : std::optional<DWORD>(local),
+                                             encoded, copied);
             if (status == 200 && (!explicitPaste || (copied == paste && m_PasteSequence == paste))) {
                 upload = QByteArray(encoded.data(), static_cast<int>(encoded.size()));
                 // A remote copy between the last poll and Ctrl+V must win over an older local clipboard.
@@ -526,6 +909,12 @@ void ClipboardSync::run()
         if (isInterruptionRequested()) break;
         if (response.status == 404 || response.status == 401 || (response.status == 403 && failures >= 3)) {
             qWarning() << "Clipboard sync unavailable for this session, HTTP" << response.status;
+            std::lock_guard lock(m_FileQueue->mutex);
+            for (const auto& job : m_FileQueue->jobs) {
+                job->progress.state = FileQueue::State::Failed;
+                job->progress.error = QStringLiteral("HTTP %1").arg(response.status);
+                job->files.clear();
+            }
             break;
         }
         if (response.status == 204 && response.sequence) {
@@ -545,6 +934,7 @@ void ClipboardSync::run()
                 // If a paste was waiting on the replaced revision, paste the host's newer copy.
                 uint64_t awaiting = local;
                 local = applied;
+                m_IncomingSequence = applied;
                 m_ConfirmedSequence = applied;
                 m_PasteSequence.compare_exchange_strong(awaiting, Ready);
             }
@@ -568,6 +958,10 @@ void ClipboardSync::run()
         const int delay = 250 << failures;
         for (int ms = 0; ms < delay && !isInterruptionRequested(); ms += 50) {
             if (m_PasteSequence <= UINT32_MAX && !explicitPaste && !failures) break;
+            {
+                std::lock_guard lock(m_FileQueue->mutex);
+                if (m_FileQueue->firstPending() != m_FileQueue->jobs.end()) break;
+            }
             msleep(50);
         }
     }

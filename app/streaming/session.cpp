@@ -1833,7 +1833,7 @@ bool Session::startConnectionAsync()
                       !m_ViewOnly && m_Preferences->lockHostOnDisconnect(),
                       !m_ViewOnly,
                       m_HostHandlesDisconnectLock,
-                      m_ClipboardToken, m_ClipboardText, m_ClipboardFiles, m_ClipboardResumable, m_FileBrowser,
+                      m_ClipboardToken, m_ClipboardText, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask, m_FileBrowser,
                       rtspSessionUrl);
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
@@ -2231,7 +2231,7 @@ void Session::exec()
     clipboardHost.setScheme(QStringLiteral("https"));
     clipboardHost.setHost(m_Computer->activeAddress.address());
     clipboardHost.setPort(m_Computer->activeHttpsPort);
-    ClipboardSync clipboard(clipboardHost, m_Computer->serverCert, m_ClipboardToken, m_ClipboardText, m_ClipboardFiles, m_ClipboardResumable);
+    ClipboardSync clipboard(clipboardHost, m_Computer->serverCert, m_ClipboardToken, m_ClipboardText, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask);
     SDL_Scancode deferredPasteKey = SDL_SCANCODE_UNKNOWN;
     Uint32 lastUploadUpdate = lastTitleUpdate - 100;
     auto streamWindowSize = [&] {
@@ -2246,24 +2246,26 @@ void Session::exec()
 #endif
     for (;;) {
 #ifdef Q_OS_WIN32
-        if ((clipboard.pastePending() || m_OverlayManager.isOverlayEnabled(Overlay::OverlayClipboardUpload)) &&
-                SDL_GetTicks() - lastUploadUpdate >= 100) {
+        if (SDL_GetTicks() - lastUploadUpdate >= 100) {
             lastUploadUpdate = SDL_GetTicks();
-            m_OverlayManager.updateClipboardUpload(clipboard.fileUploadProgress(), streamWindowSize(), caption.windowScale());
+            m_OverlayManager.updateClipboardUpload(clipboard.fileUploadTasks(), streamWindowSize(), caption.windowScale());
         }
         if (clipboard.pastePending()) {
             // Dispatch queued focus and input changes before delivering the acknowledged paste.
             SDL_PumpEvents();
             if (!SDL_HasEvent(SDL_WINDOWEVENT) && !SDL_HasEvent(SDL_KEYDOWN) && !SDL_HasEvent(SDL_MOUSEBUTTONDOWN) &&
                     !SDL_HasEvent(SDL_FINGERDOWN) && !SDL_HasEvent(SDL_QUIT)) {
-                const int pasteCount = clipboard.takeReadyPastes();
                 if (SDL_GetKeyboardFocus() == m_Window && !SDL_AtomicGet(&m_ConnectionEnding)) {
+                    const int pasteCount = clipboard.takeReadyPastes();
+                    bool sent = true;
                     for (int i = 0; i < pasteCount; ++i) {
                         // Sunshine applies Ctrl even if the physical key was released during transfer.
                         constexpr short pasteKey = static_cast<short>(0x8000 | 'V');
-                        LiSendKeyboardEvent(pasteKey, KEY_ACTION_DOWN, MODIFIER_CTRL);
-                        LiSendKeyboardEvent(pasteKey, KEY_ACTION_UP, MODIFIER_CTRL);
+                        const int down = LiSendKeyboardEvent(pasteKey, KEY_ACTION_DOWN, MODIFIER_CTRL);
+                        const int up = LiSendKeyboardEvent(pasteKey, KEY_ACTION_UP, MODIFIER_CTRL);
+                        sent = sent && down == 0 && up == 0;
                     }
+                    if (pasteCount) clipboard.acknowledgePastesSent(sent);
                 }
             }
         }
@@ -2367,10 +2369,12 @@ void Session::exec()
         }
 #endif
 #ifdef Q_OS_WIN32
-        const auto uploadInput = m_OverlayManager.handleClipboardUpload(event);
+        quint64 selectedTask = 0;
+        const auto uploadInput = m_OverlayManager.handleClipboardUpload(event, selectedTask);
         if (uploadInput == ClipboardUploadOverlay::Input::Cancel) {
-            clipboard.cancelPaste(true);
-            m_OverlayManager.updateClipboardUpload({}, streamWindowSize(), caption.windowScale());
+            clipboard.cancelFileTask(selectedTask);
+        } else if (uploadInput == ClipboardUploadOverlay::Input::Paste && SDL_GetKeyboardFocus() == m_Window) {
+            clipboard.pasteFileTask(selectedTask);
         }
         if (uploadInput != ClipboardUploadOverlay::Input::Forward) continue;
         if ((event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) ||
@@ -2681,7 +2685,7 @@ void Session::exec()
                     deferredPasteKey = key.scancode;
                     break;
                 }
-                if (!paste) clipboard.cancelPaste();
+                if (!paste && key.scancode != SDL_SCANCODE_LCTRL && key.scancode != SDL_SCANCODE_RCTRL) clipboard.cancelPaste();
             }
 #endif
             m_InputHandler->handleKeyEvent(&event.key);
