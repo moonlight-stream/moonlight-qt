@@ -2256,6 +2256,10 @@ void Session::exec()
                 metrics << tr("Frame %1 ms").arg(frames ? QString::number(SDL_AtomicGet(&m_FrameDelayMs)) :
                                                          QStringLiteral("—"));
 #ifdef Q_OS_WIN32
+                const int uploadPercent = clipboard.fileUploadPercent();
+                if (uploadPercent >= 0) {
+                    metrics.prepend(tr("Uploading files %1%").arg(uploadPercent));
+                }
                 MIB_IF_ROW2 traffic{};
                 traffic.InterfaceIndex = m_StreamInterface;
                 bool valid = m_StreamInterface && GetIfEntry2(&traffic) == NO_ERROR;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QSslCertificate>
-#include <QElapsedTimer>
 #include <QThread>
 #include <QUrl>
 #include <atomic>
@@ -18,6 +17,7 @@ public:
     void cancelPaste();
     int takeReadyPastes();
     bool pastePending() const { return m_PasteCount != 0; }
+    int fileUploadPercent() const { return pastePending() ? m_FileUploadPercent.load() : -1; }
 
 protected:
     void run() override;
@@ -33,6 +33,8 @@ private:
     static constexpr uint64_t Ready = NoPaste - 1;
     std::atomic<uint64_t> m_ConfirmedSequence{NoPaste};
     std::atomic<uint64_t> m_PasteSequence{NoPaste};
+    std::atomic<uint64_t> m_BatchSequence{NoPaste};
+    std::atomic<int> m_FileUploadPercent{-1};
     int m_PasteCount = 0;
-    QElapsedTimer m_PasteTimer;
+    std::atomic<qint64> m_PasteActivity{0};
 };

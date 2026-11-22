@@ -493,6 +493,7 @@
 </context>
 <context>
     <name>Session</name>
+    <message><source>Uploading files %1%</source><translation>正在上传文件 %1%</translation></message>
     <message><source>Checking the network route...</source><translation>正在检查到主机的网络路径…</translation></message>
     <message><source>Setting up networking...</source><translation>正在初始化网络…</translation></message>
     <message><source>Resolving the host address...</source><translation>正在解析主机地址…</translation></message>

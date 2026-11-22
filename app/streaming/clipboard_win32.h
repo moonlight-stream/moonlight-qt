@@ -94,26 +94,26 @@ struct close_handle {
 };
 using file_handle = std::unique_ptr<void, close_handle>;
 
-inline int append_file(const fs::path& path, std::string& out) {
-    if (!local_file_path(path)) return 204;
+// The handle denies writes and deletion for the duration of a clipboard transfer.
+struct source_file {
+    file_handle handle;
+    std::string name;
+    uint64_t size;
+};
+
+inline std::optional<source_file> open_file(const fs::path& path) {
+    if (!local_file_path(path)) return std::nullopt;
     HANDLE raw = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
                              FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
-    if (raw == INVALID_HANDLE_VALUE) return 204;
-    file_handle file(raw);
+    if (raw == INVALID_HANDLE_VALUE) return std::nullopt;
+    file_handle handle(raw);
     BY_HANDLE_FILE_INFORMATION info{};
     if (GetFileType(raw) != FILE_TYPE_DISK || !GetFileInformationByHandle(raw, &info) ||
-        info.dwFileAttributes & (FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_DIRECTORY)) return 204;
-    const std::string name = to_utf8(path.filename().native());
-    if (name.empty() || info.nFileSizeHigh || info.nFileSizeLow > max_body ||
-        out.size() + 8 + name.size() + info.nFileSizeLow > max_body) return 413;
-    append_size(out, static_cast<uint32_t>(name.size()));
-    out.append(name);
-    append_size(out, info.nFileSizeLow);
-    const auto offset = out.size();
-    out.resize(offset + info.nFileSizeLow);
-    DWORD read = 0;
-    if (info.nFileSizeLow && (!ReadFile(raw, out.data() + offset, info.nFileSizeLow, &read, nullptr) || read != info.nFileSizeLow)) return 409;
-    return 200;
+        info.dwFileAttributes & (FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_DIRECTORY)) return std::nullopt;
+    auto name = to_utf8(path.filename().native());
+    if (name.empty()) return std::nullopt;
+    const uint64_t size = (uint64_t(info.nFileSizeHigh) << 32) | info.nFileSizeLow;
+    return source_file{std::move(handle), std::move(name), size};
 }
 
 inline std::vector<fs::path> file_paths(HDROP drop, UINT count) {
@@ -241,7 +241,8 @@ inline HGLOBAL make_data(std::wstring_view chars, bool files) {
 
 } // namespace detail
 
-inline int read(bool text, bool files, std::optional<DWORD> since, std::string& payload, DWORD& sequence) {
+inline int read(bool text, bool files, std::optional<DWORD> since, std::string& payload, DWORD& sequence,
+                std::vector<detail::source_file>* largeFiles = nullptr) {
     payload.clear();
     std::vector<fs::path> paths;
     {
@@ -261,10 +262,36 @@ inline int read(bool text, bool files, std::optional<DWORD> since, std::string& 
             return detail::read_text(payload);
         } else return 204;
     }
-    payload = "F";
+    std::vector<detail::source_file> sources;
+    uint64_t encodedSize = 1;
+    bool fitsLegacyMessage = true;
     for (const auto& path : paths) {
-        int status = detail::append_file(path, payload);
-        if (status != 200) { payload.clear(); return status; }
+        auto source = detail::open_file(path);
+        if (!source) return 204;
+        if (source->size > max_body) fitsLegacyMessage = false;
+        if (fitsLegacyMessage) {
+            encodedSize += 8 + source->name.size() + source->size;
+            fitsLegacyMessage = encodedSize <= max_body;
+        }
+        sources.emplace_back(std::move(*source));
+    }
+    if (GetClipboardSequenceNumber() != sequence) return 409;
+    if (!fitsLegacyMessage) {
+        if (largeFiles) *largeFiles = std::move(sources);
+        return 413;
+    }
+
+    payload = "F";
+    payload.reserve(static_cast<size_t>(encodedSize));
+    for (const auto& source : sources) {
+        const DWORD size = static_cast<DWORD>(source.size);
+        detail::append_size(payload, static_cast<uint32_t>(source.name.size()));
+        payload.append(source.name);
+        detail::append_size(payload, size);
+        const auto offset = payload.size();
+        payload.resize(offset + size);
+        DWORD read = 0;
+        if (size && (!ReadFile(source.handle.get(), payload.data() + offset, size, &read, nullptr) || read != size)) return 409;
     }
     return GetClipboardSequenceNumber() == sequence ? 200 : 409;
 }
