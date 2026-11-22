@@ -3,6 +3,10 @@
 #include <Limelight.h>
 #include "SDL_compat.h"
 
+#ifdef Q_OS_WIN32
+#include <Windows.h>
+#endif
+
 #define VK_0 0x30
 #define VK_A 0x41
 
@@ -464,6 +468,26 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 break;
             case SDL_SCANCODE_GRAVE:
                 keyCode = 0xC0;
+#ifdef Q_OS_WIN32
+                // On a Windows Japanese keyboard layout, this is the Hankaku/Zenkaku key.
+                // Windows reports its physical press as WM_KEYUP (SDL_RELEASED) and its
+                // release as WM_KEYDOWN (SDL_PRESSED), and client-side auto-repeat arrives
+                // as additional SDL_RELEASED events without event->repeat set. Send a
+                // single complete tap on the first press and ignore repeats until release.
+                if (PRIMARYLANGID(LOWORD(GetKeyboardLayout(0))) == LANG_JAPANESE) {
+                    if (event->state == SDL_RELEASED) {
+                        if (!m_HankakuZenkakuHeld) {
+                            m_HankakuZenkakuHeld = true;
+                            LiSendKeyboardEvent2(0x8000 | keyCode, KEY_ACTION_DOWN, modifiers, 0);
+                            LiSendKeyboardEvent2(0x8000 | keyCode, KEY_ACTION_UP, modifiers, 0);
+                        }
+                    }
+                    else {
+                        m_HankakuZenkakuHeld = false;
+                    }
+                    return;
+                }
+#endif
                 break;
             case SDL_SCANCODE_LEFTBRACKET:
                 keyCode = 0xDB;
@@ -520,6 +544,8 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 
 void SdlInputHandler::raiseAllKeys()
 {
+    m_HankakuZenkakuHeld = false;
+
     if (m_KeysDown.isEmpty()) {
         return;
     }
