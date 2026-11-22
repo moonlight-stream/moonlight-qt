@@ -101,6 +101,7 @@ public:
     int serverCodecModeSupport;
     QString gpuModel;
     bool isSupportedServerVersion;
+    bool hostPowerAvailable = false;
 
     // Persisted traits
     NvAddress localAddress;

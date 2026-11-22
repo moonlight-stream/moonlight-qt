@@ -84,7 +84,9 @@ struct DualSenseOutputReport{
 class SdlInputHandler
 {
 public:
-    explicit SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight, const QString& hostUuid = {});
+    explicit SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight,
+                             const QString& hostUuid = {}, bool viewOnly = false);
+    bool isViewOnly() const { return m_ViewOnly; }
 
     ~SdlInputHandler();
 
@@ -211,6 +213,7 @@ private:
 
     SDL_Window* m_Window = nullptr;
     const QString m_HostUuid;
+    const bool m_ViewOnly;
     bool m_MultiController;
     bool m_GamepadMouse;
     bool m_SwapMouseButtons;

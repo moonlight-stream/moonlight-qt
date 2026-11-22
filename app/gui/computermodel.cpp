@@ -2,11 +2,11 @@
 #include "path.h"
 #include <QDateTime>
 #ifdef Q_OS_WIN
-#include "streaming/streamwindow.h"
 #include "streaming/filetransferwindow.h"
+#include "streaming/streamwindow.h"
 #include <QApplication>
-#include <openssl/rand.h>
 #include <QTimer>
+#include <openssl/rand.h>
 #endif
 
 #include <QThreadPool>
@@ -54,16 +54,18 @@ void ComputerModel::refreshStreamWindows()
     for (const auto* computer : std::as_const(m_Computers)) {
         StreamStatus status;
         status.state = static_cast<StreamWindowState>(StreamWindow::state(computer->uuid, &status.progressText));
-        if (status.state != NoStreamWindow)
+        if (status.state != NoStreamWindow) {
+            status.viewOnly = StreamWindow::isViewOnly(computer->uuid);
             current.insert(computer->uuid, status);
+        }
     }
     m_StreamWindows.swap(current);
     for (int row = 0; row < m_Computers.size(); ++row) {
         const auto& uuid = m_Computers.at(row)->uuid;
         const auto old = current.value(uuid);
         const auto status = m_StreamWindows.value(uuid);
-        if (old.state != status.state || old.progressText != status.progressText)
-            emit dataChanged(index(row), index(row), {StreamWindowStateRole, StreamProgressTextRole});
+        if (old.state != status.state || old.progressText != status.progressText || old.viewOnly != status.viewOnly)
+            emit dataChanged(index(row), index(row), {StreamWindowStateRole, StreamProgressTextRole, ViewOnlyStreamWindowRole});
     }
 }
 #endif
@@ -93,6 +95,12 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
         return computer->name;
     case UuidRole:
         return computer->uuid;
+    case ViewOnlyStreamWindowRole:
+#ifdef Q_OS_WIN
+        return m_StreamWindows.value(computer->uuid).viewOnly;
+#else
+        return false;
+#endif
     case StreamWindowStateRole:
 #ifdef Q_OS_WIN
         return static_cast<int>(m_StreamWindows.value(computer->uuid).state);
@@ -111,8 +119,12 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
         return computer->pairState == NvComputer::PS_PAIRED;
     case BusyRole:
         return computer->currentGameId != 0;
+    case HostPowerAvailableRole:
+        return computer->state == NvComputer::CS_ONLINE && computer->pairState == NvComputer::PS_PAIRED && computer->hostPowerAvailable;
+    case HostPowerPendingRole:
+        return m_PendingPower.contains(computer->uuid);
     case WakeableRole:
-        return !computer->macAddress.isEmpty();
+        return computer->macAddress.size() == 6;
     case StatusUnknownRole:
         return computer->state == NvComputer::CS_UNKNOWN;
     case ServerSupportedRole:
@@ -178,8 +190,11 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     QHash<int, QByteArray> names;
 
     names[NameRole] = "name";
+    names[HostPowerAvailableRole] = "hostPowerAvailable";
+    names[HostPowerPendingRole] = "hostPowerPending";
     names[UuidRole] = "uuid";
     names[StreamWindowStateRole] = "streamWindowState";
+    names[ViewOnlyStreamWindowRole] = "viewOnlyStreamWindow";
     names[StreamProgressTextRole] = "streamProgressText";
     names[OnlineRole] = "online";
     names[PairedRole] = "paired";
@@ -238,6 +253,21 @@ Session* ComputerModel::createQuickSession(int computerIndex)
     return selected.isInitialized() ? new Session(computer, selected) : nullptr;
 }
 
+Session* ComputerModel::createViewOnlySession(int computerIndex)
+{
+    NvComputer* computer = m_Computers.value(computerIndex);
+    if (!computer)
+        return nullptr;
+    QReadLocker lock(&computer->lock);
+    if (computer->state == NvComputer::CS_ONLINE && computer->pairState == NvComputer::PS_PAIRED) {
+        for (auto app : std::as_const(computer->appList)) {
+            if (app.isDesktop() && (!computer->currentGameId || app.id == computer->currentGameId))
+                return new Session(computer, app, nullptr, true);
+        }
+    }
+    return nullptr;
+}
+
 void ComputerModel::refreshDesktopPreviews()
 {
     if (!m_Computers.isEmpty()) {
@@ -249,6 +279,9 @@ void ComputerModel::deleteComputer(int computerIndex)
 {
     Q_ASSERT(computerIndex >= 0 && computerIndex < m_Computers.count());
 
+#ifdef Q_OS_WIN
+    delete m_FileWindows.value(m_Computers[computerIndex]->uuid);
+#endif
     beginRemoveRows(QModelIndex(), computerIndex, computerIndex);
 
     // m_Computer[computerIndex] will be deleted by this call
@@ -261,27 +294,80 @@ void ComputerModel::deleteComputer(int computerIndex)
     endRemoveRows();
 }
 
-class DeferredWakeHostTask : public QRunnable
+// Copy the target under its lock. Removing a device while a request is in
+// flight must not invalidate the worker or change the target of the action.
+class DeviceActionTask : public QObject, public QRunnable
 {
+    Q_OBJECT
 public:
-    DeferredWakeHostTask(NvComputer* computer)
-        : m_Computer(computer) {}
+    enum Action { Wake, Restart, Shutdown };
+    DeviceActionTask(const NvComputer& computer, Action action)
+        : m_Computer(computer), m_Action(action) {}
 
-    void run()
+    void run() override
     {
-        m_Computer->wake();
+        if (m_Action == Wake) {
+            bool sent = m_Computer.wake();
+            emit finished(sent, sent ? ComputerModel::tr("Wake packet sent to %1.").arg(m_Computer.name)
+                                     : ComputerModel::tr("Could not send a wake packet to %1.").arg(m_Computer.name));
+            return;
+        }
+        try {
+            NvHTTP http(&m_Computer);
+            http.requestHostPower(m_Action == Restart);
+            const auto message = m_Action == Restart ? ComputerModel::tr("Restart requested for %1.")
+                                                     : ComputerModel::tr("Shutdown requested for %1.");
+            emit finished(true, message.arg(m_Computer.name));
+        }
+        catch (const std::exception& error) {
+            emit finished(false, ComputerModel::tr("Power request to %1: %2").arg(m_Computer.name, QString::fromUtf8(error.what())));
+        }
     }
 
+signals:
+    void finished(bool success, QString message);
+
 private:
-    NvComputer* m_Computer;
+    NvComputer m_Computer;
+    Action m_Action;
 };
 
 void ComputerModel::wakeComputer(int computerIndex)
 {
-    Q_ASSERT(computerIndex >= 0 && computerIndex < m_Computers.count());
+    if (computerIndex < 0 || computerIndex >= m_Computers.size()) return;
+    auto* computer = m_Computers.at(computerIndex);
+    QReadLocker lock(&computer->lock);
+    if (computer->state == NvComputer::CS_ONLINE || computer->macAddress.size() != 6) return;
+    auto* task = new DeviceActionTask(*computer, DeviceActionTask::Wake);
+    connect(task, &DeviceActionTask::finished, this, [this, uuid = computer->uuid](bool success, QString message) {
+        emit toolActionResult(uuid, message, success);
+    });
+    QThreadPool::globalInstance()->start(task);
+}
 
-    DeferredWakeHostTask* wakeTask = new DeferredWakeHostTask(m_Computers[computerIndex]);
-    QThreadPool::globalInstance()->start(wakeTask);
+void ComputerModel::requestHostPower(const QString& uuid, bool restart)
+{
+    const int row = indexOfUuid(uuid);
+    if (row < 0 || m_PendingPower.contains(uuid)) return;
+    auto* computer = m_Computers.at(row);
+    QReadLocker lock(&computer->lock);
+    if (computer->state != NvComputer::CS_ONLINE || computer->pairState != NvComputer::PS_PAIRED ||
+            computer->serverCert.isNull() || !computer->activeHttpsPort || !computer->hostPowerAvailable) {
+        lock.unlock();
+        emit toolActionResult(uuid, tr("Power controls are unavailable for this host."), false);
+        return;
+    }
+    auto* task = new DeviceActionTask(*computer, restart ? DeviceActionTask::Restart : DeviceActionTask::Shutdown);
+    lock.unlock();
+    m_PendingPower.insert(uuid);
+    emit dataChanged(index(row), index(row), {HostPowerPendingRole});
+    connect(task, &DeviceActionTask::finished, this, [this, uuid](bool success, QString message) {
+        m_PendingPower.remove(uuid);
+        const int current = indexOfUuid(uuid);
+        if (current >= 0) emit dataChanged(index(current), index(current), {HostPowerPendingRole});
+        emit toolActionResult(uuid, message, success);
+    });
+    QThreadPool::globalInstance()->start(task);
 }
 
 void ComputerModel::openFileTransfer(const QString& uuid)

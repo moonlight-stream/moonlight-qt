@@ -1295,23 +1295,23 @@ FocusScope {
                     }
 
                     RowLayout {
+                        id: uiDisplayModeRow
+                        readonly property bool supported: SystemProperties.hasDesktopEnvironment && Qt.platform.os !== "windows"
                         width: parent.width
                         spacing: 10
-                        visible: SystemProperties.hasDesktopEnvironment
+                        visible: supported
                         Label {
                             Layout.fillWidth: true
                             id: uiDisplayModeTitle
                             text: qsTr("GUI display mode")
                             font.pixelSize: 14
                             wrapMode: Text.Wrap
-                            visible: SystemProperties.hasDesktopEnvironment
                         }
 
                         AutoResizingComboBox {
                             // ignore setting the index at first, and actually set it when the component is loaded
                             Component.onCompleted: {
-                                if (!SystemProperties.hasDesktopEnvironment) {
-                                    // Do nothing if the control won't even be visible
+                                if (!uiDisplayModeRow.supported) {
                                     return
                                 }
 
@@ -1330,7 +1330,6 @@ FocusScope {
 
                             id: uiDisplayModeComboBox
                             Layout.maximumWidth: parent.width * 0.55
-                            visible: SystemProperties.hasDesktopEnvironment
                             textRole: "text"
                             model: ListModel {
                                 id: uiDisplayModeListModel

@@ -10,6 +10,7 @@ namespace StreamWindow {
 enum State { None, Opening, Connected };
 
 State state(const QString& uuid, QString* progressText = nullptr);
+bool isViewOnly(const QString& uuid);
 bool activate(const QString& uuid);
 bool launchOrActivate(QProcess& child, const QString& uuid);
 

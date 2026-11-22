@@ -394,9 +394,10 @@ config_SL {
         streaming/audio/renderers/slaud.h
 }
 win32 {
-    SOURCES += streaming/clipboardsync.cpp streaming/filetransferengine.cpp streaming/filetransferwindow.cpp
-    HEADERS += streaming/clipboarduploadprogress.h streaming/video/clipboarduploadoverlay.h
-    HEADERS += streaming/clipboardsync.h streaming/clipboard_win32.h streaming/filetransferengine.h streaming/filetransferwindow.h streaming/filetransfercheckpoint.h streaming/transferfilehash.h streaming/transferratesampler.h
+    SOURCES += streaming/clipboardsync.cpp streaming/filetransferengine.cpp streaming/filetransferwindow.cpp streaming/filetransferprocess.cpp
+    HEADERS += streaming/clipboarduploadprogress.h streaming/video/clipboarduploadoverlay.h streaming/transferratesampler.h
+    HEADERS += streaming/filetransfercheckpoint.h streaming/transferfilehash.h
+    HEADERS += streaming/clipboardsync.h streaming/clipboard_win32.h streaming/filetransferengine.h streaming/filetransferwindow.h streaming/filetransferprocess.h
     LIBS += -lshell32
     HEADERS += streaming/video/ffmpeg-renderers/dxutil.h
 }

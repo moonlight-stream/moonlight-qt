@@ -7,6 +7,7 @@
 namespace {
 constexpr auto ReservationVariable = "MOONLIGHT_STREAM_WINDOW_HANDLE";
 HANDLE reservation = nullptr;
+HANDLE viewingMarker = nullptr;
 std::wstring property;
 HWND progressWindow = nullptr;
 HWND connectedWindow = nullptr;
@@ -134,6 +135,14 @@ bool StreamWindow::activate(const QString& uuid)
     return true;
 }
 
+bool StreamWindow::isViewOnly(const QString& uuid)
+{
+    const HANDLE marker = OpenEventW(SYNCHRONIZE, FALSE, (eventName(uuid) + L".Viewing").c_str());
+    if (!marker) return false;
+    CloseHandle(marker);
+    return true;
+}
+
 bool StreamWindow::launchOrActivate(QProcess& child, const QString& uuid)
 {
     // Reserve before CreateProcess so even concurrent launchers cannot open two windows.
@@ -144,6 +153,9 @@ bool StreamWindow::launchOrActivate(QProcess& child, const QString& uuid)
 
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         CloseHandle(event);
+        const bool requestedViewOnly = child.processEnvironment().value(QStringLiteral("MOONLIGHT_WINDOW_VIEW_ONLY")) == QStringLiteral("1");
+        if (requestedViewOnly != isViewOnly(uuid))
+            return false;
         raiseWindow(uuid);
         return true;
     }
@@ -177,6 +189,8 @@ void StreamWindow::adoptReservation(const QString& uuid)
             (!sameObject || sameObject(event, namedEvent)) && SetHandleInformation(event, HANDLE_FLAG_INHERIT, 0)) {
         reservation = event;
         property = propertyName(uuid);
+        if (qgetenv("MOONLIGHT_WINDOW_VIEW_ONLY") == "1")
+            viewingMarker = CreateEventW(nullptr, TRUE, FALSE, (eventName(uuid) + L".Viewing").c_str());
     }
     CloseHandle(namedEvent);
 }
@@ -205,6 +219,10 @@ void StreamWindow::release()
             RemovePropW(progressWindow, property.c_str());
         if (connectedWindow)
             RemovePropW(connectedWindow, property.c_str());
+        if (viewingMarker) {
+            CloseHandle(viewingMarker);
+            viewingMarker = nullptr;
+        }
         CloseHandle(reservation);
         reservation = nullptr;
         progressWindow = nullptr;

@@ -202,6 +202,8 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
 
     this->pairState = NvHTTP::getXmlString(serverInfo, "PairStatus") == "1" ?
                 PS_PAIRED : PS_NOT_PAIRED;
+    hostPowerAvailable = pairState == PS_PAIRED && !serverCert.isNull() &&
+                         NvHTTP::getXmlString(serverInfo, "hostpowerversion") == "1";
     this->currentGameId = NvHTTP::getCurrentGame(serverInfo);
     this->appVersion = NvHTTP::getXmlString(serverInfo, "appversion");
     this->gfeVersion = NvHTTP::getXmlString(serverInfo, "GfeVersion");
@@ -564,6 +566,7 @@ bool NvComputer::update(const NvComputer& that)
     ASSIGN_IF_CHANGED(gfeVersion);
     ASSIGN_IF_CHANGED(appVersion);
     ASSIGN_IF_CHANGED(isSupportedServerVersion);
+    ASSIGN_IF_CHANGED(hostPowerAvailable);
     ASSIGN_IF_CHANGED(isNvidiaServerSoftware);
     ASSIGN_IF_CHANGED(maxLumaPixelsHEVC);
     ASSIGN_IF_CHANGED(gpuModel);

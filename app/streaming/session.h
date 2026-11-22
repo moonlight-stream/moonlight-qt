@@ -98,7 +98,7 @@ class Session : public QObject
     friend class AsyncConnectionStartThread;
 
 public:
-    explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
+    explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr, bool viewOnly = false);
     virtual ~Session();
 
     Q_INVOKABLE bool initialize(QQuickWindow* qtWindow);
@@ -196,11 +196,13 @@ private:
     Overlay::OverlayManager::Control m_PressedControl = Overlay::OverlayManager::Control::None;
 #endif
     bool m_DisconnectOnly = false;
+    const bool m_ViewOnly;
     bool m_ExplicitHostQuit = false;
     bool m_HostHandlesDisconnectLock = false;
     bool m_ClipboardText = false;
     bool m_ClipboardFiles = false;
     bool m_ClipboardResumable = false;
+    bool m_FileBrowser = false;
     SDL_atomic_t m_ConnectionEnding{};
     QByteArray m_ClipboardToken;
 

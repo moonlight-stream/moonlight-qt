@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QSystemTrayIcon>
 #include <QMenu>
+#include <QScreen>
 #include <QWindow>
 #endif
 #include <QStyleHints>
@@ -40,8 +41,10 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <commctrl.h>
 #include <dwmapi.h>
 #include "streaming/windowcaption.h"
+#include "streaming/filetransferprocess.h"
 #include "streaming/streamwindow.h"
 #include <dxgi1_6.h>
 #elif defined(Q_OS_LINUX)
@@ -284,6 +287,65 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 #include <Windows.h>
 #include <DbgHelp.h>
 
+static LRESULT CALLBACK launcherWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR)
+{
+    if (msg == WM_SYSCOMMAND && (wp & 0xfff0) == SC_MAXIMIZE) {
+        return 0;
+    }
+    if (msg == WM_NCDESTROY) {
+        RemoveWindowSubclass(hwnd, launcherWindowProc, id);
+    }
+    const auto result = DefSubclassProc(hwnd, msg, wp, lp);
+    if (msg == WM_WINDOWPOSCHANGING && !IsIconic(hwnd)) {
+        // Shell positioning can bypass the interactive size limits (for example, when snapping).
+        auto* position = reinterpret_cast<WINDOWPOS*>(lp);
+        if (!(position->flags & SWP_NOSIZE)) {
+            MINMAXINFO limits {};
+            SendMessageW(hwnd, WM_GETMINMAXINFO, 0, reinterpret_cast<LPARAM>(&limits));
+            if (limits.ptMinTrackSize.x > 0 && limits.ptMinTrackSize.x == limits.ptMaxTrackSize.x) {
+                position->cx = limits.ptMaxTrackSize.x;
+            }
+        }
+    }
+    return result;
+}
+
+static void configureLauncherWindow(QWindow* window)
+{
+    const int preferredWidth = window->width();
+    const auto hwnd = reinterpret_cast<HWND>(window->winId());
+    const auto fitWidth = [window, hwnd, preferredWidth](const QRect& workArea) {
+        int width = qMin(preferredWidth, workArea.width());
+        // Qt rounds work areas to whole logical pixels, which can extend past a narrow screen.
+        MONITORINFO monitor {sizeof(monitor)};
+        if (workArea.width() <= preferredWidth &&
+                GetMonitorInfoW(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &monitor)) {
+            const int availablePixels = monitor.rcWork.right - monitor.rcWork.left;
+            width = qMin(width, static_cast<int>(availablePixels / window->devicePixelRatio()));
+        }
+        window->setMinimumWidth(width);
+        window->setMaximumWidth(width);
+        window->setWidth(width);
+    };
+    auto followScreen = [window, fitWidth, connection = QMetaObject::Connection()](QScreen* screen) mutable {
+        QObject::disconnect(connection);
+        if (screen) {
+            fitWidth(screen->availableGeometry());
+            connection = QObject::connect(screen, &QScreen::availableGeometryChanged, window, fitWidth);
+        }
+    };
+    followScreen(window->screen());
+    QObject::connect(window, &QWindow::screenChanged, window, followScreen);
+    if (window->screen()) {
+        window->setHeight(qMin(window->height(), window->screen()->availableGeometry().height()));
+    }
+
+    SetWindowSubclass(hwnd, launcherWindowProc, 0, 0);
+    DeleteMenu(GetSystemMenu(hwnd, FALSE), SC_MAXIMIZE, MF_BYCOMMAND);
+    const DWM_WINDOW_CORNER_PREFERENCE corners = DWMWCP_ROUND;
+    DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &corners, sizeof(corners));
+}
+
 static UINT s_HitUnhandledException = 0;
 
 LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
@@ -457,6 +519,19 @@ int main(int argc, char *argv[])
         // Initialize paths for standard installation
         Path::initialize(false);
     }
+
+#ifdef Q_OS_WIN
+    // This child needs only Qt Widgets and networking. Use the same identity
+    // and portable settings as the stream and skip SDL initialization.
+    if (argc == 2 && QByteArray(argv[1]) == FileTransferProcess::Argument) {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
+        QApplication app(argc, argv);
+        app.setWindowIcon(QIcon(":/res/moonlight.svg"));
+        return FileTransferProcess::run();
+    }
+#endif
 
     // Override the default QML cache directory with the one we chose
     if (qEnvironmentVariableIsEmpty("QML_DISK_CACHE_PATH")) {
@@ -1096,10 +1171,7 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_WIN
         auto window = qobject_cast<QWindow*>(engine.rootObjects().first());
         if (commandLineParserResult == GlobalCommandLineParser::NormalStartRequested) {
-            // The launcher uses a custom title bar, so opt in to native window rounding.
-            const DWM_WINDOW_CORNER_PREFERENCE corners = DWMWCP_ROUND;
-            DwmSetWindowAttribute(reinterpret_cast<HWND>(window->winId()),
-                                  DWMWA_WINDOW_CORNER_PREFERENCE, &corners, sizeof(corners));
+            configureLauncherWindow(window);
         }
         else if (commandLineParserResult == GlobalCommandLineParser::StreamRequested) {
             applyLightWindowCaption(reinterpret_cast<HWND>(window->winId()));

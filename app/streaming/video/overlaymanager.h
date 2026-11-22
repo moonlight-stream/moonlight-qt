@@ -47,8 +47,8 @@ public:
     SDL_Surface* getUpdatedOverlaySurface(OverlayType type);
 
 #ifdef Q_OS_WIN32
-    enum class Control { None, Handle, LeaveFullscreen, Disconnect };
-    void configureControls(int streamWidth, int streamHeight);
+    enum class Control { None, Handle, LeaveFullscreen, FileTransfer, Disconnect };
+    void configureControls(int streamWidth, int streamHeight, bool fileTransfer = true);
     void updateClipboardUpload(const ClipboardUploadProgress& upload, QSize window, qreal scale);
     ClipboardUploadOverlay::Input handleClipboardUpload(const SDL_Event& event);
     SDL_Rect panelRect(OverlayType type, int width, int height, int panelWidth, int panelHeight) const;
@@ -74,9 +74,10 @@ private:
     SDL_Surface* renderControls() const;
     int m_StreamWidth = 1, m_StreamHeight = 1;
     bool m_Expanded = false;
+    bool m_FileTransfer = true;
     Control m_Hover = Control::None;
     static constexpr int HandleWidth = 52, HandleHeight = 18;
-    static constexpr int MenuWidth = 272, MenuHeight = 40;
+    static constexpr int MenuWidth = 396, MenuHeight = 40;
 #endif
     struct {
         bool enabled;

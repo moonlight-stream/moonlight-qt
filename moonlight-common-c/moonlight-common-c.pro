@@ -58,7 +58,7 @@ SOURCES += \
     $$COMMON_C_DIR/src/ConnectionTester.c \
     $$COMMON_C_DIR/src/ControlStream.c \
     $$COMMON_C_DIR/src/FakeCallbacks.c \
-    $$COMMON_C_DIR/src/InputStream.c \
+    $$PWD/inputmode.c \
     $$COMMON_C_DIR/src/LinkedBlockingQueue.c \
     $$COMMON_C_DIR/src/Misc.c \
     $$COMMON_C_DIR/src/Platform.c \

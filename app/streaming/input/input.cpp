@@ -9,8 +9,9 @@
 #include <QDir>
 #include <QGuiApplication>
 
-SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight, const QString& hostUuid)
+SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight, const QString& hostUuid, bool viewOnly)
     : m_HostUuid(hostUuid),
+      m_ViewOnly(viewOnly),
       m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
       m_SwapMouseButtons(prefs.swapMouseButtons),
@@ -140,6 +141,14 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     m_SpecialKeyCombos[KeyComboLockHost].keyCode = SDLK_END;
     m_SpecialKeyCombos[KeyComboLockHost].scanCode = SDL_SCANCODE_END;
     m_SpecialKeyCombos[KeyComboLockHost].enabled = true;
+
+    if (m_ViewOnly) {
+        for (auto& shortcut : m_SpecialKeyCombos) {
+            const auto key = shortcut.keyCombo;
+            shortcut.enabled &= key == KeyComboQuit || key == KeyComboToggleFullScreen ||
+                                key == KeyComboToggleStatsOverlay || key == KeyComboToggleMinimize;
+        }
+    }
 
     m_OldIgnoreDevices = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES);
     m_OldIgnoreDevicesExcept = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT);
@@ -376,6 +385,8 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
 
 void SdlInputHandler::setCaptureActive(bool active)
 {
+    if (active && m_ViewOnly)
+        return;
     if (active) {
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {

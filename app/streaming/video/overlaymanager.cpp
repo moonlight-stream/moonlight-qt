@@ -241,8 +241,9 @@ SDL_Surface* OverlayManager::RenderTextOutlinedWrapped(TTF_Font* font, const cha
 
 
 #ifdef Q_OS_WIN32
-void OverlayManager::configureControls(int streamWidth, int streamHeight)
+void OverlayManager::configureControls(int streamWidth, int streamHeight, bool fileTransfer)
 {
+    m_FileTransfer = fileTransfer;
     m_StreamWidth = streamWidth;
     m_StreamHeight = streamHeight;
 }
@@ -339,7 +340,10 @@ OverlayManager::Control OverlayManager::controlAt(int width, int height, int x, 
     if (!m_Expanded) {
         return Control::Handle;
     }
-    return x < rect.x + rect.w / 2 ? Control::LeaveFullscreen : Control::Disconnect;
+    constexpr Control controls[] = { Control::LeaveFullscreen, Control::FileTransfer, Control::Disconnect };
+    if (!m_FileTransfer)
+        return x < rect.x + rect.w / 2 ? Control::LeaveFullscreen : Control::Disconnect;
+    return controls[(x - rect.x) * 3 / rect.w];
 }
 
 void OverlayManager::showControls(bool expanded, Control hover)
@@ -384,15 +388,19 @@ SDL_Surface* OverlayManager::renderControls() const
         QFont font;
         font.setPixelSize(15);
         painter.setFont(font);
-        for (int i = 0; i < 2; ++i) {
-            QRect rect(i * width / 2, 0, width / 2, height);
-            if (m_Hover == (i == 0 ? Control::LeaveFullscreen : Control::Disconnect)) {
+        const QString labels[] = { QCoreApplication::translate("Session", "Exit fullscreen"),
+            QCoreApplication::translate("StreamControlCenter", "File transfer"),
+            QCoreApplication::translate("Session", "Disconnect") };
+        constexpr Control controls[] = { Control::LeaveFullscreen, Control::FileTransfer, Control::Disconnect };
+        const int count = m_FileTransfer ? 3 : 2;
+        for (int i = 0; i < count; ++i) {
+            const int action = !m_FileTransfer && i == 1 ? 2 : i;
+            QRect rect(i * width / count, 0, width / count, height);
+            if (m_Hover == controls[action]) {
                 painter.fillRect(rect.adjusted(3, 3, -3, -3), QColor("#dce8fa"));
             }
             painter.setPen(QColor("#20364e"));
-            painter.drawText(rect, Qt::AlignCenter, i == 0 ?
-                QCoreApplication::translate("Session", "Exit fullscreen") :
-                QCoreApplication::translate("Session", "Disconnect"));
+            painter.drawText(rect, Qt::AlignCenter, labels[action]);
         }
     }
     else {

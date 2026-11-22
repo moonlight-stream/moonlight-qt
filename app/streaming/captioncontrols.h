@@ -15,6 +15,7 @@
 class CaptionControls {
 public:
     static constexpr int Fullscreen = 111;
+    static constexpr int FileTransfer = 112;
     enum Field { Duration, Fps, Network, Decode, Upload, Download, Loss, Resolution, FieldCount };
     CaptionControls(SDL_Window* window, StreamingPreferences& preferences, SdlInputHandler& input)
         : m_Window(window)
@@ -174,8 +175,10 @@ private:
     {
         switch (m_Page) {
         case Main:
+            if (m_Input.isViewOnly())
+                return { tr("Statistics HUD"), tr("HUD settings"), tr("Fullscreen") };
             return { tr("Statistics HUD"), tr("HUD settings"), tr("Security"),
-                settingsText("Capture system keyboard shortcuts"), tr("Fullscreen") };
+                settingsText("Capture system keyboard shortcuts"), tr("Fullscreen"), tr("File transfer") };
         case SystemKeys:
             return { settingsText("Capture system keyboard shortcuts"), settingsText("Off"),
                 settingsText("Fullscreen only"), settingsText("Always") };
@@ -198,7 +201,9 @@ private:
         if (row < 0 || row >= rows().size())
             return;
         if (m_Page == Main) {
-            switch (row) {
+            // The view-only menu has no host input or file actions.
+            const int action = m_Input.isViewOnly() && row == 2 ? 4 : row;
+            switch (action) {
             case 0:
                 toggle();
                 break;
@@ -213,11 +218,12 @@ private:
             case 3:
                 m_Page = SystemKeys;
                 break;
-            case 4: {
+            case 4:
+            case 5: {
                 dismiss();
                 SDL_Event e { };
                 e.type = SDL_USEREVENT;
-                e.user.code = Fullscreen;
+                e.user.code = action == 4 ? Fullscreen : FileTransfer;
                 SDL_PushEvent(&e);
                 break;
             }
@@ -338,7 +344,7 @@ private:
                     p.fillRect(line, QColor("#e3edfc"));
                 bool back = m_Page != Main && i == 0;
                 QString mark;
-                if ((m_Page == Main && i >= 1 && i <= 3) || (m_Page == HudSettings && i > 0))
+                if ((m_Page == Main && i >= 1 && i <= (m_Input.isViewOnly() ? 1 : 3)) || (m_Page == HudSettings && i > 0))
                     mark = QStringLiteral("›");
                 if ((m_Page == Corner && i == m_Corner + 1) || (m_Page == Opacity && i == m_Opacity)
                     || (m_Page == SystemKeys && i == m_Input.captureSystemKeysMode() + 1)

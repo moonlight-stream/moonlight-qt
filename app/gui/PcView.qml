@@ -20,6 +20,10 @@ FocusScope {
     property bool pickerOpen: false
     property var pendingQuits: ({})
     readonly property var currentQuit: device ? pendingQuits[device.hostUuid] : null
+    readonly property var cardTools: ["files", "view", "restart", "shutdown"]
+    readonly property var allTools: ["files", "view", "wake", "restart", "shutdown"]
+    property string toolResultHost: ""
+    property string toolResultMessage: ""
     onCompactChanged: pickerOpen = false
     objectName: qsTr("My devices")
     Material.theme: Material.Light
@@ -52,6 +56,81 @@ FocusScope {
                 var session = quickGrid.model.createSessionForAppId(request.targetId)
                 if (session) window.launchGuiSession(session)
             }
+        }
+    }
+
+    Connections {
+        target: computerModel
+        function onToolActionResult(uuid, message, success) {
+            if (!device || uuid !== device.hostUuid || !message) return
+            if (success) {
+                devices.toolResultHost = uuid
+                devices.toolResultMessage = message
+                clearResult.restart()
+            } else {
+                toolError.text = message
+                toolError.open()
+            }
+        }
+    }
+    Timer {
+        id: clearResult
+        interval: 6000
+        onTriggered: devices.toolResultMessage = ""
+    }
+
+    function toolLabel(tool) {
+        switch (tool) {
+        case "files": return qsTranslate("FileTransferWindow", "File transfer")
+        case "view": return qsTr("View only")
+        case "more": return qsTr("More tools")
+        case "wake": return qsTr("Wake PC")
+        case "restart": return qsTr("Restart")
+        case "shutdown": return qsTr("Shut down")
+        }
+        return ""
+    }
+
+    function toolAvailable(tool) {
+        if (!device) return false
+        if (tool === "more") return true
+        if (tool === "wake") return !device.online && !device.unknown && device.wakeable
+        if (tool === "files")
+            return Qt.platform.os === "windows" && device.ready && !device.powerPending
+        if (!device.ready || !device.serverSupported || device.powerPending || currentQuit) return false
+        if (tool === "view")
+            return !device.opening && (!device.hasStreamWindow || device.viewOnly)
+        return device.powerAvailable
+    }
+
+    function useTool(tool) {
+        if (!toolAvailable(tool)) return
+        if (tool === "more") {
+            toolsDialog.hostUuid = device.hostUuid
+            toolsDialog.open()
+            return
+        }
+        var uuid = device.hostUuid
+        var row = computerModel.indexOfUuid(uuid)
+        if (row < 0) return
+        toolsDialog.close()
+        if (tool === "files") {
+            computerModel.openFileTransfer(uuid)
+        } else if (tool === "view") {
+            var session = computerModel.createViewOnlySession(row)
+            if (session) {
+                window.launchGuiSession(session)
+            } else {
+                toolError.text = qsTr("The desktop is unavailable for viewing on %1.").arg(device.hostName)
+                toolError.open()
+            }
+        } else if (tool === "wake") {
+            computerModel.wakeComputer(row)
+        } else {
+            powerDialog.hostUuid = uuid
+            powerDialog.hostName = device.hostName
+            powerDialog.restart = tool === "restart"
+            powerDialog.open()
         }
     }
 
@@ -114,13 +193,6 @@ FocusScope {
         model.initialize(ComputerManager)
         model.pairingCompleted.connect(pairingComplete)
         model.connectionTestCompleted.connect(testConnectionDialog.connectionTestComplete)
-        model.toolActionResult.connect(function(uuid, message, success) {
-            if (!success) {
-                errorDialog.text = message
-                errorDialog.helpText = ""
-                errorDialog.open()
-            }
-        })
         return model
     }
 
@@ -223,9 +295,16 @@ FocusScope {
                 property string hostName: model.name
                 readonly property string hostUuid: model.uuid
                 readonly property bool hasStreamWindow: model.streamWindowState !== ComputerModel.NoStreamWindow
+                readonly property bool opening: model.streamWindowState === ComputerModel.OpeningStreamWindow
+                readonly property bool viewOnly: model.viewOnlyStreamWindow
+                readonly property bool wakeable: model.wakeable
+                readonly property bool powerAvailable: model.hostPowerAvailable
+                readonly property bool powerPending: model.hostPowerPending
+                readonly property bool serverSupported: model.serverSupported
+                readonly property string windowActionLabel: viewOnly ? qsTr("Show viewing window") : qsTr("Show remote control window")
                 readonly property string streamDetail: model.streamProgressText || streamStatus
                 readonly property string streamStatus: model.streamWindowState === ComputerModel.ConnectedStreamWindow
-                                                       ? qsTr("Remote control active") : qsTr("Connecting…")
+                                                       ? (viewOnly ? qsTr("Viewing") : qsTr("Remote control active")) : qsTr("Connecting…")
                 property bool online: model.online
                 property bool paired: model.paired
                 property bool unknown: model.statusUnknown
@@ -334,9 +413,11 @@ FocusScope {
                             enabled: false
                         }
                         NavigableMenuItem {
-                            text: qsTranslate("FileTransferWindow", "File transfer")
-                            visible: Qt.platform.os === "windows" && pcRow.paired && pcRow.online
-                            onTriggered: computerModel.openFileTransfer(pcRow.hostUuid)
+                            text: qsTr("More tools")
+                            onTriggered: {
+                                pcList.currentIndex = index
+                                devices.useTool("more")
+                            }
                         }
                         NavigableMenuItem {
                             text: qsTr("Wake PC")
@@ -612,7 +693,7 @@ FocusScope {
                 enabled: !devices.currentQuit
                 anchors.fill: parent
                 hoverEnabled: true
-                text: card.hasStreamWindow ? qsTr("Show remote control window") :
+                text: card.hasStreamWindow ? device.windowActionLabel :
                       !device ? qsTr("Add device") : !device.online ? qsTr("Device options") :
                       !device.paired ? qsTr("Pair device") : qsTr("Enter desktop")
                 Accessible.description: card.hasStreamWindow ? device.streamDetail : ""
@@ -635,7 +716,7 @@ FocusScope {
 
             // Mask just the corners to keep the scalable artwork inexpensive to resize.
             Repeater {
-                model: 4
+                model: device ? 2 : 4
                 Canvas {
                     width: card.cornerRadius; height: width
                     x: index % 2 ? card.width - width : 0
@@ -653,6 +734,56 @@ FocusScope {
                     }
                 }
             }
+        }
+        Rectangle {
+            id: toolsBar
+            readonly property int toolColumns: width < 480 ? 2 : 4
+            visible: !!device
+            Layout.fillWidth: true
+            Layout.preferredHeight: toolColumns === 2 ? 84 : 47
+            color: "#ffffff"
+            border.color: "#d7e0eb"
+            radius: card.cornerRadius
+            Rectangle {
+                anchors { top: parent.top; left: parent.left; right: parent.right; leftMargin: 1; rightMargin: 1 }
+                height: parent.radius
+                color: parent.color
+            }
+            GridLayout {
+                anchors.fill: parent
+                anchors.margins: 4
+                columns: toolsBar.toolColumns
+                columnSpacing: 2
+                rowSpacing: 2
+                Repeater {
+                    model: devices.cardTools
+                    DeviceToolButton {
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 120
+                        Layout.minimumWidth: 30
+                        Layout.fillHeight: true
+                        text: devices.toolLabel(modelData)
+                        iconSource: "qrc:/res/device-" + modelData + ".svg"
+                        enabled: devices.toolAvailable(modelData)
+                        onClicked: devices.useTool(modelData)
+                        Rectangle {
+                            visible: index % toolsBar.toolColumns !== 0
+                            anchors { left: parent.left; leftMargin: -1; verticalCenter: parent.verticalCenter }
+                            width: 1; height: 18
+                            color: "#d7e0eb"
+                        }
+                    }
+                }
+            }
+        }
+        Label {
+            Layout.fillWidth: true
+            Layout.topMargin: 6
+            visible: !!device && devices.toolResultHost === device.hostUuid && devices.toolResultMessage !== ""
+            text: devices.toolResultMessage
+            textFormat: Text.PlainText
+            wrapMode: Text.Wrap
+            color: "#226c50"
         }
         Label {
             visible: !device
@@ -742,7 +873,7 @@ FocusScope {
                             id: resumeButton
                             visible: model.running
                             enabled: !shortcut.stopping
-                            text: device && device.hasStreamWindow ? qsTr("Show remote control window") :
+                            text: device && device.hasStreamWindow ? device.windowActionLabel :
                                   model.isDesktop ? qsTranslate("AppView", "Reconnect to Desktop") : qsTranslate("AppView", "Resume Game")
                             icon.source: "qrc:/res/play_arrow_FILL1_wght700_GRAD200_opsz48.svg"
                             icon.color: "#2468d5"
@@ -821,7 +952,7 @@ FocusScope {
                     }
                     NavigableMenuItem {
                         visible: !model.running
-                        text: device && device.hasStreamWindow ? qsTr("Show remote control window") : model.isDesktop
+                        text: device && device.hasStreamWindow ? device.windowActionLabel : model.isDesktop
                               ? qsTranslate("AppView", "Connect to Desktop") : qsTranslate("AppView", "Launch Game")
                         onTriggered: shortcut.launch()
                     }
@@ -842,6 +973,122 @@ FocusScope {
                 }
             }
         }
+    }
+
+    NavigableDialog {
+        id: toolsDialog
+        property string hostUuid
+        readonly property bool currentHost: !!device && device.hostUuid === hostUuid
+        onCurrentHostChanged: if (visible && !currentHost) close()
+        title: qsTr("More tools")
+        Material.theme: Material.Light
+        Material.accent: devices.actionBlue
+        width: Math.min(420, devices.width - 16)
+        height: Math.min(390, devices.height - 12)
+        padding: 16
+        standardButtons: Dialog.Close
+        background: Rectangle { color: "#ffffff"; radius: 10; border.color: "#d7e0eb" }
+        header: Label {
+            text: toolsDialog.title
+            leftPadding: 18; topPadding: 16; bottomPadding: 8
+            color: "#172437"; font.pixelSize: 20; font.weight: Font.DemiBold
+        }
+        contentItem: Flickable {
+            id: toolScroller
+            clip: true
+            contentWidth: width
+            contentHeight: toolsList.height
+            boundsBehavior: Flickable.StopAtBounds
+            ScrollBar.vertical: ScrollBar {}
+            Column {
+                id: toolsList
+                width: toolScroller.width
+                spacing: 5
+                Repeater {
+                    id: toolItems
+                    model: devices.allTools
+                    DeviceToolButton {
+                        width: toolsList.width
+                        height: 44
+                        listItem: true
+                        text: devices.toolLabel(modelData)
+                        iconSource: "qrc:/res/device-" + modelData + ".svg"
+                        enabled: toolsDialog.currentHost && devices.toolAvailable(modelData)
+                        onClicked: devices.useTool(modelData)
+                        onActiveFocusChanged: {
+                            if (!activeFocus) return
+                            if (y < toolScroller.contentY)
+                                toolScroller.contentY = y
+                            else if (y + height > toolScroller.contentY + toolScroller.height)
+                                toolScroller.contentY = y + height - toolScroller.height
+                        }
+                    }
+                }
+            }
+        }
+        onOpened: {
+            toolScroller.contentY = 0
+            for (var i = 0; i < toolItems.count; i++) {
+                if (toolItems.itemAt(i).enabled) {
+                    toolItems.itemAt(i).forceActiveFocus(Qt.TabFocusReason)
+                    return
+                }
+            }
+            standardButton(Dialog.Close).forceActiveFocus(Qt.TabFocusReason)
+        }
+    }
+
+    NavigableDialog {
+        id: powerDialog
+        property string hostUuid
+        property string hostName
+        property bool restart
+        Material.theme: Material.Light
+        Material.accent: devices.actionBlue
+        width: Math.min(395, devices.width - 16)
+        padding: 20
+        title: restart ? qsTr("Restart") : qsTr("Shut down")
+        closePolicy: Popup.CloseOnEscape
+        background: Rectangle { color: "#ffffff"; radius: 10; border.color: "#d7e0eb" }
+        contentItem: ColumnLayout {
+            spacing: 16
+            Label {
+                Layout.fillWidth: true
+                text: powerDialog.restart
+                      ? qsTr("Restart %1? Anyone using this device could lose unsaved work.").arg(powerDialog.hostName)
+                      : qsTr("Shut down %1? Anyone using this device could lose unsaved work.").arg(powerDialog.hostName)
+                textFormat: Text.PlainText
+                wrapMode: Text.Wrap
+                color: "#26394f"
+            }
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                Button {
+                    id: cancelPower
+                    text: qsTr("Cancel")
+                    flat: true
+                    onClicked: powerDialog.reject()
+                }
+                Button {
+                    text: powerDialog.title
+                    highlighted: true
+                    Material.accent: "#a33539"
+                    enabled: !!device && device.hostUuid === powerDialog.hostUuid &&
+                             devices.toolAvailable(powerDialog.restart ? "restart" : "shutdown")
+                    onClicked: powerDialog.accept()
+                }
+            }
+        }
+        onOpened: cancelPower.forceActiveFocus(Qt.TabFocusReason)
+        onAccepted: {
+            if (device && device.hostUuid === hostUuid && devices.toolAvailable(restart ? "restart" : "shutdown"))
+                computerModel.requestHostPower(hostUuid, restart)
+        }
+    }
+
+    NavigableMessageDialog {
+        id: toolError
+        standardButtons: Dialog.Ok
     }
 
     NavigableMessageDialog {

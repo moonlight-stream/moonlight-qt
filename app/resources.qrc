@@ -14,6 +14,12 @@
         <file>res/question_mark.svg</file>
         <file>res/moonlight.svg</file>
         <file>res/remote-horizon.svg</file>
+        <file>res/device-files.svg</file>
+        <file>res/device-view.svg</file>
+        <file>res/device-more.svg</file>
+        <file>res/device-wake.svg</file>
+        <file>res/device-restart.svg</file>
+        <file>res/device-shutdown.svg</file>
         <file>res/update.svg</file>
         <file>res/baseline-help_outline-24px.svg</file>
         <file>res/baseline-error_outline-24px.svg</file>

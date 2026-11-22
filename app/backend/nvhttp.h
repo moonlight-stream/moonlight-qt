@@ -158,6 +158,8 @@ public:
     QVector<int>
     parseQuad(QString quad);
 
+    void requestHostPower(bool restart);
+
     void
     quitApp();
 
@@ -171,11 +173,13 @@ public:
              int gamepadMask,
              bool persistGameControllersOnDisconnect,
              bool requestDisconnectLock,
+             bool allowDesktopSharing,
              bool& hostHandlesDisconnectLock,
              QByteArray& clipboardToken,
              bool& clipboardText,
              bool& clipboardFiles,
              bool& clipboardResumable,
+             bool& fileBrowser,
              QString& rtspSessionUrl);
 
     QVector<NvApp>
@@ -199,7 +203,8 @@ private:
                    QString command,
                    QString arguments,
                    int timeoutMs,
-                   NvLogLevel logLevel);
+                   NvLogLevel logLevel,
+                   bool powerPost = false);
 
     NvAddress m_Address;
     QNetworkAccessManager* m_Nam;

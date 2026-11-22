@@ -111,6 +111,17 @@
 </context>
 <context>
     <name>ComputerModel</name>
+    <message><source>Connect to a paired, online host to transfer files.</source><translation>请选择在线且已配对的主机来传输文件。</translation></message>
+    <message><source>Wake packet sent to %1.</source><translation>已向 %1 发送唤醒包。</translation></message>
+    <message><source>Could not send a wake packet to %1.</source><translation>未能向 %1 发送唤醒包。</translation></message>
+    <message><source>Restart requested for %1.</source><translation>%1 已接受重启请求。</translation></message>
+    <message><source>Shutdown requested for %1.</source><translation>%1 已接受关机请求。</translation></message>
+    <message><source>Power request to %1: %2</source><translation>向 %1 发送电源请求失败：%2</translation></message>
+    <message><source>Power controls are unavailable for this host.</source><translation>此主机当前不支持远程电源操作。</translation></message>
+    <message><source>File transfer needs an active remote control window.</source><translation>文件传输需要已连接的远程控制窗口。</translation></message>
+    <message><source>No desktop is available for file transfer.</source><translation>没有可用于文件传输的远程桌面。</translation></message>
+    <message><source>Could not open the file transfer window.</source><translation>无法打开文件传输窗口。</translation></message>
+    <message><source>File transfer requires Windows.</source><translation>文件传输需要 Windows。</translation></message>
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
@@ -200,9 +211,6 @@
         <source>HTTPS Port: %1</source>
         <translation>HTTPS 端口: %1</translation>
     </message>
-    <message><source>Connect to a paired, online host to transfer files.</source><translation>请选择在线且已配对的主机来传输文件。</translation></message>
-    <message><source>Could not open the file transfer window.</source><translation>无法打开文件传输窗口。</translation></message>
-    <message><source>File transfer requires Windows.</source><translation>文件传输需要 Windows。</translation></message>
 </context>
 <context>
     <name>GamepadMapper</name>
@@ -214,6 +222,8 @@
 </context>
 <context>
     <name>NvHTTP</name>
+    <message><source>A paired HTTPS connection is required.</source><translation>需要已配对的 HTTPS 连接。</translation></message>
+    <message><source>The host did not accept the power request.</source><translation>主机未接受电源操作请求。</translation></message>
     <message>
         <location filename="../backend/nvhttp.cpp" line="381"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
@@ -222,6 +232,15 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>View only</source><translation>观看模式</translation></message>
+    <message><source>More tools</source><translation>更多工具</translation></message>
+    <message><source>Restart</source><translation>重启</translation></message>
+    <message><source>Shut down</source><translation>关机</translation></message>
+    <message><source>Show viewing window</source><translation>显示观看窗口</translation></message>
+    <message><source>Viewing</source><translation>正在观看</translation></message>
+    <message><source>The desktop is unavailable for viewing on %1.</source><translation>暂时无法观看 %1 的桌面。</translation></message>
+    <message><source>Restart %1? Anyone using this device could lose unsaved work.</source><translation>确定要重启 %1 吗？正在使用这台设备的人可能会丢失未保存的工作。</translation></message>
+    <message><source>Shut down %1? Anyone using this device could lose unsaved work.</source><translation>确定要关闭 %1 吗？正在使用这台设备的人可能会丢失未保存的工作。</translation></message>
     <message><source>Quick launch</source><translation>快速启动</translation></message>
     <message><source>Show hidden apps</source><translation>显示隐藏的应用</translation></message>
     <message><source>Options for %1</source><translation>%1 的应用选项</translation></message>
@@ -423,6 +442,7 @@
 </context>
 <context>
     <name>QObject</name>
+    <message><source>Viewing mode requires the desktop to be available.</source><translation>观看模式需要主机桌面可用。</translation></message>
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
@@ -507,7 +527,9 @@
 </context>
 <context>
     <name>Session</name>
+    <message><source>%1 — View only</source><translation>%1 — 观看模式</translation></message>
     <message><source>Uploading files %1%</source><translation>正在上传文件 %1%</translation></message>
+    <message><source>Unable to open the file transfer window.</source><translation>无法打开文件传输窗口。</translation></message>
     <message><source>Checking the network route...</source><translation>正在检查到主机的网络路径…</translation></message>
     <message><source>Setting up networking...</source><translation>正在初始化网络…</translation></message>
     <message><source>Resolving the host address...</source><translation>正在解析主机地址…</translation></message>
@@ -1444,6 +1466,7 @@
 </context>
 <context>
     <name>StreamControlCenter</name>
+    <message><source>File transfer</source><translation>文件传输</translation></message>
     <message><source>Request screen lock on disconnect</source><translation>主动断开时锁定被控电脑</translation></message>
     <message><source>Use installed host lock shortcut</source><translation>使用被控机锁屏快捷方式</translation></message>
     <message><source>Request screen lock now</source><translation>立即请求锁屏</translation></message>

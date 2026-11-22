@@ -104,8 +104,11 @@ public:
                     m_TimeoutTimer->stop();
                     if (isNotStreaming() || isStreamingApp(app)) {
                         m_State = StateStartSession;
-                        session = new Session(m_Computer, app, m_Preferences);
+                        session = new Session(m_Computer, app, m_Preferences, m_ViewOnly);
                         emit q->sessionCreated(app.name, session);
+                    } else if (m_ViewOnly) {
+                        m_State = StateFailure;
+                        emit q->failed(QObject::tr("Viewing mode requires the desktop to be available."));
                     } else {
                         emit q->appQuitRequired(getCurrentAppName());
                     }
@@ -115,7 +118,7 @@ public:
         // Occurs when there was another app running on computer and user accepted quit
         // confirmation dialog
         case Event::AppQuitRequested:
-            if (m_State == StateSeekApp) {
+            if (m_State == StateSeekApp && !m_ViewOnly) {
                 m_ComputerManager->quitRunningApp(m_Computer);
             }
             break;
@@ -178,6 +181,7 @@ public:
     Launcher *q_ptr;
     QString m_ComputerName;
     QString m_AppName;
+    const bool m_ViewOnly = qEnvironmentVariableIntValue("MOONLIGHT_WINDOW_VIEW_ONLY") == 1;
     StreamingPreferences *m_Preferences;
     ComputerManager *m_ComputerManager;
     ComputerSeeker *m_ComputerSeeker;

@@ -20,13 +20,6 @@ ApplicationWindow {
     property bool pollingActive: false
     readonly property bool customTitleBar: Qt.platform.os === "windows" && isGuiLaunch
 
-    function toggleWindowSize() {
-        if (visibility === Window.Maximized || visibility === Window.FullScreen)
-            showNormal()
-        else
-            showMaximized()
-    }
-
     id: window
     title: !isGuiLaunch && stackView.currentItem && stackView.currentItem.streamProgressText
            ? stackView.currentItem.streamProgressText : Qt.application.name
@@ -40,7 +33,9 @@ ApplicationWindow {
 
     function showInitialWindow() {
         // Show the window according to the user's preferences
-        if (SystemProperties.hasDesktopEnvironment) {
+        if (customTitleBar) {
+            window.showNormal()
+        } else if (SystemProperties.hasDesktopEnvironment) {
             if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_MAXIMIZED) {
                 window.showMaximized()
             }
@@ -56,8 +51,10 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
-        if (customTitleBar)
-            flags |= Qt.FramelessWindowHint
+        if (customTitleBar) {
+            flags = Qt.Window | Qt.FramelessWindowHint | Qt.CustomizeWindowHint |
+                    Qt.WindowSystemMenuHint | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint
+        }
 
         if (!deferInitialShow)
             showInitialWindow()
@@ -298,7 +295,6 @@ ApplicationWindow {
                         Math.abs(mouse.x - pressPoint.x) + Math.abs(mouse.y - pressPoint.y) >= Qt.styleHints.startDragDistance)
                     window.startSystemMove()
             }
-            onDoubleClicked: window.toggleWindowSize()
         }
         height: window.customTitleBar ? 46 : (devicePage ? 38 : 60)
         anchors.topMargin: 5
@@ -496,27 +492,18 @@ ApplicationWindow {
         }
     }
 
-    // The frame handles share the header's parent so they cover the full window,
-    // including the header. Only the narrow perimeter accepts mouse events.
+    // Share the header's parent so the top resize handle also covers the title bar.
     Repeater {
         parent: toolBar.parent
         model: window.customTitleBar && window.visibility === Window.Windowed ?
-                   [Qt.LeftEdge, Qt.RightEdge, Qt.TopEdge, Qt.BottomEdge,
-                    Qt.TopEdge | Qt.LeftEdge, Qt.TopEdge | Qt.RightEdge,
-                    Qt.BottomEdge | Qt.LeftEdge, Qt.BottomEdge | Qt.RightEdge] : []
+                   [Qt.TopEdge, Qt.BottomEdge] : []
         MouseArea {
             z: 20
-            readonly property int edges: modelData
-            readonly property bool horizontalEdge: (edges & (Qt.LeftEdge | Qt.RightEdge)) !== 0
-            readonly property bool verticalEdge: (edges & (Qt.TopEdge | Qt.BottomEdge)) !== 0
-            width: horizontalEdge ? 5 : parent.width - 10
-            height: verticalEdge ? 5 : parent.height - 10
-            x: (edges & Qt.RightEdge) ? parent.width - width : horizontalEdge ? 0 : 5
-            y: (edges & Qt.BottomEdge) ? parent.height - height : verticalEdge ? 0 : 5
-            cursorShape: horizontalEdge && verticalEdge ?
-                (edges === (Qt.TopEdge | Qt.LeftEdge) || edges === (Qt.BottomEdge | Qt.RightEdge) ?
-                     Qt.SizeFDiagCursor : Qt.SizeBDiagCursor) : horizontalEdge ? Qt.SizeHorCursor : Qt.SizeVerCursor
-            onPressed: window.startSystemResize(edges)
+            width: parent.width
+            height: 5
+            y: modelData === Qt.TopEdge ? 0 : parent.height - height
+            cursorShape: Qt.SizeVerCursor
+            onPressed: window.startSystemResize(modelData)
         }
     }
 

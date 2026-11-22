@@ -3,6 +3,7 @@
 #include "streaming/session.h"
 
 #include <QAbstractListModel>
+#include <QSet>
 
 class FileTransferWindow;
 
@@ -23,7 +24,10 @@ class ComputerModel : public QAbstractListModel
         PreviewRole,
         UuidRole,
         StreamWindowStateRole,
-        StreamProgressTextRole
+        ViewOnlyStreamWindowRole,
+        StreamProgressTextRole,
+        HostPowerAvailableRole,
+        HostPowerPendingRole
     };
 
 public:
@@ -52,12 +56,14 @@ public:
     Q_INVOKABLE void testConnectionForComputer(int computerIndex);
 
     Q_INVOKABLE void wakeComputer(int computerIndex);
+    Q_INVOKABLE void requestHostPower(const QString& uuid, bool restart);
     Q_INVOKABLE void openFileTransfer(const QString& uuid);
 
     Q_INVOKABLE void renameComputer(int computerIndex, QString name);
 
     Q_INVOKABLE void initializeQuickApps(AppModel* apps, int computerIndex);
     Q_INVOKABLE Session* createQuickSession(int computerIndex);
+    Q_INVOKABLE Session* createViewOnlySession(int computerIndex);
     Q_INVOKABLE void refreshDesktopPreviews();
 
 signals:
@@ -71,6 +77,7 @@ private slots:
     void handlePairingCompleted(NvComputer* computer, QString error);
 
 private:
+    QSet<QString> m_PendingPower;
     QVector<NvComputer*> m_Computers;
     ComputerManager* m_ComputerManager;
 #ifdef Q_OS_WIN
@@ -79,6 +86,7 @@ private:
     void refreshStreamWindows();
     struct StreamStatus {
         StreamWindowState state = NoStreamWindow;
+        bool viewOnly = false;
         QString progressText;
     };
     QHash<QString, StreamStatus> m_StreamWindows;

@@ -208,11 +208,13 @@ NvHTTP::startApp(QString verb,
                  int gamepadMask,
                  bool persistGameControllersOnDisconnect,
                  bool requestDisconnectLock,
+                 bool allowDesktopSharing,
                  bool& hostHandlesDisconnectLock,
                  QByteArray& clipboardToken,
                  bool& clipboardText,
                  bool& clipboardFiles,
                  bool& clipboardResumable,
+                 bool& fileBrowser,
                  QString& rtspSessionUrl)
 {
     QString extensions;
@@ -222,18 +224,17 @@ NvHTTP::startApp(QString verb,
     clipboardToken.clear();
     clipboardText = false;
     clipboardFiles = false;
+    fileBrowser = false;
 #ifdef Q_OS_WIN
-    if (!isGfe && !m_ServerCert.isNull()) {
+    if (allowDesktopSharing && !isGfe && !m_ServerCert.isNull()) {
         const QSettings settings;
         clipboardText = settings.value("clipboardSyncText", false).toBool();
         clipboardFiles = settings.value("clipboardSyncFiles", false).toBool();
-        if (clipboardText || clipboardFiles) {
-            unsigned char secret[32];
-            if (RAND_bytes(secret, sizeof(secret)) == 1) {
-                clipboardToken = QByteArray(reinterpret_cast<const char*>(secret), sizeof(secret)).toHex();
-                extensions += QStringLiteral("&clipboardtoken=%1&clipboardtext=%2&clipboardfiles=%3&clipboardbatchversion=2")
-                                  .arg(QString::fromLatin1(clipboardToken)).arg(int(clipboardText)).arg(int(clipboardFiles));
-            }
+        unsigned char secret[32];
+        if (RAND_bytes(secret, sizeof(secret)) == 1) {
+            clipboardToken = QByteArray(reinterpret_cast<const char*>(secret), sizeof(secret)).toHex();
+            extensions += QStringLiteral("&clipboardtoken=%1&clipboardtext=%2&clipboardfiles=%3&clipboardbatchversion=2&filebrowser=1")
+                              .arg(QString::fromLatin1(clipboardToken)).arg(int(clipboardText)).arg(int(clipboardFiles));
         }
     }
 #endif
@@ -275,10 +276,11 @@ NvHTTP::startApp(QString verb,
 
     hostHandlesDisconnectLock = getXmlString(response, "lockOnDisconnect") == "1";
     const bool clipboardAccepted = !clipboardToken.isEmpty() && getXmlString(response, "clipboardversion") == "1";
+    fileBrowser = !clipboardToken.isEmpty() && getXmlString(response, "filebrowserversion") == "1";
     clipboardText = clipboardAccepted && clipboardText && getXmlString(response, "clipboardtext") == "1";
     clipboardFiles = clipboardAccepted && clipboardFiles && getXmlString(response, "clipboardfiles") == "1";
     clipboardResumable = clipboardFiles && getXmlString(response, "clipboardbatchversion").toInt() >= 2;
-    if (!clipboardText && !clipboardFiles) {
+    if (!clipboardText && !clipboardFiles && !fileBrowser) {
         clipboardToken.clear();
     }
     rtspSessionUrl = getXmlString(response, "sessionUrl0");
@@ -517,12 +519,25 @@ NvHTTP::openConnectionToString(QUrl baseUrl,
     return ret;
 }
 
+void NvHTTP::requestHostPower(bool restart)
+{
+    if (m_ServerCert.isNull() || !httpsPort())
+        throw GfeHttpResponseException(403, tr("A paired HTTPS connection is required."));
+    const QString action = restart ? QStringLiteral("action=restart") : QStringLiteral("action=shutdown");
+    QScopedPointer<QNetworkReply> reply(openConnection(m_BaseUrlHttps, QStringLiteral("hostpower"), action,
+                                                      REQUEST_TIMEOUT_MS, NVLL_ERROR, true));
+    const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if (status != 202)
+        throw GfeHttpResponseException(status, tr("The host did not accept the power request."));
+}
+
 QNetworkReply*
 NvHTTP::openConnection(QUrl baseUrl,
                        QString command,
                        QString arguments,
                        int timeoutMs,
-                       NvLogLevel logLevel)
+                       NvLogLevel logLevel,
+                       bool powerPost)
 {
     // Port must be set
     Q_ASSERT(baseUrl.port(0) != 0);
@@ -562,7 +577,11 @@ NvHTTP::openConnection(QUrl baseUrl,
 #endif
 
     auto sslErrorsConnection = connect(m_Nam, &QNetworkAccessManager::sslErrors, this, &NvHTTP::handleSslErrors);
-    QNetworkReply* reply = m_Nam->get(request);
+    if (powerPost) {
+        request.setRawHeader("X-Moonlight-Host-Power", "1");
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
+    }
+    QNetworkReply* reply = powerPost ? m_Nam->post(request, QByteArray()) : m_Nam->get(request);
     if (baseUrl.scheme() == QStringLiteral("https") && !m_ServerCert.isNull()) {
         connect(reply, &QNetworkReply::encrypted, reply, [reply, pairedHost = m_ServerCert]() {
             if (reply->sslConfiguration().peerCertificate() != pairedHost) {

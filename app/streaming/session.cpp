@@ -4,9 +4,11 @@
 #include <iphlpapi.h>
 #endif
 #include "session.h"
+#include "../../moonlight-common-c/inputmode.h"
 #ifdef Q_OS_WIN32
 #include "captioncontrols.h"
 #include "clipboardsync.h"
+#include "filetransferprocess.h"
 #include "streamwindow.h"
 #endif
 #include "settings/streamingpreferences.h"
@@ -593,8 +595,9 @@ bool Session::populateDecoderProperties(SDL_Window* window)
     return true;
 }
 
-Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
-    : m_Preferences(preferences ? preferences : StreamingPreferences::get()),
+Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences, bool viewOnly)
+    : m_ViewOnly(viewOnly),
+      m_Preferences(preferences ? preferences : StreamingPreferences::get()),
       m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
       m_Computer(computer),
       m_App(app),
@@ -625,6 +628,7 @@ bool Session::launchInWindow() const
                         QStringLiteral("--"), m_Computer->uuid, m_App.name});
     child.setWorkingDirectory(QDir::currentPath());
     auto environment = QProcessEnvironment::systemEnvironment();
+    environment.insert(QStringLiteral("MOONLIGHT_WINDOW_VIEW_ONLY"), m_ViewOnly ? QStringLiteral("1") : QStringLiteral("0"));
     environment.insert(QStringLiteral("MOONLIGHT_WINDOW_APP_ID"), QString::number(m_App.id));
     {
         QReadLocker lock(&m_Computer->lock);
@@ -1324,6 +1328,7 @@ private:
     {
         // Only quit the running app if our session terminated gracefully
         bool shouldQuit =
+                !m_Session->m_ViewOnly &&
                 !m_Session->m_UnexpectedTermination &&
                 !m_Session->m_DisconnectOnly &&
                 (m_Session->m_ExplicitHostQuit ||
@@ -1722,6 +1727,11 @@ bool Session::handleFullscreenControlEvent(SDL_Event& event)
             toggleFullscreen();
             m_InputHandler->raiseAllKeys();
         }
+        else if (hit == m_PressedControl && hit == Control::FileTransfer) {
+            event.type = SDL_USEREVENT;
+            event.user.code = CaptionControls::FileTransfer;
+            return false;
+        }
         else if (hit == m_PressedControl && hit == Control::Disconnect) {
             m_DisconnectOnly = true;
             event.type = SDL_QUIT;
@@ -1773,6 +1783,12 @@ public:
 // Called in a non-main thread
 bool Session::startConnectionAsync()
 {
+    // The selected app may have changed since the launcher probed the host.
+    if (m_ViewOnly && (!m_App.isDesktop() ||
+            (m_Computer->currentGameId && m_Computer->currentGameId != m_App.id))) {
+        emit displayLaunchError(QObject::tr("Viewing mode requires the desktop to be available."));
+        return false;
+    }
     // The UI should have ensured the old game was already quit
     // if we decide to stream a different game.
     Q_ASSERT(m_Computer->currentGameId == 0 ||
@@ -1810,13 +1826,14 @@ bool Session::startConnectionAsync()
         http.startApp(resume ? "resume" : "launch",
                       m_Computer->isNvidiaServerSoftware,
                       m_App.id, &m_StreamConfig,
-                      enableGameOptimizations,
-                      m_Preferences->playAudioOnHost,
-                      m_InputHandler->getAttachedGamepadMask(),
-                      !m_Preferences->multiController,
-                      m_Preferences->lockHostOnDisconnect(),
+                      !m_ViewOnly && enableGameOptimizations,
+                      m_ViewOnly || m_Preferences->playAudioOnHost,
+                      m_ViewOnly ? 0 : m_InputHandler->getAttachedGamepadMask(),
+                      !m_ViewOnly && !m_Preferences->multiController,
+                      !m_ViewOnly && m_Preferences->lockHostOnDisconnect(),
+                      !m_ViewOnly,
                       m_HostHandlesDisconnectLock,
-                      m_ClipboardToken, m_ClipboardText, m_ClipboardFiles, m_ClipboardResumable,
+                      m_ClipboardToken, m_ClipboardText, m_ClipboardFiles, m_ClipboardResumable, m_FileBrowser,
                       rtspSessionUrl);
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
@@ -1916,6 +1933,7 @@ bool Session::startConnectionAsync()
                                                                          false);
     }
 
+    MlSetViewOnlyInput(m_ViewOnly);
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks, &m_AudioCallbacks,
                                 NULL, 0, NULL, 0);
@@ -1969,7 +1987,7 @@ void Session::start()
 
     // Initialize the gamepad code with our preferences
     // NB: m_InputHandler must be initialize before starting the connection.
-    m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height, m_Computer->uuid);
+    m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height, m_Computer->uuid, m_ViewOnly);
     connect(m_Preferences, &StreamingPreferences::captureSysKeysModeChanged, this, [this]() {
         if (m_InputHandler) {
             m_InputHandler->setCaptureSystemKeysMode(m_Preferences->captureSysKeysMode);
@@ -2068,6 +2086,8 @@ void Session::exec()
 #ifdef Q_OS_WIN32
     defaultWindowFlags |= SDL_WINDOW_HIDDEN;
 #endif
+    if (m_ViewOnly)
+        windowName = tr("%1 — View only").arg(m_Computer->name).toStdString();
     m_Window = SDL_CreateWindow(windowName.c_str(),
                                 x,
                                 y,
@@ -2192,7 +2212,7 @@ void Session::exec()
 #endif
 
 #ifdef Q_OS_WIN32
-    m_OverlayManager.configureControls(m_StreamConfig.width, m_StreamConfig.height);
+    m_OverlayManager.configureControls(m_StreamConfig.width, m_StreamConfig.height, !m_ViewOnly);
     updateFullscreenControls();
 #endif
 
@@ -2206,6 +2226,7 @@ void Session::exec()
 #ifdef Q_OS_WIN32
     MIB_IF_ROW2 previousTraffic{};
     CaptionControls caption(m_Window, *m_Preferences, *m_InputHandler);
+    QProcess fileTransferProcess;
     QUrl clipboardHost;
     clipboardHost.setScheme(QStringLiteral("https"));
     clipboardHost.setHost(m_Computer->activeAddress.address());
@@ -2361,6 +2382,10 @@ void Session::exec()
             continue;
         }
 #endif
+        // Run local viewer shortcuts and window events, but never dispatch
+        // mouse, controller, joystick, touch, or gesture events to host input.
+        if (m_ViewOnly && event.type >= SDL_MOUSEMOTION && event.type < SDL_CLIPBOARDUPDATE)
+            continue;
         switch (event.type) {
         case SDL_QUIT:
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -2376,6 +2401,18 @@ void Session::exec()
             case CaptionControls::Fullscreen:
                 if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) toggleFullscreen();
                 caption.update();
+                break;
+            case CaptionControls::FileTransfer:
+                if (m_ViewOnly) break;
+                if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) toggleFullscreen();
+                m_InputHandler->raiseAllKeys();
+                m_InputHandler->setCaptureActive(false);
+                if (!FileTransferProcess::show(fileTransferProcess, clipboardHost, m_Computer->serverCert,
+                                               m_FileBrowser ? m_ClipboardToken : QByteArray(),
+                                               m_Computer->name, m_Computer->uuid)) {
+                    const auto message = tr("Unable to open the file transfer window.").toUtf8();
+                    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Moonlight", message.constData(), m_Window);
+                }
                 break;
 #endif
             case SDL_CODE_FRAME_READY:
@@ -2708,6 +2745,7 @@ void Session::exec()
 
 DispatchDeferredCleanup:
 #ifdef Q_OS_WIN32
+    FileTransferProcess::stop(fileTransferProcess);
     clipboard.stop();
     caption.close();
 #endif
@@ -2725,7 +2763,7 @@ DispatchDeferredCleanup:
 
     // A local window close, disconnect button or quit shortcut reaches here with
     // live input. stopInputStream() drains reliable keyboard packets during teardown.
-    if (event.type == SDL_QUIT && !SDL_AtomicGet(&m_ConnectionEnding) &&
+    if (!m_ViewOnly && event.type == SDL_QUIT && !SDL_AtomicGet(&m_ConnectionEnding) &&
             !m_HostHandlesDisconnectLock && m_Preferences->lockHostOnDisconnect()) {
         m_InputHandler->requestHostScreenLock();
     }
