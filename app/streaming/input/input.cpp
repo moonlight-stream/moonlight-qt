@@ -4,6 +4,7 @@
 #include "settings/mappingmanager.h"
 #include "path.h"
 #include "utils.h"
+#include "windowskeyboard.h"
 
 #include <QtGlobal>
 #include <QDir>
@@ -268,6 +269,7 @@ SdlInputHandler::~SdlInputHandler()
 void SdlInputHandler::setWindow(SDL_Window *window)
 {
     m_Window = window;
+    WindowsKeyboardInput::disableLocalIme(m_Window);
 }
 
 void SdlInputHandler::notifyFocusLost()
@@ -287,6 +289,8 @@ void SdlInputHandler::notifyFocusLost()
 
 void SdlInputHandler::notifyFocusGained()
 {
+    // Fullscreen or decoder transitions may replace the native HWND.
+    WindowsKeyboardInput::disableLocalIme(m_Window);
 }
 
 bool SdlInputHandler::isCaptureActive()
