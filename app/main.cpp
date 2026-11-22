@@ -50,6 +50,7 @@
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
 #include "backend/computermanager.h"
+#include "backend/identitymanager.h"
 #include "backend/systemproperties.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
@@ -970,7 +971,11 @@ int main(int argc, char *argv[])
                                                    });
 
     // Create the identity manager on the main thread
-    IdentityManager::get();
+    QString identityWarning = IdentityManager::get()->getIdentityProblem();
+    if (!identityWarning.isEmpty()) {
+        // Always report this on stderr. A GUI launch also shows it in a dialog.
+        fprintf(stderr, "Warning: %s\n", qPrintable(identityWarning));
+    }
 
     // We require the Material theme
     QQuickStyle::setStyle("Material");
@@ -1044,6 +1049,7 @@ int main(int argc, char *argv[])
     if (hasGUI) {
         engine.rootContext()->setContextProperty("initialView", initialView);
         engine.rootContext()->setContextProperty("isGuiLaunch", commandLineParserResult == GlobalCommandLineParser::NormalStartRequested);
+        engine.rootContext()->setContextProperty("identityWarning", identityWarning);
 
         // Load the main.qml file
         engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));

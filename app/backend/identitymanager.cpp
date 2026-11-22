@@ -163,15 +163,22 @@ IdentityManager::loadIdentityFromSettings(QSettings& settings, QString* error)
         return true;
     }
 
-    if (getSslCertificate().isNull()) {
-        qWarning() << "Certificate is unreadable";
-        createCredentials(settings);
-    }
-    else if (getSslKey().isNull()) {
-        qWarning() << "Private key is unreadable";
+    QString problem;
+    if (!validateIdentity(m_CachedPemCert, m_CachedPrivateKey, &problem)) {
+        // This identity was created by Moonlight, so it's safe to replace it
+        m_IdentityProblem = QObject::tr("Moonlight's saved client identity was unusable, so it was replaced "
+                                        "with a new one. You will need to pair with your hosts again. "
+                                        "The problem was: %1").arg(problem);
+        qWarning().noquote() << m_IdentityProblem;
         createCredentials(settings);
     }
     return true;
+}
+
+QString
+IdentityManager::getIdentityProblem() const
+{
+    return m_IdentityProblem;
 }
 
 QSslCertificate

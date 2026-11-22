@@ -31,6 +31,11 @@ public:
     bool
     validateIdentity(const QByteArray& pemCert, const QByteArray& pemKey, QString* error);
 
+    // Human-readable description of a problem found with the client identity at
+    // startup that the user should be told about, or empty if none
+    QString
+    getIdentityProblem() const;
+
 private:
     IdentityManager();
 
@@ -59,6 +64,8 @@ private:
     // Initialized in constructor
     QByteArray m_CachedPrivateKey;
     QByteArray m_CachedPemCert;
+
+    QString m_IdentityProblem;
 
     // Lazy initialized
     QString m_CachedUniqueId;
