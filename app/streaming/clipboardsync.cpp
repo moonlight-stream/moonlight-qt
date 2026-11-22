@@ -170,6 +170,11 @@ public:
         return true;
     }
 
+    void acknowledge(DWORD bytes)
+    {
+        m_Rate.acknowledge(static_cast<int>(bytes), monotonicMs() - m_LastSend);
+    }
+
 private:
     void sampleRtt()
     {
@@ -195,11 +200,11 @@ bool fingerprintSources(const std::vector<win_clipboard::detail::source_file>& f
 {
     for (size_t i = 0; i < files.size(); ++i) {
         const auto& file = files[i];
-        QCryptographicHash hash(QCryptographicHash::Sha256);
-        if (!transfer_file::seek(file.handle.get(), 0) ||
-            !transfer_file::hashBytes(file.handle.get(), file.size, hash, cancelled)) return false;
+        if (!transfer_file::seek(file.handle.get(), 0)) return false;
+        const auto digest = transfer_file::sha256(file.handle.get(), file.size, cancelled);
+        if (digest.isEmpty()) return false;
         auto item = manifest.at(i).toObject();
-        item.insert(QStringLiteral("sha256"), QString::fromLatin1(hash.result().toHex()));
+        item.insert(QStringLiteral("sha256"), QString::fromLatin1(digest.toHex()));
         manifest[i] = item;
     }
     return true;
@@ -356,6 +361,7 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
                                             result.nextOffset == offset + length;
                 if (result.status != 204 && !alreadyWritten) return failure("chunk", result);
                 if (result.nextOffset != offset + length) return failure("chunk", result, "unexpected acknowledgement offset");
+                pacer.acknowledge(length);
                 offset += length;
                 acknowledged += length;
                 progress.fileBytes = offset;

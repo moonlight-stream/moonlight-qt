@@ -8,30 +8,48 @@ int main()
     ClipboardUploadRate gigabit(1'000'000'000);
     assert(gigabit.bytesPerSecond() == 2 * MiB);
     gigabit.sample(3, 1);
-    assert(gigabit.bytesPerSecond() == 31'250'000);
-    assert(gigabit.chunkBytes() == 31'250'000 / 64);
+    assert(gigabit.bytesPerSecond() == 62'500'000);
+    assert(gigabit.chunkBytes() == MiB / 2);
+    gigabit.acknowledge(MiB / 2, 8);
+    assert(gigabit.chunkBytes() == 62'500'000 / 32);
 
     for (int i = 0; i < 30; ++i) gigabit.sample(4, 2);
-    assert(gigabit.bytesPerSecond() == 93'750'000);
-    assert(gigabit.chunkBytes() == MiB);
+    assert(gigabit.bytesPerSecond() == 112'500'000);
+    assert(gigabit.chunkBytes() == 2 * MiB);
+    gigabit.acknowledge(gigabit.chunkBytes(), 18);
+    assert(gigabit.chunkBytes() == 112'500'000 / 32);
+    gigabit.acknowledge(53, 300);  // Final short request of a file.
+    assert(gigabit.chunkBytes() == 112'500'000 / 32);
+    gigabit.acknowledge(gigabit.chunkBytes(), 320);  // Slow peer on a fast switch.
+    assert(gigabit.chunkBytes() == 351'562);
     gigabit.sample(35, 2);  // Control traffic is queueing.
-    assert(gigabit.bytesPerSecond() == 46'875'000);
+    assert(gigabit.bytesPerSecond() == 56'250'000);
     gigabit.sample(4, 25);  // A variance spike also backs off.
-    assert(gigabit.bytesPerSecond() == 23'437'500);
+    assert(gigabit.bytesPerSecond() == 28'125'000);
     for (int i = 0; i < 30; ++i) gigabit.sample(50, 25);
     assert(gigabit.bytesPerSecond() == 128 * 1024);
     gigabit.sample(4, 2);
-    assert(gigabit.bytesPerSecond() == 160 * 1024);
+    assert(gigabit.bytesPerSecond() == 192 * 1024);
 
     ClipboardUploadRate missingSample(1'000'000'000);
     missingSample.sample(0, 0);
     assert(missingSample.bytesPerSecond() == 2 * MiB);
     missingSample.sample(4, 1);
-    assert(missingSample.bytesPerSecond() == 31'250'000);
+    assert(missingSample.bytesPerSecond() == 62'500'000);
     missingSample.sample(0, 0);
     assert(missingSample.bytesPerSecond() == 2 * MiB);
     missingSample.sample(4, 1);
-    assert(missingSample.bytesPerSecond() == 2 * MiB * 5 / 4);
+    assert(missingSample.bytesPerSecond() == 3 * MiB);
+
+    ClipboardUploadRate multiGigabit(2'500'000'000);
+    multiGigabit.sample(2, 1);
+    assert(multiGigabit.bytesPerSecond() == 64 * MiB);
+    for (int i = 0; i < 20; ++i) {
+        multiGigabit.sample(2, 1);
+        multiGigabit.acknowledge(multiGigabit.chunkBytes(), 2);
+    }
+    assert(multiGigabit.bytesPerSecond() == 281'250'000);
+    assert(multiGigabit.chunkBytes() == 4 * MiB);
 
     ClipboardUploadRate alreadyBusy(1'000'000'000);
     alreadyBusy.sample(4, 30);
