@@ -10,10 +10,10 @@ GroupBox {
         y: section.padding
         width: section.availableWidth
         text: section.title
-        color: "#244655"; font.pixelSize: 16; font.bold: true
+        color: "#24364b"; font.pixelSize: 16; font.bold: true
         wrapMode: Text.Wrap
     }
     background: Rectangle {
-        color: "white"; radius: 9; border.color: "#d4e1e5"
+        color: "white"; radius: 9; border.color: "#dce4ec"
     }
 }

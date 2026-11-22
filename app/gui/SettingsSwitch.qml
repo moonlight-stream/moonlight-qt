@@ -12,7 +12,7 @@ Switch {
         width: 36; height: 20; radius: 10
         x: control.width - width - control.rightPadding
         anchors.verticalCenter: parent.verticalCenter
-        color: !control.enabled ? "#dce2e8" : control.checked ? "#167384" : "#788c97"
+        color: !control.enabled ? "#dce2e8" : control.checked ? "#2468d5" : "#788c97"
         Rectangle {
             width: 14; height: 14; radius: 7
             anchors.verticalCenter: parent.verticalCenter
@@ -29,7 +29,7 @@ Switch {
     }
     background: Rectangle {
         radius: 6
-        color: control.hovered ? "#eff6f7" : "white"
-        border.color: control.visualFocus ? "#167384" : "#dbe5e8"
+        color: control.hovered ? "#f1f5fb" : "white"
+        border.color: control.visualFocus ? "#2468d5" : "#dce4ec"
     }
 }

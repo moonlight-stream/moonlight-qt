@@ -175,15 +175,9 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected keyboard grab toggle combo");
 
-        // Toggle the system key capture mode
-        if (isSystemKeyCaptureActive()) {
-            m_CaptureSystemKeysMode = StreamingPreferences::CSK_OFF;
-        }
-        else {
-            m_CaptureSystemKeysMode = StreamingPreferences::CSK_ALWAYS;
-        }
-
-        updateKeyboardGrabState();
+        // The shortcut overrides the mode for this stream only.
+        setCaptureSystemKeysMode(isSystemKeyCaptureActive() ? StreamingPreferences::CSK_OFF :
+                                                             StreamingPreferences::CSK_ALWAYS);
         break;
 
     default:
@@ -525,6 +519,22 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                              KEY_ACTION_DOWN : KEY_ACTION_UP,
                          modifiers,
                          flags);
+}
+
+bool SdlInputHandler::requestHostScreenLock()
+{
+    // Use the same GameStream virtual-key encoding as handleKeyEvent(). Send
+    // Win explicitly: GFE drops ordinary keys carrying the META modifier flag.
+    constexpr short leftWin = static_cast<short>(0x805B);
+    constexpr short keyL = static_cast<short>(0x804C);
+    if (LiSendKeyboardEvent(leftWin, KEY_ACTION_DOWN, MODIFIER_EXTENDED) != 0) {
+        return false;
+    }
+
+    const bool sentL = LiSendKeyboardEvent(keyL, KEY_ACTION_DOWN, 0) == 0;
+    const bool releasedL = sentL && LiSendKeyboardEvent(keyL, KEY_ACTION_UP, 0) == 0;
+    const bool releasedWin = LiSendKeyboardEvent(leftWin, KEY_ACTION_UP, MODIFIER_EXTENDED) == 0;
+    return releasedL && releasedWin;
 }
 
 void SdlInputHandler::raiseAllKeys()

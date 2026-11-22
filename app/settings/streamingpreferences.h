@@ -16,6 +16,9 @@ public:
 
     Q_INVOKABLE void save();
 
+    bool lockHostOnDisconnect() const;
+    void setLockHostOnDisconnect(bool enabled);
+
     void reload();
 
     enum AudioConfig
@@ -118,6 +121,8 @@ public:
         CSK_ALWAYS,
     };
     Q_ENUM(CaptureSysKeysMode);
+    void setCaptureSysKeysMode(CaptureSysKeysMode mode);
+    Q_INVOKABLE void refreshCaptureSysKeysMode();
 
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
@@ -131,6 +136,7 @@ public:
     Q_PROPERTY(bool multiController MEMBER multiController NOTIFY multiControllerChanged)
     Q_PROPERTY(bool enableMdns MEMBER enableMdns NOTIFY enableMdnsChanged)
     Q_PROPERTY(bool quitAppAfter MEMBER quitAppAfter NOTIFY quitAppAfterChanged)
+    Q_PROPERTY(bool lockHostOnDisconnect READ lockHostOnDisconnect WRITE setLockHostOnDisconnect NOTIFY lockHostOnDisconnectChanged)
     Q_PROPERTY(bool absoluteMouseMode MEMBER absoluteMouseMode NOTIFY absoluteMouseModeChanged)
     Q_PROPERTY(bool absoluteTouchMode MEMBER absoluteTouchMode NOTIFY absoluteTouchModeChanged)
     Q_PROPERTY(bool framePacing MEMBER framePacing NOTIFY framePacingChanged)
@@ -155,7 +161,7 @@ public:
     Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
-    Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
+    Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode WRITE setCaptureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
 
     Q_INVOKABLE bool retranslate();
@@ -216,6 +222,7 @@ signals:
     void enableMdnsChanged();
     void closeToTrayChanged();
     void quitAppAfterChanged();
+    void lockHostOnDisconnectChanged();
     void absoluteMouseModeChanged();
     void absoluteTouchModeChanged();
     void audioConfigChanged();
@@ -248,5 +255,6 @@ private:
     QString getSuffixFromLanguage(Language lang);
 
     QQmlEngine* m_QmlEngine;
+    CaptureSysKeysMode m_SavedCaptureSysKeysMode;
 };
 

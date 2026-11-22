@@ -2,6 +2,7 @@
 
 #include <SDL_syswm.h>
 #include "windowcaption.h"
+#include "input/input.h"
 #include <commctrl.h>
 #include <QCoreApplication>
 #include <QPainter>
@@ -15,9 +16,10 @@ class CaptionControls {
 public:
     static constexpr int Fullscreen = 111;
     enum Field { Duration, Fps, Network, Decode, Upload, Download, Loss, Resolution, FieldCount };
-    CaptionControls(SDL_Window* window, bool& enabled)
+    CaptionControls(SDL_Window* window, StreamingPreferences& preferences, SdlInputHandler& input)
         : m_Window(window)
-        , m_Enabled(enabled)
+        , m_Preferences(preferences)
+        , m_Input(input)
     {
         QSettings settings;
         m_Fields = settings.value("streamHud/fields", 0xff).toInt() & 0xff;
@@ -43,11 +45,11 @@ public:
         m_ButtonHover = false;
     }
 
-    bool enabled() const { return m_Enabled; }
+    bool enabled() const { return m_Preferences.showPerformanceOverlay; }
     void toggle()
     {
-        m_Enabled = !m_Enabled;
-        QSettings().setValue("showperfoverlay", m_Enabled);
+        m_Preferences.showPerformanceOverlay = !enabled();
+        QSettings().setValue("showperfoverlay", enabled());
         update();
     }
 
@@ -128,7 +130,8 @@ private:
                 if (GetForegroundWindow() != owner)
                     dismiss();
                 else {
-                    const int width = px(216), height = px(12 + rows().size() * 32);
+                    const int width = px(m_Page == Security || m_Page == Main || m_Page == SystemKeys ? 300 : 216);
+                    const int height = px(12 + rows().size() * 32 + (m_Page == Security ? 76 : 0));
                     RECT work { };
                     MONITORINFO monitor { sizeof(monitor) };
                     GetMonitorInfo(MonitorFromWindow(owner, MONITOR_DEFAULTTONEAREST), &monitor);
@@ -143,7 +146,7 @@ private:
             ShowWindow(m_Button, SW_HIDE);
             dismiss();
         }
-        if (visible && m_Enabled) {
+        if (visible && enabled()) {
             int count = 0;
             for (int i = 0; i < FieldCount; ++i)
                 if (m_Fields & (1 << i))
@@ -157,8 +160,9 @@ private:
             ShowWindow(m_Hud, SW_HIDE);
     }
 
-    enum Page { Main, Fields, Corner, Opacity };
+    enum Page { Main, HudSettings, Fields, Corner, Opacity, Security, SystemKeys };
     static QString tr(const char* s) { return QCoreApplication::translate("StreamControlCenter", s); }
+    static QString settingsText(const char* s) { return QCoreApplication::translate("SettingsView", s); }
     int px(int v) const { return qRound(v * m_Scale); }
     QStringList labels() const
     {
@@ -169,8 +173,15 @@ private:
     {
         switch (m_Page) {
         case Main:
-            return { tr("Statistics HUD"), tr("Displayed metrics"), tr("Position"), tr("Opacity"),
-                tr("Fullscreen") };
+            return { tr("Statistics HUD"), tr("HUD settings"), tr("Security"),
+                settingsText("Capture system keyboard shortcuts"), tr("Fullscreen") };
+        case SystemKeys:
+            return { settingsText("Capture system keyboard shortcuts"), settingsText("Off"),
+                settingsText("Fullscreen only"), settingsText("Always") };
+        case HudSettings:
+            return { tr("HUD settings"), tr("Displayed metrics"), tr("Position"), tr("Opacity") };
+        case Security:
+            return { tr("Security"), tr("Send Win+L on disconnect") };
         case Fields:
             return QStringList { tr("Displayed metrics") } + labels();
         case Corner:
@@ -190,13 +201,14 @@ private:
                 toggle();
                 break;
             case 1:
-                m_Page = Fields;
+                m_Page = HudSettings;
                 break;
             case 2:
-                m_Page = Corner;
+                m_LockOnDisconnect = m_Preferences.lockHostOnDisconnect();
+                m_Page = Security;
                 break;
             case 3:
-                m_Page = Opacity;
+                m_Page = SystemKeys;
                 break;
             case 4: {
                 dismiss();
@@ -207,9 +219,19 @@ private:
                 break;
             }
             }
-        } else if (row == 0)
-            m_Page = Main;
-        else if (m_Page == Fields) {
+        } else if (row == 0) {
+            m_Page = (m_Page == Security || m_Page == HudSettings || m_Page == SystemKeys) ? Main : HudSettings;
+        } else if (m_Page == SystemKeys) {
+            const auto mode = static_cast<StreamingPreferences::CaptureSysKeysMode>(row - 1);
+            m_Input.setCaptureSystemKeysMode(mode);
+            m_Preferences.setCaptureSysKeysMode(mode);
+        } else if (m_Page == Security) {
+            m_Preferences.setLockHostOnDisconnect(!m_LockOnDisconnect);
+            m_LockOnDisconnect = m_Preferences.lockHostOnDisconnect();
+        } else if (m_Page == HudSettings) {
+            constexpr Page pages[] = { Fields, Corner, Opacity };
+            m_Page = pages[row - 1];
+        } else if (m_Page == Fields) {
             int next = m_Fields ^ (1 << (row - 1));
             if (next) {
                 m_Fields = next;
@@ -298,18 +320,39 @@ private:
                     p.fillRect(line, QColor("#e3edfc"));
                 bool back = m_Page != Main && i == 0;
                 QString mark;
-                if (m_Page == Main && i > 0 && i < 4)
+                if ((m_Page == Main && i >= 1 && i <= 3) || (m_Page == HudSettings && i > 0))
                     mark = QStringLiteral("›");
-                if ((m_Page == Main && i == 0 && enabled()) || (m_Page == Corner && i == m_Corner + 1)
-                    || (m_Page == Opacity && i == m_Opacity)
+                if ((m_Page == Corner && i == m_Corner + 1) || (m_Page == Opacity && i == m_Opacity)
+                    || (m_Page == SystemKeys && i == m_Input.captureSystemKeysMode() + 1)
                     || (m_Page == Fields && i > 0 && (m_Fields & (1 << (i - 1)))))
                     mark = QStringLiteral("✓");
                 line.adjust(9, 0, -9, 0);
+                if ((m_Page == Main && i == 0) || (m_Page == Security && i == 1)) {
+                    const bool checked = m_Page == Main ? enabled() : m_LockOnDisconnect;
+                    const QRect track(line.right() - 29, line.center().y() - 8, 30, 16);
+                    p.setRenderHint(QPainter::Antialiasing);
+                    p.setPen(Qt::NoPen);
+                    p.setBrush(QColor(checked ? "#2468d5" : "#788c97"));
+                    p.drawRoundedRect(track, 8, 8);
+                    p.setBrush(Qt::white);
+                    p.drawEllipse(track.left() + (checked ? 16 : 2), track.top() + 2, 12, 12);
+                    line.setRight(track.left() - 8);
+                }
                 p.setPen(QColor("#20364e"));
                 p.drawText(line, Qt::AlignLeft | Qt::AlignVCenter,
                     (back ? QStringLiteral("‹   ") : QString()) + items[i]);
                 p.setPen(QColor("#2468d5"));
                 p.drawText(line, Qt::AlignRight | Qt::AlignVCenter, mark);
+            }
+            if (m_Page == Security) {
+                const int top = 6 + items.size() * 32;
+                p.setPen(QColor("#dce4ec"));
+                p.drawLine(15, top, w - 15, top);
+                font.setPixelSize(12);
+                p.setFont(font);
+                p.setPen(QColor("#52647a"));
+                p.drawText(QRect(15, top + 6, w - 30, h - top - 10), Qt::AlignLeft | Qt::TextWordWrap,
+                    QCoreApplication::translate("SettingsView", "Moonlight sends Win+L when you disconnect manually. The remote PC must support this shortcut. If the connection is lost, Moonlight cannot send it."));
             }
         }
         p.end();
@@ -375,7 +418,9 @@ private:
         return DefWindowProcW(hwnd, msg, wp, lp);
     }
     SDL_Window* m_Window;
-    bool& m_Enabled;
+    StreamingPreferences& m_Preferences;
+    SdlInputHandler& m_Input;
+    bool m_LockOnDisconnect = false;
     int m_Fields, m_Corner, m_Opacity, m_Hover = -1;
     double m_Scale = 1;
     bool m_Open = false, m_ButtonHover = false;

@@ -113,6 +113,7 @@ void Session::clStageFailed(int stage, int errorCode)
 
 void Session::clConnectionTerminated(int errorCode)
 {
+    SDL_AtomicSet(&s_ActiveSession->m_ConnectionEnding, 1);
     unsigned int portFlags = LiGetPortFlagsFromTerminationErrorCode(errorCode);
     s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
 
@@ -1965,6 +1966,11 @@ void Session::start()
     // Initialize the gamepad code with our preferences
     // NB: m_InputHandler must be initialize before starting the connection.
     m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height);
+    connect(m_Preferences, &StreamingPreferences::captureSysKeysModeChanged, this, [this]() {
+        if (m_InputHandler) {
+            m_InputHandler->setCaptureSystemKeysMode(m_Preferences->captureSysKeysMode);
+        }
+    });
 
     // Kick off the async connection thread then return to the caller to pump the event loop
     auto thread = new AsyncConnectionStartThread(this);
@@ -1975,6 +1981,7 @@ void Session::start()
 
 void Session::interrupt()
 {
+    SDL_AtomicSet(&m_ConnectionEnding, 1);
     // Stop any connection in progress
     LiInterruptConnection();
 
@@ -2194,7 +2201,7 @@ void Session::exec()
     Uint32 lastTitleUpdate = SDL_GetTicks();
 #ifdef Q_OS_WIN32
     MIB_IF_ROW2 previousTraffic{};
-    CaptionControls caption(m_Window, m_Preferences->showPerformanceOverlay);
+    CaptionControls caption(m_Window, *m_Preferences, *m_InputHandler);
     const Uint32 hudStart = lastTitleUpdate;
     caption.update();
     previousTraffic.InterfaceIndex = m_StreamInterface;
@@ -2368,6 +2375,7 @@ void Session::exec()
                 if (m_Preferences->muteOnFocusLoss) {
                     m_AudioMuted = false;
                 }
+                m_Preferences->refreshCaptureSysKeysMode();
                 m_InputHandler->notifyFocusGained();
                 break;
             case SDL_WINDOWEVENT_LEAVE:
@@ -2639,6 +2647,13 @@ DispatchDeferredCleanup:
 
     // Raise any keys that are still down
     m_InputHandler->raiseAllKeys();
+
+    // A local window close, disconnect button or quit shortcut reaches here with
+    // live input. stopInputStream() drains reliable keyboard packets during teardown.
+    if (event.type == SDL_QUIT && !SDL_AtomicGet(&m_ConnectionEnding) &&
+            m_Preferences->lockHostOnDisconnect() && !SdlInputHandler::requestHostScreenLock()) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Failed to queue the host screen lock shortcut");
+    }
 
     // Destroy the input handler now. This must be destroyed
     // before allowwing the UI to continue execution or it could

@@ -133,6 +133,7 @@ public:
     int getAttachedGamepadMask();
 
     void raiseAllKeys();
+    static bool requestHostScreenLock();
 
     void notifyMouseLeave();
 
@@ -143,6 +144,8 @@ public:
     bool isCaptureActive();
 
     bool isSystemKeyCaptureActive();
+    StreamingPreferences::CaptureSysKeysMode captureSystemKeysMode() const { return m_CaptureSystemKeysMode; }
+    void setCaptureSystemKeysMode(StreamingPreferences::CaptureSysKeysMode mode);
 
     void setCaptureActive(bool active);
 
@@ -203,7 +206,7 @@ private:
     static
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
-    SDL_Window* m_Window;
+    SDL_Window* m_Window = nullptr;
     bool m_MultiController;
     bool m_GamepadMouse;
     bool m_SwapMouseButtons;

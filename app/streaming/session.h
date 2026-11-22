@@ -197,6 +197,7 @@ private:
 #endif
     bool m_DisconnectOnly = false;
     bool m_ExplicitHostQuit = false;
+    SDL_atomic_t m_ConnectionEnding{};
 
     void notifyMouseEmulationMode(bool enabled);
 

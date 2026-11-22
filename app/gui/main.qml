@@ -421,7 +421,7 @@ ApplicationWindow {
             NavigableToolButton {
                 id: settingsButton
                 visible: isGuiLaunch && !toolBar.devicePage
-                Accessible.name: qsTr("Settings")
+                Accessible.name: qsTranslate("StreamControlCenter", "Control center")
 
                 iconSource:  "qrc:/res/settings.svg"
 
@@ -446,7 +446,7 @@ ApplicationWindow {
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
-                ToolTip.text: qsTr("Settings") + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
+                ToolTip.text: settingsButton.Accessible.name + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
             }
 
             Row {

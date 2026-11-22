@@ -30,6 +30,7 @@
 #define SER_WINDOWMODE "windowmode"
 #define SER_MDNS "mdns"
 #define SER_QUITAPPAFTER "quitAppAfter"
+#define SER_LOCK_HOST_ON_DISCONNECT "lockHostOnDisconnect"
 #define SER_ABSMOUSEMODE "mouseacceleration"
 #define SER_ABSTOUCHMODE "abstouchmode"
 #define SER_STARTWINDOWED "startwindowed"
@@ -102,6 +103,42 @@ StreamingPreferences* StreamingPreferences::get(QQmlEngine *qmlEngine)
     }
 }
 
+static StreamingPreferences::CaptureSysKeysMode readCaptureSysKeysMode(const QSettings& settings)
+{
+    bool ok;
+    const int mode = settings.value(SER_CAPTURESYSKEYS, int(StreamingPreferences::CSK_ALWAYS)).toInt(&ok);
+    if (!ok || mode < StreamingPreferences::CSK_OFF || mode > StreamingPreferences::CSK_ALWAYS)
+        return StreamingPreferences::CSK_ALWAYS;
+    return static_cast<StreamingPreferences::CaptureSysKeysMode>(mode);
+}
+
+void StreamingPreferences::refreshCaptureSysKeysMode()
+{
+    QSettings settings;
+    settings.sync();
+    const auto saved = readCaptureSysKeysMode(settings);
+    // Preserve a command-line override unless the saved policy actually changed.
+    if (m_SavedCaptureSysKeysMode != saved) {
+        m_SavedCaptureSysKeysMode = saved;
+        captureSysKeysMode = saved;
+        emit captureSysKeysModeChanged();
+    }
+}
+
+void StreamingPreferences::setCaptureSysKeysMode(CaptureSysKeysMode mode)
+{
+    if (mode < CSK_OFF || mode > CSK_ALWAYS)
+        return;
+    QSettings settings;
+    settings.setValue(SER_CAPTURESYSKEYS, int(mode));
+    settings.sync();
+    m_SavedCaptureSysKeysMode = mode;
+    if (captureSysKeysMode != mode) {
+        captureSysKeysMode = mode;
+        emit captureSysKeysModeChanged();
+    }
+}
+
 void StreamingPreferences::reload()
 {
     QSettings settings;
@@ -153,8 +190,7 @@ void StreamingPreferences::reload()
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
     enableHdr = settings.value(SER_HDR, false).toBool();
-    captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
-                                                         static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
+    m_SavedCaptureSysKeysMode = captureSysKeysMode = readCaptureSysKeysMode(settings);
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_STEREO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
@@ -320,6 +356,24 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
     }
 }
 
+bool StreamingPreferences::lockHostOnDisconnect() const
+{
+    // A detached stream can outlive the settings page that changes this option.
+    QSettings settings;
+    settings.sync();
+    return settings.value(SER_LOCK_HOST_ON_DISCONNECT, false).toBool();
+}
+
+void StreamingPreferences::setLockHostOnDisconnect(bool enabled)
+{
+    if (lockHostOnDisconnect() != enabled) {
+        QSettings settings;
+        settings.setValue(SER_LOCK_HOST_ON_DISCONNECT, enabled);
+        settings.sync();
+        emit lockHostOnDisconnectChanged();
+    }
+}
+
 void StreamingPreferences::save()
 {
     QSettings settings;
@@ -362,7 +416,6 @@ void StreamingPreferences::save()
     settings.setValue(SER_BACKGROUNDGAMEPAD, backgroundGamepad);
     settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
-    settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
 }
 

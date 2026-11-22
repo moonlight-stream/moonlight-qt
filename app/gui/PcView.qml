@@ -187,7 +187,7 @@ FocusScope {
             id: railSettings
             anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 6 }
             height: 40
-            text: qsTranslate("main", "Settings")
+            text: qsTranslate("StreamControlCenter", "Control center")
             icon.source: "qrc:/res/settings.svg"
             icon.width: 18; icon.height: 18
             highlighted: devices.showingSettings

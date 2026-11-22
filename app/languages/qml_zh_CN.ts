@@ -740,6 +740,13 @@
 </context>
 <context>
     <name>SettingsView</name>
+    <message><source>Off</source><translation>关闭</translation></message>
+    <message><source>Fullscreen only</source><translation>仅全屏时</translation></message>
+    <message><source>Always</source><translation>始终</translation></message>
+    <message><source>Security</source><translation>安全</translation></message>
+    <message><source>Session security</source><translation>会话安全</translation></message>
+    <message><source>Lock the remote PC when I disconnect</source><translation>主动断开远控时锁定被控电脑</translation></message>
+    <message><source>Moonlight sends Win+L when you disconnect manually. The remote PC must support this shortcut. If the connection is lost, Moonlight cannot send it.</source><translation>主动断开时，Moonlight 会向被控电脑发送 Win+L。被控电脑需支持此快捷键。连接意外中断时无法发送。</translation></message>
     <message><source>General</source><translation>常规</translation></message>
     <message><source>Streaming</source><translation>串流</translation></message>
     <message><source>Input</source><translation>输入</translation></message>
@@ -1419,6 +1426,9 @@
 </context>
 <context>
     <name>StreamControlCenter</name>
+    <message><source>HUD settings</source><translation>统计浮层设置</translation></message>
+    <message><source>Security</source><translation>安全</translation></message>
+    <message><source>Send Win+L on disconnect</source><translation>主动断开时锁定被控电脑</translation></message>
     <message><source>Duration</source><translation>连接时长</translation></message>
     <message><source>Frame rate</source><translation>帧率</translation></message>
     <message><source>Network RTT</source><translation>网络延迟</translation></message>

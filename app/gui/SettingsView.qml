@@ -11,9 +11,13 @@ import SystemProperties 1.0
 
 FocusScope {
     id: settingsPage
-    Material.accent: "#167384"
-    Material.foreground: "#233d50"
-    objectName: qsTr("Settings")
+    readonly property var categoryNames: [qsTr("General"), qsTr("Streaming"), qsTr("Input"),
+                                          qsTr("Security"), qsTr("Advanced")]
+    readonly property bool compactNavigation: width < 490
+    readonly property int pageGutter: width < 600 ? 12 : 24
+    Material.accent: "#2468d5"
+    Material.foreground: "#24364b"
+    objectName: qsTranslate("StreamControlCenter", "Control center")
 
     signal languageChanged()
 
@@ -24,7 +28,10 @@ FocusScope {
 
         // Highlight the first item if a gamepad is connected
         if (SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
-            categories.currentItem.forceActiveFocus(Qt.TabFocus)
+            if (compactNavigation)
+                categoryPicker.forceActiveFocus(Qt.TabFocusReason)
+            else if (categories.currentItem)
+                categories.currentItem.forceActiveFocus(Qt.TabFocusReason)
         }
     }
 
@@ -37,29 +44,50 @@ FocusScope {
 
     Column {
         id: header
-        anchors { left: parent.left; right: parent.right; top: parent.top }
-        leftPadding: settingsPage.width < 600 ? 12 : 28
+        width: Math.min(parent.width, 1030)
+        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
+        leftPadding: settingsPage.pageGutter
         rightPadding: leftPadding
-        topPadding: 18; spacing: 8
+        topPadding: settingsPage.compactNavigation ? 12 : 18
+        spacing: 10
         Label {
             text: settingsPage.objectName
-            font.pixelSize: 22; font.bold: true; color: "#203d4b"
+            font.pixelSize: 22; font.bold: true; color: "#182b46"
+        }
+        ComboBox {
+            id: categoryPicker
+            visible: settingsPage.compactNavigation
+            width: parent.width - parent.leftPadding - parent.rightPadding
+            model: settingsPage.categoryNames
+            currentIndex: categories.currentIndex
+            Accessible.name: settingsPage.objectName + " · " + currentText
+            onActivated: categories.currentIndex = index
         }
         TabBar {
             id: categories
+            visible: !settingsPage.compactNavigation
             width: parent.width - parent.leftPadding - parent.rightPadding
-            background: Rectangle { color: "transparent" }
+            spacing: 0
+            background: Rectangle { color: "#edf2f9"; radius: 8 }
             onCurrentIndexChanged: if (scroller) { autoScrollAnimation.stop(); scroller.contentY = 0 }
             Repeater {
-                model: [qsTr("General"), qsTr("Streaming"), qsTr("Input"), qsTr("Advanced")]
+                model: settingsPage.categoryNames
                 TabButton {
-                    width: Math.min(implicitWidth + 12, categories.width / 4)
+                    id: category
+                    width: categories.availableWidth / Math.max(1, categories.count)
+                    height: 40
                     text: modelData
                     Accessible.name: text
+                    hoverEnabled: true
+                    background: Rectangle {
+                        radius: 7
+                        color: category.checked ? "#dce8fa" : category.hovered ? "#e5ecf5" : "transparent"
+                        border.color: category.visualFocus ? "#2468d5" : "transparent"
+                    }
                     contentItem: Label {
                         Accessible.ignored: true
-                        text: parent.text; color: parent.checked ? "#116c7b" : "#536d79"
-                        font.bold: parent.checked; elide: Text.ElideRight
+                        text: category.text; color: category.checked ? "#164b9f" : "#465b75"
+                        font.bold: category.checked; elide: Text.ElideRight
                         horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
                     }
                 }
@@ -123,7 +151,7 @@ FocusScope {
             id: sections
             width: Math.min(scroller.width, 1030)
             anchors.horizontalCenter: parent.horizontalCenter
-            padding: settingsPage.width < 600 ? 12 : 24
+            padding: settingsPage.pageGutter
             spacing: 14
 
             SettingsSection {
@@ -753,13 +781,13 @@ FocusScope {
                             hoverEnabled: true
                             contentItem: Label {
                                 text: resetBitrateButton.text; font: resetBitrateButton.font
-                                color: "#126575"
+                                color: "#164b9f"
                                 horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
                             }
                             background: Rectangle {
                                 radius: 5
-                                color: resetBitrateButton.down ? "#cde5e8" : resetBitrateButton.hovered ? "#dceef0" : "#edf6f6"
-                                border.color: resetBitrateButton.visualFocus ? "#167384" : "#cadfe1"
+                                color: resetBitrateButton.down ? "#d6e5fb" : resetBitrateButton.hovered ? "#e3edfc" : "#f1f5fb"
+                                border.color: resetBitrateButton.visualFocus ? "#2468d5" : "#cbdaf0"
                             }
                             text: qsTr("Use Default (%1 Mbps)").arg(StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444) / 1000.0)
                             visible: StreamingPreferences.bitrateKbps !== StreamingPreferences.getDefaultBitrate(StreamingPreferences.width, StreamingPreferences.height, StreamingPreferences.fps, StreamingPreferences.enableYUV444)
@@ -1415,75 +1443,33 @@ FocusScope {
                         width: parent.width
                         spacing: 10
 
-                        CheckBox {
-                            id: captureSysKeysCheck
+                        Label {
+                            id: captureSysKeysLabel
                             Layout.fillWidth: true
-                            hoverEnabled: true
                             text: qsTr("Capture system keyboard shortcuts")
                             font.pixelSize: 14
-                            enabled: SystemProperties.hasDesktopEnvironment
-                            checked: StreamingPreferences.captureSysKeysMode !== StreamingPreferences.CSK_OFF || !SystemProperties.hasDesktopEnvironment
-
-                            SettingsToolTip {
-                                timeout: 10000
-                                text: qsTr("This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.") + "\n\n" +
-                                      qsTr("NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.")
-                            }
+                            wrapMode: Text.Wrap
                         }
 
                         AutoResizingComboBox {
                             Layout.maximumWidth: parent.width * 0.55
-                            // ignore setting the index at first, and actually set it when the component is loaded
-                            Component.onCompleted: {
-                                if (!SystemProperties.hasDesktopEnvironment) {
-                                    // Do nothing if the control won't even be visible
-                                    return
-                                }
+                            Accessible.name: captureSysKeysLabel.text
+                            model: [qsTr("Off"), qsTr("Fullscreen only"), qsTr("Always")]
+                            enabled: SystemProperties.hasDesktopEnvironment
+                            currentIndex: enabled ? StreamingPreferences.captureSysKeysMode : StreamingPreferences.CSK_ALWAYS
+                            onActivated: function(index) { StreamingPreferences.captureSysKeysMode = index }
+                            Component.onCompleted: StreamingPreferences.refreshCaptureSysKeysMode()
 
-                                var saved_syskeysmode = StreamingPreferences.captureSysKeysMode
-                                currentIndex = 0
-                                for (var i = 0; i < captureSysKeysModeListModel.count; i++) {
-                                    var el_syskeysmode = captureSysKeysModeListModel.get(i).val;
-                                    if (saved_syskeysmode === el_syskeysmode) {
-                                        currentIndex = i
-                                        break
-                                    }
-                                }
-
-                                activated(currentIndex)
-                            }
-
-                            enabled: captureSysKeysCheck.checked && captureSysKeysCheck.enabled
-                            textRole: "text"
-                            model: ListModel {
-                                id: captureSysKeysModeListModel
-                                ListElement {
-                                    text: qsTr("in fullscreen")
-                                    val: StreamingPreferences.CSK_FULLSCREEN
-                                }
-                                ListElement {
-                                    text: qsTr("always")
-                                    val: StreamingPreferences.CSK_ALWAYS
+                            Connections {
+                                target: window
+                                function onActiveChanged() {
+                                    if (window.active) StreamingPreferences.refreshCaptureSysKeysMode()
                                 }
                             }
-
-                            function updatePref() {
-                                if (!enabled) {
-                                    StreamingPreferences.captureSysKeysMode = StreamingPreferences.CSK_OFF
-                                }
-                                else {
-                                    StreamingPreferences.captureSysKeysMode = captureSysKeysModeListModel.get(currentIndex).val
-                                }
-                            }
-
-                            // ::onActivated must be used, as it only listens for when the index is changed by a human
-                            onActivated: {
-                                updatePref()
-                            }
-
-                            // This handles transition of the checkbox state
-                            onEnabledChanged: {
-                                updatePref()
+                            SettingsToolTip {
+                                timeout: 10000
+                                text: qsTr("This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.") + "\n\n" +
+                                      qsTr("NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.")
                             }
                         }
                     }
@@ -1604,8 +1590,43 @@ FocusScope {
             }
 
             SettingsSection {
-                id: advancedSettingsGroupBox
                 visible: categories.currentIndex === 3
+                width: parent.width - parent.leftPadding - parent.rightPadding
+                padding: 12
+                title: qsTr("Session security")
+
+                Column {
+                    width: parent.width
+                    spacing: 6
+                    SettingsSwitch {
+                        id: lockHostSwitch
+                        text: qsTr("Lock the remote PC when I disconnect")
+                        Component.onCompleted: checked = StreamingPreferences.lockHostOnDisconnect
+                        Accessible.description: lockHelp.text
+                        onToggled: StreamingPreferences.lockHostOnDisconnect = checked
+                        Connections {
+                            target: window
+                            function onActiveChanged() {
+                                if (window.active)
+                                    lockHostSwitch.checked = StreamingPreferences.lockHostOnDisconnect
+                            }
+                        }
+                    }
+                    Label {
+                        id: lockHelp
+                        width: parent.width
+                        leftPadding: 12; rightPadding: 12
+                        text: qsTr("Moonlight sends Win+L when you disconnect manually. The remote PC must support this shortcut. If the connection is lost, Moonlight cannot send it.")
+                        color: "#52647a"
+                        font.pixelSize: 13
+                        wrapMode: Text.Wrap
+                    }
+                }
+            }
+
+            SettingsSection {
+                id: advancedSettingsGroupBox
+                visible: categories.currentIndex === 4
                 width: (parent.width - (parent.leftPadding + parent.rightPadding))
                 padding: 12
                 title: qsTr("Advanced Settings")

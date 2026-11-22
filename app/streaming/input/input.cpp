@@ -279,6 +279,9 @@ void SdlInputHandler::notifyFocusLost()
     if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) && !m_AbsoluteMouseMode) {
         setCaptureActive(false);
     }
+    else {
+        updateKeyboardGrabState();
+    }
 
     // Raise all keys that are currently pressed. If we don't do this, certain keys
     // used in shortcuts that cause focus loss (such as Alt+Tab) may get stuck down.
@@ -287,6 +290,7 @@ void SdlInputHandler::notifyFocusLost()
 
 void SdlInputHandler::notifyFocusGained()
 {
+    updateKeyboardGrabState();
 }
 
 bool SdlInputHandler::isCaptureActive()
@@ -299,16 +303,28 @@ bool SdlInputHandler::isCaptureActive()
     return m_FakeMouseCaptureActive;
 }
 
+void SdlInputHandler::setCaptureSystemKeysMode(StreamingPreferences::CaptureSysKeysMode mode)
+{
+    if (!WMUtils::isRunningDesktopEnvironment()) {
+        mode = StreamingPreferences::CSK_ALWAYS;
+    }
+    if (mode != m_CaptureSystemKeysMode) {
+        m_CaptureSystemKeysMode = mode;
+        if (m_Window) {
+            updateKeyboardGrabState();
+        }
+    }
+}
+
 void SdlInputHandler::updateKeyboardGrabState()
 {
-    bool shouldGrab = m_CaptureSystemKeysMode != StreamingPreferences::CSK_OFF && isCaptureActive();
-    if (shouldGrab) {
-        Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
-        if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN &&
-            !(windowFlags & SDL_WINDOW_FULLSCREEN)) {
-            // Ungrab if it's fullscreen only and we left fullscreen
-            shouldGrab = false;
-        }
+    const Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
+    const bool shouldGrab = (windowFlags & SDL_WINDOW_INPUT_FOCUS) && isCaptureActive() &&
+            (m_CaptureSystemKeysMode == StreamingPreferences::CSK_ALWAYS ||
+             (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN && (windowFlags & SDL_WINDOW_FULLSCREEN)));
+    if (m_KeyboardCaptureActive && !shouldGrab) {
+        // A captured modifier's key-up may now go to the local desktop.
+        raiseAllKeys();
     }
 
     // Don't close the window on Alt+F4 when keyboard grab is enabled
@@ -318,6 +334,8 @@ void SdlInputHandler::updateKeyboardGrabState()
     // On SDL 2.0.15+, we can get keyboard-only grab on Win32, X11, and Wayland.
     // SDL 2.0.18 adds keyboard grab on macOS (if built with non-AppStore APIs).
     SDL_SetWindowKeyboardGrab(m_Window, shouldGrab ? SDL_TRUE : SDL_FALSE);
+#else
+    SDL_SetHintWithPriority(SDL_HINT_GRAB_KEYBOARD, shouldGrab ? "1" : "0", SDL_HINT_OVERRIDE);
 #endif
 
     m_KeyboardCaptureActive = shouldGrab;
