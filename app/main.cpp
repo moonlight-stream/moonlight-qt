@@ -972,8 +972,10 @@ int main(int argc, char *argv[])
 
     // Create the identity manager on the main thread.
     // An unusable loaded identity is fatal.
+    IdentityManager::IdentitySource identitySource = parser.isIdentityStdinRequested() ?
+                IdentityManager::IdentitySource::Stdin : IdentityManager::configuredSource();
     QString identityError;
-    if (!IdentityManager::initialize(IdentityManager::configuredSource(), &identityError)) {
+    if (!IdentityManager::initialize(identitySource, &identityError)) {
         fprintf(stderr, "Error: %s\n", qPrintable(identityError));
         if (commandLineParserResult == GlobalCommandLineParser::NormalStartRequested) {
             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Moonlight", qPrintable(identityError), nullptr);

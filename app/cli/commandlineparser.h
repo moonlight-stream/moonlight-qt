@@ -21,6 +21,11 @@ public:
 
     ParseResult parse(const QStringList &args);
 
+    // True if --identity-stdin was given
+    bool isIdentityStdinRequested() const;
+
+private:
+    bool m_IdentityStdin;
 };
 
 class QuitCommandLineParser
