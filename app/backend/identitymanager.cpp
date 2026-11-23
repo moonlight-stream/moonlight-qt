@@ -2,6 +2,8 @@
 #include "utils.h"
 
 #include <QDebug>
+#include <QDateTime>
+#include <QCryptographicHash>
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
@@ -131,6 +133,8 @@ IdentityManager::IdentityManager()
         qFatal("Private key is unreadable");
     }
 
+    logIdentityDetails(m_IdentitySource, m_CachedPemCert, m_CachedPrivateKey);
+
     // Load the unique ID from settings
     m_CachedUniqueId = settings.value(SER_UNIQUEID).toString();
     if (!m_CachedUniqueId.isEmpty()) {
@@ -154,6 +158,7 @@ IdentityManager::loadIdentityFromSettings(QSettings& settings, QString* error)
     // This source never fails, since an unusable identity here is replaced
     Q_UNUSED(error);
 
+    m_IdentitySource = "settings";
     m_CachedPemCert = settings.value(SER_CERT).toByteArray();
     m_CachedPrivateKey = settings.value(SER_KEY).toByteArray();
 
@@ -173,6 +178,87 @@ IdentityManager::loadIdentityFromSettings(QSettings& settings, QString* error)
         createCredentials(settings);
     }
     return true;
+}
+
+QString
+IdentityManager::describeCertificate(const QSslCertificate& cert)
+{
+    if (cert.isNull()) {
+        return "<null certificate>";
+    }
+
+    QStringList sans;
+    const auto altNames = cert.subjectAlternativeNames();
+    for (auto it = altNames.constBegin(); it != altNames.constEnd(); ++it) {
+        sans << (it.key() == QSsl::DnsEntry ? "DNS:" : "IP:") + it.value();
+    }
+
+    // The public key hash identifies the key pair independently of any one certificate
+    QString spkiSha256;
+    QByteArray der = cert.toDer();
+    const unsigned char* derData = reinterpret_cast<const unsigned char*>(der.constData());
+    X509* x509 = d2i_X509(nullptr, &derData, der.size());
+    if (x509 != nullptr) {
+        unsigned char* spki = nullptr;
+        int spkiLength = i2d_X509_PUBKEY(X509_get_X509_PUBKEY(x509), &spki);
+        if (spkiLength > 0) {
+            QByteArray spkiDer(reinterpret_cast<const char*>(spki), spkiLength);
+            spkiSha256 = QString::fromLatin1(QCryptographicHash::hash(spkiDer, QCryptographicHash::Sha256).toHex(':'));
+            OPENSSL_free(spki);
+        }
+        X509_free(x509);
+    }
+
+    return QString("subject=[CN=%1, O=%2, OU=%3] issuer=[CN=%4, O=%5] serial=%6 "
+                   "valid=%7..%8 SAN=[%9] sha256=%10 spki-sha256=%11")
+            .arg(cert.subjectInfo(QSslCertificate::CommonName).join('/'),
+                 cert.subjectInfo(QSslCertificate::Organization).join('/'),
+                 cert.subjectInfo(QSslCertificate::OrganizationalUnitName).join('/'),
+                 cert.issuerInfo(QSslCertificate::CommonName).join('/'),
+                 cert.issuerInfo(QSslCertificate::Organization).join('/'),
+                 QString::fromLatin1(cert.serialNumber()),
+                 cert.effectiveDate().toString(Qt::ISODate),
+                 cert.expiryDate().toString(Qt::ISODate),
+                 sans.join(", "))
+            .arg(QString::fromLatin1(cert.digest(QCryptographicHash::Sha256).toHex(':')),
+                 spkiSha256.isEmpty() ? "<unknown>" : spkiSha256);
+}
+
+void
+IdentityManager::logIdentityDetails(const QString& source, const QByteArray& pemCert, const QByteArray& pemKey)
+{
+    QList<QSslCertificate> chain = QSslCertificate::fromData(pemCert);
+    qInfo().noquote() << "Client identity from" << source << "contains" << chain.size() << "certificate(s)";
+
+    QDateTime now = QDateTime::currentDateTimeUtc();
+    for (int i = 0; i < chain.size(); i++) {
+        const QSslCertificate& cert = chain[i];
+        qInfo().noquote() << QString("Client chain[%1]%2: %3").arg(i).arg(i == 0 ? " (leaf)" : "",
+                                                                      describeCertificate(cert));
+
+        if (now < cert.effectiveDate() || now > cert.expiryDate()) {
+            qWarning() << "Client chain[" << i << "] is outside its validity period";
+        }
+    }
+
+    // Never log the key itself, only what kind of key it is
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    BIO* bio = BIO_new_mem_buf(const_cast<char*>(pemKey.constData()), pemKey.size());
+#else
+    BIO* bio = BIO_new_mem_buf(pemKey.constData(), pemKey.size());
+#endif
+    if (bio != nullptr) {
+        EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, refusePassphrase, nullptr);
+        if (pk == nullptr) {
+            qWarning() << "OpenSSL could not parse the private key (encrypted or unsupported format?)";
+        }
+        else {
+            qInfo() << "Client private key: type" << EVP_PKEY_base_id(pk) << "bits" << EVP_PKEY_bits(pk);
+            EVP_PKEY_free(pk);
+        }
+        BIO_free(bio);
+        ERR_clear_error();
+    }
 }
 
 QString

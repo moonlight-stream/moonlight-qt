@@ -31,6 +31,12 @@ public:
     bool
     validateIdentity(const QByteArray& pemCert, const QByteArray& pemKey, QString* error);
 
+    // One-line summary (subject, issuer, serial, validity, SANs, SHA-256 of the
+    // certificate and of its public key) for diagnostics
+    static
+    QString
+    describeCertificate(const QSslCertificate& cert);
+
     // Human-readable description of a problem found with the client identity at
     // startup that the user should be told about, or empty if none
     QString
@@ -61,11 +67,17 @@ private:
     bool
     loadIdentityFromSettings(QSettings& settings, QString* error);
 
+    // Logs the certificate chain and the key type, never the key material itself
+    static
+    void
+    logIdentityDetails(const QString& source, const QByteArray& pemCert, const QByteArray& pemKey);
+
     // Initialized in constructor
     QByteArray m_CachedPrivateKey;
     QByteArray m_CachedPemCert;
 
     QString m_IdentityProblem;
+    QString m_IdentitySource;
 
     // Lazy initialized
     QString m_CachedUniqueId;
