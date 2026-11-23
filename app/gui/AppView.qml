@@ -375,5 +375,5 @@ CenteredGridView {
         onAccepted: quitApp()
     }
 
-    ScrollBar.vertical: ScrollBar {}
+    ScrollBar.vertical: AppScrollBar {}
 }

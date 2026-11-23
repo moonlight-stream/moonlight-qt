@@ -1,6 +1,7 @@
 #include "filetransferengine.h"
 #include "filetransfercheckpoint.h"
 #include "transferfilehash.h"
+#include "shellfiledrop.h"
 #include "backend/identitymanager.h"
 
 #include <QDir>
@@ -14,8 +15,10 @@
 #include <QNetworkReply>
 #include <QRegularExpression>
 #include <QScopeGuard>
+#include <QSet>
 #include <QStandardPaths>
 #include <QStorageInfo>
+#include <QTemporaryDir>
 #include <QTemporaryFile>
 #include <QTimer>
 #include <QUuid>
@@ -31,6 +34,13 @@ using Flag = std::shared_ptr<std::atomic_bool>;
 using Params = QList<QPair<QString, QString>>;
 using Progress = std::function<void(qint64)>;
 using Engine = FileTransferEngine;
+using FileAction = Engine::FileAction;
+using ConflictResolver = std::function<Engine::ConflictChoice(bool, const QString&, const QString&)>;
+
+struct CopyTarget {
+    QString path;
+    QString replaceVersion; // Empty means that publication must not overwrite anything.
+};
 
 namespace ck = transfer_checkpoint;
 struct Failure { QString message; bool interrupted = false; int code = 0; };
@@ -63,6 +73,70 @@ QString childPath(const QString& parent, const QString& name)
     return parent.endsWith('/') ? parent + name : parent + '/' + name;
 }
 
+bool validRemoteDragPath(const QString& path)
+{
+    if (!driveRoot(path.left(3))) return false;
+    if (path.size() == 3) return true;
+    const auto parts = path.mid(3).split('/');
+    return std::all_of(parts.cbegin(), parts.cend(), safeName);
+}
+
+QString availableCopyName(const QString& name, const QSet<QString>& existing)
+{
+    if (!existing.contains(name.toCaseFolded())) return name;
+    const int dot = name.lastIndexOf('.');
+    const auto stem = dot > 0 ? name.left(dot) : name;
+    const auto extension = dot > 0 ? name.mid(dot) : QString();
+    for (int n = 1; ; ++n) {
+        const QString suffix = n == 1 ? Engine::tr(" - Copy") : Engine::tr(" - Copy (%1)").arg(n);
+        const bool keepExtension = suffix.size() + extension.size() < 255;
+        const auto ending = suffix + (keepExtension ? extension : QString());
+        auto prefix = (keepExtension ? stem : name).left(255 - ending.size());
+        if (!prefix.isEmpty() && prefix.back().isHighSurrogate()) prefix.chop(1);
+        const auto candidate = prefix + ending;
+        if (!existing.contains(candidate.toCaseFolded())) return candidate;
+    }
+}
+
+QString localFileVersion(const QString& path)
+{
+    auto file = ck::open(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                         OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS);
+    BY_HANDLE_FILE_INFORMATION info{};
+    FILE_BASIC_INFO basic{};
+    if (!file || !ck::regular(file.get(), info) ||
+        !GetFileInformationByHandleEx(file.get(), FileBasicInfo, &basic, sizeof(basic))) return {};
+    const auto size = (quint64(info.nFileSizeHigh) << 32) | info.nFileSizeLow;
+    return ck::identity(info) + '-' + QString::number(size) + '-' + QString::number(basic.ChangeTime.QuadPart);
+}
+
+void checkReplacement(const CopyTarget& target)
+{
+    if (target.replaceVersion != localFileVersion(target.path))
+        throw Failure{Engine::tr("The file changed or is in use: %1").arg(target.path)};
+}
+
+// Keep the old file in place while a local copy or a legacy download is being written.
+void writeLocalCopy(const CopyTarget& target, const Flag& cancelled, const std::function<void(const QString&)>& write)
+{
+    if (target.replaceVersion.isEmpty()) {
+        write(target.path);
+        return;
+    }
+    const auto parent = QFileInfo(target.path).absolutePath();
+    std::vector<ck::Handle> pins;
+    if (!ck::pinDirectory(parent, pins)) throw Failure{Engine::tr("Cannot open folder: %1").arg(parent)};
+    QTemporaryDir staging(QDir(parent).filePath(".moonlight-XXXXXX"));
+    if (!staging.isValid()) throw Failure{staging.errorString()};
+    const auto staged = staging.filePath("file");
+    write(staged);
+    checkCancelled(cancelled);
+    checkReplacement(target);
+    if (!MoveFileExW(qUtf16Printable(QDir::toNativeSeparators(staged)), qUtf16Printable(QDir::toNativeSeparators(target.path)),
+                     MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH))
+        throw Failure{Engine::tr("The file changed or is in use: %1").arg(target.path)};
+}
+
 QList<TransferEntry> localList(const QString& path, const Flag& cancelled)
 {
     QList<TransferEntry> entries;
@@ -92,9 +166,10 @@ QList<TransferEntry> localList(const QString& path, const Flag& cancelled)
 class Worker
 {
 public:
-    Worker(QUrl host, const QSslConfiguration& ssl, QByteArray token, Flag cancelled, bool standalone) :
+    Worker(QUrl host, const QSslConfiguration& ssl, QByteArray token, Flag cancelled, bool standalone,
+           ConflictResolver resolve = {}) :
         host(std::move(host)), certificate(ssl.caCertificates().value(0)), cancelled(std::move(cancelled)),
-        needsSession(standalone)
+        needsSession(standalone), resolveConflict(std::move(resolve))
     {
         network.setProxy(QNetworkProxy::NoProxy);
         request.setSslConfiguration(ssl);
@@ -104,11 +179,18 @@ public:
         request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
     }
 
-    QList<TransferEntry> list(bool remote, const QString& path)
+    QList<TransferEntry> list(bool remote, const QString& path, const QString& name = {})
     {
         checkCancelled(cancelled);
-        if (!remote) return localList(path, cancelled);
-        const auto payload = exchange("list", {{"path", path}}, nullptr, ListLimit);
+        if (!remote) {
+            if (name.isEmpty()) return localList(path, cancelled);
+            const QFileInfo info(childPath(path, name));
+            if (!info.exists() && !info.isSymLink() && !info.isJunction()) return {};
+            return {{name, info.absoluteFilePath(), info.isDir(), info.size(), info.lastModified(), localFileVersion(info.absoluteFilePath())}};
+        }
+        Params params{{"path", path}};
+        if (!name.isEmpty()) params.append({"name", name});
+        const auto payload = exchange("list", params, nullptr, ListLimit);
         const auto array = QJsonDocument::fromJson(payload).object().value("entries");
         const Failure invalid{Engine::tr("Invalid folder listing from host")};
         if (!array.isArray()) throw invalid;
@@ -121,6 +203,7 @@ public:
             entry.path = obj.value("path").toString();
             if (!obj.value("directory").isBool()) throw invalid;
             entry.directory = obj.value("directory").toBool();
+            entry.replaceVersion = obj.value("replaceVersion").toString();
             if (path.isEmpty()) {
                 if (!driveRoot(entry.path) || !entry.directory) throw invalid;
                 entry.name = entry.path;
@@ -174,6 +257,41 @@ public:
         return result;
     }
 
+    FileDragLocation dragLocation(bool source, QPoint position)
+    {
+        const auto payload = exchange(source ? "drag-source" : "drop-target",
+                                      {{"x", QString::number(position.x())}, {"y", QString::number(position.y())}}, nullptr, ListLimit);
+        const auto obj = QJsonDocument::fromJson(payload).object();
+        const Failure invalid{Engine::tr("Invalid folder listing from host")};
+        FileDragLocation result;
+        if (!source) {
+            if (!obj.value("directory").isString()) throw invalid;
+            result.folder = obj.value("directory").toString();
+            if (!result.folder.isEmpty() && !validRemoteDragPath(result.folder)) throw invalid;
+            return result;
+        }
+        if (!obj.value("entries").isArray()) throw invalid;
+        const auto entries = obj.value("entries").toArray();
+        QSet<QString> names;
+        if (entries.size() > 4096) throw invalid;
+        for (const auto item : entries) {
+            const auto record = item.toObject();
+            TransferEntry entry;
+            entry.path = record.value("path").toString();
+            entry.name = record.value("name").toString();
+            bool sizeOk, timeOk;
+            entry.size = record.value("size").toString().toLongLong(&sizeOk);
+            entry.modified = QDateTime::fromMSecsSinceEpoch(record.value("modified").toString().toLongLong(&timeOk));
+            if (!validRemoteDragPath(entry.path) || !safeName(entry.name) ||
+                entry.path.section('/', -1) != entry.name || !record.value("directory").isBool() ||
+                !sizeOk || entry.size < 0 || !timeOk || names.contains(entry.name.toCaseFolded())) throw invalid;
+            entry.directory = record.value("directory").toBool();
+            names.insert(entry.name.toCaseFolded());
+            result.entries.append(std::move(entry));
+        }
+        return result;
+    }
+
     void makeDirectory(bool remote, const QString& parent, const QString& name)
     {
         if (parent.isEmpty() || !safeName(name))
@@ -185,17 +303,66 @@ public:
             throw Failure{Engine::tr("Cannot create folder: %1").arg(path)};
     }
 
+    void manageFiles(FileAction action, bool remote, const QList<TransferEntry>& entries, const QString& folder)
+    {
+        if (folder.isEmpty() || !QDir::isAbsolutePath(folder) || entries.isEmpty() ||
+            (action == FileAction::DownloadToOpen && (!remote || entries.size() != 1)))
+            throw Failure{Engine::tr("Invalid file or folder: %1").arg(folder)};
+        for (const auto& entry : entries) {
+            if (entry.directory || entry.size < 0 || !safeName(entry.name) || !QDir::isAbsolutePath(entry.path) ||
+                QFileInfo(entry.path).fileName() != entry.name ||
+                (action == FileAction::Delete && QDir::cleanPath(entry.path).compare(QDir::cleanPath(childPath(folder, entry.name)), Qt::CaseInsensitive) != 0))
+                throw Failure{Engine::tr("Invalid file or folder: %1").arg(entry.path)};
+        }
+        if (action == FileAction::DownloadToOpen) {
+            const auto& entry = entries.first();
+            const auto target = childPath(folder, entry.name);
+            download(entry, target, [](qint64) {});
+            // Preserve Windows attachment checks when opening the downloaded file with its default application.
+            QFile zone(target + QStringLiteral(":Zone.Identifier"));
+            const QByteArray mark("[ZoneTransfer]\r\nZoneId=3\r\n");
+            if (!zone.open(QIODevice::WriteOnly) || zone.write(mark) != mark.size() || !zone.flush())
+                throw Failure{zone.errorString()};
+            return;
+        }
+        if (remote && action == FileAction::Delete) {
+            const auto allowed = capabilities().value("deleteFiles");
+            if (!allowed.isBool()) throw Failure{Engine::tr("Update Sunshine to delete remote files.")};
+            if (!allowed.toBool()) throw Failure{Engine::tr("Enable “Allow file deletion” in Sunshine under Configuration → Input.")};
+        }
+        for (const auto& entry : entries) {
+            checkCancelled(cancelled);
+            if (!remote) {
+                const QFileInfo info(entry.path);
+                if (!info.isFile() || info.isSymLink() || info.isJunction() || info.size() != entry.size ||
+                    (entry.modified.isValid() && info.lastModified() != entry.modified))
+                    throw Failure{Engine::tr("Source changed: %1").arg(entry.path)};
+            }
+            if (action == FileAction::Delete) {
+                deleteFile(remote, entry);
+            } else {
+                const auto target = chooseTarget(remote, entry, folder, true);
+                if (!target) continue;
+                if (remote) {
+                    writeChunks(*target, entry.size, [&](qint64 offset, qint64 count) {
+                        return readBlock(entry, offset, count);
+                    }, [](qint64) {});
+                } else {
+                    writeLocalCopy(*target, cancelled, [&](const QString& path) {
+                        QFile file(entry.path);
+                        if (!file.copy(path)) throw Failure{QStringLiteral("%1\n%2").arg(path, file.errorString())};
+                    });
+                }
+            }
+        }
+    }
+
     std::shared_ptr<ck::Journal> copy(bool fromRemote, const TransferEntry& entry, const QString& folder,
                                      const Progress& report, const Flag& closing)
     {
         const auto target = childPath(folder, entry.name);
         try {
-            QJsonDocument caps;
-            try { caps = QJsonDocument::fromJson(exchange("capabilities", {}, nullptr)); }
-            catch (const Failure& e) {
-                if (e.code != 400 && e.code != 404 && e.code != 405) throw;
-            }
-            if (caps.object().value("version").toInt() >= 2) openJournal(fromRemote, entry, target);
+            if (capabilities().value("version").toInt() >= 2) openJournal(fromRemote, entry, target);
             copyEntry(fromRemote, entry, folder, report);
         } catch (const Failure& e) {
             if (!*closing && (*cancelled || !e.interrupted)) {
@@ -218,8 +385,10 @@ public:
 
     qint64 bytes = 0;
     qint64 wireBytes = 0;
+    int skipped = 0;
 
-    void copyEntry(bool fromRemote, const TransferEntry& entry, const QString& parent, const Progress& report, int depth = 0)
+    void copyEntry(bool fromRemote, const TransferEntry& entry, const QString& parent, const Progress& report,
+                   int depth = 0, bool newParent = false)
     {
         checkCancelled(cancelled);
         if (parent.isEmpty() || !safeName(entry.name) || depth > 128)
@@ -230,22 +399,45 @@ public:
                 throw Failure{Engine::tr("Source changed: %1").arg(entry.path)};
         }
         const auto destination = childPath(parent, entry.name);
-        if (!journal && fromRemote && QFileInfo::exists(destination))
-            throw Failure{Engine::tr("Destination already exists: %1").arg(destination)};
         if (entry.directory) {
             const auto children = list(fromRemote, entry.path);
-            if (journal) {
-                createJobDirectory(fromRemote, parent, entry.name, destination);
-            } else {
-                makeDirectory(!fromRemote, parent, entry.name);
+            bool created = true;
+            if (journal) created = createJobDirectory(fromRemote, parent, entry.name, destination);
+            else makeDirectory(!fromRemote, parent, entry.name);
+            for (const auto& child : children) copyEntry(fromRemote, child, destination, report, depth + 1, created);
+            return;
+        }
+
+        auto state = journal ? record(destination) : QJsonObject{};
+        CopyTarget target{destination, state.value("replace").toString()};
+        const auto savedName = state.value("copyName").toString();
+        if (!savedName.isEmpty()) {
+            if (!safeName(savedName) || !target.replaceVersion.isEmpty()) throw Failure{Engine::tr("Cannot read transfer checkpoint")};
+            target.path = childPath(parent, savedName);
+        } else if (state.value("skipped").toBool()) {
+            ++skipped;
+            return;
+        } else if (!newParent && target.replaceVersion.isEmpty() && !state.contains("sha256") && !state.contains("identity")) {
+            // Older checkpoints already own their partial file or publication receipt.
+            // A fresh copy asks before writing and remembers the decision across a restart.
+            const auto choice = chooseTarget(!fromRemote, entry, parent, false);
+            if (!choice) {
+                ++skipped;
+                state.insert("skipped", true);
+                if (journal) save(state);
+                return;
             }
-            for (const auto& child : children) copyEntry(fromRemote, child, destination, report, depth + 1);
-        } else if (fromRemote) {
-            if (journal) resumeDownload(entry, destination, report);
-            else download(entry, destination, report);
+            target = *choice;
+            if (target.path != destination) state.insert("copyName", QFileInfo(target.path).fileName());
+            if (!target.replaceVersion.isEmpty()) state.insert("replace", target.replaceVersion);
+            if (journal && (target.path != destination || !target.replaceVersion.isEmpty())) save(state);
+        }
+        if (fromRemote) {
+            if (journal) resumeDownload(entry, target, state, report);
+            else writeLocalCopy(target, cancelled, [&](const QString& path) { download(entry, path, report); });
         } else {
-            if (journal) resumeUpload(entry, destination, report);
-            else upload(entry, destination, report);
+            if (journal) resumeUpload(entry, target, state, report);
+            else upload(entry, target, report);
         }
     }
 
@@ -259,6 +451,65 @@ public:
     }
 
 private:
+    std::optional<CopyTarget> chooseTarget(bool remote, const TransferEntry& entry, const QString& folder, bool sameSide)
+    {
+        const auto path = childPath(folder, entry.name);
+        const auto entries = list(remote, folder, entry.name);
+        // Older hosts return the whole directory, even for a single-name lookup.
+        const auto found = std::find_if(entries.cbegin(), entries.cend(), [&](const TransferEntry& file) {
+            return file.name.compare(entry.name, Qt::CaseInsensitive) == 0;
+        });
+        if (found == entries.cend()) return CopyTarget{path, {}};
+        if (!resolveConflict) throw Failure{Engine::tr("Destination already exists: %1").arg(path)};
+        const auto& version = found->replaceVersion;
+        QString reason;
+        if (sameSide && QDir::cleanPath(entry.path).compare(QDir::cleanPath(path), Qt::CaseInsensitive) == 0)
+            reason = Engine::tr("The source and destination are the same file.");
+        else if (found->directory)
+            reason = Engine::tr("A folder occupies this name.");
+        else if (version.isNull() && remote)
+            reason = Engine::tr("Replacing remote files requires an updated Sunshine host with file deletion enabled.");
+        else if (version.isEmpty())
+            reason = Engine::tr("The file changed or is in use: %1").arg(path);
+        const auto choice = resolveConflict(remote, path, reason);
+        checkCancelled(cancelled);
+        if (choice == Engine::ConflictChoice::KeepBoth) {
+            QSet<QString> names;
+            names.insert(entry.name.toCaseFolded());
+            if (remote) {
+                for (const auto& file : list(true, folder)) names.insert(file.name.toCaseFolded());
+            } else {
+                for (const auto& name : QDir(folder).entryList(QDir::AllEntries | QDir::System | QDir::Hidden | QDir::NoDotAndDotDot))
+                    names.insert(name.toCaseFolded());
+            }
+            return CopyTarget{childPath(folder, availableCopyName(entry.name, names)), {}};
+        }
+        if (choice == Engine::ConflictChoice::Replace && reason.isEmpty())
+            return CopyTarget{path, version};
+        return std::nullopt;
+    }
+
+    void deleteFile(bool remote, const TransferEntry& entry)
+    {
+        if (remote) {
+            if (!entry.modified.isValid()) throw Failure{Engine::tr("Source changed: %1").arg(entry.path)};
+            exchange("delete", {{"path", entry.path}, {"size", QString::number(entry.size)},
+                                {"modified", QString::number(entry.modified.toMSecsSinceEpoch())}}, &empty);
+        } else {
+            QFile file(entry.path);
+            if (!file.moveToTrash()) throw Failure{QStringLiteral("%1\n%2").arg(entry.path, file.errorString())};
+        }
+    }
+
+    QJsonObject capabilities()
+    {
+        try { return QJsonDocument::fromJson(exchange("capabilities", {}, nullptr)).object(); }
+        catch (const Failure& e) {
+            if (e.code != 400 && e.code != 404 && e.code != 405) throw;
+            return {};
+        }
+    }
+
     QByteArray exchange(const QString& operation, const Params& params, const QByteArray* body,
                         qint64 limit = 4096, bool cleanup = false)
     {
@@ -274,7 +525,7 @@ private:
             // Source hashing can outlast the standalone grant. Renew it before retrying a
             // read or a v2 operation with an idempotent task/lease and explicit offset.
             if (cleanup || e.code != 403 || !request.hasRawHeader("X-Moonlight-File-Session") ||
-                operation == "mkdir" || operation == "write") throw;
+                operation == "mkdir" || operation == "write" || operation == "delete") throw;
             sendRequest("session", {}, &empty, 4096, false);
             return sendRequest(operation, params, body, limit, false);
         }
@@ -329,7 +580,8 @@ private:
             });
             cancelTimer.start(50);
         }
-        QTimer::singleShot(cleanup ? 1500 : 60000, r, &QNetworkReply::abort);
+        const bool hitTest = operation == "drag-source" || operation == "drop-target";
+        QTimer::singleShot(cleanup ? 1500 : (hitTest ? 3000 : 60000), r, &QNetworkReply::abort);
         if (!r->isFinished()) loop.exec();
         if (r->bytesAvailable()) drain();
         if (!cleanup) checkCancelled(cancelled);
@@ -348,6 +600,8 @@ private:
                 throw Failure{Engine::tr("Could not start file transfer. Check the connection and that Sunshine supports standalone file transfer. %1").arg(r->errorString()), transport, code};
         }
         const QString path = params.isEmpty() ? QString() : params.first().second;
+        if (code == 409 && operation == "delete")
+            throw Failure{Engine::tr("The file changed or is in use: %1").arg(path), false, code};
         if (code == 409) throw Failure{Engine::tr("File changed or destination exists: %1").arg(path), false, code};
         if (code == 403) throw Failure{Engine::tr("Access denied by host"), journal && bytes > 0, code};
         // A refreshed session or an expired upload stage invalidates its previous lease.
@@ -378,19 +632,19 @@ private:
         if (!journal->load(target, state)) throw Failure{Engine::tr("Cannot read transfer checkpoint")};
         if (state.isEmpty()) {
             state = QJsonObject{{"target", target}, {"id", ck::nonce()}};
-            save(target, state);
+            save(state);
         }
         if (!ck::validHex(state.value("id").toString(), 32))
             throw Failure{Engine::tr("Cannot read transfer checkpoint")};
         return state;
     }
 
-    void save(const QString& target, const QJsonObject& state)
+    void save(const QJsonObject& state)
     {
-        if (!journal->store(target, state)) throw Failure{Engine::tr("Cannot save transfer checkpoint")};
+        if (!journal->store(state.value("target").toString(), state)) throw Failure{Engine::tr("Cannot save transfer checkpoint")};
     }
 
-    void createJobDirectory(bool fromRemote, const QString& parent, const QString& name, const QString& target)
+    bool createJobDirectory(bool fromRemote, const QString& parent, const QString& name, const QString& target)
     {
         auto state = record(target);
         std::vector<ck::Handle> pinned;
@@ -404,7 +658,7 @@ private:
                     ck::identity(info) != state.value("identity").toString())
                     throw Failure{Engine::tr("Destination already exists: %1").arg(target)};
             }
-            return;
+            return false;
         }
         makeDirectory(!fromRemote, parent, name);
         if (fromRemote) {
@@ -414,7 +668,8 @@ private:
             state.insert("identity", ck::identity(info));
         }
         state.insert("created", true);
-        save(target, state);
+        save(state);
+        return true;
     }
 
     void clean(bool fromRemote, const TransferEntry& entry, const QString& root)
@@ -432,12 +687,17 @@ private:
             return !needsSession;
         };
         journal->each([&](const QJsonObject& state) {
-            const auto target = state.value("target").toString();
+            auto target = state.value("target").toString();
             const auto id = state.value("id").toString();
             if (!ck::validHex(id, 32) || state.value("done").toBool() || state.value("created").toBool() ||
                 target != QDir::cleanPath(target) ||
                 (target != root && !(entry.directory && target.startsWith(root + '/'))))
                 return;
+            const auto copyName = state.value("copyName").toString();
+            if (!copyName.isEmpty()) {
+                if (!safeName(copyName)) return;
+                target = childPath(QFileInfo(target).absolutePath(), copyName);
+            }
             if (fromRemote) {
                 std::vector<ck::Handle> pinned;
                 if (!state.value("identity").toString().isEmpty() &&
@@ -481,8 +741,9 @@ private:
         throw Failure{Engine::tr("Invalid transfer checkpoint from host")};
     }
 
-    void resumeUpload(const TransferEntry& entry, const QString& target, const Progress& report)
+    void resumeUpload(const TransferEntry& entry, const CopyTarget& destination, QJsonObject state, const Progress& report)
     {
+        const auto& target = destination.path;
         const Failure changed{Engine::tr("Source changed: %1").arg(entry.path)};
         std::vector<ck::Handle> parents;
         if (!ck::pinDirectory(QFileInfo(entry.path).absolutePath(), parents)) throw changed;
@@ -497,7 +758,6 @@ private:
             throw changed;
         }
         const QString sha = QString::fromLatin1(hasher.result().toHex());
-        auto state = record(target);
         const auto previous = state.value("sha256").toString();
         if (!previous.isEmpty() && previous != sha) {
             if (state.value("done").toBool()) throw changed;
@@ -505,7 +765,7 @@ private:
             state.insert("id", ck::nonce());
         }
         state.insert("sha256", sha);
-        save(target, state);
+        save(state);
         const QString id = state.value("id").toString();
         if (state.value("done").toBool()) {
             TransferEntry remote{entry.name, target, false, entry.size, {}};
@@ -515,12 +775,9 @@ private:
             report(bytes);
             return;
         }
-        auto reply =
-            QJsonDocument::fromJson(
-                exchange("resume",
-                         {{"path", target}, {"id", id}, {"size", QString::number(entry.size)}, {"sha256", sha}},
-                         &empty))
-                .object();
+        Params params{{"path", target}, {"id", id}, {"size", QString::number(entry.size)}, {"sha256", sha}};
+        if (!destination.replaceVersion.isEmpty()) params.append({"replace", destination.replaceVersion});
+        const auto reply = QJsonDocument::fromJson(exchange("resume", params, &empty)).object();
         const auto lease = reply.value("id").toString();
         bool ok = false;
         qint64 offset = reply.value("offset").toString().toLongLong(&ok);
@@ -554,21 +811,26 @@ private:
             wireBytes += count;
             report(bytes);
         }
-        if (!reply.value("complete").toBool()) exchange("commit", {{"path", target}, {"id", lease}}, &empty);
+        if (!reply.value("complete").toBool()) {
+            Params commit{{"path", target}, {"id", lease}};
+            if (!destination.replaceVersion.isEmpty()) commit.append({"replace", destination.replaceVersion});
+            exchange("commit", commit, &empty);
+        }
         state.insert("done", true);
-        save(target, state);
+        save(state);
     }
 
-    void resumeDownload(const TransferEntry& entry, const QString& target, const Progress& report)
+    void resumeDownload(const TransferEntry& entry, const CopyTarget& destination, QJsonObject state, const Progress& report)
     {
-        auto state = record(target);
+        const auto& target = destination.path;
         const QString sha = remoteFingerprint(entry, state.value("id").toString());
         std::vector<ck::Handle> parents;
         if (!ck::pinDirectory(QFileInfo(target).absolutePath(), parents))
             throw Failure{Engine::tr("Cannot open folder: %1").arg(target)};
         const Failure conflict{Engine::tr("Destination already exists: %1").arg(target)};
         // Recognize our own completed file even if the process stopped between rename and saving its receipt.
-        if (QFileInfo::exists(target)) {
+        if (QFileInfo::exists(target) &&
+            (destination.replaceVersion.isEmpty() || localFileVersion(target) != destination.replaceVersion)) {
             auto h = ck::open(target, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN);
             BY_HANDLE_FILE_INFORMATION info{};
             LARGE_INTEGER size{};
@@ -582,7 +844,7 @@ private:
             }
             if (QString::fromLatin1(hash.result().toHex()) != sha) throw conflict;
             state.insert("done", true);
-            save(target, state);
+            save(state);
             bytes += entry.size;
             report(bytes);
             return;
@@ -600,7 +862,7 @@ private:
                 throw Failure{Engine::tr("Cannot create partial download: %1").arg(target)};
             state.insert("identity", ck::identity(info));
             state.insert("sha256", sha);
-            save(target, state);
+            save(state);
             if (!ck::disposition(part.get(), false)) throw Failure{Engine::tr("Cannot save transfer checkpoint")};
         }
         LARGE_INTEGER size{};
@@ -610,7 +872,7 @@ private:
             if (!transfer_file::seek(part.get(), 0) || !SetEndOfFile(part.get()))
                 throw Failure{Engine::tr("Cannot save transfer checkpoint")};
             state.insert("sha256", sha);
-            save(target, state);
+            save(state);
             offset = 0;
         }
         QCryptographicHash hash(QCryptographicHash::Sha256);
@@ -647,10 +909,22 @@ private:
             const FILETIME t{static_cast<DWORD>(ticks), static_cast<DWORD>(ticks >> 32)};
             SetFileTime(part.get(), nullptr, nullptr, &t);
         }
-        if (!ck::publish(part.get(), target))
+        if (!FlushFileBuffers(part.get())) throw Failure{Engine::tr("Cannot write partial download: %1").arg(target)};
+        checkCancelled(cancelled);
+        if (!destination.replaceVersion.isEmpty()) checkReplacement(destination);
+        if (!ck::renamePart(part.get(), target, !destination.replaceVersion.isEmpty()))
             throw Failure{Engine::tr("Could not publish download; check the destination: %1").arg(target)};
         state.insert("done", true);
-        save(target, state);
+        save(state);
+    }
+
+    QByteArray readBlock(const TransferEntry& entry, qint64 offset, qint64 count)
+    {
+        Params params{{"path", entry.path}, {"offset", QString::number(offset)}, {"size", QString::number(entry.size)}};
+        if (entry.modified.isValid()) params.append({"modified", QString::number(entry.modified.toMSecsSinceEpoch())});
+        auto block = exchange("read", params, nullptr, ChunkSize);
+        if (block.size() != count) throw Failure{Engine::tr("Incomplete data from host: %1").arg(entry.path)};
+        return block;
     }
 
     void download(const TransferEntry& entry, const QString& destination, const Progress& report)
@@ -659,11 +933,7 @@ private:
         if (!output.open()) throw Failure{output.errorString()};
         qint64 offset = 0;
         do {
-            Params params{{"path", entry.path}, {"offset", QString::number(offset)}, {"size", QString::number(entry.size)}};
-            if (entry.modified.isValid()) params.append({"modified", QString::number(entry.modified.toMSecsSinceEpoch())});
-            const auto block = exchange("read", params, nullptr, ChunkSize);
-            if (block.size() != std::min(ChunkSize, entry.size - offset))
-                throw Failure{Engine::tr("Incomplete data from host: %1").arg(entry.path)};
+            const auto block = readBlock(entry, offset, std::min(ChunkSize, entry.size - offset));
             if (output.write(block) != block.size()) throw Failure{output.errorString()};
             bytes += block.size();
             wireBytes += block.size();
@@ -677,7 +947,7 @@ private:
         output.setAutoRemove(false);
     }
 
-    void upload(const TransferEntry& entry, const QString& destination, const Progress& report)
+    void upload(const TransferEntry& entry, const CopyTarget& destination, const Progress& report)
     {
         QFile input(entry.path);
         if (!input.open(QIODevice::ReadOnly)) throw Failure{input.errorString()};
@@ -685,6 +955,17 @@ private:
         const auto modified = input.fileTime(QFileDevice::FileModificationTime);
         if (size != entry.size || (entry.modified.isValid() && modified != entry.modified))
             throw Failure{Engine::tr("Source changed: %1").arg(entry.path)};
+        writeChunks(destination, size, [&](qint64, qint64 count) {
+            auto block = input.read(count);
+            if (block.size() != count || input.size() != size || input.fileTime(QFileDevice::FileModificationTime) != modified)
+                throw Failure{Engine::tr("Source changed: %1").arg(entry.path)};
+            return block;
+        }, report);
+    }
+
+    template<class Read>
+    void writeChunks(const CopyTarget& destination, qint64 size, Read read, const Progress& report)
+    {
         const auto id = QUuid::createUuid().toString(QUuid::Id128);
         qint64 offset = 0;
         bool attempted = false;
@@ -697,12 +978,12 @@ private:
         do {
             checkCancelled(cancelled);
             const qint64 count = std::min(ChunkSize, size - offset);
-            const auto block = input.read(count);
-            if (block.size() != count || input.size() != size || input.fileTime(QFileDevice::FileModificationTime) != modified)
-                throw Failure{Engine::tr("Source changed: %1").arg(entry.path)};
+            const auto block = read(offset, count);
             attempted = true;
-            exchange("write", {{"path", destination}, {"id", id}, {"offset", QString::number(offset)},
-                              {"size", QString::number(size)}}, &block);
+            Params params{{"path", destination.path}, {"id", id}, {"offset", QString::number(offset)},
+                          {"size", QString::number(size)}};
+            if (!destination.replaceVersion.isEmpty()) params.append({"replace", destination.replaceVersion});
+            exchange("write", params, &block);
             offset += count;
             bytes += count;
             wireBytes += count;
@@ -718,6 +999,7 @@ private:
     QSslCertificate certificate;
     Flag cancelled;
     bool needsSession;
+    ConflictResolver resolveConflict;
     QNetworkAccessManager network;
     QNetworkRequest request;
     const QByteArray empty;
@@ -725,13 +1007,26 @@ private:
 }
 
 FileTransferEngine::FileTransferEngine(QUrl host, QSslCertificate certificate, QByteArray token, QObject* parent,
-                                       bool standalone)
+                                       bool standalone, ConflictPrompt prompt)
     : QObject(parent), m_Host(std::move(host)), m_Certificate(std::move(certificate)), m_Token(std::move(token)),
-      m_Standalone(standalone), m_Ssl(IdentityManager::get()->getSslConfig())
+      m_Standalone(standalone), m_ConflictPrompt(std::move(prompt)), m_Ssl(IdentityManager::get()->getSslConfig())
 {
     m_Ssl.setCaCertificates({m_Certificate});
     m_Lists.setMaxThreadCount(2);
     m_Transfers.setMaxThreadCount(1);
+}
+
+FileTransferEngine::ConflictChoice FileTransferEngine::askFileConflict(const Flag& cancelled, bool remote, const QString& path, const QString& reason)
+{
+    if (!m_ConflictPrompt) throw Failure{tr("Destination already exists: %1").arg(path)};
+    auto answer = std::make_shared<std::promise<ConflictChoice>>();
+    auto result = answer->get_future();
+    QMetaObject::invokeMethod(this, [this, remote, path, reason, answer, cancelled] {
+        if (!*cancelled) m_ConflictPrompt(remote, path, reason, [answer](ConflictChoice choice) { answer->set_value(choice); });
+    }, Qt::QueuedConnection);
+    // The GUI thread joins this worker during shutdown, even if the question is still open.
+    while (result.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready) checkCancelled(cancelled);
+    return result.get();
 }
 
 FileTransferEngine::~FileTransferEngine()
@@ -771,6 +1066,61 @@ void FileTransferEngine::list(bool remote, QString path)
     });
 }
 
+QList<TransferEntry> FileTransferEngine::localDropEntries(const QList<QUrl>& urls)
+{
+    QList<TransferEntry> entries;
+    QSet<QString> seen;
+    for (const auto& url : urls) {
+        if (!url.isLocalFile()) return {};
+        const QFileInfo info(url.toLocalFile());
+        if (!info.isAbsolute() || info.isRoot() || info.isSymLink() || info.isJunction() ||
+            (!info.isFile() && !info.isDir()) || !safeName(info.fileName())) return {};
+        const auto key = info.absoluteFilePath().toCaseFolded();
+        if (seen.contains(key)) continue;
+        seen.insert(key);
+        entries.append({info.fileName(), info.absoluteFilePath(), info.isDir(),
+                        info.isDir() ? 0 : info.size(), info.lastModified()});
+    }
+    return entries;
+}
+
+std::future<FileDragLocation> FileTransferEngine::remoteDragLocation(bool source, QPoint position, QList<QUrl> localFiles)
+{
+    std::packaged_task<FileDragLocation()> task([this, source, position, localFiles = std::move(localFiles)] {
+        try {
+            Worker worker(m_Host, m_Ssl, m_Token, m_WindowClosing, false);
+            auto location = worker.dragLocation(source, position);
+            if (!source && !location.folder.isEmpty()) {
+                location.entries = localDropEntries(localFiles);
+                if (location.entries.isEmpty()) location.error = tr("The dragged selection contains an unavailable file or folder.");
+            }
+            return location;
+        } catch (const Failure& failure) {
+            return FileDragLocation{{}, {}, failure.message};
+        }
+    });
+    auto result = task.get_future();
+    m_Lists.start(std::move(task));
+    return result;
+}
+
+std::future<QString> FileTransferEngine::localDropFolder(QPoint screenPoint, quintptr window, std::function<void(QString)> finished)
+{
+    std::packaged_task<QString()> task([this, screenPoint, window, finished = std::move(finished)] {
+        QString folder;
+        POINT point {screenPoint.x(), screenPoint.y()};
+        if (WindowFromPhysicalPoint(point) == reinterpret_cast<HWND>(window)) {
+            const auto paths = shell_file_drop::paths_at(point, false);
+            if (!paths.empty()) folder = QDir::fromNativeSeparators(QString::fromStdWString(paths.front()));
+        }
+        if (finished) QMetaObject::invokeMethod(this, [finished, folder] { finished(folder); }, Qt::QueuedConnection);
+        return folder;
+    });
+    auto result = task.get_future();
+    m_Lists.start(std::move(task));
+    return result;
+}
+
 void FileTransferEngine::loadPlaces(bool remote)
 {
     m_Lists.start([this, remote] {
@@ -800,6 +1150,20 @@ void FileTransferEngine::makeDirectory(bool remote, QString parent, QString name
     });
 }
 
+void FileTransferEngine::manageFiles(FileAction action, bool remote, QList<TransferEntry> entries, QString folder,
+                                     std::function<void(QString)> finished)
+{
+    m_Transfers.start([this, action, remote, entries = std::move(entries), folder = std::move(folder), finished = std::move(finished)] {
+        QString error;
+        try {
+            Worker worker(m_Host, m_Ssl, m_Token, m_WindowClosing, m_Standalone,
+                          [this](bool side, const QString& path, const QString& reason) { return askFileConflict(m_WindowClosing, side, path, reason); });
+            worker.manageFiles(action, remote, entries, folder);
+        } catch (const Failure& failure) { error = failure.message; }
+        QMetaObject::invokeMethod(this, [finished, error] { finished(error); }, Qt::QueuedConnection);
+    });
+}
+
 int FileTransferEngine::enqueue(bool fromRemote, TransferEntry entry, QString destinationFolder)
 {
     const int id = m_NextId++;
@@ -817,7 +1181,8 @@ void FileTransferEngine::startNext()
     m_Transfers.start([this, job, flag = m_ActiveCancel] {
         const auto total = job.entry.directory ? -1 : job.entry.size;
         QElapsedTimer timer;
-        Worker worker(m_Host, m_Ssl, m_Token, flag, m_Standalone);
+        Worker worker(m_Host, m_Ssl, m_Token, flag, m_Standalone,
+                      [this, flag](bool side, const QString& path, const QString& reason) { return askFileConflict(flag, side, path, reason); });
         auto update = [&](qint64 bytes) {
             if (timer.isValid() && timer.elapsed() < 100) return;
             timer.start();
@@ -833,6 +1198,7 @@ void FileTransferEngine::startNext()
         bool success = true;
         try {
             receipt = worker.copy(job.fromRemote, job.entry, job.destination, update, m_WindowClosing);
+            if (worker.skipped) result = job.entry.directory ? tr("Completed (%1 skipped)").arg(worker.skipped) : tr("Skipped");
         } catch (const Failure& failure) {
             result = failure.message;
             paused = failure.interrupted && !*flag;
@@ -842,7 +1208,7 @@ void FileTransferEngine::startNext()
                                          wire = worker.wireBytes, receipt = std::move(receipt)]() mutable {
             emit networkProgress(id, wire);
             if (paused) emit interrupted(id);
-            emit progress(id, bytes, success ? bytes : total, result, true);
+            emit progress(id, bytes, success && total < 0 ? bytes : total, result, true);
             if (receipt) m_Transfers.start([receipt = std::move(receipt)] { receipt->clear(); });
             m_Active = 0;
             m_ActiveCancel.reset();

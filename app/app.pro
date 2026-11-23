@@ -55,7 +55,7 @@ win32 {
     }
 
     INCLUDEPATH += $$PWD/../libs/windows/include
-    LIBS += ws2_32.lib iphlpapi.lib winmm.lib dxva2.lib ole32.lib windowscodecs.lib gdi32.lib user32.lib comctl32.lib d3d9.lib dwmapi.lib dbghelp.lib
+    LIBS += ws2_32.lib iphlpapi.lib winmm.lib dxva2.lib ole32.lib oleaut32.lib windowscodecs.lib gdi32.lib user32.lib comctl32.lib d3d9.lib dwmapi.lib dbghelp.lib
 }
 macx:!disable-prebuilts {
     !exists($$PWD/../libs/mac) {
@@ -395,10 +395,12 @@ config_SL {
 }
 win32 {
     SOURCES += streaming/clipboardsync.cpp streaming/filetransferengine.cpp streaming/filetransferwindow.cpp streaming/filetransferprocess.cpp
+    SOURCES += streaming/streamfiledrag.cpp
+    HEADERS += streaming/streamfiledrag.h streaming/shellfiledrop.h
     HEADERS += streaming/clipboarduploadprogress.h streaming/clipboarduploadrate.h streaming/video/clipboarduploadoverlay.h streaming/transferratesampler.h
-    HEADERS += streaming/filetransfercheckpoint.h streaming/transferfilehash.h streaming/clipboarddownload.h streaming/clipboard_image.h
+    HEADERS += streaming/filetransfercheckpoint.h streaming/transferfilehash.h streaming/clipboarddownload.h streaming/clipboardvirtualfiles.h streaming/explorerpaste.h streaming/desktoptransferprogress.h streaming/clipboard_image.h
     HEADERS += streaming/clipboardsync.h streaming/clipboard_win32.h streaming/filetransferengine.h streaming/filetransferwindow.h streaming/filetransferprocess.h
-    LIBS += -lshell32
+    LIBS += -lshell32 -lshlwapi
     HEADERS += streaming/video/ffmpeg-renderers/dxutil.h
 }
 win32:!winrt {

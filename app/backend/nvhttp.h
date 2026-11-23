@@ -182,6 +182,7 @@ public:
              bool& clipboardResumable,
              bool& clipboardMultitask,
              bool& fileBrowser,
+             bool& fileDrag,
              QString& rtspSessionUrl);
 
     QVector<NvApp>

@@ -9,6 +9,7 @@
 #include "captioncontrols.h"
 #include "clipboardsync.h"
 #include "filetransferprocess.h"
+#include "streamfiledrag.h"
 #include "streamwindow.h"
 #endif
 #include "settings/streamingpreferences.h"
@@ -1833,7 +1834,7 @@ bool Session::startConnectionAsync()
                       !m_ViewOnly && m_Preferences->lockHostOnDisconnect(),
                       !m_ViewOnly,
                       m_HostHandlesDisconnectLock,
-                      m_ClipboardToken, m_ClipboardText, m_ClipboardImages, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask, m_FileBrowser,
+                      m_ClipboardToken, m_ClipboardText, m_ClipboardImages, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask, m_FileBrowser, m_FileDrag,
                       rtspSessionUrl);
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
@@ -2231,6 +2232,20 @@ void Session::exec()
     clipboardHost.setScheme(QStringLiteral("https"));
     clipboardHost.setHost(m_Computer->activeAddress.address());
     clipboardHost.setPort(m_Computer->activeHttpsPort);
+    std::unique_ptr<StreamFileDrag> fileDrag;
+    if (!m_ViewOnly && m_FileDrag) {
+        auto error = [this](const QString& message) {
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_WARNING, "Moonlight", message.toUtf8().constData(), m_Window);
+        };
+        fileDrag = std::make_unique<StreamFileDrag>(m_Window, QSize(m_StreamConfig.width, m_StreamConfig.height),
+            clipboardHost, m_Computer->serverCert, m_ClipboardToken,
+            [&, error](bool fromRemote, const QList<TransferEntry>& entries, const QString& folder) {
+                if (!FileTransferProcess::show(fileTransferProcess, clipboardHost, m_Computer->serverCert, m_ClipboardToken,
+                        m_Computer->name, m_Computer->uuid, FileTransferProcess::dropCommand(fromRemote, entries, folder))) {
+                    error(tr("Unable to open the file transfer window."));
+                }
+            }, error);
+    }
     ClipboardSync clipboard(clipboardHost, m_Computer->serverCert, m_ClipboardToken, m_ClipboardText, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask, m_ClipboardImages);
     SDL_Scancode deferredPasteKey = SDL_SCANCODE_UNKNOWN;
     Uint32 lastUploadUpdate = lastTitleUpdate - 100;
@@ -2246,6 +2261,7 @@ void Session::exec()
 #endif
     for (;;) {
 #ifdef Q_OS_WIN32
+        if (fileDrag && !SDL_AtomicGet(&m_ConnectionEnding)) fileDrag->poll();
         if (SDL_GetTicks() - lastUploadUpdate >= 100) {
             lastUploadUpdate = SDL_GetTicks();
             m_OverlayManager.updateClipboardUpload(clipboard.fileUploadTasks(), streamWindowSize(), caption.windowScale());
@@ -2345,7 +2361,8 @@ void Session::exec()
         // and other problems.
         int waitMs = 1000;
 #ifdef Q_OS_WIN32
-        if (clipboard.pastePending() || m_OverlayManager.isOverlayEnabled(Overlay::OverlayClipboardUpload)) waitMs = 16;
+        if (clipboard.pastePending() || (fileDrag && fileDrag->pending()) ||
+            m_OverlayManager.isOverlayEnabled(Overlay::OverlayClipboardUpload)) waitMs = 16;
 #endif
         if (!SDL_WaitEventTimeout(&event, waitMs)) {
             presence.runCallbacks();
@@ -2369,6 +2386,10 @@ void Session::exec()
         }
 #endif
 #ifdef Q_OS_WIN32
+        if (fileDrag && ((event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) ||
+                         event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_KEYDOWN || event.type == SDL_FINGERDOWN)) {
+            fileDrag->cancelGesture();
+        }
         quint64 selectedTask = 0;
         const auto uploadInput = m_OverlayManager.handleClipboardUpload(event, selectedTask);
         if (uploadInput == ClipboardUploadOverlay::Input::Cancel) {
@@ -2391,6 +2412,10 @@ void Session::exec()
         if (m_ViewOnly && event.type >= SDL_MOUSEMOTION && event.type < SDL_CLIPBOARDUPDATE)
             continue;
         switch (event.type) {
+        case SDL_DROPFILE:
+        case SDL_DROPTEXT:
+            SDL_free(event.drop.file);
+            break;
         case SDL_QUIT:
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Quit event received");
@@ -2461,6 +2486,7 @@ void Session::exec()
             // Early handling of some events
 #ifdef Q_OS_WIN32
             caption.update();
+            if (fileDrag) fileDrag->updateWindow();
 #endif
             switch (event.window.event) {
             case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -2693,9 +2719,17 @@ void Session::exec()
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
             presence.runCallbacks();
+#ifdef Q_OS_WIN32
+            if (fileDrag && fileDrag->handleButton(event.button,
+                    m_InputHandler->usesAbsoluteMouse() && m_InputHandler->isCaptureActive(),
+                    m_InputHandler->primaryMouseButton())) break;
+#endif
             m_InputHandler->handleMouseButtonEvent(&event.button);
             break;
         case SDL_MOUSEMOTION:
+#ifdef Q_OS_WIN32
+            if (fileDrag && fileDrag->waitingForRelease()) break;
+#endif
             m_InputHandler->handleMouseMotionEvent(&event.motion);
             break;
         case SDL_MOUSEWHEEL:
@@ -2749,6 +2783,7 @@ void Session::exec()
 
 DispatchDeferredCleanup:
 #ifdef Q_OS_WIN32
+    fileDrag.reset();
     FileTransferProcess::stop(fileTransferProcess);
     clipboard.stop();
     caption.close();

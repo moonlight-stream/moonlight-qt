@@ -102,7 +102,7 @@ FocusScope {
         flickableDirection: Flickable.VerticalFlick
         boundsBehavior: Flickable.StopAtBounds
         contentWidth: width; contentHeight: sections.implicitHeight
-        ScrollBar.vertical: ScrollBar {}
+        ScrollBar.vertical: AppScrollBar {}
 
         function isChildOfFlickable(item) {
             while (item) {

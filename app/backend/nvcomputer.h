@@ -90,7 +90,6 @@ public:
 
     // Ephemeral traits
     ComputerState state;
-    PairState pairState;
     NvAddress activeAddress;
     uint16_t activeHttpsPort;
     int currentGameId;
@@ -113,6 +112,7 @@ public:
     bool hasCustomName;
     QString uuid;
     QSslCertificate serverCert;
+    PairState pairState = PS_UNKNOWN;
     QVector<NvApp> appList;
     bool isNvidiaServerSoftware;
     // Remember to update isEqualSerialized() when adding fields here!

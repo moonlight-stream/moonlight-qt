@@ -2,6 +2,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QCache>
 #include <QClipboard>
 #include <QCryptographicHash>
 #include <QJsonArray>
@@ -17,31 +18,130 @@
 #include <QPainter>
 #include <QStyledItemDelegate>
 #include <QDateTime>
+#include <QDesktopServices>
 #include <QDir>
+#include <QDrag>
+#include <QDropEvent>
 #include <QFileInfo>
 #include <QFont>
 #include <QHeaderView>
 #include <QHostInfo>
+#include <QImage>
 #include <QLabel>
 #include <QLineEdit>
 #include <QLocale>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMimeData>
+#include <QPixmap>
 #include <QPushButton>
 #include <QScrollBar>
+#include <QScopeGuard>
 #include <QSet>
 #include <QSettings>
 #include <QSignalBlocker>
 #include <QSplitter>
 #include <QStyle>
+#include <QTemporaryDir>
+#include <QThreadPool>
 #include <QToolButton>
 #include <QTreeWidget>
 #include <QUuid>
 #include <QVBoxLayout>
+#include <qt_windows.h>
+#include <objbase.h>
+#include <shellapi.h>
 #include <algorithm>
+#include <functional>
+#include <utility>
+
+class TransferFileIcons final : public QObject
+{
+public:
+    TransferFileIcons(QObject* parent, std::function<void()> refresh)
+        : QObject(parent), m_Refresh(std::move(refresh)) { m_Worker.setMaxThreadCount(1); }
+
+    ~TransferFileIcons() override
+    {
+        m_Worker.clear();
+        m_Worker.waitForDone();
+    }
+
+    using Key = QPair<QString, qint64>;
+
+    QIcon icon(const Key& key, bool remote)
+    {
+        if (const auto* cached = m_Cache.object(key)) return *cached;
+        if (!m_Pending.contains(key)) {
+            m_Pending.insert(key);
+            m_Worker.start([this, key, remote] {
+                const auto image = shellIcon(key.first, remote);
+                QMetaObject::invokeMethod(this, [this, key, image] {
+                    m_Pending.remove(key);
+                    m_Cache.insert(key, new QIcon(QPixmap::fromImage(image)));
+                    m_Refresh();
+                }, Qt::QueuedConnection);
+            });
+        }
+        return {};
+    }
+
+private:
+    static QImage shellIcon(const QString& name, bool remote)
+    {
+        const auto hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+        if (FAILED(hr) && hr != RPC_E_CHANGED_MODE) return {};
+        const auto cleanup = qScopeGuard([hr] { if (SUCCEEDED(hr)) CoUninitialize(); });
+        SHFILEINFOW info{};
+        const UINT flags = SHGFI_ICON | SHGFI_LARGEICON | (remote ? SHGFI_USEFILEATTRIBUTES : 0);
+        if (!SHGetFileInfoW(name.toStdWString().c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), flags) || !info.hIcon)
+            return {};
+        const auto image = QImage::fromHICON(info.hIcon);
+        DestroyIcon(info.hIcon);
+        return image;
+    }
+
+    QCache<Key, QIcon> m_Cache{512};
+    QSet<Key> m_Pending;
+    QThreadPool m_Worker;
+    std::function<void()> m_Refresh;
+};
 
 namespace {
+using FileAction = FileTransferEngine::FileAction;
+
+void showFileConflict(QWidget* parent, bool remote, const QString& path, const QString& replaceUnavailable,
+                      FileTransferEngine::ConflictReply reply)
+{
+    using Choice = FileTransferEngine::ConflictChoice;
+    if (!parent->isVisible() || parent->isMinimized()) parent->showNormal();
+    auto* box = new QMessageBox(QMessageBox::Warning, FileTransferWindow::tr("File already exists"), {}, QMessageBox::NoButton, parent);
+    box->setAttribute(Qt::WA_DeleteOnClose);
+    box->setOption(QMessageBox::Option::DontUseNativeDialog);
+    box->setTextFormat(Qt::PlainText);
+    const auto question = replaceUnavailable.isEmpty() ? FileTransferWindow::tr("%1 already exists. Replace it?")
+                                                       : FileTransferWindow::tr("%1 already exists.");
+    box->setText(question.arg(QFileInfo(path).fileName()));
+    const auto location = remote ? FileTransferWindow::tr("Remote · %1") : FileTransferWindow::tr("Local · %1");
+    auto details = location.arg(QDir::toNativeSeparators(path));
+    if (!replaceUnavailable.isEmpty()) details += '\n' + replaceUnavailable;
+    box->setInformativeText(details);
+    auto* skip = box->addButton(FileTransferWindow::tr("Skip"), QMessageBox::ActionRole);
+    auto* replace = box->addButton(FileTransferWindow::tr("Replace"), QMessageBox::ActionRole);
+    auto* keep = box->addButton(FileTransferWindow::tr("Keep both"), QMessageBox::ActionRole);
+    replace->setEnabled(replaceUnavailable.isEmpty());
+    box->setDefaultButton(skip);
+    box->setEscapeButton(skip);
+    QObject::connect(box, &QDialog::finished, box, [box, replace, keep, reply = std::move(reply)] {
+        if (box->clickedButton() == keep) reply(Choice::KeepBoth);
+        else if (box->clickedButton() == replace) reply(Choice::Replace);
+        else reply(Choice::Skip);
+    });
+    box->open();
+}
+
 constexpr char clipboardType[] = "application/x-moonlight-transfer-selection";
+constexpr int numericSortRole = Qt::UserRole + 1;
 
 QString nativePath(const QString& path)
 {
@@ -62,6 +162,77 @@ QString byteCounts(const QLocale& locale, qint64 bytes, qint64 total)
     const auto done = locale.formattedDataSize(bytes);
     return total < 0 ? done : done + QStringLiteral(" / ") + locale.formattedDataSize(total);
 }
+
+void setNumericCell(QTreeWidgetItem* item, int column, const QVariant& value, const QString& text)
+{
+    item->setData(column, numericSortRole, value);
+    item->setText(column, text);
+}
+
+class TransferListItem final : public QTreeWidgetItem
+{
+public:
+    TransferListItem(int nameColumn, const TransferEntry& entry, bool remote, TransferFileIcons* icons,
+                     bool pinFoldersFirst = false)
+        : m_NameColumn(nameColumn), m_PinnedFolder(pinFoldersFirst && entry.directory), m_Remote(remote), m_Icons(icons)
+    {
+        if (entry.directory) return;
+        if (remote) {
+            // Only the extension is meaningful on this computer.
+            const auto suffix = QFileInfo(entry.name).suffix().toLower();
+            if (!suffix.isEmpty()) m_IconKey.first = '.' + suffix;
+        } else {
+            m_IconKey = {nativePath(entry.path), entry.modified.toMSecsSinceEpoch()};
+        }
+    }
+
+    QVariant data(int column, int role) const override
+    {
+        if (role == Qt::DecorationRole && column == m_NameColumn && !m_IconKey.first.isEmpty()) {
+            const auto icon = m_Icons->icon(m_IconKey, m_Remote);
+            if (!icon.isNull()) return icon;
+        }
+        return QTreeWidgetItem::data(column, role);
+    }
+
+    bool operator<(const QTreeWidgetItem& other) const override
+    {
+        const auto& rhs = static_cast<const TransferListItem&>(other);
+        const int column = treeWidget()->sortColumn();
+        if (column < 0) return false;
+        if (m_PinnedFolder != rhs.m_PinnedFolder) {
+            // Qt reverses the comparison for descending sorts. Keep pinned folders first either way.
+            return treeWidget()->header()->sortIndicatorOrder() == Qt::AscendingOrder ? m_PinnedFolder : rhs.m_PinnedFolder;
+        }
+        static const QCollator collator = [] {
+            QCollator result;
+            result.setNumericMode(true);
+            result.setCaseSensitivity(Qt::CaseInsensitive);
+            return result;
+        }();
+        if (column != m_NameColumn) {
+            const auto key = data(column, numericSortRole);
+            const auto otherKey = other.data(column, numericSortRole);
+            if (key.isValid() != otherKey.isValid()) return !key.isValid();
+            if (key != otherKey) return key.toLongLong() < otherKey.toLongLong();
+            if (!key.isValid()) {
+                const int order = collator.compare(text(column), other.text(column));
+                if (order != 0) return order < 0;
+            }
+        }
+        const auto name = text(m_NameColumn);
+        const auto otherName = other.text(m_NameColumn);
+        const int order = collator.compare(name, otherName);
+        return order != 0 ? order < 0 : name < otherName;
+    }
+
+private:
+    const int m_NameColumn;
+    const bool m_PinnedFolder;
+    const bool m_Remote;
+    TransferFileIcons* const m_Icons;
+    TransferFileIcons::Key m_IconKey;
+};
 
 QLabel* heading(const QString& text)
 {
@@ -106,8 +277,96 @@ public:
 class FileList final : public QTreeWidget
 {
 public:
-    using QTreeWidget::QTreeWidget;
+    explicit FileList(bool remote) : m_Remote(remote)
+    {
+        setDragDropMode(remote ? DragDrop : DragOnly);
+        setDefaultDropAction(Qt::CopyAction);
+        setDropIndicatorShown(false);
+    }
+
+    std::function<QList<TransferEntry>()> selectedFiles;
+    std::function<QString(QPoint)> destinationAt;
+    std::function<void(const QList<TransferEntry>&, const QString&)> upload;
+    std::function<void(const QList<TransferEntry>&, QPoint)> downloadAt;
+
 protected:
+    void startDrag(Qt::DropActions) override
+    {
+        const auto entries = selectedFiles();
+        if (entries.isEmpty()) return;
+        if (m_Remote) {
+            // Keep remote paths on their own machine. Capture the release and write
+            // straight to the selected local folder through the transfer queue.
+            m_Dragged = entries;
+            viewport()->grabMouse(Qt::DragCopyCursor);
+            return;
+        }
+        QList<QUrl> urls;
+        for (const auto& entry : entries) urls << QUrl::fromLocalFile(entry.path);
+        auto* mime = new QMimeData;
+        mime->setUrls(urls);
+        QDrag drag(this);
+        drag.setMimeData(mime);
+        drag.exec(Qt::CopyAction);
+    }
+
+    void mouseMoveEvent(QMouseEvent* event) override
+    {
+        if (m_Dragged.isEmpty()) QTreeWidget::mouseMoveEvent(event);
+    }
+
+    void mouseReleaseEvent(QMouseEvent* event) override
+    {
+        if (event->button() == Qt::LeftButton && !m_Dragged.isEmpty()) {
+            const auto entries = endDrag();
+            downloadAt(entries, event->globalPosition().toPoint());
+            event->accept();
+        } else {
+            QTreeWidget::mouseReleaseEvent(event);
+        }
+    }
+
+    void keyPressEvent(QKeyEvent* event) override
+    {
+        if (!m_Dragged.isEmpty() && event->key() == Qt::Key_Escape) endDrag();
+        else QTreeWidget::keyPressEvent(event);
+    }
+
+    bool viewportEvent(QEvent* event) override
+    {
+        if (event->type() == QEvent::UngrabMouse || event->type() == QEvent::Hide) m_Dragged.clear();
+        return QTreeWidget::viewportEvent(event);
+    }
+
+    void dragEnterEvent(QDragEnterEvent* event) override
+    {
+        const auto urls = event->mimeData()->urls();
+        if (m_Remote && event->possibleActions().testFlag(Qt::CopyAction) && !urls.isEmpty() &&
+            std::all_of(urls.cbegin(), urls.cend(), [](const QUrl& url) { return url.isLocalFile(); })) {
+            event->setDropAction(Qt::CopyAction);
+            event->accept();
+        }
+    }
+
+    void dragMoveEvent(QDragMoveEvent* event) override
+    {
+        if (!destinationAt(event->position().toPoint()).isEmpty()) {
+            event->setDropAction(Qt::CopyAction);
+            event->accept();
+        } else event->ignore();
+    }
+
+    void dropEvent(QDropEvent* event) override
+    {
+        const auto folder = destinationAt(event->position().toPoint());
+        if (folder.isEmpty() || !event->possibleActions().testFlag(Qt::CopyAction)) return;
+        const auto entries = FileTransferEngine::localDropEntries(event->mimeData()->urls());
+        if (entries.isEmpty()) return;
+        upload(entries, folder);
+        event->setDropAction(Qt::CopyAction);
+        event->accept();
+    }
+
     void mousePressEvent(QMouseEvent* event) override
     {
         if (event->button() == Qt::LeftButton && columnAt(event->pos().x()) == 0) {
@@ -126,10 +385,36 @@ protected:
         if (columnAt(event->pos().x()) != 0)
             QTreeWidget::mouseDoubleClickEvent(event);
     }
+
+private:
+    QList<TransferEntry> endDrag()
+    {
+        auto entries = std::exchange(m_Dragged, {});
+        viewport()->releaseMouse();
+        setState(NoState);
+        return entries;
+    }
+
+    const bool m_Remote;
+    QList<TransferEntry> m_Dragged;
 };
 
 void configureList(QTreeWidget* tree, const QStringList& labels)
 {
+    const auto scrollBarStyle = QStringLiteral(R"(
+        QScrollBar { background: transparent; border: none; }
+        QScrollBar:vertical { width: 16px; }
+        QScrollBar:horizontal { height: 16px; }
+        QScrollBar::handle { background: #8093aa; border-radius: 4px; }
+        QScrollBar::handle:vertical { min-height: 24px; margin: 0 4px; }
+        QScrollBar::handle:horizontal { min-width: 24px; margin: 4px 0; }
+        QScrollBar::handle:hover { background: #597ba2; }
+        QScrollBar::handle:pressed { background: palette(highlight); }
+        QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
+        QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
+    )");
+    tree->verticalScrollBar()->setStyleSheet(scrollBarStyle);
+    tree->horizontalScrollBar()->setStyleSheet(scrollBarStyle);
     tree->setHeaderLabels(labels);
     tree->setRootIsDecorated(false);
     tree->setUniformRowHeights(true);
@@ -144,7 +429,10 @@ void configureList(QTreeWidget* tree, const QStringList& labels)
 FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, QByteArray token,
                                        QString hostName, QString hostId, QWidget* parent, bool standalone)
     : QWidget(parent, Qt::Window)
-    , m_Engine(new FileTransferEngine(host, certificate, token, this, standalone))
+    , m_Engine(new FileTransferEngine(host, certificate, token, this, standalone,
+        [this](bool remote, const QString& path, const QString& reason, FileTransferEngine::ConflictReply reply) {
+            showFileConflict(this, remote, path, reason, std::move(reply));
+        }))
     , m_ClipboardId(QUuid::createUuid().toRfc4122())
     , m_Available(!token.isEmpty())
     , m_Standalone(standalone)
@@ -156,8 +444,12 @@ FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, Q
     auto* browsers = new QSplitter(Qt::Horizontal);
     layout->addWidget(vertical);
     vertical->addWidget(browsers);
-    m_Panes[0].settingsKey = QStringLiteral("fileTransfer/bookmarks/local");
-    m_Panes[1].settingsKey = QStringLiteral("fileTransfer/bookmarks/hosts/") + (hostId.isEmpty() ? host.host() : hostId);
+    const auto hostKey = hostId.isEmpty() ? host.host() : hostId;
+    m_Panes[0].bookmarksKey = QStringLiteral("fileTransfer/bookmarks/local");
+    m_Panes[1].bookmarksKey = QStringLiteral("fileTransfer/bookmarks/hosts/") + hostKey;
+    const auto directorySettings = QStringLiteral("fileTransfer/lastDirectories/") + hostKey;
+    m_Panes[0].lastDirectoryKey = directorySettings + QStringLiteral("/local");
+    m_Panes[1].lastDirectoryKey = directorySettings + QStringLiteral("/remote");
     browsers->addWidget(makePane(false, tr("Local · %1").arg(QHostInfo::localHostName())));
     browsers->addWidget(makePane(true, tr("Remote · %1").arg(hostName)));
     browsers->setChildrenCollapsible(false);
@@ -177,6 +469,8 @@ FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, Q
     queueLayout->addLayout(queueBar);
     m_Queue = new QTreeWidget;
     configureList(m_Queue, {tr("Name"), tr("Status"), tr("Transferred"), tr("Speed"), tr("Source"), tr("Destination")});
+    m_Queue->header()->setSortIndicator(-1, Qt::AscendingOrder); // Show enqueue order until a column is chosen.
+    m_Queue->setSortingEnabled(true);
     m_Queue->setColumnWidth(1, 150);
     m_Queue->setColumnWidth(2, 130);
     m_Queue->setColumnWidth(3, 96);
@@ -238,6 +532,10 @@ FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, Q
     });
     connect(m_Queue, &QTreeWidget::itemSelectionChanged, this, &FileTransferWindow::updateActions);
     connect(QApplication::clipboard(), &QClipboard::dataChanged, this, &FileTransferWindow::updateActions);
+    m_FileIcons = new TransferFileIcons(this, [this] {
+        for (auto& pane : m_Panes) pane.files->viewport()->update();
+        m_Queue->viewport()->update();
+    });
     if (!certificate.isNull()) {
         // A host's display name or IP may change between connections.
         const auto peer = QCryptographicHash::hash(certificate.toDer() + '\0' + hostId.toUtf8(), QCryptographicHash::Sha256).toHex();
@@ -249,9 +547,9 @@ FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, Q
     m_SaveTimer.start();
     m_Engine->loadPlaces(false);
     if (m_Available) m_Engine->loadPlaces(true);
-    navigate(false, QDir::homePath());
+    restoreDirectory(false, QDir::homePath());
     if (m_Available)
-        navigate(true, {});
+        restoreDirectory(true, {});
     else {
         m_Panes[1].message->setText(tr("This host did not grant file access. Check the Sunshine version and file transfer permission."));
         m_Panes[1].address->setEnabled(false);
@@ -299,8 +597,38 @@ QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
         button->setMinimumSize(28, 30);
     }
     layout->addLayout(nav);
-    p.files = new FileList;
+    auto* files = new FileList(remote);
+    p.files = files;
+    files->selectedFiles = [this, remote] { return selection(remote); };
+    files->setToolTip(tr("Drag files or folders to the other PC. Drop on a folder to copy into it."));
+    files->destinationAt = [this, remote, files](QPoint point) -> QString {
+        const auto& pane = m_Panes[remote];
+        if (!m_Available || !pane.ready || !files->viewport()->rect().contains(point)) return {};
+        if (auto* item = files->itemAt(point)) {
+            const auto entry = item->data(0, Qt::UserRole).value<TransferEntry>();
+            if (entry.directory) return entry.path;
+        }
+        return pane.path;
+    };
+    files->upload = [this](const auto& entries, const QString& folder) { transferTo(false, entries, folder); };
+    files->downloadAt = [this](const auto& entries, QPoint global) {
+        auto* local = static_cast<FileList*>(m_Panes[0].files);
+        const auto point = local->viewport()->mapFromGlobal(global);
+        const auto copy = [this, entries](const QString& folder) {
+            if (!folder.isEmpty()) transferTo(true, entries, folder);
+            else m_Panes[1].message->setText(tr("Drop the selection in the local pane, in File Explorer, or on the desktop."));
+        };
+        if (QApplication::widgetAt(global) == local->viewport()) {
+            copy(local->destinationAt(point));
+        } else {
+            const auto pos = GetMessagePos();
+            const POINT physical{short(LOWORD(pos)), short(HIWORD(pos))};
+            m_Engine->localDropFolder(QPoint(physical.x, physical.y), reinterpret_cast<quintptr>(WindowFromPhysicalPoint(physical)), copy);
+        }
+    };
     configureList(p.files, {QString(), tr("Name"), tr("Modified"), tr("Type"), tr("Size")});
+    p.files->header()->setSortIndicator(1, Qt::AscendingOrder);
+    p.files->setSortingEnabled(true);
     p.files->setStyleSheet(QStringLiteral("QTreeView::item { min-height: 28px; }"));
     p.files->header()->setSectionResizeMode(0, QHeaderView::Fixed);
     p.files->header()->setSectionResizeMode(1, QHeaderView::Stretch);
@@ -309,16 +637,20 @@ QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
     p.files->setColumnWidth(3, 65);
     p.files->setColumnWidth(4, 78);
     p.files->setItemDelegateForColumn(0, new SelectionColumn(p.files));
-    p.selectAll = new QCheckBox(p.files->header()->viewport());
+    // Cover the whole selection header so a click beside the checkbox cannot sort by it.
+    auto* header = p.files->header();
+    auto* selectionHeader = new QWidget(header->viewport());
+    selectionHeader->setAttribute(Qt::WA_NoMousePropagation);
+    auto* selectionLayout = new QHBoxLayout(selectionHeader);
+    selectionLayout->setContentsMargins(0, 0, 0, 0);
+    p.selectAll = new QCheckBox;
+    selectionLayout->addWidget(p.selectAll, 0, Qt::AlignCenter);
     p.selectAll->setAccessibleName(tr("Select all"));
     p.selectAll->setToolTip(tr("Select all"));
-    auto positionCheck = [&p] {
-        auto* header = p.files->header();
-        const QSize size = p.selectAll->sizeHint();
-        p.selectAll->setGeometry(header->sectionViewportPosition(0) + (header->sectionSize(0) - size.width()) / 2,
-                                 (header->height() - size.height()) / 2, size.width(), size.height());
+    auto positionCheck = [header, selectionHeader] {
+        selectionHeader->setGeometry(header->sectionViewportPosition(0), 0, header->sectionSize(0), header->height());
     };
-    connect(p.files->header(), &QHeaderView::geometriesChanged, this, positionCheck);
+    connect(header, &QHeaderView::geometriesChanged, this, positionCheck);
     connect(p.files->horizontalScrollBar(), &QScrollBar::valueChanged, this, positionCheck);
     positionCheck();
     connect(p.selectAll, &QCheckBox::clicked, this, [this, remote] {
@@ -332,15 +664,32 @@ QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
     p.message->setWordWrap(true);
     layout->addWidget(p.message);
 
+    p.open = new QAction(tr("Open"), p.files);
+    p.remove = new QAction(tr("Delete…"), p.files);
+    p.remove->setShortcut(QKeySequence::Delete);
     p.copy = new QAction(tr("Copy"), p.files);
     p.copy->setShortcut(QKeySequence::Copy);
     p.paste = new QAction(tr("Paste here"), p.files);
     p.paste->setShortcut(QKeySequence::Paste);
-    for (auto* action : {p.copy, p.paste}) {
+    auto* actionsButton = new QToolButton;
+    actionsButton->setText(tr("File actions"));
+    actionsButton->setPopupMode(QToolButton::InstantPopup);
+    auto* actionsMenu = new QMenu(actionsButton);
+    actionsButton->setMenu(actionsMenu);
+    bar->insertWidget(1, actionsButton);
+    for (auto* action : {p.open, p.copy, p.paste, p.remove}) {
         action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
         p.files->addAction(action);
+        actionsMenu->addAction(action);
     }
     p.files->setContextMenuPolicy(Qt::ActionsContextMenu);
+    connect(p.open, &QAction::triggered, this, [this, remote] {
+        const auto items = m_Panes[remote].files->selectedItems();
+        if (items.size() == 1) openEntry(remote, items.first()->data(0, Qt::UserRole).value<TransferEntry>());
+    });
+    connect(p.remove, &QAction::triggered, this, [this, remote] {
+        manageSelection(FileAction::Delete, remote, selection(remote));
+    });
     connect(p.copy, &QAction::triggered, this, [this, remote] { copySelection(remote); });
     connect(p.paste, &QAction::triggered, this, [this, remote] { pasteSelection(remote); });
     connect(p.send, &QPushButton::clicked, this, [this, remote] { transfer(remote, selection(remote)); });
@@ -371,14 +720,21 @@ QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
     });
     connect(p.files, &QTreeWidget::itemSelectionChanged, this, &FileTransferWindow::updateActions);
     connect(p.files, &QTreeWidget::itemActivated, this, [this, remote](QTreeWidgetItem* item) {
-        const auto entry = item->data(0, Qt::UserRole).value<TransferEntry>();
-        if (entry.directory)
-            navigate(remote, entry.path);
+        openEntry(remote, item->data(0, Qt::UserRole).value<TransferEntry>());
     });
     return box;
 }
 
-void FileTransferWindow::navigate(bool remote, QString path)
+void FileTransferWindow::restoreDirectory(bool remote, const QString& defaultPath)
+{
+    const auto saved = QSettings().value(m_Panes[remote].lastDirectoryKey, defaultPath).toString();
+    if (!saved.isEmpty() && QDir::isRelativePath(saved))
+        navigate(remote, defaultPath);
+    else
+        navigate(remote, saved, defaultPath);
+}
+
+void FileTransferWindow::navigate(bool remote, QString path, std::optional<QString> restoreFallback)
 {
     auto& p = m_Panes[remote];
     path = QDir::fromNativeSeparators(path);
@@ -390,6 +746,7 @@ void FileTransferWindow::navigate(bool remote, QString path)
         path = QDir(p.path).filePath(path);
     }
     p.requested = path.isEmpty() ? QString() : QDir::cleanPath(path);
+    p.restoreFallback = std::move(restoreFallback);
     p.ready = false;
     p.address->setText(nativePath(p.requested));
     p.files->clear();
@@ -398,11 +755,16 @@ void FileTransferWindow::navigate(bool remote, QString path)
     m_Engine->list(remote, p.requested);
 }
 
-void FileTransferWindow::showDirectory(bool remote, QString path, QList<TransferEntry> entries, QString error)
+void FileTransferWindow::showDirectory(bool remote, QString path, const QList<TransferEntry>& entries, QString error)
 {
     auto& p = m_Panes[remote];
     if (p.requested != QDir::fromNativeSeparators(path))
         return;
+    const auto fallback = std::exchange(p.restoreFallback, std::nullopt);
+    if (!error.isEmpty() && fallback && p.requested != *fallback) {
+        navigate(remote, *fallback);
+        return;
+    }
     // Keep the current selection and scroll position when a background transfer
     // refreshes this folder while the user is preparing another copy.
     const QSignalBlocker blocker(p.files);
@@ -417,33 +779,34 @@ void FileTransferWindow::showDirectory(bool remote, QString path, QList<Transfer
         updateActions();
         return;
     }
+    if (!fallback && (p.history.isEmpty() || p.path != p.requested))
+        QSettings().setValue(p.lastDirectoryKey, p.requested);
     p.path = p.requested;
     if (p.history.size() >= 2 && p.history.at(p.history.size() - 2) == p.path)
         p.history.removeLast();
     else if (p.history.isEmpty() || p.history.last() != p.path)
         p.history.append(p.path);
-    QCollator collator;
-    collator.setNumericMode(true);
-    collator.setCaseSensitivity(Qt::CaseInsensitive);
-    std::sort(entries.begin(), entries.end(), [&collator](const TransferEntry& a, const TransferEntry& b) {
-        return a.directory != b.directory ? a.directory : collator.compare(a.name, b.name) < 0;
-    });
     const auto folder = style()->standardIcon(p.path.isEmpty() ? QStyle::SP_DriveHDIcon : QStyle::SP_DirIcon);
     const auto file = style()->standardIcon(QStyle::SP_FileIcon);
+    p.files->setSortingEnabled(false);
     for (const auto& entry : entries) {
-        auto* item = new QTreeWidgetItem(p.files);
+        // Sort local files and folders together by the selected column.
+        auto* item = new TransferListItem(1, entry, remote, m_FileIcons, /*pinFoldersFirst=*/remote);
         item->setText(1, entry.name);
         item->setToolTip(1, nativePath(entry.path));
         item->setIcon(1, entry.directory ? folder : file);
         const auto suffix = QFileInfo(entry.name).suffix();
         item->setText(3, p.path.isEmpty() ? tr("Drive") : entry.directory ? tr("Folder") : suffix.isEmpty() ? tr("File") : suffix);
         if (!p.path.isEmpty() && entry.modified.isValid())
-            item->setText(2, entry.modified.toLocalTime().toString(QStringLiteral("yyyy/MM/dd HH:mm")));
+            setNumericCell(item, 2, entry.modified.toMSecsSinceEpoch(),
+                           entry.modified.toLocalTime().toString(QStringLiteral("yyyy/MM/dd HH:mm")));
         if (!entry.directory)
-            item->setText(4, locale().formattedDataSize(entry.size));
+            setNumericCell(item, 4, entry.size, locale().formattedDataSize(entry.size));
         item->setData(0, Qt::UserRole, QVariant::fromValue(entry));
-        item->setSelected(selected.contains(entry.name));
+        p.files->addTopLevelItem(item);
+        if (selected.contains(entry.name)) item->setSelected(true);
     }
+    p.files->setSortingEnabled(true);
     p.files->verticalScrollBar()->setValue(scroll);
     p.message->setText(entries.isEmpty() ? tr("Empty folder") : tr("%1 items").arg(entries.size()));
     updateActions();
@@ -468,18 +831,28 @@ void FileTransferWindow::updateActions()
         auto& p = m_Panes[side];
         const bool available = !side || m_Available;
         const bool destination = p.ready && !p.path.isEmpty();
-        const bool hasSelection = destination && !p.files->selectedItems().isEmpty();
+        const auto items = p.files->selectedItems();
+        const bool hasSelection = destination && !items.isEmpty();
         p.back->setEnabled(available && (p.history.size() > 1 || (!p.ready && !p.history.isEmpty())));
         p.up->setEnabled(destination);
         p.refresh->setEnabled(available);
         p.locations->setEnabled(available);
         p.newFolder->setEnabled(destination);
         const int count = p.files->topLevelItemCount();
-        const int selected = p.files->selectedItems().size();
+        const int selected = items.size();
         p.selectAll->setEnabled(p.ready && count > 0);
         p.selectAll->setCheckState(!selected ? Qt::Unchecked : selected == count ? Qt::Checked : Qt::PartiallyChecked);
+        const bool singleFile = selected == 1 && !items.first()->data(0, Qt::UserRole).value<TransferEntry>().directory;
+        p.open->setText(side && singleFile ? tr("Open temporary copy") : tr("Open"));
+        p.open->setEnabled(p.ready && selected == 1 && (!p.operating || !singleFile));
+        p.remove->setEnabled(!p.operating && hasSelection && std::none_of(items.cbegin(), items.cend(), [](const QTreeWidgetItem* item) {
+            return item->data(0, Qt::UserRole).value<TransferEntry>().directory;
+        }));
         p.copy->setEnabled(hasSelection);
-        p.paste->setEnabled(destination && (ours ? m_CopiedRemote != bool(side) : side && mime && mime->hasUrls()));
+        const bool canPaste = ours ? !m_Copied.isEmpty() && (m_CopiedRemote != bool(side) ||
+            std::none_of(m_Copied.cbegin(), m_Copied.cend(), [](const TransferEntry& entry) { return entry.directory; }))
+            : mime && mime->hasUrls();
+        p.paste->setEnabled(destination && !p.operating && canPaste);
         p.send->setEnabled(hasSelection && m_Panes[!side].ready && !m_Panes[!side].path.isEmpty());
     }
     bool canCancel = false, canResume = false;
@@ -496,7 +869,7 @@ void FileTransferWindow::updateActions()
 void FileTransferWindow::showLocations(bool remote)
 {
     auto& p = m_Panes[remote];
-    auto bookmarks = QSettings().value(p.settingsKey).toStringList();
+    auto bookmarks = QSettings().value(p.bookmarksKey).toStringList();
     QMenu menu(this);
     menu.setMinimumWidth(p.address->parentWidget()->width());
     auto addPath = [&](QString label, const QString& path, QStyle::StandardPixmap icon) {
@@ -538,9 +911,75 @@ void FileTransferWindow::showLocations(bool remote)
     if (chosen == bookmark) {
         if (bookmarks.contains(p.path)) bookmarks.removeAll(p.path);
         else bookmarks.append(p.path);
-        QSettings().setValue(p.settingsKey, bookmarks);
+        QSettings().setValue(p.bookmarksKey, bookmarks);
     }
     else if (chosen) navigate(remote, chosen->data().toString());
+}
+
+void FileTransferWindow::openLocalFile(const QString& path)
+{
+    const QFileInfo info(path);
+    if (!info.isFile() || info.isSymLink() || info.isJunction() ||
+        !QDesktopServices::openUrl(QUrl::fromLocalFile(path)))
+        QMessageBox::warning(this, tr("Open"), tr("Could not open %1.").arg(nativePath(path)));
+}
+
+void FileTransferWindow::openEntry(bool remote, const TransferEntry& entry)
+{
+    const auto& pane = m_Panes[remote];
+    if (!pane.ready || (pane.operating && !entry.directory)) return;
+    if (entry.directory) navigate(remote, entry.path);
+    else if (remote) manageSelection(FileAction::DownloadToOpen, true, {entry});
+    else openLocalFile(entry.path);
+}
+
+void FileTransferWindow::manageSelection(FileAction action, bool remote, const QList<TransferEntry>& entries)
+{
+    auto& p = m_Panes[remote];
+    if (!p.ready || p.path.isEmpty() || p.operating || entries.isEmpty()) return;
+    const auto viewPath = p.path;
+    QString folder = viewPath;
+    QString openPath;
+    if (action == FileAction::Delete) {
+        QStringList paths;
+        for (const auto& entry : entries) paths << nativePath(entry.path);
+        QMessageBox confirm(QMessageBox::Question, tr("Delete files"), {}, QMessageBox::Yes | QMessageBox::Cancel, this);
+        confirm.setTextFormat(Qt::PlainText);
+        confirm.setText(remote ? tr("Permanently delete the selected files on the remote PC?") :
+                                 tr("Move the selected files to the Recycle Bin on this PC?"));
+        confirm.setInformativeText(paths.size() == 1 ? paths.first() : tr("%1 files in %2").arg(paths.size()).arg(nativePath(folder)));
+        if (paths.size() > 1) confirm.setDetailedText(paths.join('\n'));
+        confirm.setDefaultButton(QMessageBox::Cancel);
+        if (confirm.exec() != QMessageBox::Yes) return;
+        p.message->setText(tr("Deleting files…"));
+    } else if (action == FileAction::DownloadToOpen) {
+        if (!m_OpenCopies) m_OpenCopies = std::make_unique<QTemporaryDir>();
+        folder = m_OpenCopies->filePath(QUuid::createUuid().toString(QUuid::Id128));
+        if (!m_OpenCopies->isValid() || !QDir().mkdir(folder)) {
+            p.message->setText(tr("Could not create a temporary folder."));
+            return;
+        }
+        openPath = QDir(folder).filePath(entries.first().name);
+        p.message->setText(tr("Downloading %1 to open…").arg(entries.first().name));
+    } else {
+        p.message->setText(tr("Copying files…"));
+    }
+    p.operating = true;
+    updateActions();
+    m_Engine->manageFiles(action, remote, entries, folder, [this, remote, viewPath, openPath](const QString& error) {
+        auto& pane = m_Panes[remote];
+        pane.operating = false;
+        if (pane.requested == viewPath) {
+            if (openPath.isEmpty()) pane.ready = false;
+            m_Engine->list(remote, viewPath);
+        }
+        updateActions();
+        if (isVisible()) {
+            if (!error.isEmpty()) QMessageBox::warning(this, tr("File transfer"), error);
+            else if (!openPath.isEmpty()) openLocalFile(openPath);
+        }
+        closeWhenIdle();
+    });
 }
 
 void FileTransferWindow::copySelection(bool remote)
@@ -550,6 +989,11 @@ void FileTransferWindow::copySelection(bool remote)
         return;
     m_CopiedRemote = remote;
     auto* mime = new QMimeData;
+    if (!remote) {
+        QList<QUrl> urls;
+        for (const auto& entry : m_Copied) urls << QUrl::fromLocalFile(entry.path);
+        mime->setUrls(urls);
+    }
     mime->setData(clipboardType, m_ClipboardId);
     QApplication::clipboard()->setMimeData(mime);
 }
@@ -562,14 +1006,16 @@ void FileTransferWindow::pasteSelection(bool remote)
     if (mime->data(clipboardType) == m_ClipboardId) {
         if (m_CopiedRemote != remote)
             transfer(!remote, m_Copied);
+        else
+            manageSelection(FileAction::Copy, remote, m_Copied);
     }
-    else if (remote && mime->hasUrls()) {
+    else if (mime->hasUrls()) {
         QList<TransferEntry> entries;
         for (const auto& url : mime->urls()) {
             if (!url.isLocalFile())
                 continue;
             QFileInfo info(url.toLocalFile());
-            if (!info.exists() || info.isRoot() || info.isSymLink())
+            if (!info.exists() || info.isRoot() || info.isSymLink() || info.isJunction())
                 continue;
             TransferEntry entry;
             entry.name = info.fileName();
@@ -579,7 +1025,8 @@ void FileTransferWindow::pasteSelection(bool remote)
             entry.modified = info.lastModified();
             entries.append(entry);
         }
-        transfer(false, entries);
+        if (remote) transfer(false, entries);
+        else manageSelection(FileAction::Copy, false, entries);
     }
 }
 
@@ -592,17 +1039,19 @@ FileTransferWindow::~FileTransferWindow()
 QTreeWidgetItem* FileTransferWindow::addTask(bool fromRemote, const TransferEntry& entry,
                                              const QString& destination, const QString& key, qint64 bytes)
 {
-    auto* item = new QTreeWidgetItem(m_Queue);
+    auto* item = new TransferListItem(0, entry, fromRemote, m_FileIcons);
     m_Tasks.insert(item, Task{entry, destination, key, fromRemote, bytes});
     item->setText(0, entry.name);
+    item->setIcon(0, style()->standardIcon(entry.directory ? QStyle::SP_DirIcon : QStyle::SP_FileIcon));
     item->setText(1, tr("Interrupted"));
-    item->setText(2, byteCounts(locale(), bytes, entry.directory ? -1 : entry.size));
+    setNumericCell(item, 2, bytes, byteCounts(locale(), bytes, entry.directory ? -1 : entry.size));
     const auto source = fromRemote ? tr("Remote · %1") : tr("Local · %1");
     const auto target = fromRemote ? tr("Local · %1") : tr("Remote · %1");
     item->setText(4, source.arg(nativePath(entry.path)));
     item->setText(5, target.arg(nativePath(destination)));
     item->setToolTip(4, item->text(4));
     item->setToolTip(5, item->text(5));
+    m_Queue->addTopLevelItem(item);
     return item;
 }
 
@@ -676,7 +1125,7 @@ void FileTransferWindow::startTask(QTreeWidgetItem* item)
     m_Running.insert(t.id, item);
     item->setText(1, tr("Queued"));
     item->setToolTip(1, {});
-    item->setText(3, {});
+    setNumericCell(item, 3, {}, {});
 }
 
 void FileTransferWindow::cancelTask(QTreeWidgetItem* item)
@@ -707,8 +1156,14 @@ void FileTransferWindow::transfer(bool fromRemote, const QList<TransferEntry>& e
 {
     const auto& destination = m_Panes[!fromRemote];
     if (!destination.ready || destination.path.isEmpty()) return;
+    transferTo(fromRemote, entries, destination.path);
+}
+
+void FileTransferWindow::transferTo(bool fromRemote, const QList<TransferEntry>& entries, const QString& destination)
+{
+    if (!m_Available || !QDir::isAbsolutePath(destination)) return;
     for (const auto& entry : entries) {
-        const auto key = taskKey(fromRemote, entry.path, destination.path);
+        const auto key = taskKey(fromRemote, entry.path, destination);
         auto it = std::find_if(m_Tasks.cbegin(), m_Tasks.cend(), [&](const Task& t) {
             return t.key == key && t.state != State::Finished;
         });
@@ -719,16 +1174,27 @@ void FileTransferWindow::transfer(bool fromRemote, const QList<TransferEntry>& e
             m_Queue->setCurrentItem(item);
             m_Queue->scrollToItem(item);
         } else {
-            item = addTask(fromRemote, entry, destination.path, key, 0);
+            item = addTask(fromRemote, entry, destination, key, 0);
         }
         startTask(item);
     }
     updateActions();
 }
 
+bool FileTransferWindow::hasPendingWork() const
+{
+    return !m_Running.isEmpty() || m_Panes[0].operating || m_Panes[1].operating;
+}
+
+void FileTransferWindow::closeWhenIdle()
+{
+    if (m_CloseAfterTransfers && !isVisible() && !hasPendingWork())
+        QTimer::singleShot(0, this, [this] { if (!isVisible() && !hasPendingWork()) close(); });
+}
+
 void FileTransferWindow::closeEvent(QCloseEvent* event)
 {
-    if (m_Standalone && !m_Running.isEmpty()) {
+    if (m_Standalone && hasPendingWork()) {
         // Closing the browser lets queued transfers finish in the background.
         m_CloseAfterTransfers = true;
         hide();
@@ -743,7 +1209,10 @@ void FileTransferWindow::refreshSpeed()
     auto* item = m_Running.value(m_SpeedJob);
     if (!item) return;
     const auto rate = m_Speed.sample(m_AttemptBytes);
-    item->setText(3, rate < 0 ? QString() : tr("%1/s").arg(locale().formattedDataSize(rate)));
+    if (rate < 0)
+        setNumericCell(item, 3, {}, {});
+    else
+        setNumericCell(item, 3, rate, tr("%1/s").arg(locale().formattedDataSize(rate)));
 }
 
 void FileTransferWindow::showProgress(int id, qint64 bytes, qint64 total, const QString& status, bool finished)
@@ -754,7 +1223,7 @@ void FileTransferWindow::showProgress(int id, qint64 bytes, qint64 total, const 
     t.bytes = bytes;
     item->setText(1, finished && t.retryable && t.state != State::Cancelling ? tr("Interrupted") : status);
     item->setToolTip(1, status);
-    item->setText(2, byteCounts(locale(), bytes, total));
+    setNumericCell(item, 2, bytes, byteCounts(locale(), bytes, total));
     item->setToolTip(2, item->text(2));
     if (!finished) {
         if (m_SaveTimer.elapsed() >= 2000 && t.state == State::Active) {
@@ -766,7 +1235,7 @@ void FileTransferWindow::showProgress(int id, qint64 bytes, qint64 total, const 
     if (m_SpeedJob == id) {
         m_SpeedTimer->stop();
         m_SpeedJob = 0;
-        item->setText(3, {});
+        setNumericCell(item, 3, {}, {});
     }
     m_Running.remove(id);
     t.id = 0;
@@ -781,6 +1250,5 @@ void FileTransferWindow::showProgress(int id, qint64 bytes, qint64 total, const 
     const bool remoteDestination = !t.fromRemote;
     if (m_Panes[remoteDestination].requested == t.destination) m_Engine->list(remoteDestination, t.destination);
     updateActions();
-    if (m_CloseAfterTransfers && !isVisible() && m_Running.isEmpty())
-        QTimer::singleShot(0, this, [this] { if (!isVisible()) close(); });
+    closeWhenIdle();
 }

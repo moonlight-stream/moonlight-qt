@@ -7,6 +7,7 @@
 #include <QHash>
 #include <QWidget>
 #include <array>
+#include <optional>
 
 class QAction;
 class QCheckBox;
@@ -14,10 +15,12 @@ class QLabel;
 class QLineEdit;
 class QLockFile;
 class QPushButton;
+class QTemporaryDir;
 class QTimer;
 class QToolButton;
 class QTreeWidget;
 class QTreeWidgetItem;
+class TransferFileIcons;
 
 class FileTransferWindow final : public QWidget
 {
@@ -26,6 +29,7 @@ public:
     FileTransferWindow(QUrl host, QSslCertificate certificate, QByteArray token,
                        QString hostName, QString hostId, QWidget* parent = nullptr, bool standalone = false);
     ~FileTransferWindow() override;
+    void transferTo(bool fromRemote, const QList<TransferEntry>& entries, const QString& destination);
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -44,20 +48,31 @@ private:
         QTreeWidget* files;
         QLabel* message;
         QPushButton* send;
+        QAction* open;
+        QAction* remove;
         QAction* copy;
         QAction* paste;
         QString path;
         QString requested;
         QStringList history;
-        QString settingsKey;
+        QString bookmarksKey;
+        QString lastDirectoryKey;
+        std::optional<QString> restoreFallback;
         bool ready = false;
+        bool operating = false;
     };
     QWidget* makePane(bool remote, const QString& title);
-    void navigate(bool remote, QString path);
-    void showDirectory(bool remote, QString path, QList<TransferEntry> entries, QString error);
+    void restoreDirectory(bool remote, const QString& defaultPath);
+    void navigate(bool remote, QString path, std::optional<QString> restoreFallback = std::nullopt);
+    void showDirectory(bool remote, QString path, const QList<TransferEntry>& entries, QString error);
     QList<TransferEntry> selection(bool remote) const;
     void updateActions();
     void showLocations(bool remote);
+    void openEntry(bool remote, const TransferEntry& entry);
+    void openLocalFile(const QString& path);
+    void manageSelection(FileTransferEngine::FileAction action, bool remote, const QList<TransferEntry>& entries);
+    bool hasPendingWork() const;
+    void closeWhenIdle();
     void copySelection(bool remote);
     void pasteSelection(bool remote);
     void transfer(bool fromRemote, const QList<TransferEntry>& entries);
@@ -73,6 +88,7 @@ private:
     void showProgress(int id, qint64 bytes, qint64 total, const QString& status, bool finished);
 
     FileTransferEngine* m_Engine;
+    TransferFileIcons* m_FileIcons;
     std::array<Pane, 2> m_Panes{};
     QTreeWidget* m_Queue;
     QPushButton* m_Cancel;
@@ -100,6 +116,7 @@ private:
     qint64 m_AttemptBytes = 0;
     QByteArray m_ClipboardId;
     QList<TransferEntry> m_Copied;
+    std::unique_ptr<QTemporaryDir> m_OpenCopies;
     bool m_CopiedRemote = false;
     bool m_Available;
     bool m_Standalone;

@@ -20,6 +20,7 @@
 #define SER_IPV6PORT "ipv6port"
 #define SER_APPLIST "apps"
 #define SER_SRVCERT "srvcert"
+#define SER_PAIRED "paired"
 #define SER_CUSTOMNAME "customname"
 #define SER_NVIDIASOFTWARE "nvidiasw"
 
@@ -38,6 +39,8 @@ NvComputer::NvComputer(QSettings& settings)
     this->manualAddress = NvAddress(settings.value(SER_MANUALADDR).toString(),
                                     settings.value(SER_MANUALPORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
     this->serverCert = QSslCertificate(settings.value(SER_SRVCERT).toByteArray());
+    // Older host records only have the certificate saved during pairing.
+    this->pairState = settings.value(SER_PAIRED, !serverCert.isNull()).toBool() ? PS_PAIRED : PS_NOT_PAIRED;
     this->isNvidiaServerSoftware = settings.value(SER_NVIDIASOFTWARE).toBool();
 
     int appCount = settings.beginReadArray(SER_APPLIST);
@@ -52,7 +55,6 @@ NvComputer::NvComputer(QSettings& settings)
     sortAppList();
 
     this->currentGameId = 0;
-    this->pairState = PS_UNKNOWN;
     this->state = CS_UNKNOWN;
     this->gfeVersion = nullptr;
     this->appVersion = nullptr;
@@ -90,6 +92,7 @@ void NvComputer::serialize(QSettings& settings, bool serializeApps) const
     settings.setValue(SER_MANUALADDR, manualAddress.address());
     settings.setValue(SER_MANUALPORT, manualAddress.port());
     settings.setValue(SER_SRVCERT, serverCert.toPem());
+    settings.setValue(SER_PAIRED, pairState == PS_PAIRED);
     settings.setValue(SER_NVIDIASOFTWARE, isNvidiaServerSoftware);
 
     // Avoid deleting an existing applist if we couldn't get one
@@ -115,6 +118,7 @@ bool NvComputer::isEqualSerialized(const NvComputer &that) const
            this->ipv6Address == that.ipv6Address &&
            this->manualAddress == that.manualAddress &&
            this->serverCert == that.serverCert &&
+           this->pairState == that.pairState &&
            this->isNvidiaServerSoftware == that.isNvidiaServerSoftware &&
            this->appList == that.appList;
 }

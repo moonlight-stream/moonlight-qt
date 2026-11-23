@@ -4,7 +4,13 @@
 #include <mstcpip.h>
 
 #include "clipboardsync.h"
+#include "filetransferprocess.h"
+#include "settings/streamingpreferences.h"
+#include <QLocalSocket>
 #include "clipboarddownload.h"
+#include "clipboardvirtualfiles.h"
+#include "explorerpaste.h"
+#include "desktoptransferprogress.h"
 #include "clipboarduploadrate.h"
 #include "clipboard_win32.h"
 #include "transferfilehash.h"
@@ -21,11 +27,11 @@
 #include <cstring>
 #include <functional>
 #include <QNetworkAccessManager>
-#include <QHostAddress>
 #include <QNetworkProxy>
 #include <QNetworkReply>
 #include <QSslConfiguration>
 #include <QSettings>
+#include <QScopedValueRollback>
 #include <QSet>
 #include <QStandardPaths>
 #include <QTimer>
@@ -53,12 +59,9 @@ struct Result {
     QByteArray task;
 };
 
-Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
-                const QSslCertificate& pairedHost, const QByteArray* upload,
-                const std::function<bool()>& cancelled = {}, int timeoutMs = 120000, size_t maxResponse = win_clipboard::max_body)
+QNetworkReply* startExchange(QNetworkAccessManager& network, const QNetworkRequest& request,
+                             const QSslCertificate& pairedHost, const QByteArray* upload)
 {
-    QEventLoop loop;
-    Result result;
     auto reply = upload ? network.post(request, *upload) : network.get(request);
     // This manager is private to one paired host. Validate each new TLS
     // connection before Qt allows any HTTP data through it.
@@ -69,6 +72,13 @@ Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
         if (reply->sslConfiguration().peerCertificate() == pairedHost) reply->ignoreSslErrors(errors);
     });
     reply->setReadBufferSize(64 * 1024);
+    return reply;
+}
+
+Result collectReply(QNetworkReply* reply, const std::function<bool()>& cancelled, int timeoutMs, size_t maxResponse)
+{
+    QEventLoop loop;
+    Result result;
     auto receive = [&] {
         if (reply->bytesAvailable() > static_cast<qint64>(maxResponse) - result.payload.size()) {
             reply->abort();
@@ -84,6 +94,7 @@ Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
     });
     cancellation.start(50);
     if (timeoutMs > 0) QTimer::singleShot(timeoutMs, reply, &QNetworkReply::abort);
+    if (reply->bytesAvailable()) receive();
     if (!reply->isFinished()) loop.exec();
     if (reply->bytesAvailable()) receive();
     // Qt also reports HTTP 4xx/5xx as a network error.
@@ -108,6 +119,13 @@ Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
     return result;
 }
 
+Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
+                const QSslCertificate& pairedHost, const QByteArray* upload,
+                const std::function<bool()>& cancelled = {}, int timeoutMs = 120000, size_t maxResponse = win_clipboard::max_body)
+{
+    return collectReply(startExchange(network, request, pairedHost, upload), cancelled, timeoutMs, maxResponse);
+}
+
 bool waitForUpload(qint64 deadline, const std::function<bool()>& cancelled)
 {
     while (!cancelled()) {
@@ -116,6 +134,83 @@ bool waitForUpload(qint64 deadline, const std::function<bool()>& cancelled)
         std::this_thread::sleep_for(std::chrono::milliseconds((std::min<qint64>)(remaining, 25)));
     }
     return false;
+}
+
+QNetworkRequest chunkRequest(const QNetworkRequest& baseRequest, DWORD revision, const char* op, const QString& lease, int file, quint64 offset) {
+    QUrlQuery query;
+    query.addQueryItem("download", op);
+    query.addQueryItem("lease", lease);
+    query.addQueryItem("files", "1");
+    query.addQueryItem("since", QString::number(revision));
+    const bool chunk = qstrcmp(op, "chunk") == 0;
+    if (chunk) {
+        query.addQueryItem("file", QString::number(file));
+        query.addQueryItem("offset", QString::number(offset));
+    }
+    auto endpoint = baseRequest.url();
+    endpoint.setQuery(query);
+    auto req = baseRequest;
+    req.setUrl(endpoint);
+    return req;
+}
+
+
+int receiveSnapshot(QNetworkAccessManager& network, const QNetworkRequest& baseRequest,
+                    const QSslCertificate& certificate, const QByteArray& manifest, DWORD revision,
+                    const std::filesystem::path& destination, DWORD local,
+                    const std::function<bool()>& cancelled, const std::function<bool(const ClipboardUploadProgress&)>& report,
+                    ClipboardVirtualFiles::Paths* paths, bool saveToFolder)
+{
+    // Keep a small window of independent range reads in flight. The receiver
+    // consumes them in offset order and validates each chunk before writing.
+    std::deque<std::pair<quint64, QNetworkReply*>> pending;
+    size_t window = 4;
+    const auto discardPending = [&] {
+        for (const auto& entry : pending) {
+            entry.second->abort();
+            delete entry.second;
+        }
+        pending.clear();
+    };
+    const auto fetch = [&](const char* op, const QString& lease, int file, quint64 offset, quint64 size) {
+        using clipboard_download::ChunkBytes;
+        if (qstrcmp(op, "finish") == 0) {
+            discardPending();
+            return exchange(network, chunkRequest(baseRequest, revision, op, lease, file, offset), certificate, nullptr, {}, 3000);
+        }
+        auto start = [&](quint64 pos) {
+            auto reply = startExchange(network, chunkRequest(baseRequest, revision, op, lease, file, pos), certificate, nullptr);
+            reply->setReadBufferSize(ChunkBytes);
+            return reply;
+        };
+        auto next = pending.empty() ? offset : pending.back().first + ChunkBytes;
+        while (pending.size() < window && next < size) {
+            pending.emplace_back(next, start(next));
+            next += ChunkBytes;
+        }
+        auto reply = pending.front().second;
+        pending.pop_front();
+        for (int retry = 0; ; ++retry) {
+            auto result = collectReply(reply, cancelled, 30000, ChunkBytes);
+            const bool transient = !result.status || result.status == 408 || result.status == 429 ||
+                                   result.status == 502 || result.status == 503 || result.status == 504;
+            if (!transient || cancelled() || retry == 2) {
+                if (result.status != 200 && !cancelled())
+                    qWarning() << "Clipboard download chunk failed, HTTP" << result.status
+                               << "network error" << result.networkError << "file" << file << "offset" << offset;
+                return result;
+            }
+            // Some hosts or proxies cannot serve overlapping reads reliably.
+            // Retry only the uncommitted offset, then keep this batch serial.
+            window = 1;
+            discardPending();
+            if (!waitForUpload(monotonicMs() + (100 << retry), cancelled)) return result;
+            reply = start(offset);
+        }
+    };
+    DWORD unused = 0;
+    return clipboard_download::receive(manifest, destination, revision, local, unused, fetch,
+                                       cancelled, report, paths, saveToFolder);
 }
 
 quint64 directEthernetSpeed(const QUrl& host)
@@ -147,7 +242,7 @@ class ClipboardUploadPacer
 {
 public:
     explicit ClipboardUploadPacer(const QUrl& host)
-        : m_Rate(directEthernetSpeed(host), QHostAddress(host.host()).isLoopback())
+        : m_Rate(directEthernetSpeed(host))
     {
         sampleRtt();
     }
@@ -155,7 +250,7 @@ public:
     DWORD nextSize(quint64 remaining)
     {
         const auto now = monotonicMs();
-        if (now - m_LastSample >= m_Rate.sampleIntervalMs()) {
+        if (now - m_LastSample >= 250) {
             m_LastSample = now;
             sampleRtt();
         }
@@ -165,8 +260,10 @@ public:
     bool wait(DWORD bytes, const std::function<bool()>& cancelled)
     {
         const int rate = m_Rate.bytesPerSecond();
-        const auto due = m_LastSend + (static_cast<qint64>(bytes) * 1000 + rate - 1) / rate;
-        if (!waitForUpload(due, cancelled)) return false;
+        if (rate) {
+            const auto due = m_LastSend + (static_cast<qint64>(bytes) * 1000 + rate - 1) / rate;
+            if (!waitForUpload(due, cancelled)) return false;
+        } else if (cancelled()) return false;
         m_LastSend = monotonicMs();
         return true;
     }
@@ -833,7 +930,8 @@ QList<ClipboardUploadProgress> ClipboardSync::fileUploadTasks() const
     std::lock_guard lock(m_FileQueue->mutex);
     QList<ClipboardUploadProgress> tasks;
     const auto& download = m_FileQueue->download;
-    if (!download.names.isEmpty() && (download.state != FileQueue::State::ReadyLocally ||
+    const bool finished = download.state == FileQueue::State::ReadyLocally || download.state == FileQueue::State::Saved;
+    if (!download.names.isEmpty() && (!finished ||
         (monotonicMs() < m_FileQueue->readyUntil && GetClipboardSequenceNumber() == m_FileQueue->readySequence))) {
         tasks.append(download);
     }
@@ -908,12 +1006,37 @@ void ClipboardSync::run()
     // A large PNG can take minutes on a slow link. Time out stalled traffic.
     request.setTransferTimeout(120000);
 
+    // Explorer can call the STA for metadata or stream reads between polls.
+    const auto waitForEvents = [](int milliseconds) {
+        QEventLoop loop;
+        QTimer::singleShot(milliseconds, &loop, &QEventLoop::quit);
+        loop.exec();
+    };
+
     DWORD local = m_LocalSequence;
     std::optional<DWORD> remote;
+    const bool oleReady = SUCCEEDED(OleInitialize(nullptr));
+    ClipboardVirtualFiles* offer = nullptr;
+    explorer_paste::Shortcut shortcut;
+    DesktopTransferProgress progressWindow;
+    explorer_paste::Shortcut::Paste pasteToFolder;
+    bool receiving = false;
+    const auto clearOffer = [&] {
+        shortcut.reset();
+        pasteToFolder = {};
+        if (offer) {
+            offer->disconnect();
+            offer->Release();
+            offer = nullptr;
+        }
+    };
+    bool refreshOffer = false;
     int failures = 0;
     while (!isInterruptionRequested()) {
+        if (offer && OleIsCurrentClipboard(offer) != S_OK) clearOffer();
+        if (offer && pasteToFolder) shortcut.update(local, pasteToFolder);
         if (m_FileQueue->process(*this, network, local, remote)) {
-            msleep(20);
+            waitForEvents(20);
             continue;
         }
         QUrl url = m_Host;
@@ -950,10 +1073,17 @@ void ClipboardSync::run()
                 }
             }
         }
+        // Poll only the revision while Explorer holds a virtual selection. An ordinary
+        // manifest poll on older Sunshine builds closes its previous read lease.
+        const bool probe = offer && remote && upload.isEmpty() && !refreshOffer;
+        if (probe) query.clear();
         if (upload.isEmpty()) {
             m_SendingSequence = NoPaste;
             query.addQueryItem("since", remote ? QString::number(*remote) : QStringLiteral("init"));
-            if (m_Files) query.addQueryItem("download", "1");
+            if (m_Files && !probe) {
+                query.addQueryItem("download", "1");
+                query.addQueryItem("metadataOnly", "1");
+            }
         }
         url.setQuery(query);
         request.setUrl(url);
@@ -971,6 +1101,11 @@ void ClipboardSync::run()
             }
             break;
         }
+        if (probe && response.status == 204 && response.sequence && response.sequence != remote) {
+            refreshOffer = true;
+            continue;
+        }
+        if (!probe && (response.status == 200 || response.status == 204)) refreshOffer = false;
         if (response.status == 204 && response.sequence) {
             remote = response.sequence;
             if (!upload.isEmpty()) {
@@ -985,59 +1120,161 @@ void ClipboardSync::run()
             DWORD applied = local;
             int status;
             if (m_Files && response.payload.startsWith('M')) {
-                auto& queue = *m_FileQueue;
-                const auto started = monotonicMs();
-                quint64 taskId;
-                {
-                    std::lock_guard lock(queue.mutex);
-                    queue.download = {};
-                    queue.downloadCancelled = false;
-                    taskId = ++queue.nextId;
+                const DWORD revision = *response.sequence;
+                const auto baseRequest = request;
+                const auto manifest = QJsonDocument::fromJson(response.payload.mid(1)).object();
+                const auto entries = manifest.value("files").toArray();
+                std::vector<FILEDESCRIPTORW> descriptors;
+                for (const auto& value : entries) {
+                    const auto entry = value.toObject();
+                    const auto name = entry.value("name").toString().toStdWString();
+                    bool valid = false;
+                    const quint64 size = entry.value("size").toString().toULongLong(&valid);
+                    if (!valid || !win_clipboard::detail::valid_name(name) || name.size() >= MAX_PATH) break;
+                    FILEDESCRIPTORW descriptor{};
+                    descriptor.dwFlags = FD_ATTRIBUTES | FD_FILESIZE | FD_UNICODE;
+                    descriptor.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+                    descriptor.nFileSizeHigh = static_cast<DWORD>(size >> 32);
+                    descriptor.nFileSizeLow = static_cast<DWORD>(size);
+                    std::copy(name.begin(), name.end(), descriptor.cFileName);
+                    descriptors.push_back(descriptor);
                 }
-                const auto cancelled = [&] { return isInterruptionRequested() || queue.downloadCancelled ||
-                                                    GetClipboardSequenceNumber() != local; };
-                const auto report = [&](const ClipboardUploadProgress& progress) {
-                    std::lock_guard lock(queue.mutex);
-                    if (queue.downloadCancelled) return false;
-                    queue.download = progress;
-                    queue.download.taskId = taskId;
-                    queue.download.startedAtMs = started;
-                    return true;
-                };
-                const auto fetch = [&](const char* op, const QString& lease, int file, quint64 offset) {
-                    QUrlQuery query;
-                    query.addQueryItem("download", op);
-                    query.addQueryItem("lease", lease);
-                    query.addQueryItem("files", "1");
-                    query.addQueryItem("since", QString::number(*response.sequence));
-                    const bool chunk = qstrcmp(op, "chunk") == 0;
-                    if (chunk) {
-                        query.addQueryItem("file", QString::number(file));
-                        query.addQueryItem("offset", QString::number(offset));
+                // Release source handles immediately. Reopen and validate the same
+                // remote selection when Explorer asks for its first file stream.
+                if (!manifest.value("metadataOnly").toBool())
+                    exchange(network, chunkRequest(baseRequest, revision, "finish", manifest.value("lease").toString(), 0, 0), m_Certificate, nullptr, {}, 3000);
+                const auto offerId = manifest.value("offer").toString();
+                auto download = [&, revision, baseRequest, entries, offerId](ClipboardVirtualFiles::Paths& paths, const std::filesystem::path& destination,
+                                                                   HWND folder = nullptr, bool* detached = nullptr) {
+                    if (receiving) { qWarning() << "Clipboard download already active"; return false; }
+                    QScopedValueRollback<bool> guard(receiving, true);
+                    const HRESULT ownership = offer ? OleIsCurrentClipboard(offer) : S_FALSE;
+                    if (isInterruptionRequested() || ownership != S_OK || GetClipboardSequenceNumber() != local) {
+                        qWarning() << "Clipboard download no longer current" << ownership << local << GetClipboardSequenceNumber();
+                        return false;
                     }
                     auto endpoint = m_Host;
+                    QUrlQuery query;
+                    query.addQueryItem("download", offerId.isEmpty() ? "1" : "offer");
+                    if (!offerId.isEmpty()) query.addQueryItem("lease", offerId);
+                    query.addQueryItem("files", "1");
+                    query.addQueryItem("since", QString::number(offerId.isEmpty() ? revision - 1U : revision));
                     endpoint.setQuery(query);
-                    auto req = request;
-                    req.setUrl(endpoint);
-                    return exchange(network, req, m_Certificate, nullptr,
-                                    [&] { return chunk && cancelled(); }, chunk ? 30000 : 3000);
+                    auto open = baseRequest;
+                    open.setUrl(endpoint);
+                    if (folder || !offerId.isEmpty()) open.setRawHeader("X-Clipboard-Independent", "1");
+                    const auto snapshot = exchange(network, open, m_Certificate, nullptr, {}, 10000);
+                    if (snapshot.status != 200 || snapshot.sequence != revision || !snapshot.payload.startsWith('M') ||
+                        QJsonDocument::fromJson(snapshot.payload.mid(1)).object().value("files").toArray() != entries) {
+                        qWarning() << "Clipboard snapshot rejected, HTTP" << snapshot.status << "expected revision" << revision
+                                   << "received" << snapshot.sequence.value_or(0) << "network error" << snapshot.networkError;
+                        return false;
+                    }
+                    if (folder && !snapshot.task.isEmpty()) {
+                        endpoint.setPath("/clipboard/transfer");
+                        endpoint.setQuery(QString{});
+                        QJsonObject task {
+                            {"host", endpoint.toString()}, {"certificate", QString::fromLatin1(m_Certificate.toPem())},
+                            {"token", QString::fromLatin1(snapshot.task)}, {"manifest", QString::fromUtf8(snapshot.payload)},
+                            {"revision", QString::number(revision)}, {"folder", QString::fromStdWString(destination.native())},
+                            {"window", QString::number(reinterpret_cast<quintptr>(folder))}
+                        };
+                        *detached = ClipboardTransferProcess::launch(task);
+                        if (!*detached) {
+                            qWarning() << "Clipboard transfer process did not acknowledge the task";
+                            auto cleanup = baseRequest;
+                            cleanup.setRawHeader("X-Clipboard-Token", snapshot.task);
+                            cleanup.setUrl(endpoint);
+                            const auto lease = QJsonDocument::fromJson(snapshot.payload.mid(1)).object().value("lease").toString();
+                            exchange(network, chunkRequest(cleanup, revision, "finish", lease, 0, 0), m_Certificate, nullptr, {}, 3000);
+                        }
+                        return *detached;
+                    }
+                    if (folder) progressWindow.show(folder);
+                    auto& queue = *m_FileQueue;
+                    const auto started = monotonicMs();
+                    quint64 taskId;
+                    {
+                        std::lock_guard lock(queue.mutex);
+                        queue.download = {};
+                        queue.downloadCancelled = false;
+                        taskId = ++queue.nextId;
+                    }
+                    const auto cancelled = [&] { return isInterruptionRequested() || queue.downloadCancelled ||
+                                                        (!destination.empty() && progressWindow.cancelled) ||
+                                                        GetClipboardSequenceNumber() != local; };
+                    const auto report = [&](const ClipboardUploadProgress& progress) {
+                        if (!destination.empty()) progressWindow.update(progress);
+                        std::lock_guard lock(queue.mutex);
+                        if (queue.downloadCancelled) return false;
+                        queue.download = progress;
+                        queue.download.taskId = taskId;
+                        queue.download.startedAtMs = started;
+                        return true;
+                    };
+                    auto reader = baseRequest;
+                    if (!snapshot.task.isEmpty()) {
+                        endpoint.setPath("/clipboard/transfer");
+                        reader.setUrl(endpoint);
+                        reader.setRawHeader("X-Clipboard-Token", snapshot.task);
+                    }
+                    const int status = receiveSnapshot(network, reader, m_Certificate, snapshot.payload, revision,
+                                                       destination.empty() ? stagingRoot : destination, local,
+                                                       cancelled, report, &paths, !destination.empty());
+                    std::lock_guard lock(queue.mutex);
+                    if (queue.downloadCancelled) {
+                        queue.download = {};
+                    } else if (status == 204) {
+                        queue.download.state = destination.empty() ? FileQueue::State::ReadyLocally : FileQueue::State::Saved;
+                        queue.readySequence = local;
+                        queue.readyUntil = monotonicMs() + 4000;
+                    } else if (status == 409) {
+                        queue.download = {};
+                    } else {
+                        queue.download.state = FileQueue::State::Failed;
+                        queue.download.error = status == 507 ? FileQueue::message("Not enough local disk space") :
+                                               FileQueue::message("File download failed");
+                    }
+                    return status == 204;
                 };
-                status = clipboard_download::receive(response.payload, stagingRoot, *response.sequence,
-                                                     local, applied, fetch, cancelled, report);
-                std::lock_guard lock(queue.mutex);
-                if (queue.downloadCancelled) {
-                    // Consume this host revision so the next poll honors Cancel.
-                    remote = response.sequence;
-                } else if (status == 204) {
-                    queue.download.state = FileQueue::State::ReadyLocally;
-                    queue.readySequence = applied;
-                    queue.readyUntil = monotonicMs() + 4000;
-                } else if (status == 409) {
-                    queue.download = {};
-                } else {
-                    queue.download.state = FileQueue::State::Failed;
-                    queue.download.error = status == 507 ? FileQueue::message("Not enough local disk space") :
-                                           FileQueue::message("File download failed");
+                status = GetClipboardSequenceNumber() != local ? 409 : 400;
+                if (oleReady && !entries.isEmpty() && entries.size() <= win_clipboard::max_files &&
+                    descriptors.size() == size_t(entries.size()) && GetClipboardSequenceNumber() == local) {
+                    auto next = new ClipboardVirtualFiles(std::move(descriptors), [download](ClipboardVirtualFiles::Paths& paths) {
+                        return download(paths, {});
+                    });
+                    if (SUCCEEDED(OleSetClipboard(next))) {
+                        clearOffer();
+                        offer = next;
+                        applied = GetClipboardSequenceNumber();
+                        pasteToFolder = [&, download, applied](const explorer_paste::Target& target) {
+                            bool detached = false;
+                            const auto current = explorer_paste::focusedTarget();
+                            ClipboardVirtualFiles::Paths unusedPaths;
+                            bool ok = false;
+                            if (current.window == target.window && current.pane == target.pane &&
+                                current.directory == target.directory && GetClipboardSequenceNumber() == applied) {
+                                win_clipboard::detail::file_handle pin(CreateFileW(target.directory.c_str(),
+                                    FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                    OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
+                                if (pin.get() != INVALID_HANDLE_VALUE) ok = download(unusedPaths, target.directory, target.window, &detached);
+                                else {
+                                    qWarning() << "Clipboard destination could not be opened" << GetLastError();
+                                    pin.release();
+                                }
+                            }
+                            else {
+                                qWarning() << "Clipboard paste target changed" << (current.window == target.window)
+                                           << (current.pane == target.pane) << (current.directory == target.directory)
+                                           << "sequence" << applied << GetClipboardSequenceNumber();
+                            }
+                            if (!detached) {
+                                if (!ok && !progressWindow.visible()) progressWindow.show(target.window);
+                                progressWindow.finish(ok);
+                            }
+                        };
+                        status = 204;
+                    } else { next->Release(); status = 409; }
                 }
             } else {
                 status = win_clipboard::write(m_Text, m_Files, payload, applied, stagingRoot, local, m_Images);
@@ -1079,7 +1316,62 @@ void ClipboardSync::run()
                     return job->progress.state == FileQueue::State::Queued;
                 })) break;
             }
-            msleep(50);
+            waitForEvents(50);
         }
     }
+    if (offer && OleIsCurrentClipboard(offer) == S_OK) OleSetClipboard(nullptr);
+    clearOffer();
+    if (oleReady) OleUninitialize();
+}
+
+int ClipboardTransferProcess::run(const QString& channel)
+{
+    QLocalSocket socket;
+    const auto task = take(channel, socket);
+    QUrl host(task.value("host").toString());
+    QSslCertificate certificate(task.value("certificate").toString().toLatin1());
+    const QByteArray token = task.value("token").toString().toLatin1();
+    const auto manifest = task.value("manifest").toString().toUtf8();
+    bool valid = false;
+    const DWORD revision = task.value("revision").toString().toUInt(&valid);
+    const auto folder = std::filesystem::path(task.value("folder").toString().toStdWString());
+    if (!valid || host.scheme() != "https" || host.host().isEmpty() || host.path() != "/clipboard/transfer" ||
+        certificate.isNull() || token.size() != 64 || !manifest.startsWith('M') ||
+        !win_clipboard::detail::local_file_path(folder)) return 1;
+
+    // Acquire the directory while the sending process still holds its own pin.
+    HANDLE handle = CreateFileW(folder.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+    if (handle == INVALID_HANDLE_VALUE) return 1;
+    win_clipboard::detail::file_handle pin(handle);
+    StreamingPreferences::get()->retranslate();
+    QNetworkAccessManager network;
+    network.setProxy(QNetworkProxy(QNetworkProxy::NoProxy));
+    auto ssl = IdentityManager::get()->getSslConfig();
+    ssl.setCaCertificates({certificate});
+    QNetworkRequest request(host);
+    request.setSslConfiguration(ssl);
+    request.setTransferTimeout(30000);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
+    request.setRawHeader("X-Clipboard-Token", token);
+
+    DesktopTransferProgress panel;
+    panel.show(reinterpret_cast<HWND>(task.value("window").toString().toULongLong()));
+    if (socket.write("R", 1) != 1 || (socket.bytesToWrite() && !socket.waitForBytesWritten(3000))) return 1;
+    socket.disconnectFromServer();
+    const auto cancelled = [&] { return panel.cancelled; };
+    const auto report = [&](const ClipboardUploadProgress& progress) {
+        panel.update(progress);
+        return !panel.cancelled;
+    };
+    const int result = receiveSnapshot(network, request, certificate, manifest, revision, folder, 0,
+                                       cancelled, report, nullptr, true);
+    pin.reset();
+    panel.finish(result == 204);
+    while (panel.visible()) {
+        QEventLoop loop;
+        QTimer::singleShot(100, &loop, &QEventLoop::quit);
+        loop.exec();
+    }
+    return result == 204 ? 0 : 1;
 }

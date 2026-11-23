@@ -164,13 +164,14 @@ inline Handle openPart(const QString& target, const QJsonObject& state, bool exi
     return h;
 }
 
-inline bool publish(HANDLE h, const QString& target)
+inline bool renamePart(HANDLE h, const QString& target, bool replace)
 {
     const auto path = QDir::toNativeSeparators(QFileInfo(target).absoluteFilePath()).toStdWString();
     std::vector<unsigned char> data(sizeof(FILE_RENAME_INFO) + path.size() * sizeof(wchar_t));
     auto* info = reinterpret_cast<FILE_RENAME_INFO*>(data.data());
+    info->ReplaceIfExists = replace;
     info->FileNameLength = static_cast<DWORD>(path.size() * sizeof(wchar_t));
     std::memcpy(info->FileName, path.data(), info->FileNameLength);
-    return FlushFileBuffers(h) && SetFileInformationByHandle(h, FileRenameInfo, info, static_cast<DWORD>(data.size()));
+    return SetFileInformationByHandle(h, FileRenameInfo, info, static_cast<DWORD>(data.size())) != FALSE;
 }
 }

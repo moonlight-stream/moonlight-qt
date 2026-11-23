@@ -4,7 +4,7 @@
 
 struct ClipboardUploadProgress
 {
-    enum class State { Queued, Uploading, WaitingForPaste, NeedsPaste, Failed, ReadyLocally };
+    enum class State { Queued, Uploading, WaitingForPaste, NeedsPaste, Failed, ReadyLocally, Saved, Cancelled };
     QStringList names; // Basenames in clipboard order.
     int index = 0;
     quint64 fileBytes = 0;

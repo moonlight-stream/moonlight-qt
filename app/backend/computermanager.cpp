@@ -96,7 +96,9 @@ public:
 private:
     bool tryPollComputer(QNetworkAccessManager* nam, NvAddress address, bool& changed)
     {
+        QReadLocker lock(&m_Computer->lock);
         NvHTTP http(address, 0, m_Computer->serverCert, !m_Computer->isNvidiaServerSoftware, nam);
+        lock.unlock();
 
         QString serverInfo;
         try {
@@ -190,9 +192,12 @@ private:
 
             // Grab the applist if it's empty or it's been long enough that we need to refresh
             pollsSinceLastAppListFetch++;
-            if (m_Computer->state == NvComputer::CS_ONLINE &&
+            QReadLocker lock(&m_Computer->lock);
+            const bool fetchApps = m_Computer->state == NvComputer::CS_ONLINE &&
                     m_Computer->pairState == NvComputer::PS_PAIRED &&
-                    (m_Computer->appList.isEmpty() || pollsSinceLastAppListFetch >= POLLS_PER_APPLIST_FETCH)) {
+                    (m_Computer->appList.isEmpty() || pollsSinceLastAppListFetch >= POLLS_PER_APPLIST_FETCH);
+            lock.unlock();
+            if (fetchApps) {
                 // Notify prior to the app list poll since it may take a while, and we don't
                 // want to delay onlining of a machine, especially if we already have a cached list.
                 if (stateChanged) {
@@ -595,7 +600,8 @@ QVector<NvComputer*> ComputerManager::getComputers()
 
     struct HostRow {
         NvComputer* computer;
-        int group;
+        bool paired;
+        int availability;
         QString name;
     };
     QVector<HostRow> rows;
@@ -605,17 +611,17 @@ QVector<NvComputer*> ComputerManager::getComputers()
         }
         // Polling can update a host while we sort. Compare immutable snapshots.
         QReadLocker hostLock(&host->lock);
-        int group;
-        if (host->state == NvComputer::CS_ONLINE) {
-            group = host->pairState == NvComputer::PS_PAIRED ? 0 : 1;
+        int availability = 0;
+        if (host->state != NvComputer::CS_ONLINE) {
+            availability = host->state == NvComputer::CS_UNKNOWN ? 1 : 2;
         }
-        else {
-            group = host->state == NvComputer::CS_UNKNOWN ? 2 : 3;
-        }
-        rows.append({host, group, host->name.toLower()});
+        rows.append({host, host->pairState == NvComputer::PS_PAIRED, availability, host->name.toLower()});
     }
     std::stable_sort(rows.begin(), rows.end(), [](const HostRow& a, const HostRow& b) {
-        return a.group == b.group ? a.name < b.name : a.group < b.group;
+        if (a.paired != b.paired) {
+            return a.paired;
+        }
+        return a.availability == b.availability ? a.name < b.name : a.availability < b.availability;
     });
     QVector<NvComputer*> hosts;
     hosts.reserve(rows.size());
@@ -709,16 +715,18 @@ class PendingPairingTask : public QObject, public QRunnable
 
 public:
     PendingPairingTask(ComputerManager* computerManager, NvComputer* computer, QString pin)
-        : m_ComputerManager(computerManager),
-          m_Computer(computer),
+        : m_Computer(computer),
           m_Pin(pin)
     {
         connect(this, &PendingPairingTask::pairingCompleted,
                 computerManager, &ComputerManager::pairingCompleted);
+        connect(this, &PendingPairingTask::computerStateChanged,
+                computerManager, &ComputerManager::handleComputerStateChanged);
     }
 
 signals:
     void pairingCompleted(NvComputer* computer, QString error);
+    void computerStateChanged(NvComputer* computer);
 
 private:
     void run()
@@ -726,7 +734,8 @@ private:
         NvPairingManager pairingManager(m_Computer);
 
         try {
-           NvPairingManager::PairState result = pairingManager.pair(m_Computer->appVersion, m_Pin, m_Computer->serverCert);
+           QSslCertificate serverCert;
+           NvPairingManager::PairState result = pairingManager.pair(m_Computer->appVersion, m_Pin, serverCert);
            switch (result)
            {
            case NvPairingManager::PairState::PIN_WRONG:
@@ -744,9 +753,12 @@ private:
                emit pairingCompleted(m_Computer, tr("Another pairing attempt is already in progress."));
                break;
            case NvPairingManager::PairState::PAIRED:
-               // Persist the newly pinned server certificate for this host
-               m_ComputerManager->saveHost(m_Computer);
-
+               {
+                   QWriteLocker lock(&m_Computer->lock);
+                   m_Computer->serverCert = std::move(serverCert);
+                   m_Computer->pairState = NvComputer::PS_PAIRED;
+               }
+               emit computerStateChanged(m_Computer);
                emit pairingCompleted(m_Computer, nullptr);
                break;
            }
@@ -757,7 +769,6 @@ private:
         }
     }
 
-    ComputerManager* m_ComputerManager;
     NvComputer* m_Computer;
     QString m_Pin;
 };

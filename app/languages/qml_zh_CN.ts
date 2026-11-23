@@ -247,6 +247,7 @@
     <message><source>Unpaired</source><translation>未配对</translation></message>
     <message><source>Devices</source><translation>设备</translation></message>
     <message><source>My devices</source><translation>我的设备</translation></message>
+    <message><source>Unpaired devices</source><translation>未配对设备</translation></message>
     <message><source>Searching</source><translation>检测中</translation></message>
     <message><source>Device options</source><translation>设备选项</translation></message>
     <message><source>Add device</source><translation>添加设备</translation></message>
@@ -516,6 +517,9 @@
 </context>
 <context>
     <name>ClipboardTransfer</name>
+    <message><source>Receiving files</source><translation>正在接收文件</translation></message>
+    <message><source>Files saved</source><translation>文件已保存</translation></message>
+    <message><source>Transfer cancelled</source><translation>传输已取消</translation></message>
     <message><source>Preparing files (%1)</source><translation>正在准备文件（共 %1 个）</translation></message>
     <message><source>Resuming %1 of %2</source><translation>正在续传第 %1 个文件，共 %2 个</translation></message>
     <message><source>Speed —</source><translation>速度 —</translation></message>
@@ -1514,6 +1518,27 @@
 </context>
 <context>
     <name>FileTransferWindow</name>
+    <message><source>Drag files or folders to the other PC. Drop on a folder to copy into it.</source><translation>可将文件或文件夹拖到另一台电脑。拖到文件夹上即可复制到该目录。</translation></message>
+    <message><source>Drop the selection in the local pane, in File Explorer, or on the desktop.</source><translation>请将所选项目拖到本机面板、资源管理器或桌面。</translation></message>
+    <message><source>File actions</source><translation>文件操作</translation></message>
+    <message><source>Open</source><translation>打开</translation></message>
+    <message><source>Open temporary copy</source><translation>在本机打开临时副本</translation></message>
+    <message><source>Could not open %1.</source><translation>无法打开 %1。</translation></message>
+    <message><source>Could not create a temporary folder.</source><translation>无法创建临时文件夹。</translation></message>
+    <message><source>Downloading %1 to open…</source><translation>正在下载 %1，完成后将在本机打开…</translation></message>
+    <message><source>Copying files…</source><translation>正在复制文件…</translation></message>
+    <message><source>File already exists</source><translation>文件已存在</translation></message>
+    <message><source>%1 already exists. Replace it?</source><translation>%1 已存在，是否替换？</translation></message>
+    <message><source>%1 already exists.</source><translation>%1 已存在。</translation></message>
+    <message><source>Skip</source><translation>跳过</translation></message>
+    <message><source>Replace</source><translation>替换</translation></message>
+    <message><source>Keep both</source><translation>保留两者</translation></message>
+    <message><source>Delete…</source><translation>删除…</translation></message>
+    <message><source>Delete files</source><translation>删除文件</translation></message>
+    <message><source>Permanently delete the selected files on the remote PC?</source><translation>要永久删除远端电脑上的所选文件吗？</translation></message>
+    <message><source>Move the selected files to the Recycle Bin on this PC?</source><translation>要将本机的所选文件移入回收站吗？</translation></message>
+    <message><source>%1 files in %2</source><translation>%2 中的 %1 个文件</translation></message>
+    <message><source>Deleting files…</source><translation>正在删除文件…</translation></message>
     <message><source>Resume selected</source><translation>继续所选任务</translation></message>
     <message><source>Interrupted</source><translation>已中断</translation></message>
     <message><source>Speed</source><translation>速度</translation></message>
@@ -1572,6 +1597,19 @@
 </context>
 <context>
     <name>FileTransferEngine</name>
+    <message><source>Drop files on a folder or empty space in File Explorer or on the desktop.</source><translation>请将文件拖到资源管理器中的文件夹或空白处，也可以拖到桌面。</translation></message>
+    <message><source>The file drop timed out.</source><translation>文件拖放超时，请重试。</translation></message>
+    <message><source>The dragged selection contains an unavailable file or folder.</source><translation>拖动的文件或文件夹中有项目无法访问。</translation></message>
+    <message><source>The file changed or is in use: %1</source><translation>文件已更改或正被使用：%1</translation></message>
+    <message><source> - Copy</source><translation> - 副本</translation></message>
+    <message><source> - Copy (%1)</source><translation> - 副本 (%1)</translation></message>
+    <message><source>The source and destination are the same file.</source><translation>源文件和目标文件是同一个文件。</translation></message>
+    <message><source>A folder occupies this name.</source><translation>目标位置已有同名文件夹。</translation></message>
+    <message><source>Replacing remote files requires an updated Sunshine host with file deletion enabled.</source><translation>替换远端文件需要主机使用支持此功能的 Sunshine 版本，并开启“允许删除文件”。</translation></message>
+    <message><source>Skipped</source><translation>已跳过</translation></message>
+    <message><source>Completed (%1 skipped)</source><translation>已完成（已跳过 %1 项）</translation></message>
+    <message><source>Update Sunshine to delete remote files.</source><translation>请更新 Sunshine 以使用远端文件删除功能。</translation></message>
+    <message><source>Enable “Allow file deletion” in Sunshine under Configuration → Input.</source><translation>请在 Sunshine 的「配置 → 输入」中开启「Allow file deletion」（允许删除文件）。</translation></message>
     <message><source>This transfer is already running or its checkpoint is unavailable</source><translation>任务已在传输，或无法访问其断点记录</translation></message>
     <message><source>Cannot read transfer checkpoint</source><translation>无法读取传输断点</translation></message>
     <message><source>Cannot save transfer checkpoint</source><translation>无法保存传输断点</translation></message>

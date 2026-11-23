@@ -22,6 +22,9 @@ int main(void) {
             CHECK(LiSendMouseMoveEvent(1, 1) == -2);
             CHECK(LiSendMousePositionEvent(1, 1, 100, 100) == -2);
             CHECK(LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT) == -2);
+#ifdef _WIN32
+            CHECK(MlCancelFileDrag() == -2);
+#endif
             CHECK(LiSendHighResScrollEvent(120) == -2);
             CHECK(LiSendKeyboardEvent(0x41, KEY_ACTION_DOWN, 0) == -2);
             CHECK(LiSendUtf8TextEvent("paste", 5) == -2);

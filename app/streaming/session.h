@@ -205,6 +205,7 @@ private:
     bool m_ClipboardResumable = false;
     bool m_ClipboardMultitask = false;
     bool m_FileBrowser = false;
+    bool m_FileDrag = false;
     SDL_atomic_t m_ConnectionEnding{};
     QByteArray m_ClipboardToken;
 

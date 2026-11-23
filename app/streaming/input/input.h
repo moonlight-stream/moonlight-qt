@@ -146,6 +146,8 @@ public:
     void notifyFocusGained();
 
     bool isCaptureActive();
+    bool usesAbsoluteMouse() const { return m_AbsoluteMouseMode; }
+    Uint8 primaryMouseButton() const { return m_SwapMouseButtons ? SDL_BUTTON_RIGHT : SDL_BUTTON_LEFT; }
 
     bool isSystemKeyCaptureActive();
     StreamingPreferences::CaptureSysKeysMode captureSystemKeysMode() const { return m_CaptureSystemKeysMode; }

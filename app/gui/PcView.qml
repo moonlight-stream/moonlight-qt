@@ -238,6 +238,7 @@ FocusScope {
                 anchors.rightMargin: 2
                 spacing: 8
                 Label {
+                    id: myDevicesTitle
                     Layout.fillWidth: true
                     text: qsTr("My devices")
                     color: "#536278"
@@ -278,19 +279,40 @@ FocusScope {
         }
         ListView {
             id: pcList
+            readonly property int rowHeight: 42
+            readonly property real rowsHeight: count * rowHeight + Math.max(0, count - 1) * spacing
             anchors { left: parent.left; right: parent.right; top: listTitle.bottom; bottom: railSettings.top; margins: 8 }
             topMargin: 4
             spacing: 3
             clip: true
             focus: true
             model: computerModel
+            section.property: "paired"
+            section.delegate: Item {
+                width: pcList.width
+                // Put spare space above the lower section. Long lists scroll as one.
+                height: section === "false" ? Math.max(unpairedTitle.implicitHeight,
+                            pcList.height - pcList.topMargin - pcList.rowsHeight) : 0
+                Label {
+                    id: unpairedTitle
+                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                    visible: parent.height > 0
+                    text: qsTr("Unpaired devices")
+                    leftPadding: 10
+                    topPadding: 12
+                    bottomPadding: 6
+                    color: myDevicesTitle.color
+                    font: myDevicesTitle.font
+                    elide: Text.ElideRight
+                }
+            }
             onCountChanged: if (count && currentIndex < 0) currentIndex = 0
-            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.vertical: AppScrollBar {}
             delegate: ItemDelegate {
                 id: pcRow
                 hoverEnabled: true
                 width: pcList.width
-                height: 42
+                height: pcList.rowHeight
                 readonly property bool selected: !devices.showingSettings && ListView.isCurrentItem
                 property string hostName: model.name
                 readonly property string hostUuid: model.uuid
@@ -822,7 +844,7 @@ FocusScope {
             cellWidth: Math.max(1, Math.min(400, width / columnCount))
             cellHeight: 84
             model: device ? device.quickApps : null
-            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.vertical: AppScrollBar {}
             footer: CheckBox {
                 visible: !!quickGrid.model && quickGrid.model.hasHiddenApps
                 height: visible ? implicitHeight : 0
@@ -999,7 +1021,7 @@ FocusScope {
             contentWidth: width
             contentHeight: toolsList.height
             boundsBehavior: Flickable.StopAtBounds
-            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.vertical: AppScrollBar {}
             Column {
                 id: toolsList
                 width: toolScroller.width

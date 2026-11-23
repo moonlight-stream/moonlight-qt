@@ -96,7 +96,7 @@ struct close_handle {
 };
 using file_handle = std::unique_ptr<void, close_handle>;
 
-// The handle denies writes and deletion for the duration of a clipboard transfer.
+// Read from the selected file even when Explorer renames it during a transfer.
 struct source_file {
     file_handle handle;
     std::string name;
@@ -105,7 +105,7 @@ struct source_file {
 
 inline std::optional<source_file> open_file(const fs::path& path) {
     if (!local_file_path(path)) return std::nullopt;
-    HANDLE raw = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+    HANDLE raw = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
                              FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
     if (raw == INVALID_HANDLE_VALUE) return std::nullopt;
     file_handle handle(raw);

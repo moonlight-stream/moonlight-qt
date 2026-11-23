@@ -219,6 +219,7 @@ NvHTTP::startApp(QString verb,
                  bool& clipboardResumable,
                  bool& clipboardMultitask,
                  bool& fileBrowser,
+                 bool& fileDrag,
                  QString& rtspSessionUrl)
 {
     QString extensions;
@@ -232,6 +233,7 @@ NvHTTP::startApp(QString verb,
     clipboardResumable = false;
     clipboardMultitask = false;
     fileBrowser = false;
+    fileDrag = false;
 #ifdef Q_OS_WIN
     if (allowDesktopSharing && !isGfe && !m_ServerCert.isNull()) {
         const QSettings settings;
@@ -285,6 +287,7 @@ NvHTTP::startApp(QString verb,
     hostHandlesDisconnectLock = getXmlString(response, "lockOnDisconnect") == "1";
     const bool clipboardAccepted = !clipboardToken.isEmpty() && getXmlString(response, "clipboardversion") == "1";
     fileBrowser = !clipboardToken.isEmpty() && getXmlString(response, "filebrowserversion") == "1";
+    fileDrag = fileBrowser && getXmlString(response, "filedragversion") == "1";
     clipboardText = clipboardAccepted && clipboardText && getXmlString(response, "clipboardtext") == "1";
     clipboardImages = clipboardAccepted && clipboardImages && getXmlString(response, "clipboardimages") == "1";
     clipboardFiles = clipboardAccepted && clipboardFiles && getXmlString(response, "clipboardfiles") == "1";
