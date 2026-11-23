@@ -47,6 +47,15 @@ private:
     void
     createCredentials(QSettings& settings);
 
+    // Each loadIdentityFrom*() function loads the client identity from one source.
+    // On success, it sets the identity manager's identity members and returns
+    // true. On failure, it returns false and sets error to a reason that is fatal.
+
+    // Loads the identity encoded in the cert and key settings. Never fails,
+    // since a missing or unusable identity is replaced with a new one.
+    bool
+    loadIdentityFromSettings(QSettings& settings, QString* error);
+
     // Initialized in constructor
     QByteArray m_CachedPrivateKey;
     QByteArray m_CachedPemCert;

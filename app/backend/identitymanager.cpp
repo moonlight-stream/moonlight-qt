@@ -120,21 +120,8 @@ IdentityManager::IdentityManager()
 {
     QSettings settings;
 
-    m_CachedPemCert = settings.value(SER_CERT).toByteArray();
-    m_CachedPrivateKey = settings.value(SER_KEY).toByteArray();
-
-    if (m_CachedPemCert.isEmpty() || m_CachedPrivateKey.isEmpty()) {
-        qInfo() << "No existing credentials found";
-        createCredentials(settings);
-    }
-    else if (getSslCertificate().isNull()) {
-        qWarning() << "Certificate is unreadable";
-        createCredentials(settings);
-    }
-    else if (getSslKey().isNull()) {
-        qWarning() << "Private key is unreadable";
-        createCredentials(settings);
-    }
+    QString error;
+    loadIdentityFromSettings(settings, &error);
 
     // We should have valid credentials now. If not, we're screwed
     if (getSslCertificate().isNull()) {
@@ -159,6 +146,32 @@ IdentityManager::IdentityManager()
 
         settings.setValue(SER_UNIQUEID, m_CachedUniqueId);
     }
+}
+
+bool
+IdentityManager::loadIdentityFromSettings(QSettings& settings, QString* error)
+{
+    // This source never fails, since an unusable identity here is replaced
+    Q_UNUSED(error);
+
+    m_CachedPemCert = settings.value(SER_CERT).toByteArray();
+    m_CachedPrivateKey = settings.value(SER_KEY).toByteArray();
+
+    if (m_CachedPemCert.isEmpty() || m_CachedPrivateKey.isEmpty()) {
+        qInfo() << "No existing credentials found";
+        createCredentials(settings);
+        return true;
+    }
+
+    if (getSslCertificate().isNull()) {
+        qWarning() << "Certificate is unreadable";
+        createCredentials(settings);
+    }
+    else if (getSslKey().isNull()) {
+        qWarning() << "Private key is unreadable";
+        createCredentials(settings);
+    }
+    return true;
 }
 
 QSslCertificate
