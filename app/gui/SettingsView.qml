@@ -1630,6 +1630,13 @@ FocusScope {
                     SettingsSwitch {
                         visible: Qt.platform.os === "windows"
                         width: parent.width
+                        text: qsTr("Sync copied images with the remote Windows PC")
+                        checked: StreamingPreferences.clipboardSyncImages
+                        onToggled: StreamingPreferences.clipboardSyncImages = checked
+                    }
+                    SettingsSwitch {
+                        visible: Qt.platform.os === "windows"
+                        width: parent.width
                         text: qsTr("Transfer copied files through the clipboard")
                         checked: StreamingPreferences.clipboardSyncFiles
                         onToggled: StreamingPreferences.clipboardSyncFiles = checked

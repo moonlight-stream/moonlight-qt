@@ -1,6 +1,8 @@
 // Windows clipboard wire format shared with the Sunshine desktop clipboard endpoint.
 #pragma once
 
+#include "clipboard_image.h"
+
 #include <windows.h>
 #include <shellapi.h>
 #include <shlobj.h>
@@ -148,11 +150,13 @@ inline int read_text(std::string& out) {
 
 struct staged_batch {
     fs::path directory;
+    file_handle directoryPin;
     std::vector<fs::path> paths;
     bool published = false;
     ~staged_batch() {
         if (published || directory.empty()) return;
         for (const auto& path : paths) DeleteFileW(path.c_str());
+        directoryPin.reset();
         RemoveDirectoryW(directory.c_str());
     }
 };
@@ -166,16 +170,31 @@ inline bool batch_name(const std::wstring& name) {
     return true;
 }
 
-// Retain recent Explorer paste sources across disconnects. Each directory
-// contains at most 16 MiB, so keeping 16 batches bounds normal use to 256 MiB.
-inline void expire_batches(const fs::path& root, const fs::path& current) {
+// Keep recent paste sources across disconnects. Under disk pressure also
+// reclaim recent batches that neither Explorer nor another transfer references.
+inline void expire_batches(const fs::path& root, const fs::path& current, size_t keep = 16) {
+    clipboard_lock clipboard(nullptr);
+    if (!clipboard.opened) return;
+    std::vector<fs::path> inUse{fs::path(current).make_preferred()};
+    if (IsClipboardFormatAvailable(CF_HDROP)) {
+        auto drop = static_cast<HDROP>(GetClipboardData(CF_HDROP));
+        if (!drop) return;
+        const auto count = DragQueryFileW(drop, 0xffffffff, nullptr, 0);
+        if (count > max_files) return;
+        auto paths = file_paths(drop, count);
+        if (paths.empty()) return;
+        for (auto& path : paths) inUse.push_back(path.make_preferred().parent_path());
+    }
     const auto cutoff = fs::file_time_type::clock::now() - std::chrono::hours(24);
     std::error_code ec;
     std::vector<std::pair<fs::file_time_type, fs::path>> previous;
-    for (fs::directory_iterator dir(root, ec), end; !ec && dir != end; dir.increment(ec)) {
+    for (fs::directory_iterator dir(fs::path(root).make_preferred(), ec), end; !ec && dir != end; dir.increment(ec)) {
         const auto& path = dir->path();
         const auto attrs = GetFileAttributesW(path.c_str());
-        if (path == current || attrs == INVALID_FILE_ATTRIBUTES || !(attrs & FILE_ATTRIBUTE_DIRECTORY) ||
+        const bool referenced = std::any_of(inUse.begin(), inUse.end(), [&](const fs::path& active) {
+            return CompareStringOrdinal(path.c_str(), -1, active.c_str(), -1, TRUE) == CSTR_EQUAL;
+        });
+        if (referenced || attrs == INVALID_FILE_ATTRIBUTES || !(attrs & FILE_ATTRIBUTE_DIRECTORY) ||
             attrs & FILE_ATTRIBUTE_REPARSE_POINT || !batch_name(path.filename().native())) continue;
         std::error_code batch_error;
         auto modified = fs::last_write_time(path, batch_error);
@@ -184,7 +203,14 @@ inline void expire_batches(const fs::path& root, const fs::path& current) {
     std::sort(previous.rbegin(), previous.rend());
     size_t retained = 1;
     for (const auto& [modified, path] : previous) {
-        if (modified >= cutoff && retained < 16) { ++retained; continue; }
+        if (modified >= cutoff && retained < keep) { ++retained; continue; }
+        HANDLE handle = CreateFileW(path.c_str(), DELETE | FILE_READ_ATTRIBUTES,
+                                    FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                                    FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+        if (handle == INVALID_HANDLE_VALUE) continue;
+        file_handle pin(handle);
+        BY_HANDLE_FILE_INFORMATION info{};
+        if (!GetFileInformationByHandle(handle, &info) || (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) continue;
         std::error_code batch_error;
         const fs::directory_iterator end;
         for (fs::directory_iterator item(path, batch_error); !batch_error && item != end; item.increment(batch_error)) {
@@ -192,12 +218,13 @@ inline void expire_batches(const fs::path& root, const fs::path& current) {
             if (child_attrs != INVALID_FILE_ATTRIBUTES && !(child_attrs & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)))
                 DeleteFileW(item->path().c_str());
         }
-        RemoveDirectoryW(path.c_str());
+        FILE_DISPOSITION_INFO remove{TRUE};
+        SetFileInformationByHandle(handle, FileDispositionInfo, &remove, sizeof(remove));
     }
 }
 
-inline int stage_files(std::string_view body, const fs::path& root, staged_batch& batch) {
-    if (body.empty() || root.empty() || !root.is_absolute()) return 400;
+inline int create_batch(const fs::path& root, staged_batch& batch) {
+    if (root.empty() || !root.is_absolute()) return 400;
     std::error_code ec;
     fs::create_directories(root, ec);
     if (ec || !local_file_path(root)) return 500;
@@ -205,8 +232,21 @@ inline int stage_files(std::string_view body, const fs::path& root, staged_batch
     wchar_t unique[39]{};
     if (FAILED(CoCreateGuid(&guid)) || !StringFromGUID2(guid, unique, 39)) return 500;
     auto directory = root / unique;
+    // Qt cache paths use forward slashes. Explorer expects native paths in CF_HDROP.
+    directory.make_preferred();
     if (!CreateDirectoryW(directory.c_str(), nullptr)) return 500;
     batch.directory = std::move(directory);
+    HANDLE handle = CreateFileW(batch.directory.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+    if (handle == INVALID_HANDLE_VALUE) return 500;
+    batch.directoryPin.reset(handle);
+    return 200;
+}
+
+inline int stage_files(std::string_view body, const fs::path& root, staged_batch& batch) {
+    if (body.empty()) return 400;
+    int status = create_batch(root, batch);
+    if (status != 200) return status;
     while (!body.empty()) {
         std::string_view name, bytes;
         if (batch.paths.size() >= max_files || !take_field(body, name) || name.size() > 1020 || !take_field(body, bytes)) return 400;
@@ -263,9 +303,10 @@ inline int encode_files(const std::vector<detail::source_file>& sources, std::st
 }
 
 inline int read(bool text, bool files, std::optional<DWORD> since, std::string& payload, DWORD& sequence,
-                std::vector<detail::source_file>* pinnedFiles = nullptr) {
+                std::vector<detail::source_file>* pinnedFiles = nullptr, bool images = false) {
     payload.clear();
     std::vector<fs::path> paths;
+    clipboard_image::snapshot image;
     {
         detail::clipboard_lock lock(nullptr);
         if (!lock.opened) return 409;
@@ -279,9 +320,16 @@ inline int read(bool text, bool files, std::optional<DWORD> since, std::string& 
             if (count > max_files) return 413;
             paths = detail::file_paths(drop, count);
             if (paths.empty()) return 204;
+        } else if (images && clipboard_image::available()) {
+            const int status = clipboard_image::capture(image);
+            if (status != 200) return status;
         } else if (text && IsClipboardFormatAvailable(CF_UNICODETEXT)) {
             return detail::read_text(payload);
         } else return 204;
+    }
+    if (paths.empty()) {
+        const int status = clipboard_image::encode(image, payload);
+        return GetClipboardSequenceNumber() == sequence ? status : 409;
     }
     std::vector<detail::source_file> sources;
     for (const auto& path : paths) {
@@ -298,9 +346,58 @@ inline int read(bool text, bool files, std::optional<DWORD> since, std::string& 
     return GetClipboardSequenceNumber() == sequence ? status : 409;
 }
 
+inline int publish_data(UINT format, HGLOBAL data, DWORD& sequence, std::optional<DWORD> expected, std::string_view png = {}) {
+    if (!data) return 500;
+    // EmptyClipboard requires a real clipboard owner to publish data.
+    HWND owner = CreateWindowExW(0, L"STATIC", nullptr, 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, nullptr, nullptr);
+    int status = 409;
+    if (owner) {
+        detail::clipboard_lock lock(owner);
+        if (lock.opened && (!expected || *expected == GetClipboardSequenceNumber()) &&
+            EmptyClipboard() && SetClipboardData(format, data)) {
+            data = nullptr;
+            clipboard_image::offer_png(png);
+            sequence = GetClipboardSequenceNumber();
+            status = 204;
+        }
+    }
+    if (owner && status == 204) {
+        // Windows may synthesize additional text formats when CloseClipboard
+        // publishes the update. Record the final sequence under a fresh lock.
+        detail::clipboard_lock lock(owner);
+        if (lock.opened && GetClipboardOwner() == owner) sequence = GetClipboardSequenceNumber();
+    }
+    if (owner) DestroyWindow(owner);
+    if (data) GlobalFree(data);
+    return status;
+}
+
+inline int publish_files(detail::staged_batch& batch, const fs::path& stagingRoot,
+                         DWORD& sequence, std::optional<DWORD> expected) {
+    std::wstring paths;
+    for (const auto& path : batch.paths) {
+        paths += path.native();
+        paths.push_back(L'\0');
+    }
+    const int status = publish_data(CF_HDROP, detail::make_data(paths, true), sequence, expected);
+    if (status == 204) {
+        batch.published = true;
+        detail::expire_batches(stagingRoot, batch.directory);
+    }
+    return status;
+}
+
 inline int write(bool text, bool files, std::string_view payload, DWORD& sequence,
-                 const fs::path& staging_root, std::optional<DWORD> expected = std::nullopt) {
+                 const fs::path& staging_root, std::optional<DWORD> expected = std::nullopt, bool images = false) {
     if (payload.empty()) return 400;
+    if (payload.front() == 'I') {
+        if (!images) return 403;
+        if (payload.size() > clipboard_image::max_packet) return 413;
+        HGLOBAL bitmap = nullptr;
+        const auto png = payload.substr(1);
+        const int status = clipboard_image::decode(png, bitmap);
+        return status == 200 ? publish_data(CF_DIBV5, bitmap, sequence, expected, png) : status;
+    }
     if (payload.size() > max_body) return 413;
     const char format = payload.front();
     payload.remove_prefix(1);
@@ -315,33 +412,9 @@ inline int write(bool text, bool files, std::string_view payload, DWORD& sequenc
         if (!files) return 403;
         int status = detail::stage_files(payload, staging_root, batch);
         if (status != 200) return status;
-        for (const auto& path : batch.paths) { value += path.native(); value.push_back(L'\0'); }
+        return publish_files(batch, staging_root, sequence, expected);
     } else return 400;
 
-    HGLOBAL data = detail::make_data(value, format == 'F');
-    if (!data) return 500;
-    // EmptyClipboard requires a real clipboard owner to publish data.
-    HWND owner = CreateWindowExW(0, L"STATIC", nullptr, 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, nullptr, nullptr);
-    int status = 409;
-    if (owner) {
-        detail::clipboard_lock lock(owner);
-        if (lock.opened && (!expected || *expected == GetClipboardSequenceNumber()) &&
-            EmptyClipboard() && SetClipboardData(format == 'F' ? CF_HDROP : CF_UNICODETEXT, data)) {
-            data = nullptr;
-            sequence = GetClipboardSequenceNumber();
-            batch.published = true;
-            status = 204;
-        }
-    }
-    if (owner && status == 204) {
-        // Windows may synthesize additional text formats when CloseClipboard
-        // publishes the update. Record the final sequence under a fresh lock.
-        detail::clipboard_lock lock(owner);
-        if (lock.opened && GetClipboardOwner() == owner) sequence = GetClipboardSequenceNumber();
-    }
-    if (owner) DestroyWindow(owner);
-    if (data) GlobalFree(data);
-    if (batch.published && format == 'F') detail::expire_batches(staging_root, batch.directory);
-    return status;
+    return publish_data(CF_UNICODETEXT, detail::make_data(value, false), sequence, expected);
 }
 } // namespace win_clipboard

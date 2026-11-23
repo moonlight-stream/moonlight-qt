@@ -200,6 +200,7 @@ private:
     bool m_ExplicitHostQuit = false;
     bool m_HostHandlesDisconnectLock = false;
     bool m_ClipboardText = false;
+    bool m_ClipboardImages = false;
     bool m_ClipboardFiles = false;
     bool m_ClipboardResumable = false;
     bool m_ClipboardMultitask = false;

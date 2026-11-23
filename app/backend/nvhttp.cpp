@@ -212,6 +212,7 @@ NvHTTP::startApp(QString verb,
                  bool& hostHandlesDisconnectLock,
                  QByteArray& clipboardToken,
                  bool& clipboardText,
+                 bool& clipboardImages,
                  bool& clipboardFiles,
                  bool& clipboardResumable,
                  bool& clipboardMultitask,
@@ -224,6 +225,7 @@ NvHTTP::startApp(QString verb,
     }
     clipboardToken.clear();
     clipboardText = false;
+    clipboardImages = false;
     clipboardFiles = false;
     clipboardResumable = false;
     clipboardMultitask = false;
@@ -232,12 +234,13 @@ NvHTTP::startApp(QString verb,
     if (allowDesktopSharing && !isGfe && !m_ServerCert.isNull()) {
         const QSettings settings;
         clipboardText = settings.value("clipboardSyncText", false).toBool();
+        clipboardImages = settings.value("clipboardSyncImages", false).toBool();
         clipboardFiles = settings.value("clipboardSyncFiles", false).toBool();
         unsigned char secret[32];
         if (RAND_bytes(secret, sizeof(secret)) == 1) {
             clipboardToken = QByteArray(reinterpret_cast<const char*>(secret), sizeof(secret)).toHex();
-            extensions += QStringLiteral("&clipboardtoken=%1&clipboardtext=%2&clipboardfiles=%3&clipboardbatchversion=2&clipboardmultitask=1&filebrowser=1")
-                              .arg(QString::fromLatin1(clipboardToken)).arg(int(clipboardText)).arg(int(clipboardFiles));
+            extensions += QStringLiteral("&clipboardtoken=%1&clipboardtext=%2&clipboardfiles=%3&clipboardimages=%4&clipboardbatchversion=2&clipboardmultitask=1&filebrowser=1")
+                              .arg(QString::fromLatin1(clipboardToken)).arg(int(clipboardText)).arg(int(clipboardFiles)).arg(int(clipboardImages));
         }
     }
 #endif
@@ -281,10 +284,11 @@ NvHTTP::startApp(QString verb,
     const bool clipboardAccepted = !clipboardToken.isEmpty() && getXmlString(response, "clipboardversion") == "1";
     fileBrowser = !clipboardToken.isEmpty() && getXmlString(response, "filebrowserversion") == "1";
     clipboardText = clipboardAccepted && clipboardText && getXmlString(response, "clipboardtext") == "1";
+    clipboardImages = clipboardAccepted && clipboardImages && getXmlString(response, "clipboardimages") == "1";
     clipboardFiles = clipboardAccepted && clipboardFiles && getXmlString(response, "clipboardfiles") == "1";
     clipboardResumable = clipboardFiles && getXmlString(response, "clipboardbatchversion").toInt() >= 2;
     clipboardMultitask = clipboardResumable && getXmlString(response, "clipboardmultitask") == "1";
-    if (!clipboardText && !clipboardFiles && !fileBrowser) {
+    if (!clipboardText && !clipboardImages && !clipboardFiles && !fileBrowser) {
         clipboardToken.clear();
     }
     rtspSessionUrl = getXmlString(response, "sessionUrl0");

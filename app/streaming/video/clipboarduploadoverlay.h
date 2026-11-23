@@ -191,6 +191,8 @@ public:
         QString title;
         using State = ClipboardUploadProgress::State;
         if (m_Upload.state != State::Uploading) title = status(m_Upload);
+        else if (m_Upload.downloading) title = m_Upload.committing ? tr("Preparing local clipboard") :
+                                            tr("Downloading %1 of %2").arg(m_Upload.index + 1).arg(m_Upload.names.size());
         else if (m_Upload.preparing) title = tr("Preparing files (%1)").arg(m_Upload.names.size());
         else if (m_Upload.committing) title = tr("Waiting for host");
         else title = (m_Upload.resumedBytes ? tr("Resuming %1 of %2") : tr("Uploading %1 of %2"))
@@ -203,7 +205,7 @@ public:
         font.setPixelSize(12);
         p.setFont(font);
         p.setPen(Qt::white);
-        p.drawText(button, Qt::AlignCenter, m_Upload.state == State::Failed ? tr("Dismiss") : tr("Cancel (Esc)"));
+        p.drawText(button, Qt::AlignCenter, m_Upload.state == State::Failed || m_Upload.state == State::ReadyLocally ? tr("Dismiss") : tr("Cancel (Esc)"));
         auto action = [&](QRect rect, const QString& label) {
             p.setPen(Qt::NoPen);
             p.setBrush(QColor("#344258"));
@@ -216,7 +218,7 @@ public:
         int y = 39;
         for (int row = 0; row < rows(m_Layout); ++row) {
             const bool current = row == 0;
-            const int percent = m_Upload.fileSize ? int(m_Upload.fileBytes * 100 / m_Upload.fileSize) : m_Upload.preparing ? 0 : 100;
+            const int percent = m_Upload.preparing ? 0 : ClipboardUploadProgress::percentOf(m_Upload.fileBytes, m_Upload.fileSize);
             text(QRect(14, y, w - 96, 20), m_Upload.names.at(m_Upload.index + row), 13,
                  current ? "#e3ebf6" : "#a6b3c6", current);
             text(QRect(w - 79, y, 65, 20), m_Upload.state != State::Uploading ? QString() : current ? QString::number(percent) + '%' : tr("Queued"),
@@ -252,7 +254,7 @@ public:
             text(QRect(14, top, end - 14, 18), job.names.isEmpty() ? tr("Transfer failed") : job.names.value(job.index), 12, "#e3ebf6", true);
             text(QRect(14, top + 17, end - 14, 16), status(job), 11, "#a6b3c6");
             if (needsPaste) action(rowPaste(w, i), tr("Paste here"));
-            action(cancel, job.state == State::Failed ? tr("Dismiss") : tr("Cancel"));
+            action(cancel, job.state == State::Failed || job.state == State::ReadyLocally ? tr("Dismiss") : tr("Cancel"));
         }
         if (m_Others.size() > otherRows()) {
             const int top = summaryHeight(m_Layout) + otherRows() * Row;
@@ -276,6 +278,7 @@ private:
         case State::Queued: return tr("Queued");
         case State::NeedsPaste: return tr("Choose where to paste");
         case State::WaitingForPaste: return tr("Waiting for paste");
+        case State::ReadyLocally: return tr("Ready to paste on this PC");
         case State::Failed: return job.error.isEmpty() ? tr("Transfer failed") : job.error;
         default: return tr("Waiting for host");
         }

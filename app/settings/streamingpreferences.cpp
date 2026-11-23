@@ -173,6 +173,7 @@ void StreamingPreferences::reload()
     enableMdns = settings.value(SER_MDNS, true).toBool();
     closeToTray = settings.value("closeToTray", false).toBool();
     clipboardSyncText = settings.value("clipboardSyncText", false).toBool();
+    clipboardSyncImages = settings.value("clipboardSyncImages", false).toBool();
     clipboardSyncFiles = settings.value("clipboardSyncFiles", false).toBool();
     quitAppAfter = settings.value(SER_QUITAPPAFTER, false).toBool();
     absoluteMouseMode = settings.value(SER_ABSMOUSEMODE, false).toBool();
@@ -393,6 +394,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_MDNS, enableMdns);
     settings.setValue("closeToTray", closeToTray);
     settings.setValue("clipboardSyncText", clipboardSyncText);
+    settings.setValue("clipboardSyncImages", clipboardSyncImages);
     settings.setValue("clipboardSyncFiles", clipboardSyncFiles);
     settings.setValue(SER_QUITAPPAFTER, quitAppAfter);
     settings.setValue(SER_ABSMOUSEMODE, absoluteMouseMode);

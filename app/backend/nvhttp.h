@@ -177,6 +177,7 @@ public:
              bool& hostHandlesDisconnectLock,
              QByteArray& clipboardToken,
              bool& clipboardText,
+             bool& clipboardImages,
              bool& clipboardFiles,
              bool& clipboardResumable,
              bool& clipboardMultitask,

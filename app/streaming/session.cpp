@@ -1833,7 +1833,7 @@ bool Session::startConnectionAsync()
                       !m_ViewOnly && m_Preferences->lockHostOnDisconnect(),
                       !m_ViewOnly,
                       m_HostHandlesDisconnectLock,
-                      m_ClipboardToken, m_ClipboardText, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask, m_FileBrowser,
+                      m_ClipboardToken, m_ClipboardText, m_ClipboardImages, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask, m_FileBrowser,
                       rtspSessionUrl);
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
@@ -2231,7 +2231,7 @@ void Session::exec()
     clipboardHost.setScheme(QStringLiteral("https"));
     clipboardHost.setHost(m_Computer->activeAddress.address());
     clipboardHost.setPort(m_Computer->activeHttpsPort);
-    ClipboardSync clipboard(clipboardHost, m_Computer->serverCert, m_ClipboardToken, m_ClipboardText, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask);
+    ClipboardSync clipboard(clipboardHost, m_Computer->serverCert, m_ClipboardToken, m_ClipboardText, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask, m_ClipboardImages);
     SDL_Scancode deferredPasteKey = SDL_SCANCODE_UNKNOWN;
     Uint32 lastUploadUpdate = lastTitleUpdate - 100;
     auto streamWindowSize = [&] {

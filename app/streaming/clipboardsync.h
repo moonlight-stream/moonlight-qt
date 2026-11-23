@@ -12,7 +12,7 @@ class ClipboardSync : public QThread
 {
 public:
     ClipboardSync(QUrl host, QSslCertificate certificate, QByteArray token, bool text, bool files,
-                  bool resumable = false, bool multitask = false);
+                  bool resumable = false, bool multitask = false, bool images = false);
     ~ClipboardSync() override;
     void stop();
     // Called from the stream window's input loop.
@@ -37,6 +37,7 @@ private:
     QSslCertificate m_Certificate;
     QByteArray m_Token;
     bool m_Text;
+    bool m_Images;
     bool m_Files;
     bool m_Resumable;
     bool m_Multitask;
@@ -44,6 +45,7 @@ private:
     static constexpr uint64_t NoPaste = UINT64_MAX;
     static constexpr uint64_t Ready = NoPaste - 1;
     std::atomic<uint64_t> m_ConfirmedSequence{NoPaste};
+    std::atomic<uint64_t> m_SendingSequence{NoPaste};
     std::atomic<uint64_t> m_PasteSequence{NoPaste};
     std::atomic<uint64_t> m_IncomingSequence{NoPaste};
     std::atomic<uint64_t> m_DeferredFileSequence{NoPaste};

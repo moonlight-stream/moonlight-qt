@@ -522,6 +522,11 @@
     <message><source>Speed %1/s</source><translation>速度 %1/s</translation></message>
     <message><source>Uploading %1 of %2</source><translation>正在上传第 %1 个文件，共 %2 个</translation></message>
     <message><source>Waiting for host</source><translation>等待主机确认</translation></message>
+    <message><source>Downloading %1 of %2</source><translation>正在下载第 %1 个文件，共 %2 个</translation></message>
+    <message><source>Preparing local clipboard</source><translation>正在准备本机剪贴板</translation></message>
+    <message><source>Ready to paste on this PC</source><translation>可以在本机粘贴了</translation></message>
+    <message><source>Not enough local disk space</source><translation>本机磁盘空间不足</translation></message>
+    <message><source>File download failed</source><translation>文件下载失败</translation></message>
     <message><source>Queued</source><translation>等待中</translation></message>
     <message><source>Cancel (Esc)</source><translation>取消 (Esc)</translation></message>
     <message><source>Cancel</source><translation>取消</translation></message>
@@ -789,6 +794,7 @@
 <context>
     <name>SettingsView</name>
     <message><source>Sync copied text with the remote Windows PC</source><translation>与远端 Windows 电脑同步复制的文本</translation></message>
+    <message><source>Sync copied images with the remote Windows PC</source><translation>与远端 Windows 电脑同步复制的图片</translation></message>
     <message><source>Transfer copied files through the clipboard</source><translation>通过剪贴板传输复制的文件</translation></message>
     <message><source>Compatible Windows Sunshine hosts lock after the last stream ends, even after a network loss. This request takes effect when you connect. On older hosts, Moonlight sends a lock shortcut when you disconnect.</source><translation>兼容的 Windows Sunshine 主机会在最后一个串流结束后锁屏，网络意外断开也会生效。此请求在连接时生效。对于旧版主机，Moonlight 会在主动断开时发送锁屏快捷键。</translation></message>
     <message><source>Off</source><translation>关闭</translation></message>

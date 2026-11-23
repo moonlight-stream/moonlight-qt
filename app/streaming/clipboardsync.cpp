@@ -4,6 +4,7 @@
 #include <mstcpip.h>
 
 #include "clipboardsync.h"
+#include "clipboarddownload.h"
 #include "clipboarduploadrate.h"
 #include "clipboard_win32.h"
 #include "transferfilehash.h"
@@ -54,7 +55,7 @@ struct Result {
 
 Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
                 const QSslCertificate& pairedHost, const QByteArray* upload,
-                const std::function<bool()>& cancelled = {}, int timeoutMs = 120000)
+                const std::function<bool()>& cancelled = {}, int timeoutMs = 120000, size_t maxResponse = win_clipboard::max_body)
 {
     QEventLoop loop;
     Result result;
@@ -69,7 +70,7 @@ Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
     });
     reply->setReadBufferSize(64 * 1024);
     auto receive = [&] {
-        if (reply->bytesAvailable() > static_cast<qint64>(win_clipboard::max_body) - result.payload.size()) {
+        if (reply->bytesAvailable() > static_cast<qint64>(maxResponse) - result.payload.size()) {
             reply->abort();
         } else {
             result.payload.append(reply->readAll());
@@ -82,7 +83,7 @@ Result exchange(QNetworkAccessManager& network, const QNetworkRequest& request,
         if (QThread::currentThread()->isInterruptionRequested() || (cancelled && cancelled())) reply->abort();
     });
     cancellation.start(50);
-    QTimer::singleShot(timeoutMs, reply, &QNetworkReply::abort);
+    if (timeoutMs > 0) QTimer::singleShot(timeoutMs, reply, &QNetworkReply::abort);
     if (!reply->isFinished()) loop.exec();
     if (reply->bytesAvailable()) receive();
     // Qt also reports HTTP 4xx/5xx as a network error.
@@ -234,7 +235,6 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
                        const QString& task = {}, const std::function<bool()>& allowCommit = {},
                        const QString& sourceKey = {}, QJsonArray* cachedManifest = nullptr)
 {
-    constexpr quint64 MaxBatchBytes = 16ULL * 1024 * 1024 * 1024;
     quint64 acknowledged = 0;
     size_t index = 0;
     quint64 offset = 0;
@@ -251,12 +251,11 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
     ClipboardUploadProgress progress;
     quint64 total = 0;
     for (const auto& file : files) {
-        if (file.size > MaxBatchBytes - total) return failure("manifest", {413}, "size limit");
         total += file.size;
         const auto name = QString::fromUtf8(file.name.data(), static_cast<int>(file.name.size()));
         progress.names.append(name);
         manifest.append(QJsonObject{{"name", name},
-                                    {"size", static_cast<double>(file.size)}});
+                                    {"size", static_cast<qint64>(file.size)}});
     }
     progress.startedAtMs = monotonicMs();
     progress.preparing = resumable;
@@ -411,13 +410,17 @@ struct ClipboardSync::FileQueue {
         bool automaticPaste = true;
         bool published = false;
         bool dispatched = false;
-        bool verifyClipboard = false;
         bool uploadStarted = false;
         DWORD publishedSequence = 0;
+        qint64 nextClipboardCheck = 0;
     };
 
     mutable std::mutex mutex;
     std::deque<std::shared_ptr<Job>> jobs;
+    ClipboardUploadProgress download;
+    std::atomic_bool downloadCancelled{false};
+    qint64 readyUntil = 0;
+    DWORD readySequence = 0;
     QThreadPool controls;
     QNetworkRequest request;
     quint64 nextId = 0;
@@ -524,7 +527,7 @@ struct ClipboardSync::FileQueue {
                 if (next->targetStatus == Binding && next->progress.state != State::Failed) break;
                 if (next->progress.state == State::Failed || next->targetStatus == Uncertain) continue;
                 if (next->published) {
-                    if (!next->verifyClipboard) continue;
+                    if (next->dispatched || monotonicMs() < next->nextClipboardCheck) continue;
                 } else if (next->targetStatus == 422) {
                     if (occupied) continue;
                     if (!next->automaticPaste && sync.m_Multitask) {
@@ -549,19 +552,31 @@ struct ClipboardSync::FileQueue {
         const auto interrupted = [&] { return sync.isInterruptionRequested() || job->cancelled.load(); };
         if (job->published) {
             auto endpoint = sync.m_Host;
-            endpoint.setQuery(QStringLiteral("since=init&files=1&text=0"));
+            // 'init' identifies the stream-start revision. Ask for the current
+            // revision without fetching the contents of the user's new copy.
+            endpoint.setQuery(QStringLiteral("since=%1&files=0&text=0").arg(job->publishedSequence));
             auto req = request;
             req.setUrl(endpoint);
             const auto result = exchange(net, req, sync.m_Certificate, nullptr, interrupted, 3000);
             std::lock_guard lock(mutex);
-            job->verifyClipboard = false;
-            if (result.status == 204 && result.sequence == job->publishedSequence) {
-                job->progress.state = job->automaticPaste ? State::WaitingForPaste : State::NeedsPaste;
-            } else {
+            job->nextClipboardCheck = monotonicMs() + 250;
+            if (job->cancelled || job->dispatched) return true;
+            if (result.status == 204 && result.sequence) {
+                if (result.sequence != job->publishedSequence) {
+                    job->published = false;
+                    job->progress.error = message("Remote clipboard changed");
+                    job->progress.state = State::Failed;
+                    // Leave the new revision available to the ordinary clipboard GET.
+                    return false;
+                }
+                if (job->progress.state == State::Queued) {
+                    job->progress.state = job->automaticPaste ? State::WaitingForPaste : State::NeedsPaste;
+                }
+            } else if (result.status == 401 || result.status == 403 || result.status == 404) {
                 job->published = false;
-                job->progress.error = message("Remote clipboard changed");
                 job->progress.state = State::Failed;
-                if (result.sequence) remote = result.sequence;
+                job->progress.error = QStringLiteral("HTTP %1").arg(result.status);
+                return false;
             }
             return true;
         }
@@ -638,14 +653,14 @@ struct ClipboardSync::FileQueue {
 };
 
 ClipboardSync::ClipboardSync(QUrl host, QSslCertificate certificate, QByteArray token, bool text, bool files,
-                             bool resumable, bool multitask)
+                             bool resumable, bool multitask, bool images)
     : m_FileQueue(std::make_unique<FileQueue>()), m_Host(std::move(host)), m_Certificate(std::move(certificate)),
-      m_Token(std::move(token)), m_Text(text), m_Files(files), m_Resumable(files && resumable),
+      m_Token(std::move(token)), m_Text(text), m_Images(images), m_Files(files), m_Resumable(files && resumable),
       m_Multitask(m_Resumable && multitask), m_LocalSequence(GetClipboardSequenceNumber())
 {
     m_Host.setPath("/clipboard");
     m_FileQueue->controls.setMaxThreadCount(8);
-    if (!m_Token.isEmpty() && !m_Certificate.isNull() && (m_Text || m_Files)) {
+    if (!m_Token.isEmpty() && !m_Certificate.isNull() && (m_Text || m_Images || m_Files)) {
         auto config = IdentityManager::get()->getSslConfig();
         config.setCaCertificates({m_Certificate});
         auto& request = m_FileQueue->request;
@@ -677,7 +692,8 @@ bool ClipboardSync::requestPaste()
     if (!isRunning()) return false;
     const DWORD sequence = GetClipboardSequenceNumber();
     const bool hasFiles = IsClipboardFormatAvailable(CF_HDROP);
-    if (!(hasFiles ? m_Files : m_Text && IsClipboardFormatAvailable(CF_UNICODETEXT))) return false;
+    if (!(hasFiles ? m_Files : (m_Images && clipboard_image::available()) ||
+                               (m_Text && IsClipboardFormatAvailable(CF_UNICODETEXT)))) return false;
     if (hasFiles) {
         if (m_IncomingSequence == sequence) return false;
         m_PasteSequence = NoPaste;
@@ -704,6 +720,13 @@ bool ClipboardSync::requestPaste()
             return true;
         }
         for (const auto& file : job->files) {
+            if (file.size > INT64_MAX || file.size > UINT64_MAX - job->progress.total) {
+                job->progress.state = FileQueue::State::Failed;
+                job->progress.error = FileQueue::message("Cannot represent the file selection size");
+                job->files.clear();
+                queue.jobs.push_back(job);
+                return true;
+            }
             job->progress.names.append(QString::fromStdString(file.name));
             job->progress.total += file.size;
         }
@@ -742,6 +765,14 @@ void ClipboardSync::cancelFileTask(quint64 taskId)
 {
     auto& queue = *m_FileQueue;
     std::lock_guard lock(queue.mutex);
+    if (taskId && taskId == queue.download.taskId) {
+        if (queue.download.state == FileQueue::State::Uploading) {
+            if (queue.download.committing) return;
+            queue.downloadCancelled = true;
+        }
+        queue.download = {};
+        return;
+    }
     const auto it = std::find_if(queue.jobs.begin(), queue.jobs.end(), [&](const auto& j) { return j->progress.taskId == taskId; });
     if (it == queue.jobs.end()) return;
     const auto job = *it;
@@ -773,7 +804,6 @@ bool ClipboardSync::pasteFileTask(quint64 taskId)
         queue.control(this, job, false);
     }
     job->automaticPaste = true;
-    job->verifyClipboard = job->published;
     job->progress.state = FileQueue::State::Queued;
     return true;
 }
@@ -802,6 +832,11 @@ QList<ClipboardUploadProgress> ClipboardSync::fileUploadTasks() const
 {
     std::lock_guard lock(m_FileQueue->mutex);
     QList<ClipboardUploadProgress> tasks;
+    const auto& download = m_FileQueue->download;
+    if (!download.names.isEmpty() && (download.state != FileQueue::State::ReadyLocally ||
+        (monotonicMs() < m_FileQueue->readyUntil && GetClipboardSequenceNumber() == m_FileQueue->readySequence))) {
+        tasks.append(download);
+    }
     for (const auto& job : m_FileQueue->jobs) tasks.append(job->progress);
     return tasks;
 }
@@ -837,7 +872,8 @@ int ClipboardSync::takeReadyPastes()
     }
     if (!m_PasteCount) return 0;
     const auto state = m_PasteSequence.load();
-    if (state != NoPaste && state != Ready && monotonicMs() - m_PasteActivity.load() < 15000 && isRunning()) return 0;
+    if (state != NoPaste && state != Ready && isRunning() &&
+        (state == m_SendingSequence || monotonicMs() - m_PasteActivity.load() < 15000)) return 0;
     const int count = state == Ready ? m_PasteCount : 0;
     m_PasteCount = 0;
     m_PasteSequence = NoPaste;
@@ -869,6 +905,8 @@ void ClipboardSync::run()
     QNetworkAccessManager network;
     network.setProxy(QNetworkProxy(QNetworkProxy::NoProxy));
     auto request = m_FileQueue->request;
+    // A large PNG can take minutes on a slow link. Time out stalled traffic.
+    request.setTransferTimeout(120000);
 
     DWORD local = m_LocalSequence;
     std::optional<DWORD> remote;
@@ -881,6 +919,7 @@ void ClipboardSync::run()
         QUrl url = m_Host;
         QUrlQuery query;
         query.addQueryItem("text", m_Text ? "1" : "0");
+        query.addQueryItem("images", m_Images ? "1" : "0");
         query.addQueryItem("files", m_Files ? "1" : "0");
         QByteArray upload;
         DWORD copied = local;
@@ -893,14 +932,16 @@ void ClipboardSync::run()
         if (explicitPaste && m_ConfirmedSequence == current) {
             m_PasteSequence.compare_exchange_strong(paste, Ready);
         } else if (remote && (current != local || explicitPaste)) {
+            m_SendingSequence = current;
             std::string encoded;
             const bool syncFiles = m_Files && !m_Multitask && current != m_DeferredFileSequence;
             int status = win_clipboard::read(m_Text, syncFiles, explicitPaste ? std::nullopt : std::optional<DWORD>(local),
-                                             encoded, copied);
+                                             encoded, copied, nullptr, m_Images);
             if (status == 200 && (!explicitPaste || (copied == paste && m_PasteSequence == paste))) {
+                m_SendingSequence = copied;
                 upload = QByteArray(encoded.data(), static_cast<int>(encoded.size()));
-                // A remote copy between the last poll and Ctrl+V must win over an older local clipboard.
-                if (explicitPaste) query.addQueryItem("since", QString::number(*remote));
+                // A copy on the host since our last poll must survive a concurrent local upload.
+                query.addQueryItem("since", QString::number(*remote));
             } else if (status == 204 || status == 413) {
                 local = copied;
                 if (explicitPaste) {
@@ -910,12 +951,15 @@ void ClipboardSync::run()
             }
         }
         if (upload.isEmpty()) {
+            m_SendingSequence = NoPaste;
             query.addQueryItem("since", remote ? QString::number(*remote) : QStringLiteral("init"));
+            if (m_Files) query.addQueryItem("download", "1");
         }
         url.setQuery(query);
         request.setUrl(url);
         if (isInterruptionRequested()) break;
-        auto response = exchange(network, request, m_Certificate, upload.isEmpty() ? nullptr : &upload);
+        auto response = exchange(network, request, m_Certificate, upload.isEmpty() ? nullptr : &upload, {}, 0,
+                                 m_Images && upload.isEmpty() ? clipboard_image::max_packet : win_clipboard::max_body);
         if (isInterruptionRequested()) break;
         if (response.status == 404 || response.status == 401 || (response.status == 403 && failures >= 3)) {
             qWarning() << "Clipboard sync unavailable for this session, HTTP" << response.status;
@@ -939,7 +983,65 @@ void ClipboardSync::run()
         } else if (response.status == 200 && remote && response.sequence && upload.isEmpty()) {
             const std::string_view payload(response.payload.constData(), response.payload.size());
             DWORD applied = local;
-            int status = win_clipboard::write(m_Text, m_Files, payload, applied, stagingRoot, local);
+            int status;
+            if (m_Files && response.payload.startsWith('M')) {
+                auto& queue = *m_FileQueue;
+                const auto started = monotonicMs();
+                quint64 taskId;
+                {
+                    std::lock_guard lock(queue.mutex);
+                    queue.download = {};
+                    queue.downloadCancelled = false;
+                    taskId = ++queue.nextId;
+                }
+                const auto cancelled = [&] { return isInterruptionRequested() || queue.downloadCancelled ||
+                                                    GetClipboardSequenceNumber() != local; };
+                const auto report = [&](const ClipboardUploadProgress& progress) {
+                    std::lock_guard lock(queue.mutex);
+                    if (queue.downloadCancelled) return false;
+                    queue.download = progress;
+                    queue.download.taskId = taskId;
+                    queue.download.startedAtMs = started;
+                    return true;
+                };
+                const auto fetch = [&](const char* op, const QString& lease, int file, quint64 offset) {
+                    QUrlQuery query;
+                    query.addQueryItem("download", op);
+                    query.addQueryItem("lease", lease);
+                    query.addQueryItem("files", "1");
+                    query.addQueryItem("since", QString::number(*response.sequence));
+                    const bool chunk = qstrcmp(op, "chunk") == 0;
+                    if (chunk) {
+                        query.addQueryItem("file", QString::number(file));
+                        query.addQueryItem("offset", QString::number(offset));
+                    }
+                    auto endpoint = m_Host;
+                    endpoint.setQuery(query);
+                    auto req = request;
+                    req.setUrl(endpoint);
+                    return exchange(network, req, m_Certificate, nullptr,
+                                    [&] { return chunk && cancelled(); }, chunk ? 30000 : 3000);
+                };
+                status = clipboard_download::receive(response.payload, stagingRoot, *response.sequence,
+                                                     local, applied, fetch, cancelled, report);
+                std::lock_guard lock(queue.mutex);
+                if (queue.downloadCancelled) {
+                    // Consume this host revision so the next poll honors Cancel.
+                    remote = response.sequence;
+                } else if (status == 204) {
+                    queue.download.state = FileQueue::State::ReadyLocally;
+                    queue.readySequence = applied;
+                    queue.readyUntil = monotonicMs() + 4000;
+                } else if (status == 409) {
+                    queue.download = {};
+                } else {
+                    queue.download.state = FileQueue::State::Failed;
+                    queue.download.error = status == 507 ? FileQueue::message("Not enough local disk space") :
+                                           FileQueue::message("File download failed");
+                }
+            } else {
+                status = win_clipboard::write(m_Text, m_Files, payload, applied, stagingRoot, local, m_Images);
+            }
             if (status == 204) {
                 // If a paste was waiting on the replaced revision, paste the host's newer copy.
                 uint64_t awaiting = local;
@@ -948,24 +1050,27 @@ void ClipboardSync::run()
                 m_ConfirmedSequence = applied;
                 m_PasteSequence.compare_exchange_strong(awaiting, Ready);
             }
-            if (status != 409) remote = response.sequence;
+            // A newer local copy supersedes the host revision we just saw. Its
+            // upload must compare against that revision, even after a long download.
+            if (status != 409 || GetClipboardSequenceNumber() != local) remote = response.sequence;
             if (status != 204 && status != 409) qWarning() << "Cannot apply incoming clipboard data, status" << status;
             failures = 0;
         } else if (response.status == 400 || response.status == 413) {
             if (!upload.isEmpty()) local = copied;
             if (explicitPaste) m_PasteSequence.compare_exchange_strong(paste, NoPaste);
-            if (response.sequence) remote = response.sequence;
+            if (upload.isEmpty() && response.sequence) remote = response.sequence;
             failures = 0;
-        } else if (explicitPaste && !upload.isEmpty() && response.status == 409 &&
+        } else if (!upload.isEmpty() && response.status == 409 &&
                    response.sequence && *response.sequence != 0 && response.sequence != remote) {
-            // The guarded POST left the newer host clipboard intact.
+            // Fetch the newer host contents on the next poll, unless the user copies again.
             local = copied;
-            m_PasteSequence.compare_exchange_strong(paste, Ready);
+            if (explicitPaste) m_PasteSequence.compare_exchange_strong(paste, Ready);
             failures = 0;
         } else {
             failures = (std::min)(failures + 1, 4);
         }
         const int delay = 250 << failures;
+        m_SendingSequence = NoPaste;
         for (int ms = 0; ms < delay && !isInterruptionRequested(); ms += 50) {
             if (m_PasteSequence <= UINT32_MAX && !explicitPaste && !failures) break;
             {
