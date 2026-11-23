@@ -1,4 +1,5 @@
 #include "filetransferwindow.h"
+#include "filetransferstyle.h"
 
 #include <QAction>
 #include <QApplication>
@@ -42,6 +43,7 @@
 #include <QSignalBlocker>
 #include <QSplitter>
 #include <QStyle>
+#include <QStyleFactory>
 #include <QTemporaryDir>
 #include <QThreadPool>
 #include <QToolButton>
@@ -109,36 +111,6 @@ private:
 
 namespace {
 using FileAction = FileTransferEngine::FileAction;
-
-void showFileConflict(QWidget* parent, bool remote, const QString& path, const QString& replaceUnavailable,
-                      FileTransferEngine::ConflictReply reply)
-{
-    using Choice = FileTransferEngine::ConflictChoice;
-    if (!parent->isVisible() || parent->isMinimized()) parent->showNormal();
-    auto* box = new QMessageBox(QMessageBox::Warning, FileTransferWindow::tr("File already exists"), {}, QMessageBox::NoButton, parent);
-    box->setAttribute(Qt::WA_DeleteOnClose);
-    box->setOption(QMessageBox::Option::DontUseNativeDialog);
-    box->setTextFormat(Qt::PlainText);
-    const auto question = replaceUnavailable.isEmpty() ? FileTransferWindow::tr("%1 already exists. Replace it?")
-                                                       : FileTransferWindow::tr("%1 already exists.");
-    box->setText(question.arg(QFileInfo(path).fileName()));
-    const auto location = remote ? FileTransferWindow::tr("Remote · %1") : FileTransferWindow::tr("Local · %1");
-    auto details = location.arg(QDir::toNativeSeparators(path));
-    if (!replaceUnavailable.isEmpty()) details += '\n' + replaceUnavailable;
-    box->setInformativeText(details);
-    auto* skip = box->addButton(FileTransferWindow::tr("Skip"), QMessageBox::ActionRole);
-    auto* replace = box->addButton(FileTransferWindow::tr("Replace"), QMessageBox::ActionRole);
-    auto* keep = box->addButton(FileTransferWindow::tr("Keep both"), QMessageBox::ActionRole);
-    replace->setEnabled(replaceUnavailable.isEmpty());
-    box->setDefaultButton(skip);
-    box->setEscapeButton(skip);
-    QObject::connect(box, &QDialog::finished, box, [box, replace, keep, reply = std::move(reply)] {
-        if (box->clickedButton() == keep) reply(Choice::KeepBoth);
-        else if (box->clickedButton() == replace) reply(Choice::Replace);
-        else reply(Choice::Skip);
-    });
-    box->open();
-}
 
 constexpr char clipboardType[] = "application/x-moonlight-transfer-selection";
 constexpr int numericSortRole = Qt::UserRole + 1;
@@ -238,17 +210,15 @@ QLabel* heading(const QString& text)
 {
     auto* label = new QLabel(text);
     label->setTextFormat(Qt::PlainText);
-    QFont font = label->font();
-    font.setPointSizeF(font.pointSizeF() + 2);
-    font.setBold(true);
-    label->setFont(font);
+    label->setFont(FileTransferStyle::headingFont(label->font()));
     return label;
 }
 
-QToolButton* tool(QHBoxLayout* layout, QStyle::StandardPixmap icon, const QString& text)
+QToolButton* tool(QHBoxLayout* layout, const QString& iconName, QStyle::StandardPixmap fallback, const QString& text)
 {
     auto* button = new QToolButton;
-    button->setIcon(QApplication::style()->standardIcon(icon));
+    button->setObjectName("transferTool");
+    button->setIcon(FileTransferStyle::icon(button, iconName, fallback));
     button->setToolTip(text);
     button->setAccessibleName(text);
     layout->addWidget(button);
@@ -260,18 +230,24 @@ QToolButton* tool(QHBoxLayout* layout, QStyle::StandardPixmap icon, const QStrin
 class SelectionColumn final : public QStyledItemDelegate
 {
 public:
-    using QStyledItemDelegate::QStyledItemDelegate;
+    SelectionColumn(QCheckBox* indicator, QObject* parent)
+        : QStyledItemDelegate(parent), m_Indicator(indicator) {}
+
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
     {
         QStyledItemDelegate::paint(painter, option, index);
-        const auto* style = option.widget->style();
+        const auto* style = m_Indicator->style();
         QStyleOptionButton check;
-        check.initFrom(option.widget);
+        check.initFrom(m_Indicator);
         const QSize size(style->pixelMetric(QStyle::PM_IndicatorWidth), style->pixelMetric(QStyle::PM_IndicatorHeight));
         check.rect = QStyle::alignedRect(option.direction, Qt::AlignCenter, size, option.rect);
-        check.state |= option.state.testFlag(QStyle::State_Selected) ? QStyle::State_On : QStyle::State_Off;
-        style->drawPrimitive(QStyle::PE_IndicatorCheckBox, &check, painter, option.widget);
+        check.state = option.state.testFlag(QStyle::State_Selected) ? QStyle::State_On : QStyle::State_Off;
+        check.state |= option.state & (QStyle::State_Enabled | QStyle::State_Active);
+        style->drawPrimitive(QStyle::PE_IndicatorCheckBox, &check, painter, m_Indicator);
     }
+
+private:
+    QCheckBox* const m_Indicator;
 };
 
 class FileList final : public QTreeWidget
@@ -399,47 +375,24 @@ private:
     QList<TransferEntry> m_Dragged;
 };
 
-void configureList(QTreeWidget* tree, const QStringList& labels)
-{
-    const auto scrollBarStyle = QStringLiteral(R"(
-        QScrollBar { background: transparent; border: none; }
-        QScrollBar:vertical { width: 16px; }
-        QScrollBar:horizontal { height: 16px; }
-        QScrollBar::handle { background: #8093aa; border-radius: 4px; }
-        QScrollBar::handle:vertical { min-height: 24px; margin: 0 4px; }
-        QScrollBar::handle:horizontal { min-width: 24px; margin: 4px 0; }
-        QScrollBar::handle:hover { background: #597ba2; }
-        QScrollBar::handle:pressed { background: palette(highlight); }
-        QScrollBar::add-page, QScrollBar::sub-page { background: transparent; }
-        QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
-    )");
-    tree->verticalScrollBar()->setStyleSheet(scrollBarStyle);
-    tree->horizontalScrollBar()->setStyleSheet(scrollBarStyle);
-    tree->setHeaderLabels(labels);
-    tree->setRootIsDecorated(false);
-    tree->setUniformRowHeights(true);
-    tree->setAlternatingRowColors(true);
-    tree->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    tree->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    tree->header()->setStretchLastSection(false);
-    tree->header()->setSectionResizeMode(0, QHeaderView::Stretch);
-}
 }
 
 FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, QByteArray token,
                                        QString hostName, QString hostId, QWidget* parent, bool standalone)
     : QWidget(parent, Qt::Window)
     , m_Engine(new FileTransferEngine(host, certificate, token, this, standalone,
-        [this](bool remote, const QString& path, const QString& reason, FileTransferEngine::ConflictReply reply) {
-            showFileConflict(this, remote, path, reason, std::move(reply));
+        [this](bool remote, int itemCount, const QList<FileConflict>& conflicts, FileTransferEngine::ConflictReply reply) {
+            showFileConflicts(this, remote, itemCount, conflicts, std::move(reply));
         }))
     , m_ClipboardId(QUuid::createUuid().toRfc4122())
     , m_Available(!token.isEmpty())
     , m_Standalone(standalone)
 {
     setWindowTitle(tr("File transfer"));
+    FileTransferStyle::apply(this);
     resize(1160, 710);
     auto* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(12, 12, 12, 12);
     auto* vertical = new QSplitter(Qt::Vertical);
     auto* browsers = new QSplitter(Qt::Horizontal);
     layout->addWidget(vertical);
@@ -455,8 +408,11 @@ FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, Q
     browsers->setChildrenCollapsible(false);
     browsers->setSizes({550, 550});
 
-    auto* queuePanel = new QWidget;
+    auto* queuePanel = new QFrame;
+    queuePanel->setObjectName("transferPanel");
     auto* queueLayout = new QVBoxLayout(queuePanel);
+    queueLayout->setContentsMargins(12, 12, 12, 12);
+    queueLayout->setSpacing(8);
     auto* queueBar = new QHBoxLayout;
     queueBar->addWidget(heading(tr("Transfers")));
     queueBar->addStretch();
@@ -468,7 +424,8 @@ FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, Q
     queueBar->addWidget(m_Clear);
     queueLayout->addLayout(queueBar);
     m_Queue = new QTreeWidget;
-    configureList(m_Queue, {tr("Name"), tr("Status"), tr("Transferred"), tr("Speed"), tr("Source"), tr("Destination")});
+    FileTransferStyle::configureList(m_Queue, {tr("Name"), tr("Status"), tr("Transferred"), tr("Speed"), tr("Source"), tr("Destination")});
+    m_Queue->setSelectionMode(QAbstractItemView::ExtendedSelection);
     m_Queue->header()->setSortIndicator(-1, Qt::AscendingOrder); // Show enqueue order until a column is chosen.
     m_Queue->setSortingEnabled(true);
     m_Queue->setColumnWidth(1, 150);
@@ -482,6 +439,11 @@ FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, Q
     vertical->setSizes({440, 200});
 
     connect(m_Engine, &FileTransferEngine::listed, this, &FileTransferWindow::showDirectory);
+    m_RemoteRetryTimer.setSingleShot(true);
+    connect(&m_RemoteRetryTimer, &QTimer::timeout, this, [this] {
+        if (isVisible() && !isMinimized() && m_RemoteRetryDelay)
+            m_Engine->list(true, m_Panes[1].requested);
+    });
     connect(m_Engine, &FileTransferEngine::progress, this, &FileTransferWindow::showProgress);
     connect(m_Engine, &FileTransferEngine::placesLoaded, this, [this](bool remote, const QList<TransferPlace>& places, const QString& error) {
         auto& pane = m_Panes[remote];
@@ -511,9 +473,7 @@ FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, Q
         if (auto* item = m_Running.value(id)) m_Tasks[item].retryable = true;
     });
     connect(m_Resume, &QPushButton::clicked, this, [this] {
-        for (auto* item : m_Queue->selectedItems()) {
-            if (m_Tasks[item].state == State::Interrupted) startTask(item);
-        }
+        startTasks(m_Queue->selectedItems());
         updateActions();
     });
     connect(m_Cancel, &QPushButton::clicked, this, [this] {
@@ -560,26 +520,39 @@ FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, Q
 QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
 {
     auto& p = m_Panes[remote];
-    auto* box = new QWidget;
+    auto* box = new QFrame;
+    box->setObjectName("transferPanel");
     auto* layout = new QVBoxLayout(box);
+    layout->setContentsMargins(12, 12, 12, 12);
+    layout->setSpacing(8);
     auto* bar = new QHBoxLayout;
     auto* label = heading(title);
     label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     label->setToolTip(title);
-    bar->addWidget(label, 1);
     p.send = new QPushButton(remote ? tr("← Download") : tr("Upload →"));
-    bar->addWidget(p.send);
+    p.send->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    auto* actionsButton = new QToolButton;
+    actionsButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum);
+    actionsButton->setObjectName("transferMenu");
+    actionsButton->setText(tr("File actions"));
+    actionsButton->setPopupMode(QToolButton::InstantPopup);
+    auto* actionsMenu = new QMenu(actionsButton);
+    actionsButton->setMenu(actionsMenu);
+
+    if (remote) bar->addWidget(p.send);
+    bar->addWidget(label, 1);
+    bar->addWidget(actionsButton);
+    if (!remote) bar->addWidget(p.send);
     layout->addLayout(bar);
 
     auto* nav = new QHBoxLayout;
     nav->setSpacing(3);
-    p.back = tool(nav, QStyle::SP_ArrowBack, tr("Back"));
-    p.up = tool(nav, QStyle::SP_ArrowUp, tr("Parent folder"));
-    p.refresh = tool(nav, QStyle::SP_BrowserReload, tr("Refresh"));
-    p.newFolder = tool(nav, QStyle::SP_FileDialogNewFolder, tr("New folder"));
+    p.back = tool(nav, QStringLiteral("go-previous"), QStyle::SP_ArrowBack, tr("Back"));
+    p.up = tool(nav, QStringLiteral("go-up"), QStyle::SP_ArrowUp, tr("Parent folder"));
+    p.refresh = tool(nav, QStringLiteral("view-refresh"), QStyle::SP_BrowserReload, tr("Refresh"));
+    p.newFolder = tool(nav, QStringLiteral("folder-new"), QStyle::SP_FileDialogNewFolder, tr("New folder"));
     auto* addressBox = new QFrame;
     addressBox->setObjectName("transferAddress");
-    addressBox->setStyleSheet(QStringLiteral("QFrame#transferAddress { background: palette(base); border: 1px solid palette(midlight); border-radius: 5px; }"));
     auto* addressBar = new QHBoxLayout(addressBox);
     addressBar->setContentsMargins(5, 1, 2, 1);
     addressBar->setSpacing(0);
@@ -589,8 +562,26 @@ QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
     p.address->setPlaceholderText(tr("This PC"));
     p.address->setAccessibleName(tr("Folder path"));
     addressBar->addWidget(p.address, 1);
-    p.locations = tool(addressBar, QStyle::SP_ArrowDown, tr("Locations and bookmarks"));
+    p.locations = tool(addressBar, QStringLiteral("go-down"), QStyle::SP_ArrowDown, tr("Locations and bookmarks"));
     p.locations->setAutoRaise(true);
+    auto* bookmarkButton = new QToolButton;
+    bookmarkButton->setObjectName("transferTool");
+    bookmarkButton->setAutoRaise(true);
+    QFont starFont(QStringLiteral("Segoe UI Symbol"));
+    starFont.setPixelSize(style()->pixelMetric(QStyle::PM_SmallIconSize));
+    bookmarkButton->setFont(starFont);
+    p.bookmark = new QAction(bookmarkButton);
+    p.bookmark->setCheckable(true);
+    bookmarkButton->setDefaultAction(p.bookmark);
+    const auto showBookmarkState = [action = p.bookmark, bookmarkButton](bool saved) {
+        const auto label = saved ? tr("Remove current bookmark") : tr("Bookmark current folder");
+        action->setText(label);
+        action->setIconText(saved ? QStringLiteral("★") : QStringLiteral("☆"));
+        bookmarkButton->setAccessibleName(label);
+    };
+    showBookmarkState(false);
+    connect(p.bookmark, &QAction::toggled, bookmarkButton, showBookmarkState);
+    addressBar->addWidget(bookmarkButton);
     nav->addWidget(addressBox, 1);
     for (auto* button : {p.back, p.up, p.refresh, p.newFolder}) {
         button->setAutoRaise(true);
@@ -626,17 +617,16 @@ QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
             m_Engine->localDropFolder(QPoint(physical.x, physical.y), reinterpret_cast<quintptr>(WindowFromPhysicalPoint(physical)), copy);
         }
     };
-    configureList(p.files, {QString(), tr("Name"), tr("Modified"), tr("Type"), tr("Size")});
+    FileTransferStyle::configureList(p.files, {QString(), tr("Name"), tr("Modified"), tr("Type"), tr("Size")});
+    p.files->setSelectionMode(QAbstractItemView::ExtendedSelection);
     p.files->header()->setSortIndicator(1, Qt::AscendingOrder);
     p.files->setSortingEnabled(true);
-    p.files->setStyleSheet(QStringLiteral("QTreeView::item { min-height: 28px; }"));
     p.files->header()->setSectionResizeMode(0, QHeaderView::Fixed);
     p.files->header()->setSectionResizeMode(1, QHeaderView::Stretch);
     p.files->setColumnWidth(0, 36);
     p.files->setColumnWidth(2, 129);
     p.files->setColumnWidth(3, 65);
     p.files->setColumnWidth(4, 78);
-    p.files->setItemDelegateForColumn(0, new SelectionColumn(p.files));
     // Cover the whole selection header so a click beside the checkbox cannot sort by it.
     auto* header = p.files->header();
     auto* selectionHeader = new QWidget(header->viewport());
@@ -644,6 +634,15 @@ QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
     auto* selectionLayout = new QHBoxLayout(selectionHeader);
     selectionLayout->setContentsMargins(0, 0, 0, 0);
     p.selectAll = new QCheckBox;
+    // The native Windows 11 checkbox paints the system accent even on a custom light surface.
+    if (!FileTransferStyle::highContrastEnabled()) {
+        if (auto* indicatorStyle = QStyleFactory::create(QStringLiteral("Fusion"))) {
+            indicatorStyle->setParent(p.selectAll);
+            p.selectAll->setStyle(indicatorStyle);
+            p.selectAll->setPalette(palette());
+        }
+    }
+    p.files->setItemDelegateForColumn(0, new SelectionColumn(p.selectAll, p.files));
     selectionLayout->addWidget(p.selectAll, 0, Qt::AlignCenter);
     p.selectAll->setAccessibleName(tr("Select all"));
     p.selectAll->setToolTip(tr("Select all"));
@@ -671,12 +670,6 @@ QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
     p.copy->setShortcut(QKeySequence::Copy);
     p.paste = new QAction(tr("Paste here"), p.files);
     p.paste->setShortcut(QKeySequence::Paste);
-    auto* actionsButton = new QToolButton;
-    actionsButton->setText(tr("File actions"));
-    actionsButton->setPopupMode(QToolButton::InstantPopup);
-    auto* actionsMenu = new QMenu(actionsButton);
-    actionsButton->setMenu(actionsMenu);
-    bar->insertWidget(1, actionsButton);
     for (auto* action : {p.open, p.copy, p.paste, p.remove}) {
         action->setShortcutContext(Qt::WidgetWithChildrenShortcut);
         p.files->addAction(action);
@@ -712,6 +705,17 @@ QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
         m_Engine->loadPlaces(remote);
     });
     connect(p.locations, &QToolButton::clicked, this, [this, remote] { showLocations(remote); });
+    connect(p.bookmark, &QAction::triggered, this, [this, remote](bool save) {
+        const auto& pane = m_Panes[remote];
+        QSettings settings;
+        auto bookmarks = settings.value(pane.bookmarksKey).toStringList();
+        if (save) {
+            if (!bookmarks.contains(pane.path)) bookmarks.append(pane.path);
+        } else {
+            bookmarks.removeAll(pane.path);
+        }
+        settings.setValue(pane.bookmarksKey, bookmarks);
+    });
     connect(p.newFolder, &QToolButton::clicked, this, [this, remote] {
         const auto parent = m_Panes[remote].path;
         bool accepted = false;
@@ -746,6 +750,10 @@ void FileTransferWindow::navigate(bool remote, QString path, std::optional<QStri
         path = QDir(p.path).filePath(path);
     }
     p.requested = path.isEmpty() ? QString() : QDir::cleanPath(path);
+    if (remote) {
+        m_RemoteRetryTimer.stop();
+        m_RemoteRetryDelay = 0;
+    }
     p.restoreFallback = std::move(restoreFallback);
     p.ready = false;
     p.address->setText(nativePath(p.requested));
@@ -755,11 +763,26 @@ void FileTransferWindow::navigate(bool remote, QString path, std::optional<QStri
     m_Engine->list(remote, p.requested);
 }
 
-void FileTransferWindow::showDirectory(bool remote, QString path, const QList<TransferEntry>& entries, QString error)
+void FileTransferWindow::showDirectory(bool remote, QString path, const QList<TransferEntry>& entries, QString error,
+                                       bool waitingForDesktop)
 {
     auto& p = m_Panes[remote];
     if (p.requested != QDir::fromNativeSeparators(path))
         return;
+    if (remote && waitingForDesktop) {
+        p.ready = false;
+        p.files->clear();
+        p.message->setText(tr("The file list will refresh when the host desktop is available. If you changed users, reconnect."));
+        m_RemoteRetryDelay = m_RemoteRetryDelay ? qMin(30000, 2 * m_RemoteRetryDelay) : 1000;
+        if (isVisible() && !isMinimized()) m_RemoteRetryTimer.start(m_RemoteRetryDelay);
+        updateActions();
+        return;
+    }
+    if (remote && m_RemoteRetryDelay) {
+        m_RemoteRetryTimer.stop();
+        m_RemoteRetryDelay = 0;
+        if (error.isEmpty()) m_Engine->loadPlaces(true);
+    }
     const auto fallback = std::exchange(p.restoreFallback, std::nullopt);
     if (!error.isEmpty() && fallback && p.requested != *fallback) {
         navigate(remote, *fallback);
@@ -782,6 +805,7 @@ void FileTransferWindow::showDirectory(bool remote, QString path, const QList<Tr
     if (!fallback && (p.history.isEmpty() || p.path != p.requested))
         QSettings().setValue(p.lastDirectoryKey, p.requested);
     p.path = p.requested;
+    p.bookmark->setChecked(!p.path.isEmpty() && QSettings().value(p.bookmarksKey).toStringList().contains(p.path));
     if (p.history.size() >= 2 && p.history.at(p.history.size() - 2) == p.path)
         p.history.removeLast();
     else if (p.history.isEmpty() || p.history.last() != p.path)
@@ -837,6 +861,8 @@ void FileTransferWindow::updateActions()
         p.up->setEnabled(destination);
         p.refresh->setEnabled(available);
         p.locations->setEnabled(available);
+        p.bookmark->setEnabled(destination);
+        if (!destination) p.bookmark->setChecked(false);
         p.newFolder->setEnabled(destination);
         const int count = p.files->topLevelItemCount();
         const int selected = items.size();
@@ -845,13 +871,9 @@ void FileTransferWindow::updateActions()
         const bool singleFile = selected == 1 && !items.first()->data(0, Qt::UserRole).value<TransferEntry>().directory;
         p.open->setText(side && singleFile ? tr("Open temporary copy") : tr("Open"));
         p.open->setEnabled(p.ready && selected == 1 && (!p.operating || !singleFile));
-        p.remove->setEnabled(!p.operating && hasSelection && std::none_of(items.cbegin(), items.cend(), [](const QTreeWidgetItem* item) {
-            return item->data(0, Qt::UserRole).value<TransferEntry>().directory;
-        }));
+        p.remove->setEnabled(!p.operating && hasSelection);
         p.copy->setEnabled(hasSelection);
-        const bool canPaste = ours ? !m_Copied.isEmpty() && (m_CopiedRemote != bool(side) ||
-            std::none_of(m_Copied.cbegin(), m_Copied.cend(), [](const TransferEntry& entry) { return entry.directory; }))
-            : mime && mime->hasUrls();
+        const bool canPaste = ours ? !m_Copied.isEmpty() : mime && mime->hasUrls();
         p.paste->setEnabled(destination && !p.operating && canPaste);
         p.send->setEnabled(hasSelection && m_Panes[!side].ready && !m_Panes[!side].path.isEmpty());
     }
@@ -869,7 +891,7 @@ void FileTransferWindow::updateActions()
 void FileTransferWindow::showLocations(bool remote)
 {
     auto& p = m_Panes[remote];
-    auto bookmarks = QSettings().value(p.bookmarksKey).toStringList();
+    const auto bookmarks = QSettings().value(p.bookmarksKey).toStringList();
     QMenu menu(this);
     menu.setMinimumWidth(p.address->parentWidget()->width());
     auto addPath = [&](QString label, const QString& path, QStyle::StandardPixmap icon) {
@@ -904,16 +926,11 @@ void FileTransferWindow::showLocations(bool remote)
         addPath(nativePath(p.path), p.path, QStyle::SP_DirOpenIcon);
     for (const auto& path : bookmarks)
         addPath(nativePath(path), path, QStyle::SP_DirIcon);
-    auto* bookmark = menu.addAction(bookmarks.contains(p.path) ? tr("Remove current bookmark") : tr("Bookmark current folder"));
-    bookmark->setEnabled(p.ready && !p.path.isEmpty());
+    p.bookmark->setChecked(p.bookmark->isEnabled() && bookmarks.contains(p.path));
+    menu.addAction(p.bookmark);
     auto* anchor = p.address->parentWidget();
     auto* chosen = menu.exec(anchor->mapToGlobal(QPoint(0, anchor->height())));
-    if (chosen == bookmark) {
-        if (bookmarks.contains(p.path)) bookmarks.removeAll(p.path);
-        else bookmarks.append(p.path);
-        QSettings().setValue(p.bookmarksKey, bookmarks);
-    }
-    else if (chosen) navigate(remote, chosen->data().toString());
+    if (chosen && chosen != p.bookmark) navigate(remote, chosen->data().toString());
 }
 
 void FileTransferWindow::openLocalFile(const QString& path)
@@ -943,11 +960,11 @@ void FileTransferWindow::manageSelection(FileAction action, bool remote, const Q
     if (action == FileAction::Delete) {
         QStringList paths;
         for (const auto& entry : entries) paths << nativePath(entry.path);
-        QMessageBox confirm(QMessageBox::Question, tr("Delete files"), {}, QMessageBox::Yes | QMessageBox::Cancel, this);
+        QMessageBox confirm(QMessageBox::Question, tr("Delete selected items"), {}, QMessageBox::Yes | QMessageBox::Cancel, this);
         confirm.setTextFormat(Qt::PlainText);
-        confirm.setText(remote ? tr("Permanently delete the selected files on the remote PC?") :
-                                 tr("Move the selected files to the Recycle Bin on this PC?"));
-        confirm.setInformativeText(paths.size() == 1 ? paths.first() : tr("%1 files in %2").arg(paths.size()).arg(nativePath(folder)));
+        confirm.setText(remote ? tr("Permanently delete the selected items and all folder contents on the remote PC?") :
+                                 tr("Move the selected items and all folder contents to the Recycle Bin on this PC?"));
+        confirm.setInformativeText(paths.size() == 1 ? paths.first() : tr("%1 items in %2").arg(paths.size()).arg(nativePath(folder)));
         if (paths.size() > 1) confirm.setDetailedText(paths.join('\n'));
         confirm.setDefaultButton(QMessageBox::Cancel);
         if (confirm.exec() != QMessageBox::Yes) return;
@@ -1114,18 +1131,39 @@ bool FileTransferWindow::takeTask(QTreeWidgetItem* item)
     return true;
 }
 
-void FileTransferWindow::startTask(QTreeWidgetItem* item)
+void FileTransferWindow::startTasks(const QList<QTreeWidgetItem*>& items)
 {
-    auto& t = m_Tasks[item];
-    if (t.state != State::Interrupted || !m_Available || !takeTask(item)) return;
-    t.state = State::Active;
-    t.retryable = false;
-    saveTask(item);
-    t.id = m_Engine->enqueue(t.fromRemote, t.entry, t.destination);
-    m_Running.insert(t.id, item);
-    item->setText(1, tr("Queued"));
-    item->setToolTip(1, {});
-    setNumericCell(item, 3, {}, {});
+    if (!m_Available) return;
+    QList<QTreeWidgetItem*> ready;
+    for (auto* item : items) {
+        auto& task = m_Tasks[item];
+        if (task.state != State::Interrupted || !takeTask(item)) continue;
+        task.state = State::Active;
+        task.retryable = false;
+        saveTask(item);
+        item->setText(1, tr("Queued"));
+        item->setToolTip(1, {});
+        setNumericCell(item, 3, {}, {});
+        ready.append(item);
+    }
+    // Only combine tasks with the same direction and destination, in queue order.
+    for (qsizetype first = 0; first < ready.size();) {
+        const auto& batch = m_Tasks[ready[first]];
+        QList<TransferEntry> entries;
+        qsizetype next = first;
+        for (; next < ready.size(); ++next) {
+            const auto& task = m_Tasks[ready[next]];
+            if (task.fromRemote != batch.fromRemote || task.destination != batch.destination) break;
+            entries.append(task.entry);
+        }
+        const auto ids = m_Engine->enqueue(batch.fromRemote, entries, batch.destination);
+        for (qsizetype i = 0; i < ids.size(); ++i) {
+            auto* item = ready[first + i];
+            m_Tasks[item].id = ids[i];
+            m_Running.insert(ids[i], item);
+        }
+        first = next;
+    }
 }
 
 void FileTransferWindow::cancelTask(QTreeWidgetItem* item)
@@ -1162,6 +1200,7 @@ void FileTransferWindow::transfer(bool fromRemote, const QList<TransferEntry>& e
 void FileTransferWindow::transferTo(bool fromRemote, const QList<TransferEntry>& entries, const QString& destination)
 {
     if (!m_Available || !QDir::isAbsolutePath(destination)) return;
+    QList<QTreeWidgetItem*> items;
     for (const auto& entry : entries) {
         const auto key = taskKey(fromRemote, entry.path, destination);
         auto it = std::find_if(m_Tasks.cbegin(), m_Tasks.cend(), [&](const Task& t) {
@@ -1176,8 +1215,9 @@ void FileTransferWindow::transferTo(bool fromRemote, const QList<TransferEntry>&
         } else {
             item = addTask(fromRemote, entry, destination, key, 0);
         }
-        startTask(item);
+        items.append(item);
     }
+    startTasks(items);
     updateActions();
 }
 
@@ -1192,6 +1232,12 @@ void FileTransferWindow::closeWhenIdle()
         QTimer::singleShot(0, this, [this] { if (!isVisible() && !hasPendingWork()) close(); });
 }
 
+void FileTransferWindow::showEvent(QShowEvent* event)
+{
+    QWidget::showEvent(event);
+    if (m_RemoteRetryDelay) m_RemoteRetryTimer.start(0);
+}
+
 void FileTransferWindow::closeEvent(QCloseEvent* event)
 {
     if (m_Standalone && hasPendingWork()) {
@@ -1202,6 +1248,7 @@ void FileTransferWindow::closeEvent(QCloseEvent* event)
         return;
     }
     QWidget::closeEvent(event);
+    if (event->isAccepted()) emit closed();
 }
 
 void FileTransferWindow::refreshSpeed()

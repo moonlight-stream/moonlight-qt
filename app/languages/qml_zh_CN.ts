@@ -222,6 +222,9 @@
 </context>
 <context>
     <name>NvHTTP</name>
+    <message><source>The host did not confirm the disconnect lock setting.</source><translation>被控端未确认断开锁屏设置。</translation></message>
+    <message><source>Sunshine does not support configuring the privacy screen from Moonlight.</source><translation>此版本的 Sunshine 不支持从 Moonlight 配置隐私屏。</translation></message>
+    <message><source>Sunshine did not confirm the privacy screen.</source><translation>Sunshine 未确认启用隐私屏。</translation></message>
     <message><source>A paired HTTPS connection is required.</source><translation>需要已配对的 HTTPS 连接。</translation></message>
     <message><source>The host did not accept the power request.</source><translation>主机未接受电源操作请求。</translation></message>
     <message>
@@ -232,6 +235,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Turn off privacy screen request</source><translation>关闭隐私屏请求</translation></message>
     <message><source>View only</source><translation>观看模式</translation></message>
     <message><source>More tools</source><translation>更多工具</translation></message>
     <message><source>Restart</source><translation>重启</translation></message>
@@ -517,6 +521,7 @@
 </context>
 <context>
     <name>ClipboardTransfer</name>
+    <message><source>Enable “Browse and transfer files” and “Allow file deletion” in Sunshine to replace remote files.</source><translation>要替换远端文件，请在 Sunshine 中开启「浏览和传输文件」和「允许删除文件」。</translation></message>
     <message><source>Receiving files</source><translation>正在接收文件</translation></message>
     <message><source>Files saved</source><translation>文件已保存</translation></message>
     <message><source>Transfer cancelled</source><translation>传输已取消</translation></message>
@@ -542,11 +547,15 @@
     <message><source>Connection or source file unavailable</source><translation>连接中断或源文件无法读取</translation></message>
     <message><source>Transfer queue is full</source><translation>传输队列已满</translation></message>
     <message><source>Cannot open the selected files</source><translation>无法打开所选文件</translation></message>
+    <message><source>This selection is too large for the clipboard. Use the file transfer assistant.</source><translation>所选项目超出剪贴板传输上限，请使用文件传输助手。</translation></message>
     <message><source>Remote clipboard changed</source><translation>远端剪贴板已更改</translation></message>
     <message><source>More tasks (%1-%2 of %3)</source><translation>查看更多任务（%1–%2 / %3）</translation></message>
 </context>
 <context>
     <name>Session</name>
+    <message><source>Windows is blocking display changes. Unlock %1, then try privacy screen again.</source><translation>Windows 当前禁止切换显示器。请解锁 %1，然后重试隐私屏。</translation></message>
+    <message><source>Sunshine could not switch to the virtual display on %1. If the host is locked, unlock it and try again. If it is already unlocked, check Sunshine's virtual display output.</source><translation>Sunshine 无法切换到 %1 的虚拟显示器。如果主机已锁屏，请解锁后重试。如果主机已解锁，请检查 Sunshine 的虚拟显示器输出设置。</translation></message>
+    <message><source>Another application is running on the host.</source><translation>主机上正在运行其他应用。</translation></message>
     <message><source>%1 — View only</source><translation>%1 — 观看模式</translation></message>
     <message><source>Uploading files %1%</source><translation>正在上传文件 %1%</translation></message>
     <message><source>Unable to open the file transfer window.</source><translation>无法打开文件传输窗口。</translation></message>
@@ -577,6 +586,7 @@
         <source>Exit fullscreen</source>
         <translation>退出全屏</translation>
     </message>
+    <message><source>Release mouse: Ctrl+Alt+Shift+Z</source><translation>释放鼠标：Ctrl+Alt+Shift+Z</translation></message>
     <message>
         <source>Disconnect</source>
         <translation>退出远控</translation>
@@ -800,13 +810,13 @@
     <message><source>Sync copied text with the remote Windows PC</source><translation>与远端 Windows 电脑同步复制的文本</translation></message>
     <message><source>Sync copied images with the remote Windows PC</source><translation>与远端 Windows 电脑同步复制的图片</translation></message>
     <message><source>Transfer copied files through the clipboard</source><translation>通过剪贴板传输复制的文件</translation></message>
-    <message><source>Compatible Windows Sunshine hosts lock after the last stream ends, even after a network loss. This request takes effect when you connect. On older hosts, Moonlight sends a lock shortcut when you disconnect.</source><translation>兼容的 Windows Sunshine 主机会在最后一个串流结束后锁屏，网络意外断开也会生效。此请求在连接时生效。对于旧版主机，Moonlight 会在主动断开时发送锁屏快捷键。</translation></message>
+    <message><source>Compatible Windows Sunshine hosts lock after the last stream ends, even after a network loss. This request takes effect when you connect.</source><translation>兼容的 Windows Sunshine 主机会在最后一个串流结束后锁屏，网络意外断开也会生效。此请求在连接时生效。</translation></message>
     <message><source>Off</source><translation>关闭</translation></message>
     <message><source>Fullscreen only</source><translation>仅全屏时</translation></message>
     <message><source>Always</source><translation>始终</translation></message>
     <message><source>Security</source><translation>安全</translation></message>
     <message><source>Session security</source><translation>会话安全</translation></message>
-    <message><source>Lock the remote PC when I disconnect</source><translation>主动断开远控时锁定被控电脑</translation></message>
+    <message><source>Lock the remote PC when I disconnect</source><translation>断开远控时锁定被控电脑</translation></message>
     <message><source>Moonlight sends Win+L when you disconnect manually. The remote PC must support this shortcut. If the connection is lost, Moonlight cannot send it.</source><translation>主动断开时，Moonlight 会向被控电脑发送 Win+L。被控电脑需支持此快捷键。连接意外中断时无法发送。</translation></message>
     <message><source>General</source><translation>常规</translation></message>
     <message><source>Streaming</source><translation>串流</translation></message>
@@ -1346,6 +1356,7 @@
 </context>
 <context>
     <name>StreamSegue</name>
+    <message><source>Reconnecting to apply the privacy screen...</source><translation>正在重新连接以应用隐私屏…</translation></message>
     <message><source>Checking video and audio capabilities...</source><translation>正在检测本机的音视频能力…</translation></message>
     <message><source>Reviewing stream settings...</source><translation>正在显示串流设置提示…</translation></message>
     <message>
@@ -1397,6 +1408,9 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Privacy screen could not start</source><translation>无法开启隐私屏</translation></message>
+    <message><source>Turn off privacy screen request</source><translation>关闭隐私屏请求</translation></message>
+    <message><source>You can turn off the request and reconnect normally to unlock the host. Its physical display may show the session.</source><translation>也可以关闭隐私屏请求，用普通串流连接并解锁主机。普通串流期间，实体屏可能显示画面。</translation></message>
     <message><source>Minimize</source><translation>最小化</translation></message>
     <message><source>Restore</source><translation>还原</translation></message>
     <message><source>Maximize</source><translation>最大化</translation></message>
@@ -1487,16 +1501,38 @@
 </context>
 <context>
     <name>StreamControlCenter</name>
+    <message><source>Display %1</source><translation>显示屏 %1</translation></message>
+    <message><source>Display</source><translation>显示屏</translation></message>
+    <message><source>Local display</source><translation>本机显示屏</translation></message>
+    <message><source>Stream resolution</source><translation>串流分辨率</translation></message>
+    <message><source>Sound</source><translation>声音</translation></message>
+    <message><source>System shortcuts</source><translation>系统快捷键</translation></message>
+    <message><source>Send system keyboard shortcuts to the host.</source><translation>将系统快捷键发送到被控端。</translation></message>
+    <message><source>End viewing</source><translation>结束观看</translation></message>
+    <message><source>Privacy screen (reconnect now)</source><translation>隐私屏（立即重连）</translation></message>
+    <message><source>Privacy screen reconnects using the virtual display configured in Sunshine.</source><translation>切换隐私屏会立即重连，并使用 Sunshine 中配置的虚拟显示器。</translation></message>
+    <message><source>Update Sunshine to use the privacy screen from Moonlight.</source><translation>请更新 Sunshine 后再从 Moonlight 配置隐私屏。</translation></message>
     <message><source>File transfer</source><translation>文件传输</translation></message>
-    <message><source>Request screen lock on disconnect</source><translation>主动断开时锁定被控电脑</translation></message>
-    <message><source>Use installed host lock shortcut</source><translation>使用被控机锁屏快捷方式</translation></message>
+    <message><source>Host mute</source><translation>被控端静音</translation></message>
+    <message><source>Muted</source><translation>已静音</translation></message>
+    <message><source>Unmuted</source><translation>未静音</translation></message>
+    <message><source>State unavailable</source><translation>状态不可用</translation></message>
+    <message><source>Checking…</source><translation>正在读取…</translation></message>
+    <message><source>Updating…</source><translation>正在切换…</translation></message>
+    <message><source>Lock on disconnect</source><translation>断开时锁屏</translation></message>
+    <message><source>Could not start the privacy screen reconnect.</source><translation>无法启动隐私屏重连。</translation></message>
+    <message><source>Update Sunshine to change the lock setting during a stream.</source><translation>更新 Sunshine 后即可在串流中修改断开锁屏设置。</translation></message>
+    <message><source>Applying disconnect lock setting…</source><translation>正在应用断开锁屏设置…</translation></message>
+    <message><source>Sunshine did not confirm the disconnect lock setting.</source><translation>Sunshine 未确认断开锁屏设置。</translation></message>
+    <message><source>Sunshine requires locking when the stream disconnects.</source><translation>Sunshine 要求断开串流时锁屏。</translation></message>
+    <message><source>Disconnect lock updated for this stream.</source><translation>断开锁屏设置已在当前串流生效。</translation></message>
     <message><source>Request screen lock now</source><translation>立即请求锁屏</translation></message>
-    <message><source>Lock shortcut queued</source><translation>锁屏按键已加入发送队列</translation></message>
-    <message><source>Couldn't queue lock shortcut</source><translation>锁屏按键未能加入发送队列</translation></message>
-    <message><source>If Win+L doesn't lock this PC, install the Ctrl+Alt+F10 lock shortcut on the remote PC and enable it above. Press Ctrl+Alt+Shift+End during a stream to request a lock.</source><translation>如果 Win+L 无法锁定被控机，请在被控机上安装 Ctrl+Alt+F10 锁屏快捷方式，再开启上方对应选项。串流中可按 Ctrl+Alt+Shift+End 请求锁屏。</translation></message>
+    <message><source>Requesting host lock…</source><translation>正在请求被控端锁屏…</translation></message>
+    <message><source>Host accepted the lock request.</source><translation>被控端已接受锁屏请求。</translation></message>
+    <message><source>Host lock failed. Check that Sunshine supports remote locking.</source><translation>锁屏请求失败，请确认被控端 Sunshine 支持远程锁屏。</translation></message>
+    <message><source>Shortcut: Ctrl+Alt+Shift+End</source><translation>操作快捷键 Ctrl+Alt+Shift+End</translation></message>
     <message><source>HUD settings</source><translation>统计浮层设置</translation></message>
     <message><source>Security</source><translation>安全</translation></message>
-    <message><source>Send Win+L on disconnect</source><translation>主动断开时锁定被控电脑</translation></message>
     <message><source>Duration</source><translation>连接时长</translation></message>
     <message><source>Frame rate</source><translation>帧率</translation></message>
     <message><source>Network RTT</source><translation>网络延迟</translation></message>
@@ -1509,7 +1545,7 @@
     <message><source>Displayed metrics</source><translation>显示项目</translation></message>
     <message><source>Position</source><translation>浮窗位置</translation></message>
     <message><source>Opacity</source><translation>不透明度</translation></message>
-    <message><source>Fullscreen</source><translation>进入全屏</translation></message>
+    <message><source>Fullscreen</source><translation>全屏</translation></message>
     <message><source>Top left</source><translation>左上角</translation></message>
     <message><source>Top right</source><translation>右上角</translation></message>
     <message><source>Bottom left</source><translation>左下角</translation></message>
@@ -1517,7 +1553,34 @@
     <message><source>Control center</source><translation>控制中心</translation></message>
 </context>
 <context>
+    <name>FileConflictDialog</name>
+    <message><source>Replace or Skip Files</source><translation>替换或跳过文件</translation></message>
+    <message><source>Remote · %1</source><translation>远端 · %1</translation></message>
+    <message><source>Local · %1</source><translation>本机 · %1</translation></message>
+    <message><source>Copying 1 item to %1</source><translation>正在将 1 个项目复制到 %1</translation></message>
+    <message><source>Copying %1 items to %2</source><translation>正在将 %1 个项目复制到 %2</translation></message>
+    <message><source>The destination already contains “%1”.</source><translation>目标已包含同名文件“%1”</translation></message>
+    <message><source>The destination has %1 files with the same names.</source><translation>目标包含 %1 个同名文件</translation></message>
+    <message><source>Some files cannot be replaced. See details for each file.</source><translation>部分文件无法替换，可在详细信息中查看原因。</translation></message>
+    <message><source>&amp;Replace the file in the destination</source><translation>替换目标中的文件(&amp;R)</translation></message>
+    <message><source>&amp;Replace the files in the destination</source><translation>全部替换(&amp;R)</translation></message>
+    <message><source>&amp;Skip this file</source><translation>跳过这个文件(&amp;S)</translation></message>
+    <message><source>&amp;Skip these files</source><translation>全部跳过(&amp;S)</translation></message>
+    <message><source>&amp;Keep both copies</source><translation>保留副本(&amp;K)</translation></message>
+    <message><source>&amp;Let me decide for each file</source><translation>由我逐个决定(&amp;L)</translation></message>
+    <message><source>Details</source><translation>详细信息</translation></message>
+    <message><source>File name</source><translation>文件名</translation></message>
+    <message><source>Action</source><translation>操作</translation></message>
+    <message><source>Back</source><translation>返回</translation></message>
+    <message><source>Continue</source><translation>继续</translation></message>
+    <message><source>Action for %1</source><translation>%1 的操作</translation></message>
+    <message><source>Skip</source><translation>跳过</translation></message>
+    <message><source>Replace</source><translation>替换</translation></message>
+    <message><source>Keep both copies</source><translation>保留副本</translation></message>
+</context>
+<context>
     <name>FileTransferWindow</name>
+    <message><source>The file list will refresh when the host desktop is available. If you changed users, reconnect.</source><translation>主机桌面可用后会自动刷新文件列表。若已切换用户，请重新连接。</translation></message>
     <message><source>Drag files or folders to the other PC. Drop on a folder to copy into it.</source><translation>可将文件或文件夹拖到另一台电脑。拖到文件夹上即可复制到该目录。</translation></message>
     <message><source>Drop the selection in the local pane, in File Explorer, or on the desktop.</source><translation>请将所选项目拖到本机面板、资源管理器或桌面。</translation></message>
     <message><source>File actions</source><translation>文件操作</translation></message>
@@ -1534,10 +1597,10 @@
     <message><source>Replace</source><translation>替换</translation></message>
     <message><source>Keep both</source><translation>保留两者</translation></message>
     <message><source>Delete…</source><translation>删除…</translation></message>
-    <message><source>Delete files</source><translation>删除文件</translation></message>
-    <message><source>Permanently delete the selected files on the remote PC?</source><translation>要永久删除远端电脑上的所选文件吗？</translation></message>
-    <message><source>Move the selected files to the Recycle Bin on this PC?</source><translation>要将本机的所选文件移入回收站吗？</translation></message>
-    <message><source>%1 files in %2</source><translation>%2 中的 %1 个文件</translation></message>
+    <message><source>Delete selected items</source><translation>删除所选项目</translation></message>
+    <message><source>Permanently delete the selected items and all folder contents on the remote PC?</source><translation>要永久删除远端电脑上的所选项目及文件夹中的全部内容吗？</translation></message>
+    <message><source>Move the selected items and all folder contents to the Recycle Bin on this PC?</source><translation>要将本机的所选项目及文件夹中的全部内容移入回收站吗？</translation></message>
+    <message><source>%1 items in %2</source><translation>%2 中的 %1 个项目</translation></message>
     <message><source>Deleting files…</source><translation>正在删除文件…</translation></message>
     <message><source>Resume selected</source><translation>继续所选任务</translation></message>
     <message><source>Interrupted</source><translation>已中断</translation></message>
@@ -1597,6 +1660,7 @@
 </context>
 <context>
     <name>FileTransferEngine</name>
+    <message><source>File session denied. Check file browsing permission in Sunshine and reconnect.</source><translation>文件会话未获授权。请确认 Sunshine 已允许浏览和传输文件，然后重新连接。</translation></message>
     <message><source>Drop files on a folder or empty space in File Explorer or on the desktop.</source><translation>请将文件拖到资源管理器中的文件夹或空白处，也可以拖到桌面。</translation></message>
     <message><source>The file drop timed out.</source><translation>文件拖放超时，请重试。</translation></message>
     <message><source>The dragged selection contains an unavailable file or folder.</source><translation>拖动的文件或文件夹中有项目无法访问。</translation></message>
@@ -1609,6 +1673,9 @@
     <message><source>Skipped</source><translation>已跳过</translation></message>
     <message><source>Completed (%1 skipped)</source><translation>已完成（已跳过 %1 项）</translation></message>
     <message><source>Update Sunshine to delete remote files.</source><translation>请更新 Sunshine 以使用远端文件删除功能。</translation></message>
+    <message><source>Update Sunshine to delete remote folders.</source><translation>请更新 Sunshine 以删除远端文件夹。</translation></message>
+    <message><source>Update Sunshine to copy folders within the remote PC.</source><translation>请更新 Sunshine 以在远端电脑上复制文件夹。</translation></message>
+    <message><source>Cannot copy a folder into itself: %1</source><translation>无法将文件夹复制到它自身或其子目录：%1</translation></message>
     <message><source>Enable “Allow file deletion” in Sunshine under Configuration → Input.</source><translation>请在 Sunshine 的「配置 → 输入」中开启「Allow file deletion」（允许删除文件）。</translation></message>
     <message><source>This transfer is already running or its checkpoint is unavailable</source><translation>任务已在传输，或无法访问其断点记录</translation></message>
     <message><source>Cannot read transfer checkpoint</source><translation>无法读取传输断点</translation></message>

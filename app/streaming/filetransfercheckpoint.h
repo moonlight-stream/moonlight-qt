@@ -122,6 +122,18 @@ inline bool regular(HANDLE handle, BY_HANDLE_FILE_INFORMATION& info)
            !(info.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT));
 }
 
+inline QString localFileVersion(const QString& path)
+{
+    auto file = open(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                     OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS);
+    BY_HANDLE_FILE_INFORMATION info{};
+    FILE_BASIC_INFO basic{};
+    if (!file || !regular(file.get(), info) ||
+        !GetFileInformationByHandleEx(file.get(), FileBasicInfo, &basic, sizeof(basic))) return {};
+    const auto size = (quint64(info.nFileSizeHigh) << 32) | info.nFileSizeLow;
+    return identity(info) + '-' + QString::number(size) + '-' + QString::number(basic.ChangeTime.QuadPart);
+}
+
 inline bool pinDirectory(const QString& path, std::vector<Handle>& chain)
 {
     QDir dir(path);

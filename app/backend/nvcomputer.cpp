@@ -208,6 +208,8 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
                 PS_PAIRED : PS_NOT_PAIRED;
     hostPowerAvailable = pairState == PS_PAIRED && !serverCert.isNull() &&
                          NvHTTP::getXmlString(serverInfo, "hostpowerversion") == "1";
+    standaloneFilesAvailable = pairState == PS_PAIRED && !serverCert.isNull() &&
+                               NvHTTP::getXmlString(serverInfo, "standalonefileversion") == "1";
     this->currentGameId = NvHTTP::getCurrentGame(serverInfo);
     this->appVersion = NvHTTP::getXmlString(serverInfo, "appversion");
     this->gfeVersion = NvHTTP::getXmlString(serverInfo, "GfeVersion");
@@ -375,13 +377,28 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
         copyOfActiveAddress = activeAddress;
     }
 
-    QTcpSocket s;
-    s.setProxy(QNetworkProxy::NoProxy);
-    s.connectToHost(copyOfActiveAddress.address(), copyOfActiveAddress.port());
-    if (s.waitForConnected(3000)) {
-        Q_ASSERT(!s.localAddress().isNull());
-        Q_ASSERT(!s.peerAddress().isNull());
+    QHostAddress localAddress;
+    QHostAddress peerAddress;
+    if (peerAddress.setAddress(copyOfActiveAddress.address())) {
+        // A connected UDP socket lets the OS choose the source address without
+        // sending any packets or waiting for the host's HTTP port.
+        QUdpSocket route;
+        route.setProxy(QNetworkProxy::NoProxy);
+        route.connectToHost(peerAddress, copyOfActiveAddress.port());
+        localAddress = route.localAddress();
+    }
+    else {
+        // For host names, keep testing the candidates to identify a reachable address.
+        QTcpSocket route;
+        route.setProxy(QNetworkProxy::NoProxy);
+        route.connectToHost(copyOfActiveAddress.address(), copyOfActiveAddress.port());
+        if (route.waitForConnected(3000)) {
+            localAddress = route.localAddress();
+            peerAddress = route.peerAddress();
+        }
+    }
 
+    if (!localAddress.isNull() && !peerAddress.isNull()) {
         const auto allInterfaces = QNetworkInterface::allInterfaces();
         for (const QNetworkInterface& nic : allInterfaces) {
             // Ensure the interface is up
@@ -391,7 +408,7 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
 
             const auto allInterfaceAddresses = nic.addressEntries();
             for (const QNetworkAddressEntry& addr : allInterfaceAddresses) {
-                if (addr.ip() == s.localAddress()) {
+                if (addr.ip() == localAddress) {
                     qInfo() << "Found matching interface:" << nic.humanReadableName() << nic.hardwareAddress() << nic.flags();
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
@@ -446,7 +463,7 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
 
                     // Didn't meet any of our VPN heuristics. Let's see if the peer address is on-link.
                     Q_ASSERT(addr.prefixLength() >= 0);
-                    if (addr.prefixLength() >= 0 && s.localAddress().isInSubnet(s.peerAddress(), addr.prefixLength())) {
+                    if (addr.prefixLength() >= 0 && localAddress.isInSubnet(peerAddress, addr.prefixLength())) {
                         return ReachabilityType::RI_LAN;
                     }
 
@@ -456,12 +473,12 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
             }
         }
 
-        qWarning() << "No match found for address:" << s.localAddress();
+        qWarning() << "No match found for address:" << localAddress;
         return ReachabilityType::RI_UNKNOWN;
     }
     else {
         // If we fail to connect, just pretend that it's not a VPN
-        qWarning() << "Unable to check for reachability within 3 seconds";
+        qWarning() << "Unable to determine the route to" << copyOfActiveAddress.toString();
         return ReachabilityType::RI_UNKNOWN;
     }
 }
@@ -571,6 +588,7 @@ bool NvComputer::update(const NvComputer& that)
     ASSIGN_IF_CHANGED(appVersion);
     ASSIGN_IF_CHANGED(isSupportedServerVersion);
     ASSIGN_IF_CHANGED(hostPowerAvailable);
+    ASSIGN_IF_CHANGED(standaloneFilesAvailable);
     ASSIGN_IF_CHANGED(isNvidiaServerSoftware);
     ASSIGN_IF_CHANGED(maxLumaPixelsHEVC);
     ASSIGN_IF_CHANGED(gpuModel);

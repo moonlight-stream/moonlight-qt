@@ -85,7 +85,7 @@ class SdlInputHandler
 {
 public:
     explicit SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight,
-                             const QString& hostUuid = {}, bool viewOnly = false);
+                             bool viewOnly = false);
     bool isViewOnly() const { return m_ViewOnly; }
 
     ~SdlInputHandler();
@@ -135,9 +135,7 @@ public:
     int getAttachedGamepadMask();
 
     void raiseAllKeys();
-    bool requestHostScreenLock();
-    bool usesHostLockShortcut() const;
-    void setUsesHostLockShortcut(bool enabled);
+    bool toggleHostMute();
 
     void notifyMouseLeave();
 
@@ -214,7 +212,6 @@ private:
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
     SDL_Window* m_Window = nullptr;
-    const QString m_HostUuid;
     const bool m_ViewOnly;
     bool m_MultiController;
     bool m_GamepadMouse;

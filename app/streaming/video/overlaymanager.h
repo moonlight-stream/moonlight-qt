@@ -8,6 +8,7 @@
 #include <SDL_ttf.h>
 #ifdef Q_OS_WIN32
 #include "clipboarduploadoverlay.h"
+#include <atomic>
 #endif
 
 namespace Overlay {
@@ -47,7 +48,7 @@ public:
     SDL_Surface* getUpdatedOverlaySurface(OverlayType type);
 
 #ifdef Q_OS_WIN32
-    enum class Control { None, Handle, LeaveFullscreen, FileTransfer, Disconnect };
+    enum class Control { None, Handle, ToggleFullscreen, FileTransfer, Disconnect };
     void configureControls(int streamWidth, int streamHeight, bool fileTransfer = true);
     void updateClipboardUpload(const QList<ClipboardUploadProgress>& tasks, QSize window, qreal scale);
     ClipboardUploadOverlay::Input handleClipboardUpload(const SDL_Event& event, quint64& taskId);
@@ -57,6 +58,7 @@ public:
     void moveHandle(int width, int height, int left, int top);
     Control controlAt(int width, int height, int x, int y) const;
     void showControls(bool expanded, Control hover = Control::None);
+    void setControlMode(bool fullscreen, bool captured);
 #endif
     void setOverlayRenderer(IOverlayRenderer* renderer);
 
@@ -75,8 +77,11 @@ private:
     int m_StreamWidth = 1, m_StreamHeight = 1;
     bool m_Expanded = false;
     bool m_FileTransfer = true;
+    std::atomic_bool m_Fullscreen{true};
+    std::atomic_bool m_CaptureHint{false};
     Control m_Hover = Control::None;
     static constexpr int HandleWidth = 52, HandleHeight = 18;
+    static constexpr int CaptureHintWidth = 250, CaptureHintHeight = 26;
     static constexpr int MenuWidth = 396, MenuHeight = 40;
 #endif
     struct {

@@ -310,6 +310,7 @@ OverlayManager::HandleEdge OverlayManager::handleEdge() const
 // Keep drag offsets in the same coordinate space even when the tab rotates.
 SDL_Rect OverlayManager::dragReferenceRect(int width, int height) const
 {
+    if (m_CaptureHint) return controlsRect(width, height, CaptureHintWidth, CaptureHintHeight);
     return controlsRect(width, height, HandleWidth, HandleHeight);
 }
 
@@ -330,9 +331,10 @@ void OverlayManager::moveHandle(int width, int height, int left, int top)
 
 OverlayManager::Control OverlayManager::controlAt(int width, int height, int x, int y) const
 {
-    bool sideTab = handleEdge() != HandleEdge::None;
-    auto rect = controlsRect(width, height, m_Expanded ? MenuWidth : (sideTab ? HandleHeight : HandleWidth),
-                             m_Expanded ? MenuHeight : (sideTab ? HandleWidth : HandleHeight));
+    const bool hint = !m_Expanded && m_CaptureHint;
+    const bool sideTab = !hint && handleEdge() != HandleEdge::None;
+    const auto rect = controlsRect(width, height, m_Expanded ? MenuWidth : (hint ? CaptureHintWidth : (sideTab ? HandleHeight : HandleWidth)),
+                                   m_Expanded ? MenuHeight : (hint ? CaptureHintHeight : (sideTab ? HandleWidth : HandleHeight)));
     SDL_Point point = {x, y};
     if (!SDL_PointInRect(&point, &rect)) {
         return Control::None;
@@ -340,9 +342,9 @@ OverlayManager::Control OverlayManager::controlAt(int width, int height, int x, 
     if (!m_Expanded) {
         return Control::Handle;
     }
-    constexpr Control controls[] = { Control::LeaveFullscreen, Control::FileTransfer, Control::Disconnect };
+    constexpr Control controls[] = { Control::ToggleFullscreen, Control::FileTransfer, Control::Disconnect };
     if (!m_FileTransfer)
-        return x < rect.x + rect.w / 2 ? Control::LeaveFullscreen : Control::Disconnect;
+        return x < rect.x + rect.w / 2 ? Control::ToggleFullscreen : Control::Disconnect;
     return controls[(x - rect.x) * 3 / rect.w];
 }
 
@@ -355,12 +357,22 @@ void OverlayManager::showControls(bool expanded, Control hover)
     }
 }
 
+void OverlayManager::setControlMode(bool fullscreen, bool captured)
+{
+    if (m_Fullscreen != fullscreen || m_CaptureHint != captured) {
+        m_Fullscreen = fullscreen;
+        m_CaptureHint = captured;
+        setOverlayTextUpdated(OverlayFullscreenControls);
+    }
+}
+
 SDL_Surface* OverlayManager::renderControls() const
 {
-    auto edge = m_Expanded ? HandleEdge::None : handleEdge();
+    const bool hint = !m_Expanded && m_CaptureHint;
+    auto edge = m_Expanded || hint ? HandleEdge::None : handleEdge();
     bool sideTab = edge != HandleEdge::None;
-    int width = m_Expanded ? MenuWidth : (sideTab ? HandleHeight : HandleWidth);
-    int height = m_Expanded ? MenuHeight : (sideTab ? HandleWidth : HandleHeight);
+    int width = m_Expanded ? MenuWidth : (hint ? CaptureHintWidth : (sideTab ? HandleHeight : HandleWidth));
+    int height = m_Expanded ? MenuHeight : (hint ? CaptureHintHeight : (sideTab ? HandleWidth : HandleHeight));
     SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, SDL_PIXELFORMAT_ARGB8888);
     if (!surface) {
         return nullptr;
@@ -388,10 +400,11 @@ SDL_Surface* OverlayManager::renderControls() const
         QFont font;
         font.setPixelSize(15);
         painter.setFont(font);
-        const QString labels[] = { QCoreApplication::translate("Session", "Exit fullscreen"),
+        const QString labels[] = { m_Fullscreen ? QCoreApplication::translate("Session", "Exit fullscreen") :
+                                                QCoreApplication::translate("StreamControlCenter", "Fullscreen"),
             QCoreApplication::translate("StreamControlCenter", "File transfer"),
             QCoreApplication::translate("Session", "Disconnect") };
-        constexpr Control controls[] = { Control::LeaveFullscreen, Control::FileTransfer, Control::Disconnect };
+        constexpr Control controls[] = { Control::ToggleFullscreen, Control::FileTransfer, Control::Disconnect };
         const int count = m_FileTransfer ? 3 : 2;
         for (int i = 0; i < count; ++i) {
             const int action = !m_FileTransfer && i == 1 ? 2 : i;
@@ -402,6 +415,14 @@ SDL_Surface* OverlayManager::renderControls() const
             painter.setPen(QColor("#20364e"));
             painter.drawText(rect, Qt::AlignCenter, labels[action]);
         }
+    }
+    else if (hint) {
+        QFont font;
+        font.setPixelSize(13);
+        painter.setFont(font);
+        painter.setPen(QColor("#20364e"));
+        painter.drawText(QRect(0, 0, width, height), Qt::AlignCenter,
+                         QCoreApplication::translate("Session", "Release mouse: Ctrl+Alt+Shift+Z"));
     }
     else {
         painter.setPen(QPen(m_Hover == Control::Handle ? QColor("#2468d5") : QColor("#20364e"), 2));

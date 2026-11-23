@@ -9,6 +9,7 @@
 #include <QLocalSocket>
 #include "clipboarddownload.h"
 #include "clipboardvirtualfiles.h"
+#include "clipboard_tree.h"
 #include "explorerpaste.h"
 #include "desktoptransferprogress.h"
 #include "clipboarduploadrate.h"
@@ -20,7 +21,9 @@
 #include <QCryptographicHash>
 #include <QCoreApplication>
 #include <QDebug>
+#include <QDir>
 #include <QEventLoop>
+#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -110,7 +113,7 @@ Result collectReply(QNetworkReply* reply, const std::function<bool()>& cancelled
         result.task = reply->rawHeader("X-Clipboard-Task");
         if (status == 409) {
             const auto cause = reply->rawHeader("X-Clipboard-Conflict");
-            if (cause == "busy" || cause == "sequence" || cause == "offset" || cause == "desktop" || cause == "shell") {
+            if (cause == "busy" || cause == "sequence" || cause == "offset" || cause == "desktop" || cause == "shell" || cause == "file") {
                 result.conflict = cause;
             }
         }
@@ -210,7 +213,9 @@ int receiveSnapshot(QNetworkAccessManager& network, const QNetworkRequest& baseR
     };
     DWORD unused = 0;
     return clipboard_download::receive(manifest, destination, revision, local, unused, fetch,
-                                       cancelled, report, paths, saveToFolder);
+                                       cancelled, report, paths, saveToFolder, [&](int itemCount, const QList<FileConflict>& conflicts) {
+        return ClipboardTransferProcess::askConflicts(false, itemCount, conflicts, cancelled);
+    });
 }
 
 quint64 directEthernetSpeed(const QUrl& host)
@@ -298,6 +303,7 @@ bool fingerprintSources(const std::vector<win_clipboard::detail::source_file>& f
 {
     for (size_t i = 0; i < files.size(); ++i) {
         const auto& file = files[i];
+        if (file.directory) continue;
         if (!transfer_file::seek(file.handle.get(), 0)) return false;
         const auto digest = transfer_file::sha256(file.handle.get(), file.size, cancelled);
         if (digest.isEmpty()) return false;
@@ -309,7 +315,7 @@ bool fingerprintSources(const std::vector<win_clipboard::detail::source_file>& f
 }
 
 bool readResumeResponse(const QByteArray& body, const std::vector<win_clipboard::detail::source_file>& files,
-                        QByteArray& id, std::vector<quint64>& offsets)
+                        QByteArray& id, std::vector<quint64>& offsets, std::vector<bool>& skipped)
 {
     const auto response = QJsonDocument::fromJson(body).object();
     id = response.value(QStringLiteral("id")).toString().toLatin1();
@@ -321,7 +327,65 @@ bool readResumeResponse(const QByteArray& body, const std::vector<win_clipboard:
         if (!value.isDouble() || offset < 0 || quint64(offset) > files[i].size) return false;
         offsets[i] = quint64(offset);
     }
+    for (const auto index : response.value("skipped").toArray()) {
+        const int i = index.toInt(-1);
+        if (i < 0 || size_t(i) >= files.size() || offsets[i] != files[i].size) return false;
+        skipped[i] = true;
+    }
     return true;
+}
+
+std::optional<QJsonArray> resolveRemoteConflicts(const QByteArray& payload, const QJsonArray& manifest,
+                                                const std::function<bool()>& cancelled)
+{
+    const auto response = QJsonDocument::fromJson(payload).object();
+    // Earlier hosts and collisions discovered during delivery report one file.
+    const auto entries = response.contains("conflicts") ? response.value("conflicts").toArray() : QJsonArray{response};
+    if (entries.isEmpty() || entries.size() > manifest.size()) return {};
+    QList<FileConflict> files;
+    QSet<int> seen;
+    QString folder;
+    for (const auto value : entries) {
+        const auto entry = value.toObject();
+        const int index = entry.value("file").toInt(-1);
+        const auto path = entry.value("path").toString();
+        const QFileInfo info(path);
+        if (index < 0 || index >= manifest.size() || seen.contains(index) || !info.isAbsolute()) return {};
+        const auto suffix = '/' + manifest.at(index).toObject().value("name").toString();
+        const auto fullPath = QDir::fromNativeSeparators(path);
+        if (!fullPath.endsWith(suffix, Qt::CaseInsensitive)) return {};
+        const auto root = fullPath.chopped(suffix.size());
+        if (!folder.isEmpty() && root.compare(folder, Qt::CaseInsensitive) != 0) return {};
+        folder = root;
+        seen.insert(index);
+        const auto reason = entry.value("reason").toString();
+        QString unavailable;
+        if (reason == "permission")
+            unavailable = QCoreApplication::translate("ClipboardTransfer", "Enable “Browse and transfer files” and “Allow file deletion” in Sunshine to replace remote files.");
+        else if (reason == "folder")
+            unavailable = QCoreApplication::translate("FileTransferEngine", "A folder occupies this name.");
+        else if (reason == "unavailable")
+            unavailable = QCoreApplication::translate("FileTransferEngine", "The file changed or is in use: %1").arg(path);
+        else if (!reason.isEmpty() || entry.value("version").toString().isEmpty()) return {};
+        files.append({path, unavailable});
+    }
+    const auto choices = ClipboardTransferProcess::askConflicts(true, int(manifest.size()), files, cancelled);
+    if (!choices || choices->size() != entries.size()) return {};
+    QJsonArray decisions;
+    for (int i = 0; i < entries.size(); ++i) {
+        const auto entry = entries.at(i).toObject();
+        QString resolution;
+        switch (choices->at(i)) {
+        case FileConflictChoice::Skip: resolution = QStringLiteral("skip"); break;
+        case FileConflictChoice::KeepBoth: resolution = QStringLiteral("keep-both"); break;
+        case FileConflictChoice::Replace:
+            if (!files[i].replaceUnavailable.isEmpty()) return {};
+            resolution = entry.value("version").toString();
+            break;
+        }
+        decisions.append(QJsonObject{{"file", entry.value("file")}, {"resolution", resolution}});
+    }
+    return decisions;
 }
 
 Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, const QUrl& host,
@@ -400,15 +464,31 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
         }
     }
     if (cancelled()) return failure("begin", {}, "cancelled");
-    QUrlQuery beginQuery(resumable ? "op=resume" : "op=begin");
+    QUrlQuery beginQuery(!task.isEmpty() ? "op=prepare" : resumable ? "op=resume" : "op=begin");
     if (!task.isEmpty()) beginQuery.addQueryItem("task", task);
     url.setQuery(beginQuery);
     request.setUrl(url);
-    auto begin = exchange(network, request, pairedHost, &manifestBody, {}, 15000);
+    auto body = manifestBody;
+    Result begin;
+    for (;;) {
+        begin = exchange(network, request, pairedHost, &body, {}, 15000);
+        if (task.isEmpty() || begin.conflict != "file") break;
+        const auto decisions = resolveRemoteConflicts(begin.payload, manifest, cancelled);
+        if (!decisions || cancelled()) return failure("prepare", begin);
+        for (const auto value : *decisions) {
+            const auto decision = value.toObject();
+            const int i = decision.value("file").toInt();
+            auto item = manifest.at(i).toObject();
+            item.insert("resolution", decision.value("resolution"));
+            manifest[i] = item;
+        }
+        body = QJsonDocument(manifest).toJson(QJsonDocument::Compact);
+    }
     if (begin.status != 200) return failure("begin", begin);
     QByteArray id = begin.payload;
     std::vector<quint64> offsets(files.size());
-    if (resumable && !readResumeResponse(begin.payload, files, id, offsets)) {
+    std::vector<bool> skipped(files.size());
+    if (resumable && !readResumeResponse(begin.payload, files, id, offsets, skipped)) {
         return failure("resume", begin, "invalid file offsets");
     }
     if (id.size() != 32 || !std::all_of(id.begin(), id.end(), [](char ch) {
@@ -425,17 +505,24 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
     request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
     auto send = [&]() -> Result {
         if (cancelled()) return failure("begin", {}, "cancelled after acknowledgement");
-        for (auto received : offsets) acknowledged += received;
+        for (size_t i = files.size(); i-- > 0;) {
+            if (skipped[i]) {
+                progress.names.removeAt(i);
+                progress.total -= files[i].size;
+            } else acknowledged += offsets[i];
+        }
         progress.resumedBytes = acknowledged;
         progress.acknowledged = acknowledged;
         progress.preparing = false;
         ClipboardUploadPacer pacer(host);
         QByteArray chunk;
+        int progressIndex = 0;
         for (index = 0; index < files.size(); ++index) {
+            if (skipped[index]) continue;
             const auto& file = files[index];
             offset = offsets[index];
-            if (resumable && !transfer_file::seek(file.handle.get(), offset)) return failure("resume", {}, "local file seek");
-            progress.index = static_cast<int>(index);
+            if (resumable && !file.directory && !transfer_file::seek(file.handle.get(), offset)) return failure("resume", {}, "local file seek");
+            progress.index = progressIndex++;
             progress.fileBytes = offset;
             progress.fileSize = file.size;
             update(progress);
@@ -472,11 +559,21 @@ Result uploadFileBatch(QNetworkAccessManager& network, QNetworkRequest request, 
         update(progress);
         // Keep the original revision guard on every attempt. Older hosts return an ambiguous
         // 409, and a newer remote clipboard must always win.
-        for (int attempt = 0; ; ++attempt) {
-            auto result = post(query, {});
+        QByteArray deliveryDecision;
+        int busyRetries = 0;
+        for (;;) {
+            auto result = post(query, deliveryDecision);
             if (result.status == 204 && (!task.isEmpty() || result.sequence)) return result;
-            if (result.status != 409 || result.conflict != "busy" || attempt >= 5) return failure("commit", result);
-            if (!waitForUpload(monotonicMs() + (100 << attempt), cancelled)) return failure("commit", {}, "cancelled");
+            if (!task.isEmpty() && result.conflict == "file") {
+                const auto decisions = resolveRemoteConflicts(result.payload, manifest, cancelled);
+                if (!decisions || decisions->size() != 1 || cancelled()) return failure("deliver", result);
+                deliveryDecision = QJsonDocument(decisions->first().toObject()).toJson(QJsonDocument::Compact);
+                busyRetries = 0;
+                continue;
+            }
+            if (result.status != 409 || result.conflict != "busy" || busyRetries >= 5) return failure("commit", result);
+            if (!waitForUpload(monotonicMs() + (100 << busyRetries), cancelled)) return failure("commit", {}, "cancelled");
+            ++busyRetries;
         }
     };
     auto result = send();
@@ -541,7 +638,7 @@ struct ClipboardSync::FileQueue {
         QCryptographicHash hash(QCryptographicHash::Sha256);
         for (const auto& file : job.files) {
             BY_HANDLE_FILE_INFORMATION info{};
-            if (!GetFileInformationByHandle(file.handle.get(), &info)) return {};
+            if (!file.directory && !GetFileInformationByHandle(file.handle.get(), &info)) return {};
             const DWORD fields[] = {info.dwVolumeSerialNumber, info.nFileIndexHigh, info.nFileIndexLow,
                 info.ftLastWriteTime.dwHighDateTime, info.ftLastWriteTime.dwLowDateTime, info.nFileSizeHigh,
                 info.nFileSizeLow, static_cast<DWORD>(file.name.size())};
@@ -808,11 +905,21 @@ bool ClipboardSync::requestPaste()
             return true;
         }
         std::string unused;
-        const auto status = win_clipboard::read(false, true, {}, unused, job->sequence, &job->files);
-        if (status != 200 || job->files.empty() || job->sequence != sequence) {
+        std::vector<std::filesystem::path> paths;
+        auto status = win_clipboard::read(false, true, {}, unused, job->sequence, &paths);
+        if (status == 200) {
+            status = win_clipboard::tree::walk(paths, true, false, [&](const auto&, const std::wstring& name,
+                                               const BY_HANDLE_FILE_INFORMATION& info, auto& handle) {
+                const bool directory = (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
+                const auto size = directory ? 0 : (quint64(info.nFileSizeHigh) << 32) | info.nFileSizeLow;
+                job->files.push_back({directory ? nullptr : std::move(handle), win_clipboard::detail::to_utf8(name), size, directory});
+            });
+        }
+        if (status != 200 || job->files.empty() || job->sequence != sequence || GetClipboardSequenceNumber() != sequence) {
             job->files.clear();
             job->progress.state = FileQueue::State::Failed;
-            job->progress.error = FileQueue::message("Cannot open the selected files");
+            job->progress.error = status == 413 ? FileQueue::message("This selection is too large for the clipboard. Use the file transfer assistant.") :
+                                                  FileQueue::message("Cannot open the selected files");
             queue.jobs.push_back(job);
             return true;
         }
@@ -931,7 +1038,7 @@ QList<ClipboardUploadProgress> ClipboardSync::fileUploadTasks() const
     QList<ClipboardUploadProgress> tasks;
     const auto& download = m_FileQueue->download;
     const bool finished = download.state == FileQueue::State::ReadyLocally || download.state == FileQueue::State::Saved;
-    if (!download.names.isEmpty() && (!finished ||
+    if ((!download.names.isEmpty() || download.skipped) && (!finished ||
         (monotonicMs() < m_FileQueue->readyUntil && GetClipboardSequenceNumber() == m_FileQueue->readySequence))) {
         tasks.append(download);
     }
@@ -1083,6 +1190,7 @@ void ClipboardSync::run()
             if (m_Files && !probe) {
                 query.addQueryItem("download", "1");
                 query.addQueryItem("metadataOnly", "1");
+                query.addQueryItem("folders", "1");
             }
         }
         url.setQuery(query);
@@ -1125,19 +1233,28 @@ void ClipboardSync::run()
                 const auto manifest = QJsonDocument::fromJson(response.payload.mid(1)).object();
                 const auto entries = manifest.value("files").toArray();
                 std::vector<FILEDESCRIPTORW> descriptors;
-                for (const auto& value : entries) {
-                    const auto entry = value.toObject();
-                    const auto name = entry.value("name").toString().toStdWString();
-                    bool valid = false;
-                    const quint64 size = entry.value("size").toString().toULongLong(&valid);
-                    if (!valid || !win_clipboard::detail::valid_name(name) || name.size() >= MAX_PATH) break;
-                    FILEDESCRIPTORW descriptor{};
-                    descriptor.dwFlags = FD_ATTRIBUTES | FD_FILESIZE | FD_UNICODE;
-                    descriptor.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
-                    descriptor.nFileSizeHigh = static_cast<DWORD>(size >> 32);
-                    descriptor.nFileSizeLow = static_cast<DWORD>(size);
-                    std::copy(name.begin(), name.end(), descriptor.cFileName);
-                    descriptors.push_back(descriptor);
+                std::vector<size_t> roots;
+                std::vector<clipboard_download::File> selection;
+                quint64 total = 0;
+                const bool validSelection = response.payload.size() <= qsizetype(win_clipboard::tree::max_manifest) &&
+                                            clipboard_download::parseFiles(entries, selection, total) == 200;
+                if (validSelection) {
+                    const bool hasFolders = std::any_of(selection.begin(), selection.end(), [](const auto& f) { return f.directory; });
+                    for (size_t i = 0; i < selection.size(); ++i) {
+                        const auto& file = selection[i];
+                        if (hasFolders) {
+                            if (!file.name.has_parent_path()) roots.push_back(i);
+                        } else {
+                            FILEDESCRIPTORW descriptor{};
+                            descriptor.dwFlags = FD_ATTRIBUTES | FD_FILESIZE | FD_UNICODE;
+                            descriptor.dwFileAttributes = FILE_ATTRIBUTE_NORMAL;
+                            descriptor.nFileSizeHigh = static_cast<DWORD>(file.size >> 32);
+                            descriptor.nFileSizeLow = static_cast<DWORD>(file.size);
+                            const auto& name = file.name.native(); // A validated basename fits cFileName.
+                            std::copy(name.begin(), name.end(), descriptor.cFileName);
+                            descriptors.push_back(descriptor);
+                        }
+                    }
                 }
                 // Release source handles immediately. Reopen and validate the same
                 // remote selection when Explorer asks for its first file stream.
@@ -1158,6 +1275,7 @@ void ClipboardSync::run()
                     query.addQueryItem("download", offerId.isEmpty() ? "1" : "offer");
                     if (!offerId.isEmpty()) query.addQueryItem("lease", offerId);
                     query.addQueryItem("files", "1");
+                    query.addQueryItem("folders", "1");
                     query.addQueryItem("since", QString::number(offerId.isEmpty() ? revision - 1U : revision));
                     endpoint.setQuery(query);
                     auto open = baseRequest;
@@ -1238,11 +1356,10 @@ void ClipboardSync::run()
                     return status == 204;
                 };
                 status = GetClipboardSequenceNumber() != local ? 409 : 400;
-                if (oleReady && !entries.isEmpty() && entries.size() <= win_clipboard::max_files &&
-                    descriptors.size() == size_t(entries.size()) && GetClipboardSequenceNumber() == local) {
+                if (oleReady && validSelection && GetClipboardSequenceNumber() == local) {
                     auto next = new ClipboardVirtualFiles(std::move(descriptors), [download](ClipboardVirtualFiles::Paths& paths) {
                         return download(paths, {});
-                    });
+                    }, std::move(roots));
                     if (SUCCEEDED(OleSetClipboard(next))) {
                         clearOffer();
                         offer = next;

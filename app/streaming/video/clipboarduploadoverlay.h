@@ -392,7 +392,9 @@ private:
         case State::Queued: return tr("Queued");
         case State::NeedsPaste: return tr("Choose where to paste");
         case State::WaitingForPaste: return tr("Waiting for paste");
-        case State::Saved: return tr("Files saved");
+        case State::Saved:
+            if (job.skipped) return QCoreApplication::translate("FileTransferEngine", "Completed (%1 skipped)").arg(job.skipped);
+            return tr("Files saved");
         case State::Cancelled: return tr("Transfer cancelled");
         case State::ReadyLocally: return tr("Ready to paste on this PC");
         case State::Failed: return job.error.isEmpty() ? tr("Transfer failed") : job.error;

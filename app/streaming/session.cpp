@@ -46,6 +46,7 @@
 
 #include <QtEndian>
 #include <QCoreApplication>
+#include <QElapsedTimer>
 #include <QThreadPool>
 #include <QProcess>
 #include <QDir>
@@ -1339,7 +1340,7 @@ private:
         if (shouldQuit) {
             emit m_Session->quitStarting();
         }
-        else {
+        else if (!m_Session->m_PrivacyReconnectRequested) {
             emit m_Session->sessionFinished(m_Session->m_PortTestResults);
         }
 
@@ -1625,13 +1626,15 @@ void Session::toggleFullscreen()
 }
 
 #ifdef Q_OS_WIN32
-void Session::updateFullscreenControls()
+void Session::updateFullscreenControls(bool expand)
 {
-    m_ControlsExpanded = false;
+    const bool fullscreen = SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN;
+    const bool gameMouse = !m_InputHandler->usesAbsoluteMouse();
+    m_ControlsExpanded = expand && (fullscreen || gameMouse);
     m_ControlPressed = false;
-    m_OverlayManager.showControls(false);
-    m_OverlayManager.setOverlayState(Overlay::OverlayFullscreenControls,
-                                     SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN);
+    m_OverlayManager.setControlMode(fullscreen, gameMouse && m_InputHandler->isCaptureActive());
+    m_OverlayManager.showControls(m_ControlsExpanded);
+    m_OverlayManager.setOverlayState(Overlay::OverlayFullscreenControls, fullscreen || gameMouse);
 }
 
 bool Session::handleFullscreenControlEvent(SDL_Event& event)
@@ -1640,6 +1643,9 @@ bool Session::handleFullscreenControlEvent(SDL_Event& event)
     if (!m_OverlayManager.isOverlayEnabled(Overlay::OverlayFullscreenControls)) {
         return false;
     }
+    const bool fullscreen = SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN;
+    const bool gameMouseCaptured = !m_InputHandler->usesAbsoluteMouse() && m_InputHandler->isCaptureActive();
+    m_OverlayManager.setControlMode(fullscreen, gameMouseCaptured);
     int x, y;
     bool touch = false, down = false, up = false;
     switch (event.type) {
@@ -1649,7 +1655,7 @@ bool Session::handleFullscreenControlEvent(SDL_Event& event)
         }
         return false;
     case SDL_MOUSEMOTION:
-        if (event.motion.which == SDL_TOUCH_MOUSEID) {
+        if (gameMouseCaptured || event.motion.which == SDL_TOUCH_MOUSEID) {
             return false;
         }
         x = event.motion.x;
@@ -1657,7 +1663,7 @@ bool Session::handleFullscreenControlEvent(SDL_Event& event)
         break;
     case SDL_MOUSEBUTTONDOWN:
     case SDL_MOUSEBUTTONUP:
-        if (event.button.which == SDL_TOUCH_MOUSEID || event.button.button != SDL_BUTTON_LEFT) {
+        if (gameMouseCaptured || event.button.which == SDL_TOUCH_MOUSEID || event.button.button != SDL_BUTTON_LEFT) {
             return false;
         }
         x = event.button.x;
@@ -1689,6 +1695,11 @@ bool Session::handleFullscreenControlEvent(SDL_Event& event)
     if (m_ControlPressed && (touch != m_ControlTouch ||
             (touch && event.tfinger.fingerId != m_ControlFinger))) {
         return false;
+    }
+    if (down && !touch && hit == Control::None && m_ControlsExpanded && !m_InputHandler->isCaptureActive()) {
+        m_ControlsExpanded = false;
+        m_OverlayManager.showControls(false);
+        return false; // A click back into the stream can recapture the game mouse.
     }
     if (down && (hit != Control::None || m_ControlsExpanded)) {
         m_ControlPressed = true;
@@ -1724,7 +1735,7 @@ bool Session::handleFullscreenControlEvent(SDL_Event& event)
         m_ControlPressed = false;
         m_ControlsExpanded = hit == Control::Handle && hit == m_PressedControl;
         m_OverlayManager.showControls(m_ControlsExpanded);
-        if (hit == m_PressedControl && hit == Control::LeaveFullscreen) {
+        if (hit == m_PressedControl && hit == Control::ToggleFullscreen) {
             toggleFullscreen();
             m_InputHandler->raiseAllKeys();
         }
@@ -1734,8 +1745,8 @@ bool Session::handleFullscreenControlEvent(SDL_Event& event)
             return false;
         }
         else if (hit == m_PressedControl && hit == Control::Disconnect) {
-            m_DisconnectOnly = true;
-            event.type = SDL_QUIT;
+            event.type = SDL_USEREVENT;
+            event.user.code = CaptionControls::Disconnect;
             return false;
         }
         return true;
@@ -1784,24 +1795,30 @@ public:
 // Called in a non-main thread
 bool Session::startConnectionAsync()
 {
+    // Polling can update the host state and active address while we connect.
+    const NvComputer computer = [this]() {
+        QReadLocker lock(&m_Computer->lock);
+        return *m_Computer;
+    }();
+
     // The selected app may have changed since the launcher probed the host.
     if (m_ViewOnly && (!m_App.isDesktop() ||
-            (m_Computer->currentGameId && m_Computer->currentGameId != m_App.id))) {
+            (computer.currentGameId && computer.currentGameId != m_App.id))) {
         emit displayLaunchError(QObject::tr("Viewing mode requires the desktop to be available."));
         return false;
     }
-    // The UI should have ensured the old game was already quit
-    // if we decide to stream a different game.
-    Q_ASSERT(m_Computer->currentGameId == 0 ||
-             m_Computer->currentGameId == m_App.id);
+    if (computer.currentGameId != 0 && computer.currentGameId != m_App.id) {
+        emit displayLaunchError(tr("Another application is running on the host."));
+        return false;
+    }
 
     bool enableGameOptimizations;
-    if (m_Computer->isNvidiaServerSoftware) {
+    if (computer.isNvidiaServerSoftware) {
         // GFE will set all settings to 720p60 if it doesn't recognize
         // the chosen resolution. Avoid that by disabling SOPS when it
         // is not streaming a supported resolution.
         enableGameOptimizations = false;
-        for (const NvDisplayMode &mode : std::as_const(m_Computer->displayModes)) {
+        for (const NvDisplayMode &mode : computer.displayModes) {
             if (mode.width == m_StreamConfig.width &&
                     mode.height == m_StreamConfig.height) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1819,33 +1836,109 @@ bool Session::startConnectionAsync()
     }
 
     QString rtspSessionUrl;
+    const bool privacyScreen = m_Preferences->privacyScreenForHost(computer.uuid);
+    QElapsedTimer connectionTimer;
+    connectionTimer.start();
 
+    int reconnectRetries = 0;
     try {
-        NvHTTP http(m_Computer);
-        const bool resume = m_Computer->currentGameId != 0;
+        NvHTTP http(&computer);
+        bool resume = computer.currentGameId != 0;
         emit requestingHostSession(resume);
-        http.startApp(resume ? "resume" : "launch",
-                      m_Computer->isNvidiaServerSoftware,
-                      m_App.id, &m_StreamConfig,
-                      !m_ViewOnly && enableGameOptimizations,
-                      m_ViewOnly || m_Preferences->playAudioOnHost,
-                      m_ViewOnly ? 0 : m_InputHandler->getAttachedGamepadMask(),
-                      !m_ViewOnly && !m_Preferences->multiController,
-                      !m_ViewOnly && m_Preferences->lockHostOnDisconnect(),
-                      !m_ViewOnly,
-                      m_HostHandlesDisconnectLock,
-                      m_ClipboardToken, m_ClipboardText, m_ClipboardImages, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask, m_FileBrowser, m_FileDrag,
-                      rtspSessionUrl);
+
+        for (int attempt = 0; ; ++attempt) {
+            if (SDL_AtomicGet(&m_ConnectionEnding)) {
+                return false;
+            }
+            try {
+                http.startApp(resume ? "resume" : "launch",
+                              computer.isNvidiaServerSoftware,
+                              m_App.id, &m_StreamConfig,
+                              !m_ViewOnly && enableGameOptimizations,
+                              m_ViewOnly || m_Preferences->playAudioOnHost,
+                              m_ViewOnly ? 0 : m_InputHandler->getAttachedGamepadMask(),
+                              !m_ViewOnly && !m_Preferences->multiController,
+                              !m_ViewOnly && m_Preferences->lockHostOnDisconnect(),
+                              privacyScreen,
+                              !m_ViewOnly,
+                              m_ClipboardToken, m_ClipboardText, m_ClipboardImages, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask, m_FileBrowser, m_FileDrag,
+                              m_HostMuteAvailable, m_HostPrivacyAvailable,
+                              m_DisconnectLockStreamId, m_DisconnectLockEnabled, rtspSessionUrl);
+                m_StandaloneFilesAvailable = m_FileBrowser && computer.standaloneFilesAvailable;
+                break;
+            } catch (const GfeHttpResponseException& e) {
+                const QByteArray message = e.getStatusMessage();
+                if (m_PrivacyReconnect && reconnectRetries < 8 &&
+                    ((e.getStatusCode() == 409 && message == "Privacy screen requires an exclusive streaming session") ||
+                     (e.getStatusCode() == 503 && message == "Another streaming handshake is in progress"))) {
+                    ++reconnectRetries;
+                    QThread::msleep(250);
+                    --attempt;
+                    continue;
+                }
+                if (attempt != 0 || computer.isNvidiaServerSoftware) {
+                    throw;
+                }
+
+                const bool staleAppState =
+                        (resume && e.getStatusCode() == 503 && message == "No running app to resume") ||
+                        (!resume && e.getStatusCode() == 400 && message == "An app is already running on this host");
+                if (staleAppState) {
+                    const QString serverInfo = http.getServerInfo(NvHTTP::NVLL_ERROR, true);
+                    const QString state = NvHTTP::getXmlString(serverInfo, "state");
+                    if (!state.endsWith("_SERVER_FREE") && !state.endsWith("_SERVER_BUSY")) {
+                        throw;
+                    }
+                    const int currentApp = NvHTTP::getCurrentGame(serverInfo);
+                    if ((currentApp != 0 && currentApp != m_App.id) || resume == (currentApp != 0)) {
+                        throw;
+                    }
+                    resume = currentApp != 0;
+                    emit requestingHostSession(resume);
+                    qInfo() << "Retrying with refreshed host application state";
+                }
+                else if (e.getStatusCode() == 503 &&
+                         (message == "Another streaming handshake is in progress" ||
+                          message.startsWith("Failed to initialize video capture/encoding."))) {
+                    qInfo() << "Retrying after temporary host error:" << message;
+                    QThread::msleep(300);
+                }
+                else {
+                    throw;
+                }
+            } catch (const QtNetworkReplyException& e) {
+                // A refused TCP connection cannot have created a host session.
+                if (attempt != 0 || e.getError() != QNetworkReply::ConnectionRefusedError) {
+                    throw;
+                }
+                qInfo() << "Retrying after the host refused the connection";
+                QThread::msleep(300);
+            }
+        }
     } catch (const GfeHttpResponseException& e) {
-        emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
+        const QByteArray message(e.getStatusMessage());
+        if (e.getStatusCode() == 503 && message.startsWith("Privacy screen unavailable.")) {
+            const QString explanation = message.contains("Windows display settings are temporarily unavailable")
+                ? tr("Windows is blocking display changes. Unlock %1, then try privacy screen again.").arg(computer.name)
+                : tr("Sunshine could not switch to the virtual display on %1. If the host is locked, unlock it and try again. If it is already unlocked, check Sunshine's virtual display output.").arg(computer.name);
+            emit displayPrivacyLaunchError(explanation, privacyScreen ? computer.uuid : QString());
+        }
+        else {
+            emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
+        }
         return false;
     } catch (const QtNetworkReplyException& e) {
         emit displayLaunchError(e.toQString());
         return false;
     }
 
+    if (SDL_AtomicGet(&m_ConnectionEnding)) {
+        return false;
+    }
+
+    qInfo() << "Host session ready after" << connectionTimer.elapsed() << "ms";
     emit stageStarting(tr("Checking the network route..."));
-    QByteArray hostnameStr = m_Computer->activeAddress.address().toUtf8();
+    QByteArray hostnameStr = computer.activeAddress.address().toUtf8();
 #ifdef Q_OS_WIN32
     addrinfo hints{};
     hints.ai_socktype = SOCK_DGRAM;
@@ -1859,17 +1952,17 @@ bool Session::startConnectionAsync()
         freeaddrinfo(routes);
     }
 #endif
-    QByteArray siAppVersion = m_Computer->appVersion.toUtf8();
+    QByteArray siAppVersion = computer.appVersion.toUtf8();
 
     SERVER_INFORMATION hostInfo;
     hostInfo.address = hostnameStr.data();
     hostInfo.serverInfoAppVersion = siAppVersion.data();
-    hostInfo.serverCodecModeSupport = m_Computer->serverCodecModeSupport;
+    hostInfo.serverCodecModeSupport = computer.serverCodecModeSupport;
 
     // Older GFE versions didn't have this field
     QByteArray siGfeVersion;
-    if (!m_Computer->gfeVersion.isEmpty()) {
-        siGfeVersion = m_Computer->gfeVersion.toUtf8();
+    if (!computer.gfeVersion.isEmpty()) {
+        siGfeVersion = computer.gfeVersion.toUtf8();
     }
     if (!siGfeVersion.isEmpty()) {
         hostInfo.serverInfoGfeVersion = siGfeVersion.data();
@@ -1895,9 +1988,7 @@ bool Session::startConnectionAsync()
         // Use 1392 byte video packets by default
         m_StreamConfig.packetSize = 1392;
 
-        // getActiveAddressReachability() does network I/O, so we only attempt to check
-        // reachability if we've already contacted the PC successfully.
-        switch (m_Computer->getActiveAddressReachability()) {
+        switch (computer.getActiveAddressReachability()) {
         case NvComputer::RI_LAN:
             // This address is on-link, so treat it as a local address
             // even if it's not in RFC 1918 space or it's an IPv6 address.
@@ -1944,6 +2035,7 @@ bool Session::startConnectionAsync()
         return false;
     }
 
+    qInfo() << "Stream channels ready after" << connectionTimer.elapsed() << "ms";
     emit connectionStarted();
     return true;
 }
@@ -1988,7 +2080,7 @@ void Session::start()
 
     // Initialize the gamepad code with our preferences
     // NB: m_InputHandler must be initialize before starting the connection.
-    m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height, m_Computer->uuid, m_ViewOnly);
+    m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height, m_ViewOnly);
     connect(m_Preferences, &StreamingPreferences::captureSysKeysModeChanged, this, [this]() {
         if (m_InputHandler) {
             m_InputHandler->setCaptureSystemKeysMode(m_Preferences->captureSysKeysMode);
@@ -2013,6 +2105,18 @@ void Session::interrupt()
     event.type = SDL_QUIT;
     event.quit.timestamp = SDL_GetTicks();
     SDL_PushEvent(&event);
+}
+
+Session* Session::takePrivacyReconnect()
+{
+    if (!std::exchange(m_PrivacyReconnectRequested, false))
+        return nullptr;
+    auto* session = new Session(m_Computer, m_App, m_Preferences, m_ViewOnly);
+    session->m_PrivacyReconnect = true;
+#ifdef Q_OS_WIN32
+    connect(session, &Session::sessionFinished, session, [] { StreamWindow::release(); });
+#endif
+    return session;
 }
 
 void Session::exec()
@@ -2226,12 +2330,66 @@ void Session::exec()
     Uint32 lastTitleUpdate = SDL_GetTicks();
 #ifdef Q_OS_WIN32
     MIB_IF_ROW2 previousTraffic{};
-    CaptionControls caption(m_Window, *m_Preferences, *m_InputHandler);
-    QProcess fileTransferProcess;
+    CaptionControls caption(m_Window, *m_Preferences, *m_InputHandler, [this]() -> std::future<QString> {
+        if (m_ViewOnly || SDL_AtomicGet(&m_ConnectionEnding)) return {};
+        QReadLocker lock(&m_Computer->lock);
+        auto request = std::make_shared<std::packaged_task<QString()>>(
+            [address = m_Computer->activeAddress, port = m_Computer->activeHttpsPort, cert = m_Computer->serverCert] {
+                try {
+                    NvHTTP(address, port, cert, true).requestHostLock();
+                    return QString{};
+                } catch (const std::exception& error) {
+                    qWarning() << "Host lock request failed:" << error.what();
+                    return QCoreApplication::translate("StreamControlCenter", "Host lock failed. Check that Sunshine supports remote locking.");
+                }
+            });
+        auto result = request->get_future();
+        QThreadPool::globalInstance()->start([request] { (*request)(); });
+        return result;
+    }, [this](std::optional<bool> desired) -> std::future<std::optional<bool>> {
+        if (m_ViewOnly || SDL_AtomicGet(&m_ConnectionEnding)) return {};
+        QReadLocker lock(&m_Computer->lock);
+        auto request = std::make_shared<std::packaged_task<std::optional<bool>()>>(
+            [address = m_Computer->activeAddress, port = m_Computer->activeHttpsPort, cert = m_Computer->serverCert, desired]() -> std::optional<bool> {
+                try {
+                    return NvHTTP(address, port, cert, true).requestHostMute(desired);
+                } catch (const std::exception& error) {
+                    qWarning() << "Host mute request failed:" << error.what();
+                    return std::nullopt;
+                }
+            });
+        auto result = request->get_future();
+        QThreadPool::globalInstance()->start([request] { (*request)(); });
+        return result;
+    }, m_HostMuteAvailable, m_Computer->uuid, m_HostPrivacyAvailable,
+       m_DisconnectLockEnabled, m_DisconnectLockStreamId ? CaptionControls::DisconnectLockRequest(
+           [this](bool enabled) -> std::future<std::optional<bool>> {
+               if (m_ViewOnly || SDL_AtomicGet(&m_ConnectionEnding)) return {};
+               QReadLocker lock(&m_Computer->lock);
+               auto request = std::make_shared<std::packaged_task<std::optional<bool>()>>(
+                   [address = m_Computer->activeAddress, port = m_Computer->activeHttpsPort,
+                    cert = m_Computer->serverCert, streamId = m_DisconnectLockStreamId, enabled]() -> std::optional<bool> {
+                       try {
+                           return NvHTTP(address, port, cert, true).setDisconnectLock(streamId, enabled);
+                       } catch (const std::exception& error) {
+                           qWarning() << "Disconnect lock update failed:" << error.what();
+                           return std::nullopt;
+                       }
+                   });
+               auto result = request->get_future();
+               QThreadPool::globalInstance()->start([request] { (*request)(); });
+               return result;
+           }) : CaptionControls::DisconnectLockRequest{});
+    FileTransferProcess::Window fileTransferWindow;
     QUrl clipboardHost;
     clipboardHost.setScheme(QStringLiteral("https"));
     clipboardHost.setHost(m_Computer->activeAddress.address());
     clipboardHost.setPort(m_Computer->activeHttpsPort);
+    const auto showFileTransfer = [&](const QByteArray& command = {}) {
+        return fileTransferWindow.show(clipboardHost, m_Computer->serverCert,
+                                       m_FileBrowser ? m_ClipboardToken : QByteArray(), m_StandaloneFilesAvailable,
+                                       m_Computer->name, m_Computer->uuid, command);
+    };
     std::unique_ptr<StreamFileDrag> fileDrag;
     if (!m_ViewOnly && m_FileDrag) {
         auto error = [this](const QString& message) {
@@ -2240,8 +2398,7 @@ void Session::exec()
         fileDrag = std::make_unique<StreamFileDrag>(m_Window, QSize(m_StreamConfig.width, m_StreamConfig.height),
             clipboardHost, m_Computer->serverCert, m_ClipboardToken,
             [&, error](bool fromRemote, const QList<TransferEntry>& entries, const QString& folder) {
-                if (!FileTransferProcess::show(fileTransferProcess, clipboardHost, m_Computer->serverCert, m_ClipboardToken,
-                        m_Computer->name, m_Computer->uuid, FileTransferProcess::dropCommand(fromRemote, entries, folder))) {
+                if (!showFileTransfer(FileTransferProcess::dropCommand(fromRemote, entries, folder))) {
                     error(tr("Unable to open the file transfer window."));
                 }
             }, error);
@@ -2402,7 +2559,9 @@ void Session::exec()
             event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_FINGERDOWN) {
             clipboard.cancelPaste();
         }
-        if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_KEYDOWN) caption.dismiss();
+        if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) && caption.handleMenuKey(event.key))
+            continue;
+        if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_FINGERDOWN || event.type == SDL_KEYDOWN) caption.dismiss();
         if (handleFullscreenControlEvent(event)) {
             continue;
         }
@@ -2427,18 +2586,27 @@ void Session::exec()
             case Session::ToggleStreamHud:
                 caption.toggle();
                 break;
+            case Session::LockHostNow:
+                m_InputHandler->raiseAllKeys();
+                caption.requestLock();
+                break;
             case CaptionControls::Fullscreen:
                 if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) toggleFullscreen();
                 caption.update();
                 break;
+            case CaptionControls::PrivacyReconnect:
+                m_DisconnectOnly = true;
+                m_PrivacyReconnectRequested = true;
+                goto DispatchDeferredCleanup;
+            case CaptionControls::Disconnect:
+                m_DisconnectOnly = true;
+                goto DispatchDeferredCleanup;
             case CaptionControls::FileTransfer:
                 if (m_ViewOnly) break;
                 if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) toggleFullscreen();
                 m_InputHandler->raiseAllKeys();
                 m_InputHandler->setCaptureActive(false);
-                if (!FileTransferProcess::show(fileTransferProcess, clipboardHost, m_Computer->serverCert,
-                                               m_FileBrowser ? m_ClipboardToken : QByteArray(),
-                                               m_Computer->name, m_Computer->uuid)) {
+                if (!showFileTransfer()) {
                     const auto message = tr("Unable to open the file transfer window.").toUtf8();
                     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Moonlight", message.constData(), m_Window);
                 }
@@ -2784,7 +2952,7 @@ void Session::exec()
 DispatchDeferredCleanup:
 #ifdef Q_OS_WIN32
     fileDrag.reset();
-    FileTransferProcess::stop(fileTransferProcess);
+    fileTransferWindow.closeChannel();
     clipboard.stop();
     caption.close();
 #endif
@@ -2800,15 +2968,7 @@ DispatchDeferredCleanup:
         QGuiApplication::restoreOverrideCursor();
     }
 
-    // A local window close, disconnect button or quit shortcut reaches here with
-    // live input. stopInputStream() drains reliable keyboard packets during teardown.
-    if (!m_ViewOnly && event.type == SDL_QUIT && !SDL_AtomicGet(&m_ConnectionEnding) &&
-            !m_HostHandlesDisconnectLock && m_Preferences->lockHostOnDisconnect()) {
-        m_InputHandler->requestHostScreenLock();
-    }
-    else {
-        m_InputHandler->raiseAllKeys();
-    }
+    m_InputHandler->raiseAllKeys();
 
     // Destroy the input handler now. This must be destroyed
     // before allowwing the UI to continue execution or it could
@@ -2852,7 +3012,10 @@ DispatchDeferredCleanup:
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
 #ifdef Q_OS_WIN32
-    StreamWindow::release();
+    if (m_PrivacyReconnectRequested)
+        StreamWindow::markReconnecting();
+    else
+        StreamWindow::release();
 #endif
     SDL_DestroyWindow(m_Window);
 

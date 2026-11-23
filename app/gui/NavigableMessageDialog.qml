@@ -8,14 +8,22 @@ NavigableDialog {
     property alias text: dialogLabel.dialogText
     property alias showSpinner: dialogSpinner.visible
     property alias imageSrc: dialogImage.source
+    property bool showIcon: true
 
     property string helpText
     property string helpUrl : "https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"
     property string helpTextSeparator : " "
+    property string discardText
 
     onOpened: {
+        if ((standardButtons & Dialog.Discard) && discardText) {
+            dialogButtonBox.standardButton(Dialog.Discard).text = discardText
+        }
         // Force keyboard focus on the label so keyboard navigation works
-        if (dialogButtonBox.count > 0) {
+        if ((standardButtons & Dialog.Discard) && (standardButtons & Dialog.Ok)) {
+            dialogButtonBox.standardButton(Dialog.Ok).forceActiveFocus(Qt.TabFocus)
+        }
+        else if (dialogButtonBox.count > 0) {
             dialogButtonBox.itemAt(dialogButtonBox.count - 1).forceActiveFocus(Qt.TabFocus)
         }
     }
@@ -39,14 +47,14 @@ NavigableDialog {
                 width: 50
                 height: 50
             }
-            visible: !showSpinner
+            visible: showIcon && !showSpinner
         }
 
         Label {
             property string dialogText
 
             id: dialogLabel
-            text: dialogText + ((helpText && (standardButtons & Dialog.Help)) ? (helpTextSeparator + helpText) : "")
+            text: dialogText + ((helpText && (standardButtons & (Dialog.Help | Dialog.Discard))) ? (helpTextSeparator + helpText) : "")
             wrapMode: Text.Wrap
             elide: Label.ElideRight
 

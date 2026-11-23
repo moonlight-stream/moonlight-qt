@@ -9,9 +9,8 @@
 #include <QDir>
 #include <QGuiApplication>
 
-SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight, const QString& hostUuid, bool viewOnly)
-    : m_HostUuid(hostUuid),
-      m_ViewOnly(viewOnly),
+SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight, bool viewOnly)
+    : m_ViewOnly(viewOnly),
       m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
       m_SwapMouseButtons(prefs.swapMouseButtons),
@@ -140,7 +139,11 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     m_SpecialKeyCombos[KeyComboLockHost].keyCombo = KeyComboLockHost;
     m_SpecialKeyCombos[KeyComboLockHost].keyCode = SDLK_END;
     m_SpecialKeyCombos[KeyComboLockHost].scanCode = SDL_SCANCODE_END;
+#ifdef Q_OS_WIN32
     m_SpecialKeyCombos[KeyComboLockHost].enabled = true;
+#else
+    m_SpecialKeyCombos[KeyComboLockHost].enabled = false;
+#endif
 
     if (m_ViewOnly) {
         for (auto& shortcut : m_SpecialKeyCombos) {

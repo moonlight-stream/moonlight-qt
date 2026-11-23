@@ -212,6 +212,16 @@ void StreamWindow::setConnectedWindow(HWND window)
     }
 }
 
+void StreamWindow::markReconnecting()
+{
+    if (reservation) {
+        if (connectedWindow)
+            RemovePropW(connectedWindow, property.c_str());
+        connectedWindow = nullptr;
+        ResetEvent(reservation);
+    }
+}
+
 void StreamWindow::release()
 {
     if (reservation) {

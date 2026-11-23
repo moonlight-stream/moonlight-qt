@@ -53,6 +53,13 @@ Item {
         console.error(text)
     }
 
+    function displayPrivacyLaunchError(text, hostUuid)
+    {
+        streamSegueErrorDialog.privacyError = true
+        streamSegueErrorDialog.privacyHostUuid = hostUuid
+        displayLaunchError(text)
+    }
+
     function quitStarting()
     {
         // Avoid the push transition animation
@@ -99,6 +106,19 @@ Item {
 
     function sessionReadyForDeletion()
     {
+        var next = session ? session.takePrivacyReconnect() : null
+        if (next) {
+            streamLoader.active = false
+            session = next
+            connectSessionSignals()
+            progressCard.step = lookupSteps + 1
+            progressCard.visible = true
+            progressCard.spinning = false
+            stageText = qsTr("Reconnecting to apply the privacy screen...")
+            window.visible = true
+            streamLoader.active = true
+            return
+        }
         // Garbage collect the Session object since it's pretty heavyweight
         // and keeps other libraries (like SDL_TTF) around until it is deleted.
         session = null
@@ -113,20 +133,21 @@ Item {
         SdlGamepadKeyNavigation.enable()
     }
 
-    StackView.onActivated: {
-        // Hide the toolbar before we start loading
-        toolBar.visible = false
-
-        // Hook up our signals
+    function connectSessionSignals() {
         session.requestingHostSession.connect(requestingHostSession)
         session.stageStarting.connect(stageStarting)
         session.stageFailed.connect(stageFailed)
         session.connectionStarted.connect(connectionStarted)
         session.displayLaunchError.connect(displayLaunchError)
+        session.displayPrivacyLaunchError.connect(displayPrivacyLaunchError)
         session.quitStarting.connect(quitStarting)
         session.sessionFinished.connect(sessionFinished)
         session.readyForDeletion.connect(sessionReadyForDeletion)
+    }
 
+    StackView.onActivated: {
+        toolBar.visible = false
+        connectSessionSignals()
         // Ensure the SystemProperties async thread is finished,
         // since it may currently be using the SDL video subsystem
         SystemProperties.waitForAsyncLoad()

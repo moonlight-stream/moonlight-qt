@@ -524,14 +524,18 @@ int main(int argc, char *argv[])
     // This child needs only Qt Widgets and networking. Use the same identity
     // and portable settings as the stream and skip SDL initialization.
     const bool clipboardTask = argc == 3 && QByteArray(argv[1]) == ClipboardTransferProcess::Argument;
-    if (clipboardTask || (argc == 2 && QByteArray(argv[1]) == FileTransferProcess::Argument)) {
+    const bool clipboardConflict = argc == 2 && QByteArray(argv[1]) == ClipboardTransferProcess::ConflictArgument;
+    const bool transferWindow = argc == 3 && QByteArray(argv[1]) == FileTransferProcess::Argument;
+    if (clipboardTask || clipboardConflict || transferWindow) {
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
         QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
         QApplication app(argc, argv);
+        app.setQuitOnLastWindowClosed(false);
         app.setWindowIcon(QIcon(":/res/moonlight.svg"));
+        if (clipboardConflict) return ClipboardTransferProcess::runConflict();
         if (clipboardTask) return ClipboardTransferProcess::run(QString::fromLocal8Bit(argv[2]));
-        return FileTransferProcess::run();
+        return FileTransferProcess::run(QString::fromLocal8Bit(argv[2]));
     }
 #endif
 

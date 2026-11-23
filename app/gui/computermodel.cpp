@@ -6,7 +6,6 @@
 #include "streaming/streamwindow.h"
 #include <QApplication>
 #include <QTimer>
-#include <openssl/rand.h>
 #endif
 
 #include <QThreadPool>
@@ -397,12 +396,11 @@ void ComputerModel::openFileTransfer(const QString& uuid)
     const auto certificate = computer->serverCert;
     const auto name = computer->name;
     lock.unlock();
-    unsigned char secret[32];
-    if (RAND_bytes(secret, sizeof(secret)) != 1) {
+    const auto token = FileTransferEngine::newSessionToken();
+    if (token.isEmpty()) {
         emit toolActionResult(uuid, tr("Could not open the file transfer window."), false);
         return;
     }
-    const auto token = QByteArray(reinterpret_cast<const char*>(secret), sizeof(secret)).toHex();
     auto* window = new FileTransferWindow(host, certificate, token, name, uuid, nullptr, true);
     window->setAttribute(Qt::WA_DeleteOnClose);
     m_FileWindows.insert(uuid, window);

@@ -377,6 +377,28 @@ void StreamingPreferences::setLockHostOnDisconnect(bool enabled)
     }
 }
 
+bool StreamingPreferences::privacyScreenForHost(const QString& hostUuid) const
+{
+    if (hostUuid.isEmpty())
+        return false;
+    QSettings settings;
+    settings.sync();
+    return settings.value(QStringLiteral("hostPrivacyScreen/") + hostUuid, false).toBool();
+}
+
+void StreamingPreferences::setPrivacyScreenForHost(const QString& hostUuid, bool enabled)
+{
+    if (hostUuid.isEmpty())
+        return;
+    QSettings settings;
+    const QString key = QStringLiteral("hostPrivacyScreen/") + hostUuid;
+    if (enabled)
+        settings.setValue(key, true);
+    else
+        settings.remove(key);
+    settings.sync();
+}
+
 void StreamingPreferences::save()
 {
     QSettings settings;

@@ -2,7 +2,7 @@ QT += core quick network quickcontrols2 svg
 win32:QT += widgets
 CONFIG += c++17
 win32 {
-    HEADERS += streaming/captioncontrols.h streaming/streamwindow.h
+    HEADERS += streaming/captioncontrols.h streaming/captionmenu.h streaming/streamwindow.h
     SOURCES += streaming/streamwindow.cpp
 }
 
@@ -395,11 +395,11 @@ config_SL {
 }
 win32 {
     SOURCES += streaming/clipboardsync.cpp streaming/filetransferengine.cpp streaming/filetransferwindow.cpp streaming/filetransferprocess.cpp
-    SOURCES += streaming/streamfiledrag.cpp
-    HEADERS += streaming/streamfiledrag.h streaming/shellfiledrop.h
+    SOURCES += streaming/streamfiledrag.cpp streaming/fileconflictdialog.cpp
+    HEADERS += streaming/streamfiledrag.h streaming/shellfiledrop.h streaming/fileconflict.h streaming/filetransferstyle.h
     HEADERS += streaming/clipboarduploadprogress.h streaming/clipboarduploadrate.h streaming/video/clipboarduploadoverlay.h streaming/transferratesampler.h
     HEADERS += streaming/filetransfercheckpoint.h streaming/transferfilehash.h streaming/clipboarddownload.h streaming/clipboardvirtualfiles.h streaming/explorerpaste.h streaming/desktoptransferprogress.h streaming/clipboard_image.h
-    HEADERS += streaming/clipboardsync.h streaming/clipboard_win32.h streaming/filetransferengine.h streaming/filetransferwindow.h streaming/filetransferprocess.h
+    HEADERS += streaming/clipboardsync.h streaming/clipboard_win32.h streaming/clipboard_tree.h streaming/filetransferengine.h streaming/filetransferwindow.h streaming/filetransferprocess.h
     LIBS += -lshell32 -lshlwapi
     HEADERS += streaming/video/ffmpeg-renderers/dxutil.h
 }
@@ -598,3 +598,15 @@ macx {
 
 VERSION = "$$cat(version.txt)"
 DEFINES += VERSION_STR=\\\"$$cat(version.txt)\\\"
+
+# Compile the timestamp immediately before linking, including on incremental builds.
+build_time_source = $$PWD/backend/buildtime.cpp
+CONFIG(debug, debug|release): build_time_object = buildtime-debug$$QMAKE_EXT_OBJ
+else: build_time_object = buildtime-release$$QMAKE_EXT_OBJ
+win32-msvc*: build_time_output = /Fo$$build_time_object
+else: build_time_output = -o $$build_time_object
+QMAKE_PRE_LINK += $(CXX) -c $(CXXFLAGS) $(INCPATH) $$build_time_output $$shell_quote($$shell_path($$build_time_source))
+LIBS += $$build_time_object
+PRE_TARGETDEPS += $$build_time_source
+QMAKE_CLEAN += $$build_time_object
+DISTFILES += $$build_time_source

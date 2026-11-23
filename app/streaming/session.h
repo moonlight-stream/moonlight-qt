@@ -104,6 +104,7 @@ public:
     Q_INVOKABLE bool initialize(QQuickWindow* qtWindow);
     Q_INVOKABLE void start();
     Q_INVOKABLE void interrupt();
+    Q_INVOKABLE Session* takePrivacyReconnect();
     Q_PROPERTY(QString appName READ appName CONSTANT)
     Q_INVOKABLE bool launchInWindow() const;
     QString appName() const { return m_App.name; }
@@ -111,6 +112,7 @@ public:
 #ifdef Q_OS_WIN32
     void setNetworkLoss(int basisPoints) { SDL_AtomicSet(&m_NetworkLossBasisPoints, basisPoints); }
     static constexpr int ToggleStreamHud = 110;
+    static constexpr int LockHostNow = 113;
 #endif
     Q_PROPERTY(QStringList launchWarnings MEMBER m_LaunchWarnings NOTIFY launchWarningsChanged);
 
@@ -149,6 +151,7 @@ signals:
     void connectionStarted();
 
     void displayLaunchError(QString text);
+    void displayPrivacyLaunchError(QString text, QString hostUuid);
 
     void quitStarting();
 
@@ -183,7 +186,7 @@ private:
 
     void toggleFullscreen();
 #ifdef Q_OS_WIN32
-    void updateFullscreenControls();
+    void updateFullscreenControls(bool expand = false);
     bool handleFullscreenControlEvent(SDL_Event& event);
     bool m_ControlsExpanded = false;
     bool m_ControlPressed = false;
@@ -196,16 +199,22 @@ private:
     Overlay::OverlayManager::Control m_PressedControl = Overlay::OverlayManager::Control::None;
 #endif
     bool m_DisconnectOnly = false;
+    bool m_PrivacyReconnectRequested = false;
+    bool m_PrivacyReconnect = false;
     const bool m_ViewOnly;
     bool m_ExplicitHostQuit = false;
-    bool m_HostHandlesDisconnectLock = false;
     bool m_ClipboardText = false;
     bool m_ClipboardImages = false;
     bool m_ClipboardFiles = false;
     bool m_ClipboardResumable = false;
     bool m_ClipboardMultitask = false;
     bool m_FileBrowser = false;
+    bool m_StandaloneFilesAvailable = false;
     bool m_FileDrag = false;
+    bool m_HostMuteAvailable = false;
+    bool m_HostPrivacyAvailable = false;
+    quint32 m_DisconnectLockStreamId = 0;
+    bool m_DisconnectLockEnabled = false;
     SDL_atomic_t m_ConnectionEnding{};
     QByteArray m_ClipboardToken;
 

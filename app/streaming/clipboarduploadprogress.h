@@ -7,6 +7,7 @@ struct ClipboardUploadProgress
     enum class State { Queued, Uploading, WaitingForPaste, NeedsPaste, Failed, ReadyLocally, Saved, Cancelled };
     QStringList names; // Basenames in clipboard order.
     int index = 0;
+    int skipped = 0;
     quint64 fileBytes = 0;
     quint64 fileSize = 0;
     quint64 acknowledged = 0;
@@ -23,7 +24,7 @@ struct ClipboardUploadProgress
 
     bool operator==(const ClipboardUploadProgress& other) const {
         return taskId == other.taskId && state == other.state && error == other.error &&
-               names == other.names && index == other.index && fileBytes == other.fileBytes &&
+               names == other.names && index == other.index && skipped == other.skipped && fileBytes == other.fileBytes &&
                fileSize == other.fileSize && acknowledged == other.acknowledged && total == other.total &&
                committing == other.committing && preparing == other.preparing && downloading == other.downloading &&
                startedAtMs == other.startedAtMs && resumedBytes == other.resumedBytes;

@@ -5,6 +5,7 @@
 
 #include <QElapsedTimer>
 #include <QHash>
+#include <QTimer>
 #include <QWidget>
 #include <array>
 #include <optional>
@@ -16,7 +17,6 @@ class QLineEdit;
 class QLockFile;
 class QPushButton;
 class QTemporaryDir;
-class QTimer;
 class QToolButton;
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -31,8 +31,12 @@ public:
     ~FileTransferWindow() override;
     void transferTo(bool fromRemote, const QList<TransferEntry>& entries, const QString& destination);
 
+signals:
+    void closed();
+
 protected:
     void closeEvent(QCloseEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 
 private:
     struct Pane {
@@ -41,6 +45,7 @@ private:
         QToolButton* up;
         QToolButton* refresh;
         QToolButton* locations;
+        QAction* bookmark;
         QToolButton* newFolder;
         QCheckBox* selectAll;
         QList<TransferPlace> places;
@@ -64,7 +69,7 @@ private:
     QWidget* makePane(bool remote, const QString& title);
     void restoreDirectory(bool remote, const QString& defaultPath);
     void navigate(bool remote, QString path, std::optional<QString> restoreFallback = std::nullopt);
-    void showDirectory(bool remote, QString path, const QList<TransferEntry>& entries, QString error);
+    void showDirectory(bool remote, QString path, const QList<TransferEntry>& entries, QString error, bool waitingForDesktop);
     QList<TransferEntry> selection(bool remote) const;
     void updateActions();
     void showLocations(bool remote);
@@ -80,7 +85,7 @@ private:
                              const QString& key, qint64 transferred);
     void restoreTasks();
     void saveTask(QTreeWidgetItem* item);
-    void startTask(QTreeWidgetItem* item);
+    void startTasks(const QList<QTreeWidgetItem*>& items);
     void cancelTask(QTreeWidgetItem* item);
     std::shared_ptr<QLockFile> claimTask(const QString& key);
     bool takeTask(QTreeWidgetItem* item);
@@ -111,6 +116,8 @@ private:
     QHash<int, QTreeWidgetItem*> m_Running;
     QElapsedTimer m_SaveTimer;
     QTimer* m_SpeedTimer;
+    QTimer m_RemoteRetryTimer;
+    int m_RemoteRetryDelay = 0;
     TransferRateSampler m_Speed;
     int m_SpeedJob = 0;
     qint64 m_AttemptBytes = 0;

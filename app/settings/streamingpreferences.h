@@ -18,6 +18,8 @@ public:
 
     bool lockHostOnDisconnect() const;
     void setLockHostOnDisconnect(bool enabled);
+    Q_INVOKABLE bool privacyScreenForHost(const QString& hostUuid) const;
+    Q_INVOKABLE void setPrivacyScreenForHost(const QString& hostUuid, bool enabled);
 
     void reload();
 

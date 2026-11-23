@@ -1,5 +1,7 @@
 #pragma once
 
+#include "fileconflict.h"
+
 #include <QDateTime>
 #include <QObject>
 #include <QPoint>
@@ -41,12 +43,13 @@ class FileTransferEngine : public QObject
     Q_OBJECT
 
 public:
-    enum class ConflictChoice { Skip, Replace, KeepBoth };
-    using ConflictReply = std::function<void(ConflictChoice)>;
-    using ConflictPrompt = std::function<void(bool remote, const QString& path, const QString& replaceUnavailable, ConflictReply reply)>;
+    using ConflictChoice = FileConflictChoice;
+    using ConflictReply = std::function<void(QList<ConflictChoice>)>;
+    using ConflictPrompt = std::function<void(bool remote, int itemCount, const QList<FileConflict>& conflicts, ConflictReply reply)>;
     FileTransferEngine(QUrl host, QSslCertificate certificate, QByteArray token, QObject* parent = nullptr,
                        bool standalone = false, ConflictPrompt prompt = {});
     ~FileTransferEngine() override;
+    static QByteArray newSessionToken();
 
     void list(bool remote, QString path);
     static QList<TransferEntry> localDropEntries(const QList<QUrl>& urls);
@@ -58,28 +61,30 @@ public:
     enum class FileAction { Copy, Delete, DownloadToOpen };
     void manageFiles(FileAction action, bool remote, QList<TransferEntry> entries, QString folder,
                      std::function<void(QString)> finished);
-    int enqueue(bool fromRemote, TransferEntry entry, QString destinationFolder);
+    QList<int> enqueue(bool fromRemote, const QList<TransferEntry>& entries, const QString& destinationFolder);
     void cancel(int id);
     void discard(bool fromRemote, TransferEntry entry, QString destinationFolder, std::function<void()> finished = {});
 
 signals:
     void placesLoaded(bool remote, QList<TransferPlace> places, QString error);
     void directoryCreated(bool remote, QString parent, QString error);
-    void listed(bool remote, QString path, QList<TransferEntry> entries, QString error);
+    void listed(bool remote, QString path, QList<TransferEntry> entries, QString error, bool waitingForDesktop);
     void interrupted(int id);
     void networkProgress(int id, qint64 attemptBytes);
     void progress(int id, qint64 bytes, qint64 total, QString status, bool finished);
 
 private:
     using Flag = std::shared_ptr<std::atomic_bool>;
+    struct Batch;
     struct Job {
         int id;
         bool fromRemote;
         TransferEntry entry;
         QString destination;
+        std::shared_ptr<Batch> batch;
     };
     void startNext();
-    ConflictChoice askFileConflict(const Flag& cancelled, bool remote, const QString& path, const QString& reason);
+    QList<ConflictChoice> askFileConflicts(const Flag& cancelled, bool remote, int itemCount, const QList<FileConflict>& conflicts);
 
     const QUrl m_Host;
     const QSslCertificate m_Certificate;

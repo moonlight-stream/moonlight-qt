@@ -9,6 +9,7 @@
 #include <QUrl>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <optional>
 
 class NvComputer;
 
@@ -111,7 +112,7 @@ public:
 
     explicit NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert, bool useTrueUid, QNetworkAccessManager* nam = nullptr);
 
-    explicit NvHTTP(NvComputer* computer, QNetworkAccessManager* nam = nullptr);
+    explicit NvHTTP(const NvComputer* computer, QNetworkAccessManager* nam = nullptr);
 
     static
     int
@@ -159,6 +160,9 @@ public:
     parseQuad(QString quad);
 
     void requestHostPower(bool restart);
+    void requestHostLock();
+    bool requestHostMute(std::optional<bool> desired);
+    bool setDisconnectLock(quint32 streamId, bool enabled);
 
     void
     quitApp();
@@ -173,8 +177,8 @@ public:
              int gamepadMask,
              bool persistGameControllersOnDisconnect,
              bool requestDisconnectLock,
+             bool requestPrivacyScreen,
              bool allowDesktopSharing,
-             bool& hostHandlesDisconnectLock,
              QByteArray& clipboardToken,
              bool& clipboardText,
              bool& clipboardImages,
@@ -183,6 +187,10 @@ public:
              bool& clipboardMultitask,
              bool& fileBrowser,
              bool& fileDrag,
+             bool& hostMuteAvailable,
+             bool& hostPrivacyAvailable,
+             quint32& disconnectLockStreamId,
+             bool& disconnectLockEnabled,
              QString& rtspSessionUrl);
 
     QVector<NvApp>
@@ -207,7 +215,7 @@ private:
                    QString arguments,
                    int timeoutMs,
                    NvLogLevel logLevel,
-                   bool powerPost = false);
+                   const char* postHeader = nullptr);
 
     NvAddress m_Address;
     QNetworkAccessManager* m_Nam;

@@ -19,8 +19,8 @@ public:
     using Paths = std::vector<std::filesystem::path>;
     using Download = std::function<bool(Paths&)>;
 
-    ClipboardVirtualFiles(std::vector<FILEDESCRIPTORW> files, Download download)
-        : descriptors(std::move(files)), fetch(std::move(download)) {}
+    ClipboardVirtualFiles(std::vector<FILEDESCRIPTORW> files, Download download, std::vector<size_t> dropRoots = {})
+        : descriptors(std::move(files)), roots(std::move(dropRoots)), fetch(std::move(download)) {}
 
     void disconnect() { fetch = {}; }
 
@@ -63,6 +63,7 @@ public:
     HRESULT STDMETHODCALLTYPE QueryGetData(FORMATETC* f) override {
         if (!f) return E_POINTER;
         if (f->dwAspect != DVASPECT_CONTENT) return DV_E_DVASPECT;
+        if (!roots.empty()) return f->cfFormat == CF_HDROP && (f->tymed & TYMED_HGLOBAL) ? S_OK : DV_E_FORMATETC;
         if (f->cfFormat == descriptorFormat && (f->tymed & TYMED_HGLOBAL)) return S_OK;
         if (f->cfFormat != contentsFormat || !(f->tymed & TYMED_ISTREAM)) return DV_E_FORMATETC;
         return f->lindex >= 0 && size_t(f->lindex) < descriptors.size() ? S_OK : DV_E_LINDEX;
@@ -90,7 +91,21 @@ public:
             loading = true;
             const bool ok = fetch(paths);
             loading = false;
-            if (!ok || paths.size() != descriptors.size()) { paths.clear(); return STG_E_READFAULT; }
+            if (!ok || (roots.empty() ? paths.size() != descriptors.size() : paths.size() <= roots.back())) {
+                paths.clear();
+                return STG_E_READFAULT;
+            }
+        }
+        if (f->cfFormat == CF_HDROP) {
+            std::wstring names;
+            for (const auto index : roots) {
+                names += paths[index].native();
+                names.push_back(L'\0');
+            }
+            medium->hGlobal = win_clipboard::detail::make_data(names, true);
+            if (!medium->hGlobal) return E_OUTOFMEMORY;
+            medium->tymed = TYMED_HGLOBAL;
+            return S_OK;
         }
         const HRESULT hr = SHCreateStreamOnFileEx(paths[f->lindex].c_str(),
             STGM_READ | STGM_SHARE_DENY_WRITE, FILE_ATTRIBUTE_NORMAL, FALSE, nullptr, &medium->pstm);
@@ -99,6 +114,10 @@ public:
     }
     HRESULT STDMETHODCALLTYPE EnumFormatEtc(DWORD direction, IEnumFORMATETC** out) override {
         if (direction != DATADIR_GET) return E_NOTIMPL;
+        if (!roots.empty()) {
+            FORMATETC drop{CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+            return SHCreateStdEnumFmtEtc(1, &drop, out);
+        }
         FORMATETC formats[] = {{descriptorFormat, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL},
                                {contentsFormat, nullptr, DVASPECT_CONTENT, -1, TYMED_ISTREAM}};
         return SHCreateStdEnumFmtEtc(2, formats, out);
@@ -118,6 +137,7 @@ private:
     const CLIPFORMAT contentsFormat = static_cast<CLIPFORMAT>(RegisterClipboardFormatW(CFSTR_FILECONTENTS));
     std::atomic<ULONG> refs{1};
     std::vector<FILEDESCRIPTORW> descriptors;
+    std::vector<size_t> roots; // Explorer receives the original top-level items when a selection contains folders.
     Download fetch;
     Paths paths;
     BOOL asyncMode = TRUE;

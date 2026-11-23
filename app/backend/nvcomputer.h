@@ -101,6 +101,7 @@ public:
     QString gpuModel;
     bool isSupportedServerVersion;
     bool hostPowerAvailable = false;
+    bool standaloneFilesAvailable = false;
 
     // Persisted traits
     NvAddress localAddress;

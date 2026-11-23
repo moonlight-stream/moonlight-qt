@@ -345,10 +345,15 @@ ApplicationWindow {
             }
             Label {
                 visible: toolBar.devicePage
-                text: qsTr("Version %1").arg(SystemProperties.versionString)
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                elide: Label.ElideRight
+                text: qsTr("Version %1").arg(SystemProperties.versionString) +
+                      " (" + SystemProperties.buildTimeString + ")"
                 font.pixelSize: 12; color: "#52647a"
             }
             Label {
+                visible: !toolBar.devicePage
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 font: titleLabel.font
@@ -561,6 +566,22 @@ ApplicationWindow {
         id: streamSegueErrorDialog
 
         property bool quitAfter: false
+        property bool privacyError: false
+        property string privacyHostUuid
+
+        title: privacyError ? qsTr("Privacy screen could not start") : ""
+        showIcon: !privacyError
+        standardButtons: privacyError ? Dialog.Ok | (privacyHostUuid ? Dialog.Discard : 0) :
+                                        Dialog.Ok | (SystemProperties.hasBrowser ? Dialog.Help : 0)
+        discardText: qsTr("Turn off privacy screen request")
+        helpText: privacyHostUuid ? qsTr("You can turn off the request and reconnect normally to unlock the host. Its physical display may show the session.") : ""
+        helpTextSeparator: "\n\n"
+
+        onDiscarded: {
+            if (privacyHostUuid) {
+                StreamingPreferences.setPrivacyScreenForHost(privacyHostUuid, false)
+            }
+        }
 
         onClosed: {
             if (quitAfter) {
@@ -570,6 +591,8 @@ ApplicationWindow {
             // StreamSegue assumes its dialog will be re-created each time we
             // start streaming, so fake it by wiping out the text each time.
             text = ""
+            privacyError = false
+            privacyHostUuid = ""
         }
     }
 

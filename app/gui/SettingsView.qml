@@ -1615,7 +1615,7 @@ FocusScope {
                         id: lockHelp
                         width: parent.width
                         leftPadding: 12; rightPadding: 12
-                        text: qsTr("Compatible Windows Sunshine hosts lock after the last stream ends, even after a network loss. This request takes effect when you connect. On older hosts, Moonlight sends a lock shortcut when you disconnect.")
+                        text: qsTr("Compatible Windows Sunshine hosts lock after the last stream ends, even after a network loss. This request takes effect when you connect.")
                         color: "#52647a"
                         font.pixelSize: 13
                         wrapMode: Text.Wrap

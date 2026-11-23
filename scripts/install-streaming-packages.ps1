@@ -1,13 +1,20 @@
 param(
     [Parameter(Mandatory)][string]$Stage,
-    [Parameter(Mandatory)][ValidatePattern('^[a-fA-F0-9]{64}$')][string]$SunshineSha256,
-    [Parameter(Mandatory)][ValidatePattern('^[a-fA-F0-9]{64}$')][string]$MoonlightSha256,
+    [ValidatePattern('^[a-fA-F0-9]{64}$')][string]$SunshineSha256,
+    [ValidatePattern('^[a-fA-F0-9]{64}$')][string]$MoonlightSha256,
     [string]$SunshineTarget = 'D:\Soft\Sunshine',
     [string]$MoonlightTarget = 'D:\Soft\moonlight',
-    [switch]$StageOnly
+    [switch]$StageOnly,
+    [string]$ExpectedComputerName
 )
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
+[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
+if ($ExpectedComputerName -and $env:COMPUTERNAME -ine $ExpectedComputerName) { throw "Expected host $ExpectedComputerName, reached $env:COMPUTERNAME." }
+$products = @()
+if ($SunshineSha256) { $products += 'Sunshine' }
+if ($MoonlightSha256) { $products += 'Moonlight' }
+if (!$products.Count) { throw 'At least one deployment package is required.' }
 $Stage = [IO.Path]::GetFullPath($Stage).TrimEnd('\')
 $SunshineTarget = [IO.Path]::GetFullPath($SunshineTarget).TrimEnd('\')
 $MoonlightTarget = [IO.Path]::GetFullPath($MoonlightTarget).TrimEnd('\')
@@ -29,17 +36,23 @@ function NoReparse([string]$path) {
         $path = [IO.Path]::GetDirectoryName($path)
     }
 }
-foreach ($path in @($Stage,$sunExe,$moonExe,$sunConf)) { NoReparse $path }
+$required = @()
+if ($SunshineSha256) { $required += @($sunExe, $sunConf) }
+if ($MoonlightSha256) { $required += $moonExe }
+NoReparse $Stage
+foreach ($path in $required) { NoReparse $path }
 if ($Stage -eq $SunshineTarget -or $Stage -eq $MoonlightTarget -or $MoonlightTarget -eq $SunshineTarget) { throw 'Stage and targets must be separate directories.' }
 foreach ($folder in @($SunshineTarget,$MoonlightTarget)) {
     if ($Stage.StartsWith($folder+'\',[StringComparison]::OrdinalIgnoreCase) -or $folder.StartsWith($Stage+'\',[StringComparison]::OrdinalIgnoreCase)) { throw 'Stage must be separate from the installations.' }
 }
-foreach ($path in @($sunExe,$moonExe,$sunConf)) {
+foreach ($path in $required) {
     if (![IO.File]::Exists($path)) { throw "Installation not found: $path" }
 }
-$svc = Get-CimInstance Win32_Service -Filter "Name='SunshineService'"
-if (!$svc -or $svc.PathName.IndexOf((Join-Path $SunshineTarget 'tools\sunshinesvc.exe'),[StringComparison]::OrdinalIgnoreCase) -lt 0) {
-    throw 'Sunshine service does not point to requested installation.'
+if ($SunshineSha256) {
+    $svc = Get-CimInstance Win32_Service -Filter "Name='SunshineService'"
+    if (!$svc -or $svc.PathName.IndexOf((Join-Path $SunshineTarget 'tools\sunshinesvc.exe'),[StringComparison]::OrdinalIgnoreCase) -lt 0) {
+        throw 'Sunshine service does not point to requested installation.'
+    }
 }
 $lock = [Threading.Mutex]::new($false, 'Global\MoonlightSunshineDeployment')
 try { $owned = $lock.WaitOne(0) } catch [Threading.AbandonedMutexException] { $owned = $true }
@@ -50,7 +63,7 @@ $work = Join-Path $Stage "extracted-$stamp"
 $backup = Join-Path $Stage "backup-$stamp"
 $changes = [Collections.Generic.List[object]]::new()
 $installedHashes = @{}
-foreach ($product in @('Sunshine','Moonlight')) {
+foreach ($product in $products) {
     $archive = Join-Path $Stage "$product.zip"
     $expected = if ($product -eq 'Sunshine') { $SunshineSha256 } else { $MoonlightSha256 }
     if ((Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash -ne $expected) { throw "Invalid $product package hash." }
@@ -76,12 +89,17 @@ foreach ($product in @('Sunshine','Moonlight')) {
     }
 }
 if ($StageOnly) { [pscustomobject]@{Verified=$true; FilesToUpdate=$changes.Count} | ConvertTo-Json; return }
-$runningClient = @(Get-Process -Name Moonlight -ErrorAction SilentlyContinue | Where-Object { $_.Path -ieq $moonExe })
-$runningHost = @(Get-Process -Name sunshine -ErrorAction SilentlyContinue | Where-Object { $_.Path -ieq $sunExe })
-$wasRunning = (Get-Service SunshineService).Status -eq 'Running'
+$runningClient = @()
+if ($MoonlightSha256) { $runningClient = @(Get-Process -Name Moonlight -ErrorAction SilentlyContinue | Where-Object { $_.Path -ieq $moonExe }) }
+$runningHost = @()
+$wasRunning = $false
 $basePort=47989
-$portSetting=Select-String -LiteralPath $sunConf -Pattern '^\s*port\s*=\s*(\d+)\s*$' | Select-Object -Last 1
-if ($portSetting) { $basePort=[int]$portSetting.Matches[0].Groups[1].Value }
+if ($SunshineSha256) {
+    $runningHost = @(Get-Process -Name sunshine -ErrorAction SilentlyContinue | Where-Object { $_.Path -ieq $sunExe })
+    $wasRunning = (Get-Service SunshineService).Status -eq 'Running'
+    $portSetting=Select-String -LiteralPath $sunConf -Pattern '^\s*port\s*=\s*(\d+)\s*$' | Select-Object -Last 1
+    if ($portSetting) { $basePort=[int]$portSetting.Matches[0].Groups[1].Value }
+}
 $updated = [Collections.Generic.List[object]]::new()
 function SaveOld([string]$dest,[string]$saved) {
     $exists=[IO.File]::Exists($dest)
@@ -112,9 +130,11 @@ try {
         if ((Get-FileHash -LiteralPath $entry.Target).Hash -ne $entry.Hash) { throw "Installed file verification failed: $($entry.Target)" }
     }
     if ($updated.Count) { [void][IO.Directory]::CreateDirectory($backup); $updated | ConvertTo-Json | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $backup 'changes.json') }
-    $out=Join-Path $work 'moonlight-version.txt'
-    $test=Start-Process -FilePath $moonExe -ArgumentList '--version' -WindowStyle Hidden -WorkingDirectory $MoonlightTarget -RedirectStandardOutput $out -Wait -PassThru
-    if ($test.ExitCode -ne 0 -or (Get-Content -LiteralPath $out -Raw) -notmatch 'Moonlight') {throw 'Moonlight launch verification failed.'}
+    if ($MoonlightSha256) {
+        $out=Join-Path $work 'moonlight-version.txt'
+        $test=Start-Process -FilePath $moonExe -ArgumentList '--version' -WindowStyle Hidden -WorkingDirectory $MoonlightTarget -RedirectStandardOutput $out -Wait -PassThru
+        if ($test.ExitCode -ne 0 -or (Get-Content -LiteralPath $out -Raw) -notmatch 'Moonlight') {throw 'Moonlight launch verification failed.'}
+    }
     if ($wasRunning) {
         if ($restart) { Start-Service SunshineService }
         $ok=$false
@@ -124,7 +144,7 @@ try {
         }
         if (!$ok) {throw 'Sunshine did not open its HTTPS stream listener.'}
     }
-    [pscustomobject]@{Updated=($changes.Count -gt 0); ChangedFiles=$changes.Count; Backup=$(if ($updated.Count) { $backup } else { $null }); SunshineSHA256=$installedHashes.Sunshine; MoonlightSHA256=$installedHashes.Moonlight; Service=(Get-Service SunshineService).Status.ToString(); ClientWasOpen=($runningClient.Count -gt 0)} | ConvertTo-Json
+    [pscustomobject]@{Updated=($changes.Count -gt 0); ChangedFiles=$changes.Count; Backup=$(if ($updated.Count) { $backup } else { $null }); SunshineSHA256=$installedHashes.Sunshine; MoonlightSHA256=$installedHashes.Moonlight; Service=$(if ($SunshineSha256) { (Get-Service SunshineService).Status.ToString() }); ClientWasOpen=($runningClient.Count -gt 0)} | ConvertTo-Json
 } catch {
     $failure=$_
     if ($restart -and (Get-Service SunshineService).Status -ne 'Stopped') { Stop-Service SunshineService; (Get-Service SunshineService).WaitForStatus('Stopped',[TimeSpan]::FromSeconds(30)) }

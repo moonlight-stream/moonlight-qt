@@ -101,6 +101,7 @@ struct source_file {
     file_handle handle;
     std::string name;
     uint64_t size;
+    bool directory = false;
 };
 
 inline std::optional<source_file> open_file(const fs::path& path) {
@@ -152,10 +153,15 @@ struct staged_batch {
     fs::path directory;
     file_handle directoryPin;
     std::vector<fs::path> paths;
+    std::vector<std::pair<fs::path, file_handle>> folders;
     bool published = false;
     ~staged_batch() {
         if (published || directory.empty()) return;
         for (const auto& path : paths) DeleteFileW(path.c_str());
+        for (auto it = folders.rbegin(); it != folders.rend(); ++it) {
+            it->second.reset();
+            RemoveDirectoryW(it->first.c_str());
+        }
         directoryPin.reset();
         RemoveDirectoryW(directory.c_str());
     }
@@ -168,6 +174,27 @@ inline bool batch_name(const std::wstring& name) {
         else if (!std::wcschr(L"0123456789ABCDEFabcdef", name[i])) return false;
     }
     return true;
+}
+
+// Remove cached children by handle while their ancestors are pinned. A directory
+// reparse point is a leaf, even if it points outside the clipboard cache.
+inline void remove_cached_tree(const fs::path& path, HANDLE handle, unsigned depth = 0) {
+    BY_HANDLE_FILE_INFORMATION info{};
+    if (depth > 128 || !GetFileInformationByHandle(handle, &info)) return;
+    if ((info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !(info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
+        std::error_code ec;
+        for (fs::directory_iterator it(path, ec), end; !ec && it != end; it.increment(ec)) {
+            const auto& child = it->path();
+            if (!valid_name(child.filename().native())) continue;
+            HANDLE raw = CreateFileW(child.c_str(), DELETE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                     nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+            if (raw == INVALID_HANDLE_VALUE) continue;
+            file_handle pin(raw);
+            remove_cached_tree(child, raw, depth + 1);
+        }
+    }
+    FILE_DISPOSITION_INFO remove{TRUE};
+    SetFileInformationByHandle(handle, FileDispositionInfo, &remove, sizeof(remove));
 }
 
 // Keep recent paste sources across disconnects. Under disk pressure also
@@ -211,15 +238,7 @@ inline void expire_batches(const fs::path& root, const fs::path& current, size_t
         file_handle pin(handle);
         BY_HANDLE_FILE_INFORMATION info{};
         if (!GetFileInformationByHandle(handle, &info) || (info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) continue;
-        std::error_code batch_error;
-        const fs::directory_iterator end;
-        for (fs::directory_iterator item(path, batch_error); !batch_error && item != end; item.increment(batch_error)) {
-            const auto child_attrs = GetFileAttributesW(item->path().c_str());
-            if (child_attrs != INVALID_FILE_ATTRIBUTES && !(child_attrs & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)))
-                DeleteFileW(item->path().c_str());
-        }
-        FILE_DISPOSITION_INFO remove{TRUE};
-        SetFileInformationByHandle(handle, FileDispositionInfo, &remove, sizeof(remove));
+        remove_cached_tree(path, handle);
     }
 }
 
@@ -284,6 +303,7 @@ inline HGLOBAL make_data(std::wstring_view chars, bool files) {
 inline int encode_files(const std::vector<detail::source_file>& sources, std::string& payload) {
     size_t encodedSize = 1;
     for (const auto& file : sources) {
+        if (file.directory) return 413; // Folder selections require the indexed batch protocol.
         if (file.size > max_body || 8 + file.name.size() + file.size > max_body - encodedSize) return 413;
         encodedSize += 8 + file.name.size() + static_cast<size_t>(file.size);
     }
@@ -303,7 +323,7 @@ inline int encode_files(const std::vector<detail::source_file>& sources, std::st
 }
 
 inline int read(bool text, bool files, std::optional<DWORD> since, std::string& payload, DWORD& sequence,
-                std::vector<detail::source_file>* pinnedFiles = nullptr, bool images = false) {
+                std::vector<fs::path>* selectedPaths = nullptr, bool images = false) {
     payload.clear();
     std::vector<fs::path> paths;
     clipboard_image::snapshot image;
@@ -331,15 +351,15 @@ inline int read(bool text, bool files, std::optional<DWORD> since, std::string& 
         const int status = clipboard_image::encode(image, payload);
         return GetClipboardSequenceNumber() == sequence ? status : 409;
     }
+    if (selectedPaths) {
+        *selectedPaths = std::move(paths);
+        return 200;
+    }
     std::vector<detail::source_file> sources;
     for (const auto& path : paths) {
         auto source = detail::open_file(path);
         if (!source) return 204;
         sources.emplace_back(std::move(*source));
-    }
-    if (pinnedFiles) {
-        *pinnedFiles = std::move(sources);
-        return 200;
     }
     if (GetClipboardSequenceNumber() != sequence) return 409;
     const int status = encode_files(sources, payload);
@@ -373,9 +393,9 @@ inline int publish_data(UINT format, HGLOBAL data, DWORD& sequence, std::optiona
 }
 
 inline int publish_files(detail::staged_batch& batch, const fs::path& stagingRoot,
-                         DWORD& sequence, std::optional<DWORD> expected) {
+                         DWORD& sequence, std::optional<DWORD> expected, const std::vector<fs::path>* roots = nullptr) {
     std::wstring paths;
-    for (const auto& path : batch.paths) {
+    for (const auto& path : roots ? *roots : batch.paths) {
         paths += path.native();
         paths.push_back(L'\0');
     }

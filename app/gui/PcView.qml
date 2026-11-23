@@ -419,6 +419,7 @@ FocusScope {
                         Material.background: "#ffffff"
                         width: Math.min(window.width, Math.max(200, contentWidth + 12))
                         padding: 5
+                        onAboutToShow: clearPrivacyScreen.visible = StreamingPreferences.privacyScreenForHost(pcRow.hostUuid)
                         background: Rectangle {
                             radius: 8
                             color: "#ffffff"
@@ -445,6 +446,15 @@ FocusScope {
                             text: qsTr("Wake PC")
                             onTriggered: computerModel.wakeComputer(index)
                             visible: !model.online && model.wakeable
+                        }
+                        NavigableMenuItem {
+                            id: clearPrivacyScreen
+                            visible: false
+                            text: qsTr("Turn off privacy screen request")
+                            onTriggered: {
+                                StreamingPreferences.setPrivacyScreenForHost(pcRow.hostUuid, false)
+                                visible = false
+                            }
                         }
                         NavigableMenuItem {
                             text: qsTr("Test Network")

@@ -44,7 +44,7 @@ NvHTTP::NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert
     m_Nam->setProxy(noProxy);
 }
 
-NvHTTP::NvHTTP(NvComputer* computer, QNetworkAccessManager* nam) :
+NvHTTP::NvHTTP(const NvComputer* computer, QNetworkAccessManager* nam) :
     NvHTTP(computer->activeAddress, computer->activeHttpsPort, computer->serverCert, !computer->isNvidiaServerSoftware, nam)
 {
 }
@@ -210,8 +210,8 @@ NvHTTP::startApp(QString verb,
                  int gamepadMask,
                  bool persistGameControllersOnDisconnect,
                  bool requestDisconnectLock,
+                 bool requestPrivacyScreen,
                  bool allowDesktopSharing,
-                 bool& hostHandlesDisconnectLock,
                  QByteArray& clipboardToken,
                  bool& clipboardText,
                  bool& clipboardImages,
@@ -220,9 +220,20 @@ NvHTTP::startApp(QString verb,
                  bool& clipboardMultitask,
                  bool& fileBrowser,
                  bool& fileDrag,
+                 bool& hostMuteAvailable,
+                 bool& hostPrivacyAvailable,
+                 quint32& disconnectLockStreamId,
+                 bool& disconnectLockEnabled,
                  QString& rtspSessionUrl)
 {
     QString extensions;
+    if (requestPrivacyScreen) {
+        if (isGfe || m_ServerCert.isNull() ||
+            getXmlString(getServerInfo(NVLL_ERROR, true), "privacyscreenversion") != "1") {
+            throw GfeHttpResponseException(409, tr("Sunshine does not support configuring the privacy screen from Moonlight."));
+        }
+        extensions += QStringLiteral("&privacyScreen=1");
+    }
     if (!isGfe && requestDisconnectLock) {
         extensions += QStringLiteral("&lockOnDisconnect=1");
     }
@@ -283,8 +294,13 @@ NvHTTP::startApp(QString verb,
 
     // Throws if the request failed
     verifyResponseStatus(response);
+    if (requestPrivacyScreen && getXmlString(response, "privacyscreen") != "1")
+        throw GfeHttpResponseException(409, tr("Sunshine did not confirm the privacy screen."));
 
-    hostHandlesDisconnectLock = getXmlString(response, "lockOnDisconnect") == "1";
+    hostMuteAvailable = !m_ServerCert.isNull() && getXmlString(response, "hostmuteversion") == "1";
+    hostPrivacyAvailable = !m_ServerCert.isNull() && getXmlString(response, "privacyscreenversion") == "1";
+    disconnectLockStreamId = m_ServerCert.isNull() ? 0 : getXmlString(response, "disconnectlocksession").toUInt();
+    disconnectLockEnabled = getXmlString(response, "lockOnDisconnect") == "1";
     const bool clipboardAccepted = !clipboardToken.isEmpty() && getXmlString(response, "clipboardversion") == "1";
     fileBrowser = !clipboardToken.isEmpty() && getXmlString(response, "filebrowserversion") == "1";
     fileDrag = fileBrowser && getXmlString(response, "filedragversion") == "1";
@@ -292,7 +308,9 @@ NvHTTP::startApp(QString verb,
     clipboardImages = clipboardAccepted && clipboardImages && getXmlString(response, "clipboardimages") == "1";
     clipboardFiles = clipboardAccepted && clipboardFiles && getXmlString(response, "clipboardfiles") == "1";
     clipboardResumable = clipboardFiles && getXmlString(response, "clipboardbatchversion").toInt() >= 2;
-    clipboardMultitask = clipboardResumable && getXmlString(response, "clipboardmultitask") == "1";
+    // On older hosts use an ordinary Explorer paste so Windows handles name conflicts.
+    clipboardMultitask = clipboardResumable && getXmlString(response, "clipboardmultitask") == "1" &&
+                         getXmlString(response, "clipboardpasteconflicts") == "1";
     if (!clipboardText && !clipboardImages && !clipboardFiles && !fileBrowser) {
         clipboardToken.clear();
     }
@@ -545,10 +563,51 @@ void NvHTTP::requestHostPower(bool restart)
         throw GfeHttpResponseException(403, tr("A paired HTTPS connection is required."));
     const QString action = restart ? QStringLiteral("action=restart") : QStringLiteral("action=shutdown");
     QScopedPointer<QNetworkReply> reply(openConnection(m_BaseUrlHttps, QStringLiteral("hostpower"), action,
-                                                      REQUEST_TIMEOUT_MS, NVLL_ERROR, true));
+                                                      REQUEST_TIMEOUT_MS, NVLL_ERROR, "X-Moonlight-Host-Power"));
     const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (status != 202)
         throw GfeHttpResponseException(status, tr("The host did not accept the power request."));
+}
+
+void NvHTTP::requestHostLock()
+{
+    if (m_ServerCert.isNull() || !httpsPort())
+        throw GfeHttpResponseException(403, tr("A paired HTTPS connection is required."));
+    QScopedPointer<QNetworkReply> reply(openConnection(m_BaseUrlHttps, QStringLiteral("hostlock"), {},
+                                                      3000, NVLL_ERROR, "X-Moonlight-Host-Lock"));
+    const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if (status != 202)
+        throw GfeHttpResponseException(status, tr("The host did not accept the lock request."));
+}
+
+bool NvHTTP::requestHostMute(std::optional<bool> desired)
+{
+    if (m_ServerCert.isNull() || !httpsPort())
+        throw GfeHttpResponseException(403, tr("A paired HTTPS connection is required."));
+
+    const QString action = !desired ? QStringLiteral("get") : (*desired ? QStringLiteral("mute") : QStringLiteral("unmute"));
+    QScopedPointer<QNetworkReply> reply(openConnection(m_BaseUrlHttps, QStringLiteral("hostmute"),
+                                                      QStringLiteral("action=") + action, 2500, NVLL_ERROR,
+                                                      "X-Moonlight-Host-Mute"));
+    const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    const QByteArray state = reply->readAll();
+    if (status != 200 || (state != "0" && state != "1"))
+        throw GfeHttpResponseException(status, tr("The host did not report a mute state."));
+    return state == "1";
+}
+
+bool NvHTTP::setDisconnectLock(quint32 streamId, bool enabled)
+{
+    if (m_ServerCert.isNull() || !httpsPort() || !streamId)
+        throw GfeHttpResponseException(403, tr("A paired HTTPS connection is required."));
+    const auto args = QStringLiteral("session=%1&enabled=%2").arg(streamId).arg(int(enabled));
+    QScopedPointer<QNetworkReply> reply(openConnection(m_BaseUrlHttps, QStringLiteral("disconnectlock"),
+                                                      args, 3000, NVLL_ERROR, "X-Moonlight-Disconnect-Lock"));
+    const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    const QByteArray state = reply->readAll();
+    if (status != 200 || (state != "0" && state != "1"))
+        throw GfeHttpResponseException(status, tr("The host did not confirm the disconnect lock setting."));
+    return state == "1";
 }
 
 QNetworkReply*
@@ -557,7 +616,7 @@ NvHTTP::openConnection(QUrl baseUrl,
                        QString arguments,
                        int timeoutMs,
                        NvLogLevel logLevel,
-                       bool powerPost)
+                       const char* postHeader)
 {
     // Port must be set
     Q_ASSERT(baseUrl.port(0) != 0);
@@ -597,11 +656,11 @@ NvHTTP::openConnection(QUrl baseUrl,
 #endif
 
     auto sslErrorsConnection = connect(m_Nam, &QNetworkAccessManager::sslErrors, this, &NvHTTP::handleSslErrors);
-    if (powerPost) {
-        request.setRawHeader("X-Moonlight-Host-Power", "1");
+    if (postHeader) {
+        request.setRawHeader(postHeader, "1");
         request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
     }
-    QNetworkReply* reply = powerPost ? m_Nam->post(request, QByteArray()) : m_Nam->get(request);
+    QNetworkReply* reply = postHeader ? m_Nam->post(request, QByteArray()) : m_Nam->get(request);
     if (baseUrl.scheme() == QStringLiteral("https") && !m_ServerCert.isNull()) {
         connect(reply, &QNetworkReply::encrypted, reply, [reply, pairedHost = m_ServerCert]() {
             if (reply->sslConfiguration().peerCertificate() != pairedHost) {

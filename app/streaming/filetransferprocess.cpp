@@ -5,18 +5,54 @@
 
 #include <QApplication>
 #include <QDir>
+#include <QEventLoop>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLocalServer>
 #include <QLocalSocket>
+#include <QDialog>
 #include <QUuid>
 #include <QDeadlineTimer>
 #include <QProcess>
 #include <QSslCertificate>
+#include <QThread>
 #include <QTimer>
 #include <QUrl>
 #include <qt_windows.h>
+
+namespace {
+std::unique_ptr<QLocalSocket> launchHelper(const char* argument, qint64& pid)
+{
+    QLocalServer server;
+    server.setSocketOptions(QLocalServer::UserAccessOption);
+    const auto name = QStringLiteral("moonlight-transfer-") + QUuid::createUuid().toString(QUuid::WithoutBraces);
+    if (!server.listen(name) || !QProcess::startDetached(QCoreApplication::applicationFilePath(),
+                                                         {QString::fromLatin1(argument), name}, {}, &pid) ||
+        !server.waitForNewConnection(7000)) return {};
+    auto* socket = server.nextPendingConnection();
+    ULONG client = 0;
+    if (!socket || !GetNamedPipeClientProcessId(reinterpret_cast<HANDLE>(socket->socketDescriptor()), &client) ||
+        client != static_cast<ULONG>(pid)) return {};
+    socket->setParent(nullptr);
+    return std::unique_ptr<QLocalSocket>(socket);
+}
+
+bool sendPacket(QLocalSocket& socket, const QByteArray& packet)
+{
+    if (socket.write(packet) != packet.size()) return false;
+    QDeadlineTimer deadline(5000);
+    while (socket.bytesToWrite()) {
+        if (deadline.hasExpired() || !socket.waitForBytesWritten(deadline.remainingTime())) return false;
+    }
+    return true;
+}
+
+bool acknowledged(QLocalSocket& socket)
+{
+    return (socket.bytesAvailable() || socket.waitForReadyRead(5000)) && socket.read(1) == "R";
+}
+}
 
 namespace FileTransferProcess {
 constexpr qsizetype maxPacket = 16 * 1024 * 1024;
@@ -32,79 +68,46 @@ QByteArray dropCommand(bool fromRemote, const QList<TransferEntry>& entries, con
         .toJson(QJsonDocument::Compact);
 }
 
-static bool send(QProcess& process, const QByteArray& packet)
-{
-    if (process.write(packet) != packet.size()) return false;
-    while (process.bytesToWrite() && process.waitForBytesWritten(1000)) {}
-    return !process.bytesToWrite();
-}
-
-bool show(QProcess& process, const QUrl& host, const QSslCertificate& certificate,
-          const QByteArray& token, const QString& hostName, const QString& hostId, const QByteArray& command)
+bool Window::show(const QUrl& host, const QSslCertificate& certificate, const QByteArray& streamToken,
+                  bool standalone, const QString& hostName, const QString& hostId, const QByteArray& command)
 {
     if (command.size() >= maxPacket) return false;
-    // The SDL thread doesn't dispatch Qt events, so explicitly reap an exited child.
-    if (process.state() != QProcess::NotRunning && !process.waitForFinished(0)) {
-        AllowSetForegroundWindow(static_cast<DWORD>(process.processId()));
-        return send(process, (command.isEmpty() ? QByteArray("R") : command) + '\n');
+    // The SDL loop does not dispatch Qt socket notifications.
+    if (m_Socket && !PeekNamedPipe(reinterpret_cast<HANDLE>(m_Socket->socketDescriptor()),
+                                    nullptr, 0, nullptr, nullptr, nullptr)) closeChannel();
+    if (!m_Socket) {
+        m_Socket = launchHelper(Argument, m_Pid);
+        if (!m_Socket) return false;
+        QJsonObject settings{{"host", host.toString()}, {"certificate", QString::fromLatin1(certificate.toPem())},
+                             {"standalone", standalone}, {"name", hostName}, {"id", hostId}};
+        if (!standalone) settings.insert("token", QString::fromLatin1(streamToken));
+        if (!sendPacket(*m_Socket, QJsonDocument(settings).toJson(QJsonDocument::Compact) + '\n')) {
+            closeChannel();
+            return false;
+        }
     }
-    process.setStandardOutputFile(QProcess::nullDevice());
-    process.setStandardErrorFile(QProcess::nullDevice());
-    process.start(QCoreApplication::applicationFilePath(), {QString::fromLatin1(Argument)});
-    if (!process.waitForStarted(2000))
-        return false;
-    AllowSetForegroundWindow(static_cast<DWORD>(process.processId()));
-    QJsonObject settings {
-        {"host", host.toString()}, {"certificate", QString::fromLatin1(certificate.toPem())},
-        {"token", QString::fromLatin1(token)}, {"name", hostName}, {"id", hostId}
-    };
-    QByteArray packet = QJsonDocument(settings).toJson(QJsonDocument::Compact) + '\n';
-    packet += (command.isEmpty() ? QByteArray("R") : command) + '\n';
-    if (send(process, packet)) return true;
-    stop(process);
+    AllowSetForegroundWindow(static_cast<DWORD>(m_Pid));
+    if (sendPacket(*m_Socket, (command.isEmpty() ? QByteArray("R") : command) + '\n') &&
+        acknowledged(*m_Socket)) return true;
+    closeChannel();
     return false;
 }
 
-void stop(QProcess& process)
+int run(const QString& channel)
 {
-    if (process.state() != QProcess::NotRunning) {
-        process.closeWriteChannel();
-        if (!process.waitForFinished(2000)) {
-            process.kill();
-            process.waitForFinished();
-        }
-    }
-}
-
-int run()
-{
-    HANDLE pipe = GetStdHandle(STD_INPUT_HANDLE);
-    if (GetFileType(pipe) != FILE_TYPE_PIPE)
-        return 1;
-
-    QByteArray packet;
-    char block[4096];
-    DWORD bytes = 0;
-    while (!packet.contains('\n')) {
-        if (!ReadFile(pipe, block, sizeof(block), &bytes, nullptr) || !bytes || packet.size() >= 65536)
-            return 1;
-        packet.append(block, int(bytes));
-    }
-    const auto newline = packet.indexOf('\n');
-    const auto settings = QJsonDocument::fromJson(packet.left(newline)).object();
-    packet.remove(0, newline + 1);
+    QLocalSocket socket;
+    const auto settings = ClipboardTransferProcess::take(channel, socket);
     const QUrl host(settings.value("host").toString());
-    if (!host.isValid() || host.scheme() != QStringLiteral("https") || host.host().isEmpty())
-        return 1;
+    if (!host.isValid() || host.scheme() != QStringLiteral("https") || host.host().isEmpty()) return 1;
+    const bool standalone = settings.value("standalone").toBool();
+    const auto token = standalone ? FileTransferEngine::newSessionToken() : settings.value("token").toString().toLatin1();
+    if (standalone && token.isEmpty()) return 1;
 
     StreamingPreferences::get()->retranslate();
     IdentityManager::get();
-    // Keep the session's queue and any active copies alive when the user closes
-    // the browser; another click in the stream opens the same window again.
     QApplication::setQuitOnLastWindowClosed(false);
-    FileTransferWindow window(host, QSslCertificate(settings.value("certificate").toString().toLatin1()),
-                              settings.value("token").toString().toLatin1(),
-                              settings.value("name").toString(), settings.value("id").toString());
+    FileTransferWindow window(host, QSslCertificate(settings.value("certificate").toString().toLatin1()), token,
+                              settings.value("name").toString(), settings.value("id").toString(), nullptr, standalone);
     auto activate = [&window]() {
         if (window.isMinimized())
             window.showNormal();
@@ -114,12 +117,12 @@ int run()
         window.activateWindow();
     };
     auto dispatch = [&] {
-        qsizetype end;
-        while ((end = packet.indexOf('\n')) >= 0) {
-            const auto line = packet.left(end);
-            packet.remove(0, end + 1);
+        while (socket.canReadLine()) {
+            QByteArray line = socket.readLine();
+            line.chop(1);
             if (line == "R") {
                 activate();
+                socket.write("R", 1);
                 continue;
             }
             const auto drop = QJsonDocument::fromJson(line).object();
@@ -138,63 +141,130 @@ int run()
                 window.showMinimized();
                 window.setAttribute(Qt::WA_ShowWithoutActivating, false);
             }
+            socket.write("R", 1);
         }
+        if (socket.bytesAvailable() >= maxPacket) socket.abort();
     };
-    dispatch();
-    // Closing the pipe on disconnect or process death also ends this GUI loop,
-    // so the window and any partially written transfer are cleaned up together.
-    QTimer timer;
-    QObject::connect(&timer, &QTimer::timeout, &window, [&]() {
-        DWORD pending;
-        for (;;) {
-            if (!PeekNamedPipe(pipe, nullptr, 0, nullptr, &pending, nullptr)) {
-                QCoreApplication::quit();
-                return;
-            }
-            if (!pending) break;
-            if (!ReadFile(pipe, block, qMin<DWORD>(pending, sizeof(block)), &bytes, nullptr) || !bytes) {
-                QCoreApplication::quit();
-                return;
-            }
-            packet.append(block, int(bytes));
-            dispatch();
-            if (packet.size() >= maxPacket) {
-                QCoreApplication::quit();
-                return;
-            }
-        }
+    bool attached = true;
+    auto streamEnded = [&] {
+        if (!attached) return;
+        attached = false;
+        dispatch();
+        // A hidden standalone window defers its close until the queue drains.
+        if (!standalone || (!window.isVisible() && window.close())) QCoreApplication::quit();
+    };
+    QObject::connect(&window, &FileTransferWindow::closed, &window, [&] {
+        if (!attached) QCoreApplication::quit();
     });
-    timer.start(200);
+    QObject::connect(&socket, &QLocalSocket::readyRead, &window, dispatch);
+    QObject::connect(&socket, &QLocalSocket::disconnected, &window, streamEnded);
+    QTimer::singleShot(0, &window, [&] {
+        dispatch(); // The first command may have arrived with the settings.
+        if (socket.state() == QLocalSocket::UnconnectedState) streamEnded();
+    });
     return QApplication::exec();
 }
 }
 
 namespace ClipboardTransferProcess {
+static std::optional<QList<FileConflictChoice>> askOnGuiThread(bool remote, int itemCount, const QList<FileConflict>& conflicts,
+                                                              const std::function<bool()>& cancelled)
+{
+    QEventLoop loop;
+    std::optional<QList<FileConflictChoice>> answer;
+    auto* box = showFileConflicts(nullptr, remote, itemCount, conflicts, [&](const QList<FileConflictChoice>& choices) {
+        answer = choices;
+        loop.quit();
+    });
+    QTimer timer;
+    QObject::connect(&timer, &QTimer::timeout, box, [&] { if (cancelled()) box->reject(); });
+    timer.start(100);
+    loop.exec();
+    return cancelled() ? std::nullopt : answer;
+}
+
+// A clipboard worker cannot create Qt widgets, and the SDL streaming loop owns
+// the application's GUI thread. Give the same dialog its own GUI loop there.
+std::optional<QList<FileConflictChoice>> askConflicts(bool remote, int itemCount, const QList<FileConflict>& conflicts,
+                                                     const std::function<bool()>& cancelled)
+{
+    if (cancelled() || conflicts.isEmpty() || itemCount < conflicts.size()) return {};
+    if (QThread::currentThread() == qApp->thread()) return askOnGuiThread(remote, itemCount, conflicts, cancelled);
+
+    QJsonArray files;
+    for (const auto& file : conflicts)
+        files.append(QJsonObject{{"path", file.path}, {"reason", file.replaceUnavailable}});
+    const auto packet = QJsonDocument(QJsonObject{{"files", files}, {"count", itemCount}, {"remote", remote}})
+                            .toJson(QJsonDocument::Compact) + '\n';
+    if (packet.size() > FileTransferProcess::maxPacket) return {};
+
+    QProcess child;
+    QEventLoop loop;
+    QObject::connect(&child, &QProcess::finished, &loop, &QEventLoop::quit);
+    child.start(QCoreApplication::applicationFilePath(), {ConflictArgument});
+    if (!child.waitForStarted(3000)) return {};
+    AllowSetForegroundWindow(static_cast<DWORD>(child.processId()));
+    if (child.write(packet) != packet.size()) return {};
+    QTimer timer;
+    QObject::connect(&timer, &QTimer::timeout, &child, [&] { if (cancelled()) child.kill(); });
+    timer.start(100);
+    if (child.state() != QProcess::NotRunning) loop.exec();
+    if (cancelled() || child.exitStatus() != QProcess::NormalExit || child.exitCode() != 0) return {};
+    const auto values = QJsonDocument::fromJson(child.readAllStandardOutput()).array();
+    if (values.size() != conflicts.size()) return {};
+    QList<FileConflictChoice> choices;
+    for (const auto value : values) {
+        const int choice = value.toInt(-1);
+        if (choice < int(FileConflictChoice::Skip) || choice > int(FileConflictChoice::KeepBoth)) return {};
+        choices.append(static_cast<FileConflictChoice>(choice));
+    }
+    return choices;
+}
+
+int runConflict()
+{
+    HANDLE parent = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (GetFileType(parent) != FILE_TYPE_PIPE || GetFileType(output) != FILE_TYPE_PIPE) return 1;
+    QByteArray packet;
+    char block[4096];
+    DWORD bytes;
+    do {
+        if (!ReadFile(parent, block, sizeof(block), &bytes, nullptr) || !bytes) return 1;
+        packet.append(block, int(bytes));
+        if (packet.size() > FileTransferProcess::maxPacket) return 1;
+    } while (!packet.endsWith('\n'));
+    const auto request = QJsonDocument::fromJson(packet).object();
+    const int itemCount = request.value("count").toInt();
+    QList<FileConflict> conflicts;
+    for (const auto value : request.value("files").toArray()) {
+        const auto file = value.toObject();
+        if (!file.value("path").isString() || !file.value("reason").isString()) return 1;
+        conflicts.append({file.value("path").toString(), file.value("reason").toString()});
+    }
+    if (conflicts.isEmpty() || conflicts.size() > itemCount) return 1;
+    StreamingPreferences::get()->retranslate();
+    const auto answer = askOnGuiThread(request.value("remote").toBool(), itemCount, conflicts, [parent] {
+        return !PeekNamedPipe(parent, nullptr, 0, nullptr, nullptr, nullptr);
+    });
+    if (!answer) return 1;
+    QJsonArray values;
+    for (const auto choice : *answer) values.append(int(choice));
+    const auto response = QJsonDocument(values).toJson(QJsonDocument::Compact);
+    return WriteFile(output, response.constData(), DWORD(response.size()), &bytes, nullptr) && bytes == DWORD(response.size()) ? 0 : 1;
+}
+
 bool launch(const QJsonObject& task)
 {
-    QLocalServer server;
-    server.setSocketOptions(QLocalServer::UserAccessOption);
-    const auto name = QStringLiteral("moonlight-transfer-") + QUuid::createUuid().toString(QUuid::WithoutBraces);
-    if (!server.listen(name)) return false;
     qint64 pid = 0;
-    if (!QProcess::startDetached(QCoreApplication::applicationFilePath(), {Argument, name}, {}, &pid)) return false;
-    if (!server.waitForNewConnection(7000)) return false;
-    auto socket = server.nextPendingConnection();
-    ULONG client = 0;
-    if (!socket || !GetNamedPipeClientProcessId(reinterpret_cast<HANDLE>(socket->socketDescriptor()), &client) ||
-        client != static_cast<ULONG>(pid)) return false;
-    const auto packet = QJsonDocument(task).toJson(QJsonDocument::Compact) + '\n';
-    if (socket->write(packet) != packet.size()) return false;
-    QDeadlineTimer deadline(5000);
-    while (socket->bytesToWrite()) {
-        if (deadline.hasExpired() || !socket->waitForBytesWritten(deadline.remainingTime())) return false;
-    }
-    return (socket->bytesAvailable() || socket->waitForReadyRead(5000)) && socket->read(1) == "R";
+    auto socket = launchHelper(Argument, pid);
+    return socket && sendPacket(*socket, QJsonDocument(task).toJson(QJsonDocument::Compact) + '\n') &&
+           acknowledged(*socket);
 }
 
 QJsonObject take(const QString& channel, QLocalSocket& socket)
 {
-    socket.setReadBufferSize(256 * 1024);
+    socket.setReadBufferSize(FileTransferProcess::maxPacket);
     socket.connectToServer(channel);
     if (!socket.waitForConnected(5000)) return {};
     QDeadlineTimer deadline(5000);
