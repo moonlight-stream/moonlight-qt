@@ -50,15 +50,20 @@ ApplicationWindow {
             window.showFullScreen()
         }
 
-        // Display any modal dialogs for configuration warnings
         if (isGuiLaunch) {
-            if (SystemProperties.isWow64) {
-                wow64Dialog.open()
+            // Display any modal dialogs for configuration warnings
+            if (StreamingPreferences.configurationWarnings) {
+                if (SystemProperties.isWow64) {
+                    wow64Dialog.open()
+                }
+
+                // Hardware acceleration and unmapped gamepads are checked asynchronously
+                SystemProperties.hasHardwareAccelerationChanged.connect(hasHardwareAccelerationChanged)
+                SystemProperties.unmappedGamepadsChanged.connect(hasUnmappedGamepadsChanged)
             }
 
-            // Hardware acceleration and unmapped gamepads are checked asynchronously
-            SystemProperties.hasHardwareAccelerationChanged.connect(hasHardwareAccelerationChanged)
-            SystemProperties.unmappedGamepadsChanged.connect(hasUnmappedGamepadsChanged)
+            // We still need to load the remaining properties even if config warnings are disabled,
+            // since some of them are used by the SettingsView to enable/disable certain options.
             SystemProperties.startAsyncLoad()
         }
     }
