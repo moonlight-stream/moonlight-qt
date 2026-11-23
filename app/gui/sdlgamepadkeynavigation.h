@@ -31,6 +31,8 @@ private:
 
     void updateTimerState();
 
+    void pumpGamepadEvents();
+
 private slots:
     void onPollingTimerFired();
 

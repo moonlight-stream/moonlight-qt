@@ -51,7 +51,7 @@ void SdlGamepadKeyNavigation::enable()
     // on first init of the GC subsystem. We can't depend on them due to
     // overlapping lifetimes of SdlGamepadKeyNavigation instances, so we
     // will attach ourselves.
-    SDL_PumpEvents();
+    pumpGamepadEvents();
     SDL_FlushEvent(SDL_CONTROLLERDEVICEADDED);
 
     // Open all currently attached game controllers
@@ -99,17 +99,19 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
 {
     SDL_Event event;
 
+    // Pump all gamepad events before processing
+    pumpGamepadEvents();
+
     // Discard any pending button events on the first poll to avoid picking up
     // stale input data from the stream session (like the quit combo).
     if (m_FirstPoll) {
-        SDL_PumpEvents();
         SDL_FlushEvent(SDL_CONTROLLERBUTTONDOWN);
         SDL_FlushEvent(SDL_CONTROLLERBUTTONUP);
-
         m_FirstPoll = false;
     }
 
-    while (SDL_PollEvent(&event)) {
+    // Peep events rather than polling to avoid calling SDL_PumpEvents()
+    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) == 1) {
         switch (event.type) {
         case SDL_QUIT:
             // SDL may send us a quit event since we initialize
@@ -277,6 +279,27 @@ void SdlGamepadKeyNavigation::updateTimerState()
 
         // Poll every 50 ms for a new joystick event
         m_PollingTimer->start(50);
+    }
+}
+
+void SdlGamepadKeyNavigation::pumpGamepadEvents()
+{
+#if !defined(STEAM_LINK) && !defined(Q_OS_WIN32)
+    // We avoid using SDL_PumpEvents() when the video subsystem is initialized,
+    // because the SystemPropertyQueryThread might post a queued callback to
+    // shut down the video subsystem. If that runs inside SDL_PumpEvents(),
+    // it can cause a crash. This can happen with libdecor-gtk, which pumps
+    // the same Glib main loop that Qt uses for queued connections.
+    //
+    // NB: We exempt Steam Link and Windows because both platforms keep the
+    // video subsystem initialized all the time, so the race cannot happen.
+    if (SDL_WasInit(SDL_INIT_VIDEO)) {
+        SDL_JoystickUpdate();
+    }
+    else
+#endif
+    {
+        SDL_PumpEvents();
     }
 }
 
