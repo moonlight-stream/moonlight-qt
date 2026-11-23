@@ -882,10 +882,6 @@ int main(int argc, char *argv[])
     // After the QGuiApplication is created, the platform stuff will be initialized
     // and we can set the SDL video driver to match Qt.
     if (QGuiApplication::platformName() == "xcb") {
-        if (WMUtils::isRunningWayland()) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected XWayland. This will probably break hardware decoding! Try running with QT_QPA_PLATFORM=wayland or switch to X11.");
-        }
         qputenv("SDL_VIDEODRIVER", "x11");
     }
     else if (QGuiApplication::platformName().startsWith("wayland")) {
