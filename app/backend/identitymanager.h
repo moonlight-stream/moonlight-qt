@@ -8,6 +8,19 @@
 class IdentityManager
 {
 public:
+    // Where the client identity comes from
+    enum class IdentitySource
+    {
+        Settings,  // The identity encoded in the cert and key settings
+        Files,     // The PEM files named by the certificatefile and keyfile settings
+    };
+
+    // The source the settings call for: Files if certificatefile or keyfile is
+    // set, otherwise Settings
+    static
+    IdentitySource
+    configuredSource();
+
     QString
     getUniqueId();
 
@@ -23,6 +36,13 @@ public:
     static
     IdentityManager*
     get();
+
+    // Creates the identity manager with the client identity from source. Returns
+    // false and sets error if the identity can't be loaded from that source, which
+    // is fatal since Moonlight never substitutes another identity for it.
+    static
+    bool
+    initialize(IdentitySource source, QString* error);
 
     // Checks that a PEM certificate (leaf first, optionally followed by intermediates)
     // and an unencrypted PEM private key parse and belong together. On failure,
@@ -43,7 +63,8 @@ public:
     getIdentityProblem() const;
 
 private:
-    IdentityManager();
+    explicit
+    IdentityManager(IdentitySource source);
 
     QSslCertificate
     getSslCertificate();
@@ -67,6 +88,11 @@ private:
     bool
     loadIdentityFromSettings(QSettings& settings, QString* error);
 
+    // Loads the identity from the PEM files named by the certificatefile and
+    // keyfile settings
+    bool
+    loadIdentityFromFiles(QSettings& settings, QString* error);
+
     // Logs the certificate chain and the key type, never the key material itself
     static
     void
@@ -77,6 +103,7 @@ private:
     QByteArray m_CachedPemCert;
 
     QString m_IdentityProblem;
+    QString m_FatalError;
     QString m_IdentitySource;
 
     // Lazy initialized

@@ -2,6 +2,7 @@
 #include "utils.h"
 
 #include <QDebug>
+#include <QFile>
 #include <QDateTime>
 #include <QCryptographicHash>
 
@@ -14,6 +15,8 @@
 #define SER_UNIQUEID "uniqueid"
 #define SER_CERT "certificate"
 #define SER_KEY "key"
+#define SER_CERTFILE "certificatefile"
+#define SER_KEYFILE "keyfile"
 
 static int
 refusePassphrase(char*, int, int, void*)
@@ -24,13 +27,46 @@ refusePassphrase(char*, int, int, void*)
 
 IdentityManager* IdentityManager::s_Im = nullptr;
 
+IdentityManager::IdentitySource
+IdentityManager::configuredSource()
+{
+    // An administrator can provision an externally issued identity (which may
+    // include intermediate certificates) instead of the one in the cert and key
+    // settings. Setting either file selects it, so a missing one is reported.
+    QSettings settings;
+    if (!settings.value(SER_CERTFILE).toString().isEmpty() ||
+            !settings.value(SER_KEYFILE).toString().isEmpty()) {
+        return IdentitySource::Files;
+    }
+    return IdentitySource::Settings;
+}
+
+bool
+IdentityManager::initialize(IdentitySource source, QString* error)
+{
+    Q_ASSERT(s_Im == nullptr);
+
+    IdentityManager* im = new IdentityManager(source);
+    if (!im->m_FatalError.isEmpty()) {
+        *error = im->m_FatalError;
+        delete im;
+        return false;
+    }
+
+    s_Im = im;
+    return true;
+}
+
 IdentityManager*
 IdentityManager::get()
 {
     // This will always be called first on the main thread,
     // so it's safe to initialize without locks.
     if (s_Im == nullptr) {
-        s_Im = new IdentityManager();
+        QString error;
+        if (!initialize(configuredSource(), &error)) {
+            qFatal("%s", qPrintable(error));
+        }
     }
 
     return s_Im;
@@ -118,12 +154,27 @@ void IdentityManager::createCredentials(QSettings& settings)
     qInfo() << "Wrote new identity credentials to settings";
 }
 
-IdentityManager::IdentityManager()
+IdentityManager::IdentityManager(IdentitySource source)
 {
     QSettings settings;
-
     QString error;
-    loadIdentityFromSettings(settings, &error);
+    bool ok = false;
+
+    switch (source) {
+    case IdentitySource::Settings:
+        ok = loadIdentityFromSettings(settings, &error);
+        break;
+    case IdentitySource::Files:
+        ok = loadIdentityFromFiles(settings, &error);
+        break;
+    }
+
+    // Only the identity in the cert and key settings is ever replaced, so a failure
+    // to load any other identity is fatal
+    if (!ok) {
+        m_FatalError = error;
+        return;
+    }
 
     // We should have valid credentials now. If not, we're screwed
     if (getSslCertificate().isNull()) {
@@ -177,6 +228,46 @@ IdentityManager::loadIdentityFromSettings(QSettings& settings, QString* error)
         qWarning().noquote() << m_IdentityProblem;
         createCredentials(settings);
     }
+    return true;
+}
+
+bool
+IdentityManager::loadIdentityFromFiles(QSettings& settings, QString* error)
+{
+    QString certFile = settings.value(SER_CERTFILE).toString();
+    QString keyFile = settings.value(SER_KEYFILE).toString();
+    if (certFile.isEmpty() || keyFile.isEmpty()) {
+        *error = QObject::tr("Both certificatefile and keyfile must be set to use a provisioned client identity.");
+        return false;
+    }
+
+    QFile certQFile(certFile);
+    QFile keyQFile(keyFile);
+    if (!certQFile.open(QIODevice::ReadOnly)) {
+        *error = QObject::tr("Unable to read the client certificate file \"%1\": %2")
+                     .arg(certFile, certQFile.errorString());
+        return false;
+    }
+    if (!keyQFile.open(QIODevice::ReadOnly)) {
+        *error = QObject::tr("Unable to read the client key file \"%1\": %2")
+                     .arg(keyFile, keyQFile.errorString());
+        return false;
+    }
+
+    QByteArray pemCert = certQFile.readAll();
+    QByteArray pemKey = keyQFile.readAll();
+    QString problem;
+
+    qInfo() << "Using the client identity from" << certFile << "and" << keyFile;
+    if (!validateIdentity(pemCert, pemKey, &problem)) {
+        *error = QObject::tr("The client identity in \"%1\" and \"%2\" is unusable: %3")
+                     .arg(certFile, keyFile, problem);
+        return false;
+    }
+
+    m_CachedPemCert = pemCert;
+    m_CachedPrivateKey = pemKey;
+    m_IdentitySource = QString("%1 and %2").arg(certFile, keyFile);
     return true;
 }
 
@@ -376,7 +467,8 @@ QSslConfiguration
 IdentityManager::getSslConfig()
 {
     QSslConfiguration sslConfig(QSslConfiguration::defaultConfiguration());
-    sslConfig.setLocalCertificate(getSslCertificate());
+    // Present the full chain so hosts can verify a provisioned identity issued by an intermediate CA
+    sslConfig.setLocalCertificateChain(QSslCertificate::fromData(m_CachedPemCert));
     sslConfig.setPrivateKey(getSslKey());
     return sslConfig;
 }

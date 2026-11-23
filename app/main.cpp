@@ -970,7 +970,17 @@ int main(int argc, char *argv[])
                                                        return StreamingPreferences::get(qmlEngine);
                                                    });
 
-    // Create the identity manager on the main thread
+    // Create the identity manager on the main thread.
+    // An unusable loaded identity is fatal.
+    QString identityError;
+    if (!IdentityManager::initialize(IdentityManager::configuredSource(), &identityError)) {
+        fprintf(stderr, "Error: %s\n", qPrintable(identityError));
+        if (commandLineParserResult == GlobalCommandLineParser::NormalStartRequested) {
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Moonlight", qPrintable(identityError), nullptr);
+        }
+        return 1;
+    }
+
     QString identityWarning = IdentityManager::get()->getIdentityProblem();
     if (!identityWarning.isEmpty()) {
         // Always report this on stderr. A GUI launch also shows it in a dialog.
