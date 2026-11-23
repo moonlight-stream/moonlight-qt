@@ -13,10 +13,11 @@ public:
     {
         Settings,  // The identity encoded in the cert and key settings
         Files,     // The PEM files named by the certificatefile and keyfile settings
+        Stdin,     // A JSON object on standard input, kept only in memory
     };
 
     // The source the settings call for: Files if certificatefile or keyfile is
-    // set, otherwise Settings
+    // set, otherwise Settings. Never returns Stdin, which must be requested.
     static
     IdentitySource
     configuredSource();
@@ -92,6 +93,11 @@ private:
     // keyfile settings
     bool
     loadIdentityFromFiles(QSettings& settings, QString* error);
+
+    // Loads the identity from a JSON object read from standard input. It is kept
+    // only in memory and never saved.
+    bool
+    loadIdentityFromStdin(QSettings& settings, QString* error);
 
     // Logs the certificate chain and the key type, never the key material itself
     static

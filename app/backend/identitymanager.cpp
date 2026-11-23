@@ -1,4 +1,5 @@
 #include "identitymanager.h"
+#include "identitystdin.h"
 #include "utils.h"
 
 #include <QDebug>
@@ -17,6 +18,9 @@
 #define SER_KEY "key"
 #define SER_CERTFILE "certificatefile"
 #define SER_KEYFILE "keyfile"
+
+// Far larger than any reasonable certificate chain and key
+#define STDIN_IDENTITY_MAX_BYTES (64 * 1024)
 
 static int
 refusePassphrase(char*, int, int, void*)
@@ -167,6 +171,9 @@ IdentityManager::IdentityManager(IdentitySource source)
     case IdentitySource::Files:
         ok = loadIdentityFromFiles(settings, &error);
         break;
+    case IdentitySource::Stdin:
+        ok = loadIdentityFromStdin(settings, &error);
+        break;
     }
 
     // Only the identity in the cert and key settings is ever replaced, so a failure
@@ -268,6 +275,39 @@ IdentityManager::loadIdentityFromFiles(QSettings& settings, QString* error)
     m_CachedPemCert = pemCert;
     m_CachedPrivateKey = pemKey;
     m_IdentitySource = QString("%1 and %2").arg(certFile, keyFile);
+    return true;
+}
+
+bool
+IdentityManager::loadIdentityFromStdin(QSettings& settings, QString* error)
+{
+    QByteArray json, pemCert, pemKey;
+    QString problem;
+
+    bool ok = IdentityStdin::readAll(STDIN_IDENTITY_MAX_BYTES, &json, error) &&
+              IdentityStdin::parseJson(json, &pemCert, &pemKey, error);
+    IdentityStdin::cleanse(json);
+
+    if (ok && !validateIdentity(pemCert, pemKey, &problem)) {
+        *error = QObject::tr("The client identity on standard input is unusable: %1").arg(problem);
+        ok = false;
+    }
+    if (!ok) {
+        IdentityStdin::cleanse(pemCert);
+        IdentityStdin::cleanse(pemKey);
+        return false;
+    }
+
+    qInfo() << "Using the client identity supplied on standard input";
+    if (!settings.value(SER_CERTFILE).toString().isEmpty() ||
+            !settings.value(SER_KEYFILE).toString().isEmpty()) {
+        qInfo() << "Ignoring the certificatefile and keyfile settings in favor of standard input";
+    }
+
+    // Moved rather than copied so no extra copies of the key material are left behind
+    m_CachedPemCert = std::move(pemCert);
+    m_CachedPrivateKey = std::move(pemKey);
+    m_IdentitySource = "stdin";
     return true;
 }
 
