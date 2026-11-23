@@ -18,7 +18,9 @@
 #define REQUEST_TIMEOUT_MS 5000
 #define LAUNCH_TIMEOUT_MS 120000
 #define RESUME_TIMEOUT_MS 30000
-#define QUIT_TIMEOUT_MS 30000
+// Like the Android client, allow the host to finish application teardown and
+// undo commands before replying. openConnection still limits connection setup.
+#define QUIT_TIMEOUT_MS 0
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #define XML_NAME_EQUALS(x, y) ((x) == (y))
@@ -307,6 +309,13 @@ NvHTTP::quitApp()
 
     // Throws if the request failed
     verifyResponseStatus(response);
+
+    // A successful HTTP/XML status alone does not mean cancel succeeded.
+    // Do not report success for a refused or incomplete response.
+    const QString cancelResult = getXmlString(response, "cancel");
+    if (cancelResult.isEmpty() || cancelResult == "0") {
+        throw GfeHttpResponseException(500, tr("The host did not confirm that the application was closed."));
+    }
 
     // Newer GFE versions will just return success even if quitting fails
     // if we're not the original requester.
