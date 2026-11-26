@@ -78,7 +78,9 @@ public:
           m_LastFrameWidth(-1),
           m_LastFrameHeight(-1),
           m_LastDrawableWidth(-1),
-          m_LastDrawableHeight(-1)
+          m_LastDrawableHeight(-1),
+          m_LastPanX(-1),
+          m_LastPanY(-1)
     {
     }
 
@@ -147,7 +149,9 @@ public:
         // Check if anything has changed since the last vertex buffer upload
         if (m_VideoVertexBuffer &&
                 frame->width == m_LastFrameWidth && frame->height == m_LastFrameHeight &&
-                drawableWidth == m_LastDrawableWidth && drawableHeight == m_LastDrawableHeight) {
+                drawableWidth == m_LastDrawableWidth && drawableHeight == m_LastDrawableHeight &&
+                StreamUtils::getFitHeightPanXOffset() == m_LastPanX &&
+                StreamUtils::getFitWidthPanYOffset() == m_LastPanY) {
             // Nothing to do
             return true;
         }
@@ -162,9 +166,17 @@ public:
         dst.h = drawableHeight;
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
+        // Flip y from screen-y (what scaleSourceToDestinationSurface produces)
+        // to math-y (what screenSpaceToNormalizedDeviceCoords expects). For the
+        // symmetric letterbox case both produce the same value, but fit-width
+        // -pan-Y produces an asymmetric rect that diverges - same fix as
+        // d3d11va.cpp.
+        SDL_Rect mathDst = dst;
+        mathDst.y = drawableHeight - dst.y - dst.h;
+
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
-        StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, drawableWidth, drawableHeight);
+        StreamUtils::screenSpaceToNormalizedDeviceCoords(&mathDst, &renderRect, drawableWidth, drawableHeight);
 
         Vertex verts[] =
         {
@@ -187,6 +199,8 @@ public:
         m_LastFrameHeight = frame->height;
         m_LastDrawableWidth = drawableWidth;
         m_LastDrawableHeight = drawableHeight;
+        m_LastPanX = StreamUtils::getFitHeightPanXOffset();
+        m_LastPanY = StreamUtils::getFitWidthPanYOffset();
 
         return true;
     }
@@ -968,6 +982,8 @@ private:
     int m_LastFrameHeight;
     int m_LastDrawableWidth;
     int m_LastDrawableHeight;
+    int m_LastPanX;
+    int m_LastPanY;
 };
 
 @implementation DisplayLinkDelegate {

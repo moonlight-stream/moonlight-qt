@@ -1394,7 +1394,8 @@ void Session::getWindowDimensions(int& x, int& y,
         dst.w = ((int)(usableBounds.w * 0.80f)) & ~0x1;  // even width
         dst.h = ((int)(usableBounds.h * 0.80f)) & ~0x1;  // even height
 
-        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+        // Window sizing must always fit the display, so bypass edge-pan here
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst, false);
 
         // Only scale the size down, never up
         if (m_StreamConfig.width >= dst.w || m_StreamConfig.height >= dst.h) {
@@ -2027,6 +2028,9 @@ void Session::exec()
                 break;
             case SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER:
                 m_FlushingWindowEventsRef--;
+                break;
+            case SDL_CODE_FIT_WIDTH_PAN_TICK:
+                m_InputHandler->onFitWidthPanTick();
                 break;
             case SDL_CODE_GAMECONTROLLER_RUMBLE:
                 m_InputHandler->rumble((uint16_t)(uintptr_t)event.user.data1,

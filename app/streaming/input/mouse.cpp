@@ -134,7 +134,11 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         dst.w = windowWidth;
         dst.h = windowHeight;
 
-        // Use the stream and window sizes to determine the video region
+        // Use the stream and window sizes to determine the video region.
+        // In fit-width-pan-Y mode this picks up the current pan offset which
+        // is driven by the edge-pan timer callback, not by motion events -
+        // so the inverse transform below stays consistent with what the
+        // renderer is currently displaying.
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
         mouseInVideoRegion = isMouseInVideoRegion(x, y, windowWidth, windowHeight);
@@ -282,6 +286,129 @@ bool SdlInputHandler::isMouseInVideoRegion(int mouseX, int mouseY, int windowWid
            (mouseY >= dst.y && mouseY <= dst.y + dst.h);
 }
 
+Uint32 SdlInputHandler::fitWidthPanTimerCallback(Uint32 interval, void* /*param*/)
+{
+    // Runs on SDL's timer thread - keep work to a minimum and just post a
+    // SDL_USEREVENT for the main event loop to handle (where we can safely
+    // call SDL_GetMouseState / SDL_GetWindowSize).
+    SDL_Event event;
+    SDL_zero(event);
+    event.type = SDL_USEREVENT;
+    event.user.code = SDL_CODE_FIT_WIDTH_PAN_TICK;
+    SDL_PushEvent(&event);
+    return interval;
+}
+
+// Computes the per-tick pan delta along one axis from the cursor position
+// along that axis. Edge zone is ~10% of the window extent, clamped to a usable
+// range. Pan rate uses quadratic depth scaling so the user has fine control
+// near the inner boundary (depth 0.3 -> ~2.7 px/tick) and can pan rapidly
+// when pressed hard against the edge (depth 1.0 -> 30 px/tick = 1800 px/sec).
+//
+// Direction follows pan-toward-cursor: cursor at the top/left edge scrolls the
+// view toward the top/left of the stream (offset decreases); cursor at the
+// bottom/right edge scrolls toward the bottom/right (offset increases).
+static int computeEdgePanDelta(int pos, int extent)
+{
+    const int kMaxPanRatePerTick = 30;
+    int edgeZone = qBound(25, extent / 10, 80);
+    int delta = 0;
+    if (pos < edgeZone) {
+        float depth = (float)(edgeZone - pos) / edgeZone;
+        delta = -(int)(depth * depth * kMaxPanRatePerTick);
+        if (delta == 0 && depth > 0.0f) {
+            delta = -1;
+        }
+    }
+    else if (pos > extent - edgeZone) {
+        float depth = (float)(pos - (extent - edgeZone)) / edgeZone;
+        delta = (int)(depth * depth * kMaxPanRatePerTick);
+        if (delta == 0 && depth > 0.0f) {
+            delta = 1;
+        }
+    }
+    return delta;
+}
+
+void SdlInputHandler::onFitWidthPanTick()
+{
+    if (!StreamingPreferences::get()->fitWidthPanY) {
+        return;
+    }
+    if (m_Window == nullptr || m_StreamWidth <= 0 || m_StreamHeight <= 0) {
+        return;
+    }
+
+    int windowWidth, windowHeight;
+    SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+    if (windowHeight <= 0 || windowWidth <= 0) {
+        return;
+    }
+
+    int mouseX, mouseY;
+    SDL_GetMouseState(&mouseX, &mouseY);
+
+    // Only pan while the cursor is inside the window. In windowed mode the
+    // cursor is free to leave; SDL_GetMouseState returns coords relative to
+    // the focused window which may be far outside [0, windowW] x [0, windowH].
+    // Without this guard, a cursor 1000px outside the window produces a huge
+    // depth and pan blows past maxPan in a single tick.
+    if (mouseX < 0 || mouseX > windowWidth || mouseY < 0 || mouseY > windowHeight) {
+        return;
+    }
+
+    bool panChanged = false;
+
+    int zoomedH = (int)SDL_ceilf((float)windowWidth * m_StreamHeight / m_StreamWidth);
+    int zoomedW = (int)SDL_ceilf((float)windowHeight * m_StreamWidth / m_StreamHeight);
+
+    if (zoomedH > windowHeight) {
+        // Stream is taller than the window aspect: fit width, pan vertically.
+        int maxPan = zoomedH - windowHeight;
+        int delta = computeEdgePanDelta(mouseY, windowHeight);
+        if (delta != 0) {
+            int current = StreamUtils::getFitWidthPanYOffset();
+            int next = qBound(0, current + delta, maxPan);
+            if (next != current) {
+                StreamUtils::setFitWidthPanYOffset(next);
+                panChanged = true;
+            }
+        }
+    }
+    else if (zoomedW > windowWidth) {
+        // Stream is wider than the window aspect: match window height, pan
+        // horizontally.
+        int maxPan = zoomedW - windowWidth;
+        int delta = computeEdgePanDelta(mouseX, windowWidth);
+        if (delta != 0) {
+            int current = StreamUtils::getFitHeightPanXOffset();
+            int next = qBound(0, current + delta, maxPan);
+            if (next != current) {
+                StreamUtils::setFitHeightPanXOffset(next);
+                panChanged = true;
+            }
+        }
+    }
+
+    // The local cursor sits still at the edge while the stream slides under
+    // it, so re-send its position through the new transform. Otherwise the
+    // host cursor stays put until the user wiggles the mouse.
+    if (panChanged && m_AbsoluteMouseMode && isCaptureActive()) {
+        SDL_Rect src, dst;
+        src.x = src.y = 0;
+        src.w = m_StreamWidth;
+        src.h = m_StreamHeight;
+        dst.x = dst.y = 0;
+        dst.w = windowWidth;
+        dst.h = windowHeight;
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        int x = qMin(qMax(mouseX - dst.x, 0), dst.w);
+        int y = qMin(qMax(mouseY - dst.y, 0), dst.h);
+        LiSendMousePositionEvent((short)x, (short)y, dst.w, dst.h);
+    }
+}
+
 void SdlInputHandler::updatePointerRegionLock()
 {
     // Pointer region lock is irrelevant in relative mouse mode
@@ -302,20 +429,29 @@ void SdlInputHandler::updatePointerRegionLock()
     // If region lock is enabled, grab the cursor so it can't accidentally leave our window.
     if (isCaptureActive() && m_PointerRegionLockActive) {
 #if SDL_VERSION_ATLEAST(2, 0, 18)
-        SDL_Rect src, dst;
+        SDL_Rect src, dst, windowRect;
 
         src.x = src.y = 0;
         src.w = m_StreamWidth;
         src.h = m_StreamHeight;
 
-        dst.x = dst.y = 0;
-        SDL_GetWindowSize(m_Window, &dst.w, &dst.h);
+        windowRect.x = windowRect.y = 0;
+        SDL_GetWindowSize(m_Window, &windowRect.w, &windowRect.h);
+        dst = windowRect;
 
         // Use the stream and window sizes to determine the video region
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
+        // In fill-and-pan mode dst extends past the window on one axis -
+        // clamp so SDL receives a rect that fits inside the window. The
+        // visible video region in that mode is the window itself.
+        SDL_Rect lockRect;
+        if (!SDL_IntersectRect(&dst, &windowRect, &lockRect)) {
+            lockRect = windowRect;
+        }
+
         // SDL 2.0.18 lets us lock the cursor to a specific region
-        SDL_SetWindowMouseRect(m_Window, &dst);
+        SDL_SetWindowMouseRect(m_Window, &lockRect);
 #elif SDL_VERSION_ATLEAST(2, 0, 15)
         // SDL 2.0.15 only lets us lock the cursor to the whole window
         SDL_SetWindowMouseGrab(m_Window, SDL_TRUE);

@@ -1347,6 +1347,25 @@ Flickable {
                                   qsTr("NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.")
                 }
 
+                CheckBox {
+                    id: fitWidthPanYCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Fill the window instead of letterboxing (pan by moving the cursor to the screen edges)")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.fitWidthPanY
+                    onCheckedChanged: {
+                        StreamingPreferences.fitWidthPanY = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 10000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("When the stream and your screen have different aspect ratios, scale the stream to fill the window instead of leaving black bars. A tall stream (e.g. a portrait monitor) fills the window width and pans up/down; a wide stream (e.g. an ultrawide or multi-monitor host) matches the window height and pans left/right. Push the cursor against a screen edge to scroll.") + "\n\n" +
+                                  qsTr("This is purely client-side: the host's resolution and behavior are unchanged.") + " " +
+                                  qsTr("Has no effect when the stream already fits the window aspect ratio.")
+                }
+
                 Row {
                     spacing: 5
                     width: parent.width
