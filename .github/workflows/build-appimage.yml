@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/SDL
-          ref: d3926e74bd58eaf5f157ff809f0cb781f2a574b0
+          ref: ae7dae5b630d870d02795878d0109d67c212518e
           path: deps/SDL
 
       - name: Build SDL3
@@ -56,7 +56,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: libsdl-org/sdl2-compat
-          ref: bebc6eb01397497130ca58a1cb48c8bd141422f5
+          ref: 0cc83e9ad87e0f7881914862661da24c8c457eef
           path: deps/sdl2-compat
 
       - name: Build sdl2-compat
