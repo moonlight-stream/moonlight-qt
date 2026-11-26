@@ -106,7 +106,7 @@ public:
                         m_State = StateStartSession;
                         session = new Session(m_Computer, app, m_Preferences, m_ViewOnly);
                         emit q->sessionCreated(app.name, session);
-                    } else if (m_ViewOnly) {
+                    } else if (m_ViewOnly || !qEnvironmentVariableIsEmpty("MOONLIGHT_CAPTURE_OUTPUT")) {
                         m_State = StateFailure;
                         emit q->failed(QObject::tr("Viewing mode requires the desktop to be available."));
                     } else {

@@ -7,6 +7,7 @@
 #include <Limelight.h>
 
 #include <QUrl>
+#include <QJsonObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <optional>
@@ -160,8 +161,11 @@ public:
     parseQuad(QString quad);
 
     void requestHostPower(bool restart);
+    QImage getDesktopWallpaper();
     void requestHostLock();
+    QJsonObject displayControl(const QString& output, const QString& size);
     bool requestHostMute(std::optional<bool> desired);
+    bool setStreamBitrate(quint32 streamId, int kbps);
     bool setDisconnectLock(quint32 streamId, bool enabled);
 
     void
@@ -178,7 +182,9 @@ public:
              bool persistGameControllersOnDisconnect,
              bool requestDisconnectLock,
              bool requestPrivacyScreen,
-             bool allowDesktopSharing,
+             bool createPrivacyDisplay,
+             QString privacyDesktopSize,
+             bool allowDesktopSharing, const QString& captureOutput,
              QByteArray& clipboardToken,
              bool& clipboardText,
              bool& clipboardImages,
@@ -189,9 +195,10 @@ public:
              bool& fileDrag,
              bool& hostMuteAvailable,
              bool& hostPrivacyAvailable,
-             quint32& disconnectLockStreamId,
+             bool& hostDisplayControl,
+             quint32& bitrateStreamId, quint32& disconnectLockStreamId,
              bool& disconnectLockEnabled,
-             QString& rtspSessionUrl);
+             QString& rtspSessionUrl, bool viewOnly, QString& recoveryToken, bool recovering);
 
     QVector<NvApp>
     getAppList();
@@ -205,6 +212,9 @@ public:
 
     QUrl m_BaseUrlHttp;
     QUrl m_BaseUrlHttps;
+signals:
+    void cancelRequests();
+
 private:
     void
     handleSslErrors(QNetworkReply* reply, const QList<QSslError>& errors);
@@ -215,7 +225,8 @@ private:
                    QString arguments,
                    int timeoutMs,
                    NvLogLevel logLevel,
-                   const char* postHeader = nullptr);
+                   const char* postHeader = nullptr,
+                   qint64 maxResponseBytes = 0);
 
     NvAddress m_Address;
     QNetworkAccessManager* m_Nam;

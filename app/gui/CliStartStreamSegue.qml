@@ -31,6 +31,11 @@ Item {
     }
 
     function onLaunchFailed(message) {
+        if (isDisplayCompanion) {
+            console.error(message)
+            Qt.quit()
+            return
+        }
         stageLabel.visible = false
         errorDialog.text = message
         errorDialog.open()

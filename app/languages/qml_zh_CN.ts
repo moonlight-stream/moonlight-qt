@@ -222,6 +222,12 @@
 </context>
 <context>
     <name>NvHTTP</name>
+    <message><source>The original stream must be connected to open another display.</source><translation>请先连接主串流窗口，再打开其他屏幕。</translation></message>
+    <message><source>Sunshine did not confirm the requested display.</source><translation>Sunshine 未确认所选屏幕。</translation></message>
+    <message>
+        <source>Update Sunshine to configure the virtual display.</source>
+        <translation>请更新 Sunshine 以配置虚拟显示器。</translation>
+    </message>
     <message><source>The host did not confirm the disconnect lock setting.</source><translation>被控端未确认断开锁屏设置。</translation></message>
     <message><source>Sunshine does not support configuring the privacy screen from Moonlight.</source><translation>此版本的 Sunshine 不支持从 Moonlight 配置隐私屏。</translation></message>
     <message><source>Sunshine did not confirm the privacy screen.</source><translation>Sunshine 未确认启用隐私屏。</translation></message>
@@ -235,6 +241,18 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Sunshine could not confirm the disconnect. Check the connected devices and try again.</source><translation>Sunshine 未能确认断开结果，请检查当前连接的设备后重试。</translation></message>
+    <message><source>Privacy screen resolution…</source><translation>隐私屏分辨率…</translation></message>
+    <message><source>Privacy screen resolution</source><translation>隐私屏分辨率</translation></message>
+    <message><source>Size for the next private connection. Leave blank to use Sunshine settings.</source><translation>下次隐私屏连接使用的分辨率。留空则使用 Sunshine 设置。</translation></message>
+    <message>
+        <source>Connect using privacy screen</source>
+        <translation>使用隐私屏连接</translation>
+    </message>
+    <message>
+        <source>Allow virtual display creation while locked</source>
+        <translation>允许锁屏时创建虚拟显示器</translation>
+    </message>
     <message><source>Turn off privacy screen request</source><translation>关闭隐私屏请求</translation></message>
     <message><source>View only</source><translation>观看模式</translation></message>
     <message><source>More tools</source><translation>更多工具</translation></message>
@@ -641,12 +659,21 @@
     <message>
         <location filename="../streaming/session.cpp" line="131"/>
         <source>Connection terminated</source>
-        <translation>会话已终止</translation>
+        <translation>远程控制已断开</translation>
     </message>
+    <message>
+        <source>Remote viewing disconnected</source>
+        <translation>远程观看已断开</translation>
+    </message>
+    <message><source>The host ended this session. Connect again if you want to continue.</source><translation>主机已结束本次连接。如需继续，请重新连接。</translation></message>
+    <message><source>Restoring connection (attempt %1 of %2)…</source><translation>正在恢复连接（第 %1 次，共 %2 次）…</translation></message>
+    <message><source>Could not reconnect</source><translation>未能恢复连接</translation></message>
+    <message><source>Check your network and the host, then connect again.</source><translation>请检查网络和主机状态，然后重新连接。</translation></message>
+    <message><source>Open the device list and verify the host pairing.</source><translation>请在设备列表中确认主机和配对状态。</translation></message>
     <message>
         <location filename="../streaming/session.cpp" line="132"/>
         <source>Error code: %1</source>
-        <translation>错误代码: %1</translation>
+        <translation>错误代码：%1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="958"/>
@@ -1356,7 +1383,10 @@
 </context>
 <context>
     <name>StreamSegue</name>
-    <message><source>Reconnecting to apply the privacy screen...</source><translation>正在重新连接以应用隐私屏…</translation></message>
+    <message><source>Checking host status…</source><translation>正在确认主机状态…</translation></message>
+    <message><source>Cancel reconnection</source><translation>取消重连</translation></message>
+    <message><source>Cancelling reconnection…</source><translation>正在取消重连…</translation></message>
+    <message><source>Reconnecting to apply stream settings...</source><translation>正在重新连接以应用串流设置…</translation></message>
     <message><source>Checking video and audio capabilities...</source><translation>正在检测本机的音视频能力…</translation></message>
     <message><source>Reviewing stream settings...</source><translation>正在显示串流设置提示…</translation></message>
     <message>
@@ -1501,6 +1531,34 @@
 </context>
 <context>
     <name>StreamControlCenter</name>
+    <message><source>Video quality</source><translation>画质</translation></message>
+    <message><source>Clear</source><translation>清晰</translation></message>
+    <message><source>HD</source><translation>高清</translation></message>
+    <message><source>Original</source><translation>原画</translation></message>
+    <message><source>Starting quality</source><translation>启动时的画质</translation></message>
+    <message><source>Bitrate</source><translation>码率</translation></message>
+    <message><source>Drag and release to apply.</source><translation>拖动滑块，松开即应用。</translation></message>
+    <message><source>Applying bitrate...</source><translation>正在应用码率…</translation></message>
+    <message><source>The host could not confirm the bitrate change.</source><translation>主机未确认码率更改。</translation></message>
+    <message><source>Update Sunshine to change bitrate during streaming.</source><translation>请更新主机端 Sunshine，以便在串流中调整码率。</translation></message>
+    <message>
+        <source>Privacy screen resolution</source>
+        <translation>隐私屏分辨率</translation>
+    </message>
+    <message>
+        <source>Changes the virtual desktop during this stream.</source>
+        <translation>立即更改当前虚拟桌面的分辨率。</translation>
+    </message>
+    <message><source>Dock</source><translation>返回</translation></message>
+    <message><source>Return to tabs</source><translation>放回标签栏</translation></message>
+    <message>
+        <source>Could not open the display window.</source>
+        <translation>无法打开屏幕窗口。</translation>
+    </message>
+    <message>
+        <source>Sunshine could not confirm the display settings.</source>
+        <translation>Sunshine 未能确认显示设置。</translation>
+    </message>
     <message><source>Display %1</source><translation>显示屏 %1</translation></message>
     <message><source>Display</source><translation>显示屏</translation></message>
     <message><source>Local display</source><translation>本机显示屏</translation></message>
@@ -1551,6 +1609,9 @@
     <message><source>Bottom left</source><translation>左下角</translation></message>
     <message><source>Bottom right</source><translation>右下角</translation></message>
     <message><source>Control center</source><translation>控制中心</translation></message>
+    <message><source>Mouse capture mode</source><translation>鼠标捕捉模式</translation></message>
+    <message><source>Game priority</source><translation>游戏优先</translation></message>
+    <message><source>Desktop priority</source><translation>桌面优先</translation></message>
 </context>
 <context>
     <name>FileConflictDialog</name>
@@ -1704,5 +1765,31 @@
     <message><source>Incomplete data from host: %1</source><translation>主机返回的数据不完整：%1</translation></message>
     <message><source>Transferring</source><translation>传输中</translation></message>
     <message><source>Completed</source><translation>已完成</translation></message>
+</context>
+<context>
+    <name>HostSessionBanner</name>
+    <message><source>Disconnecting…</source><translation>正在断开…</translation></message>
+    <message><source>This PC is being viewed</source><translation>本机被查看中</translation></message>
+    <message><source>1 device is connected to this PC</source><translation>当前有 1 台设备连接此电脑</translation></message>
+    <message><source>%1 devices are connected to this PC</source><translation>当前有 %1 台设备连接此电脑</translation></message>
+    <message><source>Host connection status</source><translation>本机连接状态</translation></message>
+    <message><source>This PC is being controlled</source><translation>本机被控中</translation></message>
+    <message><source>1 device is controlling this PC</source><translation>当前有 1 台设备正在控制此电脑</translation></message>
+    <message><source>%1 devices are controlling this PC</source><translation>当前有 %1 台设备正在控制此电脑</translation></message>
+    <message><source>No devices connected</source><translation>当前没有设备连接此电脑</translation></message>
+    <message><source>Local Sunshine status unavailable</source><translation>暂时无法读取本机 Sunshine 的连接状态</translation></message>
+    <message><source>Disconnect all</source><translation>断开所有远控</translation></message>
+    <message><source>Collapse connection details</source><translation>收起被控详情</translation></message>
+    <message><source>Show connection details</source><translation>展开被控详情</translation></message>
+</context>
+<context>
+    <name>HostSessionsView</name>
+    <message><source>View only</source><translation>仅查看</translation></message>
+    <message><source>Remote control</source><translation>远程控制</translation></message>
+    <message><source>Incoming connections</source><translation>本机远控连接</translation></message>
+    <message><source>Connected devices</source><translation>已连接设备</translation></message>
+    <message><source>Connected for %1</source><translation>连接时长 %1</translation></message>
+    <message><source>Disconnect</source><translation>断开远控</translation></message>
+    <message><source>Disconnect %1</source><translation>断开 %1 的远控连接</translation></message>
 </context>
 </TS>

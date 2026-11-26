@@ -2,6 +2,7 @@
 #include <Limelight.h>
 
 #include <QDebug>
+#include <QJsonDocument>
 #include <QSettings>
 #include <openssl/rand.h>
 #include <QUuid>
@@ -211,7 +212,9 @@ NvHTTP::startApp(QString verb,
                  bool persistGameControllersOnDisconnect,
                  bool requestDisconnectLock,
                  bool requestPrivacyScreen,
-                 bool allowDesktopSharing,
+                 bool createPrivacyDisplay,
+                 QString privacyDesktopSize,
+                 bool allowDesktopSharing, const QString& captureOutput,
                  QByteArray& clipboardToken,
                  bool& clipboardText,
                  bool& clipboardImages,
@@ -222,17 +225,38 @@ NvHTTP::startApp(QString verb,
                  bool& fileDrag,
                  bool& hostMuteAvailable,
                  bool& hostPrivacyAvailable,
-                 quint32& disconnectLockStreamId,
+                 bool& hostDisplayControl,
+                 quint32& bitrateStreamId, quint32& disconnectLockStreamId,
                  bool& disconnectLockEnabled,
-                 QString& rtspSessionUrl)
+                 QString& rtspSessionUrl, bool viewOnly, QString& recoveryToken, bool recovering)
 {
     QString extensions;
+    if (recovering && !recoveryToken.isEmpty()) {
+        Q_ASSERT(verb == "resume");
+        extensions += QStringLiteral("&recoverystream=") + QString::fromLatin1(QUrl::toPercentEncoding(recoveryToken));
+    }
+    if (!captureOutput.isEmpty()) {
+        if (verb != "resume" || isGfe || m_ServerCert.isNull())
+            throw GfeHttpResponseException(409, tr("The original stream must be connected to open another display."));
+        extensions += QStringLiteral("&captureOutput=") + QString::fromLatin1(QUrl::toPercentEncoding(captureOutput));
+    }
     if (requestPrivacyScreen) {
-        if (isGfe || m_ServerCert.isNull() ||
-            getXmlString(getServerInfo(NVLL_ERROR, true), "privacyscreenversion") != "1") {
+        const auto info = isGfe || m_ServerCert.isNull() ? QString() : getServerInfo(NVLL_ERROR, true);
+        if (getXmlString(info, "privacyscreenversion") != "1") {
             throw GfeHttpResponseException(409, tr("Sunshine does not support configuring the privacy screen from Moonlight."));
         }
         extensions += QStringLiteral("&privacyScreen=1");
+        if (!privacyDesktopSize.isEmpty() && getXmlString(info, "displaycontrolversion") != "1")
+            throw GfeHttpResponseException(409, tr("Update Sunshine to configure the virtual display."));
+    }
+    // Sunshine also applies these options when the host itself requires privacy.
+    if (!isGfe && !m_ServerCert.isNull()) {
+        if (viewOnly)
+            extensions += QStringLiteral("&viewOnly=1");
+        if (allowDesktopSharing)
+            extensions += createPrivacyDisplay ? QStringLiteral("&createPrivacyDisplay=1") : QStringLiteral("&createPrivacyDisplay=0");
+        if (!privacyDesktopSize.isEmpty())
+            extensions += QStringLiteral("&privacyDesktopSize=") + QString::fromLatin1(QUrl::toPercentEncoding(privacyDesktopSize));
     }
     if (!isGfe && requestDisconnectLock) {
         extensions += QStringLiteral("&lockOnDisconnect=1");
@@ -288,17 +312,25 @@ NvHTTP::startApp(QString verb,
                                    "&gcmap="+QString::number(gamepadMask)+
                                    "&gcpersist="+QString::number(persistGameControllersOnDisconnect ? 1 : 0)+
                                    extensions + LiGetLaunchUrlQueryParameters(),
-                                   LAUNCH_TIMEOUT_MS);
+                                   recovering ? RESUME_TIMEOUT_MS : LAUNCH_TIMEOUT_MS);
 
     qInfo() << "Launch response:" << response;
 
     // Throws if the request failed
     verifyResponseStatus(response);
+    if (!captureOutput.isEmpty() && getXmlString(response, "captureOutput") != captureOutput)
+        throw GfeHttpResponseException(409, tr("Sunshine did not confirm the requested display."));
     if (requestPrivacyScreen && getXmlString(response, "privacyscreen") != "1")
         throw GfeHttpResponseException(409, tr("Sunshine did not confirm the privacy screen."));
 
+    const auto issuedToken = m_ServerCert.isNull() ? QString() : getXmlString(response, "recoverystream");
+    if (recovering && !recoveryToken.isEmpty() && issuedToken != recoveryToken)
+        throw GfeHttpResponseException(410, QStringLiteral("The original streaming session has ended"));
+    recoveryToken = issuedToken;
     hostMuteAvailable = !m_ServerCert.isNull() && getXmlString(response, "hostmuteversion") == "1";
     hostPrivacyAvailable = !m_ServerCert.isNull() && getXmlString(response, "privacyscreenversion") == "1";
+    hostDisplayControl = !m_ServerCert.isNull() && getXmlString(response, "displaycontrolversion") == "1";
+    bitrateStreamId = m_ServerCert.isNull() ? 0 : getXmlString(response, "bitratesession").toUInt();
     disconnectLockStreamId = m_ServerCert.isNull() ? 0 : getXmlString(response, "disconnectlocksession").toUInt();
     disconnectLockEnabled = getXmlString(response, "lockOnDisconnect") == "1";
     const bool clipboardAccepted = !clipboardToken.isEmpty() && getXmlString(response, "clipboardversion") == "1";
@@ -482,6 +514,45 @@ NvHTTP::getBoxArt(int appId)
     return image;
 }
 
+QImage NvHTTP::getDesktopWallpaper()
+{
+    if (m_ServerCert.isNull() || !httpsPort()) {
+        return {};
+    }
+
+    constexpr qint64 maxWallpaperBytes = 16 * 1024 * 1024;
+    QScopedPointer<QNetworkReply> reply(openConnection(m_BaseUrlHttps, QStringLiteral("desktopwallpaper"),
+                                                      {}, REQUEST_TIMEOUT_MS, NVLL_NONE, nullptr, maxWallpaperBytes));
+    const int status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    if (status == 204) return {};
+    const QtNetworkReplyException invalid(QNetworkReply::ProtocolFailure, QStringLiteral("Invalid desktop wallpaper response"));
+    if (status != 200 ||
+            reply->bytesAvailable() > maxWallpaperBytes) {
+        throw invalid;
+    }
+
+    const auto contentType = reply->header(QNetworkRequest::ContentTypeHeader).toString();
+    const auto format = contentType == QStringLiteral("image/jpeg") ? "jpeg" :
+                        contentType == QStringLiteral("image/png") ? "png" :
+                        contentType == QStringLiteral("image/bmp") ? "bmp" : nullptr;
+    if (!format) {
+        throw invalid;
+    }
+    QImageReader reader(reply.data(), format);
+    reader.setAutoDetectImageFormat(false);
+    reader.setAutoTransform(true);
+    const auto size = reader.size();
+    if (size.isEmpty() || qint64(size.width()) * size.height() > 40'000'000) {
+        throw invalid;
+    }
+    if (size.width() > 1600 || size.height() > 1200) {
+        reader.setScaledSize(size.scaled(1600, 1200, Qt::KeepAspectRatio));
+    }
+    const QImage image = reader.read();
+    if (image.isNull()) throw invalid;
+    return image;
+}
+
 QByteArray
 NvHTTP::getXmlStringFromHex(QString xml,
                             QString tagName)
@@ -580,6 +651,22 @@ void NvHTTP::requestHostLock()
         throw GfeHttpResponseException(status, tr("The host did not accept the lock request."));
 }
 
+QJsonObject NvHTTP::displayControl(const QString& output, const QString& size)
+{
+    if (m_ServerCert.isNull() || !httpsPort())
+        return {};
+    QString args;
+    if (!output.isEmpty())
+        args = "output=" + QString::fromLatin1(QUrl::toPercentEncoding(output));
+    else if (!size.isEmpty())
+        args = "size=" + QString::fromLatin1(QUrl::toPercentEncoding(size));
+    QScopedPointer<QNetworkReply> reply(openConnection(m_BaseUrlHttps, "displaycontrol", args,
+                                                       3500, NVLL_ERROR, "X-Moonlight-Display"));
+    if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() != 200)
+        return {};
+    return QJsonDocument::fromJson(reply->readAll()).object();
+}
+
 bool NvHTTP::requestHostMute(std::optional<bool> desired)
 {
     if (m_ServerCert.isNull() || !httpsPort())
@@ -594,6 +681,17 @@ bool NvHTTP::requestHostMute(std::optional<bool> desired)
     if (status != 200 || (state != "0" && state != "1"))
         throw GfeHttpResponseException(status, tr("The host did not report a mute state."));
     return state == "1";
+}
+
+bool NvHTTP::setStreamBitrate(quint32 streamId, int kbps)
+{
+    if (m_ServerCert.isNull() || !httpsPort() || !streamId)
+        return false;
+    const auto args = QStringLiteral("session=%1&kbps=%2").arg(streamId).arg(kbps);
+    QScopedPointer<QNetworkReply> reply(openConnection(m_BaseUrlHttps, QStringLiteral("bitrate"),
+                                                      args, 5500, NVLL_ERROR, "X-Moonlight-Bitrate"));
+    return reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200 &&
+           reply->readAll() == QByteArray::number(kbps);
 }
 
 bool NvHTTP::setDisconnectLock(quint32 streamId, bool enabled)
@@ -616,7 +714,8 @@ NvHTTP::openConnection(QUrl baseUrl,
                        QString arguments,
                        int timeoutMs,
                        NvLogLevel logLevel,
-                       const char* postHeader)
+                       const char* postHeader,
+                       qint64 maxResponseBytes)
 {
     // Port must be set
     Q_ASSERT(baseUrl.port(0) != 0);
@@ -661,6 +760,17 @@ NvHTTP::openConnection(QUrl baseUrl,
         request.setHeader(QNetworkRequest::ContentTypeHeader, QStringLiteral("application/octet-stream"));
     }
     QNetworkReply* reply = postHeader ? m_Nam->post(request, QByteArray()) : m_Nam->get(request);
+    connect(this, &NvHTTP::cancelRequests, reply, &QNetworkReply::abort);
+    if (maxResponseBytes > 0) {
+        // Leave one extra byte so an oversized response can be detected
+        // without blocking forever on a full read buffer.
+        reply->setReadBufferSize(maxResponseBytes + 1);
+        connect(reply, &QIODevice::readyRead, reply, [reply, maxResponseBytes]() {
+            if (reply->bytesAvailable() > maxResponseBytes) {
+                reply->abort();
+            }
+        });
+    }
     if (baseUrl.scheme() == QStringLiteral("https") && !m_ServerCert.isNull()) {
         connect(reply, &QNetworkReply::encrypted, reply, [reply, pairedHost = m_ServerCert]() {
             if (reply->sslConfiguration().peerCertificate() != pairedHost) {

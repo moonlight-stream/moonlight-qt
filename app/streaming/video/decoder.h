@@ -75,6 +75,7 @@ public:
     virtual QSize getDecoderMaxResolution() = 0;
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
     virtual void renderFrameOnMainThread() = 0;
+    virtual void requestRedraw() {}
     virtual void setHdrMode(bool enabled) = 0;
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info) = 0;
 };

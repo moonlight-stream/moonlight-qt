@@ -4,6 +4,7 @@
 #include <iphlpapi.h>
 #endif
 #include "session.h"
+#include "../../moonlight-common-c/controltransport.h"
 #include "../../moonlight-common-c/inputmode.h"
 #ifdef Q_OS_WIN32
 #include "captioncontrols.h"
@@ -11,9 +12,11 @@
 #include "filetransferprocess.h"
 #include "streamfiledrag.h"
 #include "streamwindow.h"
+#include "streamrecoverywindow.h"
 #endif
 #include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
+#include "backend/localhostsessions.h"
 #include "backend/richpresencemanager.h"
 
 #include <Limelight.h>
@@ -41,8 +44,10 @@
 #define SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE 103
 #define SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED 104
 #define SDL_CODE_GAMECONTROLLER_SET_ADAPTIVE_TRIGGERS 105
+#define SDL_CODE_CONNECTION_TERMINATED 106
 
 #include <openssl/rand.h>
+#include <cerrno>
 
 #include <QtEndian>
 #include <QCoreApplication>
@@ -103,8 +108,28 @@ void Session::clStageStarting(int stage)
     emit s_ActiveSession->stageStarting(description);
 }
 
+static bool isNetworkSocketError(int error)
+{
+#ifdef _WIN32
+    if (error == WSAETIMEDOUT || error == WSAENETDOWN || error == WSAENETUNREACH || error == WSAEHOSTUNREACH ||
+            error == WSAECONNRESET || error == WSAENETRESET || error == WSAECONNREFUSED) {
+        return true;
+    }
+#endif
+    return error == ETIMEDOUT || error == ENETDOWN || error == ENETUNREACH || error == EHOSTUNREACH ||
+           error == ECONNRESET || error == ENETRESET || error == ECONNREFUSED;
+}
+
 void Session::clStageFailed(int stage, int errorCode)
 {
+    if (SDL_AtomicGet(&s_ActiveSession->m_Interrupted)) {
+        return;
+    }
+    if (s_ActiveSession->m_RecoveryAttempt && (stage == STAGE_RTSP_HANDSHAKE || stage == STAGE_CONTROL_STREAM_START) &&
+            isNetworkSocketError(errorCode)) {
+        s_ActiveSession->requestNetworkRecovery();
+        return;
+    }
     // Perform the port test now, while we're on the async connection thread and not blocking the UI.
     unsigned int portFlags = LiGetPortFlagsFromStage(stage);
     if (portFlags)
@@ -122,58 +147,140 @@ void Session::clConnectionTerminated(int errorCode)
     unsigned int portFlags = LiGetPortFlagsFromTerminationErrorCode(errorCode);
     s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
 
-    // Display the termination dialog if this was not intended
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Connection terminated: %d", errorCode);
+    SDL_Event event{};
+    event.type = SDL_USEREVENT;
+    event.user.code = SDL_CODE_CONNECTION_TERMINATED;
+    event.user.data1 = s_ActiveSession;
+    event.user.data2 = reinterpret_cast<void*>(static_cast<intptr_t>(errorCode));
+    SDL_PushEvent(&event);
+}
+
+static constexpr int MaxRecoveryAttempts = 3;
+
+QString Session::recoveryStatus() const
+{
+    return m_RecoveryAttempt ? tr("Restoring connection (attempt %1 of %2)…").arg(m_RecoveryAttempt).arg(MaxRecoveryAttempts) : QString();
+}
+
+void Session::requestNetworkRecovery(bool stableStream)
+{
+    m_NextReconnect = stableStream ? 1 : m_RecoveryAttempt + 1;
+}
+
+void Session::displayHostDisconnect()
+{
+    emit displayDisconnectError(m_ViewOnly ? tr("Remote viewing disconnected") : tr("Connection terminated"),
+                                tr("The host ended this session. Connect again if you want to continue."), false);
+}
+
+bool Session::canResume(NvHTTP& http, const NvComputer& computer)
+{
+    connect(this, &Session::recoveryCancelled, &http, &NvHTTP::cancelRequests);
+    if (SDL_AtomicGet(&m_Interrupted)) return false;
+    const auto info = http.getServerInfo(NvHTTP::NVLL_ERROR, true);
+    if (SDL_AtomicGet(&m_Interrupted)) return false;
+    if (NvHTTP::getXmlString(info, "uniqueid").compare(computer.uuid, Qt::CaseInsensitive) != 0 ||
+            NvHTTP::getXmlString(info, "PairStatus") != "1") {
+        emit displayDisconnectError(tr("Could not reconnect"), tr("Open the device list and verify the host pairing."), true);
+        return false;
+    }
+    if (NvHTTP::getCurrentGame(info) != m_App.id ||
+            (!m_RecoveryToken.isEmpty() && NvHTTP::getXmlString(info, "recoverystream") != m_RecoveryToken)) {
+        displayHostDisconnect();
+        return false;
+    }
+    return true;
+}
+
+void Session::confirmNetworkRecovery()
+{
+    if (!m_NextReconnect || !*m_NextReconnect || SDL_AtomicGet(&m_Interrupted) || m_ShouldExit) return;
+    if (m_AsyncConnectionSuccess && !m_RecoveryToken.isEmpty()) {
+        // A host-side ping timeout can send a close, and an intentional close
+        // can be lost. Verify the session before showing the first retry.
+        try {
+            QReadLocker lock(&m_Computer->lock);
+            const NvComputer computer(*m_Computer);
+            lock.unlock();
+            NvHTTP http(&computer);
+            if (!canResume(http, computer)) {
+                m_NextReconnect.reset();
+                return;
+            }
+        } catch (const QtNetworkReplyException&) {
+            // The host is unreachable. Recheck the same visit before each resume.
+        } catch (const GfeHttpResponseException& e) {
+            m_NextReconnect.reset();
+            emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
+            return;
+        }
+    }
+    if (*m_NextReconnect > MaxRecoveryAttempts) {
+        m_NextReconnect.reset();
+        emit displayDisconnectError(tr("Could not reconnect"), tr("Check your network and the host, then connect again."), true);
+    } else {
+        qInfo() << "Scheduling network recovery attempt" << *m_NextReconnect;
+    }
+}
+
+void Session::handleConnectionTermination(int errorCode, bool stableStream)
+{
+    m_UnexpectedTermination = errorCode != ML_ERROR_GRACEFUL_TERMINATION;
+    const bool socketError = isNetworkSocketError(errorCode);
+    // A failed ENet send may surface the last nonblocking socket error.
+    bool wouldBlock = errorCode == EAGAIN || errorCode == EWOULDBLOCK;
+#ifdef _WIN32
+    wouldBlock = wouldBlock || errorCode == WSAEWOULDBLOCK;
+#endif
+    if (errorCode == -1 || socketError || wouldBlock || errorCode == ML_ERROR_NO_VIDEO_FRAME ||
+            errorCode == ML_ERROR_NO_VIDEO_TRAFFIC) {
+        const auto cause = MlGetControlDisconnect();
+        if (cause == MlControlClosedByPeer && m_RecoveryToken.isEmpty()) {
+            displayHostDisconnect();
+            return;
+        }
+        if (m_CaptureOutput.isEmpty() && (cause != MlControlStillConnected || socketError ||
+                errorCode == ML_ERROR_NO_VIDEO_FRAME || (m_RecoveryAttempt && errorCode == ML_ERROR_NO_VIDEO_TRAFFIC))) {
+            requestNetworkRecovery(stableStream);
+            return;
+        }
+    }
+
     switch (errorCode) {
     case ML_ERROR_GRACEFUL_TERMINATION:
+        if (m_App.isDesktop()) displayHostDisconnect();
         break;
 
     case ML_ERROR_NO_VIDEO_TRAFFIC:
-        s_ActiveSession->m_UnexpectedTermination = true;
-
         char ports[128];
-        SDL_assert(portFlags != 0);
-        LiStringifyPortFlags(portFlags, ", ", ports, sizeof(ports));
-        emit s_ActiveSession->displayLaunchError(tr("No video received from host.") + "\n\n"+
-                                                 tr("Check your firewall and port forwarding rules for port(s): %1").arg(ports));
+        LiStringifyPortFlags(LiGetPortFlagsFromTerminationErrorCode(errorCode), ", ", ports, sizeof(ports));
+        emit displayLaunchError(tr("No video received from host.") + "\n\n" +
+                                tr("Check your firewall and port forwarding rules for port(s): %1").arg(ports));
         break;
 
     case ML_ERROR_NO_VIDEO_FRAME:
-        s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError(tr("Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection."));
+        emit displayLaunchError(tr("Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection."));
         break;
 
     case ML_ERROR_PROTECTED_CONTENT:
     case ML_ERROR_UNEXPECTED_EARLY_TERMINATION:
-        s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError(tr("Something went wrong on your host PC when starting the stream.") + "\n\n" +
-                                                 tr("Make sure you don't have any DRM-protected content open on your host PC. You can also try restarting your host PC."));
+        emit displayLaunchError(tr("Something went wrong on your host PC when starting the stream.") + "\n\n" +
+                                tr("Make sure you don't have any DRM-protected content open on your host PC. You can also try restarting your host PC."));
         break;
 
     case ML_ERROR_FRAME_CONVERSION:
-        s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError(tr("The host PC reported a fatal video encoding error.") + "\n\n" +
-                                                 tr("Try disabling HDR mode, changing the streaming resolution, or changing your host PC's display resolution."));
+        emit displayLaunchError(tr("The host PC reported a fatal video encoding error.") + "\n\n" +
+                                tr("Try disabling HDR mode, changing the streaming resolution, or changing your host PC's display resolution."));
         break;
 
     default:
-        s_ActiveSession->m_UnexpectedTermination = true;
-
         // We'll assume large errors are hex values
-        bool hexError = qAbs(errorCode) > 1000;
-        emit s_ActiveSession->displayLaunchError(tr("Connection terminated") + "\n\n" +
-                                                 tr("Error code: %1").arg(errorCode, hexError ? 8 : 0, hexError ? 16 : 10, QChar('0')));
+        const bool hexError = errorCode < -1000 || errorCode > 1000;
+        const QString heading = m_ViewOnly ? tr("Remote viewing disconnected") : tr("Connection terminated");
+        emit displayDisconnectError(heading, tr("Error code: %1").arg(errorCode, hexError ? 8 : 0, hexError ? 16 : 10, QChar('0')), true);
         break;
     }
-
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                 "Connection terminated: %d",
-                 errorCode);
-
-    // Push a quit event to the main loop
-    SDL_Event event;
-    event.type = SDL_QUIT;
-    event.quit.timestamp = SDL_GetTicks();
-    SDL_PushEvent(&event);
 }
 
 void Session::clLogMessage(const char* format, ...)
@@ -599,6 +706,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
 
 Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences, bool viewOnly)
     : m_ViewOnly(viewOnly),
+      m_CaptureOutput(qEnvironmentVariable("MOONLIGHT_CAPTURE_OUTPUT")),
       m_Preferences(preferences ? preferences : StreamingPreferences::get()),
       m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
       m_Computer(computer),
@@ -620,9 +728,21 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_AudioSampleCount(0),
       m_DropAudioEndTime(0)
 {
+    // A separate stream window may have changed the launcher's saved mode.
+    // Explicit preferences can carry a command-line override.
+    if (!preferences)
+        m_Preferences->refreshAbsoluteMouseMode();
+#ifdef Q_OS_WIN32
+    connect(this, &Session::sessionFinished, this, [this] { m_RecoveryWindow.reset(); });
+#endif
 }
 
 bool Session::launchInWindow() const
+{
+    return launchDisplayWindow({}, {}, 0);
+}
+
+bool Session::launchDisplayWindow(const QString& output, const QString& group, quintptr root, const QString& outputList) const
 {
     QProcess child;
     child.setProgram(QCoreApplication::applicationFilePath());
@@ -639,8 +759,14 @@ bool Session::launchInWindow() const
             environment.insert(QStringLiteral("MOONLIGHT_WINDOW_HOST_PORT"), QString::number(m_Computer->activeAddress.port()));
         }
     }
+    environment.insert(QStringLiteral("MOONLIGHT_CAPTURE_OUTPUT"), output);
+    environment.insert(QStringLiteral("MOONLIGHT_DISPLAY_GROUP"), group);
+    environment.insert(QStringLiteral("MOONLIGHT_DISPLAY_ROOT"), QString::number(root));
+    environment.insert(QStringLiteral("MOONLIGHT_DISPLAY_OUTPUTS"), outputList);
     child.setProcessEnvironment(environment);
 #ifdef Q_OS_WIN32
+    if (!output.isEmpty())
+        return StreamWindow::launchOrActivate(child, StreamWindow::outputKey(group, output));
     return StreamWindow::launchOrActivate(child, m_Computer->uuid);
 #else
     return child.startDetached();
@@ -738,7 +864,7 @@ bool Session::initialize(QQuickWindow* qtWindow)
     m_VideoCallbacks.setup = drSetup;
 
     m_StreamConfig.fps = m_Preferences->fps;
-    m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
+    m_StreamConfig.bitrate = m_BitrateOverrideKbps ? m_BitrateOverrideKbps : m_Preferences->bitrateKbps;
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
@@ -776,10 +902,19 @@ bool Session::initialize(QQuickWindow* qtWindow)
         break;
     }
 
+    {
+        QReadLocker lock(&m_Computer->lock);
+        m_LocalHostAudio = LocalHostSessions::isLocalAudioHost(m_Computer->audioHostId);
+    }
+    if (m_LocalHostAudio)
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Using host audio directly for this same-desktop stream");
+
     LiInitializeAudioCallbacks(&m_AudioCallbacks);
-    m_AudioCallbacks.init = arInit;
-    m_AudioCallbacks.cleanup = arCleanup;
-    m_AudioCallbacks.decodeAndPlaySample = arDecodeAndPlaySample;
+    if (playsStreamAudio()) {
+        m_AudioCallbacks.init = arInit;
+        m_AudioCallbacks.cleanup = arCleanup;
+        m_AudioCallbacks.decodeAndPlaySample = arDecodeAndPlaySample;
+    }
     m_AudioCallbacks.capabilities = getAudioRendererCapabilities(m_StreamConfig.audioConfiguration);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1241,7 +1376,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     }
 
     // Test if audio works at the specified audio configuration
-    bool audioTestPassed = testAudio(m_StreamConfig.audioConfiguration);
+    bool audioTestPassed = !playsStreamAudio() || testAudio(m_StreamConfig.audioConfiguration);
 
     // Gracefully degrade to stereo if surround sound doesn't work
     if (!audioTestPassed && CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration) > 2) {
@@ -1328,10 +1463,12 @@ private:
 
     void run() override
     {
+        m_Session->confirmNetworkRecovery();
         // Only quit the running app if our session terminated gracefully
         bool shouldQuit =
-                !m_Session->m_ViewOnly &&
+                m_Session->m_CaptureOutput.isEmpty() && !m_Session->m_ViewOnly &&
                 !m_Session->m_UnexpectedTermination &&
+                !(m_Session->m_RecoveryAttempt && SDL_AtomicGet(&m_Session->m_Interrupted)) &&
                 !m_Session->m_DisconnectOnly &&
                 (m_Session->m_ExplicitHostQuit ||
                  (m_Session->m_Preferences->quitAppAfter && !m_Session->m_App.isDesktop()));
@@ -1340,7 +1477,7 @@ private:
         if (shouldQuit) {
             emit m_Session->quitStarting();
         }
-        else if (!m_Session->m_PrivacyReconnectRequested) {
+        else if (!m_Session->m_NextReconnect || SDL_AtomicGet(&m_Session->m_Interrupted) || m_Session->m_ShouldExit) {
             emit m_Session->sessionFinished(m_Session->m_PortTestResults);
         }
 
@@ -1795,6 +1932,13 @@ public:
 // Called in a non-main thread
 bool Session::startConnectionAsync()
 {
+    // Check immediately on the first attempt, then wait two and four seconds.
+    const int retryDelayMs = m_RecoveryAttempt > 1 ? (1 << (m_RecoveryAttempt - 1)) * 1000 : 0;
+    for (int waited = 0; waited < retryDelayMs; waited += 100) {
+        if (SDL_AtomicGet(&m_Interrupted)) return false;
+        QThread::msleep(100);
+    }
+    if (SDL_AtomicGet(&m_Interrupted)) return false;
     // Polling can update the host state and active address while we connect.
     const NvComputer computer = [this]() {
         QReadLocker lock(&m_Computer->lock);
@@ -1803,11 +1947,11 @@ bool Session::startConnectionAsync()
 
     // The selected app may have changed since the launcher probed the host.
     if (m_ViewOnly && (!m_App.isDesktop() ||
-            (computer.currentGameId && computer.currentGameId != m_App.id))) {
+            (!m_RecoveryAttempt && computer.currentGameId && computer.currentGameId != m_App.id))) {
         emit displayLaunchError(QObject::tr("Viewing mode requires the desktop to be available."));
         return false;
     }
-    if (computer.currentGameId != 0 && computer.currentGameId != m_App.id) {
+    if (!m_RecoveryAttempt && computer.currentGameId != 0 && computer.currentGameId != m_App.id) {
         emit displayLaunchError(tr("Another application is running on the host."));
         return false;
     }
@@ -1836,7 +1980,7 @@ bool Session::startConnectionAsync()
     }
 
     QString rtspSessionUrl;
-    const bool privacyScreen = m_Preferences->privacyScreenForHost(computer.uuid);
+    const bool privacyScreen = m_CaptureOutput.isEmpty() && m_Preferences->privacyScreenForHost(computer.uuid);
     QElapsedTimer connectionTimer;
     connectionTimer.start();
 
@@ -1844,6 +1988,11 @@ bool Session::startConnectionAsync()
     try {
         NvHTTP http(&computer);
         bool resume = computer.currentGameId != 0;
+        if (m_RecoveryAttempt) {
+            if (!canResume(http, computer)) return false;
+            // Unattended recovery may only resume the original application.
+            resume = true;
+        }
         emit requestingHostSession(resume);
 
         for (int attempt = 0; ; ++attempt) {
@@ -1855,20 +2004,23 @@ bool Session::startConnectionAsync()
                               computer.isNvidiaServerSoftware,
                               m_App.id, &m_StreamConfig,
                               !m_ViewOnly && enableGameOptimizations,
-                              m_ViewOnly || m_Preferences->playAudioOnHost,
-                              m_ViewOnly ? 0 : m_InputHandler->getAttachedGamepadMask(),
-                              !m_ViewOnly && !m_Preferences->multiController,
-                              !m_ViewOnly && m_Preferences->lockHostOnDisconnect(),
+                              m_LocalHostAudio || m_ViewOnly || m_Preferences->playAudioOnHost,
+                              m_ViewOnly || !m_CaptureOutput.isEmpty() ? 0 : m_InputHandler->getAttachedGamepadMask(),
+                              m_CaptureOutput.isEmpty() && !m_ViewOnly && !m_Preferences->multiController,
+                              m_CaptureOutput.isEmpty() && !m_ViewOnly && m_Preferences->lockHostOnDisconnect(),
                               privacyScreen,
-                              !m_ViewOnly,
+                              !m_ViewOnly && m_Preferences->createPrivacyDisplayForHost(computer.uuid),
+                              m_ViewOnly ? QString() : m_Preferences->privacyDesktopSizeForHost(computer.uuid),
+                              !m_ViewOnly && m_CaptureOutput.isEmpty(), m_CaptureOutput,
                               m_ClipboardToken, m_ClipboardText, m_ClipboardImages, m_ClipboardFiles, m_ClipboardResumable, m_ClipboardMultitask, m_FileBrowser, m_FileDrag,
-                              m_HostMuteAvailable, m_HostPrivacyAvailable,
-                              m_DisconnectLockStreamId, m_DisconnectLockEnabled, rtspSessionUrl);
+                              m_HostMuteAvailable, m_HostPrivacyAvailable, m_HostDisplayControl,
+                              m_BitrateStreamId, m_DisconnectLockStreamId, m_DisconnectLockEnabled, rtspSessionUrl, m_ViewOnly,
+                              m_RecoveryToken, m_RecoveryAttempt > 0);
                 m_StandaloneFilesAvailable = m_FileBrowser && computer.standaloneFilesAvailable;
                 break;
             } catch (const GfeHttpResponseException& e) {
                 const QByteArray message = e.getStatusMessage();
-                if (m_PrivacyReconnect && reconnectRetries < 8 &&
+                if (m_Reconnect && reconnectRetries < 8 &&
                     ((e.getStatusCode() == 409 && message == "Privacy screen requires an exclusive streaming session") ||
                      (e.getStatusCode() == 503 && message == "Another streaming handshake is in progress"))) {
                     ++reconnectRetries;
@@ -1876,7 +2028,7 @@ bool Session::startConnectionAsync()
                     --attempt;
                     continue;
                 }
-                if (attempt != 0 || computer.isNvidiaServerSoftware) {
+                if (m_RecoveryAttempt || attempt != 0 || computer.isNvidiaServerSoftware) {
                     throw;
                 }
 
@@ -1908,7 +2060,7 @@ bool Session::startConnectionAsync()
                 }
             } catch (const QtNetworkReplyException& e) {
                 // A refused TCP connection cannot have created a host session.
-                if (attempt != 0 || e.getError() != QNetworkReply::ConnectionRefusedError) {
+                if (m_RecoveryAttempt || attempt != 0 || e.getError() != QNetworkReply::ConnectionRefusedError) {
                     throw;
                 }
                 qInfo() << "Retrying after the host refused the connection";
@@ -1917,7 +2069,11 @@ bool Session::startConnectionAsync()
         }
     } catch (const GfeHttpResponseException& e) {
         const QByteArray message(e.getStatusMessage());
-        if (e.getStatusCode() == 503 && message.startsWith("Privacy screen unavailable.")) {
+        if (SDL_AtomicGet(&m_Interrupted)) return false;
+        if (m_RecoveryAttempt && (e.getStatusCode() == 410 || (e.getStatusCode() == 503 && message == "No running app to resume"))) {
+            displayHostDisconnect();
+        }
+        else if (e.getStatusCode() == 503 && message.startsWith("Privacy screen unavailable.")) {
             const QString explanation = message.contains("Windows display settings are temporarily unavailable")
                 ? tr("Windows is blocking display changes. Unlock %1, then try privacy screen again.").arg(computer.name)
                 : tr("Sunshine could not switch to the virtual display on %1. If the host is locked, unlock it and try again. If it is already unlocked, check Sunshine's virtual display output.").arg(computer.name);
@@ -1928,7 +2084,16 @@ bool Session::startConnectionAsync()
         }
         return false;
     } catch (const QtNetworkReplyException& e) {
-        emit displayLaunchError(e.toQString());
+        if (SDL_AtomicGet(&m_Interrupted)) return false;
+        if (m_RecoveryAttempt && (e.getError() == QNetworkReply::TimeoutError ||
+                e.getError() == QNetworkReply::ConnectionRefusedError || e.getError() == QNetworkReply::RemoteHostClosedError ||
+                e.getError() == QNetworkReply::HostNotFoundError || e.getError() == QNetworkReply::TemporaryNetworkFailureError ||
+                e.getError() == QNetworkReply::NetworkSessionFailedError)) {
+            qInfo() << "Network recovery failed:" << e.toQString();
+            requestNetworkRecovery();
+        } else {
+            emit displayLaunchError(e.toQString());
+        }
         return false;
     }
 
@@ -2013,7 +2178,7 @@ bool Session::startConnectionAsync()
     // had if the host supported YUV444 (though obviously with 4:2:0 subsampling).
     // If the user has adjusted the bitrate from default, we'll assume they really wanted
     // that value and not second guess them.
-    if (m_Preferences->enableYUV444 &&
+    if (!m_BitrateOverrideKbps && m_Preferences->enableYUV444 &&
         !(m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_YUV444) &&
         m_StreamConfig.bitrate == StreamingPreferences::getDefaultBitrate(m_StreamConfig.width,
                                                                           m_StreamConfig.height,
@@ -2039,6 +2204,25 @@ bool Session::startConnectionAsync()
     emit connectionStarted();
     return true;
 }
+
+void Session::recordDecodedFrame(uint64_t delayUs)
+{
+    SDL_AtomicSet(&m_FrameDelayMs, static_cast<int>((delayUs + 500) / 1000));
+    SDL_AtomicAdd(&m_DecodedFrames, 1);
+}
+
+#ifdef Q_OS_WIN32
+void Session::notifyDisplayFramePresented()
+{
+    if (SDL_AtomicGet(&m_DisplayFrameRequested) && SDL_AtomicCAS(&m_DisplayFrameRequested, 1, 0)) {
+        SDL_Event event{};
+        event.type = SDL_USEREVENT;
+        event.user.code = CaptionControls::DisplayFramePresented;
+        event.user.data1 = this;
+        if (SDL_PushEvent(&event) != 1) SDL_AtomicSet(&m_DisplayFrameRequested, 1);
+    }
+}
+#endif
 
 void Session::flushWindowEvents()
 {
@@ -2096,7 +2280,10 @@ void Session::start()
 
 void Session::interrupt()
 {
+    SDL_AtomicSet(&m_Interrupted, 1);
     SDL_AtomicSet(&m_ConnectionEnding, 1);
+    emit recoveryCancelled();
+    if (s_ActiveSession != this) return;
     // Stop any connection in progress
     LiInterruptConnection();
 
@@ -2107,13 +2294,31 @@ void Session::interrupt()
     SDL_PushEvent(&event);
 }
 
-Session* Session::takePrivacyReconnect()
+bool Session::recoveringInPlace() const
 {
-    if (!std::exchange(m_PrivacyReconnectRequested, false))
+#ifdef Q_OS_WIN32
+    return bool(m_RecoveryWindow);
+#else
+    return false;
+#endif
+}
+
+Session* Session::takeReconnect()
+{
+    const auto next = std::exchange(m_NextReconnect, std::nullopt);
+    if (!next || SDL_AtomicGet(&m_Interrupted) || m_ShouldExit)
         return nullptr;
     auto* session = new Session(m_Computer, m_App, m_Preferences, m_ViewOnly);
-    session->m_PrivacyReconnect = true;
+    session->m_Reconnect = true;
+    session->m_RecoveryAttempt = *next;
+    session->m_RecoveryToken = m_RecoveryToken;
+    session->m_BitrateOverrideKbps = m_BitrateOverrideKbps;
+    session->m_InitialBitrateKbps = m_InitialBitrateKbps;
 #ifdef Q_OS_WIN32
+    if (session->m_RecoveryAttempt && m_RecoveryWindow) {
+        session->m_RecoveryWindow = std::move(m_RecoveryWindow);
+        session->m_RecoveryWindow->showAttempt(session, session->recoveryStatus());
+    }
     connect(session, &Session::sessionFinished, session, [] { StreamWindow::release(); });
 #endif
     return session;
@@ -2190,15 +2395,17 @@ void Session::exec()
 
 #ifdef Q_OS_WIN32
     defaultWindowFlags |= SDL_WINDOW_HIDDEN;
+    if (m_RecoveryWindow) {
+        m_Window = m_RecoveryWindow->window();
+        m_IsFullScreen = (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) != 0;
+    }
 #endif
     if (m_ViewOnly)
         windowName = tr("%1 — View only").arg(m_Computer->name).toStdString();
-    m_Window = SDL_CreateWindow(windowName.c_str(),
-                                x,
-                                y,
-                                width,
-                                height,
-                                defaultWindowFlags | StreamUtils::getPlatformWindowFlags());
+    if (!m_Window) {
+        m_Window = SDL_CreateWindow(windowName.c_str(), x, y, width, height,
+                                    defaultWindowFlags | StreamUtils::getPlatformWindowFlags());
+    }
     if (!m_Window) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "SDL_CreateWindow() failed with platform flags: %s",
@@ -2251,18 +2458,24 @@ void Session::exec()
     SDL_VERSION(&wmInfo.version);
     if (SDL_GetWindowWMInfo(m_Window, &wmInfo)) {
         applyLightWindowCaption(wmInfo.info.win.window);
-        StreamWindow::setConnectedWindow(wmInfo.info.win.window);
+        if (!m_RecoveryWindow) StreamWindow::setConnectedWindow(wmInfo.info.win.window);
     }
-    SDL_ShowWindow(m_Window);
+    if (m_CaptureOutput.isEmpty() && !m_RecoveryWindow) {
+        SDL_ShowWindow(m_Window);
+    } else {
+        // Retained and hidden windows get no new SHOWN event to start the decoder.
+        if (m_RecoveryWindow) SDL_AtomicSet(&m_DisplayFrameRequested, 1);
+        SDL_Event reset{};
+        reset.type = SDL_RENDER_DEVICE_RESET;
+        SDL_PushEvent(&reset);
+    }
 #endif
 
     // Update the window display mode based on our current monitor
     // for if/when we enter full-screen mode.
-    updateOptimalWindowDisplayMode();
-
-    // Enter full screen if requested
-    if (m_IsFullScreen) {
-        SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
+    if (!recoveringInPlace()) {
+        updateOptimalWindowDisplayMode();
+        if (m_IsFullScreen) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
 
     bool needsFirstEnterCapture = false;
@@ -2272,7 +2485,7 @@ void Session::exec()
     // We still capture in windowed absolute mode because it doesn't
     // constrain the motion of the cursor. This allows the user to
     // easily reposition or resize the window.
-    if (m_IsFullScreen || m_Preferences->absoluteMouseMode) {
+    if (m_CaptureOutput.isEmpty() && (m_IsFullScreen || m_Preferences->absoluteMouseMode)) {
         // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
         // event where it seems to work consistently on GNOME. For other platforms,
         // especially where SDL may call SDL_RecreateWindow(), we must only capture
@@ -2328,9 +2541,13 @@ void Session::exec()
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
     Uint32 lastTitleUpdate = SDL_GetTicks();
+    const Uint32 connectedAt = lastTitleUpdate;
 #ifdef Q_OS_WIN32
     MIB_IF_ROW2 previousTraffic{};
-    CaptionControls caption(m_Window, *m_Preferences, *m_InputHandler, [this]() -> std::future<QString> {
+    if (!m_InitialBitrateKbps)
+        m_InitialBitrateKbps = m_StreamConfig.bitrate;
+    CaptionControls caption(m_Window, *m_Preferences, *m_InputHandler,
+                           m_StreamConfig.bitrate, m_InitialBitrateKbps, [this]() -> std::future<QString> {
         if (m_ViewOnly || SDL_AtomicGet(&m_ConnectionEnding)) return {};
         QReadLocker lock(&m_Computer->lock);
         auto request = std::make_shared<std::packaged_task<QString()>>(
@@ -2361,7 +2578,7 @@ void Session::exec()
         auto result = request->get_future();
         QThreadPool::globalInstance()->start([request] { (*request)(); });
         return result;
-    }, m_HostMuteAvailable, m_Computer->uuid, m_HostPrivacyAvailable,
+    }, m_HostMuteAvailable, m_Computer->uuid, m_HostPrivacyAvailable && m_CaptureOutput.isEmpty(),
        m_DisconnectLockEnabled, m_DisconnectLockStreamId ? CaptionControls::DisconnectLockRequest(
            [this](bool enabled) -> std::future<std::optional<bool>> {
                if (m_ViewOnly || SDL_AtomicGet(&m_ConnectionEnding)) return {};
@@ -2379,7 +2596,50 @@ void Session::exec()
                auto result = request->get_future();
                QThreadPool::globalInstance()->start([request] { (*request)(); });
                return result;
-           }) : CaptionControls::DisconnectLockRequest{});
+           }) : CaptionControls::DisconnectLockRequest{},
+       m_HostDisplayControl ? CaptionControls::DisplayRequest(
+           [this](QString output, QString size) {
+               QReadLocker lock(&m_Computer->lock);
+               auto task = std::make_shared<std::packaged_task<QJsonObject()>>(
+                   [address = m_Computer->activeAddress, port = m_Computer->activeHttpsPort,
+                    cert = m_Computer->serverCert, output, size] {
+                       try {
+                           return NvHTTP(address, port, cert, true).displayControl(output, size);
+                       } catch (const std::exception& error) {
+                           qWarning() << "Display control request failed:" << error.what();
+                           return QJsonObject{};
+                       }
+                   });
+               auto result = task->get_future();
+               QThreadPool::globalInstance()->start([task] { (*task)(); });
+               return result;
+           }) : CaptionControls::DisplayRequest{},
+       [this](const QString& output, const QString& group, quintptr root, const QString& outputList) {
+           return launchDisplayWindow(output, group, root, outputList);
+       }, m_BitrateStreamId ? CaptionControls::BitrateRequest([this](int kbps) {
+           QReadLocker lock(&m_Computer->lock);
+           auto task = std::make_shared<std::packaged_task<bool()>>(
+               [address = m_Computer->activeAddress, port = m_Computer->activeHttpsPort,
+                cert = m_Computer->serverCert, streamId = m_BitrateStreamId, kbps] {
+                   try {
+                       return NvHTTP(address, port, cert, true).setStreamBitrate(streamId, kbps);
+                   } catch (const std::exception& error) {
+                       qWarning() << "Stream bitrate request failed:" << error.what();
+                       return false;
+                   }
+               });
+           auto result = task->get_future();
+           QThreadPool::globalInstance()->start([task] { (*task)(); });
+           return result;
+       }) : CaptionControls::BitrateRequest{}, [this](bool requestKeyframe) {
+           // A native window message can arrive inside a decoder reset. Queue
+           // the redraw behind pending resize/reset events on the SDL thread.
+           SDL_Event redraw{};
+           redraw.type = SDL_USEREVENT;
+           redraw.user.code = CaptionControls::RedrawDisplay;
+           redraw.user.data1 = reinterpret_cast<void*>(quintptr(requestKeyframe));
+           if (SDL_PushEvent(&redraw) != 1) SDL_AtomicSet(&m_DisplayFrameRequested, 1);
+       });
     FileTransferProcess::Window fileTransferWindow;
     QUrl clipboardHost;
     clipboardHost.setScheme(QStringLiteral("https"));
@@ -2492,7 +2752,7 @@ void Session::exec()
                     ratesValid ? QStringLiteral("%1 kB/s").arg((traffic.OutOctets-previousTraffic.OutOctets)/elapsed) : missing,
                     ratesValid ? QStringLiteral("%1 kB/s").arg((traffic.InOctets-previousTraffic.InOctets)/elapsed) : missing,
                     loss >= 0 && frames ? QStringLiteral("%1%").arg(loss/100.0,0,'f',2) : missing,
-                    QStringLiteral("%1 × %2").arg(m_StreamConfig.width).arg(m_StreamConfig.height)
+                    QStringLiteral("%1 × %2").arg(m_ActiveVideoWidth).arg(m_ActiveVideoHeight)
                 });
                 previousTraffic = traffic;
                 haveTraffic = valid;
@@ -2500,9 +2760,11 @@ void Session::exec()
                 if (windowed) title += "  |  " + metrics.join(QStringLiteral(" | ")).toStdString();
             }
 #ifdef Q_OS_WIN32
-            caption.update();
+            if (playsStreamAudio() && m_Preferences->muteOnFocusLoss)
+                m_AudioMuted = SDL_GetKeyboardFocus() != m_Window && !caption.groupHasFocus();
+            caption.update(false);
 #endif
-            if (title != SDL_GetWindowTitle(m_Window)) {
+            if (!recoveringInPlace() && title != SDL_GetWindowTitle(m_Window)) {
                 SDL_SetWindowTitle(m_Window, title.c_str());
             }
         }
@@ -2543,6 +2805,11 @@ void Session::exec()
         }
 #endif
 #ifdef Q_OS_WIN32
+        // Local input during the outage must not reach the restored host.
+        if (m_RecoveryWindow && event.type >= SDL_KEYDOWN && event.type < SDL_CLIPBOARDUPDATE &&
+            event.type != SDL_JOYDEVICEADDED && event.type != SDL_JOYDEVICEREMOVED &&
+            event.type != SDL_CONTROLLERDEVICEADDED && event.type != SDL_CONTROLLERDEVICEREMOVED)
+            continue;
         if (fileDrag && ((event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) ||
                          event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_KEYDOWN || event.type == SDL_FINGERDOWN)) {
             fileDrag->cancelGesture();
@@ -2570,18 +2837,33 @@ void Session::exec()
         // mouse, controller, joystick, touch, or gesture events to host input.
         if (m_ViewOnly && event.type >= SDL_MOUSEMOTION && event.type < SDL_CLIPBOARDUPDATE)
             continue;
+        if (!m_CaptureOutput.isEmpty() && event.type >= SDL_JOYAXISMOTION && event.type < SDL_FINGERDOWN)
+            continue;
         switch (event.type) {
         case SDL_DROPFILE:
         case SDL_DROPTEXT:
             SDL_free(event.drop.file);
             break;
         case SDL_QUIT:
+#ifdef Q_OS_WIN32
+            if (!SDL_AtomicGet(&m_ConnectionEnding)) caption.endDisplayGroup();
+#endif
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Quit event received");
             goto DispatchDeferredCleanup;
 
         case SDL_USEREVENT:
             switch (event.user.code) {
+            case SDL_CODE_CONNECTION_TERMINATED:
+                if (event.user.data1 != this) break;
+                if (!SDL_AtomicGet(&m_Interrupted) && !m_ShouldExit) {
+                    handleConnectionTermination(static_cast<int>(reinterpret_cast<intptr_t>(event.user.data2)),
+                                                SDL_GetTicks() - connectedAt >= 30000);
+#ifdef Q_OS_WIN32
+                    if (m_NextReconnect) m_BitrateOverrideKbps = caption.bitrateKbps();
+#endif
+                }
+                goto DispatchDeferredCleanup;
 #ifdef Q_OS_WIN32
             case Session::ToggleStreamHud:
                 caption.toggle();
@@ -2590,16 +2872,44 @@ void Session::exec()
                 m_InputHandler->raiseAllKeys();
                 caption.requestLock();
                 break;
+            case CaptionControls::DisplayFramePresented:
+                if (event.user.data1 != this) break;
+                if (m_RecoveryWindow) {
+                    // Keep the still visible until the compositor has the new frame.
+                    DwmFlush();
+                    m_RecoveryWindow->releaseToStream();
+                    m_RecoveryWindow.reset();
+                    SDL_SetWindowTitle(m_Window, windowName.c_str());
+                    if (SDL_GetWindowWMInfo(m_Window, &wmInfo))
+                        StreamWindow::setConnectedWindow(wmInfo.info.win.window);
+                    if (needsPostDecoderCreationCapture && SDL_GetKeyboardFocus() == m_Window)
+                        m_InputHandler->setCaptureActive(true);
+                    needsPostDecoderCreationCapture = false;
+                }
+                caption.framePresented();
+                break;
+            case CaptionControls::RedrawDisplay:
+                SDL_AtomicSet(&m_DisplayFrameRequested, 1);
+                if (m_VideoDecoder) m_VideoDecoder->requestRedraw();
+                if (event.user.data1) LiRequestIdrFrame();
+                break;
             case CaptionControls::Fullscreen:
                 if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) toggleFullscreen();
                 caption.update();
                 break;
+            case CaptionControls::GameMouse:
+            case CaptionControls::DesktopMouse:
+                m_InputHandler->setAbsoluteMouseMode(event.user.code == CaptionControls::DesktopMouse);
+                updateFullscreenControls();
+                break;
             case CaptionControls::PrivacyReconnect:
+                m_BitrateOverrideKbps = caption.bitrateKbps();
                 m_DisconnectOnly = true;
-                m_PrivacyReconnectRequested = true;
+                m_NextReconnect = 0;
                 goto DispatchDeferredCleanup;
             case CaptionControls::Disconnect:
                 m_DisconnectOnly = true;
+                caption.endDisplayGroup(true);
                 goto DispatchDeferredCleanup;
             case CaptionControls::FileTransfer:
                 if (m_ViewOnly) break;
@@ -2653,13 +2963,21 @@ void Session::exec()
         case SDL_WINDOWEVENT:
             // Early handling of some events
 #ifdef Q_OS_WIN32
-            caption.update();
-            if (fileDrag) fileDrag->updateWindow();
+            // WM_WINDOWPOSCHANGED already moved the caption controls. A move
+            // also keeps the same HWND registered with the file drop target.
+            if (event.window.event != SDL_WINDOWEVENT_MOVED) {
+                caption.update(event.window.event == SDL_WINDOWEVENT_DISPLAY_CHANGED);
+                if (fileDrag) fileDrag->updateWindow();
+            }
 #endif
             switch (event.window.event) {
             case SDL_WINDOWEVENT_FOCUS_LOST:
                 if (m_Preferences->muteOnFocusLoss) {
+#ifdef Q_OS_WIN32
+                    m_AudioMuted = !caption.groupHasFocus();
+#else
                     m_AudioMuted = true;
+#endif
                 }
                 m_InputHandler->notifyFocusLost();
                 break;
@@ -2669,6 +2987,8 @@ void Session::exec()
                 }
                 m_Preferences->refreshCaptureSysKeysMode();
                 m_InputHandler->notifyFocusGained();
+                if (!m_CaptureOutput.isEmpty() && m_Preferences->absoluteMouseMode && !m_InputHandler->isCaptureActive())
+                    m_InputHandler->setCaptureActive(true);
                 break;
             case SDL_WINDOWEVENT_LEAVE:
                 m_InputHandler->notifyMouseLeave();
@@ -2840,7 +3160,7 @@ void Session::exec()
                 // As of SDL 2.0.12, SDL_RecreateWindow() doesn't carry over mouse capture
                 // or mouse hiding state to the new window. By capturing after the decoder
                 // is set up, this ensures the window re-creation is already done.
-                if (needsPostDecoderCreationCapture) {
+                if (needsPostDecoderCreationCapture && !recoveringInPlace()) {
                     m_InputHandler->setCaptureActive(true);
                     needsPostDecoderCreationCapture = false;
                 }
@@ -2951,6 +3271,8 @@ void Session::exec()
 
 DispatchDeferredCleanup:
 #ifdef Q_OS_WIN32
+    if (!m_RecoveryWindow && m_NextReconnect && *m_NextReconnect > 0)
+        m_RecoveryWindow = StreamRecoveryWindow::hold(m_Window, this, caption.groupedWindow());
     fileDrag.reset();
     fileTransferWindow.closeChannel();
     clipboard.stop();
@@ -3012,12 +3334,13 @@ DispatchDeferredCleanup:
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
 #ifdef Q_OS_WIN32
-    if (m_PrivacyReconnectRequested)
-        StreamWindow::markReconnecting();
+    if (m_NextReconnect)
+        StreamWindow::markReconnecting(recoveringInPlace());
     else
         StreamWindow::release();
 #endif
-    SDL_DestroyWindow(m_Window);
+    if (!recoveringInPlace()) SDL_DestroyWindow(m_Window);
+    m_Window = nullptr;
 
     if (iconSurface != nullptr) {
         SDL_FreeSurface(iconSurface);

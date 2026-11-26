@@ -16,17 +16,28 @@
 
 - 在已配对的在线主机上打开文件传输助手。两侧文件列表支持排序、复制、粘贴和拖放。双击远端文件会打开临时下载到本机的副本。
 - 主机支持独立文件传输时，从串流控制中心打开的文件传输助手也使用独立会话。断开串流后，正在上传、下载和排队的任务会继续。
-- 更新 Sunshine 后，只要主机上的 Windows 用户已登录且会话仍连接，锁屏时也可以打开文件传输助手、浏览目录并直接开始上传或下载。文件夹中排队的文件会依次开始传输。与主机资源管理器交互的拖放和直接删除远端文件仍需解锁桌面。
+- 主机上的 Windows 用户已登录且会话仍连接时，即使主机已经锁屏，也可以从 Moonlight 设备卡片直接打开文件传输助手。在 Sunshine 中开启 **Browse and transfer files** 后，可以浏览目录、创建文件夹、上传和下载，也可以在助手的远端窗格中复制文件或文件夹，再进入另一个目录粘贴。文件夹中排队的文件会依次传输。
+- 锁屏时删除远端文件或文件夹需要主机运行支持锁屏删除的 Sunshine，并开启 **Allow file deletion**。操作使用已登录用户的文件权限。主机重启后需要先登录一次；与主机资源管理器交互的拖放仍需解锁桌面。
 - 文件夹可以在同一侧复制，也可以在两侧之间上传和下载。两端都会合并已有目录。选中文件夹按 **Delete** 后，本机端会将整个文件夹移入回收站，远端确认后会永久删除文件夹和其中的内容。远端删除文件夹需要更新 Sunshine 并开启 **Allow file deletion**。
 - 同名冲突可以选择**跳过**、**替换**或**保留两者**。保留两者会寻找可用文件名。替换针对确认时的目标版本。等待确认或恢复传输期间目标发生变化时，原确认失效。
 - 替换或永久删除远端文件需要主机启用 **Allow file deletion**。本机删除走回收站。窗口化串流也支持与资源管理器互相拖放。从串流内拖出时使用远程桌面鼠标模式，可按 **Ctrl+Alt+Shift+M** 切换。
 - 剪贴板上传根据已确认的吞吐量调整分块，控制通道出现排队时降低速率。设备列表按配对状态分组，并在配对完成后刷新。
 
-## 双机部署与验证
+## 多主机部署与验证
 
 在仓库根目录运行 `python scripts/deploy-streaming.py` 可打开终端菜单。选择本机、CHENX、CX9950X 或多台主机，再选择 Moonlight、Sunshine 或两者。脚本从现有的 Windows Release 构建自动打包，确认后部署。选择「仅校验」可检查安装路径、包哈希和待更新文件数量。执行部署时，更新运行中的 Sunshine 会重启服务，更新正在使用的 Moonlight 会关闭客户端，这可能中断串流。
 
-自动化可使用 `--target local`、`--target remote --host <地址>` 或 `--target all`，并搭配 `--component moonlight`、`--component sunshine` 或 `--dry-run`。完整运行包可通过 `--moonlight-package` 或 `--sunshine-package` 传入。远端通过 SSH 连接并校验已知主机密钥，支持 SSH 密钥、交互密码提示或 `--password-file`。交互密码被拒绝后可重输，留空会跳过该主机并继续处理其他主机。上传进度按实际传输字节显示。安装脚本校验文件 SHA-256、备份被替换的文件，并在该机安装失败时回滚。
+需要从当前源码构建时，菜单可选「先构建，再执行部署」或「先构建，再校验」。例如，运行 `python scripts/deploy-streaming.py --build --component moonlight --target local --dry-run` 会先增量构建客户端，再校验本机安装。去掉 `--dry-run` 即可安装。Moonlight 使用 Visual Studio x64 C++ 工具和 `build/win64` 中记录的 qmake；首次构建请将 x64 MSVC 版 Qt 的 bin 目录加入 PATH。Sunshine 复用相邻仓库已配置的 `../Sunshine/cmake-build-windows` Release 构建目录。指定完整 ZIP 的组件直接使用该包。所有需要构建的组件成功后才开始部署；搭配 `--watch` 时仅在启动监听前构建一次。
+
+确认部署或校验后，脚本在后台打包一次，同时在终端逐台提示输入远端主机的 SSH 密码。即使设置 `--jobs 1`，也可以在打包期间输入所有主机的密码。各主机在安装包和校验值就绪后开始上传或本机安装。默认最多同时处理 3 台主机。用 `python scripts/deploy-streaming.py --target all --dry-run --jobs 2` 可同时校验最多两台。某台失败或被跳过时，其余主机会继续，脚本最后列出未完成的主机并返回退出码 1。
+
+自动化可使用 `--target local`、`--target remote --host <地址>` 或 `--target all`，并搭配 `--component moonlight`、`--component sunshine` 或 `--dry-run`。完整运行包可通过 `--moonlight-package` 或 `--sunshine-package` 传入。远端通过 SSH 连接并校验已知主机密钥。使用 SSH 密钥时可加 `--ssh-key` 跳过启动时的密码提示，也可用 `--password-file` 从文件读取密码。非交互运行时，未指定密码文件会自动尝试 SSH 密钥。交互密码被拒绝后可重输，留空会跳过该主机。上传进度按实际传输字节显示。安装脚本校验文件 SHA-256、备份被替换的文件，并在该机安装失败时回滚。
+
+在终端菜单选择「持续部署」，或运行 `python scripts/deploy-streaming.py --watch --target local --component moonlight`，可持续监听构建输出。启动时部署已有的构建，尚未生成的文件会等到首次构建完成。之后每次只部署发生变化的组件，部署期间生成的新版本会在下一轮处理。指定完整运行 ZIP 时会监听对应的 ZIP。加 `--dry-run` 可在每次变更后仅校验。交互输入的 SSH 密码在本次运行中复用。某轮部署失败后会继续等待下一次构建，按 Ctrl+C 退出。
+
+`--clean-backups` 按主机清理历史部署备份，默认保留最近 5 份，也可用 `--keep-backups N` 指定数量。先运行 `python scripts/deploy-streaming.py --clean-backups --target local --dry-run` 查看待删除的目录，去掉 `--dry-run` 执行清理。使用 `--target all` 可在每台部署主机上分别清理。清理与正在执行的部署共用同一把锁。
+
+使用 `python scripts/deploy-streaming.py --watch --target all --clean-backups` 可在每次成功部署后自动保留最近 5 份。也可直接用 `--watch --keep-backups N` 开启指定数量的保留策略。加 `--dry-run` 会校验构建，并预览现有备份的清理结果。
 
 | 验证场景 | 结果 |
 | --- | --- |

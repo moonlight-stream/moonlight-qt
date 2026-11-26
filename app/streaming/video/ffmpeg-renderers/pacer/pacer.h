@@ -43,6 +43,7 @@ public:
     void signalVsync();
 
     void renderOnMainThread();
+    void requestRedraw();
 
 private:
     static int vsyncThread(void* context);
@@ -54,6 +55,7 @@ private:
     void enqueueFrameForRenderingAndUnlock(AVFrame* frame);
 
     void renderFrame(AVFrame* frame);
+    void presentFrame(AVFrame* frame);
 
     void dropFrameForEnqueue(QQueue<AVFrame*>& queue);
 
@@ -70,6 +72,7 @@ private:
     AVFrame* m_DeferredFreeFrame;
     bool m_Stopping;
     bool m_VsyncPending;
+    bool m_RedrawRequested = false;
 
     IVsyncSource* m_VsyncSource;
     IFFmpegRenderer* m_VsyncRenderer;

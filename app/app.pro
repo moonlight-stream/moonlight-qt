@@ -2,8 +2,9 @@ QT += core quick network quickcontrols2 svg
 win32:QT += widgets
 CONFIG += c++17
 win32 {
-    HEADERS += streaming/captioncontrols.h streaming/captionmenu.h streaming/streamwindow.h
-    SOURCES += streaming/streamwindow.cpp
+    HEADERS += streaming/displaywindows.h streaming/captioncontrols.h streaming/captionmenu.h streaming/streamwindow.h
+    HEADERS += streaming/streamrecoverywindow.h
+    SOURCES += streaming/streamwindow.cpp streaming/streamrecoverywindow.cpp
 }
 
 unix:!macx {
@@ -209,6 +210,7 @@ SOURCES += \
     gui/sdlgamepadkeynavigation.cpp \
     streaming/video/overlaymanager.cpp \
     backend/systemproperties.cpp \
+    backend/localhostsessions.cpp \
     wm.cpp
 
 HEADERS += \
@@ -246,7 +248,8 @@ HEADERS += \
     settings/mappingmanager.h \
     gui/sdlgamepadkeynavigation.h \
     streaming/video/overlaymanager.h \
-    backend/systemproperties.h
+    backend/systemproperties.h \
+    backend/localhostsessions.h
 
 # Platform-specific renderers and decoders
 ffmpeg {

@@ -10,6 +10,8 @@ AbstractButton {
     hoverEnabled: true
     Accessible.name: text
     padding: listItem ? 12 : 5
+    topPadding: listItem ? 0 : padding
+    bottomPadding: topPadding
     opacity: enabled ? 1 : 0.44
     background: Rectangle {
         radius: 5

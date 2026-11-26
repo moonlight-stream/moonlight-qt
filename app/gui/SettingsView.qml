@@ -22,6 +22,7 @@ FocusScope {
     signal languageChanged()
 
     Component.onCompleted: {
+        StreamingPreferences.refreshAbsoluteMouseMode()
         // This enables Tab and BackTab based navigation rather than arrow keys.
         // It is required to shift focus between controls on the settings page.
         SdlGamepadKeyNavigation.setUiNavMode(true)
@@ -40,6 +41,13 @@ FocusScope {
 
         // Save the prefs so the Session can observe the changes
         StreamingPreferences.save()
+    }
+
+    Connections {
+        target: window
+        function onActiveChanged() {
+            if (window.active) StreamingPreferences.refreshAbsoluteMouseMode()
+        }
     }
 
     Column {
@@ -1426,9 +1434,7 @@ FocusScope {
                         text: qsTr("Optimize mouse for remote desktop instead of games")
                         font.pixelSize: 14
                         checked: StreamingPreferences.absoluteMouseMode
-                        onCheckedChanged: {
-                            StreamingPreferences.absoluteMouseMode = checked
-                        }
+                        onToggled: StreamingPreferences.absoluteMouseMode = checked
 
                         SettingsToolTip {
                             timeout: 10000

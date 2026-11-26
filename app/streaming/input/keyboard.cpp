@@ -85,14 +85,7 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected mouse mode toggle combo");
 
-        // Uncapture input
-        setCaptureActive(false);
-
-        // Toggle mouse mode
-        m_AbsoluteMouseMode = !m_AbsoluteMouseMode;
-
-        // Recapture input
-        setCaptureActive(true);
+        setAbsoluteMouseMode(!m_AbsoluteMouseMode);
 #ifdef Q_OS_WIN32
         Session::get()->updateFullscreenControls();
 #endif

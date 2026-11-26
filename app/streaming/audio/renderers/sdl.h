@@ -21,6 +21,7 @@ public:
 private:
     SDL_AudioDeviceID m_AudioDevice;
     void* m_AudioBuffer;
+    bool m_PlaybackStarted = false;
     Uint32 m_FrameSize;
     Uint32 m_FrameDurationMs;
 };

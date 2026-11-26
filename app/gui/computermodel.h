@@ -21,7 +21,7 @@ class ComputerModel : public QAbstractListModel
         StatusUnknownRole,
         ServerSupportedRole,
         DetailsRole,
-        PreviewRole,
+        WallpaperRole,
         UuidRole,
         StreamWindowStateRole,
         ViewOnlyStreamWindowRole,
@@ -64,7 +64,7 @@ public:
     Q_INVOKABLE void initializeQuickApps(AppModel* apps, int computerIndex);
     Q_INVOKABLE Session* createQuickSession(int computerIndex);
     Q_INVOKABLE Session* createViewOnlySession(int computerIndex);
-    Q_INVOKABLE void refreshDesktopPreviews();
+    Q_INVOKABLE void refreshDesktopWallpaper(const QString& uuid);
 
 signals:
     void pairingCompleted(QVariant error);
@@ -78,6 +78,7 @@ private slots:
 
 private:
     QSet<QString> m_PendingPower;
+    QSet<QString> m_PendingWallpapers;
     QVector<NvComputer*> m_Computers;
     ComputerManager* m_ComputerManager;
 #ifdef Q_OS_WIN

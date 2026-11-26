@@ -1,10 +1,14 @@
 #include <QGuiApplication>
 #ifdef Q_OS_WIN
 #include <QApplication>
+#include <QCryptographicHash>
 #include <QSystemTrayIcon>
 #include <QMenu>
 #include <QScreen>
+#include <QWinEventNotifier>
 #include <QWindow>
+#include <memory>
+#include <string>
 #endif
 #include <QStyleHints>
 #include <QQmlApplicationEngine>
@@ -62,6 +66,7 @@
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
 #include "backend/computermanager.h"
+#include "backend/localhostsessions.h"
 #include "backend/systemproperties.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
@@ -287,12 +292,29 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 #include <Windows.h>
 #include <DbgHelp.h>
 
-static LRESULT CALLBACK launcherWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR)
+static void allowLauncherActivation(const std::wstring& windowProperty)
+{
+    EnumWindows([](HWND hwnd, LPARAM param) -> BOOL {
+        const auto property = reinterpret_cast<const wchar_t*>(param);
+        if (!GetPropW(hwnd, property)) {
+            return TRUE;
+        }
+        DWORD pid = 0;
+        if (GetWindowThreadProcessId(hwnd, &pid)) {
+            AllowSetForegroundWindow(pid);
+            return FALSE;
+        }
+        return TRUE;
+    }, reinterpret_cast<LPARAM>(windowProperty.c_str()));
+}
+
+static LRESULT CALLBACK launcherWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR data)
 {
     if (msg == WM_SYSCOMMAND && (wp & 0xfff0) == SC_MAXIMIZE) {
         return 0;
     }
     if (msg == WM_NCDESTROY) {
+        RemovePropW(hwnd, reinterpret_cast<const wchar_t*>(data));
         RemoveWindowSubclass(hwnd, launcherWindowProc, id);
     }
     const auto result = DefSubclassProc(hwnd, msg, wp, lp);
@@ -310,7 +332,7 @@ static LRESULT CALLBACK launcherWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARA
     return result;
 }
 
-static void configureLauncherWindow(QWindow* window)
+static void configureLauncherWindow(QWindow* window, const std::wstring& windowProperty)
 {
     const int preferredWidth = window->width();
     const auto hwnd = reinterpret_cast<HWND>(window->winId());
@@ -340,7 +362,9 @@ static void configureLauncherWindow(QWindow* window)
         window->setHeight(qMin(window->height(), window->screen()->availableGeometry().height()));
     }
 
-    SetWindowSubclass(hwnd, launcherWindowProc, 0, 0);
+    if (SetWindowSubclass(hwnd, launcherWindowProc, 0, reinterpret_cast<DWORD_PTR>(windowProperty.c_str()))) {
+        SetPropW(hwnd, windowProperty.c_str(), reinterpret_cast<HANDLE>(1));
+    }
     DeleteMenu(GetSystemMenu(hwnd, FALSE), SC_MAXIMIZE, MF_BYCOMMAND);
     const DWM_WINDOW_CORNER_PREFERENCE corners = DWMWCP_ROUND;
     DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &corners, sizeof(corners));
@@ -910,6 +934,32 @@ int main(int argc, char *argv[])
 
     GlobalCommandLineParser parser;
     GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse(app.arguments());
+#ifdef Q_OS_WIN
+    std::wstring launcherWindowProperty;
+    std::unique_ptr<void, decltype(&CloseHandle)> launcherActivation(nullptr, &CloseHandle);
+    QWinEventNotifier launcherActivationNotifier;
+    if (commandLineParserResult == GlobalCommandLineParser::NormalStartRequested) {
+        // Scope the launcher to this Windows session and settings profile.
+        const auto settingsPath = QSettings().fileName().toCaseFolded().toUtf8();
+        const auto profile = QCryptographicHash::hash(settingsPath, QCryptographicHash::Sha256).toHex();
+        launcherWindowProperty = (QStringLiteral("Moonlight.Launcher.") + QString::fromLatin1(profile)).toStdWString();
+        const auto eventName = L"Local\\" + launcherWindowProperty;
+
+        // The auto-reset event reserves the instance and queues activation even
+        // if the first launcher is still creating its window.
+        const HANDLE event = CreateEventExW(nullptr, eventName.c_str(), 0, EVENT_MODIFY_STATE | SYNCHRONIZE);
+        const DWORD error = GetLastError();
+        launcherActivation.reset(event);
+        if (!event) {
+            qWarning() << "Unable to create the launcher activation event:" << error;
+            return 1;
+        }
+        if (error == ERROR_ALREADY_EXISTS) {
+            allowLauncherActivation(launcherWindowProperty);
+            return SetEvent(event) ? 0 : 1;
+        }
+    }
+#endif
 #if defined(Q_OS_WIN32) && QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     // The Windows launcher starts streams in a child process. Let Qt
     // render the launcher on its default render thread during live resize.
@@ -1045,6 +1095,7 @@ int main(int argc, char *argv[])
 
     // Register our C++ types for QML
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
+    qmlRegisterType<LocalHostSessions>("LocalHostSessions", 1, 0, "LocalHostSessions");
     qmlRegisterType<AppModel>("AppModel", 1, 0, "AppModel");
     qmlRegisterUncreatableType<Session>("Session", 1, 0, "Session", "Session cannot be created from QML");
     qmlRegisterSingletonType<ComputerManager>("ComputerManager", 1, 0,
@@ -1114,7 +1165,9 @@ int main(int argc, char *argv[])
             QString appName = streamParser.getAppName();
             auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
 #ifdef Q_OS_WIN
-            StreamWindow::adoptReservation(host);
+            const QString output = qEnvironmentVariable("MOONLIGHT_CAPTURE_OUTPUT");
+            StreamWindow::adoptReservation(output.isEmpty() ? host :
+                StreamWindow::outputKey(qEnvironmentVariable("MOONLIGHT_DISPLAY_GROUP"), output));
             QObject::connect(launcher, &CliStartStream::Launcher::failed, &app, &StreamWindow::release);
             QObject::connect(launcher, &CliStartStream::Launcher::sessionCreated, &app, [&app](const QString&, Session* session) {
                 QObject::connect(session, &Session::sessionFinished, &app, &StreamWindow::release);
@@ -1165,6 +1218,9 @@ int main(int argc, char *argv[])
         deferInitialShow = commandLineParserResult == GlobalCommandLineParser::NormalStartRequested ||
                            commandLineParserResult == GlobalCommandLineParser::StreamRequested;
 #endif
+        const bool displayCompanion = commandLineParserResult == GlobalCommandLineParser::StreamRequested &&
+                                      !qEnvironmentVariableIsEmpty("MOONLIGHT_CAPTURE_OUTPUT");
+        engine.rootContext()->setContextProperty("isDisplayCompanion", displayCompanion);
         engine.rootContext()->setContextProperty("deferInitialShow", deferInitialShow);
         engine.rootContext()->setContextProperty("trayAvailable", trayAvailable);
         engine.rootContext()->setContextProperty("initialView", initialView);
@@ -1177,44 +1233,69 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_WIN
         auto window = qobject_cast<QWindow*>(engine.rootObjects().first());
         if (commandLineParserResult == GlobalCommandLineParser::NormalStartRequested) {
-            configureLauncherWindow(window);
+            configureLauncherWindow(window, launcherWindowProperty);
         }
         else if (commandLineParserResult == GlobalCommandLineParser::StreamRequested) {
             applyLightWindowCaption(reinterpret_cast<HWND>(window->winId()));
             StreamWindow::setProgressWindow(reinterpret_cast<HWND>(window->winId()));
         }
-        if (deferInitialShow) {
+        if (deferInitialShow && !displayCompanion) {
             QMetaObject::invokeMethod(window, "showInitialWindow", Qt::DirectConnection);
         }
 #endif
     }
 
 #ifdef Q_OS_WIN
-    if (trayAvailable) {
+    if (launcherActivation) {
         auto mainWindow = qobject_cast<QWindow*>(engine.rootObjects().first());
         auto restore = [mainWindow]() {
-            if (mainWindow->windowState() == Qt::WindowMinimized) {
-                mainWindow->showNormal();
-            } else {
-                mainWindow->show();
+            mainWindow->show();
+            const auto hwnd = reinterpret_cast<HWND>(mainWindow->winId());
+            if (IsIconic(hwnd)) {
+                ShowWindow(hwnd, SW_RESTORE);
             }
             mainWindow->raise();
             mainWindow->requestActivate();
         };
-        trayMenu.addAction(QCoreApplication::translate("main", "Show main window"), restore);
-        trayMenu.addAction(QCoreApplication::translate("main", "Quit"), &app, &QCoreApplication::quit);
-        tray.setContextMenu(&trayMenu);
-        tray.setToolTip(app.applicationName());
-        QObject::connect(&tray, &QSystemTrayIcon::activated, &app, [restore](QSystemTrayIcon::ActivationReason reason) {
-            if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick) {
-                restore();
-            }
-        });
-        auto prefs = StreamingPreferences::get();
-        tray.setVisible(prefs->closeToTray);
-        QObject::connect(prefs, &StreamingPreferences::closeToTrayChanged, &tray, [&tray, prefs]() {
+        QObject::connect(&launcherActivationNotifier, &QWinEventNotifier::activated, mainWindow, restore);
+        launcherActivationNotifier.setHandle(launcherActivation.get());
+        launcherActivationNotifier.setEnabled(true);
+        if (trayAvailable) {
+            trayMenu.setAttribute(Qt::WA_TranslucentBackground);
+            trayMenu.setWindowFlag(Qt::FramelessWindowHint);
+            trayMenu.setMinimumWidth(150);
+            trayMenu.setStyleSheet(QStringLiteral(R"(
+                QMenu { background: #fafafa; color: #19212c; border: 1px solid #dedfe2;
+                        border-radius: 8px; padding: 4px; font-size: 14px; }
+                QMenu::item { padding: 7px 12px 7px 8px; border-radius: 4px; }
+                QMenu::icon { left: 8px; }
+                QMenu::item:selected { background: #e8ebef; color: #19212c; }
+                QMenu::separator { height: 1px; background: #dedfe2; margin: 2px 0; }
+            )"));
+            trayMenu.addAction(QIcon(QStringLiteral(":/res/tray-home.svg")),
+                               QCoreApplication::translate("main", "Show main window"), restore);
+            trayMenu.addSeparator();
+            trayMenu.addAction(QIcon(QStringLiteral(":/res/device-shutdown.svg")),
+                               QCoreApplication::translate("main", "Quit"), &app, &QCoreApplication::quit);
+            tray.setToolTip(app.applicationName());
+            QObject::connect(&tray, &QSystemTrayIcon::activated, &trayMenu, [restore, &tray, &trayMenu](QSystemTrayIcon::ActivationReason reason) {
+                if (reason == QSystemTrayIcon::Context) {
+                    // Show the styled widget directly; Windows can substitute a native tray menu.
+                    const QRect iconRect = tray.geometry();
+                    const QPoint cursor = QCursor::pos();
+                    trayMenu.popup(iconRect.isValid() && !iconRect.contains(cursor) ? iconRect.center() : cursor);
+                    SetForegroundWindow(reinterpret_cast<HWND>(trayMenu.winId()));
+                }
+                else if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick) {
+                    restore();
+                }
+            });
+            auto prefs = StreamingPreferences::get();
             tray.setVisible(prefs->closeToTray);
-        });
+            QObject::connect(prefs, &StreamingPreferences::closeToTrayChanged, &tray, [&tray, prefs]() {
+                tray.setVisible(prefs->closeToTray);
+            });
+        }
     }
 #endif
     int err = app.exec();

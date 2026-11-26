@@ -210,6 +210,8 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
                          NvHTTP::getXmlString(serverInfo, "hostpowerversion") == "1";
     standaloneFilesAvailable = pairState == PS_PAIRED && !serverCert.isNull() &&
                                NvHTTP::getXmlString(serverInfo, "standalonefileversion") == "1";
+    if (pairState == PS_PAIRED && !serverCert.isNull())
+        audioHostId = NvHTTP::getXmlString(serverInfo, "audiohostid");
     this->currentGameId = NvHTTP::getCurrentGame(serverInfo);
     this->appVersion = NvHTTP::getXmlString(serverInfo, "appversion");
     this->gfeVersion = NvHTTP::getXmlString(serverInfo, "GfeVersion");
@@ -589,6 +591,7 @@ bool NvComputer::update(const NvComputer& that)
     ASSIGN_IF_CHANGED(isSupportedServerVersion);
     ASSIGN_IF_CHANGED(hostPowerAvailable);
     ASSIGN_IF_CHANGED(standaloneFilesAvailable);
+    ASSIGN_IF_CHANGED(audioHostId);
     ASSIGN_IF_CHANGED(isNvidiaServerSoftware);
     ASSIGN_IF_CHANGED(maxLumaPixelsHEVC);
     ASSIGN_IF_CHANGED(gpuModel);

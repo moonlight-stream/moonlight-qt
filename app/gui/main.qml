@@ -11,7 +11,7 @@ import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 
 ApplicationWindow {
-    readonly property bool lightPage: !stackView.currentItem || stackView.currentItem instanceof PcView ||
+    readonly property bool lightPage: !stackView.currentItem || stackView.currentItem instanceof PcView || stackView.currentItem instanceof HostSessionsView ||
         stackView.currentItem instanceof SettingsView || stackView.currentItem instanceof StreamSegue ||
         stackView.currentItem instanceof CliStartStreamSegue || stackView.currentItem instanceof QuitSegue
     Material.theme: lightPage ? Material.Light : Material.Dark
@@ -19,6 +19,7 @@ ApplicationWindow {
     Material.accent: lightPage ? "#2468d5" : Material.Purple
     property bool pollingActive: false
     readonly property bool customTitleBar: Qt.platform.os === "windows" && isGuiLaunch
+    readonly property bool showResizeHandles: customTitleBar && visibility === Window.Windowed
 
     id: window
     title: !isGuiLaunch && stackView.currentItem && stackView.currentItem.streamProgressText
@@ -118,6 +119,11 @@ ApplicationWindow {
     }
 
     onClosing: function(close) {
+        if (stackView.currentItem instanceof StreamSegue && stackView.currentItem.recovering) {
+            close.accepted = false
+            stackView.currentItem.cancelRecovery()
+            return
+        }
         if (trayAvailable && StreamingPreferences.closeToTray) {
             close.accepted = false
             hide()
@@ -125,7 +131,9 @@ ApplicationWindow {
     }
 
     function goBack() {
-        if (toolBar.devicePage && stackView.currentItem.showingSettings)
+        if (stackView.currentItem instanceof StreamSegue && stackView.currentItem.recovering)
+            stackView.currentItem.cancelRecovery()
+        else if (toolBar.devicePage && stackView.currentItem.showingSettings)
             stackView.currentItem.showingSettings = false
         else
             stackView.pop()
@@ -283,16 +291,14 @@ ApplicationWindow {
         id: toolBar
         readonly property bool settingsPage: devicePage && stackView.currentItem.showingSettings
         readonly property bool devicePage: stackView.currentItem instanceof PcView
+        readonly property bool showBrand: devicePage || stackView.currentItem instanceof HostSessionsView
         Material.theme: window.Material.theme
         Material.background: window.lightPage ? "#eff4f7" : Material.primary
         MouseArea {
             anchors.fill: parent
-            enabled: window.customTitleBar
-            property point pressPoint
-            onPressed: function(mouse) { pressPoint = Qt.point(mouse.x, mouse.y) }
-            onPositionChanged: function(mouse) {
-                if (pressed && window.visibility !== Window.FullScreen &&
-                        Math.abs(mouse.x - pressPoint.x) + Math.abs(mouse.y - pressPoint.y) >= Qt.styleHints.startDragDistance)
+            enabled: window.customTitleBar && window.visibility !== Window.FullScreen
+            onPositionChanged: {
+                if (pressed)
                     window.startSystemMove()
             }
         }
@@ -302,7 +308,7 @@ ApplicationWindow {
 
         Label {
             id: titleLabel
-            visible: toolBar.width > 700 && !toolBar.devicePage && !toolBar.settingsPage
+            visible: toolBar.width > 700 && !toolBar.showBrand
             anchors.fill: parent
             text: stackView.currentItem.objectName
             font.pointSize: 20
@@ -333,18 +339,18 @@ ApplicationWindow {
             }
 
             Image {
-                visible: toolBar.devicePage
+                visible: toolBar.showBrand
                 Layout.leftMargin: 6
                 Layout.preferredWidth: 19; Layout.preferredHeight: 19
                 source: "qrc:/res/moonlight.svg"
             }
             Label {
-                visible: toolBar.devicePage && toolBar.width >= 410
+                visible: toolBar.showBrand && toolBar.width >= 410
                 text: "Moonlight"
                 font.pixelSize: 15; font.bold: true; color: "#203047"
             }
             Label {
-                visible: toolBar.devicePage
+                visible: toolBar.showBrand
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 elide: Label.ElideRight
@@ -353,13 +359,13 @@ ApplicationWindow {
                 font.pixelSize: 12; color: "#52647a"
             }
             Label {
-                visible: !toolBar.devicePage
+                visible: !toolBar.showBrand
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 font: titleLabel.font
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
-                text: !toolBar.devicePage && !titleLabel.visible && stackView.currentItem ?
+                text: !toolBar.showBrand && !titleLabel.visible && stackView.currentItem ?
                           stackView.currentItem.objectName : ""
             }
 
@@ -497,19 +503,25 @@ ApplicationWindow {
         }
     }
 
-    // Share the header's parent so the top resize handle also covers the title bar.
-    Repeater {
-        parent: toolBar.parent
-        model: window.customTitleBar && window.visibility === Window.Windowed ?
-                   [Qt.TopEdge, Qt.BottomEdge] : []
-        MouseArea {
-            z: 20
-            width: parent.width
-            height: 5
-            y: modelData === Qt.TopEdge ? 0 : parent.height - height
-            cursorShape: Qt.SizeVerCursor
-            onPressed: window.startSystemResize(modelData)
-        }
+    MouseArea {
+        parent: toolBar
+        anchors.top: parent.top
+        width: parent.width
+        height: 5
+        z: 20
+        visible: window.showResizeHandles
+        cursorShape: Qt.SizeVerCursor
+        onPressed: window.startSystemResize(Qt.TopEdge)
+    }
+
+    MouseArea {
+        anchors.bottom: parent.bottom
+        width: parent.width
+        height: 5
+        z: 20
+        visible: window.showResizeHandles
+        cursorShape: Qt.SizeVerCursor
+        onPressed: window.startSystemResize(Qt.BottomEdge)
     }
 
     ErrorMessageDialog {
@@ -567,12 +579,14 @@ ApplicationWindow {
 
         property bool quitAfter: false
         property bool privacyError: false
+        property bool offerHelp: true
         property string privacyHostUuid
 
         title: privacyError ? qsTr("Privacy screen could not start") : ""
         showIcon: !privacyError
+        imageSrc: heading ? "qrc:/res/stream-disconnected.svg" : "qrc:/res/baseline-error_outline-24px.svg"
         standardButtons: privacyError ? Dialog.Ok | (privacyHostUuid ? Dialog.Discard : 0) :
-                                        Dialog.Ok | (SystemProperties.hasBrowser ? Dialog.Help : 0)
+                                        Dialog.Ok | (offerHelp && SystemProperties.hasBrowser ? Dialog.Help : 0)
         discardText: qsTr("Turn off privacy screen request")
         helpText: privacyHostUuid ? qsTr("You can turn off the request and reconnect normally to unlock the host. Its physical display may show the session.") : ""
         helpTextSeparator: "\n\n"
@@ -587,10 +601,14 @@ ApplicationWindow {
             if (quitAfter) {
                 Qt.quit()
             }
+            clearError()
+        }
 
-            // StreamSegue assumes its dialog will be re-created each time we
-            // start streaming, so fake it by wiping out the text each time.
+        // This dialog is shared by successive sessions.
+        function clearError() {
             text = ""
+            heading = ""
+            offerHelp = true
             privacyError = false
             privacyHostUuid = ""
         }

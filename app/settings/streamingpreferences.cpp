@@ -139,6 +139,28 @@ void StreamingPreferences::setCaptureSysKeysMode(CaptureSysKeysMode mode)
     }
 }
 
+void StreamingPreferences::setAbsoluteMouseMode(bool absolute)
+{
+    QSettings settings;
+    settings.setValue(SER_ABSMOUSEMODE, absolute);
+    settings.sync();
+    if (absoluteMouseMode != absolute) {
+        absoluteMouseMode = absolute;
+        emit absoluteMouseModeChanged();
+    }
+}
+
+void StreamingPreferences::refreshAbsoluteMouseMode()
+{
+    QSettings settings;
+    settings.sync();
+    const bool absolute = settings.value(SER_ABSMOUSEMODE, false).toBool();
+    if (absoluteMouseMode != absolute) {
+        absoluteMouseMode = absolute;
+        emit absoluteMouseModeChanged();
+    }
+}
+
 void StreamingPreferences::reload()
 {
     QSettings settings;
@@ -399,6 +421,28 @@ void StreamingPreferences::setPrivacyScreenForHost(const QString& hostUuid, bool
     settings.sync();
 }
 
+QString StreamingPreferences::privacyDesktopSizeForHost(const QString& hostUuid) const
+{
+    return QSettings().value("privacyDesktopSize/" + hostUuid).toString();
+}
+
+void StreamingPreferences::setPrivacyDesktopSizeForHost(const QString& hostUuid, const QString& size)
+{
+    if (!hostUuid.isEmpty())
+        QSettings().setValue("privacyDesktopSize/" + hostUuid, size);
+}
+
+bool StreamingPreferences::createPrivacyDisplayForHost(const QString& hostUuid) const
+{
+    return !hostUuid.isEmpty() && QSettings().value("createPrivacyDisplay/" + hostUuid, true).toBool();
+}
+
+void StreamingPreferences::setCreatePrivacyDisplayForHost(const QString& hostUuid, bool enabled)
+{
+    if (!hostUuid.isEmpty())
+        QSettings().setValue("createPrivacyDisplay/" + hostUuid, enabled);
+}
+
 void StreamingPreferences::save()
 {
     QSettings settings;
@@ -419,7 +463,6 @@ void StreamingPreferences::save()
     settings.setValue("clipboardSyncImages", clipboardSyncImages);
     settings.setValue("clipboardSyncFiles", clipboardSyncFiles);
     settings.setValue(SER_QUITAPPAFTER, quitAppAfter);
-    settings.setValue(SER_ABSMOUSEMODE, absoluteMouseMode);
     settings.setValue(SER_ABSTOUCHMODE, absoluteTouchMode);
     settings.setValue(SER_FRAMEPACING, framePacing);
     settings.setValue(SER_CONNWARNINGS, connectionWarnings);

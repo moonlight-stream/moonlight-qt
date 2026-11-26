@@ -1,6 +1,9 @@
 #include "computermodel.h"
 #include "path.h"
+#include <QBuffer>
 #include <QDateTime>
+#include <QDir>
+#include <QSaveFile>
 #ifdef Q_OS_WIN
 #include "streaming/filetransferwindow.h"
 #include "streaming/streamwindow.h"
@@ -81,9 +84,9 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
     QReadLocker lock(&computer->lock);
 
     switch (role) {
-    case PreviewRole: {
-        const auto file = Path::desktopPreview(computer->uuid);
-        if (!file.exists()) {
+    case WallpaperRole: {
+        const auto file = Path::desktopWallpaper(computer->uuid);
+        if (computer->pairState != NvComputer::PS_PAIRED || !file.exists()) {
             return QUrl();
         }
         auto url = QUrl::fromLocalFile(file.absoluteFilePath());
@@ -202,7 +205,7 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     names[StatusUnknownRole] = "statusUnknown";
     names[ServerSupportedRole] = "serverSupported";
     names[DetailsRole] = "details";
-    names[PreviewRole] = "desktopPreview";
+    names[WallpaperRole] = "desktopWallpaper";
 
     return names;
 }
@@ -267,11 +270,78 @@ Session* ComputerModel::createViewOnlySession(int computerIndex)
     return nullptr;
 }
 
-void ComputerModel::refreshDesktopPreviews()
+class DesktopWallpaperTask : public QObject, public QRunnable
 {
-    if (!m_Computers.isEmpty()) {
-        emit dataChanged(index(0), index(m_Computers.size() - 1), {PreviewRole});
+    Q_OBJECT
+public:
+    explicit DesktopWallpaperTask(const NvComputer& computer) : m_Computer(computer) {}
+
+    void run() override
+    {
+        try {
+            NvHTTP http(&m_Computer);
+            const auto image = http.getDesktopWallpaper();
+            QByteArray data;
+            QBuffer buffer(&data);
+            if (!image.isNull() && (!buffer.open(QIODevice::WriteOnly) || !image.save(&buffer, "JPEG", 88))) {
+                emit finished(false, {});
+                return;
+            }
+            // An unchanged wallpaper must keep its URL (and the displayed Qt texture).
+            QFile cached(Path::desktopWallpaper(m_Computer.uuid).absoluteFilePath());
+            if (!data.isEmpty() && cached.size() == data.size() &&
+                    cached.open(QIODevice::ReadOnly) && cached.readAll() == data) {
+                emit finished(false, {});
+                return;
+            }
+            emit finished(true, data);
+        }
+        catch (const QtNetworkReplyException& error) {
+            const auto code = error.getError();
+            emit finished(code == QNetworkReply::ContentNotFoundError ||
+                          code == QNetworkReply::AuthenticationRequiredError ||
+                          code == QNetworkReply::ContentAccessDenied, {});
+        }
+        catch (const GfeHttpResponseException&) {
+            emit finished(true, {});
+        }
     }
+
+signals:
+    void finished(bool updateCache, QByteArray data);
+
+private:
+    NvComputer m_Computer;
+};
+
+void ComputerModel::refreshDesktopWallpaper(const QString& uuid)
+{
+    const int row = indexOfUuid(uuid);
+    if (row < 0 || m_PendingWallpapers.contains(uuid)) return;
+    const auto* computer = m_Computers.at(row);
+    QReadLocker lock(&computer->lock);
+    if (computer->state != NvComputer::CS_ONLINE || computer->pairState != NvComputer::PS_PAIRED ||
+            computer->isNvidiaServerSoftware || computer->activeAddress.isNull() ||
+            !computer->activeHttpsPort || computer->serverCert.isNull()) return;
+
+    auto* task = new DesktopWallpaperTask(*computer);
+    lock.unlock();
+    m_PendingWallpapers.insert(uuid);
+    const QPersistentModelIndex target = index(row);
+    connect(task, &DesktopWallpaperTask::finished, this, [this, uuid, target](bool updateCache, QByteArray data) {
+        m_PendingWallpapers.remove(uuid);
+        if (!target.isValid() || !updateCache) return;
+        const auto path = Path::desktopWallpaper(uuid);
+        if (data.isEmpty()) {
+            if (!QFile::remove(path.absoluteFilePath())) return;
+        } else {
+            QSaveFile file(path.absoluteFilePath());
+            if (!path.dir().mkpath(".") || !file.open(QIODevice::WriteOnly) ||
+                    file.write(data) != data.size() || !file.commit()) return;
+        }
+        emit dataChanged(target, target, {WallpaperRole});
+    });
+    QThreadPool::globalInstance()->start(task);
 }
 
 void ComputerModel::deleteComputer(int computerIndex)
@@ -284,7 +354,7 @@ void ComputerModel::deleteComputer(int computerIndex)
     beginRemoveRows(QModelIndex(), computerIndex, computerIndex);
 
     // m_Computer[computerIndex] will be deleted by this call
-    QFile::remove(Path::desktopPreview(m_Computers[computerIndex]->uuid).absoluteFilePath());
+    QFile::remove(Path::desktopWallpaper(m_Computers[computerIndex]->uuid).absoluteFilePath());
     m_ComputerManager->deleteHost(m_Computers[computerIndex]);
 
     // Remove the now invalid item

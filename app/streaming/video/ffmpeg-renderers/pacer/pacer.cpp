@@ -163,6 +163,19 @@ int Pacer::vsyncThread(void *context)
     return 0;
 }
 
+// Called on the SDL thread. Only the rendering thread touches the retained
+// frame, including when a static desktop has stopped sending new frames.
+void Pacer::requestRedraw()
+{
+    if (!m_RenderThread) {
+        if (m_DeferredFreeFrame) presentFrame(m_DeferredFreeFrame);
+        return;
+    }
+    QMutexLocker locker(&m_FrameQueueLock);
+    m_RedrawRequested = true;
+    m_RenderQueueNotEmpty.wakeOne();
+}
+
 int Pacer::renderThread(void* context)
 {
     Pacer* me = reinterpret_cast<Pacer*>(context);
@@ -184,7 +197,8 @@ int Pacer::renderThread(void* context)
             QMutexLocker locker(&me->m_FrameQueueLock);
 
             // Wait for a frame to be ready to render
-            while (!me->m_Stopping && me->m_RenderQueue.isEmpty()) {
+            while (!me->m_Stopping && me->m_RenderQueue.isEmpty() &&
+                    !(me->m_RedrawRequested && me->m_DeferredFreeFrame)) {
                 me->m_RenderQueueNotEmpty.wait(&me->m_FrameQueueLock);
             }
 
@@ -193,10 +207,12 @@ int Pacer::renderThread(void* context)
                 break;
             }
 
-            frame = me->m_RenderQueue.dequeue();
+            me->m_RedrawRequested = false;
+            frame = me->m_RenderQueue.isEmpty() ? nullptr : me->m_RenderQueue.dequeue();
         }
 
-        me->renderFrame(frame);
+        if (frame) me->renderFrame(frame);
+        else me->presentFrame(me->m_DeferredFreeFrame);
     }
 
     // Stop any further overlay callbacks
@@ -373,6 +389,16 @@ void Pacer::signalVsync()
     m_VsyncSignalled.wakeOne();
 }
 
+void Pacer::presentFrame(AVFrame* frame)
+{
+    m_VsyncRenderer->acquireRenderLock();
+    m_VsyncRenderer->renderFrame(frame);
+    m_VsyncRenderer->releaseRenderLock();
+#ifdef Q_OS_WIN32
+    Session::get()->notifyDisplayFramePresented();
+#endif
+}
+
 void Pacer::renderFrame(AVFrame* frame)
 {
     // Count time spent in Pacer's queues
@@ -380,9 +406,7 @@ void Pacer::renderFrame(AVFrame* frame)
     m_VideoStats->totalPacerTimeUs += (beforeRender - (uint64_t)frame->pkt_dts);
 
     // Render it
-    m_VsyncRenderer->acquireRenderLock();
-    m_VsyncRenderer->renderFrame(frame);
-    m_VsyncRenderer->releaseRenderLock();
+    presentFrame(frame);
     uint64_t afterRender = LiGetMicroseconds();
 
     m_VideoStats->totalRenderTimeUs += (afterRender - beforeRender);

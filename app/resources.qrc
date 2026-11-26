@@ -16,13 +16,16 @@
         <file>res/remote-horizon.svg</file>
         <file>res/device-files.svg</file>
         <file>res/device-view.svg</file>
+        <file>res/incoming-display.svg</file>
         <file>res/device-more.svg</file>
         <file>res/device-wake.svg</file>
         <file>res/device-restart.svg</file>
         <file>res/device-shutdown.svg</file>
+        <file>res/tray-home.svg</file>
         <file>res/update.svg</file>
         <file>res/baseline-help_outline-24px.svg</file>
         <file>res/baseline-error_outline-24px.svg</file>
+        <file>res/stream-disconnected.svg</file>
         <file>res/baseline-check_circle_outline-24px.svg</file>
         <file>res/discord.svg</file>
         <file>languages/qml_de.ts</file>

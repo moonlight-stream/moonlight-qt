@@ -21,6 +21,10 @@ public:
     Q_INVOKABLE bool privacyScreenForHost(const QString& hostUuid) const;
     Q_INVOKABLE void setPrivacyScreenForHost(const QString& hostUuid, bool enabled);
 
+    Q_INVOKABLE QString privacyDesktopSizeForHost(const QString& hostUuid) const;
+    Q_INVOKABLE void setPrivacyDesktopSizeForHost(const QString& hostUuid, const QString& size);
+    Q_INVOKABLE bool createPrivacyDisplayForHost(const QString& hostUuid) const;
+    Q_INVOKABLE void setCreatePrivacyDisplayForHost(const QString& hostUuid, bool enabled);
     void reload();
 
     enum AudioConfig
@@ -125,6 +129,8 @@ public:
     Q_ENUM(CaptureSysKeysMode);
     void setCaptureSysKeysMode(CaptureSysKeysMode mode);
     Q_INVOKABLE void refreshCaptureSysKeysMode();
+    void setAbsoluteMouseMode(bool absolute);
+    Q_INVOKABLE void refreshAbsoluteMouseMode();
 
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
@@ -142,7 +148,7 @@ public:
     Q_PROPERTY(bool clipboardSyncFiles MEMBER clipboardSyncFiles NOTIFY clipboardSyncFilesChanged)
     Q_PROPERTY(bool quitAppAfter MEMBER quitAppAfter NOTIFY quitAppAfterChanged)
     Q_PROPERTY(bool lockHostOnDisconnect READ lockHostOnDisconnect WRITE setLockHostOnDisconnect NOTIFY lockHostOnDisconnectChanged)
-    Q_PROPERTY(bool absoluteMouseMode MEMBER absoluteMouseMode NOTIFY absoluteMouseModeChanged)
+    Q_PROPERTY(bool absoluteMouseMode MEMBER absoluteMouseMode WRITE setAbsoluteMouseMode NOTIFY absoluteMouseModeChanged)
     Q_PROPERTY(bool absoluteTouchMode MEMBER absoluteTouchMode NOTIFY absoluteTouchModeChanged)
     Q_PROPERTY(bool framePacing MEMBER framePacing NOTIFY framePacingChanged)
     Q_PROPERTY(bool connectionWarnings MEMBER connectionWarnings NOTIFY connectionWarningsChanged)

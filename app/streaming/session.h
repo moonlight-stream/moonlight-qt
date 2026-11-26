@@ -2,6 +2,8 @@
 
 #include <QSemaphore>
 #include <QQuickWindow>
+#include <memory>
+#include <optional>
 
 #include <Limelight.h>
 #include <opus_multistream.h>
@@ -10,6 +12,8 @@
 #include "video/decoder.h"
 #include "audio/renderers/renderer.h"
 #include "video/overlaymanager.h"
+
+class StreamRecoveryWindow;
 
 class SupportedVideoFormatList : public QList<int>
 {
@@ -104,13 +108,17 @@ public:
     Q_INVOKABLE bool initialize(QQuickWindow* qtWindow);
     Q_INVOKABLE void start();
     Q_INVOKABLE void interrupt();
-    Q_INVOKABLE Session* takePrivacyReconnect();
+    Q_INVOKABLE Session* takeReconnect();
+    Q_INVOKABLE bool recoveringInPlace() const;
+    Q_PROPERTY(int recoveryAttempt MEMBER m_RecoveryAttempt CONSTANT)
+    Q_PROPERTY(QString recoveryStatus READ recoveryStatus CONSTANT)
+    QString recoveryStatus() const;
     Q_PROPERTY(QString appName READ appName CONSTANT)
     Q_INVOKABLE bool launchInWindow() const;
     QString appName() const { return m_App.name; }
-    QString desktopPreviewHost() const { return m_App.isDesktop() ? m_Computer->uuid : QString(); }
 #ifdef Q_OS_WIN32
     void setNetworkLoss(int basisPoints) { SDL_AtomicSet(&m_NetworkLossBasisPoints, basisPoints); }
+    void notifyDisplayFramePresented();
     static constexpr int ToggleStreamHud = 110;
     static constexpr int LockHostNow = 113;
 #endif
@@ -133,16 +141,13 @@ public:
 
     void flushWindowEvents();
 
-    void recordDecodedFrame(uint64_t delayUs)
-    {
-        SDL_AtomicSet(&m_FrameDelayMs, static_cast<int>((delayUs + 500) / 1000));
-        SDL_AtomicAdd(&m_DecodedFrames, 1);
-    }
+    void recordDecodedFrame(uint64_t delayUs);
 
     void setShouldExit(bool quitHostApp = false);
 
 signals:
     void requestingHostSession(bool resume);
+    void recoveryCancelled();
 
     void stageStarting(QString description);
 
@@ -152,6 +157,7 @@ signals:
 
     void displayLaunchError(QString text);
     void displayPrivacyLaunchError(QString text, QString hostUuid);
+    void displayDisconnectError(QString heading, QString detail, bool offerHelp);
 
     void quitStarting();
 
@@ -199,9 +205,24 @@ private:
     Overlay::OverlayManager::Control m_PressedControl = Overlay::OverlayManager::Control::None;
 #endif
     bool m_DisconnectOnly = false;
-    bool m_PrivacyReconnectRequested = false;
-    bool m_PrivacyReconnect = false;
+    // Zero requests a settings reconnect. Positive values count network recovery attempts.
+    std::optional<int> m_NextReconnect;
+    bool m_Reconnect = false;
+    int m_RecoveryAttempt = 0;
+    QString m_RecoveryToken;
+    SDL_atomic_t m_Interrupted{};
+    void requestNetworkRecovery(bool stableStream = false);
+    bool canResume(NvHTTP& http, const NvComputer& computer);
+    void confirmNetworkRecovery();
+    void displayHostDisconnect();
+    void handleConnectionTermination(int errorCode, bool stableStream);
+    int m_BitrateOverrideKbps = 0;
+    int m_InitialBitrateKbps = 0;
     const bool m_ViewOnly;
+    const QString m_CaptureOutput;
+    bool m_LocalHostAudio = false;
+    bool playsStreamAudio() const { return !m_LocalHostAudio && m_CaptureOutput.isEmpty(); }
+    bool launchDisplayWindow(const QString& output, const QString& group, quintptr root, const QString& outputList = {}) const;
     bool m_ExplicitHostQuit = false;
     bool m_ClipboardText = false;
     bool m_ClipboardImages = false;
@@ -212,7 +233,9 @@ private:
     bool m_StandaloneFilesAvailable = false;
     bool m_FileDrag = false;
     bool m_HostMuteAvailable = false;
+    bool m_HostDisplayControl = false;
     bool m_HostPrivacyAvailable = false;
+    quint32 m_BitrateStreamId = 0;
     quint32 m_DisconnectLockStreamId = 0;
     bool m_DisconnectLockEnabled = false;
     SDL_atomic_t m_ConnectionEnding{};
@@ -307,6 +330,8 @@ private:
     SDL_atomic_t m_DecodedFrames{0};
     SDL_atomic_t m_FrameDelayMs{0};
 #ifdef Q_OS_WIN32
+    SDL_atomic_t m_DisplayFrameRequested{0};
+    std::unique_ptr<StreamRecoveryWindow> m_RecoveryWindow;
     unsigned long m_StreamInterface = 0;
     SDL_atomic_t m_NetworkLossBasisPoints{-1};
 #endif

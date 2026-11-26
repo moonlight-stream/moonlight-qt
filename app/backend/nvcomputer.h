@@ -102,6 +102,7 @@ public:
     bool isSupportedServerVersion;
     bool hostPowerAvailable = false;
     bool standaloneFilesAvailable = false;
+    QString audioHostId;
 
     // Persisted traits
     NvAddress localAddress;

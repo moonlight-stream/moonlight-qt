@@ -27,6 +27,7 @@ public:
     virtual QSize getDecoderMaxResolution() override;
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;
     virtual void renderFrameOnMainThread() override;
+    void requestRedraw() override;
     virtual void setHdrMode(bool enabled) override;
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info) override;
 
@@ -129,7 +130,6 @@ private:
     int m_VideoFormat;
     bool m_NeedsSpsFixup;
     bool m_TestOnly;
-    bool m_CheckedDesktopPreview = false;
     TestMode m_CurrentTestMode;
     SDL_Thread* m_DecoderThread;
     SDL_atomic_t m_DecoderThreadShouldQuit;

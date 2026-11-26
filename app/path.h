@@ -14,7 +14,7 @@ public:
     static void writeCacheFile(QString fileName, QByteArray data);
     static void deleteCacheFile(QString fileName);
     static QFileInfo getCacheFileInfo(QString fileName);
-    static QFileInfo desktopPreview(const QString& hostId);
+    static QFileInfo desktopWallpaper(const QString& hostId);
 
     // Only safe to use directly for Qt classes
     static QString getDataFilePath(QString fileName);

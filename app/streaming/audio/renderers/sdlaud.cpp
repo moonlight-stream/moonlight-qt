@@ -66,9 +66,6 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
                 "SDL audio driver: %s",
                 SDL_GetCurrentAudioDriver());
 
-    // Start playback
-    SDL_PauseAudioDevice(m_AudioDevice, 0);
-
     return true;
 }
 
@@ -131,6 +128,12 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
         return false;
     }
 
+    // The capability probe never submits PCM. Start the device only when the
+    // first decoded packet is already queued, including after a device reopen.
+    if (!m_PlaybackStarted) {
+        SDL_PauseAudioDevice(m_AudioDevice, 0);
+        m_PlaybackStarted = true;
+    }
     return true;
 }
 

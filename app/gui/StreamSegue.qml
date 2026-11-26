@@ -13,6 +13,15 @@ Item {
     readonly property string streamProgressText: progressCard.visible ? stageText : ""
     property int lookupSteps: 0
     property bool quitAfter : false
+    readonly property bool recovering: !!session && session.recoveryAttempt > 0 && progressCard.visible
+    property bool cancellingRecovery: false
+    property bool finished: false
+
+    function cancelRecovery() {
+        if (!recovering || cancellingRecovery) return
+        cancellingRecovery = true
+        session.interrupt()
+    }
 
     function requestingHostSession(resume)
     {
@@ -60,6 +69,14 @@ Item {
         displayLaunchError(text)
     }
 
+    function displayDisconnectError(heading, detail, offerHelp)
+    {
+        streamSegueErrorDialog.offerHelp = offerHelp
+        streamSegueErrorDialog.heading = heading
+        streamSegueErrorDialog.text = detail
+        console.error(heading + "\n" + detail)
+    }
+
     function quitStarting()
     {
         // Avoid the push transition animation
@@ -72,6 +89,9 @@ Item {
 
     function sessionFinished(portTestResult)
     {
+        finished = true
+        if (cancellingRecovery)
+            streamSegueErrorDialog.clearError()
         progressCard.visible = false
         if (portTestResult !== 0 && portTestResult !== -1 && streamSegueErrorDialog.text) {
             streamSegueErrorDialog.text += "\n\n" + qsTr("This PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.")
@@ -85,7 +105,7 @@ Item {
             stackView.pop()
         }
 
-        if (quitAfter && !streamSegueErrorDialog.text) {
+        if (quitAfter && (isDisplayCompanion || !streamSegueErrorDialog.text)) {
             // If this was a CLI launch without errors, exit now
             Qt.quit()
         }
@@ -106,19 +126,23 @@ Item {
 
     function sessionReadyForDeletion()
     {
-        var next = session ? session.takePrivacyReconnect() : null
+        var next = session ? session.takeReconnect() : null
         if (next) {
             streamLoader.active = false
             session = next
+            finished = false
             connectSessionSignals()
             progressCard.step = lookupSteps + 1
             progressCard.visible = true
             progressCard.spinning = false
-            stageText = qsTr("Reconnecting to apply the privacy screen...")
-            window.visible = true
+            stageText = next.recoveryAttempt ? qsTr("Checking host status…") : qsTr("Reconnecting to apply stream settings...")
+            if (!next.recoveringInPlace()) window.visible = true
             streamLoader.active = true
             return
         }
+        // A cancellation may arrive after cleanup already queued another attempt.
+        if (cancellingRecovery && !finished)
+            session.sessionFinished(0)
         // Garbage collect the Session object since it's pretty heavyweight
         // and keeps other libraries (like SDL_TTF) around until it is deleted.
         session = null
@@ -138,8 +162,12 @@ Item {
         session.stageStarting.connect(stageStarting)
         session.stageFailed.connect(stageFailed)
         session.connectionStarted.connect(connectionStarted)
+        session.recoveryCancelled.connect(function() {
+            if (session && (session.recoveryAttempt || session.recoveringInPlace())) cancellingRecovery = true
+        })
         session.displayLaunchError.connect(displayLaunchError)
         session.displayPrivacyLaunchError.connect(displayPrivacyLaunchError)
+        session.displayDisconnectError.connect(displayDisconnectError)
         session.quitStarting.connect(quitStarting)
         session.sessionFinished.connect(sessionFinished)
         session.readyForDeletion.connect(sessionReadyForDeletion)
@@ -172,14 +200,14 @@ Item {
     Loader {
         id: streamLoader
         active: false
-        asynchronous: true
+        asynchronous: !isDisplayCompanion
 
         onLoaded: {
             // Set the hint text. We do this here rather than
             // in the hintText control itself to synchronize
             // with Session.exec() which requires no concurrent
             // gamepad usage.
-            progressCard.hint = qsTr("Tip:") + " " + qsTr("Press %1 to disconnect your session").arg(SdlGamepadKeyNavigation.getConnectedGamepads() > 0 ?
+            progressCard.hint = session.recoveryStatus || qsTr("Tip:") + " " + qsTr("Press %1 to disconnect your session").arg(SdlGamepadKeyNavigation.getConnectedGamepads() > 0 ?
                                                   qsTr("Start+Select+L1+R1") : qsTr("Ctrl+Alt+Shift+Q"))
 
             // Stop GUI gamepad usage now
@@ -201,11 +229,11 @@ Item {
             startSessionTimer.interval = 0
 
             // Display the toasts together in a vertical centered arrangement
-            if (session.launchWarnings.length)
+            if (!session.recoveryAttempt && session.launchWarnings.length)
                 stageText = qsTr("Reviewing stream settings...")
 
             var yOffset = 0
-            for (var i = 0; i < session.launchWarnings.length; i++) {
+            for (var i = 0; !session.recoveryAttempt && !isDisplayCompanion && i < session.launchWarnings.length; i++) {
                 var text = session.launchWarnings[i]
                 console.warn(text)
 
@@ -234,7 +262,16 @@ Item {
         id: progressCard
         step: lookupSteps + 1
         stepCount: lookupSteps + 3
-        text: stageText
+        text: cancellingRecovery ? qsTr("Cancelling reconnection…") : stageText
         spinning: false
+    }
+
+    Button {
+        anchors.top: progressCard.bottom
+        anchors.horizontalCenter: progressCard.horizontalCenter
+        visible: recovering
+        enabled: !cancellingRecovery
+        text: qsTr("Cancel reconnection")
+        onClicked: cancelRecovery()
     }
 }

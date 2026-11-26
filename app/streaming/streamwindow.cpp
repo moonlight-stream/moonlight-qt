@@ -1,6 +1,7 @@
 #include "streamwindow.h"
 
 #include <QProcess>
+#include <QCryptographicHash>
 #include <QVector>
 #include <memory>
 
@@ -30,10 +31,11 @@ struct WindowSearch {
 BOOL CALLBACK findWindow(HWND window, LPARAM param)
 {
     auto& search = *reinterpret_cast<WindowSearch*>(param);
-    if (IsWindowVisible(window)) {
+    const auto cover = static_cast<HWND>(GetPropW(window, StreamWindow::CoverProperty));
+    if (IsWindowVisible(window) || IsWindowVisible(cover)) {
         const auto kind = reinterpret_cast<ULONG_PTR>(GetPropW(window, search.property.c_str()));
         if (kind == StreamWindow::Connected || kind == StreamWindow::Opening) {
-            search.target = window;
+            search.target = IsWindowVisible(cover) ? cover : window;
             if (kind == StreamWindow::Connected)
                 return FALSE;
         }
@@ -105,6 +107,11 @@ bool startDetached(QProcess& child, HANDLE reservationHandle)
 }
 }
 
+QString StreamWindow::outputKey(const QString& group, const QString& output)
+{
+    return group + QLatin1Char('.') + QString::fromLatin1(QCryptographicHash::hash(output.toUtf8(), QCryptographicHash::Sha256).toHex());
+}
+
 StreamWindow::State StreamWindow::state(const QString& uuid, QString* progressText)
 {
     if (progressText)
@@ -156,7 +163,10 @@ bool StreamWindow::launchOrActivate(QProcess& child, const QString& uuid)
         const bool requestedViewOnly = child.processEnvironment().value(QStringLiteral("MOONLIGHT_WINDOW_VIEW_ONLY")) == QStringLiteral("1");
         if (requestedViewOnly != isViewOnly(uuid))
             return false;
-        raiseWindow(uuid);
+        // DisplayWindows reveals a companion only in response to a tab gesture.
+        // Joining a concurrent preconnect must keep its window in the background.
+        if (child.processEnvironment().value(QStringLiteral("MOONLIGHT_CAPTURE_OUTPUT")).isEmpty())
+            raiseWindow(uuid);
         return true;
     }
 
@@ -212,12 +222,15 @@ void StreamWindow::setConnectedWindow(HWND window)
     }
 }
 
-void StreamWindow::markReconnecting()
+void StreamWindow::markReconnecting(bool retainWindow)
 {
     if (reservation) {
-        if (connectedWindow)
+        if (connectedWindow && retainWindow) {
+            SetPropW(connectedWindow, property.c_str(), reinterpret_cast<HANDLE>(ULONG_PTR(Opening)));
+        } else if (connectedWindow) {
             RemovePropW(connectedWindow, property.c_str());
-        connectedWindow = nullptr;
+            connectedWindow = nullptr;
+        }
         ResetEvent(reservation);
     }
 }

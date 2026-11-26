@@ -145,6 +145,7 @@ public:
 
     bool isCaptureActive();
     bool usesAbsoluteMouse() const { return m_AbsoluteMouseMode; }
+    void setAbsoluteMouseMode(bool absolute);
     Uint8 primaryMouseButton() const { return m_SwapMouseButtons ? SDL_BUTTON_RIGHT : SDL_BUTTON_LEFT; }
 
     bool isSystemKeyCaptureActive();
@@ -212,6 +213,7 @@ private:
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
     SDL_Window* m_Window = nullptr;
+    StreamingPreferences& m_Preferences;
     const bool m_ViewOnly;
     bool m_MultiController;
     bool m_GamepadMouse;

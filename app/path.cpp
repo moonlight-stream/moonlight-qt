@@ -65,10 +65,10 @@ QFileInfo Path::getCacheFileInfo(QString fileName)
     return QFileInfo(QDir(s_CacheDir), fileName);
 }
 
-QFileInfo Path::desktopPreview(const QString& hostId)
+QFileInfo Path::desktopWallpaper(const QString& hostId)
 {
     const auto key = QCryptographicHash::hash(hostId.toUtf8(), QCryptographicHash::Sha256).toHex();
-    return getCacheFileInfo(QStringLiteral("desktop-%1.png").arg(QString::fromLatin1(key)));
+    return getCacheFileInfo(QStringLiteral("wallpaper-%1.jpg").arg(QString::fromLatin1(key)));
 }
 
 QString Path::getDataFilePath(QString fileName)

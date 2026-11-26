@@ -7,10 +7,10 @@
 // The two panels share one non-activating HWND. Row coordinates are in DIPs,
 // and frame is in native pixels relative to that window.
 namespace CaptionMenu {
-enum class Page { Main, Display, Sound, Security, SystemKeys, Fields, Corner, Opacity };
-enum class Action { Submenu, Back, Info, Divider, Hud, Field, Corner, Opacity, SystemKeys,
-                    HostMute, DisconnectLock, Privacy, LockNow, Fullscreen, Files, Disconnect };
-enum class Icon { None, Display, Sound, Security, Keyboard, Files, Fullscreen, Disconnect };
+enum class Page { Main, Display, Quality, Sound, Security, MouseMode, SystemKeys, Fields, Corner, Opacity, PrivacyResolution };
+enum class Action { Submenu, Back, Info, Divider, Hud, Field, Corner, Opacity, MouseMode, SystemKeys,
+                    SetQuality, BitrateSlider, SelectDisplay, ResizePrivacy, HostMute, DisconnectLock, Privacy, LockNow, Fullscreen, Files, Disconnect };
+enum class Icon { None, Display, Quality, Sound, Security, Mouse, Keyboard, Files, Fullscreen, Disconnect };
 
 inline QFont font(int pixels)
 {
@@ -31,7 +31,15 @@ struct Row {
     int top = 0;
 
     bool selectable() const { return enabled && action != Action::Info && action != Action::Divider; }
-    int height() const { return action == Action::Divider ? 5 : 34; }
+    int sliderMaximum = 0;
+    static constexpr int SliderMin = 500;
+    static constexpr int SliderInset = 18;
+    int height() const { return action == Action::Divider ? 5 : action == Action::BitrateSlider ? 56 : 34; }
+    int sliderValue(qreal x, int width) const
+    {
+        const qreal fraction = qBound(0.0, (x - SliderInset) / (width - 2 * SliderInset), 1.0);
+        return SliderMin + 500 * qRound(fraction * (sliderMaximum - SliderMin) / 500);
+    }
 };
 
 struct Panel {
@@ -51,9 +59,11 @@ struct Panel {
         rows.last().icon = icon;
         return rows.last();
     }
-    void submenu(Page page, const QString& label, Icon icon = Icon::None)
+    Row& submenu(Page page, const QString& label, Icon icon = Icon::None)
     {
-        add(Action::Submenu, label, icon).target = page;
+        auto& row = add(Action::Submenu, label, icon);
+        row.target = page;
+        return row;
     }
     void choice(Action action, const QString& label, int value, bool checked)
     {
@@ -118,6 +128,11 @@ struct Panel {
             p.drawRoundedRect(QRectF(1, 2, 14, 12), 1.8, 1.8);
             p.drawLine(QPointF(2, 12.5), QPointF(14, 12.5));
             break;
+        case Icon::Quality:
+            p.drawRoundedRect(QRectF(1, 2, 14, 12), 2, 2);
+            p.drawEllipse(QPointF(5, 6), 1, 1);
+            p.drawPolyline(QPolygonF{{2, 12}, {6, 9}, {8, 10.5}, {11, 7}, {15, 11}});
+            break;
         case Icon::Sound:
             p.drawPolygon(QPolygonF{{1, 6}, {4, 6}, {8, 2}, {8, 14}, {4, 10}, {1, 10}});
             p.drawArc(QRectF(6, 4, 6, 8), -48 * 16, 96 * 16);
@@ -132,6 +147,10 @@ struct Panel {
             p.drawPolyline(QPolygonF{{9, 5}, {6.5, 8}, {9.5, 8}, {7, 11}});
             break;
         }
+        case Icon::Mouse:
+            p.drawRoundedRect(QRectF(3, 1, 10, 14), 5, 5);
+            p.drawLine(QPointF(8, 4), QPointF(8, 7));
+            break;
         case Icon::Keyboard:
             p.drawRoundedRect(QRectF(0.8, 3, 14.4, 10), 1.6, 1.6);
             for (int i = 0; i < 4; ++i) p.drawPoint(QPointF(3.5 + 3 * i, 6.5));
@@ -171,14 +190,16 @@ struct Panel {
         p.setPen(QPen(QColor("#c7c9cc"), 1 / scale));
         p.setBrush(QColor("#f8f9fa"));
         p.drawRoundedRect(surface.adjusted(0.5 / scale, 0.5 / scale, -0.5 / scale, -0.5 / scale), 7, 7);
-        p.setClipRect(surface.adjusted(1, Padding, -1, -Padding));
+        p.setClipRect(surface.adjusted(1, Padding, -1, -Padding), Qt::IntersectClip);
         p.translate(0, -scroll);
         const auto normal = font(14);
         const auto detailFont = font(12);
         const QColor ink("#202124"), muted("#606469"), rule("#dcdedf"), danger("#c43829");
+        const QRectF dirty = p.clipBoundingRect();
         for (int i = 0; i < rows.size(); ++i) {
             const auto& row = rows[i];
             QRect line(Padding, row.top, size.width() - 2 * Padding, row.height());
+            if (!dirty.intersects(line)) continue;
             const int cy = line.y() + line.height() / 2;
             if (row.action == Action::Divider) {
                 p.fillRect(QRectF(1, cy, size.width() - 2, 1 / scale), rule);
@@ -191,6 +212,25 @@ struct Panel {
             }
             const QColor color = !row.enabled ? QColor("#85898d") : (row.action == Action::Disconnect ? danger : ink);
             p.setPen(color);
+            if (row.action == Action::BitrateSlider) {
+                const QRect title = line.adjusted(Row::SliderInset - Padding, 0, Padding - Row::SliderInset, -28);
+                p.setFont(normal);
+                p.drawText(title, Qt::AlignVCenter | Qt::AlignLeft, row.label);
+                p.drawText(title, Qt::AlignVCenter | Qt::AlignRight, row.detail);
+                const int y = line.top() + 38;
+                const int left = Row::SliderInset, right = size.width() - Row::SliderInset;
+                const qreal ratio = qBound(0.0, qreal(row.value - Row::SliderMin) / (row.sliderMaximum - Row::SliderMin), 1.0);
+                const qreal x = left + (right - left) * ratio;
+                const QColor accent = row.enabled ? QColor("#2468d5") : muted;
+                p.setPen(QPen(rule, 3, Qt::SolidLine, Qt::RoundCap));
+                p.drawLine(left, y, right, y);
+                p.setPen(QPen(accent, 3, Qt::SolidLine, Qt::RoundCap));
+                p.drawLine(QPointF(left, y), QPointF(x, y));
+                p.setPen(Qt::NoPen);
+                p.setBrush(accent);
+                p.drawEllipse(QPointF(x, y), 6, 6);
+                continue;
+            }
             if (row.icon != Icon::None) {
                 paintIcon(p, row.icon, cy, color);
             } else if (row.checked) {

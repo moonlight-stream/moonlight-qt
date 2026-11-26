@@ -2,17 +2,12 @@
 #include "ffmpeg.h"
 #include "utils.h"
 #include "streaming/session.h"
-#include "path.h"
-#include <QDir>
-#include <QImage>
-#include <QSaveFile>
 
 #include <h264_stream.h>
 
 extern "C" {
 #include <libavutil/mastering_display_metadata.h>
 #include <libavutil/pixdesc.h>
-#include <libswscale/swscale.h>
 }
 
 #include "ffmpeg-renderers/sdlvid.h"
@@ -63,42 +58,6 @@ extern "C" {
 #define MAX_SPS_EXTRA_SIZE 16
 
 #define FAILED_DECODES_RESET_THRESHOLD 20
-
-static void saveDesktopPreview(AVFrame* frame, const QString& hostId)
-{
-    AVFrame* downloaded = nullptr;
-    if (frame->hw_frames_ctx) {
-        downloaded = av_frame_alloc();
-        if (!downloaded || av_hwframe_transfer_data(downloaded, frame, 0) < 0) {
-            av_frame_free(&downloaded);
-            return;
-        }
-        frame = downloaded;
-    }
-
-    const QSize size = QSize(frame->width, frame->height).scaled(480, 320, Qt::KeepAspectRatio);
-    QImage image(size, QImage::Format_RGBA8888);
-    auto format = static_cast<AVPixelFormat>(frame->format);
-    if (!image.isNull() && sws_isSupportedInput(format)) {
-        auto* scaler = sws_getContext(frame->width, frame->height, format,
-                                      size.width(), size.height(), AV_PIX_FMT_RGBA,
-                                      SWS_BILINEAR, nullptr, nullptr, nullptr);
-        if (scaler) {
-            uint8_t* planes[4] = {image.bits()};
-            int strides[4] = {static_cast<int>(image.bytesPerLine())};
-            const int rows = sws_scale(scaler, frame->data, frame->linesize, 0, frame->height, planes, strides);
-            sws_freeContext(scaler);
-            if (rows == size.height()) {
-                const auto path = Path::desktopPreview(hostId);
-                QSaveFile file(path.absoluteFilePath());
-                if (path.dir().mkpath(".") && file.open(QIODevice::WriteOnly) && image.save(&file, "PNG")) {
-                    file.commit();
-                }
-            }
-        }
-    }
-    av_frame_free(&downloaded);
-}
 
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
@@ -2078,13 +2037,6 @@ void FFmpegVideoDecoder::decoderThreadProc()
                     av_log_set_level(AV_LOG_INFO);
 
                     // Capture a frame timestamp to measuring pacing delay
-                    if (!m_TestOnly && !m_CheckedDesktopPreview) {
-                        m_CheckedDesktopPreview = true;
-                        const auto host = Session::get()->desktopPreviewHost();
-                        if (!host.isEmpty()) {
-                            saveDesktopPreview(frame, host);
-                        }
-                    }
                     frame->pkt_dts = LiGetMicroseconds();
 
                     if (!m_FrameInfoQueue.isEmpty()) {
@@ -2293,5 +2245,10 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 void FFmpegVideoDecoder::renderFrameOnMainThread()
 {
     m_Pacer->renderOnMainThread();
+}
+
+void FFmpegVideoDecoder::requestRedraw()
+{
+    m_Pacer->requestRedraw();
 }
 

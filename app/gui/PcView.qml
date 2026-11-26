@@ -2,19 +2,22 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Controls.Material 2.2
+import QtQuick.Window 2.2
 
 import AppModel 1.0
 import ComputerModel 1.0
+import LocalHostSessions 1.0
 
 import ComputerManager 1.0
 import StreamingPreferences 1.0
-import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 
 FocusScope {
     id: devices
     property ComputerModel computerModel: createModel()
     readonly property var device: pcList.currentItem
+    readonly property string wallpaperHost: device && device.ready && !showingSettings &&
+                                           StackView.status === StackView.Active && window.active ? device.hostUuid : ""
     readonly property bool compact: width < 620
     property bool showingSettings: false
     property bool pickerOpen: false
@@ -25,6 +28,7 @@ FocusScope {
     property string toolResultHost: ""
     property string toolResultMessage: ""
     onCompactChanged: pickerOpen = false
+    onWallpaperHostChanged: if (wallpaperHost) computerModel.refreshDesktopWallpaper(wallpaperHost)
     objectName: qsTr("My devices")
     Material.theme: Material.Light
     readonly property color actionBlue: "#2468d5"
@@ -32,13 +36,6 @@ FocusScope {
     Material.accent: actionBlue
     Material.background: "#f7f9fc"
     focus: true
-
-    Connections {
-        target: window
-        function onActiveChanged() {
-            if (window.active && devices.visible) computerModel.refreshDesktopPreviews()
-        }
-    }
 
     Connections {
         target: ComputerManager
@@ -138,7 +135,6 @@ FocusScope {
     // also be done in CliStartStreamSegue.qml, since this code does not run
     // for command-line initiated streams.
     StackView.onActivated: {
-        computerModel.refreshDesktopPreviews()
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
     }
@@ -197,10 +193,39 @@ FocusScope {
     }
 
     Rectangle { anchors.fill: parent; color: "#f7f9fc" }
+
+    LocalHostSessions {
+        id: hostSessions
+        onDisconnectFailed: {
+            toolError.text = qsTr("Sunshine could not confirm the disconnect. Check the connected devices and try again.")
+            toolError.open()
+        }
+    }
+    Timer {
+        running: Qt.platform.os === "windows" && window.visible && window.visibility !== Window.Minimized &&
+                 (devices.visible || stackView.currentItem instanceof HostSessionsView)
+        interval: 1000
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: hostSessions.refresh()
+    }
+    HostSessionBanner {
+        id: incomingCard
+        monitor: hostSessions
+        z: 3
+        visible: hostSessions.devices.length > 0
+        width: devices.compact ? devices.width : rail.width
+        height: visible ? implicitHeight : 0
+        anchors { left: parent.left; top: parent.top }
+        onToggled: {
+            devices.pickerOpen = false
+            stackView.push(Qt.resolvedUrl("HostSessionsView.qml"), {monitor: hostSessions})
+        }
+    }
     ItemDelegate {
         id: picker
         visible: devices.compact
-        anchors { left: parent.left; top: parent.top; margins: 6 }
+        anchors { left: parent.left; top: incomingCard.bottom; margins: 6 }
         height: 36
         text: qsTr("Devices")
         onClicked: devices.pickerOpen = !devices.pickerOpen
@@ -231,6 +256,7 @@ FocusScope {
         Item {
             id: listTitle
             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 6 }
+            anchors.topMargin: 6 + (devices.compact ? 0 : incomingCard.height)
             height: 42
             RowLayout {
                 anchors.fill: parent
@@ -330,7 +356,7 @@ FocusScope {
                 property bool online: model.online
                 property bool paired: model.paired
                 property bool unknown: model.statusUnknown
-                property url preview: model.desktopPreview
+                property url wallpaper: model.desktopWallpaper
                 property alias quickApps: quickAppsLoader.item
                 Loader {
                     id: quickAppsLoader
@@ -419,7 +445,10 @@ FocusScope {
                         Material.background: "#ffffff"
                         width: Math.min(window.width, Math.max(200, contentWidth + 12))
                         padding: 5
-                        onAboutToShow: clearPrivacyScreen.visible = StreamingPreferences.privacyScreenForHost(pcRow.hostUuid)
+                        onAboutToShow: {
+                            requestPrivacy.checked = StreamingPreferences.privacyScreenForHost(pcRow.hostUuid)
+                            createPrivacy.checked = StreamingPreferences.createPrivacyDisplayForHost(pcRow.hostUuid)
+                        }
                         background: Rectangle {
                             radius: 8
                             color: "#ffffff"
@@ -448,13 +477,27 @@ FocusScope {
                             visible: !model.online && model.wakeable
                         }
                         NavigableMenuItem {
-                            id: clearPrivacyScreen
-                            visible: false
-                            text: qsTr("Turn off privacy screen request")
+                            id: requestPrivacy
+                            visible: pcRow.paired
+                            checkable: true
+                            text: qsTr("Connect using privacy screen")
+                            onTriggered: StreamingPreferences.setPrivacyScreenForHost(pcRow.hostUuid, !StreamingPreferences.privacyScreenForHost(pcRow.hostUuid))
+                        }
+                        NavigableMenuItem {
+                            visible: pcRow.paired
+                            text: qsTr("Privacy screen resolution…")
                             onTriggered: {
-                                StreamingPreferences.setPrivacyScreenForHost(pcRow.hostUuid, false)
-                                visible = false
+                                privacySizeDialog.hostUuid = pcRow.hostUuid
+                                privacySizeField.text = StreamingPreferences.privacyDesktopSizeForHost(pcRow.hostUuid)
+                                privacySizeDialog.open()
                             }
+                        }
+                        NavigableMenuItem {
+                            id: createPrivacy
+                            visible: pcRow.paired
+                            checkable: true
+                            text: qsTr("Allow virtual display creation while locked")
+                            onTriggered: StreamingPreferences.setCreatePrivacyDisplayForHost(pcRow.hostUuid, !StreamingPreferences.createPrivacyDisplayForHost(pcRow.hostUuid))
                         }
                         NavigableMenuItem {
                             text: qsTr("Test Network")
@@ -643,17 +686,33 @@ FocusScope {
                 scale: 1 + 0.035 * card.emphasis
                 Image {
                     anchors.fill: parent
-                    visible: wallpaper.status !== Image.Ready
+                    visible: !wallpaper.visible
                     source: "qrc:/res/remote-horizon.svg"
                     fillMode: Image.PreserveAspectCrop
                 }
                 Image {
                     id: wallpaper
                     anchors.fill: parent
-                    source: SystemProperties.desktopWallpaper
+                    visible: wallpaper.status === Image.Ready
+                    source: device && device.wallpaper.toString() && preparedWallpaper.lastReady &&
+                            preparedWallpaper.lastReady.host === device.hostUuid ? preparedWallpaper.lastReady.url : ""
                     sourceSize.width: 1600
-                    asynchronous: true
                     fillMode: Image.PreserveAspectCrop
+                }
+                Image {
+                    id: preparedWallpaper
+                    property var lastReady: null
+                    visible: false
+                    asynchronous: true
+                    sourceSize.width: 1600
+                    fillMode: Image.PreserveAspectCrop
+                    source: device ? device.wallpaper : ""
+                    onStatusChanged: {
+                        if (preparedWallpaper.status === Image.Ready && device)
+                            lastReady = {host: device.hostUuid, url: preparedWallpaper.source}
+                        else if (!preparedWallpaper.source.toString())
+                            lastReady = null
+                    }
                 }
             }
             Rectangle {
@@ -767,19 +826,23 @@ FocusScope {
                 }
             }
         }
-        Rectangle {
+        Item {
             id: toolsBar
             readonly property int toolColumns: width < 480 ? 2 : 4
             visible: !!device
             Layout.fillWidth: true
             Layout.preferredHeight: toolColumns === 2 ? 84 : 47
-            color: "#ffffff"
-            border.color: "#d7e0eb"
-            radius: card.cornerRadius
-            Rectangle {
-                anchors { top: parent.top; left: parent.left; right: parent.right; leftMargin: 1; rightMargin: 1 }
-                height: parent.radius
-                color: parent.color
+            Item {
+                anchors.fill: parent
+                clip: true
+                // Crop the upper corners at the seam with the artwork.
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.topMargin: -radius
+                    radius: card.cornerRadius
+                    color: "#ffffff"
+                    border.color: "#d7e0eb"
+                }
             }
             GridLayout {
                 anchors.fill: parent
@@ -1261,6 +1324,34 @@ FocusScope {
 
             // Stop showing the spinner and show the image instead
             showSpinner = false
+        }
+    }
+
+    NavigableDialog {
+        id: privacySizeDialog
+        property string hostUuid
+        title: qsTr("Privacy screen resolution")
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        onOpened: {
+            standardButton(Dialog.Ok).enabled = privacySizeField.valid
+            privacySizeField.forceActiveFocus()
+            privacySizeField.selectAll()
+        }
+        onAccepted: StreamingPreferences.setPrivacyDesktopSizeForHost(hostUuid, privacySizeField.text.trim())
+        ColumnLayout {
+            Label { text: qsTr("Size for the next private connection. Leave blank to use Sunshine settings.") }
+            TextField {
+                id: privacySizeField
+                placeholderText: "2560x1440"
+                Layout.fillWidth: true
+                readonly property var dimensions: text.trim().split("x")
+                readonly property bool valid: !text.trim() ||
+                    (/^[0-9]{3,4}x[0-9]{3,4}$/.test(text.trim()) &&
+                     Number(dimensions[0]) >= 320 && Number(dimensions[0]) <= 8192 &&
+                     Number(dimensions[1]) >= 200 && Number(dimensions[1]) <= 8192)
+                onValidChanged: if (privacySizeDialog.opened) privacySizeDialog.standardButton(Dialog.Ok).enabled = valid
+                onAccepted: if (valid) privacySizeDialog.accept()
+            }
         }
     }
 

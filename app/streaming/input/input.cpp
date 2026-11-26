@@ -10,7 +10,8 @@
 #include <QGuiApplication>
 
 SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight, bool viewOnly)
-    : m_ViewOnly(viewOnly),
+    : m_Preferences(prefs),
+      m_ViewOnly(viewOnly),
       m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
       m_SwapMouseButtons(prefs.swapMouseButtons),
@@ -384,6 +385,20 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
     }
 
     return true;
+}
+
+void SdlInputHandler::setAbsoluteMouseMode(bool absolute)
+{
+    if (m_ViewOnly)
+        return;
+
+    m_Preferences.setAbsoluteMouseMode(absolute);
+    if (m_AbsoluteMouseMode == absolute)
+        return;
+
+    setCaptureActive(false);
+    m_AbsoluteMouseMode = absolute;
+    setCaptureActive(true);
 }
 
 void SdlInputHandler::setCaptureActive(bool active)

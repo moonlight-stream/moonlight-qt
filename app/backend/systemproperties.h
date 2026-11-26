@@ -2,7 +2,6 @@
 
 #include <QObject>
 #include <QRect>
-#include <QUrl>
 
 #include "SDL_compat.h"
 
@@ -28,7 +27,6 @@ public:
     Q_PROPERTY(bool usesMaterial3Theme MEMBER usesMaterial3Theme CONSTANT)
     Q_PROPERTY(QString versionString MEMBER versionString CONSTANT)
     Q_PROPERTY(QString buildTimeString READ buildTimeString CONSTANT)
-    Q_PROPERTY(QUrl desktopWallpaper MEMBER desktopWallpaper CONSTANT)
 
     QString buildTimeString() const;
 
@@ -71,7 +69,6 @@ private:
     bool hasBrowser;
     bool hasDiscordIntegration;
     QString versionString;
-    QUrl desktopWallpaper;
     bool usesMaterial3Theme;
     bool isDarwin;
 
