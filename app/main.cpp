@@ -50,6 +50,7 @@
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
 #include "backend/computermanager.h"
+#include "backend/identitymanager.h"
 #include "backend/systemproperties.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
@@ -969,8 +970,24 @@ int main(int argc, char *argv[])
                                                        return StreamingPreferences::get(qmlEngine);
                                                    });
 
-    // Create the identity manager on the main thread
-    IdentityManager::get();
+    // Create the identity manager on the main thread.
+    // An unusable loaded identity is fatal.
+    IdentityManager::IdentitySource identitySource = parser.isIdentityStdinRequested() ?
+                IdentityManager::IdentitySource::Stdin : IdentityManager::configuredSource();
+    QString identityError;
+    if (!IdentityManager::initialize(identitySource, &identityError)) {
+        fprintf(stderr, "Error: %s\n", qPrintable(identityError));
+        if (commandLineParserResult == GlobalCommandLineParser::NormalStartRequested) {
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Moonlight", qPrintable(identityError), nullptr);
+        }
+        return 1;
+    }
+
+    QString identityWarning = IdentityManager::get()->getIdentityProblem();
+    if (!identityWarning.isEmpty()) {
+        // Always report this on stderr. A GUI launch also shows it in a dialog.
+        fprintf(stderr, "Warning: %s\n", qPrintable(identityWarning));
+    }
 
     // We require the Material theme
     QQuickStyle::setStyle("Material");
@@ -1044,6 +1061,7 @@ int main(int argc, char *argv[])
     if (hasGUI) {
         engine.rootContext()->setContextProperty("initialView", initialView);
         engine.rootContext()->setContextProperty("isGuiLaunch", commandLineParserResult == GlobalCommandLineParser::NormalStartRequested);
+        engine.rootContext()->setContextProperty("identityWarning", identityWarning);
 
         // Load the main.qml file
         engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));

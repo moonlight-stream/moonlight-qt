@@ -1,18 +1,65 @@
 #include "identitymanager.h"
+#include "identitystdin.h"
 #include "utils.h"
 
 #include <QDebug>
+#include <QFile>
+#include <QDateTime>
+#include <QCryptographicHash>
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
 #include <openssl/rand.h>
+#include <openssl/err.h>
 
 #define SER_UNIQUEID "uniqueid"
 #define SER_CERT "certificate"
 #define SER_KEY "key"
+#define SER_CERTFILE "certificatefile"
+#define SER_KEYFILE "keyfile"
+
+// Far larger than any reasonable certificate chain and key
+#define STDIN_IDENTITY_MAX_BYTES (64 * 1024)
+
+static int
+refusePassphrase(char*, int, int, void*)
+{
+    // Fail on encrypted keys instead of letting OpenSSL prompt on the terminal
+    return 0;
+}
 
 IdentityManager* IdentityManager::s_Im = nullptr;
+
+IdentityManager::IdentitySource
+IdentityManager::configuredSource()
+{
+    // An administrator can provision an externally issued identity (which may
+    // include intermediate certificates) instead of the one in the cert and key
+    // settings. Setting either file selects it, so a missing one is reported.
+    QSettings settings;
+    if (!settings.value(SER_CERTFILE).toString().isEmpty() ||
+            !settings.value(SER_KEYFILE).toString().isEmpty()) {
+        return IdentitySource::Files;
+    }
+    return IdentitySource::Settings;
+}
+
+bool
+IdentityManager::initialize(IdentitySource source, QString* error)
+{
+    Q_ASSERT(s_Im == nullptr);
+
+    IdentityManager* im = new IdentityManager(source);
+    if (!im->m_FatalError.isEmpty()) {
+        *error = im->m_FatalError;
+        delete im;
+        return false;
+    }
+
+    s_Im = im;
+    return true;
+}
 
 IdentityManager*
 IdentityManager::get()
@@ -20,7 +67,10 @@ IdentityManager::get()
     // This will always be called first on the main thread,
     // so it's safe to initialize without locks.
     if (s_Im == nullptr) {
-        s_Im = new IdentityManager();
+        QString error;
+        if (!initialize(configuredSource(), &error)) {
+            qFatal("%s", qPrintable(error));
+        }
     }
 
     return s_Im;
@@ -108,24 +158,29 @@ void IdentityManager::createCredentials(QSettings& settings)
     qInfo() << "Wrote new identity credentials to settings";
 }
 
-IdentityManager::IdentityManager()
+IdentityManager::IdentityManager(IdentitySource source)
 {
     QSettings settings;
+    QString error;
+    bool ok = false;
 
-    m_CachedPemCert = settings.value(SER_CERT).toByteArray();
-    m_CachedPrivateKey = settings.value(SER_KEY).toByteArray();
+    switch (source) {
+    case IdentitySource::Settings:
+        ok = loadIdentityFromSettings(settings, &error);
+        break;
+    case IdentitySource::Files:
+        ok = loadIdentityFromFiles(settings, &error);
+        break;
+    case IdentitySource::Stdin:
+        ok = loadIdentityFromStdin(settings, &error);
+        break;
+    }
 
-    if (m_CachedPemCert.isEmpty() || m_CachedPrivateKey.isEmpty()) {
-        qInfo() << "No existing credentials found";
-        createCredentials(settings);
-    }
-    else if (getSslCertificate().isNull()) {
-        qWarning() << "Certificate is unreadable";
-        createCredentials(settings);
-    }
-    else if (getSslKey().isNull()) {
-        qWarning() << "Private key is unreadable";
-        createCredentials(settings);
+    // Only the identity in the cert and key settings is ever replaced, so a failure
+    // to load any other identity is fatal
+    if (!ok) {
+        m_FatalError = error;
+        return;
     }
 
     // We should have valid credentials now. If not, we're screwed
@@ -135,6 +190,8 @@ IdentityManager::IdentityManager()
     if (getSslKey().isNull()) {
         qFatal("Private key is unreadable");
     }
+
+    logIdentityDetails(m_IdentitySource, m_CachedPemCert, m_CachedPrivateKey);
 
     // Load the unique ID from settings
     m_CachedUniqueId = settings.value(SER_UNIQUEID).toString();
@@ -153,6 +210,194 @@ IdentityManager::IdentityManager()
     }
 }
 
+bool
+IdentityManager::loadIdentityFromSettings(QSettings& settings, QString* error)
+{
+    // This source never fails, since an unusable identity here is replaced
+    Q_UNUSED(error);
+
+    m_IdentitySource = "settings";
+    m_CachedPemCert = settings.value(SER_CERT).toByteArray();
+    m_CachedPrivateKey = settings.value(SER_KEY).toByteArray();
+
+    if (m_CachedPemCert.isEmpty() || m_CachedPrivateKey.isEmpty()) {
+        qInfo() << "No existing credentials found";
+        createCredentials(settings);
+        return true;
+    }
+
+    QString problem;
+    if (!validateIdentity(m_CachedPemCert, m_CachedPrivateKey, &problem)) {
+        // This identity was created by Moonlight, so it's safe to replace it
+        m_IdentityProblem = QObject::tr("Moonlight's saved client identity was unusable, so it was replaced "
+                                        "with a new one. You will need to pair with your hosts again. "
+                                        "The problem was: %1").arg(problem);
+        qWarning().noquote() << m_IdentityProblem;
+        createCredentials(settings);
+    }
+    return true;
+}
+
+bool
+IdentityManager::loadIdentityFromFiles(QSettings& settings, QString* error)
+{
+    QString certFile = settings.value(SER_CERTFILE).toString();
+    QString keyFile = settings.value(SER_KEYFILE).toString();
+    if (certFile.isEmpty() || keyFile.isEmpty()) {
+        *error = QObject::tr("Both certificatefile and keyfile must be set to use a provisioned client identity.");
+        return false;
+    }
+
+    QFile certQFile(certFile);
+    QFile keyQFile(keyFile);
+    if (!certQFile.open(QIODevice::ReadOnly)) {
+        *error = QObject::tr("Unable to read the client certificate file \"%1\": %2")
+                     .arg(certFile, certQFile.errorString());
+        return false;
+    }
+    if (!keyQFile.open(QIODevice::ReadOnly)) {
+        *error = QObject::tr("Unable to read the client key file \"%1\": %2")
+                     .arg(keyFile, keyQFile.errorString());
+        return false;
+    }
+
+    QByteArray pemCert = certQFile.readAll();
+    QByteArray pemKey = keyQFile.readAll();
+    QString problem;
+
+    qInfo() << "Using the client identity from" << certFile << "and" << keyFile;
+    if (!validateIdentity(pemCert, pemKey, &problem)) {
+        *error = QObject::tr("The client identity in \"%1\" and \"%2\" is unusable: %3")
+                     .arg(certFile, keyFile, problem);
+        return false;
+    }
+
+    m_CachedPemCert = pemCert;
+    m_CachedPrivateKey = pemKey;
+    m_IdentitySource = QString("%1 and %2").arg(certFile, keyFile);
+    return true;
+}
+
+bool
+IdentityManager::loadIdentityFromStdin(QSettings& settings, QString* error)
+{
+    QByteArray json, pemCert, pemKey;
+    QString problem;
+
+    bool ok = IdentityStdin::readAll(STDIN_IDENTITY_MAX_BYTES, &json, error) &&
+              IdentityStdin::parseJson(json, &pemCert, &pemKey, error);
+    IdentityStdin::cleanse(json);
+
+    if (ok && !validateIdentity(pemCert, pemKey, &problem)) {
+        *error = QObject::tr("The client identity on standard input is unusable: %1").arg(problem);
+        ok = false;
+    }
+    if (!ok) {
+        IdentityStdin::cleanse(pemCert);
+        IdentityStdin::cleanse(pemKey);
+        return false;
+    }
+
+    qInfo() << "Using the client identity supplied on standard input";
+    if (!settings.value(SER_CERTFILE).toString().isEmpty() ||
+            !settings.value(SER_KEYFILE).toString().isEmpty()) {
+        qInfo() << "Ignoring the certificatefile and keyfile settings in favor of standard input";
+    }
+
+    // Moved rather than copied so no extra copies of the key material are left behind
+    m_CachedPemCert = std::move(pemCert);
+    m_CachedPrivateKey = std::move(pemKey);
+    m_IdentitySource = "stdin";
+    return true;
+}
+
+QString
+IdentityManager::describeCertificate(const QSslCertificate& cert)
+{
+    if (cert.isNull()) {
+        return "<null certificate>";
+    }
+
+    QStringList sans;
+    const auto altNames = cert.subjectAlternativeNames();
+    for (auto it = altNames.constBegin(); it != altNames.constEnd(); ++it) {
+        sans << (it.key() == QSsl::DnsEntry ? "DNS:" : "IP:") + it.value();
+    }
+
+    // The public key hash identifies the key pair independently of any one certificate
+    QString spkiSha256;
+    QByteArray der = cert.toDer();
+    const unsigned char* derData = reinterpret_cast<const unsigned char*>(der.constData());
+    X509* x509 = d2i_X509(nullptr, &derData, der.size());
+    if (x509 != nullptr) {
+        unsigned char* spki = nullptr;
+        int spkiLength = i2d_X509_PUBKEY(X509_get_X509_PUBKEY(x509), &spki);
+        if (spkiLength > 0) {
+            QByteArray spkiDer(reinterpret_cast<const char*>(spki), spkiLength);
+            spkiSha256 = QString::fromLatin1(QCryptographicHash::hash(spkiDer, QCryptographicHash::Sha256).toHex(':'));
+            OPENSSL_free(spki);
+        }
+        X509_free(x509);
+    }
+
+    return QString("subject=[CN=%1, O=%2, OU=%3] issuer=[CN=%4, O=%5] serial=%6 "
+                   "valid=%7..%8 SAN=[%9] sha256=%10 spki-sha256=%11")
+            .arg(cert.subjectInfo(QSslCertificate::CommonName).join('/'),
+                 cert.subjectInfo(QSslCertificate::Organization).join('/'),
+                 cert.subjectInfo(QSslCertificate::OrganizationalUnitName).join('/'),
+                 cert.issuerInfo(QSslCertificate::CommonName).join('/'),
+                 cert.issuerInfo(QSslCertificate::Organization).join('/'),
+                 QString::fromLatin1(cert.serialNumber()),
+                 cert.effectiveDate().toString(Qt::ISODate),
+                 cert.expiryDate().toString(Qt::ISODate),
+                 sans.join(", "))
+            .arg(QString::fromLatin1(cert.digest(QCryptographicHash::Sha256).toHex(':')),
+                 spkiSha256.isEmpty() ? "<unknown>" : spkiSha256);
+}
+
+void
+IdentityManager::logIdentityDetails(const QString& source, const QByteArray& pemCert, const QByteArray& pemKey)
+{
+    QList<QSslCertificate> chain = QSslCertificate::fromData(pemCert);
+    qInfo().noquote() << "Client identity from" << source << "contains" << chain.size() << "certificate(s)";
+
+    QDateTime now = QDateTime::currentDateTimeUtc();
+    for (int i = 0; i < chain.size(); i++) {
+        const QSslCertificate& cert = chain[i];
+        qInfo().noquote() << QString("Client chain[%1]%2: %3").arg(i).arg(i == 0 ? " (leaf)" : "",
+                                                                      describeCertificate(cert));
+
+        if (now < cert.effectiveDate() || now > cert.expiryDate()) {
+            qWarning() << "Client chain[" << i << "] is outside its validity period";
+        }
+    }
+
+    // Never log the key itself, only what kind of key it is
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    BIO* bio = BIO_new_mem_buf(const_cast<char*>(pemKey.constData()), pemKey.size());
+#else
+    BIO* bio = BIO_new_mem_buf(pemKey.constData(), pemKey.size());
+#endif
+    if (bio != nullptr) {
+        EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, refusePassphrase, nullptr);
+        if (pk == nullptr) {
+            qWarning() << "OpenSSL could not parse the private key (encrypted or unsupported format?)";
+        }
+        else {
+            qInfo() << "Client private key: type" << EVP_PKEY_base_id(pk) << "bits" << EVP_PKEY_bits(pk);
+            EVP_PKEY_free(pk);
+        }
+        BIO_free(bio);
+        ERR_clear_error();
+    }
+}
+
+QString
+IdentityManager::getIdentityProblem() const
+{
+    return m_IdentityProblem;
+}
+
 QSslCertificate
 IdentityManager::getSslCertificate()
 {
@@ -162,40 +407,98 @@ IdentityManager::getSslCertificate()
     return m_CachedSslCert;
 }
 
+bool
+IdentityManager::validateIdentity(const QByteArray& pemCert, const QByteArray& pemKey, QString* error)
+{
+    QString problem;
+
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    BIO* bio = BIO_new_mem_buf(const_cast<char*>(pemCert.constData()), pemCert.size());
+#else
+    BIO* bio = BIO_new_mem_buf(pemCert.constData(), pemCert.size());
+#endif
+    THROW_BAD_ALLOC_IF_NULL(bio);
+    X509* leaf = PEM_read_bio_X509(bio, nullptr, refusePassphrase, nullptr);
+    BIO_free(bio);
+
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    bio = BIO_new_mem_buf(const_cast<char*>(pemKey.constData()), pemKey.size());
+#else
+    bio = BIO_new_mem_buf(pemKey.constData(), pemKey.size());
+#endif
+    THROW_BAD_ALLOC_IF_NULL(bio);
+    EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, refusePassphrase, nullptr);
+    BIO_free(bio);
+
+    QSslCertificate sslCert(pemCert, QSsl::Pem);
+    if (leaf == nullptr || sslCert.isNull()) {
+        problem = QObject::tr("The certificate is not a valid PEM certificate.");
+    }
+    else if (pk == nullptr) {
+        problem = QObject::tr("The private key could not be parsed. "
+                              "It may be encrypted or in an unsupported format.");
+    }
+    else if (X509_check_private_key(leaf, pk) != 1) {
+        problem = QObject::tr("The private key does not match the certificate.");
+    }
+    else if (pemToSslKey(pemKey, sslCert.publicKey().algorithm()).isNull()) {
+        problem = QObject::tr("The private key could not be loaded for use with TLS.");
+    }
+
+    X509_free(leaf);
+    EVP_PKEY_free(pk);
+    ERR_clear_error();
+
+    if (!problem.isEmpty()) {
+        if (error != nullptr) {
+            *error = problem;
+        }
+        return false;
+    }
+    return true;
+}
+
+QSslKey
+IdentityManager::pemToSslKey(const QByteArray& pemKey, QSsl::KeyAlgorithm algorithm)
+{
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    BIO* bio = BIO_new_mem_buf(const_cast<char*>(pemKey.constData()), -1);
+#else
+    BIO* bio = BIO_new_mem_buf(pemKey.constData(), -1);
+#endif
+    THROW_BAD_ALLOC_IF_NULL(bio);
+
+    EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, refusePassphrase, nullptr);
+    BIO_free(bio);
+    if (pk == nullptr) {
+        return QSslKey();
+    }
+
+    bio = BIO_new(BIO_s_mem());
+    THROW_BAD_ALLOC_IF_NULL(bio);
+
+    // We must write out our PEM in the old PKCS1 format for SecureTransport
+    // on macOS/iOS to be able to read it.
+#ifdef Q_OS_DARWIN
+    PEM_write_bio_PrivateKey_traditional(bio, pk, nullptr, nullptr, 0, nullptr, 0);
+#else
+    PEM_write_bio_PrivateKey(bio, pk, nullptr, nullptr, 0, nullptr, 0);
+#endif
+
+    BUF_MEM* mem;
+    BIO_get_mem_ptr(bio, &mem);
+    QSslKey key(QByteArray(mem->data, (int)mem->length), algorithm);
+
+    BIO_free(bio);
+    EVP_PKEY_free(pk);
+    return key;
+}
+
 QSslKey
 IdentityManager::getSslKey()
 {
     if (m_CachedSslKey.isNull()) {
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-        BIO* bio = BIO_new_mem_buf(const_cast<char*>(m_CachedPrivateKey.constData()), -1);
-#else
-        BIO* bio = BIO_new_mem_buf(m_CachedPrivateKey.constData(), -1);
-#endif
-        THROW_BAD_ALLOC_IF_NULL(bio);
-
-        EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
-        BIO_free(bio);
-        if (pk == nullptr) {
-            return m_CachedSslKey;
-        }
-
-        bio = BIO_new(BIO_s_mem());
-        THROW_BAD_ALLOC_IF_NULL(bio);
-
-        // We must write out our PEM in the old PKCS1 format for SecureTransport
-        // on macOS/iOS to be able to read it.
-#ifdef Q_OS_DARWIN
-        PEM_write_bio_PrivateKey_traditional(bio, pk, nullptr, nullptr, 0, nullptr, 0);
-#else
-        PEM_write_bio_PrivateKey(bio, pk, nullptr, nullptr, 0, nullptr, 0);
-#endif
-
-        BUF_MEM* mem;
-        BIO_get_mem_ptr(bio, &mem);
-        m_CachedSslKey = QSslKey(QByteArray(mem->data, (int)mem->length), getSslCertificate().publicKey().algorithm());
-
-        BIO_free(bio);
-        EVP_PKEY_free(pk);
+        m_CachedSslKey = pemToSslKey(m_CachedPrivateKey, getSslCertificate().publicKey().algorithm());
     }
     return m_CachedSslKey;
 }
@@ -204,7 +507,8 @@ QSslConfiguration
 IdentityManager::getSslConfig()
 {
     QSslConfiguration sslConfig(QSslConfiguration::defaultConfiguration());
-    sslConfig.setLocalCertificate(getSslCertificate());
+    // Present the full chain so hosts can verify a provisioned identity issued by an intermediate CA
+    sslConfig.setLocalCertificateChain(QSslCertificate::fromData(m_CachedPemCert));
     sslConfig.setPrivateKey(getSslKey());
     return sslConfig;
 }

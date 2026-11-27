@@ -172,6 +172,7 @@ SOURCES += \
     main.cpp \
     backend/computerseeker.cpp \
     backend/identitymanager.cpp \
+    backend/identitystdin.cpp \
     backend/nvcomputer.cpp \
     backend/nvhttp.cpp \
     backend/nvpairingmanager.cpp \
@@ -216,6 +217,7 @@ HEADERS += \
     utils.h \
     backend/computerseeker.h \
     backend/identitymanager.h \
+    backend/identitystdin.h \
     backend/nvcomputer.h \
     backend/nvhttp.h \
     backend/nvpairingmanager.h \

@@ -106,6 +106,74 @@ for different architectures, which handle building deps and extra linking for yo
         * This build will lack windowed mode, Discord/Help links, and other features that don't make sense on an embedded device.
         * For platforms with poor GPU performance, add `"CONFIG+=gpuslow"` to prefer direct KMSDRM rendering over GL/Vulkan renderers. Direct KMSDRM rendering can use dedicated YUV/RGB conversion and scaling hardware rather than slower GPU shaders for these operations.
 
+## Client Identity
+Moonlight identifies itself to hosts with a client certificate.
+By default it generates one and stores it in the `cert` and `key` settings.
+If that stored identity is ever corrupted or otherwise made unusable,
+Moonlight replaces it and warns that hosts must be paired again.
+
+If a more tightly-controlled certificate and key are needed,
+an administrator can provision an externally-issued identity
+by setting `certificatefile` and `keyfile` in the same settings store:
+
+* `certificatefile` is the path to a PEM certificate,
+  optionally followed by the intermediate certificates needed to verify it.
+  Moonlight presents the whole chain to hosts.
+* `keyfile` is the path to the certificate's unencrypted PEM private key.
+
+When either is set, Moonlight uses these files and ignores `cert` and `key`.
+It never modifies or replaces a provisioned identity.
+If only one of the two is set,
+or the files can't be read,
+or the key doesn't match the certificate,
+Moonlight reports the problem and exits instead of starting.
+
+### Supplying a client identity on standard input
+In some circumstances,
+it can be helpful to avoid putting the certificate and key on disk at all.
+A wrapper application can supply a client identity that exists only in memory,
+such as a short-lived certificate issued for a single session:
+
+```
+wrapper | moonlight --identity-stdin [<action> ...]
+```
+
+`--identity-stdin` works with every action,
+and when starting Moonlight's GUI without an action.
+Use it with `pair` to pair a host with the identity,
+and then with `stream`, `list`, and `quit` to talk to that host.
+
+With `--identity-stdin`, Moonlight reads standard input to EOF (up to 64 KiB) during startup,
+before it shows any window.
+The input must be a single JSON object with exactly these two string members:
+
+```json
+{"certificate": "-----BEGIN CERTIFICATE-----\n...", "key": "-----BEGIN PRIVATE KEY-----\n..."}
+```
+
+* `certificate` is the PEM certificate, optionally followed by intermediate certificates.
+* `key` is the unencrypted PEM private key.
+
+The wrapper must close its end of the pipe after writing the object.
+Standard input can't be a terminal.
+
+This identity takes priority over `certificatefile`, `keyfile`, `cert`, and `key`,
+which are all ignored if `--identity-stdin` is specified.
+Nothing about the identity passed through standard input is saved.
+If it can't be read,
+or the key doesn't match the certificate,
+Moonlight prints the reason to stderr and exits with a nonzero status.
+When starting the GUI, it also shows the reason in a dialog.
+
+The identity is used for as long as Moonlight runs,
+so a short-lived certificate can expire during a long GUI session.
+A host paired from the GUI with this identity
+appears unpaired when Moonlight is later started without it.
+
+On Windows, pass the pipe as `hStdInput` with `STARTF_USESTDHANDLES`,
+and pass `hStdError` to receive errors and the log.
+On macOS, run `Moonlight.app/Contents/MacOS/Moonlight` directly.
+
 ## Contribute
 1. Fork us
 2. Write code

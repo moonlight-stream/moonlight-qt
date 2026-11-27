@@ -38,6 +38,7 @@ public:
         setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
         addHelpOption();
         addVersionOption();
+        addIdentityStdinOption();
     }
 
     void handleHelpAndVersionOptions()
@@ -125,6 +126,14 @@ public:
         addOption(QCommandLineOption("no-" + name, QString("Do not use %1.").arg(descriptiveName)));
     }
 
+    void addIdentityStdinOption()
+    {
+        addOption(QCommandLineOption("identity-stdin",
+                                     "Read the client certificate and private key from standard input "
+                                     "as a JSON object {\"certificate\": \"<PEM>\", \"key\": \"<PEM>\"}. "
+                                     "It is used instead of the configured client identity and is never saved."));
+    }
+
     void addValueOption(QString name, QString descriptiveName)
     {
         addOption(QCommandLineOption(name, QString("Specify %1 to use.").arg(descriptiveName), name));
@@ -141,6 +150,7 @@ private:
 };
 
 GlobalCommandLineParser::GlobalCommandLineParser()
+    : m_IdentityStdin(false)
 {
 }
 
@@ -167,6 +177,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
     parser.addPositionalArgument("action", "Action to execute", "<action>");
     parser.parse(args);
     auto posArgs = parser.positionalArguments();
+    m_IdentityStdin = parser.isSet("identity-stdin");
 
     if (posArgs.isEmpty()) {
         // This method will not return and terminates the process if --version
@@ -197,6 +208,11 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
 
         parser.showError("Invalid action");
     }
+}
+
+bool GlobalCommandLineParser::isIdentityStdinRequested() const
+{
+    return m_IdentityStdin;
 }
 
 QuitCommandLineParser::QuitCommandLineParser()

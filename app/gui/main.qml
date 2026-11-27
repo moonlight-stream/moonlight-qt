@@ -51,6 +51,12 @@ ApplicationWindow {
         }
 
         if (isGuiLaunch) {
+            // A replaced client identity can unpair hosts, so always report it
+            // regardless of the configuration warnings preference
+            if (identityWarning) {
+                identityWarningDialog.open()
+            }
+
             // Display any modal dialogs for configuration warnings
             if (StreamingPreferences.configurationWarnings) {
                 if (SystemProperties.isWow64) {
@@ -460,6 +466,12 @@ ApplicationWindow {
                    "Your streaming performance may be severely degraded in this configuration.")
         helpText: qsTr("Click the Help button for more information on solving this problem.")
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems"
+    }
+
+    NavigableMessageDialog {
+        id: identityWarningDialog
+        standardButtons: Dialog.Ok
+        text: identityWarning
     }
 
     NavigableMessageDialog {
