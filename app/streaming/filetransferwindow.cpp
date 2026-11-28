@@ -520,6 +520,10 @@ FileTransferWindow::FileTransferWindow(QUrl host, QSslCertificate certificate, Q
 QWidget* FileTransferWindow::makePane(bool remote, const QString& title)
 {
     auto& p = m_Panes[remote];
+    p.transferRefresh.setSingleShot(true);
+    connect(&p.transferRefresh, &QTimer::timeout, this, [this, remote] {
+        m_Engine->list(remote, m_Panes[remote].requested);
+    });
     auto* box = new QFrame;
     box->setObjectName("transferPanel");
     auto* layout = new QVBoxLayout(box);
@@ -750,6 +754,7 @@ void FileTransferWindow::navigate(bool remote, QString path, std::optional<QStri
         path = QDir(p.path).filePath(path);
     }
     p.requested = path.isEmpty() ? QString() : QDir::cleanPath(path);
+    p.transferRefresh.stop();
     if (remote) {
         m_RemoteRetryTimer.stop();
         m_RemoteRetryDelay = 0;
@@ -1200,20 +1205,21 @@ void FileTransferWindow::transfer(bool fromRemote, const QList<TransferEntry>& e
 void FileTransferWindow::transferTo(bool fromRemote, const QList<TransferEntry>& entries, const QString& destination)
 {
     if (!m_Available || !QDir::isAbsolutePath(destination)) return;
+    QHash<QString, QTreeWidgetItem*> unfinished;
+    for (auto it = m_Tasks.cbegin(); it != m_Tasks.cend(); ++it) {
+        if (it->state != State::Finished) unfinished.insert(it->key, it.key());
+    }
     QList<QTreeWidgetItem*> items;
     for (const auto& entry : entries) {
         const auto key = taskKey(fromRemote, entry.path, destination);
-        auto it = std::find_if(m_Tasks.cbegin(), m_Tasks.cend(), [&](const Task& t) {
-            return t.key == key && t.state != State::Finished;
-        });
-        QTreeWidgetItem* item;
-        if (it != m_Tasks.cend()) {
-            item = it.key();
-            if (it->state == State::Interrupted) m_Tasks[item].entry = entry;
+        auto* item = unfinished.value(key);
+        if (item) {
+            if (m_Tasks[item].state == State::Interrupted) m_Tasks[item].entry = entry;
             m_Queue->setCurrentItem(item);
             m_Queue->scrollToItem(item);
         } else {
             item = addTask(fromRemote, entry, destination, key, 0);
+            unfinished.insert(key, item);
         }
         items.append(item);
     }
@@ -1295,7 +1301,11 @@ void FileTransferWindow::showProgress(int id, qint64 bytes, qint64 total, const 
     }
     t.lock.reset();
     const bool remoteDestination = !t.fromRemote;
-    if (m_Panes[remoteDestination].requested == t.destination) m_Engine->list(remoteDestination, t.destination);
+    auto& pane = m_Panes[remoteDestination];
+    if (pane.requested == t.destination) {
+        // Refresh once after a burst of completions, or immediately when the queue drains.
+        pane.transferRefresh.start(m_Running.isEmpty() ? 0 : 750);
+    }
     updateActions();
     closeWhenIdle();
 }

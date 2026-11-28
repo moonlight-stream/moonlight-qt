@@ -8,12 +8,15 @@
 #include <QQueue>
 #include <QSslConfiguration>
 #include <QThreadPool>
+#include <QThreadStorage>
 #include <QUrl>
 
 #include <atomic>
 #include <functional>
 #include <future>
 #include <memory>
+
+class QNetworkAccessManager;
 
 struct TransferEntry
 {
@@ -92,7 +95,9 @@ private:
     const bool m_Standalone;
     const ConflictPrompt m_ConflictPrompt;
     QSslConfiguration m_Ssl;
+    QThreadStorage<QNetworkAccessManager*> m_Networks;
     QThreadPool m_Transfers;
+    QThreadPool m_SmallFiles;
     QThreadPool m_Lists;
     Flag m_ListCancel[2];
     Flag m_WindowClosing = std::make_shared<std::atomic_bool>(false);

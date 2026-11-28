@@ -25,12 +25,14 @@
 #include <QUuid>
 
 #include <algorithm>
+#include <deque>
 #include <filesystem>
 #include <openssl/rand.h>
 #include <functional>
 
 namespace {
 constexpr qint64 ChunkSize = 1024 * 1024;
+constexpr int SmallFileConcurrency = 4;
 constexpr qint64 ListLimit = 16 * 1024 * 1024;
 using Flag = std::shared_ptr<std::atomic_bool>;
 using Params = QList<QPair<QString, QString>>;
@@ -173,16 +175,31 @@ QList<TransferEntry> localList(const QString& path, const Flag& cancelled)
     return entries;
 }
 
-// A worker and its network connections belong to exactly one pool task.
+// A connection stays on its pool thread and is scoped to this engine's peer and client identity.
+using Networks = QThreadStorage<QNetworkAccessManager*>;
+
+QNetworkAccessManager& transferNetwork(Networks& networks)
+{
+    if (!networks.hasLocalData()) {
+        auto* manager = new QNetworkAccessManager;
+        manager->setProxy(QNetworkProxy::NoProxy);
+        networks.setLocalData(manager);
+    }
+    return *networks.localData();
+}
+
 class Worker
 {
 public:
-    Worker(QUrl host, const QSslConfiguration& ssl, QByteArray token, Flag cancelled, bool standalone,
-           ConflictResolver resolve = {}, ConflictDecisions* decisions = nullptr) :
-        host(std::move(host)), certificate(ssl.caCertificates().value(0)), cancelled(std::move(cancelled)),
-        needsSession(standalone), resolveConflicts(std::move(resolve)), conflictDecisions(decisions)
+    Worker(const Worker&) = delete;
+    Worker(Worker&&) = default;
+
+    Worker(Networks& networks, QUrl host, const QSslConfiguration& ssl, QByteArray token, Flag cancelled, bool standalone,
+           ConflictResolver resolve = {}, ConflictDecisions* decisions = nullptr, std::optional<QJsonObject>* batchCaps = nullptr) :
+        networks(networks), host(std::move(host)), certificate(ssl.caCertificates().value(0)), cancelled(std::move(cancelled)),
+        needsSession(standalone && !(batchCaps && batchCaps->has_value())), resolveConflicts(std::move(resolve)),
+        conflictDecisions(decisions), batchCaps(batchCaps)
     {
-        network.setProxy(QNetworkProxy::NoProxy);
         request.setSslConfiguration(ssl);
         request.setRawHeader("X-Clipboard-Token", std::move(token));
         if (standalone) request.setRawHeader("X-Moonlight-File-Session", "1");
@@ -420,15 +437,18 @@ public:
     }
 
     std::shared_ptr<ck::Journal> copy(bool fromRemote, const TransferEntry& entry, const QString& folder,
-                                     const Progress& report, const Flag& closing)
+                                     const Progress& report, const Flag& closing, QThreadPool& smallFiles)
     {
+        filePool = &smallFiles;
         const auto target = childPath(folder, entry.name);
         try {
             const auto caps = capabilities();
             backgroundTransfers = caps.value("backgroundTransfers").toBool();
             if (caps.value("version").toInt() >= 2) openJournal(fromRemote, entry, target);
             copyEntry(fromRemote, !fromRemote, entry, folder, report);
-        } catch (const Failure& e) {
+        } catch (Failure& e) {
+            // All sibling writes have joined. A lost grant after partial progress is resumable.
+            if (e.code == 403 && journal && bytes > 0) e.interrupted = true;
             if (!*closing && (*cancelled || !e.interrupted)) {
                 // An explicit cancel can arrive before the session/capabilities request finishes.
                 if (*cancelled && !journal) openJournal(fromRemote, entry, target);
@@ -452,7 +472,7 @@ public:
     int skipped = 0;
 
     void copyEntry(bool fromRemote, bool toRemote, const TransferEntry& entry, const QString& parent, const Progress& report,
-                   int depth = 0, bool newParent = false)
+                   int depth = 0, bool newParent = false, bool parallel = false)
     {
         checkCancelled(cancelled);
         if (parent.isEmpty() || !safeName(entry.name) || depth > 128)
@@ -466,7 +486,7 @@ public:
         if (entry.directory) {
             auto name = entry.name;
             if (!depth && fromRemote == toRemote && copyingToSourceParent(fromRemote, entry.path, parent)) {
-                const auto choice = chooseTarget(toRemote, entry, parent, true);
+                const auto choice = chooseTarget(toRemote, entry, parent, true, report);
                 if (!choice) return;
                 destination = choice->path;
                 name = QFileInfo(destination).fileName();
@@ -477,10 +497,14 @@ public:
             std::vector<ck::Handle> pins;
             if (!toRemote && !ck::pinDirectory(destination, pins))
                 throw Failure{Engine::tr("Cannot open folder: %1").arg(destination)};
-            for (const auto& child : children) copyEntry(fromRemote, toRemote, child, destination, report, depth + 1, created);
+            copyChildren(fromRemote, toRemote, children, destination, report, depth + 1, created);
             return;
         }
 
+        // A second spelling of a pending name must see the first file's publication and receipt.
+        if (std::any_of(pendingFiles.cbegin(), pendingFiles.cend(), [&](const auto& file) {
+                return file.path.compare(destination, Qt::CaseInsensitive) == 0;
+            })) finishFiles(report);
         auto state = journal ? record(destination) : QJsonObject{};
         CopyTarget target{destination, state.value("replace").toString()};
         const auto savedName = state.value("copyName").toString();
@@ -493,7 +517,7 @@ public:
         } else if (!newParent && needsConflictDecision(state)) {
             // Older checkpoints already own their partial file or publication receipt.
             // A fresh copy asks before writing and remembers the decision across a restart.
-            const auto choice = chooseTarget(toRemote, entry, parent, fromRemote == toRemote);
+            const auto choice = chooseTarget(toRemote, entry, parent, fromRemote == toRemote, report);
             if (!choice) {
                 ++skipped;
                 state.insert("skipped", true);
@@ -505,6 +529,17 @@ public:
             if (!target.replaceVersion.isEmpty()) state.insert("replace", target.replaceVersion);
             if (journal && (target.path != destination || !target.replaceVersion.isEmpty())) save(state);
         }
+        if (parallel && target.path == destination && target.replaceVersion.isEmpty()) {
+            queueSmallFile(fromRemote, entry, target, state);
+        } else {
+            finishFiles(report);
+            transferFile(fromRemote, toRemote, entry, target, state, report);
+        }
+    }
+
+    void transferFile(bool fromRemote, bool toRemote, const TransferEntry& entry, const CopyTarget& target,
+                      const QJsonObject& state, const Progress& report)
+    {
         if (fromRemote == toRemote) {
             if (toRemote) {
                 writeChunks(target, entry.size, [&](qint64 offset, qint64 count) { return readBlock(entry, offset, count); }, report);
@@ -533,6 +568,67 @@ public:
     }
 
 private:
+    struct FileResult {
+        qint64 bytes;
+        qint64 wireBytes;
+        std::optional<Failure> failure;
+    };
+    struct PendingFile {
+        QString path;
+        std::future<FileResult> result;
+    };
+    std::deque<PendingFile> pendingFiles;
+
+    void copyChildren(bool fromRemote, bool toRemote, const QList<TransferEntry>& children, const QString& destination,
+                      const Progress& report, int depth, bool created)
+    {
+        // Join even on a listing/target error before releasing the directory pins or cleaning its journal.
+        auto join = qScopeGuard([&] {
+            while (!pendingFiles.empty()) finishOneFile(report);
+        });
+        for (const auto& child : children) {
+            const bool parallel = filePool && children.size() > 1 && !child.directory && child.size <= ChunkSize;
+            finishFiles(report, parallel ? SmallFileConcurrency - 1 : 0);
+            copyEntry(fromRemote, toRemote, child, destination, report, depth, created, parallel);
+        }
+        finishFiles(report);
+    }
+
+    void queueSmallFile(bool fromRemote, const TransferEntry& entry, const CopyTarget& target, const QJsonObject& state)
+    {
+        Worker file(networks, host, request.sslConfiguration(), request.rawHeader("X-Clipboard-Token"), cancelled,
+                    request.hasRawHeader("X-Moonlight-File-Session"));
+        file.needsSession = false; // The coordinator opened the grant. Each request still checks it.
+        file.backgroundTransfers = backgroundTransfers;
+        file.journal = journal;
+        std::packaged_task<FileResult()> task([file = std::move(file), fromRemote, entry, target, state]() mutable {
+            std::optional<Failure> failure;
+            try {
+                file.transferFile(fromRemote, !fromRemote, entry, target, state, [](qint64) {});
+            } catch (const Failure& e) { failure = e; }
+            return FileResult{file.bytes, file.wireBytes, failure};
+        });
+        pendingFiles.push_back({target.path, task.get_future()});
+        filePool->start(std::move(task));
+    }
+
+    std::optional<Failure> finishOneFile(const Progress& report)
+    {
+        auto result = pendingFiles.front().result.get();
+        pendingFiles.pop_front();
+        bytes += result.bytes;
+        wireBytes += result.wireBytes;
+        report(bytes);
+        return result.failure;
+    }
+
+    void finishFiles(const Progress& report, size_t maxPending = 0)
+    {
+        while (pendingFiles.size() > maxPending) {
+            if (auto failure = finishOneFile(report)) throw *failure;
+        }
+    }
+
     bool desktopUnavailable(const QString& path)
     {
         if (!path.isEmpty()) {
@@ -655,7 +751,8 @@ private:
         }
     }
 
-    std::optional<CopyTarget> chooseTarget(bool remote, const TransferEntry& entry, const QString& folder, bool sameSide)
+    std::optional<CopyTarget> chooseTarget(bool remote, const TransferEntry& entry, const QString& folder, bool sameSide,
+                                          const Progress& report)
     {
         const auto path = childPath(folder, entry.name);
         const auto key = qMakePair(entry.path, path);
@@ -672,6 +769,7 @@ private:
             decision = {choices.first(), conflict.replaceVersion};
         }
         if (decision.choice == Engine::ConflictChoice::KeepBoth) {
+            finishFiles(report); // Number the copy against all previously published siblings.
             QSet<QString> names;
             names.insert(entry.name.toCaseFolded());
             if (remote) {
@@ -701,18 +799,20 @@ private:
 
     QJsonObject capabilities()
     {
-        try { return QJsonDocument::fromJson(exchange("capabilities", {}, nullptr)).object(); }
+        if (batchCaps && batchCaps->has_value()) return batchCaps->value();
+        QJsonObject caps;
+        try { caps = QJsonDocument::fromJson(exchange("capabilities", {}, nullptr)).object(); }
         catch (const Failure& e) {
             if (e.code != 400 && e.code != 404 && e.code != 405) throw;
-            return {};
         }
+        if (batchCaps) *batchCaps = caps;
+        return caps;
     }
 
     QByteArray exchange(const QString& operation, const Params& params, const QByteArray* body,
                         qint64 limit = 4096, bool cleanup = false)
     {
-        // Standalone grants expire during inactivity. Reopen on the first remote
-        // operation of this task, retaining its grant across all subsequent chunks.
+        // Open a grant for a new task or batch. Later files in a negotiated batch share it.
         if (needsSession && !cleanup) {
             sendRequest("session", {}, &empty, 4096, false);
             needsSession = false;
@@ -747,6 +847,7 @@ private:
         url.setQuery(QString::fromLatin1(query), QUrl::StrictMode);
         request.setUrl(url);
         QEventLoop loop;
+        auto& network = transferNetwork(networks);
         std::unique_ptr<QNetworkReply> reply(body ? network.post(request, *body) : network.get(request));
         auto* r = reply.get();
         bool invalidResponse = false;
@@ -818,7 +919,7 @@ private:
     {
         const auto peer = certificate.digest(QCryptographicHash::Sha256);
         const auto local = request.sslConfiguration().localCertificate().digest(QCryptographicHash::Sha256);
-        auto job = std::make_unique<ck::Journal>(peer, local, fromRemote, entry.path, target);
+        auto job = std::make_shared<ck::Journal>(peer, local, fromRemote, entry.path, target);
         if (!job->ready())
             throw Failure{Engine::tr("This transfer is already running or its checkpoint is unavailable")};
         journal = std::move(job);
@@ -969,7 +1070,9 @@ private:
         const auto previous = state.value("sha256").toString();
         Params params{{"path", target}, {"size", QString::number(entry.size)}};
         if (!destination.replaceVersion.isEmpty()) params.append({"replace", destination.replaceVersion});
-        const bool prepare = backgroundTransfers && !state.value("done").toBool();
+        // For a fresh single-chunk file, resume itself reserves the path immediately after hashing.
+        const bool prepare = backgroundTransfers && !state.value("done").toBool() &&
+                             (entry.size > ChunkSize || !previous.isEmpty());
         // Reserve the exact destination before hashing a potentially large local file.
         const auto reserve = [&] {
             if (!prepare) return;
@@ -1254,9 +1357,10 @@ private:
         cleanup.dismiss();
     }
 
-    std::unique_ptr<ck::Journal> journal;
+    std::shared_ptr<ck::Journal> journal;
     int lastCode = 0;
     QByteArray nextOffset;
+    Networks& networks;
     QUrl host;
     QSslCertificate certificate;
     Flag cancelled;
@@ -1264,7 +1368,8 @@ private:
     bool backgroundTransfers = false;
     ConflictResolver resolveConflicts;
     ConflictDecisions* conflictDecisions;
-    QNetworkAccessManager network;
+    std::optional<QJsonObject>* batchCaps;
+    QThreadPool* filePool = nullptr;
     QNetworkRequest request;
     const QByteArray empty;
 };
@@ -1273,6 +1378,7 @@ private:
 struct FileTransferEngine::Batch {
     std::atomic_bool prepared{false};
     ConflictDecisions decisions;
+    std::optional<QJsonObject> capabilities;
 };
 
 QByteArray FileTransferEngine::newSessionToken()
@@ -1290,6 +1396,7 @@ FileTransferEngine::FileTransferEngine(QUrl host, QSslCertificate certificate, Q
     m_Ssl.setCaCertificates({m_Certificate});
     m_Lists.setMaxThreadCount(2);
     m_Transfers.setMaxThreadCount(1);
+    m_SmallFiles.setMaxThreadCount(SmallFileConcurrency);
 }
 
 QList<FileTransferEngine::ConflictChoice> FileTransferEngine::askFileConflicts(const Flag& cancelled, bool remote, int itemCount,
@@ -1320,8 +1427,8 @@ FileTransferEngine::~FileTransferEngine()
     m_Lists.clear();
     m_Lists.waitForDone();
     if (m_Standalone) {
-        m_Transfers.start([host = m_Host, ssl = m_Ssl, token = m_Token] {
-            Worker worker(host, ssl, token, std::make_shared<std::atomic_bool>(false), true);
+        m_Transfers.start([this] {
+            Worker worker(m_Networks, m_Host, m_Ssl, m_Token, std::make_shared<std::atomic_bool>(false), true);
             worker.endSession();
         });
     }
@@ -1339,7 +1446,7 @@ void FileTransferEngine::list(bool remote, QString path)
         bool waitingForDesktop = false;
         try {
             checkCancelled(flag);
-            Worker worker(m_Host, m_Ssl, m_Token, flag, m_Standalone);
+            Worker worker(m_Networks, m_Host, m_Ssl, m_Token, flag, m_Standalone);
             entries = worker.browse(remote, path, waitingForDesktop);
         } catch (const Failure& failure) {
             error = failure.message;
@@ -1372,7 +1479,7 @@ std::future<FileDragLocation> FileTransferEngine::remoteDragLocation(bool source
 {
     std::packaged_task<FileDragLocation()> task([this, source, position, localFiles = std::move(localFiles)] {
         try {
-            Worker worker(m_Host, m_Ssl, m_Token, m_WindowClosing, false);
+            Worker worker(m_Networks, m_Host, m_Ssl, m_Token, m_WindowClosing, false);
             auto location = worker.dragLocation(source, position);
             if (!source && !location.folder.isEmpty()) {
                 location.entries = localDropEntries(localFiles);
@@ -1411,7 +1518,7 @@ void FileTransferEngine::loadPlaces(bool remote)
         QList<TransferPlace> locations;
         QString error;
         try {
-            Worker worker(m_Host, m_Ssl, m_Token, m_WindowClosing, m_Standalone);
+            Worker worker(m_Networks, m_Host, m_Ssl, m_Token, m_WindowClosing, m_Standalone);
             locations = worker.places(remote);
         } catch (const Failure& failure) { error = failure.message; }
         QMetaObject::invokeMethod(this, [this, remote, locations, error] {
@@ -1425,7 +1532,7 @@ void FileTransferEngine::makeDirectory(bool remote, QString parent, QString name
     m_Lists.start([this, remote, parent, name] {
         QString error;
         try {
-            Worker worker(m_Host, m_Ssl, m_Token, m_WindowClosing, m_Standalone);
+            Worker worker(m_Networks, m_Host, m_Ssl, m_Token, m_WindowClosing, m_Standalone);
             worker.makeDirectory(remote, parent, name);
         } catch (const Failure& failure) { error = failure.message; }
         QMetaObject::invokeMethod(this, [this, remote, parent, error] {
@@ -1441,7 +1548,7 @@ void FileTransferEngine::manageFiles(FileAction action, bool remote, QList<Trans
         QString error;
         try {
             ConflictDecisions decisions;
-            Worker worker(m_Host, m_Ssl, m_Token, m_WindowClosing, m_Standalone,
+            Worker worker(m_Networks, m_Host, m_Ssl, m_Token, m_WindowClosing, m_Standalone,
                           [this](bool side, int count, const QList<FileConflict>& conflicts) {
                               return askFileConflicts(m_WindowClosing, side, count, conflicts);
                           }, m_ConflictPrompt ? &decisions : nullptr);
@@ -1481,10 +1588,10 @@ void FileTransferEngine::startNext()
     m_Transfers.start([this, job, batchEntries = std::move(batchEntries), flag = m_ActiveCancel] {
         const auto total = job.entry.directory ? -1 : job.entry.size;
         QElapsedTimer timer;
-        Worker worker(m_Host, m_Ssl, m_Token, flag, m_Standalone,
+        Worker worker(m_Networks, m_Host, m_Ssl, m_Token, flag, m_Standalone,
                       [this, flag](bool side, int count, const QList<FileConflict>& conflicts) {
                           return askFileConflicts(flag, side, count, conflicts);
-                      }, m_ConflictPrompt ? &job.batch->decisions : nullptr);
+                      }, m_ConflictPrompt ? &job.batch->decisions : nullptr, &job.batch->capabilities);
         auto update = [&](qint64 bytes) {
             if (timer.isValid() && timer.elapsed() < 100) return;
             timer.start();
@@ -1503,7 +1610,7 @@ void FileTransferEngine::startNext()
                 worker.prepareConflicts(job.fromRemote, !job.fromRemote, batchEntries, job.destination);
                 job.batch->prepared = true;
             }
-            receipt = worker.copy(job.fromRemote, job.entry, job.destination, update, m_WindowClosing);
+            receipt = worker.copy(job.fromRemote, job.entry, job.destination, update, m_WindowClosing, m_SmallFiles);
             if (worker.skipped) result = job.entry.directory ? tr("Completed (%1 skipped)").arg(worker.skipped) : tr("Skipped");
         } catch (const Failure& failure) {
             result = failure.message;
@@ -1545,7 +1652,7 @@ void FileTransferEngine::discard(bool fromRemote, TransferEntry entry, QString d
 {
     m_Transfers.start([this, fromRemote, entry = std::move(entry), destinationFolder = std::move(destinationFolder),
                        finished = std::move(finished)] {
-        Worker worker(m_Host, m_Ssl, m_Token, m_WindowClosing, m_Standalone);
+        Worker worker(m_Networks, m_Host, m_Ssl, m_Token, m_WindowClosing, m_Standalone);
         try { worker.discard(fromRemote, entry, destinationFolder); } catch (const Failure&) {}
         if (finished) QMetaObject::invokeMethod(this, finished, Qt::QueuedConnection);
     });

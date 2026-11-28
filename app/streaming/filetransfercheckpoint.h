@@ -44,11 +44,10 @@ public:
     {
         QJsonArray key{QString::fromLatin1(host.toHex()), QString::fromLatin1(client.toHex()),
                        fromRemote, QDir::cleanPath(source), QDir::cleanPath(target)};
-        const auto path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) +
-                          QStringLiteral("/FileTransferCheckpoints/") + digest(QJsonDocument(key).toJson(QJsonDocument::Compact));
-        dir = QDir(path);
-        if (dir.mkpath(".")) {
-            lock = std::make_unique<QLockFile>(path + "/job.lock");
+        directoryPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) +
+                        QStringLiteral("/FileTransferCheckpoints/") + digest(QJsonDocument(key).toJson(QJsonDocument::Compact));
+        if (QDir().mkpath(directoryPath)) {
+            lock = std::make_unique<QLockFile>(directoryPath + "/job.lock");
             lock->setStaleLockTime(0);
             locked = lock->tryLock();
         }
@@ -57,25 +56,26 @@ public:
     {
         if (locked) {
             lock->unlock();
-            QDir().rmdir(dir.absolutePath());
+            QDir().rmdir(directoryPath);
         }
     }
     bool ready() const { return locked; }
     QString fileName(const QString& path) const { return digest(QDir::cleanPath(path).toUtf8()) + ".json"; }
     bool load(const QString& target, QJsonObject& state) const
     {
-        const auto path = dir.filePath(fileName(target));
-        if (!QFileInfo::exists(path)) { state = {}; return true; }
-        return read(path, state) && state.value("target").toString() == target;
+        const auto record = directoryPath + '/' + fileName(target);
+        if (!QFileInfo::exists(record)) { state = {}; return true; }
+        return read(record, state) && state.value("target").toString() == target;
     }
     bool store(const QString& target, const QJsonObject& state) const
     {
-        QSaveFile f(dir.filePath(fileName(target)));
+        QSaveFile f(directoryPath + '/' + fileName(target));
         const auto data = QJsonDocument(state).toJson(QJsonDocument::Compact);
         return f.open(QIODevice::WriteOnly) && f.write(data) == data.size() && f.commit();
     }
     bool each(const std::function<void(const QJsonObject&)>& callback) const
     {
+        const QDir dir(directoryPath);
         for (const auto& n : dir.entryList({"*.json"}, QDir::Files)) {
             QJsonObject state;
             if (!read(dir.filePath(n), state) || fileName(state.value("target").toString()) != n) return false;
@@ -85,6 +85,7 @@ public:
     }
     void clear() const
     {
+        const QDir dir(directoryPath);
         for (const auto& n : dir.entryList({"*.json"}, QDir::Files)) QFile::remove(dir.filePath(n));
     }
 
@@ -98,7 +99,7 @@ private:
         state = doc.object();
         return true;
     }
-    QDir dir;
+    QString directoryPath;
     std::unique_ptr<QLockFile> lock;
     bool locked = false;
 };

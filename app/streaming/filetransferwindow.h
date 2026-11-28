@@ -62,6 +62,7 @@ private:
         QStringList history;
         QString bookmarksKey;
         QString lastDirectoryKey;
+        QTimer transferRefresh{nullptr};
         std::optional<QString> restoreFallback;
         bool ready = false;
         bool operating = false;
