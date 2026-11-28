@@ -14,6 +14,36 @@ public:
     static
     void scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst);
 
+    // Fit-width-pan-Y mode: viewer-only zoom that fills window width and pans
+    // vertically based on local cursor position. Set by mouse motion handler;
+    // read every frame by scaleSourceToDestinationSurface when the pref is on.
+    static
+    int getFitWidthPanYOffset();
+
+    static
+    void setFitWidthPanYOffset(int offset);
+
+    // Horizontal counterpart: when the stream is wider than the window aspect
+    // the scaler matches the window height and pans horizontally by this offset.
+    static
+    int getFitHeightPanXOffset();
+
+    static
+    void setFitHeightPanXOffset(int offset);
+
+    // Same as scaleSourceToDestinationSurface() but lets callers that are not
+    // drawing the video (e.g. initial window sizing) opt out of edge-pan so
+    // they always get a rect that fits inside dst.
+    static
+    void scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst, bool allowEdgePan);
+
+    // Returns true and writes the dst rect for fit-width mode if the pref is on
+    // and the stream is taller than the window aspect (i.e. would otherwise
+    // letterbox left/right). Used by mouse.cpp to detect when the special path
+    // is active and clamp confinement to the window rather than the offscreen rect.
+    static
+    bool isFitWidthPanYActive(const SDL_Rect* src, const SDL_Rect* dst);
+
     static
     void screenSpaceToNormalizedDeviceCoords(SDL_FRect* rect, int viewportWidth, int viewportHeight);
 

@@ -1,6 +1,8 @@
 #include "streamutils.h"
+#include "settings/streamingpreferences.h"
 
 #include <Qt>
+#include <QAtomicInt>
 #include <QDir>
 
 #ifdef Q_OS_DARWIN
@@ -128,16 +130,97 @@ SDL_Window* StreamUtils::createTestWindow()
     return testWindow;
 }
 
+// Most recently computed edge-pan offsets (in window pixels), written by the
+// edge-pan tick on the event thread and read each frame by every renderer
+// through scaleSourceToDestinationSurface. Atomic so the renderer thread and
+// event thread can access without locking.
+//
+// Only one axis is ever in use at a time: Y when the stream is taller than the
+// window aspect (fit width, pan vertically), X when the stream is wider than
+// the window aspect (fit height, pan horizontally).
+static QAtomicInt s_FitWidthPanYOffset = 0;
+static QAtomicInt s_FitHeightPanXOffset = 0;
+
+int StreamUtils::getFitWidthPanYOffset()
+{
+    return s_FitWidthPanYOffset.loadAcquire();
+}
+
+void StreamUtils::setFitWidthPanYOffset(int offset)
+{
+    s_FitWidthPanYOffset.storeRelease(offset);
+}
+
+int StreamUtils::getFitHeightPanXOffset()
+{
+    return s_FitHeightPanXOffset.loadAcquire();
+}
+
+void StreamUtils::setFitHeightPanXOffset(int offset)
+{
+    s_FitHeightPanXOffset.storeRelease(offset);
+}
+
+bool StreamUtils::isFitWidthPanYActive(const SDL_Rect* src, const SDL_Rect* dst)
+{
+    if (src->w <= 0 || src->h <= 0 || dst->w <= 0 || dst->h <= 0) {
+        return false;
+    }
+    if (!StreamingPreferences::get()->fitWidthPanY) {
+        return false;
+    }
+    // Fit-width only kicks in when the stream is "taller" than the window aspect
+    // ratio - i.e. when the default path would have letterboxed left/right.
+    int wouldBeLetterboxedH = SDL_ceilf((float)dst->w * src->h / src->w);
+    return wouldBeLetterboxedH > dst->h;
+}
+
 void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst)
+{
+    scaleSourceToDestinationSurface(src, dst, true);
+}
+
+void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst, bool allowEdgePan)
 {
     int dstH = SDL_ceilf((float)dst->w * src->h / src->w);
     int dstW = SDL_ceilf((float)dst->h * src->w / src->h);
 
+    // Fill-and-pan mode: instead of letterboxing, scale the stream so it fills
+    // the window on the axis that would otherwise have black bars, and let the
+    // overflowing axis extend past the window. The renderer's viewport / NDC
+    // math clips naturally, and the input transform inverts through the same
+    // dst rect so coordinates stay consistent.
+    bool edgePan = allowEdgePan && StreamingPreferences::get()->fitWidthPanY &&
+                   src->w > 0 && src->h > 0;
+
     if (dstH > dst->h) {
+        // Stream is "more vertical" than the window. Default behavior letterboxes
+        // by scaling to fit height (pillarboxing left/right). In fill-and-pan
+        // mode, fill the width and pan vertically.
+        if (edgePan) {
+            int maxPan = dstH - dst->h;
+            int panOffset = qBound(0, getFitWidthPanYOffset(), maxPan);
+            dst->y -= panOffset;
+            dst->h = dstH;
+            return;
+        }
+
         dst->x += (dst->w - dstW) / 2;
         dst->w = dstW;
     }
     else {
+        // Stream is "wider" than the window (e.g. an ultrawide or multi-monitor
+        // host on a 16:9 screen). Default behavior fits width and letterboxes
+        // top/bottom. In fill-and-pan mode, match the window height and pan
+        // horizontally.
+        if (edgePan && dstW > dst->w) {
+            int maxPan = dstW - dst->w;
+            int panOffset = qBound(0, getFitHeightPanXOffset(), maxPan);
+            dst->x -= panOffset;
+            dst->w = dstW;
+            return;
+        }
+
         dst->y += (dst->h - dstH) / 2;
         dst->h = dstH;
     }

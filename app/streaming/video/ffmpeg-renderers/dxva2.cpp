@@ -926,6 +926,28 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
 
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
+    // In fill-and-pan mode dst extends past the render target on one axis.
+    // VideoProcessBlt wants a target rect inside the surface, so crop dst to
+    // the display and shrink the source rect by the same proportion.
+    if (dst.x < 0 || dst.y < 0 || dst.x + dst.w > m_DisplayWidth || dst.y + dst.h > m_DisplayHeight) {
+        float scaleX = (float)frame->width / dst.w;
+        float scaleY = (float)frame->height / dst.h;
+        int left = qMax(dst.x, 0);
+        int top = qMax(dst.y, 0);
+        int right = qMin(dst.x + dst.w, m_DisplayWidth);
+        int bottom = qMin(dst.y + dst.h, m_DisplayHeight);
+
+        sample.SrcRect.left = (LONG)((left - dst.x) * scaleX);
+        sample.SrcRect.top = (LONG)((top - dst.y) * scaleY);
+        sample.SrcRect.right = qMin((LONG)SDL_ceilf((right - dst.x) * scaleX), (LONG)frame->width);
+        sample.SrcRect.bottom = qMin((LONG)SDL_ceilf((bottom - dst.y) * scaleY), (LONG)frame->height);
+
+        dst.x = left;
+        dst.y = top;
+        dst.w = right - left;
+        dst.h = bottom - top;
+    }
+
     sample.DstRect.left = dst.x;
     sample.DstRect.right = dst.x + dst.w;
     sample.DstRect.top = dst.y;
