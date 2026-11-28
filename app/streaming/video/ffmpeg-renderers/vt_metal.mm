@@ -162,6 +162,10 @@ public:
         dst.h = drawableHeight;
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
+        // scaleSourceToDestinationSurface() uses a top-left origin, but Metal NDC
+        // has Y pointing up, so flip the region to preserve the video alignment.
+        dst.y = drawableHeight - dst.y - dst.h;
+        
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
         StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, drawableWidth, drawableHeight);
