@@ -281,7 +281,15 @@ private:
 
     Overlay::OverlayManager m_OverlayManager;
 
+    // Inactivity timeout tracking
+    Uint32 m_LastInputTime;
+    Uint32 m_InactivityTimeoutMs;
+    bool m_InactivityTimeoutEnabled;
+
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
     static Session* s_ActiveSession;
     static QSemaphore s_ActiveSessionSemaphore;
+
+    void checkInactivityTimeout();
+    void resetInactivityTimer();
 };
