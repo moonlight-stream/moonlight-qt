@@ -669,6 +669,13 @@ private:
             if (m_Computer->currentGameId != 0) {
                 http.quitApp();
             }
+            else {
+                {
+                    QWriteLocker lock(&m_Computer->lock);
+                    m_Computer->pendingQuit = false;
+                }
+                emit quitAppFailed(QString());
+            }
         } catch (const GfeHttpResponseException& e) {
             {
                 QWriteLocker lock(&m_Computer->lock);
