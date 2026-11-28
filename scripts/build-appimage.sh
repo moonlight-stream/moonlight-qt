@@ -1,4 +1,5 @@
 BUILD_CONFIG="release"
+BUILD_SYSTEM="${BUILD_SYSTEM:-qmake}"
 
 fail()
 {
@@ -20,7 +21,11 @@ else
   VERSION=`cat $SOURCE_ROOT/app/version.txt`
 fi
 
-command -v qmake6 >/dev/null 2>&1 || fail "Unable to find 'qmake6' in your PATH!"
+if [ "$BUILD_SYSTEM" = "cmake" ]; then
+  command -v cmake >/dev/null 2>&1 || fail "Unable to find 'cmake' in your PATH!"
+else
+  command -v qmake6 >/dev/null 2>&1 || fail "Unable to find 'qmake6' in your PATH!"
+fi
 command -v $LINUXDEPLOY >/dev/null 2>&1 || fail "Unable to find '$LINUXDEPLOY' in your PATH!"
 
 echo Cleaning output directories
@@ -46,17 +51,31 @@ pushd $BUILD_FOLDER
 # work even in X11. To avoid this, we will disable Wayland support for the AppImage.
 #
 # We disable DRM support because linuxdeploy doesn't bundle the appropriate libraries for Qt EGLFS.
-qmake6 $SOURCE_ROOT/moonlight-qt.pro CONFIG+=disable-wayland CONFIG+=disable-libdrm PREFIX=$DEPLOY_FOLDER/usr DEFINES+=APP_IMAGE || fail "Qmake failed!"
+if [ "$BUILD_SYSTEM" = "cmake" ]; then
+  cmake $SOURCE_ROOT -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$DEPLOY_FOLDER/usr \
+    -DCMAKE_C_FLAGS=-DAPP_IMAGE -DCMAKE_CXX_FLAGS=-DAPP_IMAGE \
+    -DDISABLE_WAYLAND=ON -DDISABLE_LIBDRM=ON || fail "CMake configure failed!"
+else
+  qmake6 $SOURCE_ROOT/moonlight-qt.pro CONFIG+=disable-wayland CONFIG+=disable-libdrm PREFIX=$DEPLOY_FOLDER/usr DEFINES+=APP_IMAGE || fail "Qmake failed!"
+fi
 popd
 
 echo Compiling Moonlight in $BUILD_CONFIG configuration
 pushd $BUILD_FOLDER
-make -j$(nproc) $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Make failed!"
+if [ "$BUILD_SYSTEM" = "cmake" ]; then
+  cmake --build . -j$(nproc) || fail "CMake build failed!"
+else
+  make -j$(nproc) $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Make failed!"
+fi
 popd
 
 echo Deploying to staging directory
 pushd $BUILD_FOLDER
-make install || fail "Make install failed!"
+if [ "$BUILD_SYSTEM" = "cmake" ]; then
+  cmake --install . || fail "CMake install failed!"
+else
+  make install || fail "Make install failed!"
+fi
 popd
 
 export QML_SOURCES_PATHS=$SOURCE_ROOT/app/gui
