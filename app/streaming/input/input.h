@@ -155,6 +155,12 @@ public:
     static
     QString getUnmappedGamepads();
 
+#ifdef Q_OS_WIN32
+    // Handles WM_POINTER* messages for pen input (Wacom, Windows Ink, etc).
+    // Returns true if the message was consumed and must not reach DefWindowProc.
+    bool handleWin32PenMessage(unsigned int msg, uintptr_t wParam, intptr_t lParam);
+#endif
+
 private:
     enum KeyCombo {
         KeyComboQuit,
@@ -249,6 +255,15 @@ private:
     SDL_TimerID m_DragTimer;
     char m_DragButton;
     int m_NumFingersDown;
+
+#ifdef Q_OS_WIN32
+    void installWin32PenHook();
+    void removeWin32PenHook();
+
+    void* m_PenHwnd = nullptr;
+    bool m_PenInContact = false;
+    bool m_PenHovering = false;
+#endif
 
     static const int k_ButtonMap[];
 };
