@@ -2075,8 +2075,8 @@ bool Session::startConnectionAsync()
         }
         else if (e.getStatusCode() == 503 && message.startsWith("Privacy screen unavailable.")) {
             const QString explanation = message.contains("Windows display settings are temporarily unavailable")
-                ? tr("Windows is blocking display changes. Unlock %1, then try privacy screen again.").arg(computer.name)
-                : tr("Sunshine could not switch to the virtual display on %1. If the host is locked, unlock it and try again. If it is already unlocked, check Sunshine's virtual display output.").arg(computer.name);
+                ? tr("Windows could not apply the private display settings on %1. For a locked host, make sure Sunshine is running as a Windows service, then reconnect.").arg(computer.name)
+                : tr("Sunshine could not activate the virtual display on %1. Check the virtual display driver and Sunshine's output setting.").arg(computer.name);
             emit displayPrivacyLaunchError(explanation, privacyScreen ? computer.uuid : QString());
         }
         else {

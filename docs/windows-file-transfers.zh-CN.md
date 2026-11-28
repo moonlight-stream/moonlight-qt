@@ -27,6 +27,8 @@
 
 在仓库根目录运行 `python scripts/deploy-streaming.py` 可打开终端菜单。选择本机、CHENX、CX9950X 或多台主机，再选择 Moonlight、Sunshine 或两者。脚本从现有的 Windows Release 构建自动打包，确认后部署。选择「仅校验」可检查安装路径、包哈希和待更新文件数量。执行部署时，更新运行中的 Sunshine 会重启服务，更新正在使用的 Moonlight 会关闭客户端，这可能中断串流。
 
+部署 Sunshine 时，脚本会在支持的 Windows x64 主机上检查 Parsec 虚拟显示驱动。缺少驱动时，主机会从 Parsec 下载签名安装包，校验 SHA-256 和发布者，安装后检查设备状态。已有可用驱动时会直接复用。加 `--skip-privacy-driver` 可跳过，`--dry-run` 可预览。驱动安装失败时，脚本会保留已完成的软件更新并报告失败，重新执行部署即可重试。部署旧版 ZIP 时，可从相邻的 Sunshine 源码仓库取得驱动安装脚本。
+
 需要从当前源码构建时，菜单可选「先构建，再执行部署」或「先构建，再校验」。例如，运行 `python scripts/deploy-streaming.py --build --component moonlight --target local --dry-run` 会先增量构建客户端，再校验本机安装。去掉 `--dry-run` 即可安装。Moonlight 使用 Visual Studio x64 C++ 工具和 `build/win64` 中记录的 qmake；首次构建请将 x64 MSVC 版 Qt 的 bin 目录加入 PATH。Sunshine 复用相邻仓库已配置的 `../Sunshine/cmake-build-windows` Release 构建目录。指定完整 ZIP 的组件直接使用该包。所有需要构建的组件成功后才开始部署；搭配 `--watch` 时仅在启动监听前构建一次。
 
 确认部署或校验后，脚本在后台打包一次，同时在终端逐台提示输入远端主机的 SSH 密码。即使设置 `--jobs 1`，也可以在打包期间输入所有主机的密码。各主机在安装包和校验值就绪后开始上传或本机安装。默认最多同时处理 3 台主机。用 `python scripts/deploy-streaming.py --target all --dry-run --jobs 2` 可同时校验最多两台。某台失败或被跳过时，其余主机会继续，脚本最后列出未完成的主机并返回退出码 1。

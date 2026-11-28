@@ -6,7 +6,8 @@ param(
     [string]$MoonlightTarget = 'D:\Soft\moonlight',
     [switch]$StageOnly,
     [string]$ExpectedComputerName,
-    [ValidateRange(0, 2147483647)][int]$KeepBackups
+    [ValidateRange(0, 2147483647)][int]$KeepBackups,
+    [ValidateSet('Install', 'Skip')][string]$PrivacyDriver = 'Install'
 )
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
@@ -84,8 +85,26 @@ function ClearDeploymentBackups([string]$stagePath, [int]$retain, [bool]$preview
         Backups = @($older | ForEach-Object { $_.Path })
     }
 }
-function WriteDeploymentResult([hashtable]$result) {
-    if ($retainBackups) {
+function CompleteDeployment([hashtable]$result) {
+    if ($SunshineSha256 -and $PrivacyDriver -eq 'Install') {
+        try {
+            $helperName = 'install-parsec-vdd.ps1'
+            $candidates = @(
+                (Join-Path $sunshineSource "scripts\$helperName")
+                (Join-Path $Stage $helperName)
+                (Join-Path $SunshineTarget "scripts\$helperName")
+            )
+            $helper = $candidates | Where-Object { [IO.File]::Exists($_) } | Select-Object -First 1
+            if (!$helper) {
+                throw 'Driver setup helper missing. Use a current Sunshine runtime ZIP or the adjacent Sunshine source checkout.'
+            }
+            NoReparse $helper
+            $result.PrivacyDriver = & $helper -CheckOnly:$StageOnly
+        } catch {
+            $result.PrivacyDriverError = $_.Exception.Message
+        }
+    }
+    if ($retainBackups -and !$result.PrivacyDriverError) {
         try {
             $cleanup = ClearDeploymentBackups $Stage $KeepBackups $StageOnly.IsPresent
             $result.BackupCleanup = $cleanup
@@ -142,6 +161,7 @@ foreach ($product in $products) {
     $binaries = @(Get-ChildItem -LiteralPath $unpack -File -Recurse -Filter "$product.exe")
     if ($binaries.Count -ne 1) { throw "Expected one $product executable in the package" }
     $source = $binaries[0].Directory.FullName
+    if ($product -eq 'Sunshine') { $sunshineSource = $source }
     $target = if ($product -eq 'Sunshine') { $SunshineTarget } else { $MoonlightTarget }
     if (![IO.File]::Exists((Join-Path $source "$product.exe"))) { throw "Missing $product binary." }
     $installedHashes[$product] = (Get-FileHash -LiteralPath (Join-Path $source "$product.exe")).Hash
@@ -156,7 +176,7 @@ foreach ($product in $products) {
         $changes.Add([pscustomobject]@{Source=$file.FullName; Target=$dest; Backup=(Join-Path $backup "$product\$rel"); Hash=$hash})
     }
 }
-if ($StageOnly) { WriteDeploymentResult @{Verified=$true; FilesToUpdate=$changes.Count}; return }
+if ($StageOnly) { CompleteDeployment @{Verified=$true; FilesToUpdate=$changes.Count}; return }
 $runningClient = @()
 if ($MoonlightSha256) { $runningClient = @(Get-Process -Name Moonlight -ErrorAction SilentlyContinue | Where-Object { $_.Path -ieq $moonExe }) }
 $runningHost = @()
@@ -223,7 +243,7 @@ try {
     if ($restart) { Start-Service SunshineService }
     throw $failure
 }
-WriteDeploymentResult $result
+CompleteDeployment $result
 
 } finally {
     try {

@@ -571,8 +571,8 @@
 </context>
 <context>
     <name>Session</name>
-    <message><source>Windows is blocking display changes. Unlock %1, then try privacy screen again.</source><translation>Windows 当前禁止切换显示器。请解锁 %1，然后重试隐私屏。</translation></message>
-    <message><source>Sunshine could not switch to the virtual display on %1. If the host is locked, unlock it and try again. If it is already unlocked, check Sunshine's virtual display output.</source><translation>Sunshine 无法切换到 %1 的虚拟显示器。如果主机已锁屏，请解锁后重试。如果主机已解锁，请检查 Sunshine 的虚拟显示器输出设置。</translation></message>
+    <message><source>Windows could not apply the private display settings on %1. For a locked host, make sure Sunshine is running as a Windows service, then reconnect.</source><translation>Windows 无法在 %1 上应用隐私屏设置。如果主机已锁屏，请确认 Sunshine 正以 Windows 服务方式运行，然后重新连接。</translation></message>
+    <message><source>Sunshine could not activate the virtual display on %1. Check the virtual display driver and Sunshine's output setting.</source><translation>Sunshine 无法启用 %1 上的虚拟显示器。请检查虚拟显示器驱动和 Sunshine 的输出设置。</translation></message>
     <message><source>Another application is running on the host.</source><translation>主机上正在运行其他应用。</translation></message>
     <message><source>%1 — View only</source><translation>%1 — 观看模式</translation></message>
     <message><source>Uploading files %1%</source><translation>正在上传文件 %1%</translation></message>
@@ -1440,7 +1440,7 @@
     <name>main</name>
     <message><source>Privacy screen could not start</source><translation>无法开启隐私屏</translation></message>
     <message><source>Turn off privacy screen request</source><translation>关闭隐私屏请求</translation></message>
-    <message><source>You can turn off the request and reconnect normally to unlock the host. Its physical display may show the session.</source><translation>也可以关闭隐私屏请求，用普通串流连接并解锁主机。普通串流期间，实体屏可能显示画面。</translation></message>
+    <message><source>If you turn off the privacy screen request, the next connection may appear on the host’s physical display.</source><translation>如果关闭隐私屏请求，下次连接的画面可能会显示在主机的实体屏上。</translation></message>
     <message><source>Minimize</source><translation>最小化</translation></message>
     <message><source>Restore</source><translation>还原</translation></message>
     <message><source>Maximize</source><translation>最大化</translation></message>

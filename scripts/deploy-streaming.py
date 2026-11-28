@@ -24,6 +24,14 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKER = ROOT / 'scripts/install-streaming-packages.ps1'
+PRIVACY_DRIVER_SCRIPT = ROOT.parent / 'Sunshine/src_assets/windows/misc/install-parsec-vdd.ps1'
+PRIVACY_DRIVER_STATUS = {
+    'Already installed': '已安装，设备正常',
+    'Would install': '缺少驱动，部署时将安装',
+    'Installed': '已安装并验证设备正常',
+    'Restart required': 'Windows 需要重启才能使用驱动',
+    'Unsupported platform': '已跳过，驱动不支持此 Windows 版本或架构',
+}
 BINARIES = {
     'Moonlight': ROOT / 'build/win64/app/release/Moonlight.exe',
     'Sunshine': ROOT.parent / 'Sunshine/cmake-build-windows/sunshine.exe',
@@ -166,7 +174,7 @@ def check_build(path, version):
         _winapi.CloseHandle(handle)
 
 
-def prepare(inputs, stage, report, versions=None):
+def prepare(inputs, stage, report, versions=None, *, skip_privacy_driver=False):
     hashes = {}
     for name, (source, is_package) in inputs.items():
         archive = stage / f'{name}.zip'
@@ -187,6 +195,9 @@ def prepare(inputs, stage, report, versions=None):
                 check_build(source, versions[name])
             hashes[name] = digest(archive)
     shutil.copyfile(WORKER, stage / WORKER.name)
+    # EXE-only builds and older runtime ZIPs do not contain the setup helper.
+    if 'Sunshine' in inputs and not skip_privacy_driver and PRIVACY_DRIVER_SCRIPT.is_file():
+        shutil.copyfile(PRIVACY_DRIVER_SCRIPT, stage / PRIVACY_DRIVER_SCRIPT.name)
     return hashes
 
 
@@ -200,6 +211,8 @@ def worker_args(args, target, hashes):
         values.extend((f'-{name}Sha256', checksum))
     if args.keep_backups is not None:
         values.extend(('-KeepBackups', str(args.keep_backups)))
+    if args.skip_privacy_driver and 'Sunshine' in hashes:
+        values.extend(('-PrivacyDriver', 'Skip'))
     if args.dry_run:
         values.append('-StageOnly')
     return values
@@ -284,6 +297,8 @@ def deploy_remote(args, target, stage, packages, report, password):
 
         hashes = packages.result()
         files = [*(f'{name}.zip' for name in hashes), WORKER.name]
+        if (stage / PRIVACY_DRIVER_SCRIPT.name).is_file():
+            files.append(PRIVACY_DRIVER_SCRIPT.name)
         with ssh.open_sftp() as sftp:
             try:
                 sftp.stat(staging_root)
@@ -386,6 +401,8 @@ def menu(args):
     print('\n目标：' + '、'.join(target.label for target in targets))
     for name, (path, _) in inputs.items():
         print(f'{name}：{path}')
+    if 'Sunshine' in inputs and not args.skip_privacy_driver:
+        print('部署时会为缺少 Parsec 虚拟显示驱动的主机安装驱动。')
     deploy_label = '持续部署' if args.watch else '执行部署'
     verify_label = '持续校验' if args.watch else '仅校验'
     actions = {'1': f'{verify_label}（无需重启）'} if args.dry_run else {
@@ -433,7 +450,7 @@ def deploy_hosts(args, targets, stage, inputs, versions, passwords):
     with ThreadPoolExecutor(max_workers=workers + 1) as pool:
         if inputs:
             print('正在后台打包…', flush=True)
-        packages = pool.submit(prepare, inputs, stage, package_report, versions)
+        packages = pool.submit(prepare, inputs, stage, package_report, versions, skip_privacy_driver=args.skip_privacy_driver)
         pending = deque()
 
         def submit(target, password=None):
@@ -485,13 +502,19 @@ def deploy_hosts(args, targets, stage, inputs, versions, passwords):
             try:
                 result = event.result()
                 if not args.clean_backups and args.dry_run:
-                    print(f'{prefix} 校验通过，{result["FilesToUpdate"]} 个文件待更新。')
+                    print(f'{prefix} 软件包校验通过，{result["FilesToUpdate"]} 个文件待更新。')
                 elif not args.clean_backups:
-                    print(f'{prefix} 完成，已更新 {result["ChangedFiles"]} 个文件。')
+                    print(f'{prefix} 已更新 {result["ChangedFiles"]} 个文件。')
                     if result.get('Service'):
                         print(f'{prefix} Sunshine 服务：{result["Service"]}')
                     if result.get('Backup'):
                         print(f'{prefix} 备份：{result["Backup"]}')
+                if result.get('PrivacyDriver'):
+                    status = result['PrivacyDriver']
+                    print(f'{prefix} Parsec 虚拟显示驱动：{PRIVACY_DRIVER_STATUS.get(status, status)}')
+                if result.get('PrivacyDriverError'):
+                    failed.add(target)
+                    print(f'{prefix} Parsec 虚拟显示驱动：{result["PrivacyDriverError"]}', file=sys.stderr, flush=True)
                 cleanup = result if args.clean_backups else result.get('BackupCleanup')
                 if cleanup is not None:
                     label = '待删除' if args.dry_run else '已删除'
@@ -538,7 +561,7 @@ def deploy(args, targets, inputs, *, versions=None, passwords=None):
         return deploy_hosts(args, targets, stage, inputs, versions,
                             {} if passwords is None else passwords)
     finally:
-        for name in [*(f'{product}.zip' for product in inputs), WORKER.name]:
+        for name in [*(f'{product}.zip' for product in inputs), WORKER.name, PRIVACY_DRIVER_SCRIPT.name]:
             (stage / name).unlink(missing_ok=True)
         try:
             if not any(stage.iterdir()):
@@ -601,6 +624,7 @@ def main(argv=None):
     parser.add_argument('--component', choices=COMPONENTS, default='both')
     parser.add_argument('--moonlight-package', type=Path, help='Optional full runtime ZIP')
     parser.add_argument('--sunshine-package', type=Path, help='Optional full runtime ZIP')
+    parser.add_argument('--skip-privacy-driver', action='store_true', help='Skip the default Parsec Virtual Display Driver setup on Sunshine hosts')
     parser.add_argument('--dry-run', action='store_true', help='Validate packages or preview backup cleanup without making changes')
     args = parser.parse_args(argv)
     if args.jobs < 1:

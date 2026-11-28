@@ -588,7 +588,7 @@ ApplicationWindow {
         standardButtons: privacyError ? Dialog.Ok | (privacyHostUuid ? Dialog.Discard : 0) :
                                         Dialog.Ok | (offerHelp && SystemProperties.hasBrowser ? Dialog.Help : 0)
         discardText: qsTr("Turn off privacy screen request")
-        helpText: privacyHostUuid ? qsTr("You can turn off the request and reconnect normally to unlock the host. Its physical display may show the session.") : ""
+        helpText: privacyHostUuid ? qsTr("If you turn off the privacy screen request, the next connection may appear on the host’s physical display.") : ""
         helpTextSeparator: "\n\n"
 
         onDiscarded: {
