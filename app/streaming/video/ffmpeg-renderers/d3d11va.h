@@ -31,6 +31,8 @@ public:
         GENERIC_YUV_420,
         GENERIC_AYUV,
         GENERIC_Y410,
+        YUV_420_BICUBIC,
+        YUV_420_LANCZOS,
         _COUNT
     };
 

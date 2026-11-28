@@ -6,6 +6,7 @@
 #include "path.h"
 #include "utils.h"
 
+#include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
 #include "streaming/session.h"
 
@@ -53,6 +54,8 @@ static const std::array<const char*, D3D11VARenderer::PixelShaders::_COUNT> k_Vi
     "d3d11_yuv420_pixel.fxc",
     "d3d11_ayuv_pixel.fxc",
     "d3d11_y410_pixel.fxc",
+    "d3d11_yuv420_pixel_bicubic.fxc",
+    "d3d11_yuv420_pixel_lanczos.fxc",
 };
 
 D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
@@ -962,7 +965,22 @@ void D3D11VARenderer::bindColorConversion(bool frameChanged, AVFrame* frame)
     }
     else {
         // We'll need to use the generic 4:2:0 shader for this colorspace and color range combo
-        m_RenderDeviceContext->PSSetShader(m_VideoPixelShaders[PixelShaders::GENERIC_YUV_420].Get(), nullptr, 0);
+        {
+            // Choose the resampling kernel from the user preference. Bilinear
+            // keeps the stock shader so the default path stays bit-identical.
+            PixelShaders scaledShader = PixelShaders::GENERIC_YUV_420;
+            switch (StreamingPreferences::get()->scalerAlgorithm) {
+            case StreamingPreferences::SA_BICUBIC:
+                scaledShader = PixelShaders::YUV_420_BICUBIC;
+                break;
+            case StreamingPreferences::SA_LANCZOS3:
+                scaledShader = PixelShaders::YUV_420_LANCZOS;
+                break;
+            default:
+                break;
+            }
+            m_RenderDeviceContext->PSSetShader(m_VideoPixelShaders[scaledShader].Get(), nullptr, 0);
+        }
     }
 
     // If nothing has changed since last frame, we're done

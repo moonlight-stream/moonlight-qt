@@ -55,6 +55,17 @@ public:
     };
     Q_ENUM(RendererSelection)
 
+    // Scaling filter used when the streamed resolution differs from the window.
+    // Moonlight's D3D11 renderer samples with D3D11_FILTER_MIN_MAG_MIP_LINEAR for
+    // every pixel shader, so SA_BILINEAR reproduces the stock behaviour exactly.
+    enum ScalerAlgorithm
+    {
+        SA_BILINEAR = 0,    // stock: one bilinear fetch per sample
+        SA_BICUBIC = 1,     // 4-tap Catmull-Rom, separable
+        SA_LANCZOS3 = 2,    // 6-tap Lanczos (a=3), separable
+    };
+    Q_ENUM(ScalerAlgorithm)
+
     enum WindowMode
     {
         WM_FULLSCREEN,
@@ -146,6 +157,7 @@ public:
     Q_PROPERTY(bool enableYUV444 MEMBER enableYUV444 NOTIFY enableYUV444Changed)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
     Q_PROPERTY(RendererSelection rendererSelection MEMBER rendererSelection NOTIFY rendererSelectionChanged)
+    Q_PROPERTY(ScalerAlgorithm scalerAlgorithm MEMBER scalerAlgorithm NOTIFY scalerAlgorithmChanged)
     Q_PROPERTY(WindowMode windowMode MEMBER windowMode NOTIFY windowModeChanged)
     Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
     Q_PROPERTY(UIDisplayMode uiDisplayMode MEMBER uiDisplayMode NOTIFY uiDisplayModeChanged)
@@ -200,6 +212,7 @@ public:
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
     RendererSelection rendererSelection;
+    ScalerAlgorithm scalerAlgorithm;
 
 signals:
     void displayModeChanged();
@@ -238,6 +251,7 @@ signals:
     void keepAwakeChanged();
     void languageChanged();
     void rendererSelectionChanged();
+    void scalerAlgorithmChanged();
 
 private:
     explicit StreamingPreferences(QQmlEngine *qmlEngine);
